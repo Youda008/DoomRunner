@@ -1,0 +1,60 @@
+Pre-built executables:
+
+
+On the project home page i provide static and dynamic version of DoomRunner.
+Static version is bigger, but should be completely standalone and run on any computer without installing anything.
+Dynamic version is much smaller, but requires you to install all the linked dynamic libraries:
+
+Qt5Core.dll
+Qt5Gui.dll
+Qt5Widgets.dll
+
+libbz2-1.dll
+libfreetype-6.dll
+libglib-2.0-0.dll
+libgraphite2.dll
+libharfbuzz-0.dll
+libiconv-2.dll
+libicudt64.dll
+libicuin64.dll
+libicuuc64.dll
+libintl-8.dll
+libpcre-1.dll
+libpcre2-16-0.dll
+libpng16-16.dll
+zlib1.dll
+
+libgcc_s_seh-1.dll
+libstdc++-6.dll
+libwinpthread-1.dll
+
+Because the project was built in Msys2/MinGW64 toolchain, the easiest and most realiable way to get those is to install Msys2 (https://www.msys2.org/, and don't forget to add C:\msys64\mingw64\bin to PATH variable) and install them using the built-in package manager pacman. Most probably all of them will be installed automatically by a single command in the Msys terminal:
+
+	pacboy -S qt5:x
+	
+I recommend you to just grab the static one, unless you plan to use a lot of different Qt applications, and want to save every possible Megabyte on your disk.
+
+
+
+
+Own build:
+
+
+The build is currently tested only on Windows with Msys2/MinGW64 toolchain, but i plan to make it work also on Linux, once the launcher is finished.
+
+I've been trying to compile the Qt by myself but with no luck. Both the dynamic and static Qt builds are broken in Msys2/MinGW64 environment. Only errors, errors and more errors. Fortunatelly Msys2 provides pre-compiled Qt packages that work well, even the static version.
+
+So if you wanna build this on your own right now, the only supported way is:
+
+1. Install Msys2 and its gcc toolchain
+	https://github.com/orlp/dev-on-windows/wiki/Installing-GCC--&-MSYS2
+
+2. Install qt5 or qt5-static
+	pacboy -S qt5:x
+	
+3. Open DoomRunner.pro in Qt Creator
+
+4. Setup paths to your MinGW and Qt
+	Tools -> Options -> Kits -> Compiler, Qt version
+	
+5. Chose configuration Debug/Release and build it

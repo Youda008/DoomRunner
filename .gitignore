@@ -1,5 +1,6 @@
-Build-release-static
-Build-release
-Build-profile
-Build-debug
+/Build-release-static
+/Build-release
+/Build-profile
+/Build-debug
 /notes.txt
+/Releases

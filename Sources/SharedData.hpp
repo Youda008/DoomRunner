@@ -23,29 +23,22 @@ struct Engine {
 	QString name;
 	QString path;
 };
-// in main window we want to display the engines as names only and in setup dialog with paths
-inline QString makeEngineUITextFromName( const Engine & engine )
-{
-	return engine.name;
-}
-inline QString makeEngineUITextWithPath( const Engine & engine )
-{
-	return engine.name % "  [" % engine.path % "]";
-}
 
 struct IWAD {
 	QString name;
 	QString path;
 };
-// in main window we want to display the iwads as names only and in setup dialog with paths
-inline QString makeIwadUITextFromName( const IWAD & iwad )
-{
-	return iwad.name;
-}
-inline QString makeIwadUITextWithPath( const IWAD & iwad )
-{
-	return iwad.name % "  [" % iwad.path % "]";
-}
+
+struct MapPack {
+	QString name;
+};
+
+// useful for debug purposes, easier to set breakpoint in than in lambdas
+QString makeEngineDispStrFromName( const Engine & engine );
+QString makeEngineDispStrWithPath( const Engine & engine );
+QString makeIwadDispStrFromName( const IWAD & iwad );
+QString makeIwadDispStrWithPath( const IWAD & iwad );
+QString makeMapPackDispStr( const MapPack & pack );
 
 
 #endif // SHARED_DATA_INCLUDED

@@ -97,11 +97,11 @@ class SetupDialog : public QDialog {
 
 	// engine info
 	QList< Engine > & engines;
-	ObjectListROModel< Engine, makeEngineUITextWithPath > engineModel;  ///< read-only view model, list content is changed by buttons
+	ReadOnlyListModel< Engine > engineModel;  ///< read-only view model, list content is changed by buttons
 
 	// IWAD info
 	QList< IWAD > & iwads;
-	ObjectListROModel< IWAD, makeIwadUITextWithPath > iwadModel;  ///< read-only view model, list content is changed by buttons
+	ReadOnlyListModel< IWAD > iwadModel;  ///< read-only view model, list content is changed by buttons
 	bool & iwadListFromDir;
 	QString & iwadDir;
 

@@ -20,5 +20,7 @@ using uint = unsigned int;
 using ushort = unsigned short;
 using byte = uint8_t;
 
+//using namespace std;  // we're working with Qt, so not a good idea
+
 
 #endif // COMMON_INCLUDED

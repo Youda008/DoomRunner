@@ -15,8 +15,6 @@
 #include "JsonHelper.hpp"
 #include "Utils.hpp"
 
-#include <cstdio>
-
 #include <QString>
 #include <QTextStream>
 #include <QFile>
@@ -34,6 +32,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+#include <QDebug>
 
 
 //======================================================================================================================
@@ -89,12 +88,12 @@ MainWindow::MainWindow()
 	, height( -1 )
 	, tickCount( 0 )
 	, pathHelper( false )
-	, engineModel( engines )
-	, iwadModel( iwads )
+	, engineModel( engines, []( const Engine & engine ) { return engine.name; } )
+	, iwadModel( iwads, []( const IWAD & iwad ) { return iwad.name; } )
 	, iwadListFromDir( false )
-	, mapModel( maps )
+	, mapModel( maps, []( const MapPack & pack ) { return pack.name; } )
 	, selectedPackIdx( -1 )
-	, presetModel( presets )
+	, presetModel( presets, []( Preset & preset ) -> QString & { return preset.name; } )
 	, dmflags1( 0 )
 	, dmflags2( 0 )
 	, compatflags1( 0 )
@@ -108,6 +107,12 @@ MainWindow::MainWindow()
 	ui->presetListView->setModel( &presetModel );
 	ui->iwadListView->setModel( &iwadModel );
 	ui->mapListView->setModel( &mapModel );
+
+	// setup drag&drop-capable widgets
+	ui->presetListView->toggleNameEditing( true );
+	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
+	ui->presetListView->toggleInterWidgetDragAndDrop( false );
+	ui->presetListView->toggleExternalFileDragAndDrop( false );
 
 	// setup signals
 	connect( ui->setupPathsAction, &QAction::triggered, this, &thisClass::runSetupDialog );
@@ -157,10 +162,11 @@ MainWindow::MainWindow()
 	connect( ui->cmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateAdditionalArgs );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
 
-	// setup drag&drop
 	ui->modList->setDragEnabled( true );
 	ui->modList->setAcceptDrops( true );
 	ui->modList->setDropIndicatorShown( true );
+	ui->modList->setDragDropMode( QAbstractItemView::InternalMove );
+	ui->modList->setDefaultDropAction( Qt::MoveAction );
 	connect( ui->modList, &FileSystemDnDListWidget::fileSystemPathDropped, this, &thisClass::addModByPath );
 
 	// try to load last saved state

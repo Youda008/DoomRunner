@@ -46,12 +46,9 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_4">
              <item>
-              <widget class="QListView" name="presetListView">
-               <property name="dragDropMode">
-                <enum>QAbstractItemView::InternalMove</enum>
-               </property>
-               <property name="defaultDropAction">
-                <enum>Qt::MoveAction</enum>
+              <widget class="EditableListView" name="presetListView">
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
                </property>
               </widget>
              </item>
@@ -171,7 +168,11 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_5">
              <item>
-              <widget class="QListView" name="iwadListView"/>
+              <widget class="QListView" name="iwadListView">
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -183,7 +184,11 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_7">
              <item>
-              <widget class="QListView" name="mapListView"/>
+              <widget class="QListView" name="mapListView">
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -200,11 +205,8 @@
             <layout class="QVBoxLayout" name="verticalLayout_6">
              <item>
               <widget class="FileSystemDnDListWidget" name="modList">
-               <property name="dragDropMode">
-                <enum>QAbstractItemView::InternalMove</enum>
-               </property>
-               <property name="defaultDropAction">
-                <enum>Qt::MoveAction</enum>
+               <property name="editTriggers">
+                <set>QAbstractItemView::NoEditTriggers</set>
                </property>
               </widget>
              </item>
@@ -1096,7 +1098,7 @@
      <x>0</x>
      <y>0</y>
      <width>647</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuItemMenu">
@@ -1137,6 +1139,11 @@
    <class>FileSystemDnDListWidget</class>
    <extends>QListWidget</extends>
    <header location="global">Sources/FileSystemDnDListWidget.hpp</header>
+  </customwidget>
+  <customwidget>
+   <class>EditableListView</class>
+   <extends>QListView</extends>
+   <header location="global">Sources/EditableListView.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>

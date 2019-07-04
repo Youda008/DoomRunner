@@ -27,6 +27,7 @@ CONFIG += c++14
 SOURCES += \
     Sources/CompatFlagsDialog.cpp \
     Sources/DMFlagsDialog.cpp \
+    Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
     Sources/FileSystemDnDListWidget.cpp \
     Sources/ItemModels.cpp \
@@ -41,6 +42,7 @@ HEADERS += \
     Sources/Common.hpp \
     Sources/CompatFlagsDialog.hpp \
     Sources/DMFlagsDialog.hpp \
+    Sources/EditableListView.hpp \
     Sources/EngineDialog.hpp \
     Sources/FileSystemDnDListWidget.hpp \
     Sources/ItemModels.hpp \

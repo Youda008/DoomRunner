@@ -38,9 +38,12 @@ bool containsSuch( const QList< Type > & list, std::function< bool ( const Type 
 template< typename Type >
 int findSuch( const QList< Type > & list, std::function< bool ( const Type & elem ) > condition )
 {
-	for (int i = 0; i < list.count(); i++)
-		if (condition( list[i] ))
+	int i = 0;
+	for (const Type & elem : list) {
+		if (condition( elem ))
 			return i;
+		i++;
+	}
 	return -1;
 }
 

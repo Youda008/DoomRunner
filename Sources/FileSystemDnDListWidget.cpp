@@ -4,7 +4,7 @@
 // Author:      Jan Broz (Youda008)
 // Created on:  21.5.2019
 // Description: specialized list widget accepting drops of file system paths
-//              inspired by github.com/Hypnotoad90/RocketLauncher2/blob/master/FileSystemDnDListWidget.h
+//              inspired by github.com/Hypnotoad90/RocketLauncher2/blob/master/dndfilesystemlistview.h
 //======================================================================================================================
 
 #include "FileSystemDnDListWidget.hpp"
@@ -21,10 +21,20 @@ void FileSystemDnDListWidget::dragEnterEvent( QDragEnterEvent * event )
 	if (event->mimeData()->hasUrls()) {
 		event->acceptProposedAction();
 	} else if (event->source() != this) {
-		event->setDropAction( Qt::CopyAction );
-		event->accept();
+		event->acceptProposedAction();
 	} else {
 		QListWidget::dragEnterEvent( event );
+	}
+}
+
+void FileSystemDnDListWidget::dragMoveEvent( QDragMoveEvent * event )
+{
+	if (event->mimeData()->hasUrls()) {
+		event->acceptProposedAction();
+	} else if (event->source() != this) {
+		event->acceptProposedAction();
+	} else {
+		QListWidget::dragMoveEvent( event );
 	}
 }
 

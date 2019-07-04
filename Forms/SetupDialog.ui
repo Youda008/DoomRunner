@@ -28,7 +28,11 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QListView" name="engineListView"/>
+           <widget class="QListView" name="engineListView">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -237,7 +241,11 @@
            </layout>
           </item>
           <item>
-           <widget class="QListView" name="iwadListView"/>
+           <widget class="QListView" name="iwadListView">
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">

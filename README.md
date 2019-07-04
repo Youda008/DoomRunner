@@ -20,4 +20,5 @@ Currently the launcher is still work-in-progress. Some features are not finished
 
 ## Download (alpha version)
 Currently i have pre-built executables only for Windows. There is a statically linked version and dynamically linked version. The static one is bigger, but it's a standalone portable executable that should run on any computer. Download the dynamic version ONLY if you already have Msys2 with Qt installed, otherwise grab the static one.
-TODO: link
+
+Download it [here](https://github.com/Youda008/DoomRunner/releases)

@@ -51,12 +51,14 @@ int findSuch( const QList< Type > & list, std::function< bool ( const Type & ele
 //======================================================================================================================
 //  list view helpers
 
-// all these functions assume lists in single-selection mode
+// all of these function assume a 1-dimensional non-recursive list view/widget
 
+/// assumes a single-selection mode, will throw a message box error otherwise
 int getSelectedItemIdx( QListView * view );
+
 void selectItemByIdx( QListView * view, int index );
 void deselectItemByIdx( QListView * view, int index );
-void deselectSelectedItem( QListView * view );
+void deselectSelectedItems( QListView * view );
 void changeSelectionTo( QListView * view, int index );
 
 template< typename Object >
@@ -64,23 +66,19 @@ void appendItem( QListView * view, AObjectListModel< Object > & model, const Obj
 {
 	model.list().append( item );
 
-	// change the selection to the new item
-	int selectedIdx = getSelectedItemIdx( view );
-	if (selectedIdx >= 0)   // deselect currently selected item, if any
-		deselectItemByIdx( view, selectedIdx );
-	selectItemByIdx( view, model.list().size() - 1 );
+	changeSelectionTo( view, model.list().size() - 1 );
 
-	model.updateUI( 0 );
+	model.updateUI( model.list().size() - 1 );
 }
 
 template< typename Object >
-void deleteSelectedItem( QListView * view, AObjectListModel< Object > & model )
+int deleteSelectedItem( QListView * view, AObjectListModel< Object > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
 	if (selectedIdx < 0) {  // if no item is selected
 		if (!model.list().isEmpty())
 			QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
-		return;
+		return -1;
 	}
 
 	// update selection
@@ -94,18 +92,20 @@ void deleteSelectedItem( QListView * view, AObjectListModel< Object > & model )
 	model.list().removeAt( selectedIdx );
 
 	model.updateUI( selectedIdx );
+
+	return selectedIdx;
 }
 
 template< typename Object >
-void moveUpSelectedItem( QListView * view, AObjectListModel< Object > & model )
+int moveUpSelectedItem( QListView * view, AObjectListModel< Object > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
 	if (selectedIdx < 0) {  // if no item is selected
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
-		return;
+		return -1;
 	}
 	if (selectedIdx == 0) {  // if the selected item is the first one, do nothing
-		return;
+		return selectedIdx;
 	}
 
 	model.list().move( selectedIdx, selectedIdx - 1 );
@@ -115,18 +115,20 @@ void moveUpSelectedItem( QListView * view, AObjectListModel< Object > & model )
 	selectItemByIdx( view, selectedIdx - 1 );
 
 	model.updateUI( selectedIdx - 1 );
+
+	return selectedIdx;
 }
 
 template< typename Object >
-void moveDownSelectedItem( QListView * view, AObjectListModel< Object > & model )
+int moveDownSelectedItem( QListView * view, AObjectListModel< Object > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
 	if (selectedIdx < 0) {  // if no item is selected
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
-		return;
+		return -1;
 	}
 	if (selectedIdx == model.list().size() - 1) {  // if the selected item is the last one, do nothing
-		return;
+		return selectedIdx;
 	}
 
 	model.list().move( selectedIdx, selectedIdx + 1 );
@@ -136,18 +138,9 @@ void moveDownSelectedItem( QListView * view, AObjectListModel< Object > & model 
 	selectItemByIdx( view, selectedIdx + 1 );
 
 	model.updateUI( selectedIdx );
+
+	return selectedIdx;
 }
-
-
-//======================================================================================================================
-//  list widget helpers
-
-// QListWidgets inherits from QListView, so for the rest we can use the functions above
-
-void appendItem( QListWidget * widget, const QString & text, bool checkable, Qt::CheckState initialState );
-void deleteSelectedItem( QListWidget * widget );
-void moveUpSelectedItem( QListWidget * widget );
-void moveDownSelectedItem( QListWidget * widget );
 
 
 //======================================================================================================================

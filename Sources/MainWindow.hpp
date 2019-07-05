@@ -19,7 +19,6 @@
 #include <QMainWindow>
 #include <QString>
 #include <QList>
-#include <QHash>
 
 class QListView;
 
@@ -43,9 +42,9 @@ class MainWindow : public QMainWindow {
 
  private:
 
-	virtual void closeEvent( QCloseEvent * event ) override;
-	virtual void timerEvent( QTimerEvent * event ) override;
 	virtual void showEvent( QShowEvent * event ) override;
+	virtual void timerEvent( QTimerEvent * event ) override;
+	virtual void closeEvent( QCloseEvent * event ) override;
 
  private slots:
 
@@ -58,18 +57,19 @@ class MainWindow : public QMainWindow {
 	void selectPreset( const QModelIndex & index );
 	void toggleIWAD( const QModelIndex & index );
 	void toggleMapPack( const QModelIndex & index );
-	void toggleMod( QListWidgetItem * item );
+	void toggleMod( const QModelIndex & index );
 
 	void presetAdd();
 	void presetDelete();
 	void presetMoveUp();
 	void presetMoveDown();
+	void presetDropped();
 
 	void modAdd();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
-	void addModByPath( QString path );
+	void modsDropped();
 
 	void updateIWADsFromDir();
 	void updateMapPacksFromDir();
@@ -154,12 +154,13 @@ class MainWindow : public QMainWindow {
 	int selectedPackIdx;    ///< which map pack was selected last (workaround to allow user to deselect map pack by clicking it again)
 
 	// mod info
-	struct ModInfo {
+	struct Mod {
+		QString name;
 		QString path;
+		bool checked;
 	};
-	// using model-view architecture with checkable items is too hard, TODO
-	// so we rather use list widget and map the string values from it into mod info struct
-	QHash< QString, ModInfo > modInfo;
+	QList< Mod > mods;
+	EditableListModel< Mod > modModel;
 	QString modDir;    ///< directory with mods, starting dir for "Add mod" dialog (value returned by SetupDialog)
 
 	// presets
@@ -168,12 +169,7 @@ class MainWindow : public QMainWindow {
 		QString selectedEnginePath;  // we store the engine by path, so that it does't break when user renames them or reorders them
 		QString selectedIWAD;  // we store the IWAD by name, so that it doesn't break when user reorders them
 		//QString selectedMapPack;
-		struct ModEntry {
-			QString name;
-			ModInfo info;
-			bool checked;
-		};
-		QList< ModEntry > mods;  // this list needs to be kept in sync with mod list widget
+		QList< Mod > mods;  // this list needs to be kept in sync with mod list widget
 	};
 	QList< Preset > presets;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 	EditableListModel< Preset > presetModel;    ///< wrapper around list of presets mediating their names to the editable preset list view

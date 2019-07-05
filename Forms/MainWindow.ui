@@ -204,9 +204,12 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
              <item>
-              <widget class="FileSystemDnDListWidget" name="modList">
+              <widget class="EditableListView" name="modListView">
                <property name="editTriggers">
                 <set>QAbstractItemView::NoEditTriggers</set>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::ContiguousSelection</enum>
                </property>
               </widget>
              </item>
@@ -1135,11 +1138,6 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
-  <customwidget>
-   <class>FileSystemDnDListWidget</class>
-   <extends>QListWidget</extends>
-   <header location="global">Sources/FileSystemDnDListWidget.hpp</header>
-  </customwidget>
   <customwidget>
    <class>EditableListView</class>
    <extends>QListView</extends>

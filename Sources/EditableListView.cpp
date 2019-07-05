@@ -104,12 +104,7 @@ void EditableListView::dragEnterEvent( QDragEnterEvent * event )
 	// QListView::dragEnterEvent in short:
 	// 1. if mode is InternalMove then discard events from external sources and copy actions
 	// 2. accept if event contains at leats one mime type present in model->mimeTypes or model->canDropMimeData
-
-	qDebug() << "EditableListView::dragEnterEvent";
-	qDebug() << "  action: " << event->dropAction();
-	//qDebug() << "  formats: ";
-	//for (QString format : event->mimeData()->formats())
-	//	qDebug() << "    " << format;
+	// We override it, so that we apply our own rules and restrictions for the drag&drop operation.
 
 	if (isDropAcceptable( event )) {  // does proposed drop operation comply with our settings?
 		superClass::dragEnterEvent( event );  // let it calc the index and query the model if the drop is ok there
@@ -124,8 +119,7 @@ void EditableListView::dragMoveEvent( QDragMoveEvent * event )
 	// 1. if mode is InternalMove then discard events from external sources and copy actions
 	// 2. accept if event contains at leats one mime type present in model->mimeTypes or model->canDropMimeData
 	// 3. draw drop indicator according to position
-
-	//qDebug() << "EditableListView::dragMoveEvent";
+	// We override it, so that we apply our own rules and restrictions for the drag&drop operation.
 
 	if (isDropAcceptable( event )) {  // does proposed drop operation comply with our settings?
 		superClass::dragMoveEvent( event );  // let it query the model if the drop is ok there and draw the indicator
@@ -142,6 +136,33 @@ void EditableListView::dropEvent( QDropEvent * event )
 	// 3. if model->dropMimeData then accept drop event
 
 	superClass::dropEvent( event );
+}
+
+void EditableListView::startDrag( Qt::DropActions supportedActions )
+{
+	// idiotic workaround because Qt is fucking retarded
+	//
+	// When an internal reordering drag&drop is performed, Qt doesn't update the selection and leaves the selection
+	// on the old indexes, where are now some completely different items.
+	// You can't manually update the indexes in dropEvent, because at some point after it Qt calls removeRows on items
+	// that are CURRENTLY SELECTED, instead of on items that were selected at the beginning of this drag&drop operation.
+	// So we must update the selection at some point AFTER the drag&drop operation is finished and the rows removed.
+	//
+	// QAbstractItemView::startDrag, despite its confusing name, is the common parent function for
+	// Model::dropMimeData and Model::removeRows both of which happen when items are dropped.
+	// So this is the right place to update the selection.
+	//
+	// But outside an item model, there is no information abouth the target drop index. So the model must write down
+	// the index and then let other classes retrieve it at the right time.
+	//
+	// And like it wasn't enough, we can't retrieve the drop index here, because we cannot cast our abstract model
+	// into the correct model, because it's a template class whose template parameter is not known here.
+	// So the only way is to emit a signal to the owner of this ListView, which then catches it, queries the model
+	// for a drop index and then performs the update.
+
+	superClass::startDrag( supportedActions );
+	// at this point the drag&drop should be finished and source rows removed, so we can safely update the selection
+	emit itemsDropped();
 }
 
 void EditableListView::toggleNameEditing( bool enabled )

@@ -29,10 +29,10 @@ class EditableListView : public QListView {
 
 	EditableListView( QWidget * parent );
 
-	/* We support 3 kinds of drag&drop operations, that can be separately enabled/disabled
-	 * 1. intra-widget d&d - drag&drop from inside this widget for manual reordering of items on the list
-	 * 2. inter-widget d&d - drag&drop from another widget for moving items between different widgets
-	 * 3. external file d&d - drag&drop from directory window for inserting file paths into the list */
+	// We support 3 kinds of drag&drop operations, that can be separately enabled/disabled
+	// 1. intra-widget d&d - drag&drop from inside this widget for manual reordering of items on the list
+	// 2. inter-widget d&d - drag&drop from another widget for moving items between different widgets
+	// 3. external file d&d - drag&drop from directory window for inserting file paths into the list
 
 	/** internal drag&drop for reordering items inside this widget, enabled by default */
 	void toggleIntraWidgetDragAndDrop( bool enabled );
@@ -51,6 +51,7 @@ class EditableListView : public QListView {
 	virtual void dragEnterEvent( QDragEnterEvent * event ) override;
 	virtual void dragMoveEvent( QDragMoveEvent * event ) override;
 	virtual void dropEvent( QDropEvent * event ) override;
+	virtual void startDrag(Qt::DropActions supportedActions) override;
 
 	/** update QAbstractItemView's properties based on our new settings */
 	void updateDragDropMode();
@@ -61,6 +62,10 @@ class EditableListView : public QListView {
 	bool isIntraWidgetDnD( QDragMoveEvent * event );
 	bool isInterWidgetDnD( QDragMoveEvent * event );
 	bool isExternFileDnD( QDragMoveEvent * event );
+
+ signals:
+
+	void itemsDropped();
 
  protected: // members
 

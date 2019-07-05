@@ -29,7 +29,6 @@ SOURCES += \
     Sources/DMFlagsDialog.cpp \
     Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
-    Sources/FileSystemDnDListWidget.cpp \
     Sources/ItemModels.cpp \
     Sources/JsonHelper.cpp \
     Sources/MainWindow.cpp \
@@ -44,7 +43,6 @@ HEADERS += \
     Sources/DMFlagsDialog.hpp \
     Sources/EditableListView.hpp \
     Sources/EngineDialog.hpp \
-    Sources/FileSystemDnDListWidget.hpp \
     Sources/ItemModels.hpp \
     Sources/JsonHelper.hpp \
     Sources/MainWindow.hpp \

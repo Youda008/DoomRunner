@@ -57,8 +57,8 @@ class AObjectListModel : public QAbstractListModel {
 	void updateUI( int changeBeginIdx, int changeEndIdx = -1 )
 	{
 		if (changeEndIdx < 0)
-			changeEndIdx = objectList.size() - 1;
-		emit dataChanged( createIndex( changeBeginIdx, 0 ), createIndex( changeEndIdx, 0 ), {Qt::DisplayRole} );
+			changeEndIdx = objectList.size();
+		emit dataChanged( createIndex( changeBeginIdx, 0 ), createIndex( changeEndIdx - 1, 0 ), {Qt::DisplayRole} );
 	}
 
 };
@@ -121,24 +121,37 @@ class EditableListModel : public AObjectListModel< Object > {
 	/// function that assigns a dropped file into a newly created Object
 	std::function< void	( Object &, const QFileInfo & ) > assignFile;
 
+	/// function that points the model to a bool flag of Object indicating whether the item is checked
+	std::function< bool & ( Object & ) > isChecked;
+
+	bool checkableItems;
+
  public:
 
 	EditableListModel( QList< Object > & objectList, std::function< QString & ( Object & ) > displayString )
-		: AObjectListModel<Object>( objectList ), displayString( displayString ) {}
+		: AObjectListModel<Object>( objectList ), displayString( displayString ), checkableItems( false ) {}
 
 	void setDisplayStringFunc( std::function< QString & ( Object & ) > displayString )
 		{ this->displayString = displayString; }
 	void setAssignFileFunc( std::function< void ( Object &, const QFileInfo & ) > assignFile )
 		{ this->assignFile = assignFile; }
+	void setIsCheckedFunc( std::function< bool & ( Object & ) > isChecked )
+		{ this->isChecked = isChecked; }
+	void toggleCheckable( bool enabled ) { checkableItems = enabled; }
 
 	Qt::ItemFlags flags( const QModelIndex & index ) const override
 	{
-		Qt::ItemFlags defaultFlags = QAbstractListModel::flags(index);
+		if (!index.isValid())
+			return Qt::ItemIsDropEnabled;
 
-		if (index.isValid())
-			return defaultFlags | Qt::ItemIsDragEnabled | Qt::ItemIsEditable;
-		else
-			return defaultFlags | Qt::ItemIsDropEnabled;
+		Qt::ItemFlags flags = QAbstractListModel::flags(index);
+
+		flags |= Qt::ItemIsDragEnabled;
+		flags |= Qt::ItemIsEditable;
+		if (checkableItems)
+			flags |= Qt::ItemIsUserCheckable;
+
+		return flags;
 	}
 
 	QVariant data( const QModelIndex & index, int role ) const override
@@ -146,26 +159,44 @@ class EditableListModel : public AObjectListModel< Object > {
 		if (index.parent().isValid() || !index.isValid() || index.row() >= superClass::objectList.size())
 			return QVariant();
 
-		if (role == Qt::DisplayRole || role == Qt::EditRole)
+		if (role == Qt::DisplayRole || role == Qt::EditRole) {
 			// This template class doesn't know about the structure of Object, it's supposed to be universal for any.
 			// Therefore only author of Object knows which of its memebers he wants to display in the widget,
 			// so he must specify it by a function.
 			return displayString( superClass::objectList[ index.row() ] );
-		else
+		} if (role == Qt::CheckStateRole && checkableItems) {
+			// Same as above, exept that this function is optional to ease up initializations of models
+			// that are supposed to be used in non-checkable widgets
+			if (!isChecked) {
+				qWarning() << "checkableItems has been set, but no isChecked function is specified. "
+				              "Either specify an isChecked function or disable disable checkable items.";
+				return QVariant();
+			} else {
+				return isChecked( superClass::objectList[ index.row() ] ) ? Qt::Checked : Qt::Unchecked;
+			}
+		} else {
 			return QVariant();
+		}
 	}
 
 	bool setData( const QModelIndex & index, const QVariant & value, int role ) override
 	{
-		qDebug() << "setData( row = " << index.row() << ", role = " << role << " )";
-
 		if (index.parent().isValid() || !index.isValid() || index.row() >= superClass::objectList.size())
 			return false;
 
 		if (role == Qt::DisplayRole || role == Qt::EditRole) {
 			displayString( superClass::objectList[ index.row() ] ) = value.toString();
-			emit superClass::dataChanged( index, index, {role} );
+			//emit superClass::dataChanged( index, index, {role} );
 			return true;
+		} else if (role == Qt::CheckStateRole && checkableItems) {
+			if (!isChecked) {
+				qWarning() << "checkableItems has been set, but no isChecked function is specified. "
+				              "Either specify an isChecked function or disable disable checkable items.";
+				return false;
+			} else {
+				isChecked( superClass::objectList[ index.row() ] ) = (value == Qt::Checked ? true : false );
+				return true;
+			}
 		} else {
 			return false;
 		}
@@ -173,10 +204,7 @@ class EditableListModel : public AObjectListModel< Object > {
 
 	bool insertRows( int row, int count, const QModelIndex & parent ) override
 	{
-		qDebug() << "insertRows( row = " << row << ", count = " << count << " )";
-
 		if (parent.isValid()) {
-			qDebug() << "parent index";
 			return false;
 		}
 
@@ -193,21 +221,24 @@ class EditableListModel : public AObjectListModel< Object > {
 
 	bool removeRows( int row, int count, const QModelIndex & parent ) override
 	{
-		qDebug() << "removeRows( row = " << row << ", count = " << count << " )";
-
 		if (parent.isValid() || row < 0 || row + count > superClass::objectList.size()) {
-			qDebug() << "invalid index";
 			return false;
 		}
 
 		QAbstractListModel::beginRemoveRows( parent, row, row + count - 1 );
 
-		for (int i = 0; i < count; i++)
+		// n times moving all the elements backward to insert one is not nice
+		// but it happens only once in awhile and the number of elements is almost always very low
+		for (int i = 0; i < count; i++) {
 			superClass::objectList.removeAt( row );
+			if (row < _droppedRow)  // we are removing a row that is before the target row
+				_droppedRow--;      // so target row's index is moving backwards
+		}
 
 		QAbstractListModel::endRemoveRows();
 		return true;
 	}
+
 
 	Qt::DropActions supportedDropActions() const override
 	{
@@ -252,8 +283,6 @@ class EditableListModel : public AObjectListModel< Object > {
 			rawData++;
 		}
 
-		qDebug() << "mimeData: row " << indexes[0].row();
-
 		mimeData->setData( internalMimeType, encodedData );
 		return mimeData;
 	}
@@ -261,8 +290,6 @@ class EditableListModel : public AObjectListModel< Object > {
 	/// deserializes items from MIME data and inserts them before <row>
 	bool dropMimeData( const QMimeData * mime, Qt::DropAction action, int row, int, const QModelIndex & parent ) override
 	{
-		qDebug() << "dropMimeData: row = " << row;
-
 		// in edge cases always append to the end of the list
 		if (row < 0 || row > superClass::objectList.size())
 			row = superClass::objectList.size();
@@ -301,7 +328,7 @@ class EditableListModel : public AObjectListModel< Object > {
 			origObjectRefs.append( &superClass::objectList[ origIndex ] );
 		}
 
-		// allocate space to move the items to
+		// allocate space for the items to move to
 		insertRows( row, count, parent );
 
 		// move the original items to the target position
@@ -309,8 +336,19 @@ class EditableListModel : public AObjectListModel< Object > {
 			superClass::objectList[ row + i ] = std::move( *origObjectRefs[i] );
 		}
 
-		// don't remove the old rows by calling removeRows because the caller of dropMimeData removes them after this
-		// kinda strange design decision, but we have to deal with it
+		// idiotic workaround because Qt is fucking retarded
+		//
+		// When an internal reordering drag&drop is performed, Qt doesn't update the selection and leaves the selection
+		// on the old indexes, where are now some completely different items.
+		// You can't manually update the indexes here, because at some point after dropMimeData Qt calls removeRows on items
+		// that are CURRENTLY SELECTED, instead of on items that were selected at the beginning of this drag&drop operation.
+		// So we must update the selection at some point AFTER the drag&drop operation is finished and the rows removed.
+		//
+		// But outside an item model, there is no information abouth the target drop index. So we must write down
+		// the index here and then let other classes retrieve it at the right time.
+		_dropped = true;
+		_droppedRow = row;
+		_droppedCount = count;
 
 		return true;
 	}
@@ -322,6 +360,10 @@ class EditableListModel : public AObjectListModel< Object > {
 			              "Either specify an assignFile function or disable file dropping in the widget";
 			return false;
 		}
+
+		// idiotic workaround because Qt is fucking retarded, read the big comment above
+		_droppedRow = row;
+		_droppedCount = 0;
 
 		for (const QUrl & droppedUrl : urls)
 		{
@@ -338,10 +380,27 @@ class EditableListModel : public AObjectListModel< Object > {
 			// Therefore only author of Object knows how to assign a dropped file into it, so he must define it by a function.
 			assignFile( superClass::objectList[ row ], fileInfo );
 			row++;
+			_droppedCount++;
 		}
+
+		_dropped = true;
 
 		return true;
 	}
+
+ protected:
+
+	// idiotic workaround because Qt is fucking retarded, read the big comment above
+
+	bool _dropped;
+	int _droppedRow;
+	int _droppedCount;
+
+ public:
+
+	bool wasDroppedInto() { bool d = _dropped; _dropped = false; return d; }
+	int droppedRow() const { return _droppedRow; }
+	int droppedCount() const { return _droppedCount; }
 
 };
 

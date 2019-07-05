@@ -23,8 +23,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QListWidgetItem>
-#include <QHash>
-//#include <QSet>
 #include <QTimer>
 #include <QProcess>
 #include <QDesktopWidget>
@@ -32,6 +30,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+
 #include <QDebug>
 
 
@@ -79,6 +78,7 @@ enum GameMode {
 
 
 //======================================================================================================================
+//  MainWindow
 
 MainWindow::MainWindow()
 
@@ -93,6 +93,7 @@ MainWindow::MainWindow()
 	, iwadListFromDir( false )
 	, mapModel( maps, []( const MapPack & pack ) { return pack.name; } )
 	, selectedPackIdx( -1 )
+	, modModel( mods, []( Mod & mod ) -> QString & { return mod.name; } )
 	, presetModel( presets, []( Preset & preset ) -> QString & { return preset.name; } )
 	, dmflags1( 0 )
 	, dmflags2( 0 )
@@ -107,12 +108,33 @@ MainWindow::MainWindow()
 	ui->presetListView->setModel( &presetModel );
 	ui->iwadListView->setModel( &iwadModel );
 	ui->mapListView->setModel( &mapModel );
+	ui->modListView->setModel( &modModel );
 
-	// setup drag&drop-capable widgets
-	ui->presetListView->toggleNameEditing( true );
+	// setup preset list view
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
+	connect( ui->presetListView, &EditableListView::itemsDropped, this, &thisClass::presetDropped );
+	ui->presetListView->toggleNameEditing( true );
+
+	// setup mod list view
+	ui->modListView->toggleIntraWidgetDragAndDrop( true );
+	ui->modListView->toggleInterWidgetDragAndDrop( false );
+	ui->modListView->toggleExternalFileDragAndDrop( true );
+	connect( ui->modListView, &EditableListView::itemsDropped, this, &thisClass::modsDropped );
+	ui->modListView->toggleNameEditing( false );
+	modModel.setAssignFileFunc(  // this will be our reaction when a file is dragged and dropped from a directory window
+		[this]( Mod & mod, const QFileInfo & file ) {
+			mod.name = file.fileName();
+			mod.path = this->pathHelper.convertPath( file.filePath() );
+		}
+	);
+	modModel.setIsCheckedFunc(  // here the model will read and write the information about check state
+		[]( Mod & mod ) -> bool & {
+			return mod.checked;
+		}
+	);
+	modModel.toggleCheckable( true );  // allow user to check/uncheck each item in the list
 
 	// setup signals
 	connect( ui->setupPathsAction, &QAction::triggered, this, &thisClass::runSetupDialog );
@@ -124,7 +146,7 @@ MainWindow::MainWindow()
 	connect( ui->presetListView, &QListView::clicked, this, &thisClass::selectPreset );
 	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::toggleIWAD );
 	connect( ui->mapListView, &QListView::clicked, this, &thisClass::toggleMapPack );
-	connect( ui->modList, &QListWidget::itemChanged, this, &thisClass::toggleMod );
+	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
 
 	connect( ui->presetBtnAdd, &QPushButton::clicked, this, &thisClass::presetAdd );
 	connect( ui->presetBtnDel, &QPushButton::clicked, this, &thisClass::presetDelete );
@@ -162,13 +184,6 @@ MainWindow::MainWindow()
 	connect( ui->cmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateAdditionalArgs );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
 
-	ui->modList->setDragEnabled( true );
-	ui->modList->setAcceptDrops( true );
-	ui->modList->setDropIndicatorShown( true );
-	ui->modList->setDragDropMode( QAbstractItemView::InternalMove );
-	ui->modList->setDefaultDropAction( Qt::MoveAction );
-	connect( ui->modList, &FileSystemDnDListWidget::fileSystemPathDropped, this, &thisClass::addModByPath );
-
 	// try to load last saved state
 	if (QFileInfo( defaultOptionsFile ).exists())
 		loadOptions( defaultOptionsFile );
@@ -197,7 +212,7 @@ MainWindow::~MainWindow()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  slots
+//  dialogs
 
 void MainWindow::runSetupDialog()
 {
@@ -231,24 +246,16 @@ void MainWindow::runCompatFlagsDialog()
 	//generateLaunchCommand();
 }
 
-void MainWindow::selectEngine( int index )
-{
-	// update the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].selectedEnginePath = engines[ index ].path;
-	}
 
-	updateSaveFilesFromDir();
-
-	generateLaunchCommand();
-}
+//----------------------------------------------------------------------------------------------------------------------
+//  list item selection
 
 void MainWindow::selectPreset( const QModelIndex & index )
 {
 	Preset & preset = presets[ index.row() ];
 
 	// restore selected engine
+	ui->engineCmbBox->setCurrentIndex( -1 );  // deselect current engine
 	if (!preset.selectedEnginePath.isEmpty()) {  // the engine combo box might have been empty when creating this preset
 		int engineIdx = findSuch<Engine>( engines, [ &preset ]( const Engine & engine )
 		                                  { return engine.path == preset.selectedEnginePath; } );
@@ -261,7 +268,7 @@ void MainWindow::selectPreset( const QModelIndex & index )
 	}
 
 	// restore selected IWAD
-	deselectSelectedItem( ui->iwadListView );
+	deselectSelectedItems( ui->iwadListView );
 	selectedIWADIdx = -1;
 	if (!preset.selectedIWAD.isEmpty()) {  // the IWAD may have not been selected when creating this preset
 		int iwadIdx = findSuch<IWAD>( iwads, [ &preset ]( const IWAD & iwad ) { return iwad.name == preset.selectedIWAD; } );
@@ -277,6 +284,7 @@ void MainWindow::selectPreset( const QModelIndex & index )
 /*
 	// restore selected MapPack
 	deselectSelectedItem( ui->mapListView );
+	selectedPackIdx = -1;
 	if (!preset.selectedMapPack.isEmpty()) {  // the map pack may have not been selected when creating this preset
 		int mapIdx = findSuch<MapPack>( maps, [ &preset ]( const MapPack & pack ) { return pack.name == preset.selectedMapPack; } );
 		if (mapIdx >= 0) {
@@ -289,28 +297,40 @@ void MainWindow::selectPreset( const QModelIndex & index )
 	}
 */
 	// restore list of mods
-	ui->modList->clear();
-	modInfo.clear();
-	for (auto modIt = preset.mods.begin(); modIt != preset.mods.end(); )
+	deselectSelectedItems( ui->modListView );
+	mods.clear();
+	for (auto modIt = preset.mods.begin(); modIt != preset.mods.end(); )  // need iterator, so that we can erase non-existing
 	{
-		const Preset::ModEntry & mod = *modIt;
+		const Mod & mod = *modIt;
 
-		if (!QFileInfo( mod.info.path ).exists()) {
+		if (!QFileInfo( mod.path ).exists()) {
 			QMessageBox::warning( this, "Mod no longer exists",
-				"A mod from the preset ("%mod.info.path%") no longer exists. It will be removed from the list." );
+				"A mod from the preset ("%mod.path%") no longer exists. It will be removed from the list." );
 			modIt = preset.mods.erase( modIt );  // keep the list widget in sync with the preset list
 			continue;
 		}
 
-		modInfo[ mod.name ] = { mod.info.path };
-		QListWidgetItem * item = new QListWidgetItem();
-		item->setData( Qt::DisplayRole, mod.name );
-		item->setFlags( item->flags() | Qt::ItemFlag::ItemIsUserCheckable );
-		item->setCheckState( mod.checked ? Qt::Checked : Qt::Unchecked );
-		ui->modList->addItem( item );
-
+		mods.append( mod );
 		modIt++;
 	}
+	modModel.updateUI(0);
+
+	generateLaunchCommand();
+}
+
+void MainWindow::selectEngine( int index )
+{
+	if (index < 0) {  // engine combo box was reset to "no engine selected" state
+		return;
+	}
+
+	// update the current preset
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx >= 0) {
+		presets[ selectedPresetIdx ].selectedEnginePath = engines[ index ].path;
+	}
+
+	updateSaveFilesFromDir();
 
 	generateLaunchCommand();
 }
@@ -363,39 +383,39 @@ void MainWindow::toggleMapPack( const QModelIndex & index )
 	generateLaunchCommand();
 }
 
-void MainWindow::toggleMod( QListWidgetItem * item )
+void MainWindow::toggleMod( const QModelIndex & modIndex )
 {
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		// the item doesn't know its index in the list widget
-		for (int i = 0; i < ui->modList->count(); i++)
-			if (ui->modList->item(i) == item)
-				presets[ selectedPresetIdx ].mods[i].checked = item->checkState() == Qt::Checked;
+		presets[ selectedPresetIdx ].mods[ modIndex.row() ].checked = mods[ modIndex.row() ].checked;
 	}
 
 	generateLaunchCommand();
 }
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  preset list manipulation
 
 void MainWindow::presetAdd()
 {
   static uint presetNum = 1;
 
 	// clear the widgets displaying preset content
-	deselectSelectedItem( ui->iwadListView );
+	ui->engineCmbBox->setCurrentIndex( -1 );
+	deselectSelectedItems( ui->iwadListView );
 	selectedIWADIdx = -1;
 	//deselectSelectedItem( ui->mapListView );
 	//selectedPackIdx = -1;
-	ui->modList->clear();
+	deselectSelectedItems( ui->modListView );
+	mods.clear();
+	modModel.updateUI(0);
 
-	// create it with the currently selected engine
-	QString currentEngine = "";
-	int engineIdx = ui->engineCmbBox->currentIndex();
-	if (engineIdx >= 0)  // engine might not have been selected yet
-		currentEngine = engines[ engineIdx ].path;
+	// appends, changes selection and updates UI
+	appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum ), "", "", {} } );
 
-	appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum ), currentEngine, "", {} } );
-
+	// open edit mode so that user can name the preset
 	ui->presetListView->edit( presetModel.index( presets.count() - 1, 0 ) );
 
 	presetNum++;
@@ -416,40 +436,43 @@ void MainWindow::presetMoveDown()
 	moveDownSelectedItem( ui->presetListView, presetModel );
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
+//  mod list manipulation
+
 void MainWindow::modAdd()
 {
 	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modDir );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
-	addModByPath( path );
+	QString name = QFileInfo( path ).fileName();
+
+	// the path comming out of the file dialog is always absolute
+	if (pathHelper.useRelativePaths())
+		path = pathHelper.getRelativePath( path );
+
+	appendItem( ui->modListView, modModel, { name, path, true } );
+
+	// add it also to the current preset
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx >= 0) {
+		presets[ selectedPresetIdx ].mods.append({ name, path, true });
+	}
+
+	generateLaunchCommand();
 }
 
 void MainWindow::modDelete()
 {
-	int selectedModIdx = getSelectedItemIdx( ui->modList );
-	if (selectedModIdx < 0) {  // if no item is selected
-		if (ui->modList->count() > 0)
-			QMessageBox::warning( this, "No item selected", "No item is selected." );
+	int deletedModIdx = deleteSelectedItem( ui->modListView, modModel );
+	if (deletedModIdx < 0)  // no item was selected
 		return;
-	}
-
-	// update selection
-	if (selectedModIdx == ui->modList->count() - 1) {            // if item is the last one
-		deselectItemByIdx( ui->modList, selectedModIdx );        // deselect it
-		if (selectedModIdx > 0) {                                // and if it's not the only one
-			selectItemByIdx( ui->modList, selectedModIdx - 1 );  // select the previous
-		}
-	}
-
-	// remove it from the list widget
-	modInfo.remove( ui->modList->item( selectedModIdx )->text() );
-	delete ui->modList->takeItem( selectedModIdx );
 
 	// remove it also from the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].mods.removeAt( selectedModIdx );
+		presets[ selectedPresetIdx ].mods.removeAt( deletedModIdx );
 	}
 
 	generateLaunchCommand();
@@ -457,22 +480,9 @@ void MainWindow::modDelete()
 
 void MainWindow::modMoveUp()
 {
-	int selectedModIdx = getSelectedItemIdx( ui->modList );
-	if (selectedModIdx < 0) {  // if no item is selected
-		QMessageBox::warning( ui->modList->parentWidget(), "No item selected", "No item is selected." );
+	int selectedModIdx = moveUpSelectedItem( ui->modListView, modModel );
+	if (selectedModIdx <= 0)  // no item was selected or it was the topmost one
 		return;
-	}
-	if (selectedModIdx == 0) {  // if the selected item is the first one, do nothing
-		return;
-	}
-
-	// move it up in the list widget
-	QListWidgetItem * item = ui->modList->takeItem( selectedModIdx );
-	ui->modList->insertItem( selectedModIdx - 1, item );
-
-	// update selection
-	deselectSelectedItem( ui->modList );  // the list widget, when item is removed, automatically selects some other one
-	selectItemByIdx( ui->modList, selectedModIdx - 1 );
 
 	// move it up also in the preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
@@ -485,22 +495,9 @@ void MainWindow::modMoveUp()
 
 void MainWindow::modMoveDown()
 {
-	int selectedModIdx = getSelectedItemIdx( ui->modList );
-	if (selectedModIdx < 0) {  // if no item is selected
-		QMessageBox::warning( ui->modList->parentWidget(), "No item selected", "No item is selected." );
+	int selectedModIdx = moveDownSelectedItem( ui->modListView, modModel );
+	if (selectedModIdx < 0 || selectedModIdx == mods.size() - 1)  // no item was selected or it was the lowest one
 		return;
-	}
-	if (selectedModIdx == ui->modList->count() - 1) {  // if the selected item is the last one, do nothing
-		return;
-	}
-
-	// move it down in the list widget
-	QListWidgetItem * item = ui->modList->takeItem( selectedModIdx );
-	ui->modList->insertItem( selectedModIdx + 1, item );
-
-	// update selection
-	deselectSelectedItem( ui->modList );  // the list widget, when item is removed, automatically selects some other one
-	selectItemByIdx( ui->modList, selectedModIdx + 1 );
 
 	// move it down also in the preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
@@ -511,31 +508,55 @@ void MainWindow::modMoveDown()
 	generateLaunchCommand();
 }
 
-void MainWindow::addModByPath( QString path )
+// idiotic workaround because Qt is fucking retarded
+//
+// When an internal reordering drag&drop is performed, Qt doesn't update the selection and leaves the selection
+// on the old indexes, where are now some completely different items.
+// You can't manually update the indexes in the view, because at some point after dropMimeData Qt calls removeRows on items
+// that are CURRENTLY SELECTED, instead of on items that were selected at the beginning of this drag&drop operation.
+// So we must update the selection at some point AFTER the drag&drop operation is finished and the rows removed.
+//
+// The right place is in overriden method QAbstractItemView::startDrag.
+// But outside an item model, there is no information abouth the target drop index. So the model must write down
+// the index and then let other classes retrieve it at the right time.
+//
+// And like it wasn't enough, we can't retrieve the drop index in the view, because we cannot cast its abstract model
+// into the correct model, because it's a template class whose template parameter is not known there.
+// So the only way is to emit a signal to the owner of the ListView (MainWindow), which then catches it,
+// queries the model for a drop index and then performs the update.
+//
+// Co-incidentally, this also solves the problem, that when items are dropped into a mod list, we need to update
+// the current preset.
+void MainWindow::presetDropped()
 {
-	QString name = QFileInfo( path ).fileName();
-
-	// the path comming out of the file dialog and drops is always absolute
-	if (pathHelper.useRelativePaths())
-		path = pathHelper.getRelativePath( path );
-
-	modInfo[ name ] = { path };
-
-	// add it to the list widget
-	QListWidgetItem * item = new QListWidgetItem();
-	item->setData( Qt::DisplayRole, name );
-	item->setFlags( item->flags() | Qt::ItemFlag::ItemIsUserCheckable );
-	item->setCheckState( Qt::Checked );
-	ui->modList->addItem( item );
-
-	// add it also to the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].mods.append({ name, {path}, true });
+	if (presetModel.wasDroppedInto()) {
+		// finaly update the selection
+		int row = presetModel.droppedRow();
+		deselectSelectedItems( ui->presetListView );
+		selectItemByIdx( ui->presetListView, row );
 	}
-
-	generateLaunchCommand();
 }
+
+void MainWindow::modsDropped()
+{
+	if (modModel.wasDroppedInto()) {
+		// finaly update the selection
+		int row = modModel.droppedRow();
+		int count = modModel.droppedCount();
+		deselectSelectedItems( ui->modListView );
+		for (int i = 0; i < count; i++)
+			selectItemByIdx( ui->modListView, row + i );
+
+		// update the preset
+		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+		if (selectedPresetIdx >= 0) {
+			presets[ selectedPresetIdx ].mods = mods; // not the most optimal way, but the size of the list is always low
+		}
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//  automatic list updates according to directory content
 
 void MainWindow::updateIWADsFromDir()
 {
@@ -573,8 +594,9 @@ void MainWindow::updateMapPacksFromDir()
 
 void MainWindow::updateSaveFilesFromDir()
 {
-	if (ui->engineCmbBox->currentIndex() < 0)
+	if (ui->engineCmbBox->currentIndex() < 0) {  // no engine is selected
 		return;
+	}
 
 	QString curText = ui->saveFileCmbBox->currentText();
 
@@ -618,6 +640,7 @@ void MainWindow::updateMapsFromIWAD()
 
 void MainWindow::updateListsFromDirs()
 {
+	qDebug() << "updating lists";
 	if (iwadListFromDir) {
 		updateIWADsFromDir();
 		iwadModel.updateUI(0);
@@ -626,6 +649,10 @@ void MainWindow::updateListsFromDirs()
 	mapModel.updateUI(0);
 	updateSaveFilesFromDir();
 }
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  other options
 
 void MainWindow::toggleAbsolutePaths( bool absolute )
 {
@@ -644,12 +671,12 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 	mapDir = pathHelper.convertPath( mapDir );
 
 	modDir = pathHelper.convertPath( modDir );
-	for (ModInfo & info : modInfo)
-		info.path = pathHelper.convertPath( info.path );
+	for (Mod & mod : mods)
+		mod.path = pathHelper.convertPath( mod.path );
 
 	for (Preset & preset : presets)
-		for (Preset::ModEntry & entry : preset.mods)
-			entry.info.path = pathHelper.convertPath( entry.info.path );
+		for (Mod & mod : preset.mods)
+			mod.path = pathHelper.convertPath( mod.path );
 
 	generateLaunchCommand();
 }
@@ -806,7 +833,7 @@ void MainWindow::updateAdditionalArgs( QString )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  options
+//  saving & loading current options
 
 void MainWindow::saveOptions( QString fileName )
 {
@@ -836,7 +863,7 @@ void MainWindow::saveOptions( QString fileName )
 			jsPortArray.append( jsPort );
 		}
 		jsEngines["engines"] = jsPortArray;
-		jsEngines["selected"] = ui->engineCmbBox->currentIndex();
+		//jsEngines["selected"] = ui->engineCmbBox->currentIndex();
 
 		json["engines"] = jsEngines;
 	}
@@ -855,6 +882,7 @@ void MainWindow::saveOptions( QString fileName )
 			jsIWADArray.append( jsIWAD );
 		}
 		jsIWADs["IWADs"] = jsIWADArray;
+		//jsIWADs["selected"] = selectedIWADIdx >= 0 ? iwads[ selectedIWADIdx ].name : "";
 
 		json["IWADs"] = jsIWADs;
     }
@@ -885,11 +913,11 @@ void MainWindow::saveOptions( QString fileName )
 			jsPreset["selectedIWAD"] = preset.selectedIWAD;
 			//jsPreset["selectedMapPack"] = preset.selectedMapPack;
 			QJsonArray jsModArray;
-			for (const Preset::ModEntry & entry : preset.mods) {
+			for (const Mod & mod : preset.mods) {
 				QJsonObject jsMod;
-				jsMod["name"] = entry.name;
-				jsMod["path"] = entry.info.path;
-				jsMod["checked"] = entry.checked;
+				jsMod["name"] = mod.name;
+				jsMod["path"] = mod.path;
+				jsMod["checked"] = mod.checked;
 				jsModArray.append( jsMod );
 			}
 			jsPreset["mods"] = jsModArray;
@@ -943,7 +971,9 @@ void MainWindow::loadOptions( QString fileName )
 	{
 		QJsonObject jsEngines = getObject( json, "engines" );
 
+		ui->engineCmbBox->setCurrentIndex( -1 );
 		engines.clear();
+
 		QJsonArray jsEngineArray = getArray( jsEngines, "engines" );
 		for (int i = 0; i < jsEngineArray.size(); i++)
 		{
@@ -962,31 +992,33 @@ void MainWindow::loadOptions( QString fileName )
 				QMessageBox::warning( this, "Engine no longer exists",
 					"An engine from the saved options ("%path%") no longer exists. It will be removed from the list." );
 		}
+
 		engineModel.updateUI(0);
-		ui->engineCmbBox->setCurrentIndex( getInt( jsEngines, "selected", 0 ) );
 	}
 
 	// IWADS
 	{
 		QJsonObject jsIWADs = getObject( json, "IWADs" );
 
+		deselectSelectedItems( ui->iwadListView );
+		selectedIWADIdx = -1;
+		iwads.clear();
+
 		iwadListFromDir = getBool( jsIWADs, "auto_update", false );
 
 		if (iwadListFromDir) {
 			QString dir = getString( jsIWADs, "directory" );
 			if (!dir.isEmpty()) {  // non-existing element directory - skip completely
-				if (QDir( dir ).exists())
+				if (QDir( dir ).exists()) {
 					iwadDir = dir;
-				else
+					updateIWADsFromDir();
+				} else {
 					QMessageBox::warning( this, "IWAD dir no longer exists",
 						"IWAD directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
-				updateIWADsFromDir();
+				}
 			}
 		} else {
 			QJsonArray jsIWADArray = getArray( jsIWADs, "IWADs" );
-			deselectSelectedItem( ui->iwadListView );
-			selectedIWADIdx = -1;
-			iwads.clear();
 			for (int i = 0; i < jsIWADArray.size(); i++)
 			{
 				QJsonObject jsIWAD = getObject( jsIWADArray, i );
@@ -1012,19 +1044,31 @@ void MainWindow::loadOptions( QString fileName )
 	// map packs
 	{
 		QJsonObject jsMaps = getObject( json, "maps" );
+
+		deselectSelectedItems( ui->mapListView );
+		selectedPackIdx = -1;
+		maps.clear();
+
 		QString dir = getString( jsMaps, "directory" );
 		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
-			if (QDir( dir ).exists())
+			if (QDir( dir ).exists()) {
 				mapDir = dir;
-			else
+				updateMapPacksFromDir();
+			} else {
 				QMessageBox::warning( this, "Map dir no longer exists",
 					"Map directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
+			}
 		}
+
+		mapModel.updateUI(0);
 	}
 
 	// mods
 	{
 		QJsonObject jsMods = getObject( json, "mods" );
+
+		deselectSelectedItems( ui->modListView );
+
 		QString dir = getString( jsMods, "directory" );
 		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
 			if (QDir( dir ).exists())
@@ -1038,8 +1082,10 @@ void MainWindow::loadOptions( QString fileName )
 	// presets
 	{
 		QJsonArray jsPresetArray = getArray( json, "presets" );
-		deselectSelectedItem( ui->presetListView );
+
+		deselectSelectedItems( ui->presetListView );
 		presets.clear();
+
 		for (int i = 0; i < jsPresetArray.size(); i++)
 		{
 			QJsonObject jsPreset = getObject( jsPresetArray, i );
@@ -1058,15 +1104,16 @@ void MainWindow::loadOptions( QString fileName )
 				if (jsMod.isEmpty())  // wrong type on position i - skip this entry
 					continue;
 
-				Preset::ModEntry entry;
-				entry.name = getString( jsMod, "name" );
-				entry.info.path = getString( jsMod, "path" );
-				entry.checked = getBool( jsMod, "checked", false );
-				if (!entry.name.isEmpty() && !entry.info.path.isEmpty())
-					preset.mods.append( entry );
+				Mod mod;
+				mod.name = getString( jsMod, "name" );
+				mod.path = getString( jsMod, "path" );
+				mod.checked = getBool( jsMod, "checked", false );
+				if (!mod.name.isEmpty() && !mod.path.isEmpty())
+					preset.mods.append( mod );
 			}
 			presets.append( preset );
 		}
+
 		presetModel.updateUI(0);
 	}
 
@@ -1126,26 +1173,20 @@ void MainWindow::generateLaunchCommand()
 	int index;
 
 	index = ui->engineCmbBox->currentIndex();
-	if (index >= 0) {
+	if (index >= 0)
 		cmdStream << "\"" << engines[ index ].path << "\"";
-	}
 
 	index = getSelectedItemIdx( ui->iwadListView );
-	if (index >= 0) {
+	if (index >= 0)
 		cmdStream << " -iwad \"" << iwads[ index ].path << "\"";
-	}
 
 	index = getSelectedItemIdx( ui->mapListView );
-	if (index >= 0) {
+	if (index >= 0)
 		cmdStream << " -file \"" << QDir( mapDir ).filePath( maps[ index ].name ) << "\"";
-	}
 
-	for (int i = 0; i < ui->modList->count(); i++) {
-		QListWidgetItem * item = ui->modList->item(i);
-		if (item->checkState() == Qt::Checked) {
-			cmdStream << " -file \"" << modInfo[ item->text() ].path << "\"";
-		}
-	}
+	for (const Mod & mod : mods)
+		if (mod.checked)
+			cmdStream << " -file \"" << mod.path << "\"";
 
 	if (ui->launchMode_map->isChecked()) {
 		cmdStream << " -warp " << getMapNumber( ui->mapCmbBox->currentText() );
@@ -1208,9 +1249,8 @@ void MainWindow::generateLaunchCommand()
 		}
 	}
 
-	if (!ui->cmdArgsLine->text().isEmpty()) {
+	if (!ui->cmdArgsLine->text().isEmpty())
 		cmdStream << " " << ui->cmdArgsLine->text();
-	}
 
 	cmdStream.flush();
 	ui->commandLine->setText( command );

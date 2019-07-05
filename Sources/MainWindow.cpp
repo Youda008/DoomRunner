@@ -205,6 +205,26 @@ void MainWindow::showEvent( QShowEvent * )
 	shown = true;
 }
 
+void MainWindow::timerEvent( QTimerEvent * )  // called once per second
+{
+	tickCount++;
+
+	if (tickCount % 2 == 0) {
+		updateListsFromDirs();
+	}
+
+	if (tickCount % 60 == 0) {
+		saveOptions( defaultOptionsFile );
+	}
+}
+
+void MainWindow::closeEvent( QCloseEvent * event )
+{
+	saveOptions( defaultOptionsFile );
+
+	QWidget::closeEvent( event );
+}
+
 MainWindow::~MainWindow()
 {
 	delete ui;
@@ -1117,6 +1137,8 @@ void MainWindow::loadOptions( QString fileName )
 		presetModel.updateUI(0);
 	}
 
+	ui->cmdArgsLine->setText( getString( json, "additional_args" ) );
+
 	// launch options
 	dmflags1 = getUInt( json, "dmflags1", 0 );
 	dmflags2 = getUInt( json, "dmflags2", 0 );
@@ -1266,28 +1288,4 @@ void MainWindow::launch()
 	bool success = QProcess::startDetached( ui->commandLine->text() );
 	if (!success)
 		QMessageBox::warning( this, tr("Launch error"), tr("Failed to execute launch command.") );
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-//  events
-
-void MainWindow::closeEvent( QCloseEvent * event )
-{
-	saveOptions( defaultOptionsFile );
-
-	QWidget::closeEvent( event );
-}
-
-void MainWindow::timerEvent( QTimerEvent * )  // called once per second
-{
-	tickCount++;
-
-	if (tickCount % 2 == 0) {
-		updateListsFromDirs();
-	}
-
-	if (tickCount % 60 == 0) {
-		saveOptions( defaultOptionsFile );
-	}
 }

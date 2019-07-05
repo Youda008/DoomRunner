@@ -97,6 +97,29 @@ int deleteSelectedItem( QListView * view, AObjectListModel< Object > & model )
 }
 
 template< typename Object >
+int cloneSelectedItem( QListView * view, AObjectListModel< Object > & model )
+{
+	int selectedIdx = getSelectedItemIdx( view );
+	if (selectedIdx < 0) {  // if no item is selected
+		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		return -1;
+	}
+
+	model.list().append( model.list()[ selectedIdx ] );
+
+	// append some postfix to the item name to distinguish it from the original
+	QModelIndex newItemIdx = model.index( model.list().size() - 1, 0 );
+	QString origName = model.data( newItemIdx, Qt::DisplayRole ).toString();
+	model.setData( newItemIdx, origName+" - clone", Qt::DisplayRole );
+
+	changeSelectionTo( view, model.list().size() - 1 );
+
+	model.updateUI( newItemIdx.row() );
+
+	return selectedIdx;
+}
+
+template< typename Object >
 int moveUpSelectedItem( QListView * view, AObjectListModel< Object > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );

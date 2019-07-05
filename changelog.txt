@@ -2,4 +2,5 @@
 - implemented drag&drop reordering for the preset list
 - reworked the drag&drop reordering and file dropping in the mod list
 - fixed restoring of additional command line arguments
-- added engine name is now automatically derived from directory name instead of executable name
+- engine name is now derived from directory name instead of executable name
+- added "clone preset" button

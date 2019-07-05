@@ -61,6 +61,7 @@ class MainWindow : public QMainWindow {
 
 	void presetAdd();
 	void presetDelete();
+	void presetClone();
 	void presetMoveUp();
 	void presetMoveDown();
 	void presetDropped();

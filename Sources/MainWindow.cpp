@@ -148,15 +148,16 @@ MainWindow::MainWindow()
 	connect( ui->mapListView, &QListView::clicked, this, &thisClass::toggleMapPack );
 	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
 
-	connect( ui->presetBtnAdd, &QPushButton::clicked, this, &thisClass::presetAdd );
-	connect( ui->presetBtnDel, &QPushButton::clicked, this, &thisClass::presetDelete );
-	connect( ui->presetBtnUp, &QPushButton::clicked, this, &thisClass::presetMoveUp );
-	connect( ui->presetBtnDown, &QPushButton::clicked, this, &thisClass::presetMoveDown );
+	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &thisClass::presetAdd );
+	connect( ui->presetBtnDel, &QToolButton::clicked, this, &thisClass::presetDelete );
+	connect( ui->presetBtnClone, &QToolButton::clicked, this, &thisClass::presetClone );
+	connect( ui->presetBtnUp, &QToolButton::clicked, this, &thisClass::presetMoveUp );
+	connect( ui->presetBtnDown, &QToolButton::clicked, this, &thisClass::presetMoveDown );
 
-	connect( ui->modBtnAdd, &QPushButton::clicked, this, &thisClass::modAdd );
-	connect( ui->modBtnDel, &QPushButton::clicked, this, &thisClass::modDelete );
-	connect( ui->modBtnUp, &QPushButton::clicked, this, &thisClass::modMoveUp );
-	connect( ui->modBtnDown, &QPushButton::clicked, this, &thisClass::modMoveDown );
+	connect( ui->modBtnAdd, &QToolButton::clicked, this, &thisClass::modAdd );
+	connect( ui->modBtnDel, &QToolButton::clicked, this, &thisClass::modDelete );
+	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
+	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
 	connect( ui->launchMode_menu, &QRadioButton::clicked, this, &thisClass::modeGameMenu );
 	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeSelectedMap );
@@ -446,6 +447,15 @@ void MainWindow::presetDelete()
 	deleteSelectedItem( ui->presetListView, presetModel );
 }
 
+void MainWindow::presetClone()
+{
+	int origIdx = cloneSelectedItem( ui->presetListView, presetModel );
+	if (origIdx >= 0) {
+		// open edit mode so that user can name the preset
+		ui->presetListView->edit( presetModel.index( presets.count() - 1, 0 ) );
+	}
+}
+
 void MainWindow::presetMoveUp()
 {
 	moveUpSelectedItem( ui->presetListView, presetModel );
@@ -559,7 +569,8 @@ void MainWindow::presetDropped()
 
 void MainWindow::modsDropped()
 {
-	if (modModel.wasDroppedInto()) {
+	if (modModel.wasDroppedInto())
+	{
 		// finaly update the selection
 		int row = modModel.droppedRow();
 		int count = modModel.droppedCount();
@@ -572,6 +583,8 @@ void MainWindow::modsDropped()
 		if (selectedPresetIdx >= 0) {
 			presets[ selectedPresetIdx ].mods = mods; // not the most optimal way, but the size of the list is always low
 		}
+
+		generateLaunchCommand();
 	}
 }
 

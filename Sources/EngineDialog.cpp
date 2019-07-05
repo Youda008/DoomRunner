@@ -51,7 +51,7 @@ void EngineDialog::browseEngine()
 		path = pathHelper.getRelativePath( path );
 
 	ui->pathLine->setText( path );
-	ui->nameLine->setText( QFileInfo( path ).baseName() );
+	ui->nameLine->setText( QFileInfo( path ).dir().dirName() );
 	// we will write those values to data storage when dialog is confirmed because user might want to cancel it
 }
 

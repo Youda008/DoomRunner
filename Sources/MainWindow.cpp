@@ -660,7 +660,6 @@ void MainWindow::updateMapsFromIWAD()
 
 void MainWindow::updateListsFromDirs()
 {
-	qDebug() << "updating lists";
 	if (iwadListFromDir) {
 		updateIWADsFromDir();
 		iwadModel.updateUI(0);

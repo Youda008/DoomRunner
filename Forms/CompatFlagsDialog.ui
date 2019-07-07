@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>542</width>
-    <height>590</height>
+    <width>613</width>
+    <height>682</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,7 +32,7 @@
       <item>
        <widget class="QCheckBox" name="checkBox">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Corpses under a vertical door or crusher are changed into gibs, rather than replaced by a different actor, if they do not have a custom Crush state. This allows an arch-vile or similar monster to resurrect them. By default, actors without a custom Crush state are removed entirely and can therefore not be raised from the dead.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, corpses under a vertical door or crusher are changed into gibs, rather than replaced by a different actor, if they do not have a custom Crush state. This allows an arch-vile or similar monster to resurrect them. By default, actors without a custom Crush state are removed entirely and can therefore not be raised from the dead.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Crushed monsters can be resurrected</string>
@@ -41,6 +41,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_2">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, friendly monsters are, like in MBF, not affected by lines with the &quot;block monsters&quot; flag, allowing them to follow the player all around a map. This option does not, however, block them at lines with the &quot;block player&quot; flag.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Friendly monsters aren't blocked</string>
         </property>
@@ -48,6 +51,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_3">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Vanilla Doom prevents a pain elemental from spawning lost souls if there are already 21 in the level. This limit has been removed in most source ports but there are maps that require it to work properly. For an example, see DoomWikiLogoIcon.pngMAP19 of Hell Revealed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Limit Pain Elementals' Lost Souls</string>
         </property>
@@ -55,6 +61,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_4">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, monsters are affected by sector friction, wind and pusher/puller effects, as they are in MBF. By default, monsters are not subjected to friction and only affected by wind and pushers/pullers if they have the WINDTHRUST flag.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Monster movement is affected by effects</string>
         </property>
@@ -62,6 +71,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_5">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The original Doom physics code prevented monsters from being thrown off of ledges that they couldn't step off of voluntarily, even when propelled by an outside force. ZDoom allows monsters to be pushed over these dropoffs by weapons and other forces. This options restores the vanilla Doom behavior.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Monsters cannot cross dropoffs</string>
         </property>
@@ -69,6 +81,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_6">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This option disables the logic that allows monsters to move away from positions where they hang over a tall dropoff (e.g. the edge of a lift.) Originally a monster got stuck in such a situation. Normally there shouldn't be any need to revert to the old behavior.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Monsters get stuck over dropoffs</string>
         </property>
@@ -76,6 +91,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_7">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This option restores Doom's original behavior where monsters would always wake up when seeing a player who is using an invisibility powerup. ZDoom normally uses a more realistic routine where monsters will usually be unable to see those players.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Monsters see invisible players</string>
         </property>
@@ -83,6 +101,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_8">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, maulotaurs are unable to create their floor fire attack if their feet are clipped by water, sludge, lava or other terrain effect. Note that the flames can still travel across water; this was on the part of Raven Software's developers as it was a bug found in the original clipping code and not an attempt at realism as some may have believed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>No Minotaur floor flames in water</string>
         </property>
@@ -90,6 +111,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_9">
+        <property name="toolTip">
+         <string>Disables drop item tossing.</string>
+        </property>
         <property name="text">
          <string>Spawn item drops on the floor</string>
         </property>
@@ -112,6 +136,9 @@
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <widget class="QCheckBox" name="checkBox_20">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Doom's collision code treated all actors as infinitely tall, i.e. it was impossible to jump over any solid object. Needless to say, with such a setup 3D bridges and similar effects are impossible to create. You can re-enable this effect with this option but be careful: Enabling it will seriously affect any map that expects proper z-sensitive object collision detection.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Actors are infinitely tall</string>
         </property>
@@ -119,6 +146,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_21">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The texture scrolling specials introduced in Boom were originally made to stack with each other. Enable this option to restore that behavior.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Boom scrollers are additive</string>
         </property>
@@ -126,6 +156,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_22">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This option emulates the error in the original engine's sine table by offsetting player angle when spawning or teleporting by one fineangle (approximatively 0.044°), preventing the player from facing directly in a cardinal direction.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Cannot travel straight NSEW</string>
         </property>
@@ -133,6 +166,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_23">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Re-enables the wallrunning bug. It is not recommended to use this option unless some map absolutely requires it. As it depends on a bug it has serious side effects on the movement code and makes any fast movement become erratic.&lt;/p&gt;&lt;p&gt;Additionally, this option reestablish the original sliding code.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Enable wall running</string>
         </property>
@@ -140,6 +176,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_24">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The scrolling floor specials in Heretic and Hexen move the player much faster than the actual texture scrolling speed. Enable this option to restore this effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Raven scrollers use original speed</string>
         </property>
@@ -147,6 +186,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_25">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Doom's hitscan tracing code ignores all lines with both sides in the same sector. ZDoom's does not. This option reverts to the original but less precise behavior.&lt;/p&gt;&lt;p&gt;This option now also covers the original behavior or sight checks for such lines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Self-referencing sectors don't block shots</string>
         </property>
@@ -154,6 +196,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_26">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, the original Doom code for hitscan attacks is used. This reintroduces two bugs which makes hitscan attacks less likely to hit. The first is that it is a monster's cross-section, rather than its bounding box, that is used to check for impact; this makes attacks with a limited range (especially melee attacks) unlikely to hit very wide monsters. The second is the blockmap bug: if an actor crosses block boundaries and its center is in a different block than the one in which the impact happens, then there is no collision at all, letting attacks pass through it harmlessly.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Use Doom code for hitscan checks</string>
         </property>
@@ -161,6 +206,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_27">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, actors use their original heights for the purposes of projectile collision. This allows for decorations to be pass-through for projectiles as they were originally in Doom while still blocking other actors correctly. Specifically, this affects actors with negative values defined for their ProjectilePassHeight property.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Use Doom heights for missile clipping</string>
         </property>
@@ -183,6 +231,9 @@
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
        <widget class="QCheckBox" name="checkBox_28">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Uses the old flawed polyobject system, for maps that relied on its glitches.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Draw polyobjects like Hexen</string>
         </property>
@@ -190,6 +241,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_29">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This option emulates a vanilla renderer glitch by ignoring the Y locations of patches drawn on two-sided midtextures and instead always drawing them at the top of the texture.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Ignore Y offsets on masked midtextures</string>
         </property>
@@ -197,6 +251,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_30">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, the original Doom sorting order for overlapping sprites is used.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Invert sprite sorting</string>
         </property>
@@ -219,6 +276,9 @@
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <widget class="QCheckBox" name="checkBox_10">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Boom introduced a DeHackEd bug which applied the maximum health setting to medikits and stim packs. Originally it was only supposed to affect health bonuses. Many ZDoom maps, however, use it to limit the maximum overall health so an unconditional fix is no longer possible. Use this option to play vanilla Doom-compatible WADs with DEHACKED modifications that change the maximum health value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>DEH health settings like Doom2.exe</string>
         </property>
@@ -226,6 +286,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_11">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, when the A_Mushroom codepointer is called from a state that was modified by a DeHackEd lump, it uses the original MBF behavior of the codepointer. This option does not affect states defined in DECORATE.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Original A_Mushroom speed in DEH mods</string>
         </property>
@@ -248,6 +311,9 @@
      <layout class="QVBoxLayout" name="verticalLayout_5">
       <item>
        <widget class="QCheckBox" name="checkBox_12">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Restores Doom's original behavior of any special line blocking use actions. ZDoom corrects this so that walkover actions or scrolling lines don't block uses.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>All special lines can block&lt;use&gt;</string>
         </property>
@@ -255,6 +321,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_13">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, any actor type which calls A_BossDeath triggers the level's special, even if they are not supposed to. This emulates a pre-Doom v1.9 behavior which is exploited by DoomWikiLogoIcon.pngDoomsday of UAC&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Allow any bossdeath for level special</string>
         </property>
@@ -262,6 +331,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_14">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disables the Boom/MBF light tag effect for doors. This is to allow maps with incorrectly tagged doors to play properly.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Disable Boom door light effect</string>
         </property>
@@ -269,6 +341,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_15">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled, when a light level changes to the highest light level found in neighboring sectors, the search is made only for the first tagged sector, like in Doom.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Find neighboring light like Doom</string>
         </property>
@@ -276,6 +351,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_16">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Doom treats the first texture in the TEXTURE1 lump as no texture at all. But the function that looks for the shortest texture ignored that and checked texture n°0 as well. This option re-enables this buggy behavior for old WADs that require it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Find shortest textures like Doom</string>
         </property>
@@ -283,6 +361,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_17">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When looking for all tagged sectors to build stairs, Doom.exe resumed the search with the last sector of the current stair, not the one following the starting sector.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Use buggier stair building</string>
         </property>
@@ -290,6 +371,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_18">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This option undoes a Boom fix to floor movement logic. If this option is on, a floor may rise through the ceiling, or a ceiling may lower through a floor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Use Doom's floor motion behavior</string>
         </property>
@@ -319,6 +403,9 @@
      <layout class="QVBoxLayout" name="verticalLayout_6">
       <item>
        <widget class="QCheckBox" name="checkBox_31">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this only if you can't live without the silent BFG trick! This option seriously cripples the sound system so that each actor can only play one sound at once. Note that this will also introduce other sound glitches.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Cripple sound for silent BFG trick</string>
         </property>
@@ -326,6 +413,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_32">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Restores Doom's original behavior to play pickup sounds only for the player that is picking up an item. Obviously this option is only useful in multiplayer games.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Don't let others hear your pickups</string>
         </property>
@@ -333,6 +423,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_33">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ZDoom normally disables the stop sound for floors that move instantly from one height to another. Enable this setting to make the stop sound be played in these special cases.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Instant moving floors are not silent</string>
         </property>
@@ -340,6 +433,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_34">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Normally when sectors make noise, ZDoom uses the point of that sector which is closest to the listener as the source of the sound. (Ensuring that large sectors make sound all throughout) Enable this option to make ZDoom revert to the old behavior which caused these sounds to originate from the center of their sector.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Sector sounds use center as source </string>
         </property>
@@ -347,6 +443,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_35">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This option cuts a sound off if it lasted more than its source's &amp;quot;life&amp;quot; in the game world.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Sounds stop when actor vanishes</string>
         </property>
@@ -354,6 +453,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="checkBox_36">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ZDoom changed the sound alert handling for monsters in 2.0.90 so that the sound target is no longer preserved by a sector. While this allows more control over the actions taking place in a map it had severe side effects in many maps that spawn monsters while playing. These maps are counting on the monsters being alerted immediately and didn't bother with proper positioning because it didn't matter. This option restores the old alerting method from Doom.exe which was valid up to ZDoom 2.0.63a.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Use original sound target handling</string>
         </property>
@@ -445,15 +547,9 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="confirm_btn">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>23</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Confirm</string>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
        </property>
       </widget>
      </item>

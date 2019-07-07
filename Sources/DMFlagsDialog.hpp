@@ -22,9 +22,9 @@ namespace Ui {
 
 //======================================================================================================================
 
-typedef bool flagsIdx;
-const flagsIdx dmflags1 = false;
-const flagsIdx dmflags2 = true;
+typedef uint8_t flagsIdx;
+const flagsIdx dmflags1 = 0;
+const flagsIdx dmflags2 = 1;
 struct Flag {
     flagsIdx flags;
     uint32_t bit;
@@ -38,6 +38,8 @@ class DMFlagsDialog : public QDialog {
 
     Q_OBJECT
 
+    using thisClass = DMFlagsDialog;
+
  public:
 
     explicit DMFlagsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & dmflags2 );
@@ -49,6 +51,7 @@ class DMFlagsDialog : public QDialog {
 
  private slots:
 
+	// slots named like this don't need to be connected, they are connected automatically
     void on_fallingDamage_toggled( bool checked );
     void on_dropWeapon_toggled( bool checked );
     void on_doubleAmmo_toggled( bool checked );
@@ -104,7 +107,8 @@ class DMFlagsDialog : public QDialog {
     void on_dmflags1_line_textEdited( const QString & arg1 );
     void on_dmflags2_line_textEdited( const QString & arg1 );
 
-    void on_confirm_btn_clicked();
+	void confirm();
+	void cancel();
 
  private: // methods
 
@@ -116,8 +120,13 @@ class DMFlagsDialog : public QDialog {
 
     Ui::DMFlagsDialog * ui;
 
-    uint32_t & flags1;
-    uint32_t & flags2;
+    // dialog-local flags - need to be separate from the called flags, because the user might click Cancel
+    uint32_t flags1;
+    uint32_t flags2;
+
+	// caller's flags (return values from this dialog) - will be updated only when user clicks Ok
+    uint32_t & retFlags1;
+    uint32_t & retFlags2;
 
 };
 

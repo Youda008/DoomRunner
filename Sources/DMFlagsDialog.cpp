@@ -24,6 +24,8 @@ DMFlagsDialog::DMFlagsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & 
 	: QDialog( parent )
 	, flags1( dmflags1 )
 	, flags2( dmflags2 )
+	, retFlags1( dmflags1 )
+	, retFlags2( dmflags2 )
 {
 	ui = new Ui::DMFlagsDialog;
 	ui->setupUi( this );
@@ -35,74 +37,85 @@ DMFlagsDialog::DMFlagsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & 
 	ui->dmflags2_line->setText( QString::number( dmflags2 ) );
 
 	updateCheckboxes();
+
+	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::confirm );
+	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::cancel );
+}
+
+void DMFlagsDialog::confirm()
+{
+	// update the dialog caller's flags only when user clicks Ok
+	retFlags1 = flags1;
+	retFlags2 = flags2;
+}
+
+void DMFlagsDialog::cancel()
+{
+
 }
 
 DMFlagsDialog::~DMFlagsDialog()
 {
 	delete ui;
 }
-/*
-void DMFlagsDialog::closeEvent( QCloseEvent * event )
-{
-	emit dmflagsConfirmed( flags1, flags2 );
 
-	QDialog::closeEvent( event );
-}
-*/
-Flag FALLING_DAMAGE               = { dmflags1, 8, false };
-Flag DROP_WEAPON                  = { dmflags2, 2, false };
-Flag DOUBLE_AMMO                  = { dmflags2, 64, false };
-Flag INF_AMMO                     = { dmflags1, 2048, false };
-Flag INF_INVENTORY                = { dmflags2, 65536, false };
-Flag NO_MONSTERS                  = { dmflags1, 4096, false };
-Flag NO_MONSTERS_TO_EXIT          = { dmflags2, 131072, false };
-Flag MONSTERS_RESPAWN             = { dmflags1, 8192, false };
-Flag NO_RESPAWN                   = { dmflags2, 16384, false };
-Flag ITEMS_RESPAWN                = { dmflags1, 16384, false };
-Flag BIG_POWERUPS_RESPAWN         = { dmflags2, 134217728, false };
-Flag FAST_MONSTERS                = { dmflags1, 32768, false };
-Flag DEGENERATION                 = { dmflags2, 128, false };
-Flag ALLOW_AUTO_AIM               = { dmflags2, 8388608, true };
-Flag ALLOW_SUICIDE                = { dmflags2, 4194304, true };
-Flag ALLOW_JUMP1                  = { dmflags1, 65536, true };
-Flag ALLOW_JUMP2                  = { dmflags1, 131072, false };
-Flag ALLOW_CROUCH1                = { dmflags1, 4194304, true };
-Flag ALLOW_CROUCH2                = { dmflags1, 8388608, false};
-Flag ALLOW_FREELOOK1              = { dmflags1, 262144, true };
-Flag ALLOW_FREELOOK2              = { dmflags1, 524288, false };
-Flag ALLOW_FOV                    = { dmflags1, 1048576, true };
-Flag ALLOW_BFG_AIMING             = { dmflags2, 256, true };
-Flag ALLOW_AUTOMAP                = { dmflags2, 262144, true };
-Flag AUTOMAP_ALLIES               = { dmflags2, 524288, true };
-Flag ALLOW_SPYING                 = { dmflags2, 1048576, true };
-Flag CHASECAM_CHEAT               = { dmflags2, 2097152, false };
-Flag CHECK_AMMO_FOR_WEAPON_SWITCH = { dmflags2, 16777216, true };
-Flag ICONS_DEATH_KILLS_ITS_SPAWNS = { dmflags2, 33554432, false };
-Flag END_SECTOR_COUNTS_FOR_KILL   = { dmflags2, 67108864, true };
 
-Flag WEAPONS_STAY                 = { dmflags1, 4, false };
-Flag ALLOW_POWERUPS               = { dmflags1, 2, true };
-Flag ALLOW_HEALTH                 = { dmflags1, 1, true };
-Flag ALLOW_ARMOR                  = { dmflags1, 512, true };
-Flag SPAWN_FARTHEST               = { dmflags1, 128, false };
-Flag SAME_MAP                     = { dmflags1, 64, false };
-Flag FORCE_RESPAWN                = { dmflags1, 256, false };
-Flag ALLOW_EXIT                   = { dmflags1, 1024, true };
-Flag BARRELS_RESPAWN              = { dmflags2, 512, false };
-Flag RESPAWN_PROTECTION           = { dmflags2, 1024, false };
-Flag LOSE_FRAG_IF_FRAGGED         = { dmflags2, 32768, false };
-Flag KEEP_FRAGS_GAINED            = { dmflags2, 8192, false };
-Flag NO_TEAM_SWITCHING            = { dmflags2, 16, false };
+//----------------------------------------------------------------------------------------------------------------------
 
-Flag SPAWN_MULTI_WEAPONS          = { dmflags1, 2097152, true };
-Flag LOSE_ENTIRE_INVENTORY        = { dmflags1, 16777216, false };
-Flag KEEP_KEYS                    = { dmflags1, 33554432, true };
-Flag KEEP_WEAPONS                 = { dmflags1, 67108864, true };
-Flag KEEP_ARMOR                   = { dmflags1, 134217728, true };
-Flag KEEP_POWERUPS                = { dmflags1, 268435456, true };
-Flag KEEP_AMMO                    = { dmflags1, 536870912, true };
-Flag LOSE_HALF_AMMO               = { dmflags1, 1073741824, false };
-Flag SPAWN_WHERE_DIED             = { dmflags2, 4096, false };
+static Flag FALLING_DAMAGE               = { dmflags1, 8, false };
+static Flag DROP_WEAPON                  = { dmflags2, 2, false };
+static Flag DOUBLE_AMMO                  = { dmflags2, 64, false };
+static Flag INF_AMMO                     = { dmflags1, 2048, false };
+static Flag INF_INVENTORY                = { dmflags2, 65536, false };
+static Flag NO_MONSTERS                  = { dmflags1, 4096, false };
+static Flag NO_MONSTERS_TO_EXIT          = { dmflags2, 131072, false };
+static Flag MONSTERS_RESPAWN             = { dmflags1, 8192, false };
+static Flag NO_RESPAWN                   = { dmflags2, 16384, false };
+static Flag ITEMS_RESPAWN                = { dmflags1, 16384, false };
+static Flag BIG_POWERUPS_RESPAWN         = { dmflags2, 134217728, false };
+static Flag FAST_MONSTERS                = { dmflags1, 32768, false };
+static Flag DEGENERATION                 = { dmflags2, 128, false };
+static Flag ALLOW_AUTO_AIM               = { dmflags2, 8388608, true };
+static Flag ALLOW_SUICIDE                = { dmflags2, 4194304, true };
+static Flag ALLOW_JUMP1                  = { dmflags1, 65536, true };
+static Flag ALLOW_JUMP2                  = { dmflags1, 131072, false };
+static Flag ALLOW_CROUCH1                = { dmflags1, 4194304, true };
+static Flag ALLOW_CROUCH2                = { dmflags1, 8388608, false};
+static Flag ALLOW_FREELOOK1              = { dmflags1, 262144, true };
+static Flag ALLOW_FREELOOK2              = { dmflags1, 524288, false };
+static Flag ALLOW_FOV                    = { dmflags1, 1048576, true };
+static Flag ALLOW_BFG_AIMING             = { dmflags2, 256, true };
+static Flag ALLOW_AUTOMAP                = { dmflags2, 262144, true };
+static Flag AUTOMAP_ALLIES               = { dmflags2, 524288, true };
+static Flag ALLOW_SPYING                 = { dmflags2, 1048576, true };
+static Flag CHASECAM_CHEAT               = { dmflags2, 2097152, false };
+static Flag CHECK_AMMO_FOR_WEAPON_SWITCH = { dmflags2, 16777216, true };
+static Flag ICONS_DEATH_KILLS_ITS_SPAWNS = { dmflags2, 33554432, false };
+static Flag END_SECTOR_COUNTS_FOR_KILL   = { dmflags2, 67108864, true };
+
+static Flag WEAPONS_STAY                 = { dmflags1, 4, false };
+static Flag ALLOW_POWERUPS               = { dmflags1, 2, true };
+static Flag ALLOW_HEALTH                 = { dmflags1, 1, true };
+static Flag ALLOW_ARMOR                  = { dmflags1, 512, true };
+static Flag SPAWN_FARTHEST               = { dmflags1, 128, false };
+static Flag SAME_MAP                     = { dmflags1, 64, false };
+static Flag FORCE_RESPAWN                = { dmflags1, 256, false };
+static Flag ALLOW_EXIT                   = { dmflags1, 1024, true };
+static Flag BARRELS_RESPAWN              = { dmflags2, 512, false };
+static Flag RESPAWN_PROTECTION           = { dmflags2, 1024, false };
+static Flag LOSE_FRAG_IF_FRAGGED         = { dmflags2, 32768, false };
+static Flag KEEP_FRAGS_GAINED            = { dmflags2, 8192, false };
+static Flag NO_TEAM_SWITCHING            = { dmflags2, 16, false };
+
+static Flag SPAWN_MULTI_WEAPONS          = { dmflags1, 2097152, true };
+static Flag LOSE_ENTIRE_INVENTORY        = { dmflags1, 16777216, false };
+static Flag KEEP_KEYS                    = { dmflags1, 33554432, true };
+static Flag KEEP_WEAPONS                 = { dmflags1, 67108864, true };
+static Flag KEEP_ARMOR                   = { dmflags1, 134217728, true };
+static Flag KEEP_POWERUPS                = { dmflags1, 268435456, true };
+static Flag KEEP_AMMO                    = { dmflags1, 536870912, true };
+static Flag LOSE_HALF_AMMO               = { dmflags1, 1073741824, false };
+static Flag SPAWN_WHERE_DIED             = { dmflags2, 4096, false };
 
 void DMFlagsDialog::on_fallingDamage_toggled( bool checked )
 {
@@ -536,9 +549,4 @@ void DMFlagsDialog::updateCheckboxes()
 		ui->loseHalfAmmo->setChecked( true );
 	if (isEnabled( SPAWN_WHERE_DIED ))
 		ui->spawnWhereDied->setChecked( true );
-}
-
-void DMFlagsDialog::on_confirm_btn_clicked()
-{
-	close(); // TODO: change to OK/Cancel dialog instead
 }

@@ -21,6 +21,7 @@
 class QDir;
 class QLineEdit;
 class PathHelper;
+class QListView;
 
 namespace Ui {
 	class SetupDialog;
@@ -77,7 +78,7 @@ class SetupDialog : public QDialog {
 
  signals:
 
-	void iwadListNeedsUpdate();
+	void iwadListNeedsUpdate( QListView * view );
 	void absolutePathsToggled( bool absolute );
 
  private: // methods

@@ -52,9 +52,9 @@ class MainWindow : public QMainWindow {
 	void runDMFlagsDialog();
 	void runCompatFlagsDialog();
 
-	void selectEngine( int index );
-
 	void selectPreset( const QModelIndex & index );
+	void selectEngine( int index );
+	void selectConfig( int index );
 	void toggleIWAD( const QModelIndex & index );
 	void toggleMapPack( const QModelIndex & index );
 	void toggleMod( const QModelIndex & index );
@@ -72,9 +72,10 @@ class MainWindow : public QMainWindow {
 	void modMoveDown();
 	void modsDropped();
 
-	void updateIWADsFromDir();
+	void updateIWADsFromDir( QListView * view );
 	void updateMapPacksFromDir();
 	void updateSaveFilesFromDir();
+	void updateConfigFilesFromDir();
 	void updateMapsFromIWAD();
 	void updateListsFromDirs();
 
@@ -168,6 +169,7 @@ class MainWindow : public QMainWindow {
 	struct Preset {
 		QString name;
 		QString selectedEnginePath;  // we store the engine by path, so that it does't break when user renames them or reorders them
+		QString selectedConfig;  // we store the engine by name, so that it does't break when user reorders them
 		QString selectedIWAD;  // we store the IWAD by name, so that it doesn't break when user reorders them
 		//QString selectedMapPack;
 		QList< Mod > mods;  // this list needs to be kept in sync with mod list widget

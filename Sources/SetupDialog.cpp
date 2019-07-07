@@ -19,6 +19,7 @@
 
 
 //======================================================================================================================
+//  SetupDialog
 
 SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engine > & engines, QList< IWAD > & iwads,
                           bool & iwadListFromDir, QString & iwadDir, QString & mapDir, QString & modDir )
@@ -83,6 +84,16 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 	//startTimer( 1000 );
 }
 
+void SetupDialog::timerEvent( QTimerEvent * )  // called once per second
+{
+	tickCount++;
+}
+
+void SetupDialog::closeEvent( QCloseEvent * event )
+{
+	QWidget::closeEvent( event );
+}
+
 SetupDialog::~SetupDialog()
 {
 	delete ui;
@@ -113,11 +124,10 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadBtnUp->setEnabled( !enabled );
 	ui->iwadBtnDown->setEnabled( !enabled );
 
-	// in order to not duplicate functionality, we delegate the request to load IWADs from directory
-	// to MainWindow, which must be able to do it on its own anyway
-	emit iwadListNeedsUpdate();
-	// and then just update our widgets
-	iwadModel.updateUI(0);
+	// In order to not duplicate functionality, we delegate the request to load IWADs from directory to MainWindow,
+	// because it has to be able to do it on its own anyway. And we pass there a ref to our list view, because we expect
+	// it to refresh the view when the data change is finished, and it might also change the list view's selection.
+	emit iwadListNeedsUpdate( ui->iwadListView );
 }
 
 void SetupDialog::browseIWADDir()
@@ -154,11 +164,10 @@ void SetupDialog::changeIWADDir( QString text )
 {
 	iwadDir = text;
 
-	// in order to not duplicate functionality, we delegate the request to load IWADs from directory
-	// to MainWindow, which must be able to do it on its own anyway
-	emit iwadListNeedsUpdate();
-	// and then just update our widgets
-	iwadModel.updateUI(0);
+	// In order to not duplicate functionality, we delegate the request to load IWADs from directory to MainWindow,
+	// because it has to be able to do it on its own anyway. And we pass there a ref to our list view, because we expect
+	// it to refresh the view when the data change is finished, and it might also change the list view's selection.
+	emit iwadListNeedsUpdate( ui->iwadListView );
 }
 
 void SetupDialog::changeMapDir( QString text )
@@ -182,7 +191,7 @@ void SetupDialog::iwadAdd()
 		path = pathHelper.getRelativePath( path );
 
 	iwads.append({ QFileInfo( path ).fileName(), path });
-	iwadModel.updateUI( iwads.size() - 1 );
+	iwadModel.updateView( iwads.size() - 1 );
 }
 
 void SetupDialog::iwadDelete()
@@ -243,8 +252,8 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 	// we let it update all the paths in all data models at once
 	emit absolutePathsToggled( checked );
 	// and then just update our widgets
-	engineModel.updateUI(0);
-	iwadModel.updateUI(0);
+	engineModel.updateView(0);
+	iwadModel.updateView(0);
 	ui->iwadDirLine->setText( iwadDir );
 	ui->mapDirLine->setText( mapDir );
 	ui->modDirLine->setText( modDir );
@@ -253,25 +262,4 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 void SetupDialog::closeDialog()
 {
 	accept();
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-//  events
-
-void SetupDialog::closeEvent( QCloseEvent * event )
-{
-	QWidget::closeEvent( event );
-}
-
-void SetupDialog::timerEvent( QTimerEvent * )  // called once per second
-{
-	tickCount++;
-
-	if (tickCount % 2 == 0) {
-		if (iwadListFromDir) {
-			emit iwadListNeedsUpdate();
-			iwadModel.updateUI(0);
-		}
-	}
 }

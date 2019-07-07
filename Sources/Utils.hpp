@@ -15,9 +15,9 @@
 #include "ItemModels.hpp"
 
 #include <QListView>
-#include <QListWidget>
 #include <QMessageBox>
 #include <QDir>
+#include <QDirIterator>
 #include <QFileInfo>
 
 
@@ -68,7 +68,7 @@ void appendItem( QListView * view, AObjectListModel< Object > & model, const Obj
 
 	changeSelectionTo( view, model.list().size() - 1 );
 
-	model.updateUI( model.list().size() - 1 );
+	model.updateView( model.list().size() - 1 );
 }
 
 template< typename Object >
@@ -91,7 +91,7 @@ int deleteSelectedItem( QListView * view, AObjectListModel< Object > & model )
 
 	model.list().removeAt( selectedIdx );
 
-	model.updateUI( selectedIdx );
+	model.updateView( selectedIdx );
 
 	return selectedIdx;
 }
@@ -114,7 +114,7 @@ int cloneSelectedItem( QListView * view, AObjectListModel< Object > & model )
 
 	changeSelectionTo( view, model.list().size() - 1 );
 
-	model.updateUI( newItemIdx.row() );
+	model.updateView( newItemIdx.row() );
 
 	return selectedIdx;
 }
@@ -137,7 +137,7 @@ int moveUpSelectedItem( QListView * view, AObjectListModel< Object > & model )
 	deselectItemByIdx( view, selectedIdx );
 	selectItemByIdx( view, selectedIdx - 1 );
 
-	model.updateUI( selectedIdx - 1 );
+	model.updateView( selectedIdx - 1 );
 
 	return selectedIdx;
 }
@@ -160,9 +160,56 @@ int moveDownSelectedItem( QListView * view, AObjectListModel< Object > & model )
 	deselectItemByIdx( view, selectedIdx );
 	selectItemByIdx( view, selectedIdx + 1 );
 
-	model.updateUI( selectedIdx );
+	model.updateView( selectedIdx );
 
 	return selectedIdx;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+
+template< typename Object >  // Object must contain public attribute .name
+void updateListFromDir( QList< Object > & list, QListView * view, QString dir, const QString & fileSuffix,
+                        std::function< Object ( const QFileInfo & file ) > makeItemFromFile )
+{
+	if (dir.isEmpty())
+		return;
+
+	QDir dir_( dir );
+	if (!dir_.exists())
+		return;
+
+	// write down the currently selected item
+	QString selectedItem;
+	int selectedItemIdx = getSelectedItemIdx( view );
+	if (selectedItemIdx >= 0)
+		selectedItem = list[ selectedItemIdx ].name;
+
+	list.clear();
+
+	// update the list according to directory content
+	QDirIterator dirIt( dir_ );
+	while (dirIt.hasNext()) {
+		dirIt.next();
+		QFileInfo file = dirIt.fileInfo();
+		if (!file.isDir() && (fileSuffix.isEmpty() || fileSuffix == file.suffix())) {
+			list.append( makeItemFromFile( file ) );
+		}
+	}
+
+	// update the selection so that the same file remains selected
+	if (selectedItemIdx >= 0) {
+		int newItemIdx = findSuch<Object>( list, [ &selectedItem ]( const Object & item )
+		                                         { return item.name == selectedItem; } );
+		if (newItemIdx >= 0 && newItemIdx != selectedItemIdx) {
+			changeSelectionTo( view, newItemIdx );
+		}
+	}
+
+	QAbstractItemModel * model = view->model();
+	if (AObjectListModel< Object > * objModel = dynamic_cast< AObjectListModel< Object > * >( model )) {
+		objModel->updateView(0);
+	}
 }
 
 

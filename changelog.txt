@@ -2,5 +2,8 @@
 - implemented drag&drop reordering for the preset list
 - reworked the drag&drop reordering and file dropping in the mod list
 - fixed restoring of additional command line arguments
+- fixed restoring of the "use absolute path" option
 - engine name is now derived from directory name instead of executable name
 - added "clone preset" button
+- added an option to select a configuration file
+- few minor bug fixes

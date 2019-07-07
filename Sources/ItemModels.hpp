@@ -49,12 +49,12 @@ class AObjectListModel : public QAbstractListModel {
 
 	QList< Object > & list() const { return objectList; }
 
-	int rowCount( const QModelIndex & ) const override
+	int rowCount( const QModelIndex & = QModelIndex() ) const override
 	{
 		return objectList.size();
 	}
 
-	void updateUI( int changeBeginIdx, int changeEndIdx = -1 )
+	void updateView( int changeBeginIdx, int changeEndIdx = -1 )
 	{
 		if (changeEndIdx < 0)
 			changeEndIdx = objectList.size();

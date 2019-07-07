@@ -276,28 +276,32 @@ void MainWindow::selectPreset( const QModelIndex & index )
 	Preset & preset = presets[ index.row() ];
 
 	// restore selected engine
-	ui->engineCmbBox->setCurrentIndex( -1 );  // deselect current engine
 	if (!preset.selectedEnginePath.isEmpty()) {  // the engine combo box might have been empty when creating this preset
 		int engineIdx = findSuch<Engine>( engines, [ &preset ]( const Engine & engine )
 		                                           { return engine.path == preset.selectedEnginePath; } );
 		if (engineIdx >= 0) {
 			ui->engineCmbBox->setCurrentIndex( engineIdx );
 		} else {
+			ui->engineCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Engine no longer exists",
 				"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please select another one." );
 		}
+	} else {
+		ui->engineCmbBox->setCurrentIndex( -1 );
 	}
 
 	// restore selected config
-	ui->configCmbBox->setCurrentIndex( -1 );  // deselect current config
 	if (!preset.selectedConfig.isEmpty()) {  // the preset combo box might have been empty when creating this preset
 		int configIdx = ui->configCmbBox->findText( preset.selectedConfig );
 		if (configIdx >= 0) {
 			ui->configCmbBox->setCurrentIndex( configIdx );
 		} else {
+			ui->configCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Config no longer exists",
 				"Config selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
 		}
+	} else {
+		ui->configCmbBox->setCurrentIndex( -1 );
 	}
 
 	// restore selected IWAD
@@ -353,14 +357,13 @@ void MainWindow::selectPreset( const QModelIndex & index )
 
 void MainWindow::selectEngine( int index )
 {
-	if (index < 0) {  // engine combo box was reset to "no engine selected" state
-		return;
-	}
-
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].selectedEnginePath = engines[ index ].path;
+		if (index < 0)  // engine combo box was reset to "no engine selected" state
+			presets[ selectedPresetIdx ].selectedEnginePath.clear();
+		else
+			presets[ selectedPresetIdx ].selectedEnginePath = engines[ index ].path;
 	}
 
 	updateSaveFilesFromDir();
@@ -371,20 +374,14 @@ void MainWindow::selectEngine( int index )
 
 void MainWindow::selectConfig( int index )
 {
-	if (index < 0) {  // config combo box was reset to "no config selected" state
-		return;
-	}
-
-	// TODO: Adding an item to an empty combobox automatically causes selectConfig(0), which we don't want
-	//       because we want to allow the config to be unselected. Find a way how to get around this.
-
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].selectedConfig = ui->configCmbBox->itemText( index );
+		if (index < 0)  // engine combo box was reset to "no engine selected" state
+			presets[ selectedPresetIdx ].selectedConfig.clear();
+		else
+			presets[ selectedPresetIdx ].selectedConfig = ui->configCmbBox->itemText( index );
 	}
-
-	updateSaveFilesFromDir();
 
 	generateLaunchCommand();
 }
@@ -456,7 +453,11 @@ void MainWindow::presetAdd()
 {
   static uint presetNum = 1;
 
-	// clear the widgets displaying preset content
+	// append the item, select it and update the view
+	appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum ), "", "", "", {} } );
+
+	// clear the widgets to represent an empty preset
+	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will be saved in the old one
 	ui->engineCmbBox->setCurrentIndex( -1 );
 	ui->configCmbBox->setCurrentIndex( -1 );
 	deselectSelectedItems( ui->iwadListView );
@@ -466,9 +467,6 @@ void MainWindow::presetAdd()
 	deselectSelectedItems( ui->modListView );
 	mods.clear();
 	modModel.updateView(0);
-
-	// appends, changes selection and updates UI
-	appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum ), "", "", "", {} } );
 
 	// open edit mode so that user can name the preset
 	ui->presetListView->edit( presetModel.index( presets.count() - 1, 0 ) );
@@ -659,7 +657,6 @@ void MainWindow::updateSaveFilesFromDir()
 
 	// write down the currently selected item
 	QString curText = ui->saveFileCmbBox->currentText();
-	ui->saveFileCmbBox->setCurrentIndex( -1 );  // just in case
 	ui->saveFileCmbBox->clear();
 
 	// update the list according to directory content
@@ -682,9 +679,15 @@ void MainWindow::updateConfigFilesFromDir()
 		return;
 	}
 
-	// write down the currently selected item
+	// write down the current value of selectedConfig in a currently selected preset,
+	// so that we can neutralize the unwanted change caused by CmbBox->addItem
+	QString presetSelectedConfig;
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx >= 0)
+		presetSelectedConfig = presets[ selectedPresetIdx ].selectedConfig;
+
+	// write down the currently selected item and current config value in selected preset
 	QString lastText = ui->configCmbBox->currentText();
-	ui->configCmbBox->setCurrentIndex( -1 );  // just in case
 	ui->configCmbBox->clear();
 
 	// update the list according to directory content
@@ -697,9 +700,13 @@ void MainWindow::updateConfigFilesFromDir()
 			ui->configCmbBox->addItem( entry.fileName() );
 	}
 
-	// restore the originally selected item (reset selection if the item does not exist in the new content)
-	int newIndex = ui->configCmbBox->findText( lastText );
-	ui->configCmbBox->setCurrentIndex( newIndex );
+	// restore the originally selected item (the selection will be reset if the item does not exist in the new content)
+	ui->configCmbBox->setCurrentIndex( ui->configCmbBox->findText( lastText ) );
+
+	// Adding an item to an empty combo-box causes the current index to change to 0, which we don't want. This change
+	// is unfortunatelly propagated into a current preset, so we have to manually set it back to maintain consistency.
+	if (selectedPresetIdx)
+		presets[ selectedPresetIdx ].selectedConfig = presetSelectedConfig;
 }
 
 void MainWindow::updateMapsFromIWAD()
@@ -1058,7 +1065,10 @@ void MainWindow::loadOptions( QString fileName )
 		} // otherwise we need to do this in showEvent callback
 	}
 
+	// path helper must be set before others, because we want to convert the loaded paths accordingly
 	pathHelper.toggleAbsolutePaths( getBool( json, "use_absolute_paths", false ) );
+	// preset must be set before others, so that the cleared selections doesn't save in the preset
+	deselectSelectedItems( ui->presetListView );
 
 	// engines
 	{
@@ -1176,7 +1186,6 @@ void MainWindow::loadOptions( QString fileName )
 	{
 		QJsonArray jsPresetArray = getArray( json, "presets" );
 
-		deselectSelectedItems( ui->presetListView );
 		presets.clear();
 
 		for (int i = 0; i < jsPresetArray.size(); i++)
@@ -1276,7 +1285,7 @@ void MainWindow::generateLaunchCommand()
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx >= 0)
-			cmdStream << "-config \""
+			cmdStream << " -config \""
 			          << QFileInfo( engines[ engineIdx ].path ).dir().filePath( ui->configCmbBox->currentText() ) << "\"";
 	}
 

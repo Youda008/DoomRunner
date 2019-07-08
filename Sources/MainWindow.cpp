@@ -126,6 +126,7 @@ MainWindow::MainWindow()
 		[ this ]( Mod & mod, const QFileInfo & file ) {
 			mod.name = file.fileName();
 			mod.path = pathHelper.convertPath( file.filePath() );
+			mod.checked = true;
 		}
 	);
 	modModel.setIsCheckedFunc(  // here the model will read and write the information about check state
@@ -1175,7 +1176,7 @@ void MainWindow::loadOptions( QString fileName )
 		QString dir = getString( jsMods, "directory" );
 		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
 			if (QDir( dir ).exists())
-				modDir = dir;
+				modDir = pathHelper.convertPath( dir );
 			else
 				QMessageBox::warning( this, "Mod dir no longer exists",
 					"Mod directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );

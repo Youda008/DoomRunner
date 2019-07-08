@@ -59,9 +59,9 @@ class EditableListView : public QListView {
 	/** does proposed drop operation comply with our settings? */
 	bool isDropAcceptable( QDragMoveEvent * event );
 
-	bool isIntraWidgetDnD( QDragMoveEvent * event );
-	bool isInterWidgetDnD( QDragMoveEvent * event );
-	bool isExternFileDnD( QDragMoveEvent * event );
+	bool isIntraWidgetDnD( QDropEvent * event );
+	bool isInterWidgetDnD( QDropEvent * event );
+	bool isExternFileDnD( QDropEvent * event );
 
  signals:
 

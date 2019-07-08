@@ -84,17 +84,17 @@ bool EditableListView::isDropAcceptable( QDragMoveEvent * event )
 		return false;
 }
 
-bool EditableListView::isIntraWidgetDnD( QDragMoveEvent * event )
+bool EditableListView::isIntraWidgetDnD( QDropEvent * event )
 {
 	return event->source() == this;
 }
 
-bool EditableListView::isInterWidgetDnD( QDragMoveEvent * event )
+bool EditableListView::isInterWidgetDnD( QDropEvent * event )
 {
 	return event->source() != this && !event->mimeData()->hasUrls();
 }
 
-bool EditableListView::isExternFileDnD( QDragMoveEvent * event )
+bool EditableListView::isExternFileDnD( QDropEvent * event )
 {
 	return event->source() != this && event->mimeData()->hasUrls();
 }
@@ -136,6 +136,10 @@ void EditableListView::dropEvent( QDropEvent * event )
 	// 3. if model->dropMimeData then accept drop event
 
 	superClass::dropEvent( event );
+
+	// announce dropped files now only if it's an external drag&drop, otherwise postpone it because of the issue decribed below
+	if (isExternFileDnD( event ))
+		emit itemsDropped();
 }
 
 void EditableListView::startDrag( Qt::DropActions supportedActions )
@@ -159,6 +163,10 @@ void EditableListView::startDrag( Qt::DropActions supportedActions )
 	// into the correct model, because it's a template class whose template parameter is not known here.
 	// So the only way is to emit a signal to the owner of this ListView, which then catches it, queries the model
 	// for a drop index and then performs the update.
+	//
+	// And even that isn't enough, because this is called only when the source of the drag is this application.
+	// When you drag files from a directory window, then dropEvent is called from somewhere else, so in that case
+	// we send the signal from dropEvent, there the deletion of the selected items doesn't happen.
 
 	superClass::startDrag( supportedActions );
 	// at this point the drag&drop should be finished and source rows removed, so we can safely update the selection

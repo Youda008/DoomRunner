@@ -302,7 +302,6 @@ class EditableListModel : public AObjectListModel< Object > {
 			qWarning() << "This model doesn't support such drop operation. It should have been restricted by the ListView.";
 			return false;
 		}
-
 	}
 
 	bool dropInternalItems( QByteArray encodedData, int row, const QModelIndex & parent )
@@ -350,6 +349,8 @@ class EditableListModel : public AObjectListModel< Object > {
 		_droppedRow = row;
 		_droppedCount = count;
 
+		superClass::updateView( _droppedRow );
+
 		return true;
 	}
 
@@ -384,6 +385,8 @@ class EditableListModel : public AObjectListModel< Object > {
 		}
 
 		_dropped = true;
+
+		superClass::updateView( _droppedRow );
 
 		return true;
 	}

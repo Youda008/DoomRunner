@@ -707,7 +707,7 @@ void MainWindow::updateConfigFilesFromDir()
 
 	// Adding an item to an empty combo-box causes the current index to change to 0, which we don't want. This change
 	// is unfortunatelly propagated into a current preset, so we have to manually set it back to maintain consistency.
-	if (selectedPresetIdx)
+	if (selectedPresetIdx >= 0)
 		presets[ selectedPresetIdx ].selectedConfig = presetSelectedConfig;
 }
 

@@ -6,4 +6,5 @@
 - engine name is now derived from directory name instead of executable name
 - added "clone preset" button
 - added an option to select a configuration file
+- added file filters for file dialogs
 - few minor bug fixes

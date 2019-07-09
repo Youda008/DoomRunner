@@ -27,9 +27,11 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 	: QDialog( parent )
 	, pathHelper( pathHelper )
 	, engines( engines )
-	, engineModel( engines, []( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; } )
+	, engineModel( engines, /*makeDisplayString*/[]( const Engine & engine ) -> QString
+	                                             { return engine.name % "  [" % engine.path % "]"; } )
 	, iwads( iwads )
-	, iwadModel( iwads, []( const IWAD & iwad ) -> QString { return iwad.name % "  [" % iwad.path % "]"; } )
+	, iwadModel( iwads, /*makeDisplayString*/[]( const IWAD & iwad ) -> QString
+	                                         { return iwad.name % "  [" % iwad.path % "]"; } )
 	, iwadListFromDir( iwadListFromDir )
 	, iwadDir( iwadDir )
 	, mapDir( mapDir )
@@ -182,7 +184,7 @@ void SetupDialog::changeModDir( QString text )
 
 void SetupDialog::iwadAdd()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate the IWAD" );
+	QString path = QFileDialog::getOpenFileName( this, "Locate the IWAD", QString(), "*.wad" );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 

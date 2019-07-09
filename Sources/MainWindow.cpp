@@ -87,13 +87,13 @@ MainWindow::MainWindow()
 	, height( -1 )
 	, tickCount( 0 )
 	, pathHelper( false )
-	, engineModel( engines, []( const Engine & engine ) { return engine.name; } )
-	, iwadModel( iwads, []( const IWAD & iwad ) { return iwad.name; } )
+	, engineModel( engines, /*makeDisplayString*/[]( const Engine & engine ) { return engine.name; } )
+	, iwadModel( iwads, /*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; } )
 	, iwadListFromDir( false )
-	, mapModel( maps, []( const MapPack & pack ) { return pack.name; } )
+	, mapModel( maps, /*makeDisplayString*/[]( const MapPack & pack ) { return pack.name; } )
 	, selectedPackIdx( -1 )
-	, modModel( mods, []( Mod & mod ) -> QString & { return mod.name; } )
-	, presetModel( presets, []( Preset & preset ) -> QString & { return preset.name; } )
+	, modModel( mods, /*displayString*/[]( Mod & mod ) -> QString & { return mod.name; } )
+	, presetModel( presets, /*displayString*/[]( Preset & preset ) -> QString & { return preset.name; } )
 	, dmflags1( 0 )
 	, dmflags2( 0 )
 	, compatflags1( 0 )
@@ -505,7 +505,8 @@ void MainWindow::presetMoveDown()
 
 void MainWindow::modAdd()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modDir );
+	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modDir,
+	                                             "Doom mod files (*.wad *.pk3 *.zip);;All files (*)" );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 

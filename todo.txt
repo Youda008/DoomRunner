@@ -1,3 +1,4 @@
 compatibility options
 fix export preset function
 import preset function
+show engine's error output in message box

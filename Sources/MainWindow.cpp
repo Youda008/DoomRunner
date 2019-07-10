@@ -42,6 +42,12 @@
 	static const QString scriptFileExt = "*.sh";
 #endif
 
+#ifdef _WIN32
+	static const QString configFileExt = "ini";
+#else
+	static const QString configFileExt = "TODO";
+#endif
+
 static constexpr char defaultOptionsFile [] = "options.json";
 
 
@@ -88,6 +94,7 @@ MainWindow::MainWindow()
 	, tickCount( 0 )
 	, pathHelper( false )
 	, engineModel( engines, /*makeDisplayString*/[]( const Engine & engine ) { return engine.name; } )
+	, configModel( configs, /*makeDisplayString*/[]( const QString & config ) { return config; } )
 	, iwadModel( iwads, /*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; } )
 	, iwadListFromDir( false )
 	, mapModel( maps, /*makeDisplayString*/[]( const MapPack & pack ) { return pack.name; } )
@@ -103,8 +110,11 @@ MainWindow::MainWindow()
 	ui->setupUi( this );
 
 	// setup view models
-	ui->engineCmbBox->setModel( &engineModel );
 	ui->presetListView->setModel( &presetModel );
+	// we use custom model for engines, because we want to display the same list differently in different window
+	ui->engineCmbBox->setModel( &engineModel );
+	// we use custom model for configs, because calling 'clear' or 'add' on a combo box changes current index, which complicates things
+	ui->configCmbBox->setModel( &configModel );
 	ui->iwadListView->setModel( &iwadModel );
 	ui->mapListView->setModel( &mapModel );
 	ui->modListView->setModel( &modModel );
@@ -293,7 +303,7 @@ void MainWindow::selectPreset( const QModelIndex & index )
 
 	// restore selected config
 	if (!preset.selectedConfig.isEmpty()) {  // the preset combo box might have been empty when creating this preset
-		int configIdx = ui->configCmbBox->findText( preset.selectedConfig );
+		int configIdx = configs.indexOf( preset.selectedConfig );
 		if (configIdx >= 0) {
 			ui->configCmbBox->setCurrentIndex( configIdx );
 		} else {
@@ -381,7 +391,7 @@ void MainWindow::selectConfig( int index )
 		if (index < 0)  // engine combo box was reset to "no engine selected" state
 			presets[ selectedPresetIdx ].selectedConfig.clear();
 		else
-			presets[ selectedPresetIdx ].selectedConfig = ui->configCmbBox->itemText( index );
+			presets[ selectedPresetIdx ].selectedConfig = configs[ index ];
 	}
 
 	generateLaunchCommand();
@@ -506,7 +516,7 @@ void MainWindow::presetMoveDown()
 void MainWindow::modAdd()
 {
 	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modDir,
-	                                             "Doom mod files (*.wad *.pk3 *.zip);;All files (*)" );
+	                                             "Doom mod files (*.wad *.WAD *.pk3 *.PK3 *.zip);;All files (*)" );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -627,7 +637,7 @@ void MainWindow::modsDropped()
 
 void MainWindow::updateIWADsFromDir( QListView * view )  // the parameter exists, because SetupDialog also wants to update its view
 {
-	updateListFromDir< IWAD >( iwads, view, iwadDir, "wad",
+	updateListFromDir< IWAD >( iwads, view, iwadDir, {"wad", "WAD"},
 		/*makeItemFromFile*/[ this ]( const QFileInfo & file ) -> IWAD
 		{
 			return { file.fileName(), pathHelper.convertPath( file.filePath() ) };
@@ -640,7 +650,7 @@ void MainWindow::updateIWADsFromDir( QListView * view )  // the parameter exists
 
 void MainWindow::updateMapPacksFromDir()
 {
-	updateListFromDir< MapPack >( maps, ui->mapListView, mapDir, "wad",
+	updateListFromDir< MapPack >( maps, ui->mapListView, mapDir, {"wad", "WAD", "pk3", "PK3"},
 		/*makeItemFromFile*/[]( const QFileInfo & file ) -> MapPack
 		{
 			return { file.fileName() };
@@ -681,16 +691,12 @@ void MainWindow::updateConfigFilesFromDir()
 		return;
 	}
 
-	// write down the current value of selectedConfig in a currently selected preset,
-	// so that we can neutralize the unwanted change caused by CmbBox->addItem
-	QString presetSelectedConfig;
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedPresetIdx >= 0)
-		presetSelectedConfig = presets[ selectedPresetIdx ].selectedConfig;
-
-	// write down the currently selected item and current config value in selected preset
+	// write down the currently selected item so that we can restore it later
 	QString lastText = ui->configCmbBox->currentText();
-	ui->configCmbBox->clear();
+	// We use a custom model for configs, because clearing a combo-box and adding an item to it causes a change of
+	// current index, which then propagates into current preset and causes a useless regeneration of launch command.
+	// This way we just clear our underlying list and update the frontend when the new data are ready.
+	configs.clear();
 
 	// update the list according to directory content
 	QFileInfo info( engines[ ui->engineCmbBox->currentIndex() ].path );
@@ -698,17 +704,14 @@ void MainWindow::updateConfigFilesFromDir()
 	QDirIterator dirIt( dir );
 	while (dirIt.hasNext()) {
 		QFileInfo entry( dirIt.next() );
-		if (!entry.isDir() && entry.suffix() == "ini")
-			ui->configCmbBox->addItem( entry.fileName() );
+		if (!entry.isDir() && entry.suffix() == configFileExt)
+			configs.append( entry.fileName() );
 	}
 
 	// restore the originally selected item (the selection will be reset if the item does not exist in the new content)
 	ui->configCmbBox->setCurrentIndex( ui->configCmbBox->findText( lastText ) );
 
-	// Adding an item to an empty combo-box causes the current index to change to 0, which we don't want. This change
-	// is unfortunatelly propagated into a current preset, so we have to manually set it back to maintain consistency.
-	if (selectedPresetIdx >= 0)
-		presets[ selectedPresetIdx ].selectedConfig = presetSelectedConfig;
+	configModel.updateView(0);
 }
 
 void MainWindow::updateMapsFromIWAD()

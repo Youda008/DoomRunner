@@ -184,7 +184,7 @@ void SetupDialog::changeModDir( QString text )
 
 void SetupDialog::iwadAdd()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate the IWAD", QString(), "*.wad" );
+	QString path = QFileDialog::getOpenFileName( this, "Locate the IWAD", QString(), "(*.wad *.WAD)" );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 

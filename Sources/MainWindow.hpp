@@ -142,6 +142,10 @@ class MainWindow : public QMainWindow {
 	QList< Engine > engines;    ///< user-ordered list of engines (managed by SetupDialog)
 	ReadOnlyListModel< Engine > engineModel;    ///< wrapper around list of engines mediating their names to the engine combo box
 
+	// config files
+	QList< QString > configs;    ///< list of config files found inside directory of selected engine
+	ReadOnlyListModel< QString > configModel;    ///< wrapper around list of configs mediating their names to the config combo box
+
 	// IWAD info
 	QList< IWAD > iwads;    ///< user-ordered list of iwads (managed by SetupDialog)
 	ReadOnlyListModel< IWAD > iwadModel;    ///< wrapper around list of iwads mediating their names to the iwad list view

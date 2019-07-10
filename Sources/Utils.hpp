@@ -25,21 +25,21 @@
 //  container helpers
 
 /** checks whether the list contains such an element that satisfies condition */
-template< typename Type >
-bool containsSuch( const QList< Type > & list, std::function< bool ( const Type & elem ) > condition )
+template< typename ElemType >
+bool containsSuch( const QList<ElemType> & list, std::function< bool ( const ElemType & elem ) > condition )
 {
-	for (const Type & elem : list)
+	for (const ElemType & elem : list)
 		if (condition( elem ))
 			return true;
 	return false;
 }
 
 /** finds such element in the list that satisfies condition */
-template< typename Type >
-int findSuch( const QList< Type > & list, std::function< bool ( const Type & elem ) > condition )
+template< typename ElemType >
+int findSuch( const QList<ElemType> & list, std::function< bool ( const ElemType & elem ) > condition )
 {
 	int i = 0;
-	for (const Type & elem : list) {
+	for (const ElemType & elem : list) {
 		if (condition( elem ))
 			return i;
 		i++;
@@ -169,8 +169,8 @@ int moveDownSelectedItem( QListView * view, AObjectListModel< Object > & model )
 //----------------------------------------------------------------------------------------------------------------------
 
 template< typename Object >  // Object must contain public attribute .name
-void updateListFromDir( QList< Object > & list, QListView * view, QString dir, const QString & fileSuffix,
-                        std::function< Object ( const QFileInfo & file ) > makeItemFromFile )
+void updateListFromDir( QList< Object > & list, QListView * view, QString dir, const QVector<QString> & fileSuffixes,
+                        std::function< Object ( const QFileInfo & file ) > makeItemFromFile )  // TODO: list of sufixes
 {
 	if (dir.isEmpty())
 		return;
@@ -192,7 +192,7 @@ void updateListFromDir( QList< Object > & list, QListView * view, QString dir, c
 	while (dirIt.hasNext()) {
 		dirIt.next();
 		QFileInfo file = dirIt.fileInfo();
-		if (!file.isDir() && (fileSuffix.isEmpty() || fileSuffix == file.suffix())) {
+		if (!file.isDir() && (fileSuffixes.isEmpty() || fileSuffixes.contains( file.suffix() ))) {
 			list.append( makeItemFromFile( file ) );
 		}
 	}

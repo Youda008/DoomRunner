@@ -6,44 +6,23 @@
 // Description:
 //======================================================================================================================
 
-#ifndef COMPAT_FLAGS_DIALOG_INCLUDED
-#define COMPAT_FLAGS_DIALOG_INCLUDED
-
-
-#include "Common.hpp"
-
-#include <QDialog>
-
-
-namespace Ui {
-	class CompatFlagsDialog;
-}
+#include "CompatOptsDialog.hpp"
+#include "ui_CompatOptsDialog.h"
 
 
 //======================================================================================================================
 
+CompatOptsDialog::CompatOptsDialog( QWidget * parent, uint32_t & compatflags1, uint32_t & compatflags2 )
 
-class CompatFlagsDialog : public QDialog {
+	: QDialog( parent )
+	, flags1( compatflags1 )
+	, flags2( compatflags2 )
+{
+	ui = new Ui::CompatOptsDialog;
+    ui->setupUi(this);
+}
 
-    Q_OBJECT
-
- public:
-
-    explicit CompatFlagsDialog( QWidget * parent, uint32_t & compatflags1, uint32_t & compatflags2 );
-    ~CompatFlagsDialog();
-
- protected:
-
-    //virtual void closeEvent( QCloseEvent * event );
-
- private:
-
-    Ui::CompatFlagsDialog * ui;
-
-    uint32_t & flags1;
-    uint32_t & flags2;
-
-};
-
-
-#endif // COMPAT_FLAGS_DIALOG_INCLUDED
+CompatOptsDialog::~CompatOptsDialog()
+{
+    delete ui;
+}

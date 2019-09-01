@@ -6,8 +6,8 @@
 // Description:
 //======================================================================================================================
 
-#include "DMFlagsDialog.hpp"
-#include "ui_DMFlagsDialog.h"
+#include "GameOptsDialog.hpp"
+#include "ui_GameOptsDialog.h"
 
 
 #include <cstdint>
@@ -27,7 +27,7 @@ DMFlagsDialog::DMFlagsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & 
 	, retFlags1( dmflags1 )
 	, retFlags2( dmflags2 )
 {
-	ui = new Ui::DMFlagsDialog;
+	ui = new Ui::GameOptsDialog;
 	ui->setupUi( this );
 
 	ui->dmflags1_line->setValidator( new QIntValidator( 0, UINT32_MAX, this ) );  // TODO: unsigned int validator

@@ -10,8 +10,8 @@
 #include "ui_MainWindow.h"
 
 #include "SetupDialog.hpp"
-#include "DMFlagsDialog.hpp"
-#include "CompatFlagsDialog.hpp"
+#include "GameOptsDialog.hpp"
+#include "CompatOptsDialog.hpp"
 #include "JsonHelper.hpp"
 #include "Utils.hpp"
 
@@ -180,8 +180,8 @@ MainWindow::MainWindow()
 	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoMonsters );
 	connect( ui->fastMonstersChkBox, &QCheckBox::toggled, this, &thisClass::toggleFastMonsters );
 	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::toggleMonstersRespawn );
-	connect( ui->dmFlagsBtn, &QPushButton::clicked, this, &thisClass::runDMFlagsDialog );
-	connect( ui->compatFlagsBtn, &QPushButton::clicked, this, &thisClass::runCompatFlagsDialog );
+	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runDMFlagsDialog );
+	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatFlagsDialog );
 
 	connect( ui->multiplayerChkBox, &QCheckBox::toggled, this, &thisClass::toggleMultiplayer );
 	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMultRole );
@@ -792,8 +792,8 @@ void MainWindow::modeGameMenu()
 	ui->noMonstersChkBox->setEnabled( false );
 	ui->fastMonstersChkBox->setEnabled( false );
 	ui->monstersRespawnChkBox->setEnabled( false );
-	ui->dmFlagsBtn->setEnabled( false );
-	ui->compatFlagsBtn->setEnabled( false );
+	ui->gameOptsBtn->setEnabled( false );
+	ui->compatOptsBtn->setEnabled( false );
 
 	ui->multiplayerChkBox->setChecked( false );
 
@@ -809,8 +809,8 @@ void MainWindow::modeSelectedMap()
 	ui->noMonstersChkBox->setEnabled( true );
 	ui->fastMonstersChkBox->setEnabled( true );
 	ui->monstersRespawnChkBox->setEnabled( true );
-	ui->dmFlagsBtn->setEnabled( true );
-	ui->compatFlagsBtn->setEnabled( true );
+	ui->gameOptsBtn->setEnabled( true );
+	ui->compatOptsBtn->setEnabled( true );
 
 	generateLaunchCommand();
 }
@@ -824,8 +824,8 @@ void MainWindow::modeSavedGame()
 	ui->noMonstersChkBox->setEnabled( false );
 	ui->fastMonstersChkBox->setEnabled( false );
 	ui->monstersRespawnChkBox->setEnabled( false );
-	ui->dmFlagsBtn->setEnabled( false );
-	ui->compatFlagsBtn->setEnabled( false );
+	ui->gameOptsBtn->setEnabled( false );
+	ui->compatOptsBtn->setEnabled( false );
 
 	generateLaunchCommand();
 }

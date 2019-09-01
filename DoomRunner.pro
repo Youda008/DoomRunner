@@ -25,10 +25,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++14
 
 SOURCES += \
-    Sources/CompatFlagsDialog.cpp \
-    Sources/DMFlagsDialog.cpp \
+    Sources/CompatOptsDialog.cpp \
     Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
+    Sources/GameOptsDialog.cpp \
     Sources/ItemModels.cpp \
     Sources/JsonHelper.cpp \
     Sources/MainWindow.cpp \
@@ -39,10 +39,10 @@ SOURCES += \
 
 HEADERS += \
     Sources/Common.hpp \
-    Sources/CompatFlagsDialog.hpp \
-    Sources/DMFlagsDialog.hpp \
+    Sources/CompatOptsDialog.hpp \
     Sources/EditableListView.hpp \
     Sources/EngineDialog.hpp \
+    Sources/GameOptsDialog.hpp \
     Sources/ItemModels.hpp \
     Sources/JsonHelper.hpp \
     Sources/MainWindow.hpp \
@@ -51,9 +51,9 @@ HEADERS += \
     Sources/Utils.hpp
 
 FORMS += \
-    Forms/CompatFlagsDialog.ui \
-    Forms/DMFlagsDialog.ui \
+    Forms/CompatOptsDialog.ui \
     Forms/EngineDialog.ui \
+    Forms/GameOptsDialog.ui \
     Forms/MainWindow.ui \
     Forms/SetupDialog.ui
 

@@ -596,22 +596,22 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
-             <widget class="QPushButton" name="dmFlagsBtn">
+             <widget class="QPushButton" name="gameOpsBtn">
               <property name="enabled">
                <bool>false</bool>
               </property>
               <property name="text">
-               <string>DM flags</string>
+               <string>Gameplay options</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="compatFlagsBtn">
+             <widget class="QPushButton" name="compatOptsBtn">
               <property name="enabled">
                <bool>false</bool>
               </property>
               <property name="text">
-               <string>Compatibility flags</string>
+               <string>Compatibility options</string>
               </property>
              </widget>
             </item>

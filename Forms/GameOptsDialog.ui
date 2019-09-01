@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>DMFlagsDialog</class>
- <widget class="QDialog" name="DMFlagsDialog">
+ <class>GameOptsDialog</class>
+ <widget class="QDialog" name="GameOptsDialog">
   <property name="windowModality">
    <enum>Qt::WindowModal</enum>
   </property>
@@ -26,7 +26,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Gameplay options</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

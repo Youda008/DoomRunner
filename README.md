@@ -16,9 +16,9 @@ You can even configure gameplay flags and compatibility flags.
 The map list and IWAD list are automatically updated from selected directory, so everytime you download a new WAD, you don't need to manually add it to the launcher. The mod list supports drag&drop from directory window and internal drag&drop for reordering the files.
 
 ## Status
-Currently the launcher is still work-in-progress. Some features are not finished yet and the build is tested only on Windows. A testing version is available below and I will be glad for any feedback, suggestions and bug reports. You can either create an issue here on Github, or write me an email youda008@seznam.cz or contact me on Discord as Youda#6731.
+Currently the launcher is still work-in-progress. Some features are not finished yet and the build is tested only on Windows. A testing version is available below and I will be glad for any feedback, suggestions and bug reports. You can either create an issue here on Github, or write me an email youda008@seznam.cz or contact me on Discord as Youda#0008.
 
-## Download (alpha version)
+## Download (beta version)
 Currently i have pre-built executables only for Windows. There is a statically linked version and dynamically linked version. The static one is bigger, but it's a standalone portable executable that should run on any computer. Download the dynamic version ONLY if you already have Msys2 with Qt installed, otherwise grab the static one.
 
 Download it [here](https://github.com/Youda008/DoomRunner/releases)

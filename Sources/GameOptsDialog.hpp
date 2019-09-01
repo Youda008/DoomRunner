@@ -16,7 +16,7 @@
 
 
 namespace Ui {
-	class DMFlagsDialog;
+	class GameOptsDialog;
 }
 
 
@@ -34,16 +34,16 @@ struct Flag {
 
 //======================================================================================================================
 
-class DMFlagsDialog : public QDialog {
+class GameOptsDialog : public QDialog {
 
     Q_OBJECT
 
-    using thisClass = DMFlagsDialog;
+    using thisClass = GameOptsDialog;
 
  public:
 
-    explicit DMFlagsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & dmflags2 );
-    ~DMFlagsDialog();
+    explicit GameOptsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & dmflags2 );
+    ~GameOptsDialog();
 
  protected:
 
@@ -118,9 +118,9 @@ class DMFlagsDialog : public QDialog {
 
  private: // members
 
-    Ui::DMFlagsDialog * ui;
+    Ui::GameOptsDialog * ui;
 
-    // dialog-local flags - need to be separate from the called flags, because the user might click Cancel
+    // dialog-local flags - need to be separate from the caller's flags, because the user might click Cancel
     uint32_t flags1;
     uint32_t flags2;
 

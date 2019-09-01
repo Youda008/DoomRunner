@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="filesTab">
        <attribute name="title">
@@ -596,7 +596,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
-             <widget class="QPushButton" name="gameOpsBtn">
+             <widget class="QPushButton" name="gameOptsBtn">
               <property name="enabled">
                <bool>false</bool>
               </property>

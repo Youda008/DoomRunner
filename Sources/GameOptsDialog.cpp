@@ -19,7 +19,7 @@
 
 //======================================================================================================================
 
-DMFlagsDialog::DMFlagsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & dmflags2 )
+GameOptsDialog::GameOptsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & dmflags2 )
 
 	: QDialog( parent )
 	, flags1( dmflags1 )
@@ -42,19 +42,19 @@ DMFlagsDialog::DMFlagsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & 
 	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::cancel );
 }
 
-void DMFlagsDialog::confirm()
+void GameOptsDialog::confirm()
 {
 	// update the dialog caller's flags only when user clicks Ok
 	retFlags1 = flags1;
 	retFlags2 = flags2;
 }
 
-void DMFlagsDialog::cancel()
+void GameOptsDialog::cancel()
 {
 
 }
 
-DMFlagsDialog::~DMFlagsDialog()
+GameOptsDialog::~GameOptsDialog()
 {
 	delete ui;
 }
@@ -117,82 +117,82 @@ static Flag KEEP_AMMO                    = { dmflags1, 536870912, true };
 static Flag LOSE_HALF_AMMO               = { dmflags1, 1073741824, false };
 static Flag SPAWN_WHERE_DIED             = { dmflags2, 4096, false };
 
-void DMFlagsDialog::on_fallingDamage_toggled( bool checked )
+void GameOptsDialog::on_fallingDamage_toggled( bool checked )
 {
 	setFlag( FALLING_DAMAGE, checked );
 }
 
-void DMFlagsDialog::on_dropWeapon_toggled( bool checked )
+void GameOptsDialog::on_dropWeapon_toggled( bool checked )
 {
 	setFlag( DROP_WEAPON, checked );
 }
 
-void DMFlagsDialog::on_doubleAmmo_toggled( bool checked )
+void GameOptsDialog::on_doubleAmmo_toggled( bool checked )
 {
 	setFlag( DOUBLE_AMMO, checked );
 }
 
-void DMFlagsDialog::on_infAmmo_toggled( bool checked )
+void GameOptsDialog::on_infAmmo_toggled( bool checked )
 {
 	setFlag( INF_AMMO, checked );
 }
 
-void DMFlagsDialog::on_infInventory_toggled( bool checked )
+void GameOptsDialog::on_infInventory_toggled( bool checked )
 {
 	setFlag( INF_INVENTORY, checked );
 }
 
-void DMFlagsDialog::on_noMonsters_toggled( bool checked )
+void GameOptsDialog::on_noMonsters_toggled( bool checked )
 {
 	setFlag( NO_MONSTERS, checked );
 }
 
-void DMFlagsDialog::on_noMonstersToExit_toggled( bool checked )
+void GameOptsDialog::on_noMonstersToExit_toggled( bool checked )
 {
 	setFlag( NO_MONSTERS_TO_EXIT, checked );
 }
 
-void DMFlagsDialog::on_monstersRespawn_toggled( bool checked )
+void GameOptsDialog::on_monstersRespawn_toggled( bool checked )
 {
 	setFlag( MONSTERS_RESPAWN, checked );
 }
 
-void DMFlagsDialog::on_noRespawn_toggled( bool checked )
+void GameOptsDialog::on_noRespawn_toggled( bool checked )
 {
 	setFlag( NO_RESPAWN, checked );
 }
 
-void DMFlagsDialog::on_itemsRespawn_toggled( bool checked )
+void GameOptsDialog::on_itemsRespawn_toggled( bool checked )
 {
 	setFlag( ITEMS_RESPAWN, checked );
 }
 
-void DMFlagsDialog::on_bigPowerupsRespawn_toggled( bool checked )
+void GameOptsDialog::on_bigPowerupsRespawn_toggled( bool checked )
 {
 	setFlag( BIG_POWERUPS_RESPAWN, checked );
 }
 
-void DMFlagsDialog::on_fastMonsters_toggled( bool checked )
+void GameOptsDialog::on_fastMonsters_toggled( bool checked )
 {
 	setFlag( FAST_MONSTERS, checked );
 }
 
-void DMFlagsDialog::on_degeneration_toggled( bool checked )
+void GameOptsDialog::on_degeneration_toggled( bool checked )
 {
 	setFlag( DEGENERATION, checked );
 }
 
-void DMFlagsDialog::on_allowAutoAim_toggled( bool checked )
+void GameOptsDialog::on_allowAutoAim_toggled( bool checked )
 {
 	setFlag( ALLOW_AUTO_AIM, checked );
 }
 
-void DMFlagsDialog::on_allowSuicide_toggled( bool checked )
+void GameOptsDialog::on_allowSuicide_toggled( bool checked )
 {
 	setFlag( ALLOW_SUICIDE, checked );
 }
 
-void DMFlagsDialog::on_allowJump_stateChanged( int state )
+void GameOptsDialog::on_allowJump_stateChanged( int state )
 {
 	if (state == 0) {
 		setFlag( ALLOW_JUMP1, false );
@@ -206,7 +206,7 @@ void DMFlagsDialog::on_allowJump_stateChanged( int state )
 	}
 }
 
-void DMFlagsDialog::on_allowCrouch_stateChanged( int state )
+void GameOptsDialog::on_allowCrouch_stateChanged( int state )
 {
 	if (state == 0) {
 		setFlag( ALLOW_CROUCH1, false );
@@ -220,7 +220,7 @@ void DMFlagsDialog::on_allowCrouch_stateChanged( int state )
 	}
 }
 
-void DMFlagsDialog::on_allowFreelook_stateChanged( int state )
+void GameOptsDialog::on_allowFreelook_stateChanged( int state )
 {
 	if (state == 0) {
 		setFlag( ALLOW_FREELOOK1, false );
@@ -234,162 +234,162 @@ void DMFlagsDialog::on_allowFreelook_stateChanged( int state )
 	}
 }
 
-void DMFlagsDialog::on_allowFOV_toggled( bool checked )
+void GameOptsDialog::on_allowFOV_toggled( bool checked )
 {
 	setFlag( ALLOW_FOV, checked );
 }
 
-void DMFlagsDialog::on_allowBFGAiming_toggled( bool checked )
+void GameOptsDialog::on_allowBFGAiming_toggled( bool checked )
 {
 	setFlag( ALLOW_BFG_AIMING, checked );
 }
 
-void DMFlagsDialog::on_allowAutomap_toggled( bool checked )
+void GameOptsDialog::on_allowAutomap_toggled( bool checked )
 {
 	setFlag( ALLOW_AUTOMAP, checked );
 }
 
-void DMFlagsDialog::on_automapAllies_toggled( bool checked )
+void GameOptsDialog::on_automapAllies_toggled( bool checked )
 {
 	setFlag( AUTOMAP_ALLIES, checked );
 }
 
-void DMFlagsDialog::on_allowSpying_toggled( bool checked )
+void GameOptsDialog::on_allowSpying_toggled( bool checked )
 {
 	setFlag( ALLOW_SPYING, checked );
 }
 
-void DMFlagsDialog::on_chasecamCheat_toggled( bool checked )
+void GameOptsDialog::on_chasecamCheat_toggled( bool checked )
 {
 	setFlag( CHASECAM_CHEAT, checked );
 }
 
-void DMFlagsDialog::on_checkAmmoForWeaponSwitch_toggled( bool checked )
+void GameOptsDialog::on_checkAmmoForWeaponSwitch_toggled( bool checked )
 {
 	setFlag( CHECK_AMMO_FOR_WEAPON_SWITCH, checked );
 }
 
-void DMFlagsDialog::on_iconsDeathKillsItsSpawns_toggled( bool checked )
+void GameOptsDialog::on_iconsDeathKillsItsSpawns_toggled( bool checked )
 {
 	setFlag( ICONS_DEATH_KILLS_ITS_SPAWNS, checked );
 }
 
-void DMFlagsDialog::on_endSectorCountsForKill_toggled( bool checked )
+void GameOptsDialog::on_endSectorCountsForKill_toggled( bool checked )
 {
 	setFlag( END_SECTOR_COUNTS_FOR_KILL, checked );
 }
 
-void DMFlagsDialog::on_weaponsStay_toggled( bool checked )
+void GameOptsDialog::on_weaponsStay_toggled( bool checked )
 {
 	setFlag( WEAPONS_STAY, checked );
 }
 
-void DMFlagsDialog::on_allowPowerups_toggled( bool checked )
+void GameOptsDialog::on_allowPowerups_toggled( bool checked )
 {
 	setFlag( ALLOW_POWERUPS, checked );
 }
 
-void DMFlagsDialog::on_allowHealth_toggled( bool checked )
+void GameOptsDialog::on_allowHealth_toggled( bool checked )
 {
 	setFlag( ALLOW_HEALTH, checked );
 }
 
-void DMFlagsDialog::on_allowArmor_toggled( bool checked )
+void GameOptsDialog::on_allowArmor_toggled( bool checked )
 {
 	setFlag( ALLOW_ARMOR, checked );
 }
 
-void DMFlagsDialog::on_spawnFarthest_toggled( bool checked )
+void GameOptsDialog::on_spawnFarthest_toggled( bool checked )
 {
 	setFlag( SPAWN_FARTHEST, checked );
 }
 
-void DMFlagsDialog::on_sameMap_toggled( bool checked )
+void GameOptsDialog::on_sameMap_toggled( bool checked )
 {
 	setFlag( SAME_MAP, checked );
 }
 
-void DMFlagsDialog::on_forceRespawn_toggled( bool checked )
+void GameOptsDialog::on_forceRespawn_toggled( bool checked )
 {
 	setFlag( FORCE_RESPAWN, checked );
 }
 
-void DMFlagsDialog::on_allowExit_toggled( bool checked )
+void GameOptsDialog::on_allowExit_toggled( bool checked )
 {
 	setFlag( ALLOW_EXIT, checked );
 }
 
-void DMFlagsDialog::on_barrelsRespawn_toggled( bool checked )
+void GameOptsDialog::on_barrelsRespawn_toggled( bool checked )
 {
 	setFlag( BARRELS_RESPAWN, checked );
 }
 
-void DMFlagsDialog::on_respawnProtection_toggled( bool checked )
+void GameOptsDialog::on_respawnProtection_toggled( bool checked )
 {
 	setFlag( RESPAWN_PROTECTION, checked );
 }
 
-void DMFlagsDialog::on_loseFragIfFragged_toggled( bool checked )
+void GameOptsDialog::on_loseFragIfFragged_toggled( bool checked )
 {
 	setFlag( LOSE_FRAG_IF_FRAGGED, checked );
 }
 
-void DMFlagsDialog::on_keepFragsGained_toggled( bool checked )
+void GameOptsDialog::on_keepFragsGained_toggled( bool checked )
 {
 	setFlag( KEEP_FRAGS_GAINED, checked );
 }
 
-void DMFlagsDialog::on_noTeamSwitching_toggled( bool checked )
+void GameOptsDialog::on_noTeamSwitching_toggled( bool checked )
 {
 	setFlag( NO_TEAM_SWITCHING, checked );
 }
 
-void DMFlagsDialog::on_spawnMultiWeapons_toggled( bool checked )
+void GameOptsDialog::on_spawnMultiWeapons_toggled( bool checked )
 {
 	setFlag( SPAWN_MULTI_WEAPONS, checked );
 }
 
-void DMFlagsDialog::on_loseEntireInventory_toggled( bool checked )
+void GameOptsDialog::on_loseEntireInventory_toggled( bool checked )
 {
 	setFlag( LOSE_ENTIRE_INVENTORY, checked );
 }
 
-void DMFlagsDialog::on_keepKeys_toggled( bool checked )
+void GameOptsDialog::on_keepKeys_toggled( bool checked )
 {
 	setFlag( KEEP_KEYS, checked );
 }
 
-void DMFlagsDialog::on_keepWeapons_toggled( bool checked )
+void GameOptsDialog::on_keepWeapons_toggled( bool checked )
 {
 	setFlag( KEEP_WEAPONS, checked );
 }
 
-void DMFlagsDialog::on_keepArmor_toggled( bool checked )
+void GameOptsDialog::on_keepArmor_toggled( bool checked )
 {
 	setFlag( KEEP_ARMOR, checked );
 }
 
-void DMFlagsDialog::on_keepPowerups_toggled( bool checked )
+void GameOptsDialog::on_keepPowerups_toggled( bool checked )
 {
 	setFlag( KEEP_POWERUPS, checked );
 }
 
-void DMFlagsDialog::on_keepAmmo_toggled( bool checked )
+void GameOptsDialog::on_keepAmmo_toggled( bool checked )
 {
 	setFlag( KEEP_AMMO, checked );
 }
 
-void DMFlagsDialog::on_loseHalfAmmo_toggled( bool checked )
+void GameOptsDialog::on_loseHalfAmmo_toggled( bool checked )
 {
 	setFlag( LOSE_HALF_AMMO, checked );
 }
 
-void DMFlagsDialog::on_spawnWhereDied_toggled( bool checked )
+void GameOptsDialog::on_spawnWhereDied_toggled( bool checked )
 {
 	setFlag( SPAWN_WHERE_DIED, checked );
 }
 
-void DMFlagsDialog::setFlag( Flag flag, bool enabled )
+void GameOptsDialog::setFlag( Flag flag, bool enabled )
 {
 	uint32_t * flags;
 	QLineEdit * line;
@@ -410,7 +410,7 @@ void DMFlagsDialog::setFlag( Flag flag, bool enabled )
 	line->setText( QString::number( *flags ) );
 }
 
-bool DMFlagsDialog::isEnabled( Flag flag )
+bool GameOptsDialog::isEnabled( Flag flag )
 {
 	uint32_t * flags;
 
@@ -425,19 +425,19 @@ bool DMFlagsDialog::isEnabled( Flag flag )
 		return (*flags & flag.bit) == 0;
 }
 
-void DMFlagsDialog::on_dmflags1_line_textEdited( const QString & )
+void GameOptsDialog::on_dmflags1_line_textEdited( const QString & )
 {
 	flags1 = ui->dmflags1_line->text().toUInt();
 	updateCheckboxes();
 }
 
-void DMFlagsDialog::on_dmflags2_line_textEdited( const QString & )
+void GameOptsDialog::on_dmflags2_line_textEdited( const QString & )
 {
 	flags2 = ui->dmflags2_line->text().toUInt();
 	updateCheckboxes();
 }
 
-void DMFlagsDialog::updateCheckboxes()
+void GameOptsDialog::updateCheckboxes()
 {
 	if (isEnabled( FALLING_DAMAGE ))
 		ui->fallingDamage->setChecked( true );

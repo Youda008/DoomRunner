@@ -262,7 +262,7 @@ void MainWindow::runSetupDialog()
 
 void MainWindow::runDMFlagsDialog()
 {
-	DMFlagsDialog dialog( this, dmflags1, dmflags2 );
+	GameOptsDialog dialog( this, dmflags1, dmflags2 );
 	dialog.exec();
 
 	generateLaunchCommand();

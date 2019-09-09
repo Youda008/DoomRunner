@@ -184,7 +184,9 @@ void SetupDialog::changeModDir( QString text )
 
 void SetupDialog::iwadAdd()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate the IWAD", QString(), "(*.wad *.WAD)" );
+	QString path = QFileDialog::getOpenFileName( this, "Locate the IWAD", QString(),
+	                                             "Doom mod files (*.wad *.WAD *.iwad *.IWAD *.pk3 *.PK3 *.ipk3 *.IPK3 *.pk7 *.PK7 *.ipk7 *.IPK7);;"
+	                                             "All files (*)" );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 

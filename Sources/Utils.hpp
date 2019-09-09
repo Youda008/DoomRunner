@@ -192,7 +192,7 @@ void updateListFromDir( QList< Object > & list, QListView * view, QString dir, c
 	while (dirIt.hasNext()) {
 		dirIt.next();
 		QFileInfo file = dirIt.fileInfo();
-		if (!file.isDir() && (fileSuffixes.isEmpty() || fileSuffixes.contains( file.suffix() ))) {
+		if (!file.isDir() && (fileSuffixes.isEmpty() || fileSuffixes.contains( file.suffix().toLower() ))) {
 			list.append( makeItemFromFile( file ) );
 		}
 	}

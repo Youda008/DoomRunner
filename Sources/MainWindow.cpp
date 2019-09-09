@@ -515,7 +515,8 @@ void MainWindow::presetMoveDown()
 void MainWindow::modAdd()
 {
 	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modDir,
-	                                             "Doom mod files (*.wad *.WAD *.pk3 *.PK3 *.zip);;All files (*)" );
+	                                             "Doom mod files (*.wad *.WAD *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
+	                                             "All files (*)" );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -636,7 +637,7 @@ void MainWindow::modsDropped()
 
 void MainWindow::updateIWADsFromDir( QListView * view )  // the parameter exists, because SetupDialog also wants to update its view
 {
-	updateListFromDir< IWAD >( iwads, view, iwadDir, {"wad", "WAD"},
+	updateListFromDir< IWAD >( iwads, view, iwadDir, {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"},
 		/*makeItemFromFile*/[ this ]( const QFileInfo & file ) -> IWAD
 		{
 			return { file.fileName(), pathHelper.convertPath( file.filePath() ) };
@@ -649,7 +650,7 @@ void MainWindow::updateIWADsFromDir( QListView * view )  // the parameter exists
 
 void MainWindow::updateMapPacksFromDir()
 {
-	updateListFromDir< MapPack >( maps, ui->mapListView, mapDir, {"wad", "WAD", "pk3", "PK3"},
+	updateListFromDir< MapPack >( maps, ui->mapListView, mapDir, {"wad", "pk3", "pk7", "zip", "7z"},
 		/*makeItemFromFile*/[]( const QFileInfo & file ) -> MapPack
 		{
 			return { file.fileName() };

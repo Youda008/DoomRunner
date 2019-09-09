@@ -49,8 +49,8 @@ class MainWindow : public QMainWindow {
  private slots:
 
 	void runSetupDialog();
-	void runDMFlagsDialog();
-	void runCompatFlagsDialog();
+	void runGameOptsDialog();
+	void runCompatOptsDialog();
 
 	void selectPreset( const QModelIndex & index );
 	void selectEngine( int index );
@@ -181,11 +181,10 @@ class MainWindow : public QMainWindow {
 	QList< Preset > presets;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 	EditableListModel< Preset > presetModel;    ///< wrapper around list of presets mediating their names to the editable preset list view
 
-	// gameplay options (values returned by DMFlagsDialog and CompatFlagsDialog)
-	uint32_t dmflags1;
-	uint32_t dmflags2;
-	uint32_t compatflags1;
-	uint32_t compatflags2;
+	// options managed by GameOptsDialog and CompatOptsDialog
+	GameplayOptions gameOpts;
+	CompatibilityOptions compatOpts;
+	QString compatOptsCmdArgs;    ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 };
 

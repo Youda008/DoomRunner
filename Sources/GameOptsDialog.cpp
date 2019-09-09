@@ -9,32 +9,94 @@
 #include "GameOptsDialog.hpp"
 #include "ui_GameOptsDialog.h"
 
-
-#include <cstdint>
-#include <climits>
-
 #include <QLineEdit>
 #include <QIntValidator>
 
 
 //======================================================================================================================
 
-GameOptsDialog::GameOptsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t & dmflags2 )
+typedef uint flagsIdx;
+constexpr flagsIdx DM_FLAGS_1 = 0;
+constexpr flagsIdx DM_FLAGS_2 = 1;
+
+struct DMFlag {
+	flagsIdx flags;
+	int32_t bit;
+	bool defaultVal;
+};
+
+static const DMFlag FALLING_DAMAGE               = { DM_FLAGS_1, 8, false };
+static const DMFlag DROP_WEAPON                  = { DM_FLAGS_2, 2, false };
+static const DMFlag DOUBLE_AMMO                  = { DM_FLAGS_2, 64, false };
+static const DMFlag INF_AMMO                     = { DM_FLAGS_1, 2048, false };
+static const DMFlag INF_INVENTORY                = { DM_FLAGS_2, 65536, false };
+static const DMFlag NO_MONSTERS                  = { DM_FLAGS_1, 4096, false };
+static const DMFlag NO_MONSTERS_TO_EXIT          = { DM_FLAGS_2, 131072, false };
+static const DMFlag MONSTERS_RESPAWN             = { DM_FLAGS_1, 8192, false };
+static const DMFlag NO_RESPAWN                   = { DM_FLAGS_2, 16384, false };
+static const DMFlag ITEMS_RESPAWN                = { DM_FLAGS_1, 16384, false };
+static const DMFlag BIG_POWERUPS_RESPAWN         = { DM_FLAGS_2, 134217728, false };
+static const DMFlag FAST_MONSTERS                = { DM_FLAGS_1, 32768, false };
+static const DMFlag DEGENERATION                 = { DM_FLAGS_2, 128, false };
+static const DMFlag ALLOW_AUTO_AIM               = { DM_FLAGS_2, 8388608, true };
+static const DMFlag ALLOW_SUICIDE                = { DM_FLAGS_2, 4194304, true };
+static const DMFlag ALLOW_JUMP1                  = { DM_FLAGS_1, 65536, true };
+static const DMFlag ALLOW_JUMP2                  = { DM_FLAGS_1, 131072, false };
+static const DMFlag ALLOW_CROUCH1                = { DM_FLAGS_1, 4194304, true };
+static const DMFlag ALLOW_CROUCH2                = { DM_FLAGS_1, 8388608, false};
+static const DMFlag ALLOW_FREELOOK1              = { DM_FLAGS_1, 262144, true };
+static const DMFlag ALLOW_FREELOOK2              = { DM_FLAGS_1, 524288, false };
+static const DMFlag ALLOW_FOV                    = { DM_FLAGS_1, 1048576, true };
+static const DMFlag ALLOW_BFG_AIMING             = { DM_FLAGS_2, 256, true };
+static const DMFlag ALLOW_AUTOMAP                = { DM_FLAGS_2, 262144, true };
+static const DMFlag AUTOMAP_ALLIES               = { DM_FLAGS_2, 524288, true };
+static const DMFlag ALLOW_SPYING                 = { DM_FLAGS_2, 1048576, true };
+static const DMFlag CHASECAM_CHEAT               = { DM_FLAGS_2, 2097152, false };
+static const DMFlag CHECK_AMMO_FOR_WEAPON_SWITCH = { DM_FLAGS_2, 16777216, true };
+static const DMFlag ICONS_DEATH_KILLS_ITS_SPAWNS = { DM_FLAGS_2, 33554432, false };
+static const DMFlag END_SECTOR_COUNTS_FOR_KILL   = { DM_FLAGS_2, 67108864, true };
+
+static const DMFlag WEAPONS_STAY                 = { DM_FLAGS_1, 4, false };
+static const DMFlag ALLOW_POWERUPS               = { DM_FLAGS_1, 2, true };
+static const DMFlag ALLOW_HEALTH                 = { DM_FLAGS_1, 1, true };
+static const DMFlag ALLOW_ARMOR                  = { DM_FLAGS_1, 512, true };
+static const DMFlag SPAWN_FARTHEST               = { DM_FLAGS_1, 128, false };
+static const DMFlag SAME_MAP                     = { DM_FLAGS_1, 64, false };
+static const DMFlag FORCE_RESPAWN                = { DM_FLAGS_1, 256, false };
+static const DMFlag ALLOW_EXIT                   = { DM_FLAGS_1, 1024, true };
+static const DMFlag BARRELS_RESPAWN              = { DM_FLAGS_2, 512, false };
+static const DMFlag RESPAWN_PROTECTION           = { DM_FLAGS_2, 1024, false };
+static const DMFlag LOSE_FRAG_IF_FRAGGED         = { DM_FLAGS_2, 32768, false };
+static const DMFlag KEEP_FRAGS_GAINED            = { DM_FLAGS_2, 8192, false };
+static const DMFlag NO_TEAM_SWITCHING            = { DM_FLAGS_2, 16, false };
+
+static const DMFlag SPAWN_MULTI_WEAPONS          = { DM_FLAGS_1, 2097152, true };
+static const DMFlag LOSE_ENTIRE_INVENTORY        = { DM_FLAGS_1, 16777216, false };
+static const DMFlag KEEP_KEYS                    = { DM_FLAGS_1, 33554432, true };
+static const DMFlag KEEP_WEAPONS                 = { DM_FLAGS_1, 67108864, true };
+static const DMFlag KEEP_ARMOR                   = { DM_FLAGS_1, 134217728, true };
+static const DMFlag KEEP_POWERUPS                = { DM_FLAGS_1, 268435456, true };
+static const DMFlag KEEP_AMMO                    = { DM_FLAGS_1, 536870912, true };
+static const DMFlag LOSE_HALF_AMMO               = { DM_FLAGS_1, 1073741824, false };
+static const DMFlag SPAWN_WHERE_DIED             = { DM_FLAGS_2, 4096, false };
+
+
+//======================================================================================================================
+
+GameOptsDialog::GameOptsDialog( QWidget * parent, GameplayOptions & gameOpts )
 
 	: QDialog( parent )
-	, flags1( dmflags1 )
-	, flags2( dmflags2 )
-	, retFlags1( dmflags1 )
-	, retFlags2( dmflags2 )
+	, gameOpts( gameOpts )
+	, retGameOpts( gameOpts )
 {
 	ui = new Ui::GameOptsDialog;
 	ui->setupUi( this );
 
-	ui->dmflags1_line->setValidator( new QIntValidator( 0, UINT32_MAX, this ) );  // TODO: unsigned int validator
-	ui->dmflags2_line->setValidator( new QIntValidator( 0, UINT32_MAX, this ) );
+	ui->dmflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
+	ui->dmflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 
-	ui->dmflags1_line->setText( QString::number( dmflags1 ) );
-	ui->dmflags2_line->setText( QString::number( dmflags2 ) );
+	ui->dmflags1_line->setText( QString::number( gameOpts.flags1 ) );
+	ui->dmflags2_line->setText( QString::number( gameOpts.flags2 ) );
 
 	updateCheckboxes();
 
@@ -45,13 +107,13 @@ GameOptsDialog::GameOptsDialog( QWidget * parent, uint32_t & dmflags1, uint32_t 
 void GameOptsDialog::confirm()
 {
 	// update the dialog caller's flags only when user clicks Ok
-	retFlags1 = flags1;
-	retFlags2 = flags2;
+	retGameOpts = gameOpts;
+	close();
 }
 
 void GameOptsDialog::cancel()
 {
-
+	close();
 }
 
 GameOptsDialog::~GameOptsDialog()
@@ -59,63 +121,44 @@ GameOptsDialog::~GameOptsDialog()
 	delete ui;
 }
 
+void GameOptsDialog::setFlag( const DMFlag & flag, bool enabled )
+{
+	int32_t * flags;
+	QLineEdit * line;
+
+	if (flag.flags == DM_FLAGS_1) {
+		flags = &gameOpts.flags1;
+		line = ui->dmflags1_line;
+	} else {
+		flags = &gameOpts.flags2;
+		line = ui->dmflags2_line;
+	}
+
+	if (enabled != flag.defaultVal)
+		*flags |= flag.bit;
+	else
+		*flags &= ~flag.bit;
+
+	line->setText( QString::number( *flags ) );
+}
+
+bool GameOptsDialog::isEnabled( const DMFlag & flag ) const
+{
+	const int32_t * flags;
+
+	if (flag.flags == DM_FLAGS_1)
+		flags = &gameOpts.flags1;
+	else
+		flags = &gameOpts.flags2;
+
+	if (flag.defaultVal == 0)
+		return (*flags & flag.bit) != 0;
+	else
+		return (*flags & flag.bit) == 0;
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
-
-static Flag FALLING_DAMAGE               = { dmflags1, 8, false };
-static Flag DROP_WEAPON                  = { dmflags2, 2, false };
-static Flag DOUBLE_AMMO                  = { dmflags2, 64, false };
-static Flag INF_AMMO                     = { dmflags1, 2048, false };
-static Flag INF_INVENTORY                = { dmflags2, 65536, false };
-static Flag NO_MONSTERS                  = { dmflags1, 4096, false };
-static Flag NO_MONSTERS_TO_EXIT          = { dmflags2, 131072, false };
-static Flag MONSTERS_RESPAWN             = { dmflags1, 8192, false };
-static Flag NO_RESPAWN                   = { dmflags2, 16384, false };
-static Flag ITEMS_RESPAWN                = { dmflags1, 16384, false };
-static Flag BIG_POWERUPS_RESPAWN         = { dmflags2, 134217728, false };
-static Flag FAST_MONSTERS                = { dmflags1, 32768, false };
-static Flag DEGENERATION                 = { dmflags2, 128, false };
-static Flag ALLOW_AUTO_AIM               = { dmflags2, 8388608, true };
-static Flag ALLOW_SUICIDE                = { dmflags2, 4194304, true };
-static Flag ALLOW_JUMP1                  = { dmflags1, 65536, true };
-static Flag ALLOW_JUMP2                  = { dmflags1, 131072, false };
-static Flag ALLOW_CROUCH1                = { dmflags1, 4194304, true };
-static Flag ALLOW_CROUCH2                = { dmflags1, 8388608, false};
-static Flag ALLOW_FREELOOK1              = { dmflags1, 262144, true };
-static Flag ALLOW_FREELOOK2              = { dmflags1, 524288, false };
-static Flag ALLOW_FOV                    = { dmflags1, 1048576, true };
-static Flag ALLOW_BFG_AIMING             = { dmflags2, 256, true };
-static Flag ALLOW_AUTOMAP                = { dmflags2, 262144, true };
-static Flag AUTOMAP_ALLIES               = { dmflags2, 524288, true };
-static Flag ALLOW_SPYING                 = { dmflags2, 1048576, true };
-static Flag CHASECAM_CHEAT               = { dmflags2, 2097152, false };
-static Flag CHECK_AMMO_FOR_WEAPON_SWITCH = { dmflags2, 16777216, true };
-static Flag ICONS_DEATH_KILLS_ITS_SPAWNS = { dmflags2, 33554432, false };
-static Flag END_SECTOR_COUNTS_FOR_KILL   = { dmflags2, 67108864, true };
-
-static Flag WEAPONS_STAY                 = { dmflags1, 4, false };
-static Flag ALLOW_POWERUPS               = { dmflags1, 2, true };
-static Flag ALLOW_HEALTH                 = { dmflags1, 1, true };
-static Flag ALLOW_ARMOR                  = { dmflags1, 512, true };
-static Flag SPAWN_FARTHEST               = { dmflags1, 128, false };
-static Flag SAME_MAP                     = { dmflags1, 64, false };
-static Flag FORCE_RESPAWN                = { dmflags1, 256, false };
-static Flag ALLOW_EXIT                   = { dmflags1, 1024, true };
-static Flag BARRELS_RESPAWN              = { dmflags2, 512, false };
-static Flag RESPAWN_PROTECTION           = { dmflags2, 1024, false };
-static Flag LOSE_FRAG_IF_FRAGGED         = { dmflags2, 32768, false };
-static Flag KEEP_FRAGS_GAINED            = { dmflags2, 8192, false };
-static Flag NO_TEAM_SWITCHING            = { dmflags2, 16, false };
-
-static Flag SPAWN_MULTI_WEAPONS          = { dmflags1, 2097152, true };
-static Flag LOSE_ENTIRE_INVENTORY        = { dmflags1, 16777216, false };
-static Flag KEEP_KEYS                    = { dmflags1, 33554432, true };
-static Flag KEEP_WEAPONS                 = { dmflags1, 67108864, true };
-static Flag KEEP_ARMOR                   = { dmflags1, 134217728, true };
-static Flag KEEP_POWERUPS                = { dmflags1, 268435456, true };
-static Flag KEEP_AMMO                    = { dmflags1, 536870912, true };
-static Flag LOSE_HALF_AMMO               = { dmflags1, 1073741824, false };
-static Flag SPAWN_WHERE_DIED             = { dmflags2, 4096, false };
 
 void GameOptsDialog::on_fallingDamage_toggled( bool checked )
 {
@@ -389,86 +432,38 @@ void GameOptsDialog::on_spawnWhereDied_toggled( bool checked )
 	setFlag( SPAWN_WHERE_DIED, checked );
 }
 
-void GameOptsDialog::setFlag( Flag flag, bool enabled )
-{
-	uint32_t * flags;
-	QLineEdit * line;
 
-	if (flag.flags == dmflags1) {
-		flags = &flags1;
-		line = ui->dmflags1_line;
-	} else {
-		flags = &flags2;
-		line = ui->dmflags2_line;
-	}
-
-	if (enabled != flag.defaultVal)
-		*flags |= flag.bit;
-	else
-		*flags &= ~flag.bit;
-
-	line->setText( QString::number( *flags ) );
-}
-
-bool GameOptsDialog::isEnabled( Flag flag )
-{
-	uint32_t * flags;
-
-	if (flag.flags == dmflags1)
-		flags = &flags1;
-	else
-		flags = &flags2;
-
-	if (flag.defaultVal == 0)
-		return (*flags & flag.bit) != 0;
-	else
-		return (*flags & flag.bit) == 0;
-}
+//----------------------------------------------------------------------------------------------------------------------
 
 void GameOptsDialog::on_dmflags1_line_textEdited( const QString & )
 {
-	flags1 = ui->dmflags1_line->text().toUInt();
+	gameOpts.flags1 = ui->dmflags1_line->text().toInt();
 	updateCheckboxes();
 }
 
 void GameOptsDialog::on_dmflags2_line_textEdited( const QString & )
 {
-	flags2 = ui->dmflags2_line->text().toUInt();
+	gameOpts.flags2 = ui->dmflags2_line->text().toInt();
 	updateCheckboxes();
 }
 
 void GameOptsDialog::updateCheckboxes()
 {
-	if (isEnabled( FALLING_DAMAGE ))
-		ui->fallingDamage->setChecked( true );
-	if (isEnabled( DROP_WEAPON ))
-		ui->dropWeapon->setChecked( true );
-	if (isEnabled( DOUBLE_AMMO ))
-		ui->doubleAmmo->setChecked( true );
-	if (isEnabled( INF_AMMO ))
-		ui->infAmmo->setChecked( true );
-	if (isEnabled( INF_INVENTORY ))
-		ui->infInventory->setChecked( true );
-	if (isEnabled( NO_MONSTERS ))
-		ui->noMonsters->setChecked( true );
-	if (isEnabled( NO_MONSTERS_TO_EXIT ))
-		ui->monstersRespawn->setChecked( true );
-	if (isEnabled( MONSTERS_RESPAWN ))
-		ui->monstersRespawn->setChecked( true );
-	if (isEnabled( NO_RESPAWN ))
-		ui->noRespawn->setChecked( true );
-	if (isEnabled( ITEMS_RESPAWN ))
-		ui->itemsRespawn->setChecked( true );
-	if (isEnabled( BIG_POWERUPS_RESPAWN ))
-		ui->bigPowerupsRespawn->setChecked( true );
-	if (isEnabled( FAST_MONSTERS ))
-		ui->fastMonsters->setChecked( true );
-	if (isEnabled( DEGENERATION ))
-		ui->degeneration->setChecked( true );
-	if (isEnabled( ALLOW_AUTO_AIM ))
-		ui->allowAutoAim->setChecked( true );
-	if (isEnabled( ALLOW_SUICIDE ))
-		ui->allowSuicide->setChecked( true );
+	ui->fallingDamage->setChecked( isEnabled( FALLING_DAMAGE ) );
+	ui->dropWeapon->setChecked( isEnabled( DROP_WEAPON ) );
+	ui->doubleAmmo->setChecked( isEnabled( DOUBLE_AMMO ) );
+	ui->infAmmo->setChecked( isEnabled( INF_AMMO ) );
+	ui->infInventory->setChecked( isEnabled( INF_INVENTORY ) );
+	ui->noMonsters->setChecked( isEnabled( NO_MONSTERS ) );
+	ui->monstersRespawn->setChecked( isEnabled( NO_MONSTERS_TO_EXIT ) );
+	ui->monstersRespawn->setChecked( isEnabled( MONSTERS_RESPAWN ) );
+	ui->noRespawn->setChecked( isEnabled( NO_RESPAWN ) );
+	ui->itemsRespawn->setChecked( isEnabled( ITEMS_RESPAWN ) );
+	ui->bigPowerupsRespawn->setChecked( isEnabled( BIG_POWERUPS_RESPAWN ) );
+	ui->fastMonsters->setChecked( isEnabled( FAST_MONSTERS ) );
+	ui->degeneration->setChecked( isEnabled( DEGENERATION ) );
+	ui->allowAutoAim->setChecked( isEnabled( ALLOW_AUTO_AIM ) );
+	ui->allowSuicide->setChecked( isEnabled( ALLOW_SUICIDE ) );
 	if (isEnabled( ALLOW_JUMP1 ))
 		ui->allowJump->setCheckState( Qt::PartiallyChecked );
 	else if (isEnabled( ALLOW_JUMP2 ))
@@ -487,66 +482,35 @@ void GameOptsDialog::updateCheckboxes()
 		ui->allowFreelook->setCheckState( Qt::Checked );
 	else
 		ui->allowFreelook->setCheckState( Qt::Unchecked );
-	if (isEnabled( ALLOW_FOV ))
-		ui->allowFOV->setChecked( true );
-	if (isEnabled( ALLOW_BFG_AIMING ))
-		ui->allowBFGAiming->setChecked( true );
-	if (isEnabled( ALLOW_AUTOMAP ))
-		ui->allowAutomap->setChecked( true );
-	if (isEnabled( AUTOMAP_ALLIES ))
-		ui->automapAllies->setChecked( true );
-	if (isEnabled( ALLOW_SPYING ))
-		ui->allowSpying->setChecked( true );
-	if (isEnabled( CHASECAM_CHEAT ))
-		ui->chasecamCheat->setChecked( true );
-	if (isEnabled( CHECK_AMMO_FOR_WEAPON_SWITCH ))
-		ui->checkAmmoForWeaponSwitch->setChecked( true );
-	if (isEnabled( ICONS_DEATH_KILLS_ITS_SPAWNS ))
-		ui->iconsDeathKillsItsSpawns->setChecked( true );
-	if (isEnabled( END_SECTOR_COUNTS_FOR_KILL ))
-		ui->endSectorCountsForKill->setChecked( true );
-	if (isEnabled( WEAPONS_STAY ))
-		ui->weaponsStay->setChecked( true );
-	if (isEnabled( ALLOW_POWERUPS ))
-		ui->allowPowerups->setChecked( true );
-	if (isEnabled( ALLOW_HEALTH ))
-		ui->allowHealth->setChecked( true );
-	if (isEnabled( ALLOW_ARMOR ))
-		ui->allowArmor->setChecked( true );
-	if (isEnabled( SPAWN_FARTHEST ))
-		ui->spawnFarthest->setChecked( true );
-	if (isEnabled( SAME_MAP ))
-		ui->sameMap->setChecked( true );
-	if (isEnabled( FORCE_RESPAWN ))
-		ui->forceRespawn->setChecked( true );
-	if (isEnabled( ALLOW_EXIT ))
-		ui->allowExit->setChecked( true );
-	if (isEnabled( BARRELS_RESPAWN ))
-		ui->barrelsRespawn->setChecked( true );
-	if (isEnabled( RESPAWN_PROTECTION ))
-		ui->respawnProtection->setChecked( true );
-	if (isEnabled( LOSE_FRAG_IF_FRAGGED ))
-		ui->loseFragIfFragged->setChecked( true );
-	if (isEnabled( KEEP_FRAGS_GAINED ))
-		ui->keepFragsGained->setChecked( true );
-	if (isEnabled( NO_TEAM_SWITCHING ))
-		ui->noTeamSwitching->setChecked( true );
-	if (isEnabled( SPAWN_MULTI_WEAPONS ))
-		ui->spawnMultiWeapons->setChecked( true );
-	if (isEnabled( LOSE_ENTIRE_INVENTORY ))
-		ui->loseEntireInventory->setChecked( true );
-	if (isEnabled( KEEP_KEYS ))
-		ui->keepKeys->setChecked( true );
-	if (isEnabled( KEEP_WEAPONS ))
-		ui->keepWeapons->setChecked( true );
-	if (isEnabled( KEEP_ARMOR ))
-		ui->keepArmor->setChecked( true );
-	if (isEnabled( KEEP_POWERUPS ))
-		ui->keepPowerups->setChecked( true );
-	if (isEnabled( KEEP_AMMO ))
-		ui->keepAmmo->setChecked( true );
-	if (isEnabled( LOSE_HALF_AMMO ))
-		ui->loseHalfAmmo->setChecked( true );
-	if (isEnabled( SPAWN_WHERE_DIED ))
-		ui->spawnWhereDied->setChecked( true );
+	ui->allowFOV->setChecked( isEnabled( ALLOW_FOV ) );
+	ui->allowBFGAiming->setChecked( isEnabled( ALLOW_BFG_AIMING ) );
+	ui->allowAutomap->setChecked( isEnabled( ALLOW_AUTOMAP ) );
+	ui->automapAllies->setChecked( isEnabled( AUTOMAP_ALLIES ) );
+	ui->allowSpying->setChecked( isEnabled( ALLOW_SPYING ) );
+	ui->chasecamCheat->setChecked( isEnabled( CHASECAM_CHEAT ) );
+	ui->checkAmmoForWeaponSwitch->setChecked( isEnabled( CHECK_AMMO_FOR_WEAPON_SWITCH ) );
+	ui->iconsDeathKillsItsSpawns->setChecked( isEnabled( ICONS_DEATH_KILLS_ITS_SPAWNS ) );
+	ui->endSectorCountsForKill->setChecked( isEnabled( END_SECTOR_COUNTS_FOR_KILL ) );
+	ui->weaponsStay->setChecked( isEnabled( WEAPONS_STAY ) );
+	ui->allowPowerups->setChecked( isEnabled( ALLOW_POWERUPS ) );
+	ui->allowHealth->setChecked( isEnabled( ALLOW_HEALTH ) );
+	ui->allowArmor->setChecked( isEnabled( ALLOW_ARMOR ) );
+	ui->spawnFarthest->setChecked( isEnabled( SPAWN_FARTHEST ) );
+	ui->sameMap->setChecked( isEnabled( SAME_MAP ) );
+	ui->forceRespawn->setChecked( isEnabled( FORCE_RESPAWN ) );
+	ui->allowExit->setChecked( isEnabled( ALLOW_EXIT ) );
+	ui->barrelsRespawn->setChecked( isEnabled( BARRELS_RESPAWN ) );
+	ui->respawnProtection->setChecked( isEnabled( RESPAWN_PROTECTION ) );
+	ui->loseFragIfFragged->setChecked( isEnabled( LOSE_FRAG_IF_FRAGGED ) );
+	ui->keepFragsGained->setChecked( isEnabled( KEEP_FRAGS_GAINED ) );
+	ui->noTeamSwitching->setChecked( isEnabled( NO_TEAM_SWITCHING ) );
+	ui->spawnMultiWeapons->setChecked( isEnabled( SPAWN_MULTI_WEAPONS ) );
+	ui->loseEntireInventory->setChecked( isEnabled( LOSE_ENTIRE_INVENTORY ) );
+	ui->keepKeys->setChecked( isEnabled( KEEP_KEYS ) );
+	ui->keepWeapons->setChecked( isEnabled( KEEP_WEAPONS ) );
+	ui->keepArmor->setChecked( isEnabled( KEEP_ARMOR ) );
+	ui->keepPowerups->setChecked( isEnabled( KEEP_POWERUPS ) );
+	ui->keepAmmo->setChecked( isEnabled( KEEP_AMMO ) );
+	ui->loseHalfAmmo->setChecked( isEnabled( LOSE_HALF_AMMO ) );
+	ui->spawnWhereDied->setChecked( isEnabled( SPAWN_WHERE_DIED ) );
 }

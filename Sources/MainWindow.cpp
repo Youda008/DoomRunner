@@ -101,10 +101,6 @@ MainWindow::MainWindow()
 	, selectedPackIdx( -1 )
 	, modModel( mods, /*displayString*/[]( Mod & mod ) -> QString & { return mod.name; } )
 	, presetModel( presets, /*displayString*/[]( Preset & preset ) -> QString & { return preset.name; } )
-	, dmflags1( 0 )
-	, dmflags2( 0 )
-	, compatflags1( 0 )
-	, compatflags2( 0 )
 {
 	ui = new Ui::MainWindow;
 	ui->setupUi( this );
@@ -180,8 +176,8 @@ MainWindow::MainWindow()
 	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoMonsters );
 	connect( ui->fastMonstersChkBox, &QCheckBox::toggled, this, &thisClass::toggleFastMonsters );
 	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::toggleMonstersRespawn );
-	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runDMFlagsDialog );
-	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatFlagsDialog );
+	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runGameOptsDialog );
+	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatOptsDialog );
 
 	connect( ui->multiplayerChkBox, &QCheckBox::toggled, this, &thisClass::toggleMultiplayer );
 	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMultRole );
@@ -260,22 +256,25 @@ void MainWindow::runSetupDialog()
 	generateLaunchCommand();
 }
 
-void MainWindow::runDMFlagsDialog()
+void MainWindow::runGameOptsDialog()
 {
-	GameOptsDialog dialog( this, dmflags1, dmflags2 );
+	GameOptsDialog dialog( this, gameOpts );
 	dialog.exec();
 
 	generateLaunchCommand();
 }
 
-void MainWindow::runCompatFlagsDialog()
+void MainWindow::runCompatOptsDialog()
 {
-	QMessageBox::warning( this, "Not implemented", "Sorry, this feature is not implemented yet" );
+	//QMessageBox::warning( this, "Not implemented", "Sorry, this feature is not implemented yet" );
 
-	//CompatFlagsDialog dialog( this, compatflags1, compatflags2 );
-	//dialog.exec();
+	CompatOptsDialog dialog( this, compatOpts );
+	dialog.exec();
 
-	//generateLaunchCommand();
+	// cache the command line args string, so that it doesn't need to be regenerated on every command line update
+	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( compatOpts );
+
+	generateLaunchCommand();
 }
 
 
@@ -1035,10 +1034,10 @@ void MainWindow::saveOptions( QString fileName )
 	json["additional_args"] = ui->cmdArgsLine->text();
 
 	// launch options
-	json["dmflags1"] = qint64( dmflags1 );
-	json["dmflags2"] = qint64( dmflags2 );
-	json["compatflags1"] = qint64( compatflags1 );
-	json["compatflags2"] = qint64( compatflags2 );
+	json["dmflags1"] = qint64( gameOpts.flags1 );
+	json["dmflags2"] = qint64( gameOpts.flags2 );
+	json["compatflags1"] = qint64( compatOpts.flags1 );
+	json["compatflags2"] = qint64( compatOpts.flags2 );
 
 	// write the json to file
 	QJsonDocument jsonDoc( json );
@@ -1230,10 +1229,10 @@ void MainWindow::loadOptions( QString fileName )
 	ui->cmdArgsLine->setText( getString( json, "additional_args" ) );
 
 	// launch options
-	dmflags1 = getUInt( json, "dmflags1", 0 );
-	dmflags2 = getUInt( json, "dmflags2", 0 );
-	compatflags1 = getUInt( json, "compatflags1", 0 );
-	compatflags2 = getUInt( json, "compatflags2", 0 );
+	gameOpts.flags1 = getInt( json, "dmflags1", 0 );
+	gameOpts.flags2 = getInt( json, "dmflags2", 0 );
+	compatOpts.flags1 = getInt( json, "compatflags1", 0 );
+	compatOpts.flags2 = getInt( json, "compatflags2", 0 );
 
 	file.close();
 
@@ -1315,14 +1314,13 @@ void MainWindow::generateLaunchCommand()
 			cmdStream << " -fast";
 		if (ui->monstersRespawnChkBox->isChecked())
 			cmdStream << " -respawn";
-		if (dmflags1 != 0)
-			cmdStream << " +dmflags " << QString::number( dmflags1 );
-		if (dmflags2 != 0)
-			cmdStream << " +dmflags2 " << QString::number( dmflags2 );
-		if (compatflags1 != 0)
-			cmdStream << " +compatflags " << QString::number( compatflags1 );
-		if (compatflags2 != 0)
-			cmdStream << " +compatflags2 " << QString::number( compatflags2 );
+		if (compatOpts.flags1 != 0)
+			cmdStream << " +dmflags " << QString::number( gameOpts.flags1 );
+		if (compatOpts.flags2 != 0)
+			cmdStream << " +dmflags2 " << QString::number( gameOpts.flags2 );
+		if (!compatOptsCmdArgs.isEmpty()) {
+			cmdStream << " " << compatOptsCmdArgs;
+		}
 	} else if (ui->launchMode_savefile->isChecked()) {
 		cmdStream << " -loadgame " << ui->saveFileCmbBox->currentText();
 	}

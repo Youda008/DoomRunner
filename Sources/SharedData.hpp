@@ -33,12 +33,23 @@ struct MapPack {
 	QString name;
 };
 
-// useful for debug purposes, easier to set breakpoint in than in lambdas
+// useful for debugging purposes, easier to set breakpoint in than in lambdas
 QString makeEngineDispStrFromName( const Engine & engine );
 QString makeEngineDispStrWithPath( const Engine & engine );
 QString makeIwadDispStrFromName( const IWAD & iwad );
 QString makeIwadDispStrWithPath( const IWAD & iwad );
 QString makeMapPackDispStr( const MapPack & pack );
+
+
+struct GameplayOptions {
+	int32_t flags1 = 0;
+	int32_t flags2 = 0;
+};
+
+struct CompatibilityOptions {
+	int32_t flags1 = 0;
+	int32_t flags2 = 0;
+};
 
 
 #endif // SHARED_DATA_INCLUDED

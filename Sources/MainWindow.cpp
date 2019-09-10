@@ -97,7 +97,9 @@ MainWindow::MainWindow()
 	, configModel( configs, /*makeDisplayString*/[]( const QString & config ) { return config; } )
 	, iwadModel( iwads, /*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; } )
 	, iwadListFromDir( false )
+	, iwadSubdirs( false )
 	, mapModel( maps, /*makeDisplayString*/[]( const MapPack & pack ) { return pack.name; } )
+	, mapSubdirs( false )
 	, selectedPackIdx( -1 )
 	, modModel( mods, /*displayString*/[]( Mod & mod ) -> QString & { return mod.name; } )
 	, presetModel( presets, /*displayString*/[]( Preset & preset ) -> QString & { return preset.name; } )
@@ -244,7 +246,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::runSetupDialog()
 {
-	SetupDialog dialog( this, pathHelper, engines, iwads, iwadListFromDir, iwadDir, mapDir, modDir );
+	SetupDialog dialog( this, pathHelper, engines, iwads, iwadListFromDir, iwadDir, iwadSubdirs, mapDir, mapSubdirs, modDir );
 	connect( &dialog, &SetupDialog::iwadListNeedsUpdate, this, &thisClass::updateIWADsFromDir );
 	connect( &dialog, &SetupDialog::absolutePathsToggled, this, &thisClass::toggleAbsolutePaths );
 	dialog.exec();
@@ -637,7 +639,7 @@ void MainWindow::modsDropped()
 
 void MainWindow::updateIWADsFromDir( QListView * view )  // the parameter exists, because SetupDialog also wants to update its view
 {
-	updateListFromDir< IWAD >( iwads, view, iwadDir, {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"},
+	updateListFromDir< IWAD >( iwads, view, iwadDir, iwadSubdirs, {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"},
 		/*makeItemFromFile*/[ this ]( const QFileInfo & file ) -> IWAD
 		{
 			return { file.fileName(), pathHelper.convertPath( file.filePath() ) };
@@ -650,7 +652,7 @@ void MainWindow::updateIWADsFromDir( QListView * view )  // the parameter exists
 
 void MainWindow::updateMapPacksFromDir()
 {
-	updateListFromDir< MapPack >( maps, ui->mapListView, mapDir, {"wad", "pk3", "pk7", "zip", "7z"},
+	updateListFromDir< MapPack >( maps, ui->mapListView, mapDir, mapSubdirs, {"wad", "pk3", "pk7", "zip", "7z"},
 		/*makeItemFromFile*/[]( const QFileInfo & file ) -> MapPack
 		{
 			return { file.fileName() };
@@ -975,6 +977,7 @@ void MainWindow::saveOptions( QString fileName )
 
 		jsIWADs["auto_update"] = iwadListFromDir;
 		jsIWADs["directory"] = iwadDir;
+		jsIWADs["subdirs"] = iwadSubdirs;
 		QJsonArray jsIWADArray;
 		for (const IWAD & iwad : iwads) {
 			QJsonObject jsIWAD;
@@ -991,6 +994,7 @@ void MainWindow::saveOptions( QString fileName )
 	{
 		QJsonObject jsMaps;
 		jsMaps["directory"] = mapDir;
+		jsMaps["subdirs"] = mapSubdirs;
 		json["maps"] = jsMaps;
 	}
 
@@ -1125,6 +1129,7 @@ void MainWindow::loadOptions( QString fileName )
 						"IWAD directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
 				}
 			}
+			iwadSubdirs = getBool( jsIWADs, "subdirs", false );
 		} else {
 			QJsonArray jsIWADArray = getArray( jsIWADs, "IWADs" );
 			for (int i = 0; i < jsIWADArray.size(); i++)
@@ -1167,6 +1172,7 @@ void MainWindow::loadOptions( QString fileName )
 					"Map directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
 			}
 		}
+		mapSubdirs = getBool( jsMaps, "subdirs", false );
 
 		mapModel.updateView(0);
 	}

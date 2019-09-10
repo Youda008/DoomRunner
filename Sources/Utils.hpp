@@ -169,14 +169,34 @@ int moveDownSelectedItem( QListView * view, AObjectListModel< Object > & model )
 //----------------------------------------------------------------------------------------------------------------------
 
 template< typename Object >  // Object must contain public attribute .name
-void updateListFromDir( QList< Object > & list, QListView * view, QString dir, const QVector<QString> & fileSuffixes,
-                        std::function< Object ( const QFileInfo & file ) > makeItemFromFile )  // TODO: list of sufixes
+void fillListFromDir( QList< Object > & list, QListView * view, QString dir, bool recursively, const QVector<QString> & fileSuffixes,
+                      std::function< Object ( const QFileInfo & file ) > makeItemFromFile )
 {
-	if (dir.isEmpty())
-		return;
-
 	QDir dir_( dir );
 	if (!dir_.exists())
+		return;
+
+	// update the list according to directory content
+	QDirIterator dirIt( dir_ );
+	while (dirIt.hasNext()) {
+		dirIt.next();
+		QFileInfo file = dirIt.fileInfo();
+		if (file.isDir()) {
+			QString fileName = file.fileName();
+			if (recursively && fileName != "." && fileName != "..") {
+				fillListFromDir< Object >( list, view, file.filePath(), recursively, fileSuffixes, makeItemFromFile );
+			}
+		} else if (fileSuffixes.isEmpty() || fileSuffixes.contains( file.suffix().toLower() )) {
+			list.append( makeItemFromFile( file ) );
+		}
+	}
+}
+
+template< typename Object >  // Object must contain public attribute .name
+void updateListFromDir( QList< Object > & list, QListView * view, QString dir, bool recursively, const QVector<QString> & fileSuffixes,
+                        std::function< Object ( const QFileInfo & file ) > makeItemFromFile )
+{
+	if (dir.isEmpty())
 		return;
 
 	// write down the currently selected item
@@ -187,15 +207,7 @@ void updateListFromDir( QList< Object > & list, QListView * view, QString dir, c
 
 	list.clear();
 
-	// update the list according to directory content
-	QDirIterator dirIt( dir_ );
-	while (dirIt.hasNext()) {
-		dirIt.next();
-		QFileInfo file = dirIt.fileInfo();
-		if (!file.isDir() && (fileSuffixes.isEmpty() || fileSuffixes.contains( file.suffix().toLower() ))) {
-			list.append( makeItemFromFile( file ) );
-		}
-	}
+	fillListFromDir( list, view, dir, recursively, fileSuffixes, makeItemFromFile );
 
 	// update the selection so that the same file remains selected
 	if (selectedItemIdx >= 0) {
@@ -206,6 +218,7 @@ void updateListFromDir( QList< Object > & list, QListView * view, QString dir, c
 		}
 	}
 
+	// update the UI
 	QAbstractItemModel * model = view->model();
 	if (AObjectListModel< Object > * objModel = dynamic_cast< AObjectListModel< Object > * >( model )) {
 		objModel->updateView(0);

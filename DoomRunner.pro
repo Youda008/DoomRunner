@@ -24,6 +24,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++14
 
+# Some Qt headers use deprecated C++ features and generate tons of warnings.
+# This will silence them and prevent them from shadowing our own potentially important warnings.
+QMAKE_CXXFLAGS += -Wno-deprecated-copy
+
 SOURCES += \
     Sources/CompatOptsDialog.cpp \
     Sources/EditableListView.cpp \

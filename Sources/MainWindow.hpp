@@ -151,12 +151,14 @@ class MainWindow : public QMainWindow {
 	ReadOnlyListModel< IWAD > iwadModel;    ///< wrapper around list of iwads mediating their names to the iwad list view
 	bool iwadListFromDir;    ///< whether the IWAD list should be periodically updated from a directory (value returned by SetupDialog)
 	QString iwadDir;    ///< directory to update IWAD list from (value returned by SetupDialog)
+	bool iwadSubdirs;    ///< whether to search for IWADs recursivelly in subdirectories
 	int selectedIWADIdx;    ///< which IWAD was selected last (workaround to allow user to deselect IWAD by clicking it again)
 
 	// map pack info
 	QList< MapPack > maps;    ///< list of map packs automatically loaded from a directory
 	ReadOnlyListModel< MapPack > mapModel;    ///< wrapper around list of map packs mediating their names to the map pack list view
 	QString mapDir;    ///< directory with map packs to automatically load the list from (value returned by SetupDialog)
+	bool mapSubdirs;    ///< whether to search for maps recursivelly in subdirectories
 	int selectedPackIdx;    ///< which map pack was selected last (workaround to allow user to deselect map pack by clicking it again)
 
 	// mod info

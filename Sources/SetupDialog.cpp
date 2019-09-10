@@ -21,9 +21,9 @@
 //======================================================================================================================
 //  SetupDialog
 
-SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engine > & engines, QList< IWAD > & iwads,
-                          bool & iwadListFromDir, QString & iwadDir, QString & mapDir, QString & modDir )
-
+SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engine > & engines,
+	                      QList< IWAD > & iwads, bool & iwadListFromDir, QString & iwadDir, bool & iwadSubdirs,
+	                      QString & mapDir, bool & mapSubdirs, QString & modDir )
 	: QDialog( parent )
 	, pathHelper( pathHelper )
 	, engines( engines )
@@ -34,7 +34,9 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 	                                         { return iwad.name % "  [" % iwad.path % "]"; } )
 	, iwadListFromDir( iwadListFromDir )
 	, iwadDir( iwadDir )
+	, iwadSubdirs( iwadSubdirs )
 	, mapDir( mapDir )
+	, mapSubdirs( mapSubdirs )
 	, modDir( modDir )
 {
 	ui = new Ui::SetupDialog;
@@ -50,7 +52,9 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 		manageIWADsAutomatically();
 	}
 	ui->iwadDirLine->setText( iwadDir );
+	ui->iwadSubdirs->setChecked( iwadSubdirs );
 	ui->mapDirLine->setText( mapDir );
+	ui->mapSubdirs->setChecked( mapSubdirs );
 	ui->modDirLine->setText( modDir );
 	ui->absolutePathsChkBox->setChecked( pathHelper.useAbsolutePaths() );
 
@@ -58,13 +62,21 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 	connect( ui->manageIWADs_manual, &QRadioButton::clicked, this, &thisClass::manageIWADsManually );
 	connect( ui->manageIWADs_auto, &QRadioButton::clicked, this, &thisClass::manageIWADsAutomatically );
 
+	connect( ui->iwadDirBtn, &QPushButton::clicked, this, &thisClass::browseIWADDir );
+	connect( ui->mapDirBtn, &QPushButton::clicked, this, &thisClass::browseMapDir );
+	connect( ui->modDirBtn, &QPushButton::clicked, this, &thisClass::browseModDir );
+
 	connect( ui->iwadDirLine, &QLineEdit::textChanged, this, &thisClass::changeIWADDir );
 	connect( ui->mapDirLine, &QLineEdit::textChanged, this, &thisClass::changeMapDir );
 	connect( ui->modDirLine, &QLineEdit::textChanged, this, &thisClass::changeModDir );
 
-	connect( ui->iwadDirBtn, &QPushButton::clicked, this, &thisClass::browseIWADDir );
-	connect( ui->mapDirBtn, &QPushButton::clicked, this, &thisClass::browseMapDir );
-	connect( ui->modDirBtn, &QPushButton::clicked, this, &thisClass::browseModDir );
+	connect( ui->iwadSubdirs, &QCheckBox::toggled, this, &thisClass::toggleIWADSubdirs );
+	connect( ui->mapSubdirs, &QCheckBox::toggled, this, &thisClass::toggleMapSubdirs );
+
+	connect( ui->iwadBtnAdd, &QPushButton::clicked, this, &thisClass::iwadAdd );
+	connect( ui->iwadBtnDel, &QPushButton::clicked, this, &thisClass::iwadDelete );
+	connect( ui->iwadBtnUp, &QPushButton::clicked, this, &thisClass::iwadMoveUp );
+	connect( ui->iwadBtnDown, &QPushButton::clicked, this, &thisClass::iwadMoveDown );
 
 	connect( ui->engineBtnAdd, &QPushButton::clicked, this, &thisClass::engineAdd );
 	connect( ui->engineBtnDel, &QPushButton::clicked, this, &thisClass::engineDelete );
@@ -72,11 +84,6 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 	connect( ui->engineBtnDown, &QPushButton::clicked, this, &thisClass::engineMoveDown );
 
 	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::editEngine );
-
-	connect( ui->iwadBtnAdd, &QPushButton::clicked, this, &thisClass::iwadAdd );
-	connect( ui->iwadBtnDel, &QPushButton::clicked, this, &thisClass::iwadDelete );
-	connect( ui->iwadBtnUp, &QPushButton::clicked, this, &thisClass::iwadMoveUp );
-	connect( ui->iwadBtnDown, &QPushButton::clicked, this, &thisClass::iwadMoveDown );
 
 	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAbsolutePaths );
 
@@ -89,11 +96,6 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 void SetupDialog::timerEvent( QTimerEvent * )  // called once per second
 {
 	tickCount++;
-}
-
-void SetupDialog::closeEvent( QCloseEvent * event )
-{
-	QWidget::closeEvent( event );
 }
 
 SetupDialog::~SetupDialog()
@@ -121,6 +123,7 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 
 	ui->iwadDirLine->setEnabled( enabled );
 	ui->iwadDirBtn->setEnabled( enabled );
+	ui->iwadSubdirs->setEnabled( enabled );
 	ui->iwadBtnAdd->setEnabled( !enabled );
 	ui->iwadBtnDel->setEnabled( !enabled );
 	ui->iwadBtnUp->setEnabled( !enabled );
@@ -180,6 +183,18 @@ void SetupDialog::changeMapDir( QString text )
 void SetupDialog::changeModDir( QString text )
 {
 	modDir = text;
+}
+
+void SetupDialog::toggleIWADSubdirs( bool checked )
+{
+	iwadSubdirs = checked;
+
+	emit iwadListNeedsUpdate( ui->iwadListView );
+}
+
+void SetupDialog::toggleMapSubdirs( bool checked )
+{
+	mapSubdirs = checked;
 }
 
 void SetupDialog::iwadAdd()

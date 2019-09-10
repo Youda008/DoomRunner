@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>491</width>
-    <height>455</height>
+    <width>540</width>
+    <height>537</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -146,46 +146,57 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="mapDirLabel">
-         <property name="text">
-          <string>Directory with maps</string>
+        <widget class="QGroupBox" name="mapDirGrpBox">
+         <property name="title">
+          <string>Directory with Maps</string>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLineEdit" name="mapDirLine"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="mapDirBtn">
+              <property name="text">
+               <string>Browse</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="mapSubdirs">
+            <property name="text">
+             <string>search also in subdirectories</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QLineEdit" name="mapDirLine"/>
-         </item>
-         <item>
-          <widget class="QPushButton" name="mapDirBtn">
-           <property name="text">
-            <string>Browse</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QLabel" name="modDirLabel">
-         <property name="text">
-          <string>Directory with mods</string>
+        <widget class="QGroupBox" name="modDirGrpBox">
+         <property name="title">
+          <string>Directory with Mods</string>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QLineEdit" name="modDirLine"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="modDirBtn">
+              <property name="text">
+               <string>Browse</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
-          <widget class="QLineEdit" name="modDirLine"/>
-         </item>
-         <item>
-          <widget class="QPushButton" name="modDirBtn">
-           <property name="text">
-            <string>Browse</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
        <item>
         <widget class="QCheckBox" name="absolutePathsChkBox">
@@ -251,6 +262,16 @@
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="iwadSubdirs">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>search also in subdirectories</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QListView" name="iwadListView">

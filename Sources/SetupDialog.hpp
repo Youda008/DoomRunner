@@ -38,13 +38,13 @@ class SetupDialog : public QDialog {
 
  public:
 
-	explicit SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engine > & engines, QList< IWAD > & iwads,
-                          bool & iwadListFromDir, QString & iwadDir, QString & mapDir, QString & modDir );
+	explicit SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engine > & engines,
+	                      QList< IWAD > & iwads, bool & iwadListFromDir, QString & iwadDir, bool & iwadSubdirs,
+	                      QString & mapDir, bool & mapSubdirs, QString & modDir );
 	virtual ~SetupDialog() override;
 
  private:
 
-	virtual void closeEvent( QCloseEvent * event ) override;
 	virtual void timerEvent( QTimerEvent * event ) override;
 
  private slots:
@@ -59,6 +59,9 @@ class SetupDialog : public QDialog {
 	void changeIWADDir( QString text );
 	void changeMapDir( QString text );
 	void changeModDir( QString text );
+
+	void toggleIWADSubdirs( bool checked );
+	void toggleMapSubdirs( bool checked );
 
 	void iwadAdd();
 	void iwadDelete();
@@ -105,9 +108,11 @@ class SetupDialog : public QDialog {
 	ReadOnlyListModel< IWAD > iwadModel;  ///< read-only view model, list content is changed by buttons
 	bool & iwadListFromDir;
 	QString & iwadDir;
+	bool & iwadSubdirs;
 
 	// additional paths
 	QString & mapDir;
+	bool & mapSubdirs;
 	QString & modDir;
 
 };

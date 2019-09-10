@@ -1,3 +1,9 @@
+1.0
+- completed Compatibility Options dialog
+- fixed bug where checkboxes in game options didn't update correctly when number was entered manually
+- IWAD list and Map pack list can now show files in subdirectories
+- added new supported filename extensions for IWADs/Maps/Mods
+
 0.9-beta
 - implemented drag&drop reordering for the preset list
 - reworked the drag&drop reordering and file dropping in the mod list

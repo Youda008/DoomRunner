@@ -64,12 +64,12 @@ For instructions how to install Msys2 check www.msys2.org
 
 Use Msys2-MinGW-64 terminal to enter the following commands.
 
-1) Install MinGW64
+##### 1. Install g++ compiler
 ```
 pacboy -S gcc:x
 ```
 
-2) Install Qt
+##### 2. Install Qt
 
 for dynamically linked version
 ```
@@ -80,7 +80,7 @@ for statically linked version
 pacboy -S qt5-static:x
 ```
 
-3) Build the project
+##### 3. Build the project
 ```
 cd <DoomRunner directory>
 ```
@@ -115,17 +115,17 @@ You have to download the Qt sources and compile Qt by yourself. I cannot give yo
 
 ### Linux (Ubuntu and derivatives)
 
-1) Install g++ compiler
+##### 1. Install g++ compiler
 ```
 sudo apt install g++
 ```
 	
-2) Install Qt
+##### 2. Install Qt
 ```
 sudo apt install qt5-default
 ```
 	
-3) Build the project
+##### 3. Build the project
 ```
 cd <DoomRunner directory>
 mkdir build-dynamic

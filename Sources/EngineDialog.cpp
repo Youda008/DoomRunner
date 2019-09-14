@@ -42,7 +42,12 @@ EngineDialog::~EngineDialog()
 
 void EngineDialog::browseEngine()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate engine's executable", QString(), "Executable files (*.exe);;All files (*)" );
+	QString path = QFileDialog::getOpenFileName( this, "Locate engine's executable", QString(),
+ #ifdef _WIN32
+		"Executable files (*.exe);;"
+ #endif
+		"All files (*)"
+	);
 	if (path.length() == 0)  // user probably clicked cancel
 		return;
 

@@ -61,6 +61,11 @@ class AObjectListModel : public QAbstractListModel {
 		emit dataChanged( createIndex( changeBeginIdx, 0 ), createIndex( changeEndIdx - 1, 0 ), {Qt::DisplayRole} );
 	}
 
+	QModelIndex makeIndex( int row )
+	{
+		return createIndex( row, 0 );
+	}
+
 };
 
 

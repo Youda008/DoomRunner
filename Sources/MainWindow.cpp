@@ -1032,6 +1032,7 @@ void MainWindow::saveOptions( QString fileName )
 
 		json["presets"] = jsPresetArray;
 	}
+	json["selected_preset"] = presets[ getSelectedItemIdx( ui->presetListView ) ].name;
 
 	json["use_absolute_paths"] = pathHelper.useAbsolutePaths();
 
@@ -1119,6 +1120,7 @@ void MainWindow::loadOptions( QString fileName )
 		iwadListFromDir = getBool( jsIWADs, "auto_update", false );
 
 		if (iwadListFromDir) {
+			iwadSubdirs = getBool( jsIWADs, "subdirs", false );
 			QString dir = getString( jsIWADs, "directory" );
 			if (!dir.isEmpty()) {  // non-existing element directory - skip completely
 				if (QDir( dir ).exists()) {
@@ -1129,7 +1131,6 @@ void MainWindow::loadOptions( QString fileName )
 						"IWAD directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
 				}
 			}
-			iwadSubdirs = getBool( jsIWADs, "subdirs", false );
 		} else {
 			QJsonArray jsIWADArray = getArray( jsIWADs, "IWADs" );
 			for (int i = 0; i < jsIWADArray.size(); i++)
@@ -1231,6 +1232,17 @@ void MainWindow::loadOptions( QString fileName )
 		}
 
 		presetModel.updateView(0);
+	}
+
+	// restore the previously selected preset
+	QString selectedPreset = getString( json, "selected_preset" );
+	int presetIdx = findSuch<Preset>( presets, [ selectedPreset ]( const Preset & preset ) { return preset.name == selectedPreset; } );
+	if (presetIdx >= 0) {
+		selectItemByIdx( ui->presetListView, presetIdx );
+		selectPreset( presetModel.makeIndex( presetIdx ) );
+	} else if (!selectedPreset.isEmpty()) {
+		QMessageBox::warning( this, "Preset no longer exists",
+			"Preset selected on last shutdown ("%selectedPreset%") no longer exists, please select another one." );
 	}
 
 	ui->cmdArgsLine->setText( getString( json, "additional_args" ) );

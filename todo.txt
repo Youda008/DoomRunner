@@ -1,3 +1,0 @@
-fix export preset function
-import preset function
-add build script for building without Qt Creator

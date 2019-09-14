@@ -34,7 +34,17 @@ Because of the static linking, everything is present in the executable. You just
 
 ### Linux
 
-todo
+On Linux, i wasn't able to make a static build yet. Therefore you need to install the following shared libraries to make the app run.
+
+* libqt5core
+* libqt5gui
+* libqt5widgets
+
+On Ubuntu use
+```
+sudo apt install libname
+```
+or some graphical package manager like Muon.
 
 
 ## How to build
@@ -42,6 +52,7 @@ todo
 In general you need 2 things
 1. A C++ compiler
 2. Qt libraries built with the SAME compiler + Qt development tools (qmake, moc, uic, ...)
+
 I'm going to show you exact steps for building in Windows using Msys2 and in Ubuntu and derivatives. If you use a different build system on Windows or different Linux distro, you will have to experiment.
 
 
@@ -50,14 +61,16 @@ I'm going to show you exact steps for building in Windows using Msys2 and in Ubu
 #### Using Msys2
 
 For instructions how to install Msys2 check www.msys2.org
+
 Use Msys2-MinGW-64 terminal to enter the following commands.
 
-1. Install MinGW64
+1) Install MinGW64
 ```
 pacboy -S gcc:x
 ```
 
-2. Install Qt
+2) Install Qt
+
 for dynamically linked version
 ```
 pacboy -S qt5:x
@@ -67,23 +80,23 @@ for statically linked version
 pacboy -S qt5-static:x
 ```
 
-3. Build the project
+3) Build the project
 ```
-	cd <DoomRunner directory>
+cd <DoomRunner directory>
 ```
 for dynamically linked version
 ```
-	mkdir build-dynamic
-	cd build-dynamic
-	qmake ../DoomRunner.pro -spec win32-g++ "CONFIG+=release"
-	mingw32-make
+mkdir build-dynamic
+cd build-dynamic
+qmake ../DoomRunner.pro -spec win32-g++ "CONFIG+=release"
+mingw32-make
 ```
 for statically linked version
 ```
-	mkdir build-static
-	cd build-static
-	C:/msys64/mingw64/qt5-static/bin/qmake ../DoomRunner.pro -spec win32-g++ "CONFIG+=release"
-	mingw32-make
+mkdir build-static
+cd build-static
+C:/msys64/mingw64/qt5-static/bin/qmake ../DoomRunner.pro -spec win32-g++ "CONFIG+=release"
+mingw32-make
 ```
 	
 
@@ -102,23 +115,23 @@ You have to download the Qt sources and compile Qt by yourself. I cannot give yo
 
 ### Linux (Ubuntu and derivatives)
 
-1. Install g++ compiler
+1) Install g++ compiler
 ```
-	sudo apt install g++
-```
-	
-2. Install Qt
-```
-	sudo apt install qt5-default
+sudo apt install g++
 ```
 	
-3. Build the project
+2) Install Qt
 ```
-	cd <DoomRunner directory>
-	mkdir build-dynamic
-	cd build-dynamic
-	qmake ../DoomRunner.pro -spec linux-g++ "CONFIG+=release"
-	make
+sudo apt install qt5-default
+```
+	
+3) Build the project
+```
+cd <DoomRunner directory>
+mkdir build-dynamic
+cd build-dynamic
+qmake ../DoomRunner.pro -spec linux-g++ "CONFIG+=release"
+make
 ```
 
 

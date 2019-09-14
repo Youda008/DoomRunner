@@ -1,6 +1,3 @@
-/Build-release-static
-/Build-release
-/Build-profile
-/Build-debug
+/Build*
 /Releases
 *.autosave

@@ -1032,7 +1032,8 @@ void MainWindow::saveOptions( QString fileName )
 
 		json["presets"] = jsPresetArray;
 	}
-	json["selected_preset"] = presets[ getSelectedItemIdx( ui->presetListView ) ].name;
+	int presetIdx = getSelectedItemIdx( ui->presetListView );
+	json["selected_preset"] = presetIdx >= 0 ? presets[ presetIdx ].name : "";
 
 	json["use_absolute_paths"] = pathHelper.useAbsolutePaths();
 

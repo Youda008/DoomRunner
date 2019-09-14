@@ -40,12 +40,12 @@ static const DMFlag FAST_MONSTERS                = { DM_FLAGS_1, 32768, false };
 static const DMFlag DEGENERATION                 = { DM_FLAGS_2, 128, false };
 static const DMFlag ALLOW_AUTO_AIM               = { DM_FLAGS_2, 8388608, true };
 static const DMFlag ALLOW_SUICIDE                = { DM_FLAGS_2, 4194304, true };
-static const DMFlag ALLOW_JUMP1                  = { DM_FLAGS_1, 65536, true };
-static const DMFlag ALLOW_JUMP2                  = { DM_FLAGS_1, 131072, false };
-static const DMFlag ALLOW_CROUCH1                = { DM_FLAGS_1, 4194304, true };
-static const DMFlag ALLOW_CROUCH2                = { DM_FLAGS_1, 8388608, false};
-static const DMFlag ALLOW_FREELOOK1              = { DM_FLAGS_1, 262144, true };
-static const DMFlag ALLOW_FREELOOK2              = { DM_FLAGS_1, 524288, false };
+static const DMFlag ALLOW_JUMP_ALWAYS_ON         = { DM_FLAGS_1, 65536, false };
+static const DMFlag ALLOW_JUMP_ALWAYS_OFF        = { DM_FLAGS_1, 131072, false };
+static const DMFlag ALLOW_CROUCH_ALWAYS_ON       = { DM_FLAGS_1, 4194304, false };
+static const DMFlag ALLOW_CROUCH_ALWAYS_OFF      = { DM_FLAGS_1, 8388608, false };
+static const DMFlag ALLOW_FREELOOK_ALWAYS_ON     = { DM_FLAGS_1, 262144, false };
+static const DMFlag ALLOW_FREELOOK_ALWAYS_OFF    = { DM_FLAGS_1, 524288, false };
 static const DMFlag ALLOW_FOV                    = { DM_FLAGS_1, 1048576, true };
 static const DMFlag ALLOW_BFG_AIMING             = { DM_FLAGS_2, 256, true };
 static const DMFlag ALLOW_AUTOMAP                = { DM_FLAGS_2, 262144, true };
@@ -237,43 +237,43 @@ void GameOptsDialog::on_allowSuicide_toggled( bool checked )
 
 void GameOptsDialog::on_allowJump_stateChanged( int state )
 {
-	if (state == 0) {
-		setFlag( ALLOW_JUMP1, false );
-		setFlag( ALLOW_JUMP2, false );
-	} else if (state == 1) {
-		setFlag( ALLOW_JUMP1, true );
-		setFlag( ALLOW_JUMP2, false );
-	} else if (state == 2) {
-		setFlag( ALLOW_JUMP1, false );
-		setFlag( ALLOW_JUMP2, true );
+	if (state == Qt::Unchecked) {
+		setFlag( ALLOW_JUMP_ALWAYS_ON, false );
+		setFlag( ALLOW_JUMP_ALWAYS_OFF, true );
+	} else if (state == Qt::PartiallyChecked) {
+		setFlag( ALLOW_JUMP_ALWAYS_ON, false );
+		setFlag( ALLOW_JUMP_ALWAYS_OFF, false );
+	} else if (state == Qt::Checked) {
+		setFlag( ALLOW_JUMP_ALWAYS_ON, true );
+		setFlag( ALLOW_JUMP_ALWAYS_OFF, false );
 	}
 }
 
 void GameOptsDialog::on_allowCrouch_stateChanged( int state )
 {
-	if (state == 0) {
-		setFlag( ALLOW_CROUCH1, false );
-		setFlag( ALLOW_CROUCH2, false );
-	} else if (state == 1) {
-		setFlag( ALLOW_CROUCH1, true );
-		setFlag( ALLOW_CROUCH2, false );
-	} else if (state == 2) {
-		setFlag( ALLOW_CROUCH1, false );
-		setFlag( ALLOW_CROUCH2, true );
+	if (state == Qt::Unchecked) {
+		setFlag( ALLOW_CROUCH_ALWAYS_ON, false );
+		setFlag( ALLOW_CROUCH_ALWAYS_OFF, true );
+	} else if (state == Qt::PartiallyChecked) {
+		setFlag( ALLOW_CROUCH_ALWAYS_ON, false );
+		setFlag( ALLOW_CROUCH_ALWAYS_OFF, false );
+	} else if (state == Qt::Checked) {
+		setFlag( ALLOW_CROUCH_ALWAYS_ON, true );
+		setFlag( ALLOW_CROUCH_ALWAYS_OFF, false );
 	}
 }
 
 void GameOptsDialog::on_allowFreelook_stateChanged( int state )
 {
-	if (state == 0) {
-		setFlag( ALLOW_FREELOOK1, false );
-		setFlag( ALLOW_FREELOOK2, false );
-	} else if (state == 1) {
-		setFlag( ALLOW_FREELOOK1, true );
-		setFlag( ALLOW_FREELOOK2, false );
-	} else if (state == 2) {
-		setFlag( ALLOW_FREELOOK1, false );
-		setFlag( ALLOW_FREELOOK2, true );
+	if (state == Qt::Unchecked) {
+		setFlag( ALLOW_FREELOOK_ALWAYS_ON, false );
+		setFlag( ALLOW_FREELOOK_ALWAYS_OFF, true );
+	} else if (state == Qt::PartiallyChecked) {
+		setFlag( ALLOW_FREELOOK_ALWAYS_ON, false );
+		setFlag( ALLOW_FREELOOK_ALWAYS_OFF, false );
+	} else if (state == Qt::Checked) {
+		setFlag( ALLOW_FREELOOK_ALWAYS_ON, true );
+		setFlag( ALLOW_FREELOOK_ALWAYS_OFF, false );
 	}
 }
 
@@ -464,24 +464,24 @@ void GameOptsDialog::updateCheckboxes()
 	ui->degeneration->setChecked( isEnabled( DEGENERATION ) );
 	ui->allowAutoAim->setChecked( isEnabled( ALLOW_AUTO_AIM ) );
 	ui->allowSuicide->setChecked( isEnabled( ALLOW_SUICIDE ) );
-	if (isEnabled( ALLOW_JUMP1 ))
-		ui->allowJump->setCheckState( Qt::PartiallyChecked );
-	else if (isEnabled( ALLOW_JUMP2 ))
+	if (isEnabled( ALLOW_JUMP_ALWAYS_ON ))
 		ui->allowJump->setCheckState( Qt::Checked );
-	else
+	else if (isEnabled( ALLOW_JUMP_ALWAYS_OFF ))
 		ui->allowJump->setCheckState( Qt::Unchecked );
-	if (isEnabled( ALLOW_CROUCH1 ))
-		ui->allowCrouch->setCheckState( Qt::PartiallyChecked );
-	else if (isEnabled( ALLOW_CROUCH2 ))
+	else
+		ui->allowJump->setCheckState( Qt::PartiallyChecked );
+	if (isEnabled( ALLOW_CROUCH_ALWAYS_ON ))
 		ui->allowCrouch->setCheckState( Qt::Checked );
-	else
+	else if (isEnabled( ALLOW_CROUCH_ALWAYS_OFF ))
 		ui->allowCrouch->setCheckState( Qt::Unchecked );
-	if (isEnabled( ALLOW_FREELOOK1 ))
-		ui->allowFreelook->setCheckState( Qt::PartiallyChecked );
-	else if (isEnabled( ALLOW_FREELOOK2 ))
-		ui->allowFreelook->setCheckState( Qt::Checked );
 	else
+		ui->allowCrouch->setCheckState( Qt::PartiallyChecked );
+	if (isEnabled( ALLOW_FREELOOK_ALWAYS_ON ))
+		ui->allowFreelook->setCheckState( Qt::Checked );
+	else if (isEnabled( ALLOW_FREELOOK_ALWAYS_OFF ))
 		ui->allowFreelook->setCheckState( Qt::Unchecked );
+	else
+		ui->allowFreelook->setCheckState( Qt::PartiallyChecked );
 	ui->allowFOV->setChecked( isEnabled( ALLOW_FOV ) );
 	ui->allowBFGAiming->setChecked( isEnabled( ALLOW_BFG_AIMING ) );
 	ui->allowAutomap->setChecked( isEnabled( ALLOW_AUTOMAP ) );

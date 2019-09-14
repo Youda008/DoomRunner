@@ -1321,9 +1321,9 @@ void MainWindow::generateLaunchCommand()
 			cmdStream << " -fast";
 		if (ui->monstersRespawnChkBox->isChecked())
 			cmdStream << " -respawn";
-		if (compatOpts.flags1 != 0)
+		if (gameOpts.flags1 != 0)
 			cmdStream << " +dmflags " << QString::number( gameOpts.flags1 );
-		if (compatOpts.flags2 != 0)
+		if (gameOpts.flags2 != 0)
 			cmdStream << " +dmflags2 " << QString::number( gameOpts.flags2 );
 		if (!compatOptsCmdArgs.isEmpty()) {
 			cmdStream << " " << compatOptsCmdArgs;

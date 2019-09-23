@@ -40,11 +40,13 @@ class MainWindow : public QMainWindow {
 	explicit MainWindow();
 	virtual ~MainWindow() override;
 
- private:
+ private: //methods
 
 	virtual void showEvent( QShowEvent * event ) override;
 	virtual void timerEvent( QTimerEvent * event ) override;
 	virtual void closeEvent( QCloseEvent * event ) override;
+
+	void firstRun();
 
  private slots:
 
@@ -52,7 +54,7 @@ class MainWindow : public QMainWindow {
 	void runGameOptsDialog();
 	void runCompatOptsDialog();
 
-	void selectPreset( const QModelIndex & index );
+	void loadPreset( const QModelIndex & index );
 	void selectEngine( int index );
 	void selectConfig( int index );
 	void toggleIWAD( const QModelIndex & index );

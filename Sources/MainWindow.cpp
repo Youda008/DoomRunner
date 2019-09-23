@@ -49,6 +49,7 @@
 #endif
 
 static constexpr char defaultOptionsFile [] = "options.json";
+static constexpr char defaultPresetName [] = "Current";
 
 
 //======================================================================================================================
@@ -152,7 +153,7 @@ MainWindow::MainWindow()
 
 	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectEngine );
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectConfig );
-	connect( ui->presetListView, &QListView::clicked, this, &thisClass::selectPreset );
+	connect( ui->presetListView, &QListView::clicked, this, &thisClass::loadPreset );
 	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::toggleIWAD );
 	connect( ui->mapListView, &QListView::clicked, this, &thisClass::toggleMapPack );
 	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
@@ -198,7 +199,7 @@ MainWindow::MainWindow()
 	if (QFileInfo( defaultOptionsFile ).exists())
 		loadOptions( defaultOptionsFile );
 	else  // this is a first run, perform an initial setup
-		QTimer::singleShot( 1, this, &thisClass::runSetupDialog );
+		firstRun();
 
 	// setup an update timer
 	startTimer( 1000 );
@@ -238,6 +239,16 @@ void MainWindow::closeEvent( QCloseEvent * event )
 MainWindow::~MainWindow()
 {
 	delete ui;
+}
+
+void MainWindow::firstRun()
+{
+	// let the user setup the paths and other basic settings
+	QTimer::singleShot( 1, this, &thisClass::runSetupDialog );
+
+	// create an empty default preset
+	// so that all the files the user sets up without having any own preset created can be saved somewhere
+	appendItem( ui->presetListView, presetModel, { defaultPresetName, "", "", "", {} } );
 }
 
 
@@ -283,7 +294,7 @@ void MainWindow::runCompatOptsDialog()
 //----------------------------------------------------------------------------------------------------------------------
 //  list item selection
 
-void MainWindow::selectPreset( const QModelIndex & index )
+void MainWindow::loadPreset( const QModelIndex & index )
 {
 	Preset & preset = presets[ index.row() ];
 
@@ -470,6 +481,7 @@ void MainWindow::presetAdd()
 
 	// clear the widgets to represent an empty preset
 	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will be saved in the old one
+	// TODO: maybe an own function
 	ui->engineCmbBox->setCurrentIndex( -1 );
 	ui->configCmbBox->setCurrentIndex( -1 );
 	deselectSelectedItems( ui->iwadListView );
@@ -488,6 +500,14 @@ void MainWindow::presetAdd()
 
 void MainWindow::presetDelete()
 {
+	int selectedIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedIdx >= 0 && presets[ selectedIdx ].name == defaultPresetName) {
+		QMessageBox::warning( this, "Default preset can't be deleted",
+			"Preset "%QString( defaultPresetName )%" cannot be deleted. "
+			"This preset stores the files you add or select without having any other preset selected." );
+		return;
+	}
+
 	deleteSelectedItem( ui->presetListView, presetModel );
 }
 
@@ -1235,16 +1255,17 @@ void MainWindow::loadOptions( QString fileName )
 		presetModel.updateView(0);
 	}
 
-	// restore the previously selected preset
-	QString selectedPreset = getString( json, "selected_preset" );
-	int presetIdx = findSuch<Preset>( presets, [ selectedPreset ]( const Preset & preset ) { return preset.name == selectedPreset; } );
-	if (presetIdx >= 0) {
-		selectItemByIdx( ui->presetListView, presetIdx );
-		selectPreset( presetModel.makeIndex( presetIdx ) );
-	} else if (!selectedPreset.isEmpty()) {
-		QMessageBox::warning( this, "Preset no longer exists",
-			"Preset selected on last shutdown ("%selectedPreset%") no longer exists, please select another one." );
+	// check for existence of default preset and create it if not there
+	int presetIdx = findSuch< Preset >( presets, []( const Preset & preset ) { return preset.name == defaultPresetName; } );
+	if (presetIdx < 0) {
+		// create an empty default preset
+		// so that all the files the user sets up without having any own preset created can be saved somewhere
+		presets.prepend({ defaultPresetName, "", "", "", {} });
+		presetIdx = 0;
 	}
+	// select the default preset, so that something is always selected to save the changes to
+	selectItemByIdx( ui->presetListView, presetIdx );
+	loadPreset( presetModel.makeIndex( presetIdx ) );
 
 	ui->cmdArgsLine->setText( getString( json, "additional_args" ) );
 
@@ -1308,9 +1329,10 @@ void MainWindow::generateLaunchCommand()
 		cmdStream << "\"" << engines[ engineIdx ].path << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
-		if (configIdx >= 0)
+		if (configIdx >= 0) {
 			cmdStream << " -config \""
 			          << QFileInfo( engines[ engineIdx ].path ).dir().filePath( ui->configCmbBox->currentText() ) << "\"";
+		}
 	}
 
 	const int iwadIdx = getSelectedItemIdx( ui->iwadListView );

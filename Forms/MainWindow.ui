@@ -30,7 +30,7 @@
           <item>
            <widget class="QGroupBox" name="presetGroupBox">
             <property name="title">
-             <string>Create presets</string>
+             <string>1. Create preset</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_4">
              <item>
@@ -180,7 +180,7 @@
           <item>
            <widget class="QGroupBox" name="engineGrpBox">
             <property name="title">
-             <string>Select engine</string>
+             <string>2. Select engine</string>
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
@@ -198,7 +198,7 @@
              </size>
             </property>
             <property name="title">
-             <string>Select IWAD</string>
+             <string>3. Select IWAD</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_5">
              <item>
@@ -214,7 +214,7 @@
           <item>
            <widget class="QGroupBox" name="mapGrpBox">
             <property name="title">
-             <string>Select map pack</string>
+             <string>4. Select map pack</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_7">
              <item>
@@ -234,7 +234,7 @@
           <item>
            <widget class="QGroupBox" name="configGrpBox">
             <property name="title">
-             <string>Select config</string>
+             <string>5. Select config (optional)</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_13">
              <item>
@@ -246,7 +246,7 @@
           <item>
            <widget class="QGroupBox" name="modGrpBox">
             <property name="title">
-             <string>Add mods</string>
+             <string>6. Add mods</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
              <item>

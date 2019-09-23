@@ -1343,9 +1343,14 @@ void MainWindow::generateLaunchCommand()
 	if (mapIdx >= 0)
 		cmdStream << " -file \"" << QDir( mapDir ).filePath( maps[ mapIdx ].name ) << "\"";
 
-	for (const Mod & mod : mods)
-		if (mod.checked)
-			cmdStream << " -file \"" << mod.path << "\"";
+	for (const Mod & mod : mods) {
+		if (mod.checked) {
+			if (QFileInfo(mod.path).suffix() == "deh")
+				cmdStream << " -deh \"" << mod.path << "\"";
+			else
+				cmdStream << " -file \"" << mod.path << "\"";
+		}
+	}
 
 	if (ui->launchMode_map->isChecked()) {
 		cmdStream << " -warp " << getMapNumber( ui->mapCmbBox->currentText() );

@@ -1,3 +1,7 @@
+1.1
+- added a "Current preset" mechanic to solve the problem with losing all files added before creating and selecting a preset
+- files with extension ".deh" are now loaded via command line option "-deh" instead of "-file"
+
 1.0
 - completed Compatibility Options dialog
 - fixed bug where checkboxes in compatibility options didn't update correctly when number was entered manually

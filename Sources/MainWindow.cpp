@@ -673,9 +673,9 @@ void MainWindow::updateIWADsFromDir( QListView * view )  // the parameter exists
 void MainWindow::updateMapPacksFromDir()
 {
 	updateListFromDir< MapPack >( maps, ui->mapListView, mapDir, mapSubdirs, {"wad", "pk3", "pk7", "zip", "7z"},
-		/*makeItemFromFile*/[]( const QFileInfo & file ) -> MapPack
+		/*makeItemFromFile*/[ this ]( const QFileInfo & file ) -> MapPack
 		{
-			return { file.fileName() };
+			return { QDir( mapDir ).relativeFilePath( file.filePath() ) };
 		}
 	);
 

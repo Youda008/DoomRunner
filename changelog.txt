@@ -2,6 +2,7 @@
 - added a "Current preset" mechanic to solve the problem with losing all files added before creating and selecting a preset
 - files with extension ".deh" are now loaded via command line option "-deh" instead of "-file"
 - you can now manually type map name into the "Launch selected map" combo box
+- window with map packs now shows paths relative to map directory as a temporary substitute for future tree view
 
 1.0
 - completed Compatibility Options dialog

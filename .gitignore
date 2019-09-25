@@ -1,4 +1,5 @@
 /Build*
 /Releases
+/TestDoomDir
 *.autosave
 /todo.txt

@@ -231,42 +231,37 @@ void updateListFromDir( QList< Object > & list, QListView * view, QString dir, b
 
 class PathHelper {
 
-	QDir _currentDir;  ///< directory to derive relative paths from
+	QDir _baseDir;  ///< directory which relative paths are relative to
+	QDir _currentDir;  ///< cached current directory - original base dir for path rebasing
 	bool _useAbsolutePaths;  ///< whether to store paths to engines, IWADs, maps and mods in absolute or relative form
 
  public:
 
-	PathHelper( bool useAbsolutePaths ) : _currentDir( QDir::current() ), _useAbsolutePaths( useAbsolutePaths ) {}
+	PathHelper( bool useAbsolutePaths, const QString & baseDir )
+		: _baseDir( baseDir ), _currentDir( QDir::current() ), _useAbsolutePaths( useAbsolutePaths ) {}
 
-	const QDir & currentDir() const                    { return _currentDir; }
+	const QDir & baseDir() const                       { return _baseDir; }
 	bool useAbsolutePaths() const                      { return _useAbsolutePaths; }
 	bool useRelativePaths() const                      { return !_useAbsolutePaths; }
 	void toggleAbsolutePaths( bool useAbsolutePaths )  { _useAbsolutePaths = useAbsolutePaths; }
 
-	QString getAbsolutePath( QString path )
+	QString getAbsolutePath( QString path ) const
 	{
-		return QFileInfo( path ).absoluteFilePath();
+		return QFileInfo( _baseDir, path ).absoluteFilePath();
 	}
-	QString getRelativePath( QString path )
+	QString getRelativePath( QString path ) const
 	{
-		return _currentDir.relativeFilePath( path );
+		return _baseDir.relativeFilePath( path );
 	}
-	QString convertPath( QString path )
+	QString convertPath( QString path ) const
 	{
 		return _useAbsolutePaths ? getAbsolutePath( path ) : getRelativePath( path );
 	}
 
-	void makeAbsolute( QDir & dir )
+	QString rebasePath( QString path ) const
 	{
-		dir.makeAbsolute();
-	}
-	void makeRelative( QDir & dir )
-	{
-		dir = _currentDir.relativeFilePath( dir.path() );
-	}
-	void convertDir( QDir & dir )
-	{
-		_useAbsolutePaths ? makeAbsolute( dir ) : makeRelative( dir );
+		QString absPath = _currentDir.filePath( path );
+		return _baseDir.relativeFilePath( absPath );
 	}
 
 };

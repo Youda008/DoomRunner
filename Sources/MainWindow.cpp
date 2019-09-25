@@ -93,7 +93,7 @@ MainWindow::MainWindow()
 	, width( -1 )
 	, height( -1 )
 	, tickCount( 0 )
-	, pathHelper( false )
+	, pathHelper( false, QDir::currentPath() )
 	, engineModel( engines, /*makeDisplayString*/[]( const Engine & engine ) { return engine.name; } )
 	, configModel( configs, /*makeDisplayString*/[]( const QString & config ) { return config; } )
 	, iwadModel( iwads, /*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; } )
@@ -266,7 +266,7 @@ void MainWindow::runSetupDialog()
 	engineModel.updateView( 0 );
 	iwadModel.updateView( 0 );
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::runGameOptsDialog()
@@ -274,7 +274,7 @@ void MainWindow::runGameOptsDialog()
 	GameOptsDialog dialog( this, gameOpts );
 	dialog.exec();
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::runCompatOptsDialog()
@@ -287,7 +287,7 @@ void MainWindow::runCompatOptsDialog()
 	// cache the command line args string, so that it doesn't need to be regenerated on every command line update
 	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( compatOpts );
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 
@@ -375,7 +375,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	}
 	modModel.updateView(0);
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::selectEngine( int index )
@@ -392,7 +392,7 @@ void MainWindow::selectEngine( int index )
 	updateSaveFilesFromDir();
 	updateConfigFilesFromDir();
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::selectConfig( int index )
@@ -406,7 +406,7 @@ void MainWindow::selectConfig( int index )
 			presets[ selectedPresetIdx ].selectedConfig = configs[ index ];
 	}
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::toggleIWAD( const QModelIndex & index )
@@ -431,7 +431,7 @@ void MainWindow::toggleIWAD( const QModelIndex & index )
 
 	updateMapsFromIWAD();
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::toggleMapPack( const QModelIndex & index )
@@ -454,7 +454,7 @@ void MainWindow::toggleMapPack( const QModelIndex & index )
 			presets[ selectedPresetIdx ].selectedMapPack.clear();  // deselect it also from preset
 	}
 */
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::toggleMod( const QModelIndex & modIndex )
@@ -465,7 +465,7 @@ void MainWindow::toggleMod( const QModelIndex & modIndex )
 		presets[ selectedPresetIdx ].mods[ modIndex.row() ].checked = mods[ modIndex.row() ].checked;
 	}
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 
@@ -556,7 +556,7 @@ void MainWindow::modAdd()
 		presets[ selectedPresetIdx ].mods.append({ name, path, true });
 	}
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::modDelete()
@@ -571,7 +571,7 @@ void MainWindow::modDelete()
 		presets[ selectedPresetIdx ].mods.removeAt( deletedModIdx );
 	}
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::modMoveUp()
@@ -586,7 +586,7 @@ void MainWindow::modMoveUp()
 		presets[ selectedPresetIdx ].mods.move( selectedModIdx, selectedModIdx - 1 );
 	}
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::modMoveDown()
@@ -601,7 +601,7 @@ void MainWindow::modMoveDown()
 		presets[ selectedPresetIdx ].mods.move( selectedModIdx, selectedModIdx + 1 );
 	}
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 // idiotic workaround because Qt is fucking retarded
@@ -650,7 +650,7 @@ void MainWindow::modsDropped()
 			presets[ selectedPresetIdx ].mods = mods; // not the most optimal way, but the size of the list is always low
 		}
 
-		generateLaunchCommand();
+		updateLaunchCommand();
 	}
 }
 
@@ -675,7 +675,7 @@ void MainWindow::updateMapPacksFromDir()
 	updateListFromDir< MapPack >( maps, ui->mapListView, mapDir, mapSubdirs, {"wad", "pk3", "pk7", "zip", "7z"},
 		/*makeItemFromFile*/[ this ]( const QFileInfo & file ) -> MapPack
 		{
-			return { QDir( mapDir ).relativeFilePath( file.filePath() ) };
+			return { QDir( mapDir ).relativeFilePath( file.absoluteFilePath() ) };
 		}
 	);
 
@@ -802,7 +802,7 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 		preset.selectedEnginePath = pathHelper.convertPath( preset.selectedEnginePath );
 	}
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::modeGameMenu()
@@ -819,7 +819,7 @@ void MainWindow::modeGameMenu()
 
 	ui->multiplayerChkBox->setChecked( false );
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::modeSelectedMap()
@@ -834,7 +834,7 @@ void MainWindow::modeSelectedMap()
 	ui->gameOptsBtn->setEnabled( true );
 	ui->compatOptsBtn->setEnabled( true );
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::modeSavedGame()
@@ -849,17 +849,17 @@ void MainWindow::modeSavedGame()
 	ui->gameOptsBtn->setEnabled( false );
 	ui->compatOptsBtn->setEnabled( false );
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::selectMap( QString )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::selectSavedGame( QString )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::selectSkill( int skill )
@@ -867,7 +867,7 @@ void MainWindow::selectSkill( int skill )
 	ui->skillSpinBox->setValue( skill );
 	ui->skillSpinBox->setEnabled( skill == Skill::CUSTOM );
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::changeSkillNum( int skill )
@@ -875,22 +875,22 @@ void MainWindow::changeSkillNum( int skill )
 	if (skill < Skill::CUSTOM)
 		ui->skillCmbBox->setCurrentIndex( skill );
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoMonsters( bool )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::toggleFastMonsters( bool )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::toggleMonstersRespawn( bool )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::toggleMultiplayer( bool checked )
@@ -907,52 +907,52 @@ void MainWindow::toggleMultiplayer( bool checked )
 	if (checked && ui->launchMode_menu->isChecked())
 		ui->launchMode_map->click();
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::selectMultRole( int )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::changeHost( QString )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::changePort( int )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::selectNetMode( int )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::selectGameMode( int )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::changePlayerCount( int )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::changeTeamDamage( double )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::changeTimeLimit( int )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::updateAdditionalArgs( QString )
 {
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 
@@ -1279,7 +1279,7 @@ void MainWindow::loadOptions( QString fileName )
 
 	updateListsFromDirs();
 
-	generateLaunchCommand();
+	updateLaunchCommand();
 }
 
 void MainWindow::exportPreset()
@@ -1295,6 +1295,7 @@ void MainWindow::exportPreset()
 		return;
 	}
 
+	QFileInfo fileInfo( fileName );
 	QFile file( fileName );
 	if (!file.open( QIODevice::ReadWrite )) {
 		QMessageBox::warning( this, "Cannot open file", "Cannot open file for writing. Check directory permissions" );
@@ -1303,8 +1304,7 @@ void MainWindow::exportPreset()
 
 	QTextStream stream( &file );
 
-	// TODO: convert paths according to the target directory
-	stream << ui->commandLine->text() << endl;
+	stream << generateLaunchCommand( fileInfo.path() ) << endl;
 
 	file.close();
 }
@@ -1318,37 +1318,60 @@ void MainWindow::importPreset()
 //----------------------------------------------------------------------------------------------------------------------
 //  launch command generation
 
-void MainWindow::generateLaunchCommand()
+void MainWindow::updateLaunchCommand()
 {
 	QString curCommand = ui->commandLine->text();
+
+	QString newCommand = generateLaunchCommand();
+
+	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
+	// and copy part of the line, by constantly reseting his selection.
+	if (newCommand != curCommand)
+		ui->commandLine->setText( newCommand );
+}
+
+QString MainWindow::generateLaunchCommand( QString baseDir )
+{
+	// allow the caller to specify which base directory he wants to derive the relative paths from
+	// this is required because of the "Export preset" function that needs to write the correct paths to the bat
+	// if no argument is given (empty string), fallback to system current directory
+	if (baseDir.isEmpty())
+		baseDir = QDir::currentPath();
+
+	PathHelper base( pathHelper.useAbsolutePaths(), baseDir );
+
 	QString newCommand;
 	QTextStream cmdStream( &newCommand );
 
 	const int engineIdx = ui->engineCmbBox->currentIndex();
 	if (engineIdx >= 0) {
-		cmdStream << "\"" << engines[ engineIdx ].path << "\"";
+		cmdStream << "\"" << base.rebasePath( engines[ engineIdx ].path ) << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx >= 0) {
-			cmdStream << " -config \""
-			          << QFileInfo( engines[ engineIdx ].path ).dir().filePath( ui->configCmbBox->currentText() ) << "\"";
+			QDir engineDir = QFileInfo( engines[ engineIdx ].path ).dir();
+			QString configPath = engineDir.filePath( ui->configCmbBox->currentText() );
+			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
 	}
 
 	const int iwadIdx = getSelectedItemIdx( ui->iwadListView );
-	if (iwadIdx >= 0)
-		cmdStream << " -iwad \"" << iwads[ iwadIdx ].path << "\"";
+	if (iwadIdx >= 0) {
+		cmdStream << " -iwad \"" << base.rebasePath( iwads[ iwadIdx ].path ) << "\"";
+	}
 
 	const int mapIdx = getSelectedItemIdx( ui->mapListView );
-	if (mapIdx >= 0)
-		cmdStream << " -file \"" << QDir( mapDir ).filePath( maps[ mapIdx ].name ) << "\"";
+	if (mapIdx >= 0) {
+		QString mapPath = QDir( mapDir ).filePath( maps[ mapIdx ].name );
+		cmdStream << " -file \"" << base.rebasePath( mapPath ) << "\"";
+	}
 
 	for (const Mod & mod : mods) {
 		if (mod.checked) {
 			if (QFileInfo(mod.path).suffix() == "deh")
-				cmdStream << " -deh \"" << mod.path << "\"";
+				cmdStream << " -deh \"" << base.rebasePath( mod.path ) << "\"";
 			else
-				cmdStream << " -file \"" << mod.path << "\"";
+				cmdStream << " -file \"" << base.rebasePath( mod.path ) << "\"";
 		}
 	}
 
@@ -1417,10 +1440,7 @@ void MainWindow::generateLaunchCommand()
 
 	cmdStream.flush();
 
-	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
-	// and copy part of the line, by constantly reseting his selection.
-	if (newCommand != curCommand)
-		ui->commandLine->setText( newCommand );
+	return newCommand;
 }
 
 void MainWindow::launch()

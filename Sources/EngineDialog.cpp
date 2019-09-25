@@ -16,7 +16,7 @@
 
 //======================================================================================================================
 
-EngineDialog::EngineDialog( QWidget * parent, PathHelper & pathHelper, QString & name, QString & path )
+EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, QString & name, QString & path )
 
 	: QDialog( parent )
 	, pathHelper( pathHelper )

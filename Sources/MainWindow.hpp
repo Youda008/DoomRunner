@@ -113,7 +113,8 @@ class MainWindow : public QMainWindow {
 
 	void updateAdditionalArgs( QString text );
 
-	void generateLaunchCommand();
+	QString generateLaunchCommand( QString baseDir = "" );
+	void updateLaunchCommand();
 
 	void launch();
 

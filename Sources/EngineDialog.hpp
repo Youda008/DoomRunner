@@ -33,7 +33,7 @@ class EngineDialog : public QDialog {
 
  public:
 
-	explicit EngineDialog( QWidget * parent, PathHelper & pathHelper, QString & name, QString & path );
+	explicit EngineDialog( QWidget * parent, const PathHelper & pathHelper, QString & name, QString & path );
 	~EngineDialog();
 
  private slots:
@@ -47,7 +47,7 @@ class EngineDialog : public QDialog {
 
 	Ui::EngineDialog * ui;
 
-	PathHelper & pathHelper;
+	const PathHelper & pathHelper;
 
 	// dialog will return the user's input via these references
 	QString & name;

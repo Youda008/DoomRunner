@@ -1,0 +1,5 @@
+- tree view for file windows to see a directory hierarchy
+- multi-file selection in map list
+- drag&drop from map list to mod list
+- drag&drop from directory to engine list
+- extracting map names from IWAD file content

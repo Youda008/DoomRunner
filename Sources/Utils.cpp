@@ -17,7 +17,7 @@
 
 int getSelectedItemIdx( QListView * view )   // this function is for single selection lists
 {
-	QModelIndexList selectedIndexes = view->selectionModel()->selectedRows();
+	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.empty()) {
 		return -1;
 	}

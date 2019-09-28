@@ -97,6 +97,45 @@ int deleteSelectedItem( QListView * view, AObjectListModel< Object > & model )
 }
 
 template< typename Object >
+QVector<int> deleteSelectedItems( QListView * view, AObjectListModel< Object > & model )
+{
+	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
+	if (selectedIndexes.isEmpty()) {
+		if (!model.list().isEmpty())
+			QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		return {};
+	}
+
+	// the list of indexes is not sorted, they are in the order in which user selected them
+	// but for the delete, we need them sorted in ascending order
+	QVector<int> selectedIndexesAsc;
+	for (const QModelIndex & index : selectedIndexes)
+		selectedIndexesAsc.push_back( index.row() );
+	std::sort( selectedIndexesAsc.begin(), selectedIndexesAsc.end(), []( int idx1, int idx2 ) { return idx1 < idx2; } );
+
+	int firstSelectedIdx = selectedIndexesAsc[0];
+
+	// delete all the selected items
+	uint deletedCnt = 0;
+	for (int selectedIdx : selectedIndexesAsc) {
+		deselectItemByIdx( view, selectedIdx );
+		model.list().removeAt( selectedIdx - deletedCnt );
+		deletedCnt++;
+	}
+
+	// try to select some nearest item, so that user can click 'delete' repeatedly to delete all of them
+	if (firstSelectedIdx < model.list().size()) {  // if the first deleted item index is still within range of existing ones
+		selectItemByIdx( view, firstSelectedIdx ); // select that one
+	} else if (!model.list().isEmpty()) {          // otherwise select the previous, if there is any
+		selectItemByIdx( view, firstSelectedIdx - 1 );
+	}
+
+	model.updateView( firstSelectedIdx );
+
+	return selectedIndexesAsc;
+}
+
+template< typename Object >
 int cloneSelectedItem( QListView * view, AObjectListModel< Object > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
@@ -165,11 +204,77 @@ int moveDownSelectedItem( QListView * view, AObjectListModel< Object > & model )
 	return selectedIdx;
 }
 
+template< typename Object >
+QVector<int> moveUpSelectedItems( QListView * view, AObjectListModel< Object > & model )
+{
+	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
+	if (selectedIndexes.isEmpty()) {
+		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		return {};
+	}
+
+	// the list of indexes is not sorted, they are in the order in which user selected them
+	// but for the move, we need them sorted in ascending order
+	QVector<int> selectedIndexesAsc;
+	for (const QModelIndex & index : selectedIndexes)
+		selectedIndexesAsc.push_back( index.row() );
+	std::sort( selectedIndexesAsc.begin(), selectedIndexesAsc.end(), []( int idx1, int idx2 ) { return idx1 < idx2; } );
+
+	// if the selected items are at the bottom, do nothing
+	if (selectedIndexesAsc.first() == 0)
+		return {};
+
+	// do the move
+	for (int selectedIdx : selectedIndexesAsc)
+		model.list().move( selectedIdx, selectedIdx - 1 );
+
+	// update selection
+	deselectItemByIdx( view, selectedIndexesAsc.last() );
+	selectItemByIdx( view, selectedIndexesAsc.first() - 1 );
+
+	model.updateView( selectedIndexesAsc.first() - 1 );
+
+	return selectedIndexesAsc;
+}
+
+template< typename Object >
+QVector<int> moveDownSelectedItems( QListView * view, AObjectListModel< Object > & model )
+{
+	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
+	if (selectedIndexes.isEmpty()) {
+		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		return {};
+	}
+
+	// the list of indexes is not sorted, they are in the order in which user selected them
+	// but for the move, we need them sorted in descending order
+	QVector<int> selectedIndexesDesc;
+	for (const QModelIndex & index : selectedIndexes)
+		selectedIndexesDesc.push_back( index.row() );
+	std::sort( selectedIndexesDesc.begin(), selectedIndexesDesc.end(), []( int idx1, int idx2 ) { return idx1 > idx2; } );
+
+	// if the selected items are at the top, do nothing
+	if (selectedIndexesDesc.first() == model.list().size() - 1)
+		return {};
+
+	// do the move
+	for (int selectedIdx : selectedIndexesDesc)
+		model.list().move( selectedIdx, selectedIdx + 1 );
+
+	// update selection
+	deselectItemByIdx( view, selectedIndexesDesc.last() );
+	selectItemByIdx( view, selectedIndexesDesc.first() + 1 );
+
+	model.updateView( selectedIndexesDesc.last() );
+
+	return selectedIndexesDesc;
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 
 template< typename Object >  // Object must contain public attribute .name
-void fillListFromDir( QList< Object > & list, QListView * view, QString dir, bool recursively, const QVector<QString> & fileSuffixes,
+void fillListFromDir( QList< Object > & list, QString dir, bool recursively, const QVector<QString> & fileSuffixes,
                       std::function< Object ( const QFileInfo & file ) > makeItemFromFile )
 {
 	QDir dir_( dir );
@@ -184,7 +289,7 @@ void fillListFromDir( QList< Object > & list, QListView * view, QString dir, boo
 		if (file.isDir()) {
 			QString fileName = file.fileName();
 			if (recursively && fileName != "." && fileName != "..") {
-				fillListFromDir< Object >( list, view, file.filePath(), recursively, fileSuffixes, makeItemFromFile );
+				fillListFromDir< Object >( list, file.filePath(), recursively, fileSuffixes, makeItemFromFile );
 			}
 		} else if (fileSuffixes.isEmpty() || fileSuffixes.contains( file.suffix().toLower() )) {
 			list.append( makeItemFromFile( file ) );
@@ -207,7 +312,7 @@ void updateListFromDir( QList< Object > & list, QListView * view, QString dir, b
 
 	list.clear();
 
-	fillListFromDir( list, view, dir, recursively, fileSuffixes, makeItemFromFile );
+	fillListFromDir( list, dir, recursively, fileSuffixes, makeItemFromFile );
 
 	// update the selection so that the same file remains selected
 	if (selectedItemIdx >= 0) {

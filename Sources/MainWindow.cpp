@@ -561,14 +561,18 @@ void MainWindow::modAdd()
 
 void MainWindow::modDelete()
 {
-	int deletedModIdx = deleteSelectedItem( ui->modListView, modModel );
-	if (deletedModIdx < 0)  // no item was selected
+	QVector<int> deletedIndexes = deleteSelectedItems( ui->modListView, modModel );
+	if (deletedIndexes.isEmpty())  // no item was selected
 		return;
 
 	// remove it also from the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].mods.removeAt( deletedModIdx );
+		int deletedCnt = 0;
+		for (int deletedIdx : deletedIndexes) {
+			presets[ selectedPresetIdx ].mods.removeAt( deletedIdx - deletedCnt );
+			deletedCnt++;
+		}
 	}
 
 	updateLaunchCommand();
@@ -576,14 +580,16 @@ void MainWindow::modDelete()
 
 void MainWindow::modMoveUp()
 {
-	int selectedModIdx = moveUpSelectedItem( ui->modListView, modModel );
-	if (selectedModIdx <= 0)  // no item was selected or it was the topmost one
+	QVector<int> movedIndexes = moveUpSelectedItems( ui->modListView, modModel );
+	if (movedIndexes.isEmpty())  // no item was selected or they were already at the top
 		return;
 
 	// move it up also in the preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].mods.move( selectedModIdx, selectedModIdx - 1 );
+		for (int movedIdx : movedIndexes) {
+			presets[ selectedPresetIdx ].mods.move( movedIdx, movedIdx - 1 );
+		}
 	}
 
 	updateLaunchCommand();
@@ -591,14 +597,16 @@ void MainWindow::modMoveUp()
 
 void MainWindow::modMoveDown()
 {
-	int selectedModIdx = moveDownSelectedItem( ui->modListView, modModel );
-	if (selectedModIdx < 0 || selectedModIdx == mods.size() - 1)  // no item was selected or it was the lowest one
+	QVector<int> movedIndexes = moveDownSelectedItems( ui->modListView, modModel );
+	if (movedIndexes.isEmpty())  // no item was selected or they were already at the bottom
 		return;
 
 	// move it down also in the preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].mods.move( selectedModIdx, selectedModIdx + 1 );
+		for (int movedIdx : movedIndexes) {
+			presets[ selectedPresetIdx ].mods.move( movedIdx, movedIdx + 1 );
+		}
 	}
 
 	updateLaunchCommand();

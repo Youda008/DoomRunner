@@ -215,7 +215,10 @@ void SetupDialog::iwadAdd()
 
 void SetupDialog::iwadDelete()
 {
-	deleteSelectedItem( ui->iwadListView, iwadModel );
+	int deletedIdx = deleteSelectedItem( ui->iwadListView, iwadModel );
+
+	// let the parent window update its elements so that they don't point to a non-existing item
+	emit iwadDeleted( deletedIdx );
 }
 
 void SetupDialog::iwadMoveUp()
@@ -239,7 +242,10 @@ void SetupDialog::engineAdd()
 
 void SetupDialog::engineDelete()
 {
-	deleteSelectedItem( ui->engineListView, engineModel );
+	int deletedIdx = deleteSelectedItem( ui->engineListView, engineModel );
+
+	// let the parent window update its elements so that they don't point to a non-existing item
+	emit engineDeleted( deletedIdx );
 }
 
 void SetupDialog::engineMoveUp()

@@ -82,6 +82,8 @@ class MainWindow : public QMainWindow {
 	void updateListsFromDirs();
 
 	void toggleAbsolutePaths( bool absolute );
+	void onEngineDeleted( int engineIdx );
+	void onIWADDeleted( int iwadIdx );
 
 	void modeGameMenu();
 	void modeSelectedMap();

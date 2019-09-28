@@ -56,6 +56,8 @@ int findSuch( const QList<ElemType> & list, std::function< bool ( const ElemType
 /// assumes a single-selection mode, will throw a message box error otherwise
 int getSelectedItemIdx( QListView * view );
 
+bool isSelectedIdx( QListView * view, int index );
+
 void selectItemByIdx( QListView * view, int index );
 void deselectItemByIdx( QListView * view, int index );
 void deselectSelectedItems( QListView * view );

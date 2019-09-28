@@ -258,8 +258,12 @@ void MainWindow::firstRun()
 void MainWindow::runSetupDialog()
 {
 	SetupDialog dialog( this, pathHelper, engines, iwads, iwadListFromDir, iwadDir, iwadSubdirs, mapDir, mapSubdirs, modDir );
+
 	connect( &dialog, &SetupDialog::iwadListNeedsUpdate, this, &thisClass::updateIWADsFromDir );
 	connect( &dialog, &SetupDialog::absolutePathsToggled, this, &thisClass::toggleAbsolutePaths );
+	connect( &dialog, &SetupDialog::engineDeleted, this, &thisClass::onEngineDeleted );
+	connect( &dialog, &SetupDialog::iwadDeleted, this, &thisClass::onIWADDeleted );
+
 	dialog.exec();
 
 	// update the views in this window, because the dialog may have changed the underlying data
@@ -811,6 +815,23 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 	}
 
 	updateLaunchCommand();
+}
+
+void MainWindow::onEngineDeleted( int deletedIdx )
+{
+	int selectedIdx = ui->engineCmbBox->currentIndex();
+	if (selectedIdx == deletedIdx) {
+		ui->engineCmbBox->setCurrentIndex( -1 );
+	} else if (selectedIdx > deletedIdx) {
+		ui->engineCmbBox->setCurrentIndex( selectedIdx - 1 );
+	}
+}
+
+void MainWindow::onIWADDeleted( int deletedIdx )
+{
+	if (isSelectedIdx( ui->iwadListView, deletedIdx )) {
+		deselectItemByIdx( ui->iwadListView, deletedIdx );
+	}
 }
 
 void MainWindow::modeGameMenu()

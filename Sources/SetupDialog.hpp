@@ -81,6 +81,8 @@ class SetupDialog : public QDialog {
 
  signals:
 
+	void engineDeleted( int engineIdx );
+	void iwadDeleted( int iwadIdx );
 	void iwadListNeedsUpdate( QListView * view );
 	void absolutePathsToggled( bool absolute );
 

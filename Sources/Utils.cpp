@@ -29,6 +29,11 @@ int getSelectedItemIdx( QListView * view )   // this function is for single sele
 	return selectedIndexes[0].row();
 }
 
+bool isSelectedIdx( QListView * view, int index )
+{
+	return view->selectionModel()->isSelected( view->model()->index( index, 0 ) );
+}
+
 void selectItemByIdx( QListView * view, int index )
 {
 	QModelIndex modelIndex = view->model()->index( index, 0 );

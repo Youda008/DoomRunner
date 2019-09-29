@@ -795,12 +795,10 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 	for (Engine & engine : engines)
 		engine.path = pathHelper.convertPath( engine.path );
 
-	if (iwadListFromDir && !iwadDir.isEmpty()) {
+	if (iwadListFromDir && !iwadDir.isEmpty())
 		iwadDir = pathHelper.convertPath( iwadDir );
-	} else {
-		for (IWAD & iwad : iwads)
-			iwad.path = pathHelper.convertPath( iwad.path );
-	}
+	for (IWAD & iwad : iwads)
+		iwad.path = pathHelper.convertPath( iwad.path );
 
 	mapDir = pathHelper.convertPath( mapDir );
 

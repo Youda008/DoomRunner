@@ -354,15 +354,11 @@ class PathHelper {
 
 	QString getAbsolutePath( QString path ) const
 	{
-		if (path.isEmpty())
-			return {};
-		return QFileInfo( _baseDir, path ).absoluteFilePath();
+		return path.isEmpty() ? "" : QFileInfo( _baseDir, path ).absoluteFilePath();
 	}
 	QString getRelativePath( QString path ) const
 	{
-		if (path.isEmpty())
-			return {};
-		return _baseDir.relativeFilePath( path );
+		return path.isEmpty() ? "" : _baseDir.relativeFilePath( path );
 	}
 	QString convertPath( QString path ) const
 	{
@@ -373,6 +369,8 @@ class PathHelper {
 	{
 		if (path.isEmpty())
 			return {};
+		if (QDir::isAbsolutePath( path ))
+			return path;
 		QString absPath = _currentDir.filePath( path );
 		return _baseDir.relativeFilePath( absPath );
 	}

@@ -1319,7 +1319,7 @@ void MainWindow::exportPreset()
 		return;
 	}
 
-	QString fileName = QFileDialog::getSaveFileName( this, "Save preset", QString(), scriptFileExt );
+	QString fileName = QFileDialog::getSaveFileName( this, "Export preset", QString(), scriptFileExt );
 	if (fileName.isEmpty()) {  // user probably clicked cancel
 		return;
 	}

@@ -40,7 +40,7 @@ class SetupDialog : public QDialog {
 
 	explicit SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engine > & engines,
 	                      QList< IWAD > & iwads, bool & iwadListFromDir, QString & iwadDir, bool & iwadSubdirs,
-	                      QString & mapDir, bool & mapSubdirs, QString & modDir );
+	                      QString & mapDir, QString & modDir );
 	virtual ~SetupDialog() override;
 
  private:
@@ -61,7 +61,6 @@ class SetupDialog : public QDialog {
 	void changeModDir( QString text );
 
 	void toggleIWADSubdirs( bool checked );
-	void toggleMapSubdirs( bool checked );
 
 	void iwadAdd();
 	void iwadDelete();
@@ -81,9 +80,9 @@ class SetupDialog : public QDialog {
 
  signals:
 
-	void engineDeleted( int engineIdx );
-	void iwadDeleted( int iwadIdx );
-	void iwadListNeedsUpdate( QListView * view );
+	//void engineDeleted( int engineIdx );
+	//void iwadDeleted( int iwadIdx );
+	//void iwadListNeedsUpdate( QListView * view );
 	void absolutePathsToggled( bool absolute );
 
  private: // methods
@@ -114,7 +113,6 @@ class SetupDialog : public QDialog {
 
 	// additional paths
 	QString & mapDir;
-	bool & mapSubdirs;
 	QString & modDir;
 
 };

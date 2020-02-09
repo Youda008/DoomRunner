@@ -74,7 +74,7 @@ class MainWindow : public QMainWindow {
 	void modMoveDown();
 	void modsDropped();
 
-	void updateIWADsFromDir( QListView * view );
+	void updateIWADsFromDir();
 	void updateMapPacksFromDir();
 	void updateSaveFilesFromDir();
 	void updateConfigFilesFromDir();
@@ -82,8 +82,6 @@ class MainWindow : public QMainWindow {
 	void updateListsFromDirs();
 
 	void toggleAbsolutePaths( bool absolute );
-	void onEngineDeleted( int engineIdx );
-	void onIWADDeleted( int iwadIdx );
 
 	void modeGameMenu();
 	void modeSelectedMap();
@@ -140,8 +138,10 @@ class MainWindow : public QMainWindow {
 	//
 	// Model and its underlying list are separated, the model doesn't hold the list inside itself.
 	// It's because we want to display the same data differently in different widgets or different dialogs.
-	// Therefore the models are merely mediators between the data and views,
-	// which presents the data to the views and propagate user input from the views back to data.
+	// Therefore the models are merely mediators between the data and views
+	// that presents the data to the views and propagate user input from the views back to data.
+	//
+	// You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
 
 	// engine info
 	QList< Engine > engines;    ///< user-ordered list of engines (managed by SetupDialog)
@@ -157,34 +157,19 @@ class MainWindow : public QMainWindow {
 	bool iwadListFromDir;    ///< whether the IWAD list should be periodically updated from a directory (value returned by SetupDialog)
 	QString iwadDir;    ///< directory to update IWAD list from (value returned by SetupDialog)
 	bool iwadSubdirs;    ///< whether to search for IWADs recursivelly in subdirectories
-	int selectedIWADIdx;    ///< which IWAD was selected last (workaround to allow user to deselect IWAD by clicking it again)
+	QString selectedIWAD;    ///< which IWAD was selected last (workaround to allow user to deselect IWAD by clicking it again)
 
 	// map pack info
-	QList< MapPack > maps;    ///< list of map packs automatically loaded from a directory
-	ReadOnlyListModel< MapPack > mapModel;    ///< wrapper around list of map packs mediating their names to the map pack list view
+	TreeModel mapModel;    ///< model owning a tree structure representing a directory with map files
 	QString mapDir;    ///< directory with map packs to automatically load the list from (value returned by SetupDialog)
-	bool mapSubdirs;    ///< whether to search for maps recursivelly in subdirectories
-	int selectedPackIdx;    ///< which map pack was selected last (workaround to allow user to deselect map pack by clicking it again)
+	TreePath selectedMapPack;    ///< which map pack was selected last (workaround to allow user to deselect map pack by clicking it again)
 
 	// mod info
-	struct Mod {
-		QString name;
-		QString path;
-		bool checked;
-	};
 	QList< Mod > mods;
 	EditableListModel< Mod > modModel;
 	QString modDir;    ///< directory with mods, starting dir for "Add mod" dialog (value returned by SetupDialog)
 
 	// presets
-	struct Preset {
-		QString name;
-		QString selectedEnginePath;  // we store the engine by path, so that it does't break when user renames them or reorders them
-		QString selectedConfig;  // we store the engine by name, so that it does't break when user reorders them
-		QString selectedIWAD;  // we store the IWAD by name, so that it doesn't break when user reorders them
-		//QString selectedMapPack;
-		QList< Mod > mods;  // this list needs to be kept in sync with mod list widget
-	};
 	QList< Preset > presets;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 	EditableListModel< Preset > presetModel;    ///< wrapper around list of presets mediating their names to the editable preset list view
 

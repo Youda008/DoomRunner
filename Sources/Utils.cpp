@@ -3,70 +3,25 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  13.5.2019
-// Description: miscellaneous utilities
+// Description: general utilities
 //======================================================================================================================
 
 #include "Utils.hpp"
-
-#include <QListView>
-#include <QMessageBox>
-
-
-//======================================================================================================================
-//  list view helpers
-
-int getSelectedItemIdx( QListView * view )   // this function is for single selection lists
-{
-	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
-	if (selectedIndexes.empty()) {
-		return -1;
-	}
-	if (selectedIndexes.size() > 1) {
-		QMessageBox::critical( view->parentWidget(), "Multiple items selected",
-			"Multiple items are selected. This shouldn't be happening and it is a bug. Please create an issue on Github page." );
-		return -1;
-	}
-	return selectedIndexes[0].row();
-}
-
-bool isSelectedIdx( QListView * view, int index )
-{
-	return view->selectionModel()->isSelected( view->model()->index( index, 0 ) );
-}
-
-void selectItemByIdx( QListView * view, int index )
-{
-	QModelIndex modelIndex = view->model()->index( index, 0 );
-	view->selectionModel()->select( modelIndex, QItemSelectionModel::Select );
-	view->selectionModel()->setCurrentIndex( modelIndex, QItemSelectionModel::NoUpdate );
-}
-
-void deselectItemByIdx( QListView * view, int index )
-{
-	QModelIndex modelIndex = view->model()->index( index, 0 );
-	view->selectionModel()->select( modelIndex, QItemSelectionModel::Deselect );
-}
-
-void deselectSelectedItems( QListView * view )
-{
-	for (QModelIndex & index : view->selectionModel()->selectedIndexes())
-		view->selectionModel()->select( index, QItemSelectionModel::Deselect );
-}
-
-void changeSelectionTo( QListView * view, int index )
-{
-	deselectSelectedItems( view );
-	selectItemByIdx( view, index );
-}
 
 
 //======================================================================================================================
 
 QString getMapNumber( QString mapName )
 {
-	if (mapName.startsWith('E')) {
+	if (mapName.startsWith('E')) {  // E2M7
 		return mapName[1]+QString(' ')+mapName[3];
-	} else {
+	} else {  // MAP21
 		return mapName.mid(3,2);
 	}
+}
+
+bool isDoom1( QString iwadName )
+{
+	return iwadName.compare( "doom.wad", Qt::CaseInsensitive ) == 0
+	    || iwadName.startsWith( "doom1" , Qt::CaseInsensitive );
 }

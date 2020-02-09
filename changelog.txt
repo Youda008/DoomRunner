@@ -1,3 +1,7 @@
+1.2
+- reworked map-packs window from to tree view to see a directory hierarchy
+- 
+
 1.1
 - added a "Current preset" mechanic to solve the problem with losing all files added before creating and selecting a preset
 - files with extension ".deh" are now loaded via command line option "-deh" instead of "-file"

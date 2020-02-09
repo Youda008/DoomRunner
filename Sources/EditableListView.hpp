@@ -17,7 +17,8 @@
 
 
 //======================================================================================================================
-/** list view that supports editing of item names and behaves correctly on both internal and external drag&drop operations */
+/** List view that supports editing of item names and behaves correctly on both internal and external drag&drop actions.
+  * Should be used together with EditableListModel. */
 
 class EditableListView : public QListView {
 

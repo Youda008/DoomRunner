@@ -39,6 +39,7 @@ SOURCES += \
     Sources/SetupDialog.cpp \
     Sources/SharedData.cpp \
     Sources/Utils.cpp \
+    Sources/WidgetUtils.cpp \
     Sources/main.cpp
 
 HEADERS += \
@@ -52,7 +53,8 @@ HEADERS += \
     Sources/MainWindow.hpp \
     Sources/SetupDialog.hpp \
     Sources/SharedData.hpp \
-    Sources/Utils.hpp
+    Sources/Utils.hpp \
+    Sources/WidgetUtils.hpp
 
 FORMS += \
     Forms/CompatOptsDialog.ui \

@@ -11,8 +11,10 @@
 
 #include "EngineDialog.hpp"
 #include "SharedData.hpp"
+#include "WidgetUtils.hpp"
 #include "Utils.hpp"
 
+#include <QStringBuilder>
 #include <QFileDialog>
 #include <QDir>
 #include <QDirIterator>
@@ -23,7 +25,7 @@
 
 SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engine > & engines,
 	                      QList< IWAD > & iwads, bool & iwadListFromDir, QString & iwadDir, bool & iwadSubdirs,
-	                      QString & mapDir, bool & mapSubdirs, QString & modDir )
+	                      QString & mapDir, QString & modDir )
 	: QDialog( parent )
 	, pathHelper( pathHelper )
 	, engines( engines )
@@ -36,7 +38,6 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 	, iwadDir( iwadDir )
 	, iwadSubdirs( iwadSubdirs )
 	, mapDir( mapDir )
-	, mapSubdirs( mapSubdirs )
 	, modDir( modDir )
 {
 	ui = new Ui::SetupDialog;
@@ -54,7 +55,6 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 	ui->iwadDirLine->setText( iwadDir );
 	ui->iwadSubdirs->setChecked( iwadSubdirs );
 	ui->mapDirLine->setText( mapDir );
-	ui->mapSubdirs->setChecked( mapSubdirs );
 	ui->modDirLine->setText( modDir );
 	ui->absolutePathsChkBox->setChecked( pathHelper.useAbsolutePaths() );
 
@@ -71,7 +71,6 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 	connect( ui->modDirLine, &QLineEdit::textChanged, this, &thisClass::changeModDir );
 
 	connect( ui->iwadSubdirs, &QCheckBox::toggled, this, &thisClass::toggleIWADSubdirs );
-	connect( ui->mapSubdirs, &QCheckBox::toggled, this, &thisClass::toggleMapSubdirs );
 
 	connect( ui->iwadBtnAdd, &QPushButton::clicked, this, &thisClass::iwadAdd );
 	connect( ui->iwadBtnDel, &QPushButton::clicked, this, &thisClass::iwadDelete );
@@ -129,10 +128,8 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadBtnUp->setEnabled( !enabled );
 	ui->iwadBtnDown->setEnabled( !enabled );
 
-	// In order to not duplicate functionality, we delegate the request to load IWADs from directory to MainWindow,
-	// because it has to be able to do it on its own anyway. And we pass there a ref to our list view, because we expect
-	// it to refresh the view when the data change is finished, and it might also change the list view's selection.
-	emit iwadListNeedsUpdate( ui->iwadListView );
+	if (enabled)
+		updateIWADsFromDir( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper );
 }
 
 void SetupDialog::browseIWADDir()
@@ -169,10 +166,8 @@ void SetupDialog::changeIWADDir( QString text )
 {
 	iwadDir = text;
 
-	// In order to not duplicate functionality, we delegate the request to load IWADs from directory to MainWindow,
-	// because it has to be able to do it on its own anyway. And we pass there a ref to our list view, because we expect
-	// it to refresh the view when the data change is finished, and it might also change the list view's selection.
-	emit iwadListNeedsUpdate( ui->iwadListView );
+	if (iwadListFromDir)
+		updateIWADsFromDir( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper );
 }
 
 void SetupDialog::changeMapDir( QString text )
@@ -189,12 +184,8 @@ void SetupDialog::toggleIWADSubdirs( bool checked )
 {
 	iwadSubdirs = checked;
 
-	emit iwadListNeedsUpdate( ui->iwadListView );
-}
-
-void SetupDialog::toggleMapSubdirs( bool checked )
-{
-	mapSubdirs = checked;
+	if (iwadListFromDir)
+		updateIWADsFromDir( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper );
 }
 
 void SetupDialog::iwadAdd()
@@ -209,16 +200,12 @@ void SetupDialog::iwadAdd()
 	if (pathHelper.useRelativePaths())
 		path = pathHelper.getRelativePath( path );
 
-	iwads.append({ QFileInfo( path ).fileName(), path });
-	iwadModel.updateView( iwads.size() - 1 );
+	appendItem( iwadModel, { QFileInfo( path ).fileName(), path } );
 }
 
 void SetupDialog::iwadDelete()
 {
-	int deletedIdx = deleteSelectedItem( ui->iwadListView, iwadModel );
-
-	// let the parent window update its elements so that they don't point to a non-existing item
-	emit iwadDeleted( deletedIdx );
+	deleteSelectedItem( ui->iwadListView, iwadModel );
 }
 
 void SetupDialog::iwadMoveUp()
@@ -237,15 +224,12 @@ void SetupDialog::engineAdd()
 	EngineDialog dialog( this, pathHelper, name, path );
 	int code = dialog.exec();
 	if (code == QDialog::Accepted)
-		appendItem( ui->engineListView, engineModel, { name, path } );
+		appendItem( engineModel, { name, path } );
 }
 
 void SetupDialog::engineDelete()
 {
-	int deletedIdx = deleteSelectedItem( ui->engineListView, engineModel );
-
-	// let the parent window update its elements so that they don't point to a non-existing item
-	emit engineDeleted( deletedIdx );
+	deleteSelectedItem( ui->engineListView, engineModel );
 }
 
 void SetupDialog::engineMoveUp()
@@ -275,10 +259,10 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 {
 	// because MainWindow is the owner of the paths displayed here (and many more),
 	// we let it update all the paths in all data models at once
-	emit absolutePathsToggled( checked );
+	emit absolutePathsToggled( checked );  // TODO: when the dialog has a copy, extract the path update to SharedData
 	// and then just update our widgets
-	engineModel.updateView(0);
-	iwadModel.updateView(0);
+	engineModel.contentChanged( 0 );
+	iwadModel.contentChanged( 0 );
 	ui->iwadDirLine->setText( iwadDir );
 	ui->mapDirLine->setText( mapDir );
 	ui->modDirLine->setText( modDir );

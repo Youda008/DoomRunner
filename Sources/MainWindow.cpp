@@ -13,9 +13,11 @@
 #include "GameOptsDialog.hpp"
 #include "CompatOptsDialog.hpp"
 #include "JsonHelper.hpp"
+#include "WidgetUtils.hpp"
 #include "Utils.hpp"
 
 #include <QString>
+#include <QStringBuilder>
 #include <QTextStream>
 #include <QFile>
 #include <QDir>
@@ -42,11 +44,7 @@
 	static const QString scriptFileExt = "*.sh";
 #endif
 
-#ifdef _WIN32
-	static const QString configFileExt = "ini";
-#else
-	static const QString configFileExt = "TODO";
-#endif
+static const QString configFileExt = "ini";
 
 static constexpr char defaultOptionsFile [] = "options.json";
 static constexpr char defaultPresetName [] = "Current";
@@ -99,9 +97,6 @@ MainWindow::MainWindow()
 	, iwadModel( iwads, /*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; } )
 	, iwadListFromDir( false )
 	, iwadSubdirs( false )
-	, mapModel( maps, /*makeDisplayString*/[]( const MapPack & pack ) { return pack.name; } )
-	, mapSubdirs( false )
-	, selectedPackIdx( -1 )
 	, modModel( mods, /*displayString*/[]( Mod & mod ) -> QString & { return mod.name; } )
 	, presetModel( presets, /*displayString*/[]( Preset & preset ) -> QString & { return preset.name; } )
 {
@@ -115,7 +110,7 @@ MainWindow::MainWindow()
 	// we use custom model for configs, because calling 'clear' or 'add' on a combo box changes current index, which complicates things
 	ui->configCmbBox->setModel( &configModel );
 	ui->iwadListView->setModel( &iwadModel );
-	ui->mapListView->setModel( &mapModel );
+	ui->mapDirView->setModel( &mapModel );
 	ui->modListView->setModel( &modModel );
 
 	// setup preset list view
@@ -124,6 +119,8 @@ MainWindow::MainWindow()
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
 	connect( ui->presetListView, &EditableListView::itemsDropped, this, &thisClass::presetDropped );
 	ui->presetListView->toggleNameEditing( true );
+
+	// setup map directory view
 
 	// setup mod list view
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
@@ -155,7 +152,7 @@ MainWindow::MainWindow()
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectConfig );
 	connect( ui->presetListView, &QListView::clicked, this, &thisClass::loadPreset );
 	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::toggleIWAD );
-	connect( ui->mapListView, &QListView::clicked, this, &thisClass::toggleMapPack );
+	connect( ui->mapDirView, &QListView::clicked, this, &thisClass::toggleMapPack );
 	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
 
 	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &thisClass::presetAdd );
@@ -248,7 +245,7 @@ void MainWindow::firstRun()
 
 	// create an empty default preset
 	// so that all the files the user sets up without having any own preset created can be saved somewhere
-	appendItem( ui->presetListView, presetModel, { defaultPresetName, "", "", "", {} } );
+	appendItem( presetModel, { defaultPresetName, "", "", "", {} } );
 }
 
 
@@ -257,18 +254,36 @@ void MainWindow::firstRun()
 
 void MainWindow::runSetupDialog()
 {
-	SetupDialog dialog( this, pathHelper, engines, iwads, iwadListFromDir, iwadDir, iwadSubdirs, mapDir, mapSubdirs, modDir );
+	SetupDialog dialog( this, pathHelper, engines, iwads, iwadListFromDir, iwadDir, iwadSubdirs, mapDir, modDir );
 
-	connect( &dialog, &SetupDialog::iwadListNeedsUpdate, this, &thisClass::updateIWADsFromDir );
+	//connect( &dialog, &SetupDialog::iwadListNeedsUpdate, this, &thisClass::updateIWADsFromDir );
 	connect( &dialog, &SetupDialog::absolutePathsToggled, this, &thisClass::toggleAbsolutePaths );
-	connect( &dialog, &SetupDialog::engineDeleted, this, &thisClass::onEngineDeleted );
-	connect( &dialog, &SetupDialog::iwadDeleted, this, &thisClass::onIWADDeleted );
+	//connect( &dialog, &SetupDialog::engineDeleted, this, &thisClass::onEngineDeleted );
+	//connect( &dialog, &SetupDialog::iwadDeleted, this, &thisClass::onIWADDeleted );
+
+	// Propagating every change of the shared data from the SetupDialog to the MainWindow's views would be difficult.
+	// So instead we just wait for the dialog to finish without doing anything and then perform a complete update.
+
+	// TODO: rather make the dialog have a copy of everything and allow the user to cancel all changes by clicking X
+
+	auto selectedEngine = getSelectedItemID( ui->engineCmbBox, engines );
+	auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwads );
+
+	ui->engineCmbBox->setCurrentIndex( -1 );
+	deselectSelectedItems( ui->iwadListView );
+
+	engineModel.startCompleteUpdate();
+	iwadModel.startCompleteUpdate();
 
 	dialog.exec();
 
-	// update the views in this window, because the dialog may have changed the underlying data
-	engineModel.updateView( 0 );
-	iwadModel.updateView( 0 );
+	engineModel.finishCompleteUpdate();
+	iwadModel.finishCompleteUpdate();
+
+	selectItemByID( ui->engineCmbBox, engines, selectedEngine );
+	selectItemByID( ui->iwadListView, iwads, selectedIWAD );
+
+	updateMapPacksFromDir();
 
 	updateLaunchCommand();
 }
@@ -304,8 +319,8 @@ void MainWindow::loadPreset( const QModelIndex & index )
 
 	// restore selected engine
 	if (!preset.selectedEnginePath.isEmpty()) {  // the engine combo box might have been empty when creating this preset
-		int engineIdx = findSuch<Engine>( engines, [ &preset ]( const Engine & engine )
-		                                           { return engine.path == preset.selectedEnginePath; } );
+		int engineIdx = findSuch< Engine >( engines, [ &preset ]( const Engine & engine )
+		                                             { return engine.path == preset.selectedEnginePath; } );
 		if (engineIdx >= 0) {
 			ui->engineCmbBox->setCurrentIndex( engineIdx );
 		} else {
@@ -333,24 +348,26 @@ void MainWindow::loadPreset( const QModelIndex & index )
 
 	// restore selected IWAD
 	deselectSelectedItems( ui->iwadListView );
-	selectedIWADIdx = -1;
+	iwadModel.startCompleteUpdate();
+	selectedIWAD.clear();
 	if (!preset.selectedIWAD.isEmpty()) {  // the IWAD may have not been selected when creating this preset
-		int iwadIdx = findSuch<IWAD>( iwads, [ &preset ]( const IWAD & iwad ) { return iwad.name == preset.selectedIWAD; } );
+		int iwadIdx = findSuch< IWAD >( iwads, [ &preset ]( const IWAD & iwad ) { return iwad.name == preset.selectedIWAD; } );
 		if (iwadIdx >= 0) {
 			selectItemByIdx( ui->iwadListView, iwadIdx );
-			selectedIWADIdx = iwadIdx;
+			selectedIWAD = preset.selectedIWAD;
 			updateMapsFromIWAD();
 		} else {
 			QMessageBox::warning( this, "IWAD no longer exists",
 				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
 		}
 	}
+	iwadModel.finishCompleteUpdate();
 /*
 	// restore selected MapPack
 	deselectSelectedItem( ui->mapListView );
 	selectedPackIdx = -1;
 	if (!preset.selectedMapPack.isEmpty()) {  // the map pack may have not been selected when creating this preset
-		int mapIdx = findSuch<MapPack>( maps, [ &preset ]( const MapPack & pack ) { return pack.name == preset.selectedMapPack; } );
+		int mapIdx = findSuch< MapPack >( maps, [ &preset ]( const MapPack & pack ) { return pack.name == preset.selectedMapPack; } );
 		if (mapIdx >= 0) {
 			selectItemByIdx( ui->mapListView, mapIdx );
 			selectedPackIdx = mapIdx;
@@ -362,6 +379,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 */
 	// restore list of mods
 	deselectSelectedItems( ui->modListView );
+	modModel.startCompleteUpdate();
 	mods.clear();
 	for (auto modIt = preset.mods.begin(); modIt != preset.mods.end(); )  // need iterator, so that we can erase non-existing
 	{
@@ -377,7 +395,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 		mods.append( mod );
 		modIt++;
 	}
-	modModel.updateView(0);
+	modModel.finishCompleteUpdate();
 
 	updateLaunchCommand();
 }
@@ -415,22 +433,20 @@ void MainWindow::selectConfig( int index )
 
 void MainWindow::toggleIWAD( const QModelIndex & index )
 {
+	QString clickedIWAD = iwads[ index.row() ].name;
+
 	// allow the user to deselect the IWAD by clicking on it again
-	int clickedIWADIdx = index.row();
-	if (clickedIWADIdx == selectedIWADIdx) {
-		selectedIWADIdx = -1;
+	if (clickedIWAD == selectedIWAD) {
+		selectedIWAD.clear();
 		ui->iwadListView->selectionModel()->select( index, QItemSelectionModel::Deselect );
 	} else {
-		selectedIWADIdx = clickedIWADIdx;
+		selectedIWAD = clickedIWAD;
 	}
 
 	// update the current preset
 	int clickedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (clickedPresetIdx >= 0) {
-		if (selectedIWADIdx >= 0)
-			presets[ clickedPresetIdx ].selectedIWAD = iwads[ index.row() ].name;
-		else
-			presets[ clickedPresetIdx ].selectedIWAD.clear();
+		presets[ clickedPresetIdx ].selectedIWAD = selectedIWAD;
 	}
 
 	updateMapsFromIWAD();
@@ -440,13 +456,14 @@ void MainWindow::toggleIWAD( const QModelIndex & index )
 
 void MainWindow::toggleMapPack( const QModelIndex & index )
 {
+	TreePath clickedMapPack = mapModel.getItemPath( index );
+
 	// allow the user to deselect the map pack by clicking on it again
-	int clickedPackIdx = index.row();
-	if (clickedPackIdx == selectedPackIdx) {
-		selectedPackIdx = -1;
-		ui->mapListView->selectionModel()->select( index, QItemSelectionModel::Deselect );
+	if (clickedMapPack == selectedMapPack) {
+		selectedMapPack.clear();
+		ui->mapDirView->selectionModel()->select( index, QItemSelectionModel::Deselect );
 	} else {
-		selectedPackIdx = clickedPackIdx;
+		selectedMapPack = clickedMapPack;
 	}
 /*
 	// update the current preset
@@ -480,8 +497,7 @@ void MainWindow::presetAdd()
 {
   static uint presetNum = 1;
 
-	// append the item, select it and update the view
-	appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum ), "", "", "", {} } );
+	appendItem( presetModel, { "Preset"+QString::number( presetNum ), "", "", "", {} } );
 
 	// clear the widgets to represent an empty preset
 	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will be saved in the old one
@@ -489,12 +505,12 @@ void MainWindow::presetAdd()
 	ui->engineCmbBox->setCurrentIndex( -1 );
 	ui->configCmbBox->setCurrentIndex( -1 );
 	deselectSelectedItems( ui->iwadListView );
-	selectedIWADIdx = -1;
+	selectedIWAD.clear();
 	//deselectSelectedItem( ui->mapListView );
 	//selectedPackIdx = -1;
 	deselectSelectedItems( ui->modListView );
 	mods.clear();
-	modModel.updateView(0);
+	modModel.contentChanged(0);
 
 	// open edit mode so that user can name the preset
 	ui->presetListView->edit( presetModel.index( presets.count() - 1, 0 ) );
@@ -552,7 +568,7 @@ void MainWindow::modAdd()
 	if (pathHelper.useRelativePaths())
 		path = pathHelper.getRelativePath( path );
 
-	appendItem( ui->modListView, modModel, { name, path, true } );
+	appendItem( modModel, { name, path, true } );
 
 	// add it also to the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
@@ -669,46 +685,42 @@ void MainWindow::modsDropped()
 //----------------------------------------------------------------------------------------------------------------------
 //  automatic list updates according to directory content
 
-void MainWindow::updateIWADsFromDir( QListView * view )  // the parameter exists, because SetupDialog also wants to update its view
+void MainWindow::updateIWADsFromDir()
 {
-	updateListFromDir< IWAD >( iwads, view, iwadDir, iwadSubdirs, {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"},
-		/*makeItemFromFile*/[ this ]( const QFileInfo & file ) -> IWAD
-		{
-			return { file.fileName(), pathHelper.convertPath( file.filePath() ) };
-		}
-	);
+	::updateIWADsFromDir( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper );
 
-	// the selected item might have been changed during the update, so update our iternal mark
-	selectedIWADIdx = getSelectedItemIdx( view );
+	// the previously selected item might have been removed
+	if (!isSomethingSelected( ui->iwadListView ))
+		selectedMapPack.clear();
 }
 
 void MainWindow::updateMapPacksFromDir()
 {
-	updateListFromDir< MapPack >( maps, ui->mapListView, mapDir, mapSubdirs, {"wad", "pk3", "pk7", "zip", "7z"},
-		/*makeItemFromFile*/[ this ]( const QFileInfo & file ) -> MapPack
-		{
-			return { QDir( mapDir ).relativeFilePath( file.absoluteFilePath() ) };
-		}
-	);
+	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, {"wad", "pk3", "pk7", "zip", "7z"} );
 
-	// the selected item might have been changed during the update, so update our iternal mark
-	selectedPackIdx = getSelectedItemIdx( ui->mapListView );
+	// the previously selected item might have been removed
+	if (!isSomethingSelected( ui->mapDirView ))
+		selectedMapPack.clear();
 }
 
 void MainWindow::updateSaveFilesFromDir()
 {
-	if (ui->engineCmbBox->currentIndex() < 0) {  // no engine is selected
+	if (ui->engineCmbBox->currentIndex() < 0) {  // no save file is selected
 		return;
 	}
 
+	QFileInfo engineFileInfo( engines[ ui->engineCmbBox->currentIndex() ].path );
+	QDir engineDir = engineFileInfo.dir();
+
 	// write down the currently selected item
-	QString curText = ui->saveFileCmbBox->currentText();
+	QString lastText = ui->saveFileCmbBox->currentText();
+
+	// custom implementation, because it doesn't use our item models, but just standard Qt ComboBox model
+
 	ui->saveFileCmbBox->clear();
 
 	// update the list according to directory content
-	QFileInfo info( engines[ ui->engineCmbBox->currentIndex() ].path );
-	QDir dir = info.dir();
-	QDirIterator dirIt( dir );
+	QDirIterator dirIt( engineDir );
 	while (dirIt.hasNext()) {
 		QFileInfo entry( dirIt.next() );
 		if (!entry.isDir() && entry.suffix() == "zds")
@@ -716,36 +728,35 @@ void MainWindow::updateSaveFilesFromDir()
 	}
 
 	// restore the originally selected item
-	ui->saveFileCmbBox->setCurrentText( curText );
+	ui->saveFileCmbBox->setCurrentText( lastText );
 }
 
 void MainWindow::updateConfigFilesFromDir()
 {
-	if (ui->engineCmbBox->currentIndex() < 0) {  // no engine is selected
+	if (ui->engineCmbBox->currentIndex() < 0) {  // no config file is selected
 		return;
 	}
 
+	QFileInfo engineFileInfo( engines[ ui->engineCmbBox->currentIndex() ].path );
+	QString engineDir = engineFileInfo.dir().dirName();
+
 	// write down the currently selected item so that we can restore it later
 	QString lastText = ui->configCmbBox->currentText();
-	// We use a custom model for configs, because clearing a combo-box and adding an item to it causes a change of
-	// current index, which then propagates into current preset and causes a useless regeneration of launch command.
-	// This way we just clear our underlying list and update the frontend when the new data are ready.
+
+	configModel.startCompleteUpdate();
+
 	configs.clear();
 
-	// update the list according to directory content
-	QFileInfo info( engines[ ui->engineCmbBox->currentIndex() ].path );
-	QDir dir = info.dir();
-	QDirIterator dirIt( dir );
-	while (dirIt.hasNext()) {
-		QFileInfo entry( dirIt.next() );
-		if (!entry.isDir() && entry.suffix() == configFileExt)
-			configs.append( entry.fileName() );
-	}
+	fillListFromDir< QString >( configs, engineDir, false, { configFileExt },
+		/*makeItemFromFile*/[]( const QFileInfo & file ) { return file.fileName(); }
+	);
+
+	configModel.finishCompleteUpdate();
 
 	// restore the originally selected item (the selection will be reset if the item does not exist in the new content)
 	ui->configCmbBox->setCurrentIndex( ui->configCmbBox->findText( lastText ) );
 
-	configModel.updateView(0);
+	configModel.contentChanged(0);
 }
 
 void MainWindow::updateMapsFromIWAD()
@@ -754,10 +765,9 @@ void MainWindow::updateMapsFromIWAD()
 	if (iwadIdx < 0)
 		return;
 
-	QString text = iwads[ iwadIdx ].name;
+	QString selectedIwadName = iwads[ iwadIdx ].name;
 
-	if ((text.compare( "doom.wad", Qt::CaseInsensitive ) == 0 || text.startsWith( "doom1" , Qt::CaseInsensitive ))
-	&& !ui->mapCmbBox->itemText(0).startsWith('E')) {
+	if (isDoom1( selectedIwadName ) && !ui->mapCmbBox->itemText(0).startsWith('E')) {
 		ui->mapCmbBox->clear();
 		for (int i = 1; i <= 9; i++)
 			ui->mapCmbBox->addItem( QStringLiteral("E1M%1").arg(i) );
@@ -775,11 +785,9 @@ void MainWindow::updateMapsFromIWAD()
 void MainWindow::updateListsFromDirs()
 {
 	if (iwadListFromDir) {
-		updateIWADsFromDir( ui->iwadListView );
-		iwadModel.updateView(0);
+		updateIWADsFromDir();
 	}
 	updateMapPacksFromDir();
-	mapModel.updateView(0);
 	updateSaveFilesFromDir();
 	updateConfigFilesFromDir();
 }
@@ -815,6 +823,7 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 	updateLaunchCommand();
 }
 
+/*
 void MainWindow::onEngineDeleted( int deletedIdx )
 {
 	int selectedIdx = ui->engineCmbBox->currentIndex();
@@ -831,6 +840,7 @@ void MainWindow::onIWADDeleted( int deletedIdx )
 		deselectItemByIdx( ui->iwadListView, deletedIdx );
 	}
 }
+*/
 
 void MainWindow::modeGameMenu()
 {
@@ -1041,7 +1051,6 @@ void MainWindow::saveOptions( QString fileName )
 	{
 		QJsonObject jsMaps;
 		jsMaps["directory"] = mapDir;
-		jsMaps["subdirs"] = mapSubdirs;
 		json["maps"] = jsMaps;
 	}
 
@@ -1133,6 +1142,8 @@ void MainWindow::loadOptions( QString fileName )
 		QJsonObject jsEngines = getObject( json, "engines" );
 
 		ui->engineCmbBox->setCurrentIndex( -1 );
+		engineModel.startCompleteUpdate();
+
 		engines.clear();
 
 		QJsonArray jsEngineArray = getArray( jsEngines, "engines" );
@@ -1154,7 +1165,7 @@ void MainWindow::loadOptions( QString fileName )
 					"An engine from the saved options ("%path%") no longer exists. It will be removed from the list." );
 		}
 
-		engineModel.updateView(0);
+		engineModel.finishCompleteUpdate();
 	}
 
 	// IWADS
@@ -1162,7 +1173,7 @@ void MainWindow::loadOptions( QString fileName )
 		QJsonObject jsIWADs = getObject( json, "IWADs" );
 
 		deselectSelectedItems( ui->iwadListView );
-		selectedIWADIdx = -1;
+		selectedIWAD.clear();
 		iwads.clear();
 
 		iwadListFromDir = getBool( jsIWADs, "auto_update", false );
@@ -1173,7 +1184,7 @@ void MainWindow::loadOptions( QString fileName )
 			if (!dir.isEmpty()) {  // non-existing element directory - skip completely
 				if (QDir( dir ).exists()) {
 					iwadDir = pathHelper.convertPath( dir );
-					updateIWADsFromDir( ui->iwadListView );
+					updateIWADsFromDir();
 				} else {
 					QMessageBox::warning( this, "IWAD dir no longer exists",
 						"IWAD directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
@@ -1200,16 +1211,15 @@ void MainWindow::loadOptions( QString fileName )
 			}
 		}
 
-		iwadModel.updateView(0);
+		iwadModel.contentChanged(0);
 	}
 
 	// map packs
 	{
 		QJsonObject jsMaps = getObject( json, "maps" );
 
-		deselectSelectedItems( ui->mapListView );
-		selectedPackIdx = -1;
-		maps.clear();
+		deselectSelectedItems( ui->mapDirView );
+		selectedMapPack.clear();
 
 		QString dir = getString( jsMaps, "directory" );
 		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
@@ -1221,9 +1231,6 @@ void MainWindow::loadOptions( QString fileName )
 					"Map directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
 			}
 		}
-		mapSubdirs = getBool( jsMaps, "subdirs", false );
-
-		mapModel.updateView(0);
 	}
 
 	// mods
@@ -1279,7 +1286,7 @@ void MainWindow::loadOptions( QString fileName )
 			presets.append( preset );
 		}
 
-		presetModel.updateView(0);
+		presetModel.contentChanged(0);
 	}
 
 	// check for existence of default preset and create it if not there
@@ -1353,8 +1360,12 @@ void MainWindow::updateLaunchCommand()
 
 	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
 	// and copy part of the line, by constantly reseting his selection.
-	if (newCommand != curCommand)
+	if (newCommand != curCommand) {
 		ui->commandLine->setText( newCommand );
+		//qDebug() << "updating launch command: updated";
+	} else {
+		//qDebug() << "updating launch command: not updated";
+	}
 }
 
 QString MainWindow::generateLaunchCommand( QString baseDir )
@@ -1387,9 +1398,9 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 		cmdStream << " -iwad \"" << base.rebasePath( iwads[ iwadIdx ].path ) << "\"";
 	}
 
-	const int mapIdx = getSelectedItemIdx( ui->mapListView );
-	if (mapIdx >= 0) {
-		QString mapPath = QDir( mapDir ).filePath( maps[ mapIdx ].name );
+	QModelIndex mapIdx = getSelectedItemIdx( ui->mapDirView );
+	if (mapIdx.isValid()) {
+		QString mapPath = mapModel.getItemPath( mapIdx ).join('/');
 		cmdStream << " -file \"" << base.rebasePath( mapPath ) << "\"";
 	}
 

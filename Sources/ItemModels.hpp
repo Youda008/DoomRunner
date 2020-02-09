@@ -51,18 +51,12 @@ class AItemListModel : public QAbstractListModel {
 
 	AItemListModel( QList< Item > & itemList ) : QAbstractListModel( nullptr ), itemList( itemList ) {}
 
+	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
+
 	QList< Item > & list() const { return itemList; }
 
-	int rowCount( const QModelIndex & = QModelIndex() ) const override
-	{
-		return itemList.size();
-	}
 
-	QModelIndex makeIndex( int row )
-	{
-		return index( row, /*column*/0, /*parent*/QModelIndex() );
-	}
-
+	//-- data change notifications -------------------------------------------------------------------------------------
 
 	/** notifies the view that the content of some items has been changed */
 	void contentChanged( int changedRowsBegin, int changedRowsEnd = -1 )
@@ -104,6 +98,20 @@ class AItemListModel : public QAbstractListModel {
 	void finishCompleteUpdate()
 	{
 		endResetModel();
+	}
+
+	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
+
+	int rowCount( const QModelIndex & = QModelIndex() ) const override
+	{
+		return itemList.size();
+	}
+
+	//-- miscellaneous -------------------------------------------------------------------------------------------------
+
+	QModelIndex makeIndex( int row )
+	{
+		return index( row, /*column*/0, /*parent*/QModelIndex() );
 	}
 
 };
@@ -178,6 +186,8 @@ class EditableListModel : public AItemListModel< Item > {
 	EditableListModel( QList< Item > & itemList, std::function< QString & ( Item & ) > displayString )
 		: AItemListModel<Item>( itemList ), displayString( displayString ), checkableItems( false ) {}
 
+	//-- customization of how data will be represented -----------------------------------------------------------------
+
 	void setDisplayStringFunc( std::function< QString & ( Item & ) > displayString )
 		{ this->displayString = displayString; }
 	void setAssignFileFunc( std::function< void ( Item &, const QFileInfo & ) > assignFile )
@@ -185,6 +195,8 @@ class EditableListModel : public AItemListModel< Item > {
 	void setIsCheckedFunc( std::function< bool & ( Item & ) > isChecked )
 		{ this->isChecked = isChecked; }
 	void toggleCheckable( bool enabled ) { checkableItems = enabled; }
+
+	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
 	Qt::ItemFlags flags( const QModelIndex & index ) const override
 	{
@@ -537,12 +549,11 @@ class TreePath : public QStringList {
   * Unlike the other models, this one holds the data, and so it cannot be displayed differently in different windows. */
 class TreeModel : public QAbstractItemModel {
 
-	// Note for someone who would is going to separate the thee from tree model to allow data sharing between windows:
-	// Don't forget that everytime the tree changes (child nodes are added or deleted) you have to call corresponding
-	// beginSomething(...) and endSomething(...) so that the abstract class and the view properly update themselfs.
-	// Read the documentation on these functions: https://doc.qt.io/qt-5/qabstractitemmodel.html#protected-functions
+	Q_OBJECT // TODO
 
-	Q_OBJECT
+ private:
+
+	TreeNode * rootNode;  ///< internal node that stores all the other nodes without an explicit parent
 
  public:
 
@@ -555,6 +566,81 @@ class TreeModel : public QAbstractItemModel {
 	~TreeModel() override
 	{
 		delete rootNode;  // recursively deletes all the child nodes
+	}
+
+	//-- custom methods for manipulating the tree ----------------------------------------------------------------------
+
+	/** Note that before starting to add or delete items in this model, you have to call startCompleteUpdate,
+	  * and when you are finished with it, you have to call finishCompleteUpdate. */
+	QModelIndex addItem( const QModelIndex & parentIndex, QString name )
+	{
+		TreeNode * parent = modelIndexToTreeNode( parentIndex );
+		return treeNodeToModelIndex( parent->addChild( name ) );
+	}
+
+	/** Note that before starting to add or delete items in this model, you have to call startCompleteUpdate,
+	  * and when you are finished with it, you have to call finishCompleteUpdate. */
+	void clear()
+	{
+		rootNode->deleteChildren();
+	}
+
+	/** item's path that can be used as a persistent item identifier that survives node shifting, adding or removal */
+	TreePath getItemPath( const QModelIndex & index ) const
+	{
+		TreePath path;
+
+		TreeNode * node = modelIndexToTreeNode( index );
+		while (node != rootNode) {
+			path.append( node->name() );
+			node = node->parent();
+		}
+		reverse( path );
+
+		return path;
+	}
+
+	/** attempts to find an item on specified path */
+	QModelIndex getItemByPath( const TreePath & path ) const
+	{
+		TreeNode * node = rootNode;
+		for (const QString & nodeName : path) {
+			node = node->child( nodeName );  // linear complexity, but we expect the sublists to be small
+			if (!node)
+				return QModelIndex();  // node at this path no longer exists
+		}
+		return treeNodeToModelIndex( node );
+	}
+
+	void traverseItems( std::function< void ( const QModelIndex & index ) > doOnItem,
+	                    const QModelIndex & parentIndex = QModelIndex() ) const
+	{
+		TreeNode * const parent = modelIndexToTreeNode( parentIndex );
+
+		for (int childRow = 0; childRow < parent->childCount(); childRow++)
+		{
+			TreeNode * const child = parent->child( childRow );
+			const QModelIndex childIndex = treeNodeToModelIndex( child, childRow );
+
+			doOnItem( childIndex );
+
+			traverseItems( doOnItem, childIndex );
+		}
+	}
+
+	//-- data change notifications -------------------------------------------------------------------------------------
+
+	/** Notifies Qt that all the model indexes and data retrieved before are no longer valid.
+	  * Call this before every model update. */
+	void startCompleteUpdate()
+	{
+		beginResetModel();
+	}
+
+	/** Call this when an update process is finished and makes a view re-draw its content according to the new data. */
+	void finishCompleteUpdate()
+	{
+		endResetModel();
 	}
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
@@ -616,96 +702,14 @@ class TreeModel : public QAbstractItemModel {
 		return treeNodeToModelIndex( parent );
 	}
 
-	//-- custom methods for manipulating the tree ----------------------------------------------------------------------
+	//-- miscellaneous -------------------------------------------------------------------------------------------------
 
 	QModelIndex makeIndex( int row, const QModelIndex & parentIndex ) const
 	{
 		return index( row, 0, parentIndex );
 	}
 
-	/** Notifies Qt that all the model indexes and data retrieved before are no longer valid.
-	  * Call this before every model update. */
-	void startCompleteUpdate()
-	{
-		beginResetModel();
-	}
-
-	/** Call this when an update process is finished and makes a view re-draw its content according to the new data. */
-	void finishCompleteUpdate()
-	{
-		endResetModel();
-	}
-
-	/** Note that before starting to add or delete items in this model, you have to call startCompleteUpdate,
-	  * and when you are finished with it, you have to call finishCompleteUpdate. */
-	QModelIndex addItem( const QModelIndex & parentIndex, QString name )
-	{
-		TreeNode * parent = modelIndexToTreeNode( parentIndex );
-		return treeNodeToModelIndex( parent->addChild( name ) );
-	}
-
-	/*QModelIndex addItem( const TreePath & path )
-	{
-		TreeNode * node = rootNode;
-		for (const QString & nodeName : path) {
-			node = node->addChild( nodeName );
-		}
-		return treeNodeToModelIndex( node );
-	}*/
-
-	/** Note that before starting to add or delete items in this model, you have to call startCompleteUpdate,
-	  * and when you are finished with it, you have to call finishCompleteUpdate. */
-	void clear()
-	{
-		rootNode->deleteChildren();
-	}
-
-	/** item's path that can be used as a persistent item identifier that survives node shifting, adding or removal */
-	TreePath getItemPath( const QModelIndex & index ) const
-	{
-		TreePath path;
-
-		TreeNode * node = modelIndexToTreeNode( index );
-		while (node != rootNode) {
-			path.append( node->name() );
-			node = node->parent();
-		}
-		reverse( path );
-
-		return path;
-	}
-
-	/** attempts to find an item on specified path */
-	QModelIndex getItemByPath( const TreePath & path ) const
-	{
-		TreeNode * node = rootNode;
-		for (const QString & nodeName : path) {
-			node = node->child( nodeName );  // linear complexity, but we expect the sublists to be small
-			if (!node)
-				return QModelIndex();  // node at this path no longer exists
-		}
-		return treeNodeToModelIndex( node );
-	}
-
-	void traverseItems( std::function< void ( const QModelIndex & index ) > doOnItem,
-	                    const QModelIndex & parentIndex = QModelIndex() ) const
-	{
-		TreeNode * const parent = modelIndexToTreeNode( parentIndex );
-
-		for (int childRow = 0; childRow < parent->childCount(); childRow++)
-		{
-			TreeNode * const child = parent->child( childRow );
-			const QModelIndex childIndex = treeNodeToModelIndex( child, childRow );
-
-			doOnItem( childIndex );
-
-			traverseItems( doOnItem, childIndex );
-		}
-	}
-
- private:
-
-	TreeNode * rootNode;  ///< internal node that stores all the other nodes without a parent
+ private: // helpers
 
 	// Internally we use TreeNode pointers, but the view accesses the model via QModelIndex.
 	// If the view passes in an empty index, it wants an item from the top level, an item that doesn't have any parent.
@@ -724,7 +728,7 @@ class TreeModel : public QAbstractItemModel {
 		// optimization for cases where the row index is known, otherwise we have to perform linear lookup at the parent
 		const int row = rowInParent >= 0 ? rowInParent : node->row();
 
-		// root node is internal only, don't expose it to the outside, for the caller it means having no parent at all.
+		// root node is internal only, don't expose it to the outside, for the caller it means having no parent at all
 		if (node == rootNode)
 			return QModelIndex();
 		else

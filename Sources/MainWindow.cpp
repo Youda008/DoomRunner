@@ -532,11 +532,10 @@ void MainWindow::presetAdd()
 	ui->configCmbBox->setCurrentIndex( -1 );
 	deselectSelectedItems( ui->iwadListView );
 	selectedIWAD.clear();
-	//deselectSelectedItem( ui->mapListView );
-	//selectedPackIdx = -1;
 	deselectSelectedItems( ui->modListView );
+	modModel.startCompleteUpdate();
 	mods.clear();
-	modModel.contentChanged(0);
+	modModel.finishCompleteUpdate();
 
 	// open edit mode so that user can name the preset
 	ui->presetListView->edit( presetModel.index( presets.count() - 1, 0 ) );
@@ -782,7 +781,7 @@ void MainWindow::updateConfigFilesFromDir()
 	// restore the originally selected item (the selection will be reset if the item does not exist in the new content)
 	ui->configCmbBox->setCurrentIndex( ui->configCmbBox->findText( lastText ) );
 
-	configModel.contentChanged(0);
+	//configModel.contentChanged(0);  TODO
 }
 
 void MainWindow::updateMapsFromIWAD()
@@ -1168,6 +1167,7 @@ void MainWindow::loadOptions( QString fileName )
 		QJsonObject jsEngines = getObject( json, "engines" );
 
 		ui->engineCmbBox->setCurrentIndex( -1 );
+
 		engineModel.startCompleteUpdate();
 
 		engines.clear();
@@ -1200,7 +1200,10 @@ void MainWindow::loadOptions( QString fileName )
 
 		deselectSelectedItems( ui->iwadListView );
 		selectedIWAD.clear();
+
+		iwadModel.startCompleteUpdate();
 		iwads.clear();
+		iwadModel.finishCompleteUpdate();
 
 		iwadListFromDir = getBool( jsIWADs, "auto_update", false );
 
@@ -1217,6 +1220,8 @@ void MainWindow::loadOptions( QString fileName )
 				}
 			}
 		} else {
+			iwadModel.startCompleteUpdate();
+
 			QJsonArray jsIWADArray = getArray( jsIWADs, "IWADs" );
 			for (int i = 0; i < jsIWADArray.size(); i++)
 			{
@@ -1235,9 +1240,9 @@ void MainWindow::loadOptions( QString fileName )
 					QMessageBox::warning( this, "IWAD no longer exists",
 						"An IWAD from the saved options ("%path%") no longer exists. It will be removed from the list." );
 			}
-		}
 
-		iwadModel.contentChanged(0);
+			iwadModel.finishCompleteUpdate();
+		}
 	}
 
 	// map packs
@@ -1279,6 +1284,8 @@ void MainWindow::loadOptions( QString fileName )
 	{
 		QJsonArray jsPresetArray = getArray( json, "presets" );
 
+		presetModel.startCompleteUpdate();
+
 		presets.clear();
 
 		for (int i = 0; i < jsPresetArray.size(); i++)
@@ -1312,7 +1319,7 @@ void MainWindow::loadOptions( QString fileName )
 			presets.append( preset );
 		}
 
-		presetModel.contentChanged(0);
+		presetModel.finishCompleteUpdate();
 	}
 
 	// check for existence of default preset and create it if not there

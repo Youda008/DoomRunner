@@ -23,17 +23,17 @@
 //======================================================================================================================
 //  SetupDialog
 
-SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engine > & engines,
-	                      QList< IWAD > & iwads, bool & iwadListFromDir, QString & iwadDir, bool & iwadSubdirs,
-	                      QString & mapDir, QString & modDir )
+SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir, const QList< Engine > & engines,
+                          const QList< IWAD > & iwads, bool iwadListFromDir, const QString & iwadDir, bool iwadSubdirs,
+                          const QString & mapDir, const QString & modDir )
 	: QDialog( parent )
-	, pathHelper( pathHelper )
+	, pathHelper( useAbsolutePaths, baseDir )
 	, engines( engines )
-	, engineModel( engines, /*makeDisplayString*/[]( const Engine & engine ) -> QString
-	                                             { return engine.name % "  [" % engine.path % "]"; } )
+	, engineModel( this->engines, /*makeDisplayString*/[]( const Engine & engine ) -> QString
+	                                                   { return engine.name % "  [" % engine.path % "]"; } )
 	, iwads( iwads )
-	, iwadModel( iwads, /*makeDisplayString*/[]( const IWAD & iwad ) -> QString
-	                                         { return iwad.name % "  [" % iwad.path % "]"; } )
+	, iwadModel( this->iwads, /*makeDisplayString*/[]( const IWAD & iwad ) -> QString
+	                                               { return iwad.name % "  [" % iwad.path % "]"; } )
 	, iwadListFromDir( iwadListFromDir )
 	, iwadDir( iwadDir )
 	, iwadSubdirs( iwadSubdirs )
@@ -86,7 +86,7 @@ SetupDialog::SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engi
 
 	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAbsolutePaths );
 
-	connect( ui->doneBtn, &QPushButton::clicked, this, &thisClass::closeDialog );
+	connect( ui->doneBtn, &QPushButton::clicked, this, &thisClass::accept );
 
 	// setup an update timer
 	//startTimer( 1000 );
@@ -220,11 +220,12 @@ void SetupDialog::iwadMoveDown()
 
 void SetupDialog::engineAdd()
 {
-	QString name, path;
-	EngineDialog dialog( this, pathHelper, name, path );
+	EngineDialog dialog( this, pathHelper, "", "" );
+
 	int code = dialog.exec();
+
 	if (code == QDialog::Accepted)
-		appendItem( engineModel, { name, path } );
+		appendItem( engineModel, { dialog.name, dialog.path } );
 }
 
 void SetupDialog::engineDelete()
@@ -245,30 +246,40 @@ void SetupDialog::engineMoveDown()
 void SetupDialog::editEngine( const QModelIndex & index )
 {
 	Engine & selectedEngine = engines[ index.row() ];
-	QString name = selectedEngine.name;
-	QString path = selectedEngine.path;
-	EngineDialog dialog( this, pathHelper, name, path );
+
+	EngineDialog dialog( this, pathHelper, selectedEngine.name, selectedEngine.path );
+
 	int code = dialog.exec();
+
 	if (code == QDialog::Accepted) {
-		selectedEngine.name = name;
-		selectedEngine.path = path;
+		selectedEngine.name = dialog.name;
+		selectedEngine.path = dialog.path;
 	}
 }
 
 void SetupDialog::toggleAbsolutePaths( bool checked )
 {
-	// because MainWindow is the owner of the paths displayed here (and many more),
-	// we let it update all the paths in all data models at once
-	emit absolutePathsToggled( checked );  // TODO: when the dialog has a copy, extract the path update to SharedData
-	// and then just update our widgets
+	pathHelper.toggleAbsolutePaths( checked );
+
+	for (Engine & engine : engines)
+		engine.path = pathHelper.convertPath( engine.path );
 	engineModel.contentChanged( 0 );
-	iwadModel.contentChanged( 0 );
+
+	if (iwadListFromDir && !iwadDir.isEmpty())
+		iwadDir = pathHelper.convertPath( iwadDir );
 	ui->iwadDirLine->setText( iwadDir );
+	for (IWAD & iwad : iwads)
+		iwad.path = pathHelper.convertPath( iwad.path );
+	iwadModel.contentChanged( 0 );
+
+	mapDir = pathHelper.convertPath( mapDir );
 	ui->mapDirLine->setText( mapDir );
+
+	modDir = pathHelper.convertPath( modDir );
 	ui->modDirLine->setText( modDir );
 }
 
 void SetupDialog::closeDialog()
 {
-	accept();
+	reject();
 }

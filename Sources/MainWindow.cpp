@@ -254,38 +254,64 @@ void MainWindow::firstRun()
 
 void MainWindow::runSetupDialog()
 {
-	SetupDialog dialog( this, pathHelper, engines, iwads, iwadListFromDir, iwadDir, iwadSubdirs, mapDir, modDir );
+	// The dialog gets a copy of all the required data and when it's confirmed, we copy them back.
+	// This allows the user to cancel all the changes he made without having to manually revert them.
+	// Secondly, this removes all the problems with data synchronization like dangling pointers
+	// or that previously selected items in the view no longer exist.
+	// And thirdly, we no longer have to split the data itself from the way they are displayed.
 
-	//connect( &dialog, &SetupDialog::iwadListNeedsUpdate, this, &thisClass::updateIWADsFromDir );
-	connect( &dialog, &SetupDialog::absolutePathsToggled, this, &thisClass::toggleAbsolutePaths );
-	//connect( &dialog, &SetupDialog::engineDeleted, this, &thisClass::onEngineDeleted );
-	//connect( &dialog, &SetupDialog::iwadDeleted, this, &thisClass::onIWADDeleted );
+	SetupDialog dialog( this,
+		pathHelper.useAbsolutePaths(),
+		pathHelper.baseDir(),
+		engines,
+		iwads,
+		iwadListFromDir,
+		iwadDir,
+		iwadSubdirs,
+		mapDir,
+		modDir
+	);
 
-	// Propagating every change of the shared data from the SetupDialog to the MainWindow's views would be difficult.
-	// So instead we just wait for the dialog to finish without doing anything and then perform a complete update.
+	int code = dialog.exec();
 
-	// TODO: rather make the dialog have a copy of everything and allow the user to cancel all changes by clicking X
+	if (code == QDialog::Accepted)
+	{
+		// write down the previously selected items
+		auto selectedEngine = getSelectedItemID( ui->engineCmbBox, engines );
+		auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwads );
 
-	auto selectedEngine = getSelectedItemID( ui->engineCmbBox, engines );
-	auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwads );
+		// deselect the items
+		ui->engineCmbBox->setCurrentIndex( -1 );
+		deselectSelectedItems( ui->iwadListView );
 
-	ui->engineCmbBox->setCurrentIndex( -1 );
-	deselectSelectedItems( ui->iwadListView );
+		// make sure all data and indexes are invalidated and no longer used
+		engineModel.startCompleteUpdate();
+		iwadModel.startCompleteUpdate();
 
-	engineModel.startCompleteUpdate();
-	iwadModel.startCompleteUpdate();
+		// update our data from the dialog
+		pathHelper = dialog.pathHelper;
+		engines = dialog.engines;
+		iwads = dialog.iwads;
+		iwadListFromDir = dialog.iwadListFromDir;
+		iwadDir = dialog.iwadDir;
+		iwadSubdirs = dialog.iwadSubdirs;
+		mapDir = dialog.mapDir;
+		modDir = dialog.modDir;
+		// update all stored paths
+		toggleAbsolutePaths( pathHelper.useAbsolutePaths() );
 
-	dialog.exec();
+		// notify the widgets to re-draw their content
+		engineModel.finishCompleteUpdate();
+		iwadModel.finishCompleteUpdate();
 
-	engineModel.finishCompleteUpdate();
-	iwadModel.finishCompleteUpdate();
+		// select back the previously selected items
+		selectItemByID( ui->engineCmbBox, engines, selectedEngine );
+		selectItemByID( ui->iwadListView, iwads, selectedIWAD );
 
-	selectItemByID( ui->engineCmbBox, engines, selectedEngine );
-	selectItemByID( ui->iwadListView, iwads, selectedIWAD );
+		updateMapPacksFromDir();
 
-	updateMapPacksFromDir();
-
-	updateLaunchCommand();
+		updateLaunchCommand();
+	}
 }
 
 void MainWindow::runGameOptsDialog()

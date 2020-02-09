@@ -96,6 +96,12 @@ class PathHelper {
 	PathHelper( bool useAbsolutePaths, const QDir & baseDir )
 		: _baseDir( baseDir ), _currentDir( QDir::current() ), _useAbsolutePaths( useAbsolutePaths ) {}
 
+	PathHelper( const PathHelper & other )
+		: _baseDir( other._baseDir ), _currentDir( other._currentDir ), _useAbsolutePaths( other._useAbsolutePaths ) {}
+
+	void operator=( const PathHelper & other )
+		{ _baseDir = other._baseDir; _currentDir = other._currentDir; _useAbsolutePaths = other._useAbsolutePaths; }
+
 	const QDir & baseDir() const                       { return _baseDir; }
 	bool useAbsolutePaths() const                      { return _useAbsolutePaths; }
 	bool useRelativePaths() const                      { return !_useAbsolutePaths; }

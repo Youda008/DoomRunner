@@ -16,7 +16,7 @@
 
 //======================================================================================================================
 
-EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, QString & name, QString & path )
+EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, const QString & name, const QString & path )
 
 	: QDialog( parent )
 	, pathHelper( pathHelper )
@@ -31,8 +31,11 @@ EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, QSt
 
 	connect( ui->browseBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
 
-	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::confirm );
-	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::cancel );
+	connect( ui->nameLine, &QLineEdit::textChanged, this, &thisClass::updateName );
+	connect( ui->pathLine, &QLineEdit::textChanged, this, &thisClass::updatePath );
+
+	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::accept );
+	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::reject );
 }
 
 EngineDialog::~EngineDialog()
@@ -57,16 +60,14 @@ void EngineDialog::browseEngine()
 
 	ui->pathLine->setText( path );
 	ui->nameLine->setText( QFileInfo( path ).dir().dirName() );
-	// we will write those values to data storage when dialog is confirmed because user might want to cancel it
 }
 
-void EngineDialog::confirm()
+void EngineDialog::updateName( QString text )
 {
-	name = ui->nameLine->text();
-	path = ui->pathLine->text();
+	name = text;
 }
 
-void EngineDialog::cancel()
+void EngineDialog::updatePath( QString text )
 {
-
+	path = text;
 }

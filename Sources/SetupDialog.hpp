@@ -38,9 +38,9 @@ class SetupDialog : public QDialog {
 
  public:
 
-	explicit SetupDialog( QWidget * parent, PathHelper & pathHelper, QList< Engine > & engines,
-	                      QList< IWAD > & iwads, bool & iwadListFromDir, QString & iwadDir, bool & iwadSubdirs,
-	                      QString & mapDir, QString & modDir );
+	explicit SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir, const QList< Engine > & engines,
+	                      const QList< IWAD > & iwads, bool iwadListFromDir, const QString & iwadDir, bool iwadSubdirs,
+	                      const QString & mapDir, const QString & modDir );
 	virtual ~SetupDialog() override;
 
  private:
@@ -80,10 +80,7 @@ class SetupDialog : public QDialog {
 
  signals:
 
-	//void engineDeleted( int engineIdx );
-	//void iwadDeleted( int iwadIdx );
-	//void iwadListNeedsUpdate( QListView * view );
-	void absolutePathsToggled( bool absolute );
+
 
  private: // methods
 
@@ -96,24 +93,24 @@ class SetupDialog : public QDialog {
 
 	uint tickCount;
 
-	// the data are owned by MainWindow, this dialog modifies them via references
+ public: // return values from this dialog
 
-	PathHelper & pathHelper;
+	PathHelper pathHelper;
 
 	// engine info
-	QList< Engine > & engines;
+	QList< Engine > engines;
 	ReadOnlyListModel< Engine > engineModel;  ///< read-only view model, list content is changed by buttons
 
 	// IWAD info
-	QList< IWAD > & iwads;
+	QList< IWAD > iwads;
 	ReadOnlyListModel< IWAD > iwadModel;  ///< read-only view model, list content is changed by buttons
-	bool & iwadListFromDir;
-	QString & iwadDir;
-	bool & iwadSubdirs;
+	bool iwadListFromDir;
+	QString iwadDir;
+	bool iwadSubdirs;
 
 	// additional paths
-	QString & mapDir;
-	QString & modDir;
+	QString mapDir;
+	QString modDir;
 
 };
 

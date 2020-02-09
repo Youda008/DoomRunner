@@ -229,7 +229,12 @@ void MainWindow::timerEvent( QTimerEvent * )  // called once per second
 {
 	tickCount++;
 
-	if (tickCount % 2 == 0) {
+ #ifdef QT_DEBUG
+	constexpr uint dirUpdateDelay = 8;
+ #else
+	constexpr uint dirUpdateDelay = 2;
+ #endif
+	if (tickCount % dirUpdateDelay == 0) {
 		updateListsFromDirs();
 	}
 
@@ -386,7 +391,6 @@ void MainWindow::loadPreset( const QModelIndex & index )
 
 	// restore selected IWAD
 	deselectSelectedItems( ui->iwadListView );
-	iwadModel.startCompleteUpdate();
 	selectedIWAD.clear();
 	if (!preset.selectedIWAD.isEmpty()) {  // the IWAD may have not been selected when creating this preset
 		int iwadIdx = findSuch< IWAD >( iwadModel.list(), [ &preset ]( const IWAD & iwad )
@@ -400,7 +404,6 @@ void MainWindow::loadPreset( const QModelIndex & index )
 				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
 		}
 	}
-	iwadModel.finishCompleteUpdate();
 /*
 	// restore selected MapPack
 	deselectSelectedItem( ui->mapListView );
@@ -776,12 +779,12 @@ void MainWindow::updateConfigFilesFromDir()
 	}
 
 	QFileInfo engineFileInfo( engineModel[ ui->engineCmbBox->currentIndex() ].path );
-	QString engineDir = engineFileInfo.dir().dirName();
+	QString engineDir = engineFileInfo.dir().path();
 
 	// write down the currently selected item so that we can restore it later
 	QString lastText = ui->configCmbBox->currentText();
 
-	configModel.startCompleteUpdate();
+	//configModel.startCompleteUpdate();  // this will reset the selection and cause the launch command to regenerate back and forth
 
 	configModel.clear();
 
@@ -789,12 +792,12 @@ void MainWindow::updateConfigFilesFromDir()
 		/*makeItemFromFile*/[]( const QFileInfo & file ) { return file.fileName(); }
 	);
 
-	configModel.finishCompleteUpdate();
+	//configModel.finishCompleteUpdate();
 
 	// restore the originally selected item (the selection will be reset if the item does not exist in the new content)
 	ui->configCmbBox->setCurrentIndex( ui->configCmbBox->findText( lastText ) );
 
-	//configModel.contentChanged(0);  TODO
+	configModel.contentChanged(0);
 }
 
 void MainWindow::updateMapsFromIWAD()
@@ -1409,9 +1412,11 @@ void MainWindow::updateLaunchCommand()
 	// and copy part of the line, by constantly reseting his selection.
 	if (newCommand != curCommand) {
 		ui->commandLine->setText( newCommand );
-		//qDebug() << "updating launch command: updated";
+		qDebug() << "updating launch command: updated";
+		qDebug() << "  old: " << curCommand;
+		qDebug() << "  new: " << newCommand;
 	} else {
-		//qDebug() << "updating launch command: not updated";
+		qDebug() << "updating launch command: not updated";
 	}
 }
 
@@ -1447,7 +1452,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 
 	QModelIndex mapIdx = getSelectedItemIdx( ui->mapDirView );
 	if (mapIdx.isValid()) {
-		QString mapPath = mapModel.getItemPath( mapIdx ).join('/');
+		QString mapPath = mapDir+'/'+mapModel.getItemPath( mapIdx ).join('/');
 		cmdStream << " -file \"" << base.rebasePath( mapPath ) << "\"";
 	}
 

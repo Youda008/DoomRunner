@@ -72,11 +72,8 @@ QModelIndex getSelectedItemIdx( QTreeView * view )   // this function is for sin
 		return {};
 	}
 	if (selectedIndexes.size() > 1) {
-		//QMessageBox::critical( view->parentWidget(), "Multiple items selected",
-		//	"Multiple items are selected. This shouldn't be happening and it is a bug. Please create an issue on Github page." );
-		qDebug() << "multiple items selected:";
-		for (const QModelIndex & idx : selectedIndexes)
-			qDebug() << "  (" << idx.row() << ", " << idx.column() << ")";
+		QMessageBox::critical( view->parentWidget(), "Multiple items selected",
+			"Multiple items are selected. This shouldn't be happening and it is a bug. Please create an issue on Github page." );
 		return {};
 	}
 	return selectedIndexes[0];

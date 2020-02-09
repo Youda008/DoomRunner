@@ -98,11 +98,9 @@ class SetupDialog : public QDialog {
 	PathHelper pathHelper;
 
 	// engine info
-	QList< Engine > engines;
 	ReadOnlyListModel< Engine > engineModel;  ///< read-only view model, list content is changed by buttons
 
 	// IWAD info
-	QList< IWAD > iwads;
 	ReadOnlyListModel< IWAD > iwadModel;  ///< read-only view model, list content is changed by buttons
 	bool iwadListFromDir;
 	QString iwadDir;

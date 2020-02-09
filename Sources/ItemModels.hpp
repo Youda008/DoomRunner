@@ -25,13 +25,7 @@
 //======================================================================================================================
 // We use model-view design pattern for several widgets, because it allows us to have all the related data
 // packed together in one struct, and have the UI automatically mirror the underlying list without manually syncing
-// the underlying list (backend) with the widget list (frontend), and also because the data can be shared in
-// multiple widgets, even across multiple windows/dialogs.
-//
-// Model and its underlying list are separated, the model doesn't hold the list inside itself.
-// It's because we want to display the same data differently in different widgets or different dialogs.
-// Therefore the models are merely mediators between the data and views,
-// which presents the data to the views and propagate user input from the views back to data.
+// the underlying list (backend) with the widget list (frontend).
 //
 // You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
 
@@ -45,16 +39,32 @@ class AItemListModel : public QAbstractListModel {
 
  protected:
 
-	QList< Item > & itemList;
+	QList< Item > itemList;
 
  public:
 
-	AItemListModel( QList< Item > & itemList ) : QAbstractListModel( nullptr ), itemList( itemList ) {}
+	AItemListModel() : QAbstractListModel( nullptr ) {}
+
+	AItemListModel( const QList< Item > & itemList ) : QAbstractListModel( nullptr ), itemList( itemList ) {}
+
+	void operator=( const AItemListModel< Item > & other ) { this->itemList = other.itemList; }
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
-	QList< Item > & list() const { return itemList; }
+	QList< Item > & list()                      { return itemList; }
+	const QList< Item > & list() const          { return itemList; }
 
+	void clear()                                { itemList.clear(); }
+	void append( const Item & item )            { itemList.append( item ); }
+	void prepend( const Item & item )           { itemList.prepend( item ); }
+	int count() const                           { return itemList.count(); }
+	Item & operator[]( int idx )                { return itemList[ idx ]; }
+	const Item & operator[]( int idx ) const    { return itemList[ idx ]; }
+	decltype( itemList.begin() ) begin()        { return itemList.begin(); }
+	decltype( itemList.begin() ) begin() const  { return itemList.begin(); }
+	decltype( itemList.end() ) end()            { return itemList.end(); }
+	decltype( itemList.end() ) end() const      { return itemList.end(); }
+	int indexOf( const Item & item ) const      { return itemList.indexOf( item ); }
 
 	//-- data change notifications -------------------------------------------------------------------------------------
 
@@ -133,8 +143,11 @@ class ReadOnlyListModel : public AItemListModel< Item > {
 
  public:
 
-	ReadOnlyListModel( QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
-		: AItemListModel<Item>( itemList ), makeDisplayString( makeDisplayString ) {}
+	ReadOnlyListModel( std::function< QString ( const Item & ) > makeDisplayString )
+		: AItemListModel< Item >(), makeDisplayString( makeDisplayString ) {}
+
+	ReadOnlyListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
+		: AItemListModel< Item >( itemList ), makeDisplayString( makeDisplayString ) {}
 
 	void setDisplayStringFunc( std::function< QString ( const Item & ) > makeDisplayString )
 		{ this->makeDisplayString = makeDisplayString; }
@@ -163,15 +176,18 @@ class ReadOnlyListModel : public AItemListModel< Item > {
 template< typename Item >
 class EditableListModel : public AItemListModel< Item > {
 
-	using superClass = AItemListModel<Item>;
+	using superClass = AItemListModel< Item >;
 
  protected:
 
 	// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 	// Therefore only author of Item knows how to perform certain operations on it, so he must specify it by functions
 
-	/// function that points the model to a string member of Item containing the text to be displayed in the widget
-	std::function< QString & ( Item & ) > displayString;
+	/// function that takes Item and constructs a String that will be displayed in the view
+	std::function< QString ( const Item & ) > makeDisplayString;
+
+	/// function that points the model to a String member of Item containing the editable data
+	std::function< QString & ( Item & ) > editString;
 
 	/// function that assigns a dropped file into a newly created Item
 	std::function< void	( Item &, const QFileInfo & ) > assignFile;
@@ -183,8 +199,15 @@ class EditableListModel : public AItemListModel< Item > {
 
  public:
 
-	EditableListModel( QList< Item > & itemList, std::function< QString & ( Item & ) > displayString )
-		: AItemListModel<Item>( itemList ), displayString( displayString ), checkableItems( false ) {}
+	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString,
+	                   std::function< QString & ( Item & ) > editString )
+		: AItemListModel< Item >(), makeDisplayString( makeDisplayString )
+		, editString( editString ), checkableItems( false ) {}
+
+	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString,
+	                   std::function< QString & ( Item & ) > editString )
+		: AItemListModel< Item >( itemList ), makeDisplayString( makeDisplayString )
+		, editString( editString ), checkableItems( false ) {}
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
 
@@ -224,7 +247,7 @@ class EditableListModel : public AItemListModel< Item > {
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 			// Therefore only author of Item knows which of its memebers he wants to display in the widget,
 			// so he must specify it by a function.
-			return displayString( superClass::itemList[ index.row() ] );
+			return makeDisplayString( superClass::itemList[ index.row() ] );
 		} if (role == Qt::CheckStateRole && checkableItems) {
 			// Same as above, exept that this function is optional to ease up initializations of models
 			// that are supposed to be used in non-checkable widgets
@@ -233,7 +256,8 @@ class EditableListModel : public AItemListModel< Item > {
 				              "Either specify an isChecked function or disable disable checkable items.";
 				return QVariant();
 			} else {
-				return isChecked( superClass::itemList[ index.row() ] ) ? Qt::Checked : Qt::Unchecked;
+				bool checked = isChecked( const_cast< Item & >( superClass::itemList[ index.row() ] ) );
+				return checked ? Qt::Checked : Qt::Unchecked;
 			}
 		} else {
 			return QVariant();
@@ -246,7 +270,7 @@ class EditableListModel : public AItemListModel< Item > {
 			return false;
 
 		if (role == Qt::EditRole) {
-			displayString( superClass::itemList[ index.row() ] ) = value.toString();
+			editString( superClass::itemList[ index.row() ] ) = value.toString();
 			emit superClass::dataChanged( index, index, {Qt::EditRole} );
 			return true;
 		} else if (role == Qt::CheckStateRole && checkableItems) {

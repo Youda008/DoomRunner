@@ -28,12 +28,12 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
                           const QString & mapDir, const QString & modDir )
 	: QDialog( parent )
 	, pathHelper( useAbsolutePaths, baseDir )
-	, engines( engines )
-	, engineModel( this->engines, /*makeDisplayString*/[]( const Engine & engine ) -> QString
-	                                                   { return engine.name % "  [" % engine.path % "]"; } )
-	, iwads( iwads )
-	, iwadModel( this->iwads, /*makeDisplayString*/[]( const IWAD & iwad ) -> QString
-	                                               { return iwad.name % "  [" % iwad.path % "]"; } )
+	, engineModel( engines,
+		/*makeDisplayString*/[]( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
+	  )
+	, iwadModel( iwads,
+		/*makeDisplayString*/[]( const IWAD & iwad ) -> QString { return iwad.name % "  [" % iwad.path % "]"; }
+	  )
 	, iwadListFromDir( iwadListFromDir )
 	, iwadDir( iwadDir )
 	, iwadSubdirs( iwadSubdirs )
@@ -245,7 +245,7 @@ void SetupDialog::engineMoveDown()
 
 void SetupDialog::editEngine( const QModelIndex & index )
 {
-	Engine & selectedEngine = engines[ index.row() ];
+	Engine & selectedEngine = engineModel[ index.row() ];
 
 	EngineDialog dialog( this, pathHelper, selectedEngine.name, selectedEngine.path );
 
@@ -261,14 +261,14 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 {
 	pathHelper.toggleAbsolutePaths( checked );
 
-	for (Engine & engine : engines)
+	for (Engine & engine : engineModel)
 		engine.path = pathHelper.convertPath( engine.path );
 	engineModel.contentChanged( 0 );
 
 	if (iwadListFromDir && !iwadDir.isEmpty())
 		iwadDir = pathHelper.convertPath( iwadDir );
 	ui->iwadDirLine->setText( iwadDir );
-	for (IWAD & iwad : iwads)
+	for (IWAD & iwad : iwadModel)
 		iwad.path = pathHelper.convertPath( iwad.path );
 	iwadModel.contentChanged( 0 );
 

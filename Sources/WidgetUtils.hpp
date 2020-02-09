@@ -266,21 +266,21 @@ QVector<int> moveDownSelectedItems( QListView * view, AItemListModel< Item > & m
 
 /** gets a persistent item ID that survives node shifting, adding or removal */
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemID( QListView * view, const QList< Item > & list ) -> decltype( list[0].getID() )
+auto getSelectedItemID( QListView * view, const AItemListModel< Item > & model ) -> decltype( model[0].getID() )
 {
 	int selectedItemIdx = getSelectedItemIdx( view );
 	if (selectedItemIdx >= 0)
-		return list[ selectedItemIdx ].getID();
+		return model[ selectedItemIdx ].getID();
 	else
 		return {};
 }
 
 /** attempts to select a previously selected item defined by persistant itemID */
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool selectItemByID( QListView * view, const QList< Item > & list, const decltype( list[0].getID() ) & itemID )
+bool selectItemByID( QListView * view, const AItemListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
 	if (!itemID.isEmpty()) {
-		int newItemIdx = findSuch< Item >( list, [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
+		int newItemIdx = findSuch< Item >( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0) {
 			selectItemByIdx( view, newItemIdx );
 			return true;
@@ -290,7 +290,7 @@ bool selectItemByID( QListView * view, const QList< Item > & list, const decltyp
 }
 
 template< typename Item >  // Item must contain public attribute .name
-void fillListFromDir( QList< Item > & list, QString dir, bool recursively, const QVector<QString> & fileSuffixes,
+void fillListFromDir( AItemListModel< Item > & model, QString dir, bool recursively, const QVector<QString> & fileSuffixes,
                       std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
 {
 	QDir dir_( dir );
@@ -304,13 +304,13 @@ void fillListFromDir( QList< Item > & list, QString dir, bool recursively, const
 		if (entry.isDir()) {
 			QString dirName = entry.fileName();
 			if (recursively && dirName != "." && dirName != "..") {
-				fillListFromDir( list, entry.filePath(), recursively, fileSuffixes, makeItemFromFile );
+				fillListFromDir( model, entry.filePath(), recursively, fileSuffixes, makeItemFromFile );
 			}
 		} else {
 			if (fileSuffixes.isEmpty() || fileSuffixes.contains( entry.suffix().toLower() )) {
 				// Because Item is generic template param, we don't know to construct it from file.
 				// So the caller needs to describe it by a function.
-				list.append( makeItemFromFile( entry ) );
+				model.append( makeItemFromFile( entry ) );
 			}
 		}
 	}
@@ -324,7 +324,7 @@ void updateListFromDir( AItemListModel< Item > & model, QListView * view, QStrin
 		return;
 
 	// write down the currently selected item
-	auto selectedItemID = getSelectedItemID( view, model.list() );  // empty string when nothing is selected
+	auto selectedItemID = getSelectedItemID( view, model );  // empty string when nothing is selected
 
 	deselectSelectedItems( view );
 
@@ -332,13 +332,13 @@ void updateListFromDir( AItemListModel< Item > & model, QListView * view, QStrin
 
 	model.list().clear();
 
-	fillListFromDir( model.list(), dir, recursively, fileSuffixes, makeItemFromFile );
+	fillListFromDir( model, dir, recursively, fileSuffixes, makeItemFromFile );
 
 	//model.finishCompleteUpdate();  // TODO: perform only diff update, instead of clear-all/insert-all
 	model.contentChanged(0);
 
 	// update the selection so that the same file remains selected
-	selectItemByID( view, model.list(), selectedItemID );
+	selectItemByID( view, model, selectedItemID );
 }
 
 
@@ -377,21 +377,21 @@ void updateTreeFromDir( TreeModel & model, QTreeView * view, QString dir, const 
 
 /** gets a persistent item ID that survives node shifting, adding or removal */
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemID( QComboBox * view, const QList< Item > & list ) -> decltype( list[0].getID() )
+auto getSelectedItemID( QComboBox * view, const AItemListModel< Item > & model ) -> decltype( model[0].getID() )
 {
 	int selectedItemIdx = view->currentIndex();
 	if (selectedItemIdx >= 0)
-		return list[ selectedItemIdx ].getID();
+		return model[ selectedItemIdx ].getID();
 	else
 		return {};
 }
 
 /** attempts to select a previously selected item defined by persistant itemID */
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool selectItemByID( QComboBox * view, const QList< Item > & list, const decltype( list[0].getID() ) & itemID )
+bool selectItemByID( QComboBox * view, const AItemListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
 	if (!itemID.isEmpty()) {
-		int newItemIdx = findSuch< Item >( list, [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
+		int newItemIdx = findSuch< Item >( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0) {
 			view->setCurrentIndex( newItemIdx );
 			return true;

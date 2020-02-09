@@ -92,13 +92,25 @@ MainWindow::MainWindow()
 	, height( -1 )
 	, tickCount( 0 )
 	, pathHelper( false, QDir::currentPath() )
-	, engineModel( engines, /*makeDisplayString*/[]( const Engine & engine ) { return engine.name; } )
-	, configModel( configs, /*makeDisplayString*/[]( const QString & config ) { return config; } )
-	, iwadModel( iwads, /*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; } )
+	, engineModel(
+		/*makeDisplayString*/[]( const Engine & engine ) { return engine.name; }
+	  )
+	, configModel(
+		/*makeDisplayString*/[]( const QString & config ) { return config; }
+	  )
+	, iwadModel(
+		/*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; }
+	  )
 	, iwadListFromDir( false )
 	, iwadSubdirs( false )
-	, modModel( mods, /*displayString*/[]( Mod & mod ) -> QString & { return mod.name; } )
-	, presetModel( presets, /*displayString*/[]( Preset & preset ) -> QString & { return preset.name; } )
+	, modModel(
+		/*makeDisplayString*/[]( const Mod & mod ) { return mod.name; },
+		/*editString*/[]( Mod & mod ) -> QString & { return mod.name; }
+	  )
+	, presetModel(
+		/*makeDisplayString*/[]( const Preset & preset ) { return preset.name; },
+		/*editString*/[]( Preset & preset ) -> QString & { return preset.name; }
+	  )
 {
 	ui = new Ui::MainWindow;
 	ui->setupUi( this );
@@ -263,8 +275,8 @@ void MainWindow::runSetupDialog()
 	SetupDialog dialog( this,
 		pathHelper.useAbsolutePaths(),
 		pathHelper.baseDir(),
-		engines,
-		iwads,
+		engineModel.list(),
+		iwadModel.list(),
 		iwadListFromDir,
 		iwadDir,
 		iwadSubdirs,
@@ -277,8 +289,8 @@ void MainWindow::runSetupDialog()
 	if (code == QDialog::Accepted)
 	{
 		// write down the previously selected items
-		auto selectedEngine = getSelectedItemID( ui->engineCmbBox, engines );
-		auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwads );
+		auto selectedEngine = getSelectedItemID( ui->engineCmbBox, engineModel );
+		auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwadModel );
 
 		// deselect the items
 		ui->engineCmbBox->setCurrentIndex( -1 );
@@ -290,8 +302,8 @@ void MainWindow::runSetupDialog()
 
 		// update our data from the dialog
 		pathHelper = dialog.pathHelper;
-		engines = dialog.engines;
-		iwads = dialog.iwads;
+		engineModel = dialog.engineModel;
+		iwadModel = dialog.iwadModel;
 		iwadListFromDir = dialog.iwadListFromDir;
 		iwadDir = dialog.iwadDir;
 		iwadSubdirs = dialog.iwadSubdirs;
@@ -305,8 +317,8 @@ void MainWindow::runSetupDialog()
 		iwadModel.finishCompleteUpdate();
 
 		// select back the previously selected items
-		selectItemByID( ui->engineCmbBox, engines, selectedEngine );
-		selectItemByID( ui->iwadListView, iwads, selectedIWAD );
+		selectItemByID( ui->engineCmbBox, engineModel, selectedEngine );
+		selectItemByID( ui->iwadListView, iwadModel, selectedIWAD );
 
 		updateMapPacksFromDir();
 
@@ -341,12 +353,12 @@ void MainWindow::runCompatOptsDialog()
 
 void MainWindow::loadPreset( const QModelIndex & index )
 {
-	Preset & preset = presets[ index.row() ];
+	Preset & preset = presetModel[ index.row() ];
 
 	// restore selected engine
 	if (!preset.selectedEnginePath.isEmpty()) {  // the engine combo box might have been empty when creating this preset
-		int engineIdx = findSuch< Engine >( engines, [ &preset ]( const Engine & engine )
-		                                             { return engine.path == preset.selectedEnginePath; } );
+		int engineIdx = findSuch< Engine >( engineModel.list(), [ &preset ]( const Engine & engine )
+		                                                        { return engine.path == preset.selectedEnginePath; } );
 		if (engineIdx >= 0) {
 			ui->engineCmbBox->setCurrentIndex( engineIdx );
 		} else {
@@ -360,7 +372,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 
 	// restore selected config
 	if (!preset.selectedConfig.isEmpty()) {  // the preset combo box might have been empty when creating this preset
-		int configIdx = configs.indexOf( preset.selectedConfig );
+		int configIdx = configModel.indexOf( preset.selectedConfig );
 		if (configIdx >= 0) {
 			ui->configCmbBox->setCurrentIndex( configIdx );
 		} else {
@@ -377,7 +389,8 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	iwadModel.startCompleteUpdate();
 	selectedIWAD.clear();
 	if (!preset.selectedIWAD.isEmpty()) {  // the IWAD may have not been selected when creating this preset
-		int iwadIdx = findSuch< IWAD >( iwads, [ &preset ]( const IWAD & iwad ) { return iwad.name == preset.selectedIWAD; } );
+		int iwadIdx = findSuch< IWAD >( iwadModel.list(), [ &preset ]( const IWAD & iwad )
+		                                                  { return iwad.name == preset.selectedIWAD; } );
 		if (iwadIdx >= 0) {
 			selectItemByIdx( ui->iwadListView, iwadIdx );
 			selectedIWAD = preset.selectedIWAD;
@@ -406,7 +419,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	// restore list of mods
 	deselectSelectedItems( ui->modListView );
 	modModel.startCompleteUpdate();
-	mods.clear();
+	modModel.clear();
 	for (auto modIt = preset.mods.begin(); modIt != preset.mods.end(); )  // need iterator, so that we can erase non-existing
 	{
 		const Mod & mod = *modIt;
@@ -418,7 +431,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 			continue;
 		}
 
-		mods.append( mod );
+		modModel.append( mod );
 		modIt++;
 	}
 	modModel.finishCompleteUpdate();
@@ -432,9 +445,9 @@ void MainWindow::selectEngine( int index )
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
 		if (index < 0)  // engine combo box was reset to "no engine selected" state
-			presets[ selectedPresetIdx ].selectedEnginePath.clear();
+			presetModel[ selectedPresetIdx ].selectedEnginePath.clear();
 		else
-			presets[ selectedPresetIdx ].selectedEnginePath = engines[ index ].path;
+			presetModel[ selectedPresetIdx ].selectedEnginePath = engineModel[ index ].path;
 	}
 
 	updateSaveFilesFromDir();
@@ -449,9 +462,9 @@ void MainWindow::selectConfig( int index )
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
 		if (index < 0)  // engine combo box was reset to "no engine selected" state
-			presets[ selectedPresetIdx ].selectedConfig.clear();
+			presetModel[ selectedPresetIdx ].selectedConfig.clear();
 		else
-			presets[ selectedPresetIdx ].selectedConfig = configs[ index ];
+			presetModel[ selectedPresetIdx ].selectedConfig = configModel[ index ];
 	}
 
 	updateLaunchCommand();
@@ -459,7 +472,7 @@ void MainWindow::selectConfig( int index )
 
 void MainWindow::toggleIWAD( const QModelIndex & index )
 {
-	QString clickedIWAD = iwads[ index.row() ].name;
+	QString clickedIWAD = iwadModel[ index.row() ].name;
 
 	// allow the user to deselect the IWAD by clicking on it again
 	if (clickedIWAD == selectedIWAD) {
@@ -472,7 +485,7 @@ void MainWindow::toggleIWAD( const QModelIndex & index )
 	// update the current preset
 	int clickedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (clickedPresetIdx >= 0) {
-		presets[ clickedPresetIdx ].selectedIWAD = selectedIWAD;
+		presetModel[ clickedPresetIdx ].selectedIWAD = selectedIWAD;
 	}
 
 	updateMapsFromIWAD();
@@ -496,9 +509,9 @@ void MainWindow::toggleMapPack( const QModelIndex & index )
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
 		if (selectedPackIdx >= 0)
-			presets[ selectedPresetIdx ].selectedMapPack = maps[ clickedPackIdx ].name;
+			presetModel[ selectedPresetIdx ].selectedMapPack = maps[ clickedPackIdx ].name;
 		else
-			presets[ selectedPresetIdx ].selectedMapPack.clear();  // deselect it also from preset
+			presetModel[ selectedPresetIdx ].selectedMapPack.clear();  // deselect it also from preset
 	}
 */
 	updateLaunchCommand();
@@ -509,7 +522,7 @@ void MainWindow::toggleMod( const QModelIndex & modIndex )
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].mods[ modIndex.row() ].checked = mods[ modIndex.row() ].checked;
+		presetModel[ selectedPresetIdx ].mods[ modIndex.row() ].checked = modModel[ modIndex.row() ].checked;
 	}
 
 	updateLaunchCommand();
@@ -534,11 +547,11 @@ void MainWindow::presetAdd()
 	selectedIWAD.clear();
 	deselectSelectedItems( ui->modListView );
 	modModel.startCompleteUpdate();
-	mods.clear();
+	modModel.clear();
 	modModel.finishCompleteUpdate();
 
 	// open edit mode so that user can name the preset
-	ui->presetListView->edit( presetModel.index( presets.count() - 1, 0 ) );
+	ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );
 
 	presetNum++;
 }
@@ -546,7 +559,7 @@ void MainWindow::presetAdd()
 void MainWindow::presetDelete()
 {
 	int selectedIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedIdx >= 0 && presets[ selectedIdx ].name == defaultPresetName) {
+	if (selectedIdx >= 0 && presetModel[ selectedIdx ].name == defaultPresetName) {
 		QMessageBox::warning( this, "Default preset can't be deleted",
 			"Preset "%QString( defaultPresetName )%" cannot be deleted. "
 			"This preset stores the files you add or select without having any other preset selected." );
@@ -561,7 +574,7 @@ void MainWindow::presetClone()
 	int origIdx = cloneSelectedItem( ui->presetListView, presetModel );
 	if (origIdx >= 0) {
 		// open edit mode so that user can name the preset
-		ui->presetListView->edit( presetModel.index( presets.count() - 1, 0 ) );
+		ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );
 	}
 }
 
@@ -598,7 +611,7 @@ void MainWindow::modAdd()
 	// add it also to the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presets[ selectedPresetIdx ].mods.append({ name, path, true });
+		presetModel[ selectedPresetIdx ].mods.append({ name, path, true });
 	}
 
 	updateLaunchCommand();
@@ -615,7 +628,7 @@ void MainWindow::modDelete()
 	if (selectedPresetIdx >= 0) {
 		int deletedCnt = 0;
 		for (int deletedIdx : deletedIndexes) {
-			presets[ selectedPresetIdx ].mods.removeAt( deletedIdx - deletedCnt );
+			presetModel[ selectedPresetIdx ].mods.removeAt( deletedIdx - deletedCnt );
 			deletedCnt++;
 		}
 	}
@@ -633,7 +646,7 @@ void MainWindow::modMoveUp()
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
 		for (int movedIdx : movedIndexes) {
-			presets[ selectedPresetIdx ].mods.move( movedIdx, movedIdx - 1 );
+			presetModel[ selectedPresetIdx ].mods.move( movedIdx, movedIdx - 1 );
 		}
 	}
 
@@ -650,7 +663,7 @@ void MainWindow::modMoveDown()
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
 		for (int movedIdx : movedIndexes) {
-			presets[ selectedPresetIdx ].mods.move( movedIdx, movedIdx + 1 );
+			presetModel[ selectedPresetIdx ].mods.move( movedIdx, movedIdx + 1 );
 		}
 	}
 
@@ -700,7 +713,7 @@ void MainWindow::modsDropped()
 		// update the preset
 		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 		if (selectedPresetIdx >= 0) {
-			presets[ selectedPresetIdx ].mods = mods; // not the most optimal way, but the size of the list is always low
+			presetModel[ selectedPresetIdx ].mods = modModel.list(); // not the most optimal way, but the size of the list is always low
 		}
 
 		updateLaunchCommand();
@@ -734,7 +747,7 @@ void MainWindow::updateSaveFilesFromDir()
 		return;
 	}
 
-	QFileInfo engineFileInfo( engines[ ui->engineCmbBox->currentIndex() ].path );
+	QFileInfo engineFileInfo( engineModel[ ui->engineCmbBox->currentIndex() ].path );
 	QDir engineDir = engineFileInfo.dir();
 
 	// write down the currently selected item
@@ -762,7 +775,7 @@ void MainWindow::updateConfigFilesFromDir()
 		return;
 	}
 
-	QFileInfo engineFileInfo( engines[ ui->engineCmbBox->currentIndex() ].path );
+	QFileInfo engineFileInfo( engineModel[ ui->engineCmbBox->currentIndex() ].path );
 	QString engineDir = engineFileInfo.dir().dirName();
 
 	// write down the currently selected item so that we can restore it later
@@ -770,9 +783,9 @@ void MainWindow::updateConfigFilesFromDir()
 
 	configModel.startCompleteUpdate();
 
-	configs.clear();
+	configModel.clear();
 
-	fillListFromDir< QString >( configs, engineDir, false, { configFileExt },
+	fillListFromDir< QString >( configModel, engineDir, false, { configFileExt },
 		/*makeItemFromFile*/[]( const QFileInfo & file ) { return file.fileName(); }
 	);
 
@@ -790,7 +803,7 @@ void MainWindow::updateMapsFromIWAD()
 	if (iwadIdx < 0)
 		return;
 
-	QString selectedIwadName = iwads[ iwadIdx ].name;
+	QString selectedIwadName = iwadModel[ iwadIdx ].name;
 
 	if (isDoom1( selectedIwadName ) && !ui->mapCmbBox->itemText(0).startsWith('E')) {
 		ui->mapCmbBox->clear();
@@ -825,21 +838,21 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 {
 	pathHelper.toggleAbsolutePaths( absolute );
 
-	for (Engine & engine : engines)
+	for (Engine & engine : engineModel)
 		engine.path = pathHelper.convertPath( engine.path );
 
 	if (iwadListFromDir && !iwadDir.isEmpty())
 		iwadDir = pathHelper.convertPath( iwadDir );
-	for (IWAD & iwad : iwads)
+	for (IWAD & iwad : iwadModel)
 		iwad.path = pathHelper.convertPath( iwad.path );
 
 	mapDir = pathHelper.convertPath( mapDir );
 
 	modDir = pathHelper.convertPath( modDir );
-	for (Mod & mod : mods)
+	for (Mod & mod : modModel)
 		mod.path = pathHelper.convertPath( mod.path );
 
-	for (Preset & preset : presets) {
+	for (Preset & preset : presetModel) {
 		for (Mod & mod : preset.mods)
 			mod.path = pathHelper.convertPath( mod.path );
 		preset.selectedEnginePath = pathHelper.convertPath( preset.selectedEnginePath );
@@ -1041,14 +1054,14 @@ void MainWindow::saveOptions( QString fileName )
 	{
 		QJsonObject jsEngines;
 
-		QJsonArray jsPortArray;
-		for (const Engine & engine : engines) {
-			QJsonObject jsPort;
-			jsPort["name"] = engine.name;
-			jsPort["path"] = engine.path;
-			jsPortArray.append( jsPort );
+		QJsonArray jsEngineArray;
+		for (const Engine & engine : engineModel) {
+			QJsonObject jsEngine;
+			jsEngine["name"] = engine.name;
+			jsEngine["path"] = engine.path;
+			jsEngineArray.append( jsEngine );
 		}
-		jsEngines["engines"] = jsPortArray;
+		jsEngines["engines"] = jsEngineArray;
 
 		json["engines"] = jsEngines;
 	}
@@ -1061,7 +1074,7 @@ void MainWindow::saveOptions( QString fileName )
 		jsIWADs["directory"] = iwadDir;
 		jsIWADs["subdirs"] = iwadSubdirs;
 		QJsonArray jsIWADArray;
-		for (const IWAD & iwad : iwads) {
+		for (const IWAD & iwad : iwadModel) {
 			QJsonObject jsIWAD;
 			jsIWAD["name"] = iwad.name;
 			jsIWAD["path"] = iwad.path;
@@ -1090,7 +1103,7 @@ void MainWindow::saveOptions( QString fileName )
 	{
 		QJsonArray jsPresetArray;
 
-		for (const Preset & preset : presets) {
+		for (const Preset & preset : presetModel) {
 			QJsonObject jsPreset;
 
 			jsPreset["name"] = preset.name;
@@ -1114,7 +1127,7 @@ void MainWindow::saveOptions( QString fileName )
 		json["presets"] = jsPresetArray;
 	}
 	int presetIdx = getSelectedItemIdx( ui->presetListView );
-	json["selected_preset"] = presetIdx >= 0 ? presets[ presetIdx ].name : "";
+	json["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
 
 	json["use_absolute_paths"] = pathHelper.useAbsolutePaths();
 
@@ -1170,7 +1183,7 @@ void MainWindow::loadOptions( QString fileName )
 
 		engineModel.startCompleteUpdate();
 
-		engines.clear();
+		engineModel.clear();
 
 		QJsonArray jsEngineArray = getArray( jsEngines, "engines" );
 		for (int i = 0; i < jsEngineArray.size(); i++)
@@ -1185,7 +1198,7 @@ void MainWindow::loadOptions( QString fileName )
 				continue;
 
 			if (QFileInfo( path ).exists())
-				engines.append({ name, pathHelper.convertPath( path ) });
+				engineModel.append({ name, pathHelper.convertPath( path ) });
 			else
 				QMessageBox::warning( this, "Engine no longer exists",
 					"An engine from the saved options ("%path%") no longer exists. It will be removed from the list." );
@@ -1202,7 +1215,7 @@ void MainWindow::loadOptions( QString fileName )
 		selectedIWAD.clear();
 
 		iwadModel.startCompleteUpdate();
-		iwads.clear();
+		iwadModel.clear();
 		iwadModel.finishCompleteUpdate();
 
 		iwadListFromDir = getBool( jsIWADs, "auto_update", false );
@@ -1235,7 +1248,7 @@ void MainWindow::loadOptions( QString fileName )
 					continue;
 
 				if (QFileInfo( path ).exists())
-					iwads.append({ name, pathHelper.convertPath( path ) });
+					iwadModel.append({ name, pathHelper.convertPath( path ) });
 				else
 					QMessageBox::warning( this, "IWAD no longer exists",
 						"An IWAD from the saved options ("%path%") no longer exists. It will be removed from the list." );
@@ -1286,7 +1299,7 @@ void MainWindow::loadOptions( QString fileName )
 
 		presetModel.startCompleteUpdate();
 
-		presets.clear();
+		presetModel.clear();
 
 		for (int i = 0; i < jsPresetArray.size(); i++)
 		{
@@ -1316,18 +1329,19 @@ void MainWindow::loadOptions( QString fileName )
 					preset.mods.append( mod );
 				}
 			}
-			presets.append( preset );
+			presetModel.append( preset );
 		}
 
 		presetModel.finishCompleteUpdate();
 	}
 
 	// check for existence of default preset and create it if not there
-	int presetIdx = findSuch< Preset >( presets, []( const Preset & preset ) { return preset.name == defaultPresetName; } );
+	int presetIdx = findSuch< Preset >( presetModel.list(), []( const Preset & preset )
+	                                                        { return preset.name == defaultPresetName; } );
 	if (presetIdx < 0) {
 		// create an empty default preset
 		// so that all the files the user sets up without having any own preset created can be saved somewhere
-		presets.prepend({ defaultPresetName, "", "", "", {} });
+		presetModel.prepend({ defaultPresetName, "", "", "", {} });
 		presetIdx = 0;
 	}
 	// select the default preset, so that something is always selected to save the changes to
@@ -1416,11 +1430,11 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 
 	const int engineIdx = ui->engineCmbBox->currentIndex();
 	if (engineIdx >= 0) {
-		cmdStream << "\"" << base.rebasePath( engines[ engineIdx ].path ) << "\"";
+		cmdStream << "\"" << base.rebasePath( engineModel[ engineIdx ].path ) << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx >= 0) {
-			QDir engineDir = QFileInfo( engines[ engineIdx ].path ).dir();
+			QDir engineDir = QFileInfo( engineModel[ engineIdx ].path ).dir();
 			QString configPath = engineDir.filePath( ui->configCmbBox->currentText() );
 			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
@@ -1428,7 +1442,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 
 	const int iwadIdx = getSelectedItemIdx( ui->iwadListView );
 	if (iwadIdx >= 0) {
-		cmdStream << " -iwad \"" << base.rebasePath( iwads[ iwadIdx ].path ) << "\"";
+		cmdStream << " -iwad \"" << base.rebasePath( iwadModel[ iwadIdx ].path ) << "\"";
 	}
 
 	QModelIndex mapIdx = getSelectedItemIdx( ui->mapDirView );
@@ -1437,7 +1451,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 		cmdStream << " -file \"" << base.rebasePath( mapPath ) << "\"";
 	}
 
-	for (const Mod & mod : mods) {
+	for (const Mod & mod : modModel) {
 		if (mod.checked) {
 			if (QFileInfo(mod.path).suffix() == "deh")
 				cmdStream << " -deh \"" << base.rebasePath( mod.path ) << "\"";

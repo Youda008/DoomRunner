@@ -1412,11 +1412,6 @@ void MainWindow::updateLaunchCommand()
 	// and copy part of the line, by constantly reseting his selection.
 	if (newCommand != curCommand) {
 		ui->commandLine->setText( newCommand );
-		qDebug() << "updating launch command: updated";
-		qDebug() << "  old: " << curCommand;
-		qDebug() << "  new: " << newCommand;
-	} else {
-		qDebug() << "updating launch command: not updated";
 	}
 }
 

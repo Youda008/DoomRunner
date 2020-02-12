@@ -1103,6 +1103,8 @@ void MainWindow::saveOptions( QString fileName )
 	{
 		QJsonObject jsMaps;
 		jsMaps["directory"] = mapDir;
+		QModelIndex mapIdx = getSelectedItemIdx( ui->mapDirView );
+		jsMaps["selected_file"] = mapIdx.isValid() ? mapModel.getItemPath( mapIdx ).join('/') : "";
 		json["maps"] = jsMaps;
 	}
 
@@ -1287,6 +1289,18 @@ void MainWindow::loadOptions( QString fileName )
 			} else {
 				QMessageBox::warning( this, "Map dir no longer exists",
 					"Map directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
+			}
+		}
+
+		QString selectedFile = getString( jsMaps, "selected_file" );    // TODO: map file vs map pack
+		if (!selectedFile.isEmpty()) {
+			TreePath relativePath = selectedFile.split('/');
+			QModelIndex mapIndex = mapModel.getItemByPath( relativePath );
+			if (mapIndex.isValid()) {
+				selectItemByIdx( ui->mapDirView, mapIndex );
+			} else {
+				QMessageBox::warning( this, "Map file no longer exists",
+					"Map file from the saved options ("%selectedFile%") no longer exists. Please select another one." );
 			}
 		}
 	}

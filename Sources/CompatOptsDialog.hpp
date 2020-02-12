@@ -34,14 +34,10 @@ class CompatOptsDialog : public QDialog {
 
  public:
 
-	explicit CompatOptsDialog( QWidget * parent, CompatibilityOptions & compatOpts );
+	explicit CompatOptsDialog( QWidget * parent, const CompatibilityOptions & compatOpts );
 	~CompatOptsDialog();
 
 	static QString getCmdArgsFromOptions( const CompatibilityOptions & compatOpts );
-
- protected:
-
-	//virtual void closeEvent( QCloseEvent * event );
 
  private slots:
 
@@ -92,9 +88,6 @@ class CompatOptsDialog : public QDialog {
 	void on_compatflags1_line_textEdited( const QString & arg1 );
 	void on_compatflags2_line_textEdited( const QString & arg1 );
 
-	void confirm();
-	void cancel();
-
  private: // methods
 
 	void setFlag( const CompatFlag & flag, bool enabled );
@@ -105,11 +98,9 @@ class CompatOptsDialog : public QDialog {
 
 	Ui::CompatOptsDialog * ui;
 
-	// dialog-local options - need to be separate from the caller's options, because the user might click Cancel
-	CompatibilityOptions compatOpts;
+ public:
 
-	// caller's options (return value from this dialog) - will be updated only when user clicks Ok
-	CompatibilityOptions & retCompatOpts;
+	CompatibilityOptions compatOpts;
 
 };
 

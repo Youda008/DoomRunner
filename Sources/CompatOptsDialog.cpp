@@ -72,11 +72,10 @@ static const CompatFlag USE_ORIGINAL_SOUND      = { "compat_soundtarget",       
 
 //======================================================================================================================
 
-CompatOptsDialog::CompatOptsDialog( QWidget * parent, CompatibilityOptions & compatOpts )
+CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityOptions & compatOpts )
 
 	: QDialog( parent )
 	, compatOpts( compatOpts )
-	, retCompatOpts( compatOpts )
 {
 	ui = new Ui::CompatOptsDialog;
     ui->setupUi( this );
@@ -89,20 +88,8 @@ CompatOptsDialog::CompatOptsDialog( QWidget * parent, CompatibilityOptions & com
 
 	updateCheckboxes();
 
-	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::confirm );
-	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::cancel );
-}
-
-void CompatOptsDialog::confirm()
-{
-	// update the dialog caller's flags only when user clicks Ok
-	retCompatOpts = compatOpts;
-	close();
-}
-
-void CompatOptsDialog::cancel()
-{
-	close();
+	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::accept );
+	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::reject );
 }
 
 CompatOptsDialog::~CompatOptsDialog()

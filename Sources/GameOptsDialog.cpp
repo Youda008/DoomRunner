@@ -83,11 +83,10 @@ static const DMFlag SPAWN_WHERE_DIED             = { DM_FLAGS_2, 4096, false };
 
 //======================================================================================================================
 
-GameOptsDialog::GameOptsDialog( QWidget * parent, GameplayOptions & gameOpts )
+GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayOptions & gameOpts )
 
 	: QDialog( parent )
 	, gameOpts( gameOpts )
-	, retGameOpts( gameOpts )
 {
 	ui = new Ui::GameOptsDialog;
 	ui->setupUi( this );
@@ -100,20 +99,8 @@ GameOptsDialog::GameOptsDialog( QWidget * parent, GameplayOptions & gameOpts )
 
 	updateCheckboxes();
 
-	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::confirm );
-	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::cancel );
-}
-
-void GameOptsDialog::confirm()
-{
-	// update the dialog caller's flags only when user clicks Ok
-	retGameOpts = gameOpts;
-	close();
-}
-
-void GameOptsDialog::cancel()
-{
-	close();
+	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::accept );
+	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::reject );
 }
 
 GameOptsDialog::~GameOptsDialog()

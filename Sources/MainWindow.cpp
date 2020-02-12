@@ -294,6 +294,7 @@ void MainWindow::runSetupDialog()
 
 	int code = dialog.exec();
 
+	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
 		// write down the previously selected items
@@ -337,22 +338,29 @@ void MainWindow::runSetupDialog()
 void MainWindow::runGameOptsDialog()
 {
 	GameOptsDialog dialog( this, gameOpts );
-	dialog.exec();
 
-	updateLaunchCommand();
+	int code = dialog.exec();
+
+	// update the data only if user clicked Ok
+	if (code == QDialog::Accepted) {
+		gameOpts = dialog.gameOpts;
+		updateLaunchCommand();
+	}
 }
 
 void MainWindow::runCompatOptsDialog()
 {
-	//QMessageBox::warning( this, "Not implemented", "Sorry, this feature is not implemented yet" );
-
 	CompatOptsDialog dialog( this, compatOpts );
-	dialog.exec();
 
-	// cache the command line args string, so that it doesn't need to be regenerated on every command line update
-	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( compatOpts );
+	int code = dialog.exec();
 
-	updateLaunchCommand();
+	// update the data only if user clicked Ok
+	if (code == QDialog::Accepted) {
+		compatOpts = dialog.compatOpts;
+		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
+		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( compatOpts );
+		updateLaunchCommand();
+	}
 }
 
 

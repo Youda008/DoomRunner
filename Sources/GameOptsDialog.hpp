@@ -34,12 +34,8 @@ class GameOptsDialog : public QDialog {
 
  public:
 
-	explicit GameOptsDialog( QWidget * parent, GameplayOptions & gameOpts );
+	explicit GameOptsDialog( QWidget * parent, const GameplayOptions & gameOpts );
 	~GameOptsDialog();
-
- protected:
-
-	//virtual void closeEvent( QCloseEvent * event );
 
  private slots:
 
@@ -99,9 +95,6 @@ class GameOptsDialog : public QDialog {
 	void on_dmflags1_line_textEdited( const QString & arg1 );
 	void on_dmflags2_line_textEdited( const QString & arg1 );
 
-	void confirm();
-	void cancel();
-
  private: // methods
 
 	void setFlag( const DMFlag & flag, bool enabled );
@@ -112,11 +105,9 @@ class GameOptsDialog : public QDialog {
 
 	Ui::GameOptsDialog * ui;
 
-	// dialog-local options - need to be separate from the caller's options, because the user might click Cancel
-	GameplayOptions gameOpts;
+ public:
 
-	// caller's options (return values from this dialog) - will be updated only when user clicks Ok
-	GameplayOptions & retGameOpts;
+	GameplayOptions gameOpts;
 
 };
 

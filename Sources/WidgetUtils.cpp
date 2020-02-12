@@ -171,7 +171,7 @@ void updateTreeFromDir( TreeModel & model, QTreeView * view, QString dir, const 
 
 	// expand all the directories
 	model.traverseItems( [ view, &model ]( const QModelIndex & index ) {
-		if (model.rowCount( index ) > 0) {  // it has children -> it is a directory
+		if (!model.isLeaf( index )) {  // it has children -> it is a directory
 			view->setExpanded( index, true );
 		}
 	});

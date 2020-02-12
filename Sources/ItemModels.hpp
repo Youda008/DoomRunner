@@ -241,8 +241,6 @@ class EditableListModel : public AItemListModel< Item > {
 		if (!index.isValid() || index.parent().isValid() || index.row() >= superClass::itemList.size())
 			return QVariant();
 
-		// TODO: split displayString and editString
-
 		if (role == Qt::DisplayRole || role == Qt::EditRole) {
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 			// Therefore only author of Item knows which of its memebers he wants to display in the widget,
@@ -333,16 +331,15 @@ class EditableListModel : public AItemListModel< Item > {
 	}
 
 	static constexpr const char * const internalMimeType = "application/EditableListModel-internal";
-	static constexpr const char * const itemListMimeType = "application/x-qabstractitemmodeldatalist";
-	static constexpr const char * const filePathMimeType = "application/x-qt-windows-mime;value=\"FileName\"";
+	//static constexpr const char * const itemListMimeType = "application/x-qabstractitemmodeldatalist";
+	static constexpr const char * const urlMimeType = "text/uri-list";
 
 	QStringList mimeTypes() const override
 	{
 		QStringList types;
 
 		types << internalMimeType;  // for internal drag&drop reordering
-		types << itemListMimeType;  // for drag&drop from other list list widgets
-		types << filePathMimeType;  // for drag&drop from directory window
+		types << urlMimeType;  // for drag&drop from directory window
 
 		return types;
 	}
@@ -350,8 +347,7 @@ class EditableListModel : public AItemListModel< Item > {
 	bool canDropMimeData( const QMimeData * mime, Qt::DropAction action, int /*row*/, int /*col*/, const QModelIndex & ) const override
 	{
 		return (mime->hasFormat( internalMimeType ) && action == Qt::MoveAction) // for internal drag&drop reordering
-		    || (mime->hasFormat( itemListMimeType ))                             // for drag&drop from other list list widgets
-		    || (mime->hasFormat( filePathMimeType ));                            // for drag&drop from directory window
+		    || (mime->hasUrls());                                                // for drag&drop from other list list widgets
 	}
 
 	/// serializes items at <indexes> into MIME data
@@ -573,16 +569,14 @@ class TreePath : public QStringList {
   * Unlike the other models, this one holds the data, and so it cannot be displayed differently in different windows. */
 class TreeModel : public QAbstractItemModel {
 
-	Q_OBJECT // TODO
-
- private:
-
 	TreeNode * rootNode;  ///< internal node that stores all the other nodes without an explicit parent
-
+	QString & baseDir;  ///< directory from which the MIME URLs are derived when items are dragged from this
+	                    // TODO: this should be value and it should be instead of mapDir member in MainWindow
  public:
 
-	TreeModel( QObject * parent = nullptr )
-		: QAbstractItemModel( parent )
+	TreeModel( QString & baseDir )
+		: QAbstractItemModel( nullptr )
+		, baseDir( baseDir )
 	{
 		rootNode = new TreeNode( "", nullptr );
 	}
@@ -652,6 +646,11 @@ class TreeModel : public QAbstractItemModel {
 		}
 	}
 
+	bool isLeaf( const QModelIndex & index ) const
+	{
+		return rowCount( index ) == 0;
+	}
+
 	//-- data change notifications -------------------------------------------------------------------------------------
 
 	/** Notifies Qt that all the model indexes and data retrieved before are no longer valid.
@@ -684,7 +683,12 @@ class TreeModel : public QAbstractItemModel {
 	{
 		if (!index.isValid())
 			return Qt::NoItemFlags;
-		return QAbstractItemModel::flags( index );
+
+		Qt::ItemFlags flags = QAbstractItemModel::flags( index );
+		if (isLeaf( index ))
+			flags |= Qt::ItemIsDragEnabled;
+
+		return flags;
 	}
 
 	QVariant data( const QModelIndex & index, int role ) const override
@@ -724,6 +728,21 @@ class TreeModel : public QAbstractItemModel {
 		TreeNode * const node = modelIndexToTreeNode( index );
 		TreeNode * const parent = node->parent();
 		return treeNodeToModelIndex( parent );
+	}
+
+	/// serializes items into MIME URLs as if they were dragged from a directory window
+	QMimeData * mimeData( const QModelIndexList & indexes ) const override
+	{
+		QMimeData * mimeData = new QMimeData;
+
+		QList< QUrl > urls;
+		for (const QModelIndex & index : indexes) {
+			QString filePath = baseDir + '/' + getItemPath( index ).join('/');
+			urls.append( QUrl::fromLocalFile( filePath ) );
+		}
+		mimeData->setUrls( urls );
+
+		return mimeData;
 	}
 
 	//-- miscellaneous -------------------------------------------------------------------------------------------------

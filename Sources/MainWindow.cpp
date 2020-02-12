@@ -103,6 +103,7 @@ MainWindow::MainWindow()
 	  )
 	, iwadListFromDir( false )
 	, iwadSubdirs( false )
+	, mapModel( mapDir )
 	, modModel(
 		/*makeDisplayString*/[]( const Mod & mod ) { return mod.name; },
 		/*editString*/[]( Mod & mod ) -> QString & { return mod.name; }
@@ -133,10 +134,12 @@ MainWindow::MainWindow()
 	ui->presetListView->toggleNameEditing( true );
 
 	// setup map directory view
+	ui->mapDirView->setDragEnabled( true );
+	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
 
 	// setup mod list view
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
-	ui->modListView->toggleInterWidgetDragAndDrop( false );
+	ui->modListView->toggleInterWidgetDragAndDrop( true );
 	ui->modListView->toggleExternalFileDragAndDrop( true );
 	connect( ui->modListView, &EditableListView::itemsDropped, this, &thisClass::modsDropped );
 	ui->modListView->toggleNameEditing( false );

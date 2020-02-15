@@ -62,6 +62,8 @@ class MainWindow : public QMainWindow {
 	void toggleMapPack( const QModelIndex & index );
 	void toggleMod( const QModelIndex & index );
 
+	void togglePresetSubWidgets( bool enabled );
+
 	void presetAdd();
 	void presetDelete();
 	void presetClone();

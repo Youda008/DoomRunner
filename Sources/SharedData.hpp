@@ -12,11 +12,12 @@
 
 #include "Common.hpp"
 
-#include "ItemModels.hpp"
+#include "Utils.hpp"  // pathHelper
 
 #include <QString>
+#include <QStringLiteral>
 #include <QList>
-#include <QListView>
+#include <QFileInfo>
 
 class PathHelper;
 
@@ -72,8 +73,18 @@ QString makeIwadDispStrWithPath( const IWAD & iwad );
 
 
 // extracted here, because MainWindow and SetupDialog both want to use it
-void updateIWADsFromDir( AItemListModel< IWAD > & iwads, QListView * iwadView, QString iwadDir, bool recursively,
-                         PathHelper & pathHelper );
+extern const QVector<QString> iwadSuffixes;
+extern const QVector<QString> mapSuffixes;
+
+// functor for generic data models and utils, prevents writing the same lambda at many places
+class IWADfromFileMaker {
+	const PathHelper & pathHelper;
+ public:
+	IWADfromFileMaker( const PathHelper & pathHelper ) : pathHelper( pathHelper ) {}
+	IWAD operator()( const QFileInfo & file ) {
+		return { file.fileName(), pathHelper.convertPath( file.filePath() ) };
+	}
+};
 
 
 #endif // SHARED_DATA_INCLUDED

@@ -48,7 +48,6 @@
 static const QString configFileExt = "ini";
 
 static constexpr char defaultOptionsFile [] = "options.json";
-static constexpr char defaultPresetName [] = "Current";
 
 
 //======================================================================================================================
@@ -144,11 +143,9 @@ MainWindow::MainWindow()
 	ui->modListView->toggleExternalFileDragAndDrop( true );
 	connect( ui->modListView, &EditableListView::itemsDropped, this, &thisClass::modsDropped );
 	ui->modListView->toggleNameEditing( false );
-	modModel.setAssignFileFunc(  // this will be our reaction when a file is dragged and dropped from a directory window
-		[ this ]( Mod & mod, const QFileInfo & file ) {
-			mod.name = file.fileName();
-			mod.path = pathHelper.convertPath( file.filePath() );
-			mod.checked = true;
+	modModel.setMakeItemFromFileFunc(  // this will be our reaction when a file is dragged and dropped from a directory window
+		[ this ]( const QFileInfo & file ) -> Mod {
+			return { file.fileName(), pathHelper.convertPath( file.filePath() ), true };
 		}
 	);
 	modModel.setIsCheckedFunc(  // here the model will read and write the information about check state
@@ -264,10 +261,6 @@ void MainWindow::firstRun()
 {
 	// let the user setup the paths and other basic settings
 	QTimer::singleShot( 1, this, &thisClass::runSetupDialog );
-
-	// create an empty default preset
-	// so that all the files the user sets up without having any own preset created can be saved somewhere
-	appendItem( presetModel, { defaultPresetName, "", "", "", {} } );
 }
 
 
@@ -280,7 +273,7 @@ void MainWindow::runSetupDialog()
 	// This allows the user to cancel all the changes he made without having to manually revert them.
 	// Secondly, this removes all the problems with data synchronization like dangling pointers
 	// or that previously selected items in the view no longer exist.
-	// And thirdly, we no longer have to split the data itself from the way they are displayed.
+	// And thirdly, we no longer have to split the data itself from the logic of displaying them.
 
 	SetupDialog dialog( this,
 		pathHelper.useAbsolutePaths(),
@@ -380,6 +373,9 @@ void MainWindow::loadPreset( const QModelIndex & index )
 {
 	Preset & preset = presetModel[ index.row() ];
 
+	// enable all widgets that contain preset settings
+	togglePresetSubWidgets( true );
+
 	// restore selected engine
 	if (!preset.selectedEnginePath.isEmpty()) {  // the engine combo box might have been empty when creating this preset
 		int engineIdx = findSuch< Engine >( engineModel.list(), [ &preset ]( const Engine & engine )
@@ -460,6 +456,19 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	modModel.finishCompleteUpdate();
 
 	updateLaunchCommand();
+}
+
+void MainWindow::togglePresetSubWidgets( bool enabled )
+{
+	ui->engineCmbBox->setEnabled( enabled );
+	ui->configCmbBox->setEnabled( enabled );
+	ui->iwadListView->setEnabled( enabled );
+	ui->mapDirView->setEnabled( enabled );
+	ui->modListView->setEnabled( enabled );
+	ui->modBtnAdd->setEnabled( enabled );
+	ui->modBtnDel->setEnabled( enabled );
+	ui->modBtnUp->setEnabled( enabled );
+	ui->modBtnDown->setEnabled( enabled );
 }
 
 void MainWindow::selectEngine( int index )
@@ -581,14 +590,6 @@ void MainWindow::presetAdd()
 
 void MainWindow::presetDelete()
 {
-	int selectedIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedIdx >= 0 && presetModel[ selectedIdx ].name == defaultPresetName) {
-		QMessageBox::warning( this, "Default preset can't be deleted",
-			"Preset "%QString( defaultPresetName )%" cannot be deleted. "
-			"This preset stores the files you add or select without having any other preset selected." );
-		return;
-	}
-
 	deleteSelectedItem( ui->presetListView, presetModel );
 }
 
@@ -748,7 +749,7 @@ void MainWindow::modsDropped()
 
 void MainWindow::updateIWADsFromDir()
 {
-	::updateIWADsFromDir( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper );
+	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, iwadSuffixes, IWADfromFileMaker( pathHelper ) );
 
 	// the previously selected item might have been removed
 	if (!isSomethingSelected( ui->iwadListView ))
@@ -757,7 +758,7 @@ void MainWindow::updateIWADsFromDir()
 
 void MainWindow::updateMapPacksFromDir()
 {
-	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, {"wad", "pk3", "pk7", "zip", "7z"} );
+	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, mapSuffixes );
 
 	// the previously selected item might have been removed
 	if (!isSomethingSelected( ui->mapDirView ))
@@ -1222,11 +1223,12 @@ void MainWindow::loadOptions( QString fileName )
 			if (name.isEmpty() || path.isEmpty())  // name or path doesn't exist - skip this entry
 				continue;
 
-			if (QFileInfo( path ).exists())
+			if (QFileInfo( path ).exists()) {
 				engineModel.append({ name, pathHelper.convertPath( path ) });
-			else
+			} else {
 				QMessageBox::warning( this, "Engine no longer exists",
 					"An engine from the saved options ("%path%") no longer exists. It will be removed from the list." );
+			}
 		}
 
 		engineModel.finishCompleteUpdate();
@@ -1240,26 +1242,27 @@ void MainWindow::loadOptions( QString fileName )
 		selectedIWAD.clear();
 
 		iwadModel.startCompleteUpdate();
+
 		iwadModel.clear();
-		iwadModel.finishCompleteUpdate();
 
 		iwadListFromDir = getBool( jsIWADs, "auto_update", false );
 
-		if (iwadListFromDir) {
+		if (iwadListFromDir)
+		{
 			iwadSubdirs = getBool( jsIWADs, "subdirs", false );
 			QString dir = getString( jsIWADs, "directory" );
-			if (!dir.isEmpty()) {  // non-existing element directory - skip completely
+			if (!dir.isEmpty()) {  // non-existing element directory -> skip completely
 				if (QDir( dir ).exists()) {
 					iwadDir = pathHelper.convertPath( dir );
-					updateIWADsFromDir();
+					fillListFromDir< IWAD >( iwadModel, iwadDir, iwadSubdirs, iwadSuffixes, IWADfromFileMaker( pathHelper ) );
 				} else {
 					QMessageBox::warning( this, "IWAD dir no longer exists",
 						"IWAD directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
 				}
 			}
-		} else {
-			iwadModel.startCompleteUpdate();
-
+		}
+		else
+		{
 			QJsonArray jsIWADArray = getArray( jsIWADs, "IWADs" );
 			for (int i = 0; i < jsIWADArray.size(); i++)
 			{
@@ -1272,15 +1275,16 @@ void MainWindow::loadOptions( QString fileName )
 				if (name.isEmpty() || path.isEmpty())  // name or path doesn't exist - skip this entry
 					continue;
 
-				if (QFileInfo( path ).exists())
+				if (QFileInfo( path ).exists()) {
 					iwadModel.append({ name, pathHelper.convertPath( path ) });
-				else
+				} else {
 					QMessageBox::warning( this, "IWAD no longer exists",
 						"An IWAD from the saved options ("%path%") no longer exists. It will be removed from the list." );
+				}
 			}
-
-			iwadModel.finishCompleteUpdate();
 		}
+
+		iwadModel.finishCompleteUpdate();
 	}
 
 	// map packs
@@ -1334,6 +1338,9 @@ void MainWindow::loadOptions( QString fileName )
 	{
 		QJsonArray jsPresetArray = getArray( json, "presets" );
 
+		deselectSelectedItems( ui->presetListView );
+		togglePresetSubWidgets( false );
+
 		presetModel.startCompleteUpdate();
 
 		presetModel.clear();
@@ -1371,19 +1378,6 @@ void MainWindow::loadOptions( QString fileName )
 
 		presetModel.finishCompleteUpdate();
 	}
-
-	// check for existence of default preset and create it if not there
-	int presetIdx = findSuch< Preset >( presetModel.list(), []( const Preset & preset )
-	                                                        { return preset.name == defaultPresetName; } );
-	if (presetIdx < 0) {
-		// create an empty default preset
-		// so that all the files the user sets up without having any own preset created can be saved somewhere
-		presetModel.prepend({ defaultPresetName, "", "", "", {} });
-		presetIdx = 0;
-	}
-	// select the default preset, so that something is always selected to save the changes to
-	selectItemByIdx( ui->presetListView, presetIdx );
-	loadPreset( presetModel.makeIndex( presetIdx ) );
 
 	ui->cmdArgsLine->setText( getString( json, "additional_args" ) );
 

@@ -51,6 +51,7 @@ class SetupDialog : public QDialog {
 
 	void manageIWADsManually();
 	void manageIWADsAutomatically();
+	void toggleIWADSubdirs( bool checked );
 
 	void browseIWADDir();
 	void browseMapDir();
@@ -59,8 +60,6 @@ class SetupDialog : public QDialog {
 	void changeIWADDir( QString text );
 	void changeMapDir( QString text );
 	void changeModDir( QString text );
-
-	void toggleIWADSubdirs( bool checked );
 
 	void iwadAdd();
 	void iwadDelete();
@@ -73,6 +72,8 @@ class SetupDialog : public QDialog {
 	void engineMoveDown();
 
 	void editEngine( const QModelIndex & index );
+
+	void updateIWADsFromDir();
 
 	void toggleAbsolutePaths( bool checked );
 

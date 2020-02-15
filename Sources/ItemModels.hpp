@@ -190,7 +190,7 @@ class EditableListModel : public AItemListModel< Item > {
 	std::function< QString & ( Item & ) > editString;
 
 	/// function that assigns a dropped file into a newly created Item
-	std::function< void	( Item &, const QFileInfo & ) > assignFile;
+	std::function< Item ( const QFileInfo & ) > makeItemFromFile;
 
 	/// function that points the model to a bool flag of Item indicating whether the item is checked
 	std::function< bool & ( Item & ) > isChecked;
@@ -211,10 +211,10 @@ class EditableListModel : public AItemListModel< Item > {
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
 
-	void setDisplayStringFunc( std::function< QString & ( Item & ) > displayString )
+	void setMakeDisplayStringFunc( std::function< QString & ( Item & ) > displayString )
 		{ this->displayString = displayString; }
-	void setAssignFileFunc( std::function< void ( Item &, const QFileInfo & ) > assignFile )
-		{ this->assignFile = assignFile; }
+	void setMakeItemFromFileFunc( std::function< Item ( const QFileInfo & ) > makeItemFromFile )
+		{ this->makeItemFromFile = makeItemFromFile; }
 	void setIsCheckedFunc( std::function< bool & ( Item & ) > isChecked )
 		{ this->isChecked = isChecked; }
 	void toggleCheckable( bool enabled ) { checkableItems = enabled; }
@@ -439,7 +439,7 @@ class EditableListModel : public AItemListModel< Item > {
 
 	bool dropMimeUrls( QList< QUrl > urls, int row, const QModelIndex & parent )
 	{
-		if (!assignFile) {
+		if (!makeItemFromFile) {
 			qWarning() << "File has been dropped but no assignFile function was set. "
 			              "Either specify an assignFile function or disable file dropping in the widget";
 			return false;
@@ -463,7 +463,7 @@ class EditableListModel : public AItemListModel< Item > {
 		for (int i = 0; i < filesToBeInserted.count(); i++) {
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 			// Therefore only author of Item knows how to assign a dropped file into it, so he must define it by a function.
-			assignFile( superClass::itemList[ row + i ], filesToBeInserted[ i ] );
+			superClass::itemList[ row + i ] = makeItemFromFile( filesToBeInserted[ i ] );
 		}
 
 		// idiotic workaround because Qt is fucking retarded, read the big comment above

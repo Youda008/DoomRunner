@@ -36,13 +36,5 @@ QString makeIwadDispStrWithPath( const IWAD & iwad )
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void updateIWADsFromDir( AItemListModel< IWAD > & iwadModel, QListView * iwadView, QString iwadDir, bool recursively,
-                         PathHelper & pathHelper )
-{
-	updateListFromDir< IWAD >( iwadModel, iwadView, iwadDir, recursively, {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"},
-		/*makeItemFromFile*/[ pathHelper ]( const QFileInfo & file ) -> IWAD
-		{
-			return { file.fileName(), pathHelper.convertPath( file.filePath() ) };
-		}
-	);
-}
+const QVector<QString> iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
+const QVector<QString> mapSuffixes = {"wad", "pk3", "pk7", "zip", "7z"};

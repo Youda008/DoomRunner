@@ -129,7 +129,7 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadBtnDown->setEnabled( !enabled );
 
 	if (enabled)
-		updateIWADsFromDir( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper );
+		updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, iwadSuffixes, IWADfromFileMaker( pathHelper ));
 }
 
 void SetupDialog::browseIWADDir()
@@ -167,7 +167,7 @@ void SetupDialog::changeIWADDir( QString text )
 	iwadDir = text;
 
 	if (iwadListFromDir)
-		updateIWADsFromDir( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper );
+		updateIWADsFromDir();
 }
 
 void SetupDialog::changeMapDir( QString text )
@@ -185,7 +185,7 @@ void SetupDialog::toggleIWADSubdirs( bool checked )
 	iwadSubdirs = checked;
 
 	if (iwadListFromDir)
-		updateIWADsFromDir( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper );
+		updateIWADsFromDir();
 }
 
 void SetupDialog::iwadAdd()
@@ -255,6 +255,11 @@ void SetupDialog::editEngine( const QModelIndex & index )
 		selectedEngine.name = dialog.name;
 		selectedEngine.path = dialog.path;
 	}
+}
+
+void SetupDialog::updateIWADsFromDir()
+{
+	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, iwadSuffixes, IWADfromFileMaker( pathHelper ));
 }
 
 void SetupDialog::toggleAbsolutePaths( bool checked )

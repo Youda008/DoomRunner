@@ -118,7 +118,7 @@ bool selectItemByID( QTreeView * view, const TreeModel & model, const TreePath &
 	return false;
 }
 
-void fillTreeFromDir( TreeModel & model, const QModelIndex & parent, QString dir, const QVector<QString> & fileSuffixes )
+void fillTreeFromDir( TreeModel & model, const QModelIndex & parent, QString dir, const QVector< QString > & fileSuffixes )
 {
 	QDir dir_( dir );
 	if (!dir_.exists())
@@ -151,7 +151,7 @@ void fillTreeFromDir( TreeModel & model, const QModelIndex & parent, QString dir
 	}
 }
 
-void updateTreeFromDir( TreeModel & model, QTreeView * view, QString dir, const QVector<QString> & fileSuffixes )
+void updateTreeFromDir( TreeModel & model, QTreeView * view, QString dir, const QVector< QString > & fileSuffixes )
 {
 	if (dir.isEmpty())
 		return;

@@ -48,7 +48,7 @@ void appendItem( AItemListModel< Item > & model, const Item & item )
 {
 	model.startAppending( 1 );
 
-	model.list().append( item );
+	model.append( item );
 
 	model.finishAppending();
 }
@@ -58,24 +58,27 @@ int deleteSelectedItem( QListView * view, AItemListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
 	if (selectedIdx < 0) {  // if no item is selected
-		if (!model.list().isEmpty())
+		if (!model.isEmpty())
 			QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
 
-	// update selection
-	if (selectedIdx == model.list().size() - 1) {      // if item is the last one
-		deselectItemByIdx( view, selectedIdx );        // deselect it
-		if (selectedIdx > 0) {                         // and if it's not the only one
-			selectItemByIdx( view, selectedIdx - 1 );  // select the previous
-		}
-	}
+	deselectItemByIdx( view, selectedIdx );
 
 	model.startCompleteUpdate();
 
-	model.list().removeAt( selectedIdx );
+	model.removeAt( selectedIdx );
 
 	model.finishCompleteUpdate();
+
+	// restore selection
+	if (selectedIdx < model.size()) {                  // try to select the item that follows after the deleted one
+		selectItemByIdx( view, selectedIdx );
+	} else {                                           // if the deleted item was the last one
+		if (selectedIdx > 0) {                         // and not the only one
+			selectItemByIdx( view, selectedIdx - 1 );  // select the previous
+		}
+	}
 
 	return selectedIdx;
 }
@@ -85,7 +88,7 @@ QVector<int> deleteSelectedItems( QListView * view, AItemListModel< Item > & mod
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty()) {
-		if (!model.list().isEmpty())
+		if (!model.isEmpty())
 			QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return {};
 	}
@@ -105,16 +108,16 @@ QVector<int> deleteSelectedItems( QListView * view, AItemListModel< Item > & mod
 	uint deletedCnt = 0;
 	for (int selectedIdx : selectedIndexesAsc) {
 		deselectItemByIdx( view, selectedIdx );
-		model.list().removeAt( selectedIdx - deletedCnt );
+		model.removeAt( selectedIdx - deletedCnt );
 		deletedCnt++;
 	}
 
 	model.finishCompleteUpdate();
 
 	// try to select some nearest item, so that user can click 'delete' repeatedly to delete all of them
-	if (firstSelectedIdx < model.list().size()) {  // if the first deleted item index is still within range of existing ones
+	if (firstSelectedIdx < model.size()) {  // if the first deleted item index is still within range of existing ones
 		selectItemByIdx( view, firstSelectedIdx ); // select that one
-	} else if (!model.list().isEmpty()) {          // otherwise select the previous, if there is any
+	} else if (!model.isEmpty()) {          // otherwise select the previous, if there is any
 		selectItemByIdx( view, firstSelectedIdx - 1 );
 	}
 
@@ -132,18 +135,18 @@ int cloneSelectedItem( QListView * view, AItemListModel< Item > & model )
 
 	model.startAppending();
 
-	model.list().append( model.list()[ selectedIdx ] );
+	model.append( model[ selectedIdx ] );
 
 	model.finishAppending();
 
 	// append some postfix to the item name to distinguish it from the original
-	QModelIndex newItemIdx = model.index( model.list().size() - 1, 0 );
+	QModelIndex newItemIdx = model.index( model.size() - 1, 0 );
 	QString origName = model.data( newItemIdx, Qt::EditRole ).toString();
 	model.setData( newItemIdx, origName+" - clone", Qt::EditRole );
 
 	model.contentChanged( newItemIdx.row() );
 
-	changeSelectionTo( view, model.list().size() - 1 );
+	changeSelectionTo( view, model.size() - 1 );
 
 	return selectedIdx;
 }
@@ -160,7 +163,7 @@ int moveUpSelectedItem( QListView * view, AItemListModel< Item > & model )
 		return selectedIdx;
 	}
 
-	model.list().move( selectedIdx, selectedIdx - 1 );
+	model.move( selectedIdx, selectedIdx - 1 );
 
 	// update selection
 	deselectItemByIdx( view, selectedIdx );
@@ -179,11 +182,11 @@ int moveDownSelectedItem( QListView * view, AItemListModel< Item > & model )
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
-	if (selectedIdx == model.list().size() - 1) {  // if the selected item is the last one, do nothing
+	if (selectedIdx == model.size() - 1) {  // if the selected item is the last one, do nothing
 		return selectedIdx;
 	}
 
-	model.list().move( selectedIdx, selectedIdx + 1 );
+	model.move( selectedIdx, selectedIdx + 1 );
 
 	// update selection
 	deselectItemByIdx( view, selectedIdx );
@@ -216,7 +219,7 @@ QVector<int> moveUpSelectedItems( QListView * view, AItemListModel< Item > & mod
 
 	// do the move
 	for (int selectedIdx : selectedIndexesAsc)
-		model.list().move( selectedIdx, selectedIdx - 1 );
+		model.move( selectedIdx, selectedIdx - 1 );
 
 	// update selection
 	deselectItemByIdx( view, selectedIndexesAsc.last() );
@@ -244,12 +247,12 @@ QVector<int> moveDownSelectedItems( QListView * view, AItemListModel< Item > & m
 	std::sort( selectedIndexesDesc.begin(), selectedIndexesDesc.end(), []( int idx1, int idx2 ) { return idx1 > idx2; } );
 
 	// if the selected items are at the top, do nothing
-	if (selectedIndexesDesc.first() == model.list().size() - 1)
+	if (selectedIndexesDesc.first() == model.size() - 1)
 		return {};
 
 	// do the move
 	for (int selectedIdx : selectedIndexesDesc)
-		model.list().move( selectedIdx, selectedIdx + 1 );
+		model.move( selectedIdx, selectedIdx + 1 );
 
 	// update selection
 	deselectItemByIdx( view, selectedIndexesDesc.last() );
@@ -332,7 +335,7 @@ void updateListFromDir( AItemListModel< Item > & model, QListView * view, QStrin
 
 	//model.startCompleteUpdate();
 
-	model.list().clear();
+	model.clear();
 
 	fillListFromDir( model, dir, recursively, fileSuffixes, makeItemFromFile );
 

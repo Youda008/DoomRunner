@@ -51,19 +51,22 @@ class AItemListModel : public QAbstractListModel {
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
-	QList< Item > & list()                      { return itemList; }
 	const QList< Item > & list() const          { return itemList; }
 
-	void clear()                                { itemList.clear(); }
-	void append( const Item & item )            { itemList.append( item ); }
-	void prepend( const Item & item )           { itemList.prepend( item ); }
 	int count() const                           { return itemList.count(); }
+	int size() const                            { return itemList.size(); }
+	bool isEmpty() const                        { return itemList.isEmpty(); }
 	Item & operator[]( int idx )                { return itemList[ idx ]; }
 	const Item & operator[]( int idx ) const    { return itemList[ idx ]; }
 	decltype( itemList.begin() ) begin()        { return itemList.begin(); }
 	decltype( itemList.begin() ) begin() const  { return itemList.begin(); }
 	decltype( itemList.end() ) end()            { return itemList.end(); }
 	decltype( itemList.end() ) end() const      { return itemList.end(); }
+	void clear()                                { itemList.clear(); }
+	void append( const Item & item )            { itemList.append( item ); }
+	void prepend( const Item & item )           { itemList.prepend( item ); }
+	void removeAt( int idx )                    { itemList.removeAt( idx ); }
+	void move( int from, int to )               { itemList.move( from, to ); }
 	int indexOf( const Item & item ) const      { return itemList.indexOf( item ); }
 
 	//-- data change notifications -------------------------------------------------------------------------------------

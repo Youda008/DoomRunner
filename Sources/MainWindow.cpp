@@ -25,10 +25,10 @@
 #include <QDirIterator>
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QListWidgetItem>
 #include <QTimer>
 #include <QProcess>
 #include <QDesktopWidget>
+#include <QScrollBar>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -591,6 +591,9 @@ void MainWindow::presetAdd()
 void MainWindow::presetDelete()
 {
 	deleteSelectedItem( ui->presetListView, presetModel );
+
+	if (presetModel.isEmpty())  // no preset selected -> nowhere to save the IWAD/map/engine/config selection
+		togglePresetSubWidgets( false );
 }
 
 void MainWindow::presetClone()
@@ -758,7 +761,12 @@ void MainWindow::updateIWADsFromDir()
 
 void MainWindow::updateMapPacksFromDir()
 {
+	// workaround to stop the scrollbar from moving to show the selected item
+	auto scrollPos = ui->mapDirView->verticalScrollBar()->value();
+
 	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, mapSuffixes );
+
+	ui->mapDirView->verticalScrollBar()->setValue( scrollPos );
 
 	// the previously selected item might have been removed
 	if (!isSomethingSelected( ui->mapDirView ))

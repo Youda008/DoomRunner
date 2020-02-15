@@ -132,6 +132,15 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 		updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, iwadSuffixes, IWADfromFileMaker( pathHelper ));
 }
 
+void SetupDialog::toggleIWADSubdirs( bool checked )
+{
+	iwadSubdirs = checked;
+
+	if (iwadListFromDir)
+		updateIWADsFromDir();
+}
+
+
 void SetupDialog::browseIWADDir()
 {
 	browseDir( "IWADs", ui->iwadDirLine );
@@ -178,14 +187,6 @@ void SetupDialog::changeMapDir( QString text )
 void SetupDialog::changeModDir( QString text )
 {
 	modDir = text;
-}
-
-void SetupDialog::toggleIWADSubdirs( bool checked )
-{
-	iwadSubdirs = checked;
-
-	if (iwadListFromDir)
-		updateIWADsFromDir();
 }
 
 void SetupDialog::iwadAdd()

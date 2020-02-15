@@ -184,7 +184,11 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
-              <widget class="QComboBox" name="engineCmbBox"/>
+              <widget class="QComboBox" name="engineCmbBox">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -203,6 +207,9 @@
             <layout class="QVBoxLayout" name="verticalLayout_5">
              <item>
               <widget class="QListView" name="iwadListView">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="editTriggers">
                 <set>QAbstractItemView::NoEditTriggers</set>
                </property>
@@ -219,6 +226,9 @@
             <layout class="QVBoxLayout" name="verticalLayout_7">
              <item>
               <widget class="QTreeView" name="mapDirView">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="editTriggers">
                 <set>QAbstractItemView::NoEditTriggers</set>
                </property>
@@ -244,7 +254,11 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_13">
              <item>
-              <widget class="QComboBox" name="configCmbBox"/>
+              <widget class="QComboBox" name="configCmbBox">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -257,6 +271,9 @@
             <layout class="QVBoxLayout" name="verticalLayout_6">
              <item>
               <widget class="EditableListView" name="modListView">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="editTriggers">
                 <set>QAbstractItemView::NoEditTriggers</set>
                </property>
@@ -269,6 +286,9 @@
               <layout class="QHBoxLayout" name="horizontalLayout_4">
                <item>
                 <widget class="QToolButton" name="modBtnAdd">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -296,6 +316,9 @@
                </item>
                <item>
                 <widget class="QToolButton" name="modBtnDel">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -323,6 +346,9 @@
                </item>
                <item>
                 <widget class="QToolButton" name="modBtnUp">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -348,6 +374,9 @@
                </item>
                <item>
                 <widget class="QToolButton" name="modBtnDown">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>

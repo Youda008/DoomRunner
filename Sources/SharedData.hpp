@@ -15,7 +15,6 @@
 #include "Utils.hpp"  // pathHelper
 
 #include <QString>
-#include <QStringLiteral>
 #include <QList>
 #include <QFileInfo>
 

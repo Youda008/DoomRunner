@@ -73,8 +73,8 @@ QString makeIwadDispStrWithPath( const IWAD & iwad );
 
 
 // extracted here, because MainWindow and SetupDialog both want to use it
-extern const QVector<QString> iwadSuffixes;
-extern const QVector<QString> mapSuffixes;
+inline const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
+inline const QVector< QString > mapSuffixes = {"wad", "pk3", "pk7", "zip", "7z"};
 
 // functor for generic data models and utils, prevents writing the same lambda at many places
 class IWADfromFileMaker {

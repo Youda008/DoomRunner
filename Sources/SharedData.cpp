@@ -33,8 +33,3 @@ QString makeIwadDispStrWithPath( const IWAD & iwad )
 {
 	return iwad.name % "  [" % iwad.path % "]";
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-
-const QVector<QString> iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
-const QVector<QString> mapSuffixes = {"wad", "pk3", "pk7", "zip", "7z"};

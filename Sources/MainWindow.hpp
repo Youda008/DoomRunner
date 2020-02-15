@@ -86,7 +86,7 @@ class MainWindow : public QMainWindow {
 
 	void toggleAbsolutePaths( bool absolute );
 
-	void modeGameMenu();
+	void modeStandard();
 	void modeSelectedMap();
 	void modeSavedGame();
 

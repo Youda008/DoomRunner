@@ -180,7 +180,7 @@ MainWindow::MainWindow()
 	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
-	connect( ui->launchMode_menu, &QRadioButton::clicked, this, &thisClass::modeGameMenu );
+	connect( ui->launchMode_standard, &QRadioButton::clicked, this, &thisClass::modeStandard );
 	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeSelectedMap );
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
 	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::selectMap );
@@ -895,26 +895,7 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 	updateLaunchCommand();
 }
 
-/*
-void MainWindow::onEngineDeleted( int deletedIdx )
-{
-	int selectedIdx = ui->engineCmbBox->currentIndex();
-	if (selectedIdx == deletedIdx) {
-		ui->engineCmbBox->setCurrentIndex( -1 );
-	} else if (selectedIdx > deletedIdx) {
-		ui->engineCmbBox->setCurrentIndex( selectedIdx - 1 );
-	}
-}
-
-void MainWindow::onIWADDeleted( int deletedIdx )
-{
-	if (isSelectedIdx( ui->iwadListView, deletedIdx )) {
-		deselectItemByIdx( ui->iwadListView, deletedIdx );
-	}
-}
-*/
-
-void MainWindow::modeGameMenu()
+void MainWindow::modeStandard()
 {
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -926,7 +907,8 @@ void MainWindow::modeGameMenu()
 	ui->gameOptsBtn->setEnabled( false );
 	ui->compatOptsBtn->setEnabled( false );
 
-	ui->multiplayerChkBox->setChecked( false );
+	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == SERVER)
+		ui->multRoleCmbBox->setCurrentIndex( CLIENT );   // only client can use standard launch mode
 
 	updateLaunchCommand();
 }
@@ -942,6 +924,9 @@ void MainWindow::modeSelectedMap()
 	ui->monstersRespawnChkBox->setEnabled( true );
 	ui->gameOptsBtn->setEnabled( true );
 	ui->compatOptsBtn->setEnabled( true );
+
+	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == CLIENT)
+		ui->multRoleCmbBox->setCurrentIndex( SERVER );   // only server can select a map
 
 	updateLaunchCommand();
 }
@@ -1004,23 +989,44 @@ void MainWindow::toggleMonstersRespawn( bool )
 
 void MainWindow::toggleMultiplayer( bool checked )
 {
+	int multRole = ui->multRoleCmbBox->currentIndex();
+
 	ui->multRoleCmbBox->setEnabled( checked );
-	ui->hostnameLine->setEnabled( checked );
+	ui->hostnameLine->setEnabled( checked && multRole == CLIENT );
 	ui->portSpinBox->setEnabled( checked );
 	ui->netModeCmbBox->setEnabled( checked );
-	ui->gameModeCmbBox->setEnabled( checked );
-	ui->playerCountSpinBox->setEnabled( checked );
-	ui->teamDmgSpinBox->setEnabled( checked );
-	ui->timeLimitSpinBox->setEnabled( checked );
+	ui->gameModeCmbBox->setEnabled( checked && multRole == SERVER );
+	ui->playerCountSpinBox->setEnabled( checked && multRole == SERVER );
+	ui->teamDmgSpinBox->setEnabled( checked && multRole == SERVER );
+	ui->timeLimitSpinBox->setEnabled( checked && multRole == SERVER );
 
-	if (checked && ui->launchMode_menu->isChecked())
-		ui->launchMode_map->click();
+	if (checked) {
+		if (multRole == CLIENT && ui->launchMode_map->isChecked())  // client doesn't select map, server does
+			ui->launchMode_standard->click();
+		if (multRole == SERVER && ui->launchMode_standard->isChecked())  // server MUST choose a map
+			ui->launchMode_map->click();
+	}
 
 	updateLaunchCommand();
 }
 
-void MainWindow::selectMultRole( int )
+void MainWindow::selectMultRole( int role )
 {
+	bool multEnabled = ui->multiplayerChkBox->isChecked();
+
+	ui->hostnameLine->setEnabled( multEnabled && role == CLIENT );
+	ui->gameModeCmbBox->setEnabled( multEnabled && role == SERVER );
+	ui->playerCountSpinBox->setEnabled( multEnabled && role == SERVER );
+	ui->teamDmgSpinBox->setEnabled( multEnabled && role == SERVER );
+	ui->timeLimitSpinBox->setEnabled( multEnabled && role == SERVER );
+
+	if (multEnabled) {
+		if (role == CLIENT && ui->launchMode_map->isChecked())  // client doesn't select map, server does
+			ui->launchMode_standard->click();
+		if (role == SERVER && ui->launchMode_standard->isChecked())  // server MUST choose a map
+			ui->launchMode_map->click();
+	}
+
 	updateLaunchCommand();
 }
 

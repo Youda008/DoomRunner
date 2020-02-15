@@ -428,9 +428,9 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_12">
                <item>
-                <widget class="QRadioButton" name="launchMode_menu">
+                <widget class="QRadioButton" name="launchMode_standard">
                  <property name="text">
-                  <string>Launch game menu</string>
+                  <string>Standard</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>

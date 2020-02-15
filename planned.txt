@@ -1,5 +1,5 @@
-- drag&drop from map list to mod list
 - drag&drop from directory to engine list
+- drag&drop from directory to IWAD list
 - extracting map names from IWAD file content
 - importing presets from .bat/.sh scripts
 - better icons for 'add','delete','clone' buttons

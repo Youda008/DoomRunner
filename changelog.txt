@@ -1,6 +1,10 @@
 1.2
-- reworked map-packs window from to tree view to see a directory hierarchy
-- 
+- reworked map-packs widget from list view to tree view to show a directory hierarchy
+- removed "Current preset" mechanic and replaced it by disabling sub-windows to prevent user making changes that are not saved anywhere
+- map file from map view can now be dragged&dropped into the mod list
+- closing the SetupDialog with X button in the corner will now cancel all your changes
+- selected map file is now saved on quit and restored on next start
+- added an "About" dialog with information about the application
 
 1.1
 - added a "Current preset" mechanic to solve the problem with losing all files added before creating and selecting a preset

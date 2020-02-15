@@ -306,8 +306,8 @@ void MainWindow::runSetupDialog()
 
 		// update our data from the dialog
 		pathHelper = dialog.pathHelper;
-		engineModel = dialog.engineModel;
-		iwadModel = dialog.iwadModel;
+		engineModel.updateList( dialog.engineModel.list() );
+		iwadModel.updateList( dialog.iwadModel.list() );
 		iwadListFromDir = dialog.iwadListFromDir;
 		iwadDir = dialog.iwadDir;
 		iwadSubdirs = dialog.iwadSubdirs;
@@ -315,6 +315,8 @@ void MainWindow::runSetupDialog()
 		modDir = dialog.modDir;
 		// update all stored paths
 		toggleAbsolutePaths( pathHelper.useAbsolutePaths() );
+		selectedEngine = pathHelper.convertPath( selectedEngine );
+		selectedIWAD = pathHelper.convertPath( selectedIWAD );
 
 		// notify the widgets to re-draw their content
 		engineModel.finishCompleteUpdate();

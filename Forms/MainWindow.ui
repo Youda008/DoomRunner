@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>DoomRunner</string>
+   <string>DoomRunner 1.2</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -1186,6 +1186,7 @@
     <addaction name="setupPathsAction"/>
     <addaction name="exportPresetAction"/>
     <addaction name="importPresetAction"/>
+    <addaction name="aboutAction"/>
     <addaction name="exitAction"/>
    </widget>
    <addaction name="menuItemMenu"/>
@@ -1208,6 +1209,11 @@
   <action name="exitAction">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="aboutAction">
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>

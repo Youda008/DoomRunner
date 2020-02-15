@@ -53,6 +53,7 @@ class MainWindow : public QMainWindow {
 	void runSetupDialog();
 	void runGameOptsDialog();
 	void runCompatOptsDialog();
+	void runAboutDialog();
 
 	void loadPreset( const QModelIndex & index );
 	void selectEngine( int index );

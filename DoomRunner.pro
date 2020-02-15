@@ -29,6 +29,7 @@ CONFIG += c++14
 QMAKE_CXXFLAGS += -Wno-deprecated-copy
 
 SOURCES += \
+    Sources/AboutDialog.cpp \
     Sources/CompatOptsDialog.cpp \
     Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
@@ -43,6 +44,7 @@ SOURCES += \
     Sources/main.cpp
 
 HEADERS += \
+    Sources/AboutDialog.hpp \
     Sources/Common.hpp \
     Sources/CompatOptsDialog.hpp \
     Sources/EditableListView.hpp \
@@ -57,6 +59,7 @@ HEADERS += \
     Sources/WidgetUtils.hpp
 
 FORMS += \
+    Forms/AboutDialog.ui \
     Forms/CompatOptsDialog.ui \
     Forms/EngineDialog.ui \
     Forms/GameOptsDialog.ui \

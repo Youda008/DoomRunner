@@ -12,6 +12,7 @@
 #include "SetupDialog.hpp"
 #include "GameOptsDialog.hpp"
 #include "CompatOptsDialog.hpp"
+#include "AboutDialog.hpp"
 #include "JsonHelper.hpp"
 #include "WidgetUtils.hpp"
 #include "Utils.hpp"
@@ -161,6 +162,7 @@ MainWindow::MainWindow()
 	connect( ui->setupPathsAction, &QAction::triggered, this, &thisClass::runSetupDialog );
 	connect( ui->exportPresetAction, &QAction::triggered, this, &thisClass::exportPreset );
 	connect( ui->importPresetAction, &QAction::triggered, this, &thisClass::importPreset );
+	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::runAboutDialog );
 	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
 
 	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectEngine );
@@ -361,6 +363,13 @@ void MainWindow::runCompatOptsDialog()
 		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( compatOpts );
 		updateLaunchCommand();
 	}
+}
+
+void MainWindow::runAboutDialog()
+{
+	AboutDialog dialog( this );
+
+	dialog.exec();
 }
 
 

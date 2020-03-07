@@ -1,5 +1,10 @@
+- distinguishing iwads from patch wads by the file header
+- extracting map names from IWAD file content
+- differential update of file lists from directory to prevent losing selection or expanding collapsed dirs
+- support for recording demos
+- allow to setup config directory for each engine
+- store selected map file and additional command line args into presets
+- better icons for 'add','delete','clone' buttons
 - drag&drop from directory to engine list
 - drag&drop from directory to IWAD list
-- extracting map names from IWAD file content
 - importing presets from .bat/.sh scripts
-- better icons for 'add','delete','clone' buttons

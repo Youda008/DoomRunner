@@ -6,7 +6,7 @@
 // Description: JSON parsing helpers
 //======================================================================================================================
 
-#include "JsonHelper.hpp"
+#include "JsonUtils.hpp"
 
 #include <QJsonValue>
 #include <QString>

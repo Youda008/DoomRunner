@@ -13,10 +13,9 @@
 #include "Common.hpp"
 
 #include "SharedData.hpp"  // Engine
+#include "FileSystemUtils.hpp"  // PathHelper
 
 #include <QDialog>
-
-class PathHelper;
 
 namespace Ui {
 	class EngineDialog;

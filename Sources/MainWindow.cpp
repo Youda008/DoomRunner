@@ -13,9 +13,11 @@
 #include "GameOptsDialog.hpp"
 #include "CompatOptsDialog.hpp"
 #include "AboutDialog.hpp"
-#include "JsonHelper.hpp"
+
+#include "LangUtils.hpp"
+#include "JsonUtils.hpp"
 #include "WidgetUtils.hpp"
-#include "Utils.hpp"
+#include "DoomUtils.hpp"
 
 #include <QString>
 #include <QStringBuilder>

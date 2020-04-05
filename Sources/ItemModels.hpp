@@ -12,7 +12,7 @@
 
 #include "Common.hpp"
 
-#include "Utils.hpp"
+#include "LangUtils.hpp"
 
 #include <QAbstractListModel>
 #include <QList>

@@ -14,7 +14,7 @@
 
 #include "SharedData.hpp"
 #include "ItemModels.hpp"
-#include "Utils.hpp"
+#include "FileSystemUtils.hpp"  // PathHelper
 
 #include <QMainWindow>
 #include <QString>

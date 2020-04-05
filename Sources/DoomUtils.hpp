@@ -2,26 +2,24 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Created on:  13.5.2019
-// Description: general utilities
+// Created on:  5.4.2020
+// Description: doom specific utilities
 //======================================================================================================================
 
-#include "Utils.hpp"
+#ifndef DOOM_UTILS_INCLUDED
+#define DOOM_UTILS_INCLUDED
+
+
+#include "Common.hpp"
+
+class QString;
 
 
 //======================================================================================================================
 
-QString getMapNumber( QString mapName )
-{
-	if (mapName.startsWith('E')) {  // E2M7
-		return mapName[1]+QString(' ')+mapName[3];
-	} else {  // MAP21
-		return mapName.mid(3,2);
-	}
-}
+QString getMapNumber( const QString & mapName );
 
-bool isDoom1( QString iwadName )
-{
-	return iwadName.compare( "doom.wad", Qt::CaseInsensitive ) == 0
-	    || iwadName.startsWith( "doom1" , Qt::CaseInsensitive );
-}
+bool isDoom1( const QString & iwadName );
+
+
+#endif // DOOM_UTILS_INCLUDED

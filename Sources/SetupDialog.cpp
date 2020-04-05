@@ -12,7 +12,6 @@
 #include "EngineDialog.hpp"
 #include "SharedData.hpp"
 #include "WidgetUtils.hpp"
-#include "Utils.hpp"
 
 #include <QString>
 #include <QStringBuilder>

@@ -8,9 +8,6 @@
 
 #include "SharedData.hpp"
 
-#include "WidgetUtils.hpp"  // updateListFromDir
-#include "Utils.hpp"        // PathHelper
-
 #include <QStringBuilder>
 
 

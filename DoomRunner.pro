@@ -32,15 +32,17 @@ QMAKE_CXXFLAGS += -Wno-deprecated-copy
 SOURCES += \
     Sources/AboutDialog.cpp \
     Sources/CompatOptsDialog.cpp \
+    Sources/DoomUtils.cpp \
     Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
+    Sources/FileSystemUtils.cpp \
     Sources/GameOptsDialog.cpp \
     Sources/ItemModels.cpp \
-    Sources/JsonHelper.cpp \
+    Sources/JsonUtils.cpp \
+    Sources/LangUtils.cpp \
     Sources/MainWindow.cpp \
     Sources/SetupDialog.cpp \
     Sources/SharedData.cpp \
-    Sources/Utils.cpp \
     Sources/WidgetUtils.cpp \
     Sources/main.cpp
 
@@ -48,15 +50,17 @@ HEADERS += \
     Sources/AboutDialog.hpp \
     Sources/Common.hpp \
     Sources/CompatOptsDialog.hpp \
+    Sources/DoomUtils.hpp \
     Sources/EditableListView.hpp \
     Sources/EngineDialog.hpp \
+    Sources/FileSystemUtils.hpp \
     Sources/GameOptsDialog.hpp \
     Sources/ItemModels.hpp \
-    Sources/JsonHelper.hpp \
+    Sources/JsonUtils.hpp \
+    Sources/LangUtils.hpp \
     Sources/MainWindow.hpp \
     Sources/SetupDialog.hpp \
     Sources/SharedData.hpp \
-    Sources/Utils.hpp \
     Sources/WidgetUtils.hpp
 
 FORMS += \

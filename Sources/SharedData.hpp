@@ -12,7 +12,7 @@
 
 #include "Common.hpp"
 
-#include "Utils.hpp"  // pathHelper
+#include "FileSystemUtils.hpp"  // PathHelper
 
 #include <QString>
 #include <QVector>

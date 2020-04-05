@@ -296,7 +296,7 @@ bool selectItemByID( QListView * view, const AItemListModel< Item > & model, con
 }
 
 template< typename Item >  // Item must contain public attribute .name
-void fillListFromDir( AItemListModel< Item > & model, QString dir, bool recursively,
+void fillListFromDir( AItemListModel< Item > & model, const QString & dir, bool recursively,
                       const QVector< QString > & fileSuffixes,
                       std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
 {
@@ -324,7 +324,7 @@ void fillListFromDir( AItemListModel< Item > & model, QString dir, bool recursiv
 }
 
 template< typename Item >
-void updateListFromDir( AItemListModel< Item > & model, QListView * view, QString dir, bool recursively,
+void updateListFromDir( AItemListModel< Item > & model, QListView * view, const QString & dir, bool recursively,
                         const QVector< QString > & fileSuffixes,
                         std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
 {
@@ -373,8 +373,8 @@ TreePath getSelectedItemID( QTreeView * view, const TreeModel & model );
 /** attempts to select a previously selected item defined by persistant itemID */
 bool selectItemByID( QTreeView * view, const TreeModel & model, const TreePath & itemID );
 
-void fillTreeFromDir( TreeModel & model, const QModelIndex & parent, QString dir, const QVector< QString > & fileSuffixes );
-void updateTreeFromDir( TreeModel & model, QTreeView * view, QString dir, const QVector< QString > & fileSuffixes );
+void fillTreeFromDir( TreeModel & model, const QModelIndex & parent, const QString & dir, const QVector< QString > & fileSuffixes );
+void updateTreeFromDir( TreeModel & model, QTreeView * view, const QString & dir, const QVector< QString > & fileSuffixes );
 
 
 //======================================================================================================================

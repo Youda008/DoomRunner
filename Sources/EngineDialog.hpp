@@ -39,8 +39,8 @@ class EngineDialog : public QDialog {
 
 	void browseEngine();
 
-	void updateName( QString text );
-	void updatePath( QString text );
+	void updateName( const QString & text );
+	void updatePath( const QString & text );
 
  private:
 

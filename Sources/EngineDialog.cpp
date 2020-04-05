@@ -59,12 +59,12 @@ void EngineDialog::browseEngine()
 	ui->nameLine->setText( QFileInfo( path ).dir().dirName() );
 }
 
-void EngineDialog::updateName( QString text )
+void EngineDialog::updateName( const QString & text )
 {
 	engine.name = text;
 }
 
-void EngineDialog::updatePath( QString text )
+void EngineDialog::updatePath( const QString & text )
 {
 	engine.path = text;
 }

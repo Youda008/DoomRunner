@@ -89,8 +89,8 @@ class MainWindow : public QMainWindow {
 	void modeSelectedMap();
 	void modeSavedGame();
 
-	void selectMap( QString map );
-	void selectSavedGame( QString saveName );
+	void selectMap( const QString & map );
+	void selectSavedGame( const QString & saveName );
 	void selectSkill( int skill );
 	void changeSkillNum( int skillNum );
 	void toggleNoMonsters( bool checked );
@@ -99,7 +99,7 @@ class MainWindow : public QMainWindow {
 
 	void toggleMultiplayer( bool checked );
 	void selectMultRole( int role );
-	void changeHost( QString host );
+	void changeHost( const QString & host );
 	void changePort( int port );
 	void selectNetMode( int mode );
 	void selectGameMode( int mode );
@@ -107,13 +107,13 @@ class MainWindow : public QMainWindow {
 	void changeTeamDamage( double damage );
 	void changeTimeLimit( int limit );
 
-	void saveOptions( QString fileName );
-	void loadOptions( QString fileName );
+	void saveOptions( const QString & fileName );
+	void loadOptions( const QString & fileName );
 
 	void exportPreset();
 	void importPreset();
 
-	void updateAdditionalArgs( QString text );
+	void updateAdditionalArgs( const QString & text );
 
 	QString generateLaunchCommand( QString baseDir = "" );
 	void updateLaunchCommand();

@@ -948,12 +948,12 @@ void MainWindow::modeSavedGame()
 	updateLaunchCommand();
 }
 
-void MainWindow::selectMap( QString )
+void MainWindow::selectMap( const QString & )
 {
 	updateLaunchCommand();
 }
 
-void MainWindow::selectSavedGame( QString )
+void MainWindow::selectSavedGame( const QString & )
 {
 	updateLaunchCommand();
 }
@@ -1032,7 +1032,7 @@ void MainWindow::selectMultRole( int role )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeHost( QString )
+void MainWindow::changeHost( const QString & )
 {
 	updateLaunchCommand();
 }
@@ -1067,7 +1067,7 @@ void MainWindow::changeTimeLimit( int )
 	updateLaunchCommand();
 }
 
-void MainWindow::updateAdditionalArgs( QString )
+void MainWindow::updateAdditionalArgs( const QString & )
 {
 	updateLaunchCommand();
 }
@@ -1076,7 +1076,7 @@ void MainWindow::updateAdditionalArgs( QString )
 //----------------------------------------------------------------------------------------------------------------------
 //  saving & loading current options
 
-void MainWindow::saveOptions( QString fileName )
+void MainWindow::saveOptions( const QString & fileName )
 {
 	QFile file( fileName );
 	if (!file.open( QIODevice::WriteOnly )) {
@@ -1192,7 +1192,7 @@ void MainWindow::saveOptions( QString fileName )
 	//return file.error() == QFile::NoError;
 }
 
-void MainWindow::loadOptions( QString fileName )
+void MainWindow::loadOptions( const QString & fileName )
 {
 	QFile file( fileName );
 	if (!file.open( QIODevice::ReadOnly )) {

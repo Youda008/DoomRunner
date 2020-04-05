@@ -56,9 +56,9 @@ class SetupDialog : public QDialog {
 	void browseMapDir();
 	void browseModDir();
 
-	void changeIWADDir( QString text );
-	void changeMapDir( QString text );
-	void changeModDir( QString text );
+	void changeIWADDir( const QString & text );
+	void changeMapDir( const QString & text );
+	void changeModDir( const QString & text );
 
 	void iwadAdd();
 	void iwadDelete();
@@ -81,7 +81,7 @@ class SetupDialog : public QDialog {
  private: // methods
 
 	void toggleAutoIWADUpdate( bool enabled );
-	void browseDir( QString dirPurpose, QLineEdit * targetLine );
+	void browseDir( const QString & dirPurpose, QLineEdit * targetLine );
 
  private: // members
 

@@ -44,20 +44,20 @@ class PathHelper {
 	void toggleAbsolutePaths( bool useAbsolutePaths )  { _useAbsolutePaths = useAbsolutePaths; }
 	void setBaseDir( const QDir & baseDir )            { _baseDir = baseDir; }
 
-	QString getAbsolutePath( QString path ) const
+	QString getAbsolutePath( const QString & path ) const
 	{
 		return path.isEmpty() ? "" : QFileInfo( _baseDir, path ).absoluteFilePath();
 	}
-	QString getRelativePath( QString path ) const
+	QString getRelativePath( const QString & path ) const
 	{
 		return path.isEmpty() ? "" : _baseDir.relativeFilePath( path );
 	}
-	QString convertPath( QString path ) const
+	QString convertPath( const QString & path ) const
 	{
 		return _useAbsolutePaths ? getAbsolutePath( path ) : getRelativePath( path );
 	}
 
-	QString rebasePath( QString path ) const
+	QString rebasePath( const QString & path ) const
 	{
 		if (path.isEmpty())
 			return {};

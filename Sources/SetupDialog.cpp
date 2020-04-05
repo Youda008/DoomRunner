@@ -157,7 +157,7 @@ void SetupDialog::browseModDir()
 	browseDir( "mods", ui->modDirLine );
 }
 
-void SetupDialog::browseDir( QString dirPurpose, QLineEdit * targetLine )
+void SetupDialog::browseDir( const QString & dirPurpose, QLineEdit * targetLine )
 {
 	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory with "+dirPurpose );
 	if (path.isEmpty())  // user probably clicked cancel
@@ -172,7 +172,7 @@ void SetupDialog::browseDir( QString dirPurpose, QLineEdit * targetLine )
 	// because we want to do the same things when user edits the path manually
 }
 
-void SetupDialog::changeIWADDir( QString text )
+void SetupDialog::changeIWADDir( const QString & text )
 {
 	iwadDir = text;
 
@@ -180,12 +180,12 @@ void SetupDialog::changeIWADDir( QString text )
 		updateIWADsFromDir();
 }
 
-void SetupDialog::changeMapDir( QString text )
+void SetupDialog::changeMapDir( const QString & text )
 {
 	mapDir = text;
 }
 
-void SetupDialog::changeModDir( QString text )
+void SetupDialog::changeModDir( const QString & text )
 {
 	modDir = text;
 }

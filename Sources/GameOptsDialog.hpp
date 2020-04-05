@@ -12,7 +12,7 @@
 
 #include "Common.hpp"
 
-#include "SharedData.hpp"
+#include "SharedData.hpp"  // GameplayOptions
 
 #include <QDialog>
 

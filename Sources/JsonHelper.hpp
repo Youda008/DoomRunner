@@ -12,9 +12,9 @@
 
 #include "Common.hpp"
 
+#include <QString>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QJsonValue>
 
 
 //======================================================================================================================

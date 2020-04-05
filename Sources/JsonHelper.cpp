@@ -8,6 +8,7 @@
 
 #include "JsonHelper.hpp"
 
+#include <QJsonValue>
 #include <QString>
 #include <QStringBuilder>
 #include <QMessageBox>
@@ -171,7 +172,7 @@ template< typename RetType >
 const RetType & jsonKeyMissing( const QString & key, const RetType & retVal )
 {
 	QMessageBox::warning( nullptr, "Error loading options file",
-		"Element "%key%" is missing in the options file. Skipping this option. " );
+		"Element "%key%" is missing in the options file. Skipping this option. " ); // TODO: more info
 	return retVal;
 }
 
@@ -187,13 +188,14 @@ template< typename RetType >
 const RetType & jsonInvalidTypeAtIdx( int index, const QString & expectedType, const RetType & retVal )
 {
     QMessageBox::warning( nullptr, "Error loading options file",
-		"Element on index "%QString::number(index)%" has invalid type, "%expectedType%" expected. Skipping this option" );
+		"Element on index "%QString::number(index)%" has invalid type, "%expectedType%" expected. Skipping this option." );
 	return retVal;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //  JSON object variants
 
+// TODO: json context
 bool getBool( const QJsonObject & json, const char * key, bool defaultVal )
 {
 	if (!json.contains( key ))

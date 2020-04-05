@@ -9,6 +9,7 @@
 #include "GameOptsDialog.hpp"
 #include "ui_GameOptsDialog.h"
 
+#include <QString>
 #include <QLineEdit>
 #include <QIntValidator>
 

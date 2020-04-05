@@ -16,12 +16,15 @@
 #include "ItemModels.hpp"
 
 #include <QListView>
-#include <QTreeView>
+class QTreeView;
 #include <QComboBox>
 #include <QMessageBox>
 #include <QDir>
 #include <QDirIterator>
 #include <QFileInfo>
+
+#include <algorithm>
+#include <functional>
 
 
 //======================================================================================================================

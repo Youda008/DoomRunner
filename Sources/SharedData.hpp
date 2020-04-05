@@ -15,7 +15,7 @@
 #include "Utils.hpp"  // pathHelper
 
 #include <QString>
-#include <QList>
+#include <QVector>
 #include <QFileInfo>
 
 class PathHelper;
@@ -50,7 +50,7 @@ struct Preset {
 	QString selectedConfig;  // we store the engine by name, so that it does't break when user reorders them
 	QString selectedIWAD;  // we store the IWAD by name, so that it doesn't break when user reorders them
 	//TreePath selectedMapPack;
-	QList< Mod > mods;  // this list needs to be kept in sync with mod list widget
+	QVector< Mod > mods;  // this list needs to be kept in sync with mod list widget
 };
 
 struct GameplayOptions {

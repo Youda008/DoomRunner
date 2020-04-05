@@ -18,7 +18,6 @@
 
 #include <QMainWindow>
 #include <QString>
-#include <QList>
 
 class QListView;
 

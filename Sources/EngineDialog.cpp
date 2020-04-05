@@ -16,18 +16,17 @@
 
 //======================================================================================================================
 
-EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, const QString & name, const QString & path )
+EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, const Engine & engine )
 
 	: QDialog( parent )
 	, pathHelper( pathHelper )
-	, name( name )
-	, path( path )
+	, engine( engine )
 {
 	ui = new Ui::EngineDialog;
 	ui->setupUi(this);
 
-	ui->nameLine->setText( name );
-	ui->pathLine->setText( path );
+	ui->nameLine->setText( engine.name );
+	ui->pathLine->setText( engine.path );
 
 	connect( ui->browseBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
 
@@ -64,10 +63,10 @@ void EngineDialog::browseEngine()
 
 void EngineDialog::updateName( QString text )
 {
-	name = text;
+	engine.name = text;
 }
 
 void EngineDialog::updatePath( QString text )
 {
-	path = text;
+	engine.path = text;
 }

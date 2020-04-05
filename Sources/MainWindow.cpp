@@ -30,9 +30,9 @@
 #include <QDesktopWidget>
 #include <QScrollBar>
 #include <QJsonDocument>
+#include <QJsonValue>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QJsonValue>
 
 #include <QDebug>
 
@@ -742,7 +742,7 @@ void MainWindow::modsDropped()
 		// update the preset
 		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 		if (selectedPresetIdx >= 0) {
-			presetModel[ selectedPresetIdx ].mods = modModel.list(); // not the most optimal way, but the size of the list is always low
+			presetModel[ selectedPresetIdx ].mods.fromList( modModel.list() );  // not the most optimal way, but the size of the list will be always small
 		}
 
 		updateLaunchCommand();

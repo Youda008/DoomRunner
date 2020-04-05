@@ -9,9 +9,10 @@
 #include "CompatOptsDialog.hpp"
 #include "ui_CompatOptsDialog.h"
 
+#include <QString>
+#include <QTextStream>
 #include <QLineEdit>
 #include <QIntValidator>
-#include <QTextStream>
 
 
 //======================================================================================================================

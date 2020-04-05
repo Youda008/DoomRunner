@@ -12,16 +12,14 @@
 
 #include "Common.hpp"
 
-#include "SharedData.hpp"
+#include "SharedData.hpp"  // Engine, IWAD
 #include "ItemModels.hpp"
 
 #include <QDialog>
-#include <QFileInfo>
 
 class QDir;
 class QLineEdit;
 class PathHelper;
-class QListView;
 
 namespace Ui {
 	class SetupDialog;
@@ -78,10 +76,6 @@ class SetupDialog : public QDialog {
 	void toggleAbsolutePaths( bool checked );
 
 	void closeDialog();
-
- signals:
-
-
 
  private: // methods
 

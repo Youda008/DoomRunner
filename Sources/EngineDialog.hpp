@@ -12,7 +12,7 @@
 
 #include "Common.hpp"
 
-#include "SharedData.hpp"
+#include "SharedData.hpp"  // Engine
 
 #include <QDialog>
 
@@ -33,7 +33,7 @@ class EngineDialog : public QDialog {
 
  public:
 
-	explicit EngineDialog( QWidget * parent, const PathHelper & pathHelper, const QString & name, const QString & path );
+	explicit EngineDialog( QWidget * parent, const PathHelper & pathHelper, const Engine & engine );
 	~EngineDialog();
 
  private slots:
@@ -51,8 +51,7 @@ class EngineDialog : public QDialog {
 
  public: // return values from this dialog
 
-	QString name;
-	QString path;
+	Engine engine;
 
 };
 

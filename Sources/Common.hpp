@@ -12,8 +12,6 @@
 
 #include <memory>
 #include <utility>
-#include <functional>
-#include <algorithm>
 #include <cstdint>
 #include <climits>
 

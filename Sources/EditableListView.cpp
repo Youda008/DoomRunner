@@ -10,11 +10,11 @@
 #include "EditableListView.hpp"
 
 #include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
 #include <QFileInfo>
 #include <QMimeData>
 #include <QUrl>
-
-#include <QDebug>
 
 
 //======================================================================================================================

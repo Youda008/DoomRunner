@@ -12,9 +12,13 @@
 
 #include "Common.hpp"
 
+#include <QVector>
+#include <QList>
 #include <QString>
 #include <QDir>
 #include <QFileInfo>
+
+#include <functional>
 
 
 //======================================================================================================================

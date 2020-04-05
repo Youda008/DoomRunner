@@ -15,9 +15,13 @@
 #include "Utils.hpp"
 
 #include <QAbstractListModel>
+#include <QList>
+#include <QString>
 #include <QMimeData>
 #include <QUrl>
 #include <QFileInfo>
+
+#include <functional>
 
 #include <QDebug>
 

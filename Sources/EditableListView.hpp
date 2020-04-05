@@ -52,7 +52,7 @@ class EditableListView : public QListView {
 	virtual void dragEnterEvent( QDragEnterEvent * event ) override;
 	virtual void dragMoveEvent( QDragMoveEvent * event ) override;
 	virtual void dropEvent( QDropEvent * event ) override;
-	virtual void startDrag(Qt::DropActions supportedActions) override;
+	virtual void startDrag( Qt::DropActions supportedActions ) override;
 
 	/** update QAbstractItemView's properties based on our new settings */
 	void updateDragDropMode();

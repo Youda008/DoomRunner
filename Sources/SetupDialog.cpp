@@ -14,10 +14,12 @@
 #include "WidgetUtils.hpp"
 #include "Utils.hpp"
 
+#include <QString>
 #include <QStringBuilder>
-#include <QFileDialog>
 #include <QDir>
 #include <QDirIterator>
+#include <QFileInfo>
+#include <QFileDialog>
 
 
 //======================================================================================================================
@@ -221,12 +223,12 @@ void SetupDialog::iwadMoveDown()
 
 void SetupDialog::engineAdd()
 {
-	EngineDialog dialog( this, pathHelper, "", "" );
+	EngineDialog dialog( this, pathHelper, {} );
 
 	int code = dialog.exec();
 
 	if (code == QDialog::Accepted)
-		appendItem( engineModel, { dialog.name, dialog.path } );
+		appendItem( engineModel, dialog.engine );
 }
 
 void SetupDialog::engineDelete()
@@ -248,13 +250,12 @@ void SetupDialog::editEngine( const QModelIndex & index )
 {
 	Engine & selectedEngine = engineModel[ index.row() ];
 
-	EngineDialog dialog( this, pathHelper, selectedEngine.name, selectedEngine.path );
+	EngineDialog dialog( this, pathHelper, selectedEngine );
 
 	int code = dialog.exec();
 
 	if (code == QDialog::Accepted) {
-		selectedEngine.name = dialog.name;
-		selectedEngine.path = dialog.path;
+		selectedEngine = dialog.engine;
 	}
 }
 

@@ -1420,14 +1420,15 @@ void MainWindow::exportPreset()
 		return;
 	}
 
-	QString fileName = QFileDialog::getSaveFileName( this, "Export preset", QString(), scriptFileExt );
-	if (fileName.isEmpty()) {  // user probably clicked cancel
+	QString filePath = QFileDialog::getSaveFileName( this, "Export preset", QString(), scriptFileExt );
+	if (filePath.isEmpty()) {  // user probably clicked cancel
 		return;
 	}
 
-	QFileInfo fileInfo( fileName );
-	QFile file( fileName );
-	if (!file.open( QIODevice::ReadWrite )) {
+	QFileInfo fileInfo( filePath );
+
+	QFile file( filePath );
+	if (!file.open( QIODevice::WriteOnly | QIODevice::Text )) {
 		QMessageBox::warning( this, "Cannot open file", "Cannot open file for writing. Check directory permissions" );
 		return;
 	}
@@ -1439,9 +1440,45 @@ void MainWindow::exportPreset()
 	file.close();
 }
 
+#include "QDebug"
+
 void MainWindow::importPreset()
 {
 	QMessageBox::warning( this, "Not implemented", "Sorry, this feature is not implemented yet" );
+/*
+	QString filePath = QFileDialog::getOpenFileName( this, "Import preset", QString(), scriptFileExt );
+	if (filePath.isEmpty()) {  // user probably clicked cancel
+		return;
+	}
+
+	QFileInfo fileInfo( filePath );
+	QString fileDir = fileInfo.path();
+
+	QFile file( filePath );
+	if (!file.open( QIODevice::ReadOnly | QIODevice::Text )) {
+		QMessageBox::warning( this, "Cannot open file", "Cannot open file for reading. Check file permissions" );
+		return;
+	}
+
+	QTextStream stream( &file );
+	QString command = stream.readLine( 10 * 1024 );
+	if (stream.status() == QTextStream::ReadCorruptData) {
+		QMessageBox::warning( this, "Error reading file", "An error occured while reading the file. Check if the disk isn't disconnected." );
+		return;
+	}
+
+	if (!stream.atEnd() && !stream.readLine( 1 ).isEmpty()) {
+		QMessageBox::warning( this, "Problem with parsing file", "Only single line shorter than 10kB is supported, the rest will be ignored" );
+	}
+
+	QStringList tokens = command.split( ' ', QString::SkipEmptyParts );
+
+	// verify that first token is existing path and that it's added in DoomRunner
+
+	// while not at end
+	//    read option
+	//    read argument
+*/
 }
 
 

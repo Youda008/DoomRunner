@@ -286,7 +286,7 @@ template< typename Item >  // Item must have getID() method that returns some ki
 bool selectItemByID( QListView * view, const AItemListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
 	if (!itemID.isEmpty()) {
-		int newItemIdx = findSuch< Item >( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
+		int newItemIdx = findSuch( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0) {
 			selectItemByIdx( view, newItemIdx );
 			return true;
@@ -399,7 +399,7 @@ template< typename Item >  // Item must have getID() method that returns some ki
 bool selectItemByID( QComboBox * view, const AItemListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
 	if (!itemID.isEmpty()) {
-		int newItemIdx = findSuch< Item >( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
+		int newItemIdx = findSuch( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0) {
 			view->setCurrentIndex( newItemIdx );
 			return true;

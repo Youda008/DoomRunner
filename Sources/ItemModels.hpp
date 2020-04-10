@@ -524,7 +524,7 @@ class TreeNode {
 	TreeNode * child( const QString & name )
 	{
 		// linear complexity, but we expect the sublists to be small
-		int idx = findSuch< TreeNode * >( _children, [ &name ]( TreeNode * node ) { return node->name() == name; } );
+		int idx = findSuch( _children, [ &name ]( TreeNode * node ) { return node->name() == name; } );
 		return idx >= 0 ? _children[ idx ] : nullptr;
 	}
 
@@ -532,7 +532,7 @@ class TreeNode {
 	TreeNode * addChild( const QString & name )
 	{
 		// linear complexity, but we expect the sublists to be small
-		int idx = findSuch< TreeNode * >( _children, [ &name ]( TreeNode * node ) { return node->name() == name; } );
+		int idx = findSuch( _children, [ &name ]( TreeNode * node ) { return node->name() == name; } );
 		if (idx >= 0) {
 			return _children[ idx ];
 		} else {

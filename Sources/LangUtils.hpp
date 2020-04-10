@@ -19,30 +19,49 @@
 #include <QFileInfo>
 
 #include <functional>
+#include <algorithm>
 
 
 //======================================================================================================================
-//  container helpers
+//  utils for Qt containers
 
-// Because it's too annoying having to specify the container manually every call like this:
-//   containsSuch< QList<Elem>, Elem >( list, []( ... ){ ... } )
-// and because it's not nice to copy-implement this for every container, we implement it once in container-generic way
-// and provide simple delegating wrappers for the specific containers
-
-template< typename Container, typename ElemType >
-bool _containsSuch( const Container & list, std::function< bool ( const ElemType & elem ) > condition )
+template< typename Container1, typename Container2 >
+bool equal( Container1 cont1, Container2 cont2 )
 {
-	for (const ElemType & elem : list)
-		if (condition( elem ))
-			return true;
-	return false;
+	return std::equal( std::begin(cont1), std::end(cont1), std::begin(cont2), std::end(cont2) );
 }
 
-template< typename Container, typename ElemType >
-int _findSuch( const Container & list, std::function< bool ( const ElemType & elem ) > condition )
+template< typename Container, typename Element >
+bool contains( const Container & cont, const Element & elem )
+{
+	return std::find( std::begin(cont), std::end(cont), elem ) != std::end(cont);
+}
+
+template< typename Container, typename Condition >
+bool containsSuch( const Container & cont, Condition condition )
+{
+	return std::find_if( std::begin(cont), std::end(cont), condition ) != std::end(cont);
+}
+
+// own implementation because Qt works with int indexes for position instead of iterators, like std
+
+template< typename Container, typename Element >
+int find( const Container & cont, const Element & elem )
 {
 	int i = 0;
-	for (const ElemType & elem : list) {
+	for (const auto & elem2 : cont) {
+		if (elem == elem2)
+			return i;
+		i++;
+	}
+	return -1;
+}
+
+template< typename Container, typename Condition >
+int findSuch( const Container & list, Condition condition )
+{
+	int i = 0;
+	for (const auto & elem : list) {
 		if (condition( elem ))
 			return i;
 		i++;
@@ -50,39 +69,10 @@ int _findSuch( const Container & list, std::function< bool ( const ElemType & el
 	return -1;
 }
 
-/** checks whether the vector contains such an element that satisfies condition */
-template< typename ElemType >
-bool containsSuch( const QVector< ElemType > & list, std::function< bool ( const ElemType & elem ) > condition )
+template< typename Container >
+void reverse( Container & cont )
 {
-	return _containsSuch< QList< ElemType >, ElemType >( list, condition );
-}
-/** checks whether the list contains such an element that satisfies condition */
-template< typename ElemType >
-bool containsSuch( const QList< ElemType > & list, std::function< bool ( const ElemType & elem ) > condition )
-{
-	return _containsSuch< QList< ElemType >, ElemType >( list, condition );
-}
-
-/** finds such element in the vector that satisfies condition */
-template< typename ElemType >
-int findSuch( const QVector< ElemType > & list, std::function< bool ( const ElemType & elem ) > condition )
-{
-	return _findSuch< QVector< ElemType >, ElemType >( list, condition );
-}
-/** finds such element in the list that satisfies condition */
-template< typename ElemType >
-int findSuch( const QList< ElemType > & list, std::function< bool ( const ElemType & elem ) > condition )
-{
-	return _findSuch< QList< ElemType >, ElemType >( list, condition );
-}
-
-
-template< typename Indexable >
-void reverse( Indexable & container )
-{
-	const int count = container.count();
-	for (int i = 0; i < count / 2; ++i)
-		std::swap( container[ i ], container[ count - 1 - i ] );
+	std::reverse( std::begin(cont), std::end(cont) );
 }
 
 

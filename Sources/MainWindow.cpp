@@ -382,8 +382,8 @@ void MainWindow::loadPreset( const QModelIndex & index )
 
 	// restore selected engine
 	if (!preset.selectedEnginePath.isEmpty()) {  // the engine combo box might have been empty when creating this preset
-		int engineIdx = findSuch< Engine >( engineModel.list(), [ &preset ]( const Engine & engine )
-		                                                        { return engine.path == preset.selectedEnginePath; } );
+		int engineIdx = findSuch( engineModel.list(), [ &preset ]( const Engine & engine )
+		                                                         { return engine.path == preset.selectedEnginePath; } );
 		if (engineIdx >= 0) {
 			ui->engineCmbBox->setCurrentIndex( engineIdx );
 		} else {
@@ -413,8 +413,8 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	deselectSelectedItems( ui->iwadListView );
 	selectedIWAD.clear();
 	if (!preset.selectedIWAD.isEmpty()) {  // the IWAD may have not been selected when creating this preset
-		int iwadIdx = findSuch< IWAD >( iwadModel.list(), [ &preset ]( const IWAD & iwad )
-		                                                  { return iwad.name == preset.selectedIWAD; } );
+		int iwadIdx = findSuch( iwadModel.list(), [ &preset ]( const IWAD & iwad )
+		                                                     { return iwad.name == preset.selectedIWAD; } );
 		if (iwadIdx >= 0) {
 			selectItemByIdx( ui->iwadListView, iwadIdx );
 			selectedIWAD = preset.selectedIWAD;

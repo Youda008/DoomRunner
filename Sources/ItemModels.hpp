@@ -32,11 +32,15 @@
 // the underlying list (backend) with the widget list (frontend).
 //
 // You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
+//
+// The following classes are written as templates, because there is a lot of boilerplate required by Qt for this job.
+// So instead of writing such classes with all the boilerplate for every widget we need it for, we have them only once
+// and the differences are extracted into user-defined functions. When you instantiate the model, you need to specify
+// how the elements should be displayed, how they should be edited and how they should be created from file-system entry.
 
 
 //======================================================================================================================
-/** Abstract wrapper around list of arbitrary objects, mediating their content to UI view elements.
-  * The model doesn't own the data, they are stored somewhere else, it just presents them to the UI. */
+/** Abstract wrapper around list of arbitrary objects, mediating their content to UI view elements. */
 
 template< typename Item >
 class AItemListModel : public QAbstractListModel {
@@ -571,8 +575,7 @@ class TreePath : public QStringList {
 
 
 //----------------------------------------------------------------------------------------------------------------------
-/** Simple single-column icon-less tree model.
-  * Unlike the other models, this one holds the data, and so it cannot be displayed differently in different windows. */
+/** Simple single-column icon-less tree model. */
 class TreeModel : public QAbstractItemModel {
 
 	TreeNode * rootNode;  ///< internal node that stores all the other nodes without an explicit parent

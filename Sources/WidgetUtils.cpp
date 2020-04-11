@@ -8,6 +8,8 @@
 
 #include "WidgetUtils.hpp"
 
+#include "DirTreeModel.hpp"
+
 #include <QTreeView>
 
 
@@ -104,13 +106,13 @@ void changeSelectionTo( QTreeView * view, const QModelIndex & index )
 	selectItemByIdx( view, index );
 }
 
-TreePath getSelectedItemID( QTreeView * view, const TreeModel & model )
+TreePath getSelectedItemID( QTreeView * view, const DirTreeModel & model )
 {
 	QModelIndex selectedItemIdx = getSelectedItemIdx( view );
 	return model.getItemPath( selectedItemIdx );  // if nothing is selected, this path will be empty
 }
 
-bool selectItemByID( QTreeView * view, const TreeModel & model, const TreePath & itemID )
+bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePath & itemID )
 {
 	QModelIndex newItemIdx = model.getItemByPath( itemID );  // empty or non-existing path will produce invalid index
 	if (newItemIdx.isValid()) {
@@ -120,7 +122,7 @@ bool selectItemByID( QTreeView * view, const TreeModel & model, const TreePath &
 	return false;
 }
 
-void fillTreeFromDir( TreeModel & model, const QModelIndex & parent, const QString & dir, const QVector< QString > & fileSuffixes )
+void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	QDir dir_( dir );
 	if (!dir_.exists())
@@ -134,8 +136,8 @@ void fillTreeFromDir( TreeModel & model, const QModelIndex & parent, const QStri
 		if (entry.isDir()) {
 			QString dirName = entry.fileName();
 			if (dirName != "." && dirName != "..") {
-				QModelIndex dirItem = model.addItem( parent, dirName );
-				fillTreeFromDir( model, dirItem, entry.filePath(), fileSuffixes );
+				QModelIndex dirItem = model.addItem( parent, dirName, NodeType::DIR );
+				fillTreeFromDir( model, dirItem, entry.filePath(), isDesiredFile );
 			}
 		}
 	}
@@ -146,14 +148,14 @@ void fillTreeFromDir( TreeModel & model, const QModelIndex & parent, const QStri
 		dirIt2.next();
 		QFileInfo entry = dirIt2.fileInfo();
 		if (!entry.isDir()) {
-			if (fileSuffixes.isEmpty() || fileSuffixes.contains( entry.suffix().toLower() )) {
-				model.addItem( parent, entry.fileName() );
+			if (isDesiredFile( entry )) {
+				model.addItem( parent, entry.fileName(), NodeType::FILE );
 			}
 		}
 	}
 }
 
-void updateTreeFromDir( TreeModel & model, QTreeView * view, const QString & dir, const QVector< QString > & fileSuffixes )
+void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	if (dir.isEmpty())
 		return;
@@ -167,13 +169,13 @@ void updateTreeFromDir( TreeModel & model, QTreeView * view, const QString & dir
 	                              //       it doesn't always reset highlighting of the item pointer to by a mouse cursor
 	model.clear();
 
-	fillTreeFromDir( model, QModelIndex(), dir, fileSuffixes );
+	fillTreeFromDir( model, QModelIndex(), dir, isDesiredFile );
 
 	model.finishCompleteUpdate();
 
 	// expand all the directories
 	model.traverseItems( [ view, &model ]( const QModelIndex & index ) {
-		if (!model.isLeaf( index )) {  // it has children -> it is a directory
+		if (model.isDir( index )) {
 			view->setExpanded( index, true );
 		}
 	});

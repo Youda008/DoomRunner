@@ -2,6 +2,8 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Created on:  13.5.2019
-// Description: mediators between a list of arbitrary objects and list view or other widgets
+// Created on:  11.4.2020
+// Description: model representing files inside a directory hierarchy
 //======================================================================================================================
+
+//#include "DirTreeModel.hpp"

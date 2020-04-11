@@ -3,14 +3,16 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  5.4.2020
-// Description: miscellaneous utilities
+// Description: utilities concerning paths, directories and files
 //======================================================================================================================
 
-#ifndef MISC_UTILS_INCLUDED
-#define MISC_UTILS_INCLUDED
+#ifndef FILE_SYSTEM_UTILS_INCLUDED
+#define FILE_SYSTEM_UTILS_INCLUDED
 
 
 #include "Common.hpp"
+
+#include "ListModel.hpp"
 
 #include <QString>
 #include <QDir>
@@ -23,19 +25,19 @@
 class PathHelper {
 
 	QDir _baseDir;  ///< directory which relative paths are relative to
-	QDir _currentDir;  ///< cached current directory - original base dir for path rebasing
+	QDir _prevBaseDir;  ///< original base dir for rebasing paths to another base
 	bool _useAbsolutePaths;  ///< whether to store paths to engines, IWADs, maps and mods in absolute or relative form
 
  public:
 
-	PathHelper( bool useAbsolutePaths, const QDir & baseDir )
-		: _baseDir( baseDir ), _currentDir( QDir::current() ), _useAbsolutePaths( useAbsolutePaths ) {}
+	PathHelper( bool useAbsolutePaths, const QDir & baseDir, const QDir & prevBaseDir = QDir() )
+		: _baseDir( baseDir ), _prevBaseDir( prevBaseDir ), _useAbsolutePaths( useAbsolutePaths ) {}
 
 	PathHelper( const PathHelper & other )
-		: _baseDir( other._baseDir ), _currentDir( other._currentDir ), _useAbsolutePaths( other._useAbsolutePaths ) {}
+		: _baseDir( other._baseDir ), _prevBaseDir( other._prevBaseDir ), _useAbsolutePaths( other._useAbsolutePaths ) {}
 
 	void operator=( const PathHelper & other )
-		{ _baseDir = other._baseDir; _currentDir = other._currentDir; _useAbsolutePaths = other._useAbsolutePaths; }
+		{ _baseDir = other._baseDir; _prevBaseDir = other._prevBaseDir; _useAbsolutePaths = other._useAbsolutePaths; }
 
 	const QDir & baseDir() const                       { return _baseDir; }
 	bool useAbsolutePaths() const                      { return _useAbsolutePaths; }
@@ -63,11 +65,16 @@ class PathHelper {
 			return {};
 		if (QDir::isAbsolutePath( path ))
 			return path;
-		QString absPath = _currentDir.filePath( path );
+		QString absPath = _prevBaseDir.filePath( path );
 		return _baseDir.relativeFilePath( absPath );
 	}
 
 };
 
 
-#endif // MISC_UTILS_INCLUDED
+//======================================================================================================================
+//  misc helper functions
+
+
+
+#endif // FILE_SYSTEM_UTILS_INCLUDED

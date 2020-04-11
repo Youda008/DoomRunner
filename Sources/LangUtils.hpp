@@ -12,13 +12,6 @@
 
 #include "Common.hpp"
 
-#include <QVector>
-#include <QList>
-#include <QString>
-#include <QDir>
-#include <QFileInfo>
-
-#include <functional>
 #include <algorithm>
 
 
@@ -26,7 +19,7 @@
 //  utils for Qt containers
 
 template< typename Container1, typename Container2 >
-bool equal( Container1 cont1, Container2 cont2 )
+bool equal( const Container1 & cont1, const Container2 & cont2 )
 {
 	return std::equal( std::begin(cont1), std::end(cont1), std::begin(cont2), std::end(cont2) );
 }

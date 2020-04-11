@@ -6,8 +6,8 @@
 // Description: mediators between a list of arbitrary objects and list view or other widgets
 //======================================================================================================================
 
-#ifndef ITEM_MODELS_INCLUDED
-#define ITEM_MODELS_INCLUDED
+#ifndef LIST_MODEL_INCLUDED
+#define LIST_MODEL_INCLUDED
 
 
 #include "Common.hpp"
@@ -27,9 +27,8 @@
 
 
 //======================================================================================================================
-// We use model-view design pattern for several widgets, because it allows us to have all the related data
-// packed together in one struct, and have the UI automatically mirror the underlying list without manually syncing
-// the underlying list (backend) with the widget list (frontend).
+// We use model-view design pattern for several widgets, because it allows us to organize the data in a way we need,
+// and have the widget (frontend) automatically mirror the underlying data (backend) without syncing them manually.
 //
 // You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
 //
@@ -43,7 +42,7 @@
 /** Abstract wrapper around list of arbitrary objects, mediating their content to UI view elements. */
 
 template< typename Item >
-class AItemListModel : public QAbstractListModel {
+class AListModel : public QAbstractListModel {
 
  protected:
 
@@ -51,9 +50,9 @@ class AItemListModel : public QAbstractListModel {
 
  public:
 
-	AItemListModel() : QAbstractListModel( nullptr ) {}
+	AListModel() : QAbstractListModel( nullptr ) {}
 
-	AItemListModel( const QList< Item > & itemList ) : QAbstractListModel( nullptr ), itemList( itemList ) {}
+	AListModel( const QList< Item > & itemList ) : QAbstractListModel( nullptr ), itemList( itemList ) {}
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
@@ -141,9 +140,9 @@ class AItemListModel : public QAbstractListModel {
 /** Wrapper around list of arbitrary objects, mediating their content to UI view elements with read-only access. */
 
 template< typename Item >
-class ReadOnlyListModel : public AItemListModel< Item > {
+class ReadOnlyListModel : public AListModel< Item > {
 
-	using superClass = AItemListModel< Item >;
+	using superClass = AListModel< Item >;
 
  protected:
 
@@ -154,10 +153,10 @@ class ReadOnlyListModel : public AItemListModel< Item > {
  public:
 
 	ReadOnlyListModel( std::function< QString ( const Item & ) > makeDisplayString )
-		: AItemListModel< Item >(), makeDisplayString( makeDisplayString ) {}
+		: AListModel< Item >(), makeDisplayString( makeDisplayString ) {}
 
 	ReadOnlyListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
-		: AItemListModel< Item >( itemList ), makeDisplayString( makeDisplayString ) {}
+		: AListModel< Item >( itemList ), makeDisplayString( makeDisplayString ) {}
 
 	void setDisplayStringFunc( std::function< QString ( const Item & ) > makeDisplayString )
 		{ this->makeDisplayString = makeDisplayString; }
@@ -184,9 +183,9 @@ class ReadOnlyListModel : public AItemListModel< Item > {
   * Supports in-place editing, internal drag&drop reordering, and external file drag&drops. */
 
 template< typename Item >
-class EditableListModel : public AItemListModel< Item > {
+class EditableListModel : public AListModel< Item > {
 
-	using superClass = AItemListModel< Item >;
+	using superClass = AListModel< Item >;
 
  protected:
 
@@ -211,12 +210,12 @@ class EditableListModel : public AItemListModel< Item > {
 
 	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString,
 	                   std::function< QString & ( Item & ) > editString )
-		: AItemListModel< Item >(), makeDisplayString( makeDisplayString )
+		: AListModel< Item >(), makeDisplayString( makeDisplayString )
 		, editString( editString ), checkableItems( false ) {}
 
 	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString,
 	                   std::function< QString & ( Item & ) > editString )
-		: AItemListModel< Item >( itemList ), makeDisplayString( makeDisplayString )
+		: AListModel< Item >( itemList ), makeDisplayString( makeDisplayString )
 		, editString( editString ), checkableItems( false ) {}
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
@@ -502,292 +501,4 @@ class EditableListModel : public AItemListModel< Item > {
 };
 
 
-//======================================================================================================================
-//  simple single-column icon-less tree model
-
-class TreeNode {
-
- public:
-
-	explicit TreeNode( const QString & name, TreeNode * parent ) : _name( name ), _parent( parent ) {}
-	~TreeNode() { deleteChildren(); }
-
-	QString name() const               { return _name; }
-
-	TreeNode * parent() const          { return _parent; }
-	TreeNode * child( int row ) const  { return _children[ row ]; }
-	int childCount() const             { return _children.size(); }
-	const auto & children() const      { return _children; }
-
-	int row() const
-	{
-		return !_parent ? -1 : _parent->_children.indexOf( const_cast< TreeNode * >( this ) );
-	}
-
-	/** returns a child with this name, or nullptr if it doesn't exist */
-	TreeNode * child( const QString & name )
-	{
-		// linear complexity, but we expect the sublists to be small
-		int idx = findSuch( _children, [ &name ]( TreeNode * node ) { return node->name() == name; } );
-		return idx >= 0 ? _children[ idx ] : nullptr;
-	}
-
-	/** creates and returns a child of this name, or returns an existing one if it already exists */
-	TreeNode * addChild( const QString & name )
-	{
-		// linear complexity, but we expect the sublists to be small
-		int idx = findSuch( _children, [ &name ]( TreeNode * node ) { return node->name() == name; } );
-		if (idx >= 0) {
-			return _children[ idx ];
-		} else {
-			_children.append( new TreeNode( name, this ) );
-			return _children.last();
-		}
-	}
-
-	void deleteChildren()
-	{
-		for (TreeNode * child : _children)
-			delete child;
-		_children.clear();
-	}
-
- private:
-
-	// Each node must have a name in order to be able to construct persistent tree paths. When the tree is then updated
-	// (new parent nodes and leaf nodes are inserted), indexes change but the paths stay the same.
-	QString _name;
-
-	QVector< TreeNode * > _children;
-	TreeNode * _parent;
-
-};
-
-
-/** sequence of names of parent nodes ordered from root to leaf, unambiguously defining a node in a tree */
-class TreePath : public QStringList {
- public:
-	using QStringList::QStringList;
-
-	/** makes TreePath from string in file-system format ("node1/node2/leaf") */
-	TreePath( const QString & pathStr ) : QStringList( pathStr.split( '/', QString::SkipEmptyParts ) ) {}
-};
-
-
-//----------------------------------------------------------------------------------------------------------------------
-/** Simple single-column icon-less tree model. */
-class TreeModel : public QAbstractItemModel {
-
-	TreeNode * rootNode;  ///< internal node that stores all the other nodes without an explicit parent
-	QString & baseDir;  ///< directory from which the MIME URLs are derived when items are dragged from this
-	                    // TODO: this should be value and it should be instead of mapDir member in MainWindow
- public:
-
-	TreeModel( QString & baseDir )
-		: QAbstractItemModel( nullptr )
-		, baseDir( baseDir )
-	{
-		rootNode = new TreeNode( "", nullptr );
-	}
-
-	~TreeModel() override
-	{
-		delete rootNode;  // recursively deletes all the child nodes
-	}
-
-	//-- custom methods for manipulating the tree ----------------------------------------------------------------------
-
-	/** Note that before starting to add or delete items in this model, you have to call startCompleteUpdate,
-	  * and when you are finished with it, you have to call finishCompleteUpdate. */
-	QModelIndex addItem( const QModelIndex & parentIndex, QString name )
-	{
-		TreeNode * parent = modelIndexToTreeNode( parentIndex );
-		return treeNodeToModelIndex( parent->addChild( name ) );
-	}
-
-	/** Note that before starting to add or delete items in this model, you have to call startCompleteUpdate,
-	  * and when you are finished with it, you have to call finishCompleteUpdate. */
-	void clear()
-	{
-		rootNode->deleteChildren();
-	}
-
-	/** item's path that can be used as a persistent item identifier that survives node shifting, adding or removal */
-	TreePath getItemPath( const QModelIndex & index ) const
-	{
-		TreePath path;
-
-		TreeNode * node = modelIndexToTreeNode( index );
-		while (node != rootNode) {
-			path.append( node->name() );
-			node = node->parent();
-		}
-		reverse( path );
-
-		return path;
-	}
-
-	/** attempts to find an item on specified path */
-	QModelIndex getItemByPath( const TreePath & path ) const
-	{
-		TreeNode * node = rootNode;
-		for (const QString & nodeName : path) {
-			node = node->child( nodeName );  // linear complexity, but we expect the sublists to be small
-			if (!node)
-				return QModelIndex();  // node at this path no longer exists
-		}
-		return treeNodeToModelIndex( node );
-	}
-
-	void traverseItems( std::function< void ( const QModelIndex & index ) > doOnItem,
-	                    const QModelIndex & parentIndex = QModelIndex() ) const
-	{
-		TreeNode * const parent = modelIndexToTreeNode( parentIndex );
-
-		for (int childRow = 0; childRow < parent->childCount(); childRow++)
-		{
-			TreeNode * const child = parent->child( childRow );
-			const QModelIndex childIndex = treeNodeToModelIndex( child, childRow );
-
-			doOnItem( childIndex );
-
-			traverseItems( doOnItem, childIndex );
-		}
-	}
-
-	bool isLeaf( const QModelIndex & index ) const
-	{
-		return rowCount( index ) == 0;
-	}
-
-	//-- data change notifications -------------------------------------------------------------------------------------
-
-	/** Notifies Qt that all the model indexes and data retrieved before are no longer valid.
-	  * Call this before every model update. */
-	void startCompleteUpdate()
-	{
-		beginResetModel();
-	}
-
-	/** Call this when an update process is finished and makes a view re-draw its content according to the new data. */
-	void finishCompleteUpdate()
-	{
-		endResetModel();
-	}
-
-	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
-
-	int rowCount( const QModelIndex & parentIndex = QModelIndex() ) const override
-	{
-		TreeNode * const parent = modelIndexToTreeNode( parentIndex );
-		return parent->childCount();
-    }
-
-	int columnCount( const QModelIndex & /*parentIndex*/ = QModelIndex() ) const override
-	{
-		return 1;
-	}
-
-	Qt::ItemFlags flags( const QModelIndex & index ) const override
-	{
-		if (!index.isValid())
-			return Qt::NoItemFlags;
-
-		Qt::ItemFlags flags = QAbstractItemModel::flags( index );
-		if (isLeaf( index ))
-			flags |= Qt::ItemIsDragEnabled;
-
-		return flags;
-	}
-
-	QVariant data( const QModelIndex & index, int role ) const override
-	{
-		if (!index.isValid())
-			return QVariant();
-
-		TreeNode * const node = static_cast< TreeNode * >( index.internalPointer() );
-
-		if (role == Qt::DisplayRole) {
-			return node->name();
-		} else {
-			return QVariant();
-		}
-	}
-
-    QVariant headerData( int /*section*/, Qt::Orientation /*orientation*/, int /*role*/ ) const override
-    {
-		return QVariant();  // no header support
-    }
-
-	QModelIndex index( int row, int column, const QModelIndex & parentIndex = QModelIndex() ) const override
-	{
-		if (!hasIndex( row, column, parentIndex ))  // checks bounds (>= 0 && < rowCount) for given parent
-			return QModelIndex();
-
-		TreeNode * const parent = modelIndexToTreeNode( parentIndex );
-		TreeNode * const sibling = parent->child( row );
-		return createIndex( row, 0, sibling );
-	}
-
-	QModelIndex parent( const QModelIndex & index ) const override
-	{
-		if (!index.isValid())
-			return QModelIndex();
-
-		TreeNode * const node = modelIndexToTreeNode( index );
-		TreeNode * const parent = node->parent();
-		return treeNodeToModelIndex( parent );
-	}
-
-	/// serializes items into MIME URLs as if they were dragged from a directory window
-	QMimeData * mimeData( const QModelIndexList & indexes ) const override
-	{
-		QMimeData * mimeData = new QMimeData;
-
-		QList< QUrl > urls;
-		for (const QModelIndex & index : indexes) {
-			QString filePath = baseDir + '/' + getItemPath( index ).join('/');
-			urls.append( QUrl::fromLocalFile( filePath ) );
-		}
-		mimeData->setUrls( urls );
-
-		return mimeData;
-	}
-
-	//-- miscellaneous -------------------------------------------------------------------------------------------------
-
-	QModelIndex makeIndex( int row, const QModelIndex & parentIndex ) const
-	{
-		return index( row, 0, parentIndex );
-	}
-
- private: // helpers
-
-	// Internally we use TreeNode pointers, but the view accesses the model via QModelIndex.
-	// If the view passes in an empty index, it wants an item from the top level, an item that doesn't have any parent.
-	// We store such elements under a root node (default parent), because it simplifies the implementation.
-
-	TreeNode * modelIndexToTreeNode( const QModelIndex & index ) const
-	{
-		// if no parent is specified, use our internal default parent
-		if (!index.isValid())
-			return rootNode;
-		else
-			return static_cast< TreeNode * >( index.internalPointer() );
-	}
-	QModelIndex treeNodeToModelIndex( TreeNode * node, int rowInParent = -1 ) const
-	{
-		// optimization for cases where the row index is known, otherwise we have to perform linear lookup at the parent
-		const int row = rowInParent >= 0 ? rowInParent : node->row();
-
-		// root node is internal only, don't expose it to the outside, for the caller it means having no parent at all
-		if (node == rootNode)
-			return QModelIndex();
-		else
-			return createIndex( row, 0, node );
-	}
-
-};
-
-
-#endif // ITEM_MODELS_INCLUDED
+#endif // LIST_MODEL_INCLUDED

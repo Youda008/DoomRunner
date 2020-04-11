@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  14.5.2019
-// Description: declaration of shared data structs used accross multiple windows
+// Description: data structures and functionality that is used accross multiple windows/dialogs
 //======================================================================================================================
 
 #ifndef SHARED_DATA_INCLUDED
@@ -12,17 +12,15 @@
 
 #include "Common.hpp"
 
-#include "FileSystemUtils.hpp"  // PathHelper
-
 #include <QString>
 #include <QVector>
-#include <QFileInfo>
 
+class QFileInfo;
 class PathHelper;
 
 
 //======================================================================================================================
-//  this needs to be in a separate header, so it can be included from multiple windows
+//  data structures
 
 struct Engine {
 	QString name;
@@ -64,25 +62,18 @@ struct CompatibilityOptions {
 };
 
 
-// useful for debugging purposes, easier to set breakpoint inside than in lambdas
-QString makeEngineDispStrFromName( const Engine & engine );
-QString makeEngineDispStrWithPath( const Engine & engine );
-QString makeIwadDispStrFromName( const IWAD & iwad );
-QString makeIwadDispStrWithPath( const IWAD & iwad );
+//======================================================================================================================
+//  functions
 
+// just to prevent writing the same long lambdas at multiple places
+bool isIWAD( const QFileInfo & file );
+bool isMapPack( const QFileInfo & file );
 
-// extracted here, because MainWindow and SetupDialog both want to use it
-inline const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
-inline const QVector< QString > mapSuffixes = {"wad", "pk3", "pk7", "zip", "7z"};
-
-// functor for generic data models and utils, prevents writing the same lambda at many places
 class IWADfromFileMaker {
 	const PathHelper & pathHelper;
  public:
 	IWADfromFileMaker( const PathHelper & pathHelper ) : pathHelper( pathHelper ) {}
-	IWAD operator()( const QFileInfo & file ) {
-		return { file.fileName(), pathHelper.convertPath( file.filePath() ) };
-	}
+	IWAD operator()( const QFileInfo & file );
 };
 
 

@@ -13,7 +13,8 @@
 #include "Common.hpp"
 
 #include "SharedData.hpp"
-#include "ItemModels.hpp"
+#include "ListModel.hpp"
+#include "DirTreeModel.hpp"
 #include "FileSystemUtils.hpp"  // PathHelper
 
 #include <QMainWindow>
@@ -149,7 +150,7 @@ class MainWindow : public QMainWindow {
 	bool iwadSubdirs;    ///< whether to search for IWADs recursivelly in subdirectories
 	QString selectedIWAD;    ///< which IWAD was selected last (workaround to allow user to deselect IWAD by clicking it again)
 
-	TreeModel mapModel;    ///< model owning a tree structure representing a directory with map files
+	DirTreeModel mapModel;    ///< model owning a tree structure representing a directory with map files
 	QString mapDir;    ///< directory with map packs to automatically load the list from (value returned by SetupDialog)
 	TreePath selectedMapPack;    ///< which map pack was selected last (workaround to allow user to deselect map pack by clicking it again)
 

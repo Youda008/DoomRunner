@@ -13,7 +13,7 @@
 #include "Common.hpp"
 
 #include "SharedData.hpp"  // Engine, IWAD
-#include "ItemModels.hpp"
+#include "ListModel.hpp"
 #include "FileSystemUtils.hpp"  // PathHelper
 
 #include <QDialog>

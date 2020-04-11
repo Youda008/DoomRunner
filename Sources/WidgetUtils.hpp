@@ -13,7 +13,8 @@
 #include "Common.hpp"
 
 #include "LangUtils.hpp"
-#include "ItemModels.hpp"
+#include "ListModel.hpp"
+#include "DirTreeModel.hpp"
 
 #include <QListView>
 class QTreeView;
@@ -47,7 +48,7 @@ void changeSelectionTo( QListView * view, int index );
 //  button actions
 
 template< typename Item >
-void appendItem( AItemListModel< Item > & model, const Item & item )
+void appendItem( AListModel< Item > & model, const Item & item )
 {
 	model.startAppending( 1 );
 
@@ -57,7 +58,7 @@ void appendItem( AItemListModel< Item > & model, const Item & item )
 }
 
 template< typename Item >
-int deleteSelectedItem( QListView * view, AItemListModel< Item > & model )
+int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
 	if (selectedIdx < 0) {  // if no item is selected
@@ -87,7 +88,7 @@ int deleteSelectedItem( QListView * view, AItemListModel< Item > & model )
 }
 
 template< typename Item >
-QVector<int> deleteSelectedItems( QListView * view, AItemListModel< Item > & model )
+QVector<int> deleteSelectedItems( QListView * view, AListModel< Item > & model )
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty()) {
@@ -128,7 +129,7 @@ QVector<int> deleteSelectedItems( QListView * view, AItemListModel< Item > & mod
 }
 
 template< typename Item >
-int cloneSelectedItem( QListView * view, AItemListModel< Item > & model )
+int cloneSelectedItem( QListView * view, AListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
 	if (selectedIdx < 0) {  // if no item is selected
@@ -155,7 +156,7 @@ int cloneSelectedItem( QListView * view, AItemListModel< Item > & model )
 }
 
 template< typename Item >
-int moveUpSelectedItem( QListView * view, AItemListModel< Item > & model )
+int moveUpSelectedItem( QListView * view, AListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
 	if (selectedIdx < 0) {  // if no item is selected
@@ -178,7 +179,7 @@ int moveUpSelectedItem( QListView * view, AItemListModel< Item > & model )
 }
 
 template< typename Item >
-int moveDownSelectedItem( QListView * view, AItemListModel< Item > & model )
+int moveDownSelectedItem( QListView * view, AListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
 	if (selectedIdx < 0) {  // if no item is selected
@@ -201,7 +202,7 @@ int moveDownSelectedItem( QListView * view, AItemListModel< Item > & model )
 }
 
 template< typename Item >
-QVector<int> moveUpSelectedItems( QListView * view, AItemListModel< Item > & model )
+QVector<int> moveUpSelectedItems( QListView * view, AListModel< Item > & model )
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty()) {
@@ -234,7 +235,7 @@ QVector<int> moveUpSelectedItems( QListView * view, AItemListModel< Item > & mod
 }
 
 template< typename Item >
-QVector<int> moveDownSelectedItems( QListView * view, AItemListModel< Item > & model )
+QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model )
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty()) {
@@ -272,7 +273,7 @@ QVector<int> moveDownSelectedItems( QListView * view, AItemListModel< Item > & m
 
 /** gets a persistent item ID that survives node shifting, adding or removal */
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemID( QListView * view, const AItemListModel< Item > & model ) -> decltype( model[0].getID() )
+auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> decltype( model[0].getID() )
 {
 	int selectedItemIdx = getSelectedItemIdx( view );
 	if (selectedItemIdx >= 0)
@@ -283,7 +284,7 @@ auto getSelectedItemID( QListView * view, const AItemListModel< Item > & model )
 
 /** attempts to select a previously selected item defined by persistant itemID */
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool selectItemByID( QListView * view, const AItemListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
+bool selectItemByID( QListView * view, const AListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
 	if (!itemID.isEmpty()) {
 		int newItemIdx = findSuch( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
@@ -296,8 +297,8 @@ bool selectItemByID( QListView * view, const AItemListModel< Item > & model, con
 }
 
 template< typename Item >  // Item must contain public attribute .name
-void fillListFromDir( AItemListModel< Item > & model, const QString & dir, bool recursively,
-                      const QVector< QString > & fileSuffixes,
+void fillListFromDir( AListModel< Item > & model, const QString & dir, bool recursively,
+                      std::function< bool ( const QFileInfo & file ) > isDesiredFile,
                       std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
 {
 	QDir dir_( dir );
@@ -311,10 +312,10 @@ void fillListFromDir( AItemListModel< Item > & model, const QString & dir, bool 
 		if (entry.isDir()) {
 			QString dirName = entry.fileName();
 			if (recursively && dirName != "." && dirName != "..") {
-				fillListFromDir( model, entry.filePath(), recursively, fileSuffixes, makeItemFromFile );
+				fillListFromDir( model, entry.filePath(), recursively, isDesiredFile, makeItemFromFile );
 			}
 		} else {
-			if (fileSuffixes.isEmpty() || fileSuffixes.contains( entry.suffix().toLower() )) {
+			if (isDesiredFile( entry )) {
 				// Because Item is generic template param, we don't know to construct it from file.
 				// So the caller needs to describe it by a function.
 				model.append( makeItemFromFile( entry ) );
@@ -324,8 +325,8 @@ void fillListFromDir( AItemListModel< Item > & model, const QString & dir, bool 
 }
 
 template< typename Item >
-void updateListFromDir( AItemListModel< Item > & model, QListView * view, const QString & dir, bool recursively,
-                        const QVector< QString > & fileSuffixes,
+void updateListFromDir( AListModel< Item > & model, QListView * view, const QString & dir, bool recursively,
+                        std::function< bool ( const QFileInfo & file ) > isDesiredFile,
                         std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
 {
 	if (dir.isEmpty())
@@ -340,7 +341,7 @@ void updateListFromDir( AItemListModel< Item > & model, QListView * view, const 
 
 	model.clear();
 
-	fillListFromDir( model, dir, recursively, fileSuffixes, makeItemFromFile );
+	fillListFromDir( model, dir, recursively, isDesiredFile, makeItemFromFile );
 
 	//model.finishCompleteUpdate();  // TODO: perform only diff update, instead of clear-all/insert-all
 	model.contentChanged(0);
@@ -368,13 +369,13 @@ void changeSelectionTo( QTreeView * view, const QModelIndex & index );
 //  complete tree update helpers
 
 /** gets a persistent item ID that survives node shifting, adding or removal */
-TreePath getSelectedItemID( QTreeView * view, const TreeModel & model );
+TreePath getSelectedItemID( QTreeView * view, const DirTreeModel & model );
 
 /** attempts to select a previously selected item defined by persistant itemID */
-bool selectItemByID( QTreeView * view, const TreeModel & model, const TreePath & itemID );
+bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePath & itemID );
 
-void fillTreeFromDir( TreeModel & model, const QModelIndex & parent, const QString & dir, const QVector< QString > & fileSuffixes );
-void updateTreeFromDir( TreeModel & model, QTreeView * view, const QString & dir, const QVector< QString > & fileSuffixes );
+void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile );
+void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile );
 
 
 //======================================================================================================================
@@ -385,7 +386,7 @@ void updateTreeFromDir( TreeModel & model, QTreeView * view, const QString & dir
 
 /** gets a persistent item ID that survives node shifting, adding or removal */
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemID( QComboBox * view, const AItemListModel< Item > & model ) -> decltype( model[0].getID() )
+auto getSelectedItemID( QComboBox * view, const AListModel< Item > & model ) -> decltype( model[0].getID() )
 {
 	int selectedItemIdx = view->currentIndex();
 	if (selectedItemIdx >= 0)
@@ -396,7 +397,7 @@ auto getSelectedItemID( QComboBox * view, const AItemListModel< Item > & model )
 
 /** attempts to select a previously selected item defined by persistant itemID */
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool selectItemByID( QComboBox * view, const AItemListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
+bool selectItemByID( QComboBox * view, const AListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
 	if (!itemID.isEmpty()) {
 		int newItemIdx = findSuch( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );

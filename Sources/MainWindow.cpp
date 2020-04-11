@@ -756,7 +756,7 @@ void MainWindow::modsDropped()
 
 void MainWindow::updateIWADsFromDir()
 {
-	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, iwadSuffixes, IWADfromFileMaker( pathHelper ) );
+	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, isIWAD, IWADfromFileMaker( pathHelper ) );
 
 	// the previously selected item might have been removed
 	if (!isSomethingSelected( ui->iwadListView ))
@@ -765,10 +765,10 @@ void MainWindow::updateIWADsFromDir()
 
 void MainWindow::updateMapPacksFromDir()
 {
-	// workaround to stop the scrollbar from moving to show the selected item
+	// TODO: workaround to stop the scrollbar from moving to show the selected item
 	auto scrollPos = ui->mapDirView->verticalScrollBar()->value();
 
-	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, mapSuffixes );
+	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, isMapPack );
 
 	ui->mapDirView->verticalScrollBar()->setValue( scrollPos );
 
@@ -821,7 +821,8 @@ void MainWindow::updateConfigFilesFromDir()
 
 	configModel.clear();
 
-	fillListFromDir< QString >( configModel, engineDir, false, { configFileExt },
+	fillListFromDir< QString >( configModel, engineDir, false,
+		/*isDesiredFile*/[]( const QFileInfo & file ){ return file.suffix().toLower() == configFileExt; },
 		/*makeItemFromFile*/[]( const QFileInfo & file ) { return file.fileName(); }
 	);
 
@@ -1272,7 +1273,7 @@ void MainWindow::loadOptions( const QString & fileName )
 			if (!dir.isEmpty()) {  // non-existing element directory -> skip completely
 				if (QDir( dir ).exists()) {
 					iwadDir = pathHelper.convertPath( dir );
-					fillListFromDir< IWAD >( iwadModel, iwadDir, iwadSubdirs, iwadSuffixes, IWADfromFileMaker( pathHelper ) );
+					fillListFromDir< IWAD >( iwadModel, iwadDir, iwadSubdirs, isIWAD, IWADfromFileMaker( pathHelper ) );
 				} else {
 					QMessageBox::warning( this, "IWAD dir no longer exists",
 						"IWAD directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
@@ -1500,13 +1501,14 @@ void MainWindow::updateLaunchCommand()
 
 QString MainWindow::generateLaunchCommand( QString baseDir )
 {
-	// allow the caller to specify which base directory he wants to derive the relative paths from
-	// this is required because of the "Export preset" function that needs to write the correct paths to the bat
-	// if no argument is given (empty string), fallback to system current directory
+	// Allow the caller to specify which base directory he wants to derive the relative paths from.
+	// This is required because of the "Export preset" function that needs to write the correct paths to the bat.
+	// If no argument is given (empty string), fallback to system current directory.
 	if (baseDir.isEmpty())
 		baseDir = QDir::currentPath();
 
-	PathHelper base( pathHelper.useAbsolutePaths(), baseDir );
+	// All stored paths are relative to pathHelper.baseDir(), but we need them relative to baseDir
+	PathHelper base( pathHelper.useAbsolutePaths(), baseDir, pathHelper.baseDir() );
 
 	QString newCommand;
 	QTextStream cmdStream( &newCommand );

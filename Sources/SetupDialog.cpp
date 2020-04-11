@@ -130,7 +130,7 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadBtnDown->setEnabled( !enabled );
 
 	if (enabled)
-		updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, iwadSuffixes, IWADfromFileMaker( pathHelper ));
+		updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, isIWAD, IWADfromFileMaker( pathHelper ) );
 }
 
 void SetupDialog::toggleIWADSubdirs( bool checked )
@@ -260,7 +260,7 @@ void SetupDialog::editEngine( const QModelIndex & index )
 
 void SetupDialog::updateIWADsFromDir()
 {
-	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, iwadSuffixes, IWADfromFileMaker( pathHelper ));
+	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, isIWAD, IWADfromFileMaker( pathHelper ) );
 }
 
 void SetupDialog::toggleAbsolutePaths( bool checked )

@@ -2,8 +2,8 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Created on:  5.4.2020
-// Description: utilities concerning paths, directories and files
+// Created on:  13.5.2019
+// Description: mediators between a list of arbitrary objects and list view or other widgets
 //======================================================================================================================
 
-//#include "FileSystemUtils.hpp"
+//#include "ListModel.hpp"

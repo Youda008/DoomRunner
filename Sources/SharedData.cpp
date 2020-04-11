@@ -3,30 +3,37 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  14.5.2019
-// Description: declaration of shared data structs used accross multiple windows
+// Description: data structures and functionality that is used accross multiple windows/dialogs
 //======================================================================================================================
 
 #include "SharedData.hpp"
 
-#include <QStringBuilder>
+#include "FileSystemUtils.hpp"
+#include "DoomUtils.hpp"
+
+#include <QHash>
+#include <QFileInfo>
+
+#include <QDebug>
 
 
 //======================================================================================================================
 
-// useful for debug purposes, easier to set breakpoint inside than in lambdas
-QString makeEngineDispStrFromName( const Engine & engine )
+static const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
+static const QVector< QString > mapSuffixes = {"wad", "pk3", "pk7", "zip", "7z"};
+
+bool isIWAD( const QFileInfo & file )
 {
-	return engine.name;
+	return iwadSuffixes.contains( file.suffix().toLower() );
 }
-QString makeEngineDispStrWithPath( const Engine & engine )
+
+bool isMapPack( const QFileInfo & file )
 {
-	return engine.name % "  [" % engine.path % "]";
+	return mapSuffixes.contains( file.suffix().toLower() );
 }
-QString makeIwadDispStrFromName( const IWAD & iwad )
+
+IWAD IWADfromFileMaker::operator()( const QFileInfo & file )
 {
-	return iwad.name;
+	return { file.fileName(), pathHelper.convertPath( file.filePath() ) };
 }
-QString makeIwadDispStrWithPath( const IWAD & iwad )
-{
-	return iwad.name % "  [" % iwad.path % "]";
-}
+

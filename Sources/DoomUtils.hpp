@@ -21,5 +21,16 @@ QString getMapNumber( const QString & mapName );
 
 bool isDoom1( const QString & iwadName );
 
+enum class WadType {
+	CANT_READ,
+	IWAD,
+	PWAD,
+	NEITHER
+};
+/// this actually opens and reads the file, so don't call it very often, instead cache the results
+WadType recognizeWadTypeByHeader( const QString & filePath );
+
+
+
 
 #endif // DOOM_UTILS_INCLUDED

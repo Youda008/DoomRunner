@@ -1,4 +1,3 @@
-- distinguishing iwads from patch wads by the file header
 - extracting map names from IWAD file content
 - differential update of file lists from directory to prevent losing selection or expanding collapsed dirs
 - support for recording demos

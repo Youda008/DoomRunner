@@ -30,7 +30,6 @@
 #include <QTimer>
 #include <QProcess>
 #include <QDesktopWidget>
-#include <QScrollBar>
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QJsonObject>
@@ -765,12 +764,7 @@ void MainWindow::updateIWADsFromDir()
 
 void MainWindow::updateMapPacksFromDir()
 {
-	// TODO: workaround to stop the scrollbar from moving to show the selected item
-	auto scrollPos = ui->mapDirView->verticalScrollBar()->value();
-
 	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, isMapPack );
-
-	ui->mapDirView->verticalScrollBar()->setValue( scrollPos );
 
 	// the previously selected item might have been removed
 	if (!isSomethingSelected( ui->mapDirView ))
@@ -1532,7 +1526,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 
 	QModelIndex mapIdx = getSelectedItemIdx( ui->mapDirView );
 	if (mapIdx.isValid()) {
-		QString mapPath = mapDir+'/'+mapModel.getItemPath( mapIdx ).join('/');
+		QString mapPath = mapDir+'/'+mapModel.getItemPath( mapIdx ).toString();  // TODO: mapDir is already part of mapModel so it could return full path directly
 		cmdStream << " -file \"" << base.rebasePath( mapPath ) << "\"";
 	}
 

@@ -19,6 +19,7 @@
 #include <QListView>
 class QTreeView;
 #include <QComboBox>
+#include <QScrollBar>
 #include <QMessageBox>
 #include <QDir>
 #include <QDirIterator>
@@ -296,7 +297,7 @@ bool selectItemByID( QListView * view, const AListModel< Item > & model, const d
 	return false;
 }
 
-template< typename Item >  // Item must contain public attribute .name
+template< typename Item >
 void fillListFromDir( AListModel< Item > & model, const QString & dir, bool recursively,
                       std::function< bool ( const QFileInfo & file ) > isDesiredFile,
                       std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
@@ -307,8 +308,7 @@ void fillListFromDir( AListModel< Item > & model, const QString & dir, bool recu
 
 	QDirIterator dirIt( dir_ );
 	while (dirIt.hasNext()) {
-		dirIt.next();
-		QFileInfo entry = dirIt.fileInfo();
+		QFileInfo entry( dirIt.next() );
 		if (entry.isDir()) {
 			QString dirName = entry.fileName();
 			if (recursively && dirName != "." && dirName != "..") {
@@ -332,7 +332,15 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 	if (dir.isEmpty())
 		return;
 
-	// write down the currently selected item
+	// Doing a differential update (deleting only things that were deleted and adding only things that were added)
+	// is not worth here. It's too complicated and prone to bugs and its advantages are too small.
+	// Instead we just clear everything and then load it from scratch according to the current state of the directory
+	// and update selection and scroll bar.
+
+	// note down the current scroll bar position
+	auto scrollPos = view->verticalScrollBar()->value();
+
+	// note down the currently selected item
 	auto selectedItemID = getSelectedItemID( view, model );  // empty string when nothing is selected
 
 	deselectSelectedItems( view );
@@ -343,13 +351,56 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 
 	fillListFromDir( model, dir, recursively, isDesiredFile, makeItemFromFile );
 
-	//model.finishCompleteUpdate();  // TODO: perform only diff update, instead of clear-all/insert-all
-	model.contentChanged(0);
+	//model.finishCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor
+	model.contentChanged(0);         // and this is an acceptable workaround, instead of differential update
 
-	// update the selection so that the same file remains selected
+	// restore the selection so that the same file remains selected
 	selectItemByID( view, model, selectedItemID );
-}
 
+	// restore the scroll bar position, so that it doesn't move when an item is selected
+	view->verticalScrollBar()->setValue( scrollPos );
+}
+/*
+template< typename Item >
+void updateListFromDirNew( AListModel< Item > & model, const QString & dir, bool recursively,
+                           std::function< bool ( const QFileInfo & file ) > isDesiredFile,
+                           std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
+{
+	if (dir.isEmpty())
+		return;
+
+	modelIt = model.begin();
+	dirIt = dir.begin();
+
+	while (modelIt != modelEnd && dirIt != dirEnd)
+	{
+		if (modelIt->name == dirIt->name) {
+			dirIt++;
+			modelEnd++;
+		} else (modelIt->name < dirIt->name) { // file has been deleted from directory
+			begin remove rows
+			remove row
+			end remove rows
+			modelIt++
+		} else (modelIt->name > dirIt->name) { // file has been added to directory
+			begin insert rows
+			insert row
+			end insert rows
+			dirIt++
+		}
+	}
+
+	while (modelIt != modelEnd)
+	{
+		remove row
+	}
+
+	while (dirIt != dirEnd)
+	{
+		append row
+	}
+}
+*/
 
 //======================================================================================================================
 //  tree view helpers

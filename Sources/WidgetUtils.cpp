@@ -160,26 +160,45 @@ void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & 
 	if (dir.isEmpty())
 		return;
 
-	// write down the currently selected item
+	// Doing a differential update (deleting only things that were deleted and adding only things that were added)
+	// is not worth here. It's too complicated and prone to bugs and its advantages are too small.
+	// Instead we just clear everything and then load it from scratch according to the current state of the directory
+	// and update selection, scroll bar and dir expansion.
+
+	// note down the current scroll bar position
+	auto scrollPos = view->verticalScrollBar()->value();
+
+	// note down the currently selected item
 	auto selectedItemID = getSelectedItemID( view, model );  // empty path when nothing is selected
 
 	deselectSelectedItems( view );
 
-	model.startCompleteUpdate();  // TODO: perform only diff update, instead of clear-all/insert-all, so that
-	                              //       it doesn't always reset highlighting of the item pointer to by a mouse cursor
+	// note down which directories are expanded
+	QHash< QString, bool > expanded;
+	model.traverseItems( [ view, &model, &expanded ]( const QModelIndex & index ) {
+		if (model.isDir( index )) {
+			expanded[ model.getItemPath( index ).toString() ] = view->isExpanded( index );
+		}
+	});
+
+	model.startCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor
+
 	model.clear();
 
 	fillTreeFromDir( model, QModelIndex(), dir, isDesiredFile );
 
 	model.finishCompleteUpdate();
 
-	// expand all the directories
-	model.traverseItems( [ view, &model ]( const QModelIndex & index ) {
+	// expand those directories that were expanded before
+	model.traverseItems( [ view, &model, &expanded ]( const QModelIndex & index ) {
 		if (model.isDir( index )) {
-			view->setExpanded( index, true );
+			view->setExpanded( index, expanded[ model.getItemPath( index ).toString() ] );
 		}
 	});
 
-	// update the selection so that the same file remains selected
+	// restore the selection so that the same file remains selected
 	selectItemByID( view, model, selectedItemID );
+
+	// restore the scroll bar position, so that it doesn't move when an item is selected
+	view->verticalScrollBar()->setValue( scrollPos );
 }

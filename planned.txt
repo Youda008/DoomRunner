@@ -1,5 +1,4 @@
 - extracting map names from IWAD file content
-- differential update of file lists from directory to prevent losing selection or expanding collapsed dirs
 - support for recording demos
 - allow to setup config directory for each engine
 - store selected map file and additional command line args into presets

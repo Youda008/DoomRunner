@@ -111,6 +111,9 @@ class TreePath : public QStringList {
 
 	/** makes TreePath from string in file-system format ("node1/node2/leaf") */
 	TreePath( const QString & pathStr ) : QStringList( pathStr.split( '/', QString::SkipEmptyParts ) ) {}
+
+	/** converts TreePath back to string in file-system format ("node1/node2/leaf") */
+	QString toString() const { return this->join('/'); }
 };
 
 

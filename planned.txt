@@ -1,6 +1,5 @@
 - extracting map names from IWAD file content
 - support for recording demos
-- allow to setup config directory for each engine
 - store selected map file and additional command line args into presets
 - better icons for 'add','delete','clone' buttons
 - drag&drop from directory to engine list

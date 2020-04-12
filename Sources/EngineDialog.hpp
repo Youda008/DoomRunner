@@ -38,9 +38,11 @@ class EngineDialog : public QDialog {
  private slots:
 
 	void browseEngine();
+	void browseConfigDir();
 
 	void updateName( const QString & text );
 	void updatePath( const QString & text );
+	void updateConfigDir( const QString & text );
 
  private:
 

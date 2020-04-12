@@ -25,11 +25,14 @@ EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, con
 
 	ui->nameLine->setText( engine.name );
 	ui->pathLine->setText( engine.path );
+	ui->configDirLine->setText( engine.configDir );
 
-	connect( ui->browseBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
+	connect( ui->browseEngineBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
+	connect( ui->browseConfigsBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
 
 	connect( ui->nameLine, &QLineEdit::textChanged, this, &thisClass::updateName );
 	connect( ui->pathLine, &QLineEdit::textChanged, this, &thisClass::updatePath );
+	connect( ui->configDirLine, &QLineEdit::textChanged, this, &thisClass::updateConfigDir );
 
 	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::accept );
 	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::reject );
@@ -42,13 +45,13 @@ EngineDialog::~EngineDialog()
 
 void EngineDialog::browseEngine()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate engine's executable", QString(),
+	QString path = QFileDialog::getOpenFileName( this, "Locate engine's executable", ui->pathLine->text(),
  #ifdef _WIN32
 		"Executable files (*.exe);;"
  #endif
 		"All files (*)"
 	);
-	if (path.length() == 0)  // user probably clicked cancel
+	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
 	// the path comming out of the file dialog is always absolute
@@ -56,7 +59,25 @@ void EngineDialog::browseEngine()
 		path = pathHelper.getRelativePath( path );
 
 	ui->pathLine->setText( path );
-	ui->nameLine->setText( QFileInfo( path ).dir().dirName() );
+
+	if (ui->nameLine->text().isEmpty())  // don't overwrite existing name
+		ui->nameLine->setText( QFileInfo( path ).dir().dirName() );
+
+	if (ui->configDirLine->text().isEmpty())  // don't overwrite existing config dir
+		ui->configDirLine->setText( QFileInfo( path ).dir().path() );
+}
+
+void EngineDialog::browseConfigDir()
+{
+	QString dirPath = QFileDialog::getExistingDirectory( this, "Locate engine's config directory", ui->configDirLine->text() );
+	if (dirPath.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path comming out of the file dialog is always absolute
+	if (pathHelper.useRelativePaths())
+		dirPath = pathHelper.getRelativePath( dirPath );
+
+	ui->configDirLine->setText( dirPath );
 }
 
 void EngineDialog::updateName( const QString & text )
@@ -67,4 +88,9 @@ void EngineDialog::updateName( const QString & text )
 void EngineDialog::updatePath( const QString & text )
 {
 	engine.path = text;
+}
+
+void EngineDialog::updateConfigDir( const QString & text )
+{
+	engine.configDir = text;
 }

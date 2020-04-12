@@ -25,6 +25,7 @@ class PathHelper;
 struct Engine {
 	QString name;
 	QString path;
+	QString configDir;
 	// used in automatic list updates for selecting the same item as before
 	QString getID() const { return path; }
 };

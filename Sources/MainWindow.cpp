@@ -773,22 +773,23 @@ void MainWindow::updateMapPacksFromDir()
 
 void MainWindow::updateSaveFilesFromDir()
 {
-	if (ui->engineCmbBox->currentIndex() < 0) {  // no save file is selected
+	int currentEngineIdx = ui->engineCmbBox->currentIndex();
+	if (currentEngineIdx < 0) {  // no save file is selected
 		return;
 	}
 
-	QFileInfo engineFileInfo( engineModel[ ui->engineCmbBox->currentIndex() ].path );
-	QDir engineDir = engineFileInfo.dir();
-
-	// write down the currently selected item
-	QString lastText = ui->saveFileCmbBox->currentText();
+	// i don't know about a case, where the save dir would be different from config dir, it's not even configurable in zdoom
+	QString saveDir = engineModel[ currentEngineIdx ].configDir;
 
 	// custom implementation, because it doesn't use our item models, but just standard Qt ComboBox model
+
+	// note down the currently selected item
+	QString lastText = ui->saveFileCmbBox->currentText();
 
 	ui->saveFileCmbBox->clear();
 
 	// update the list according to directory content
-	QDirIterator dirIt( engineDir );
+	QDirIterator dirIt( saveDir );
 	while (dirIt.hasNext()) {
 		QFileInfo entry( dirIt.next() );
 		if (!entry.isDir() && entry.suffix() == "zds")
@@ -801,21 +802,21 @@ void MainWindow::updateSaveFilesFromDir()
 
 void MainWindow::updateConfigFilesFromDir()
 {
-	if (ui->engineCmbBox->currentIndex() < 0) {  // no config file is selected
+	int currentEngineIdx = ui->engineCmbBox->currentIndex();
+	if (currentEngineIdx < 0) {  // no config file is selected
 		return;
 	}
 
-	QFileInfo engineFileInfo( engineModel[ ui->engineCmbBox->currentIndex() ].path );
-	QString engineDir = engineFileInfo.dir().path();
+	QString configDir = engineModel[ currentEngineIdx ].configDir;
 
-	// write down the currently selected item so that we can restore it later
+	// write down the currently selected item
 	QString lastText = ui->configCmbBox->currentText();
 
 	//configModel.startCompleteUpdate();  // this will reset the selection and cause the launch command to regenerate back and forth
 
 	configModel.clear();
 
-	fillListFromDir< QString >( configModel, engineDir, false,
+	fillListFromDir< QString >( configModel, configDir, false,
 		/*isDesiredFile*/[]( const QFileInfo & file ){ return file.suffix().toLower() == configFileExt; },
 		/*makeItemFromFile*/[]( const QFileInfo & file ) { return file.fileName(); }
 	);
@@ -869,8 +870,10 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 {
 	pathHelper.toggleAbsolutePaths( absolute );
 
-	for (Engine & engine : engineModel)
+	for (Engine & engine : engineModel) {
 		engine.path = pathHelper.convertPath( engine.path );
+		engine.configDir = pathHelper.convertPath( engine.configDir );
+	}
 
 	if (iwadListFromDir && !iwadDir.isEmpty())
 		iwadDir = pathHelper.convertPath( iwadDir );
@@ -1096,6 +1099,7 @@ void MainWindow::saveOptions( const QString & fileName )
 			QJsonObject jsEngine;
 			jsEngine["name"] = engine.name;
 			jsEngine["path"] = engine.path;
+			jsEngine["config_dir"] = engine.configDir;
 			jsEngineArray.append( jsEngine );
 		}
 		jsEngines["engines"] = jsEngineArray;
@@ -1233,11 +1237,12 @@ void MainWindow::loadOptions( const QString & fileName )
 
 			QString name = getString( jsEngine, "name" );
 			QString path = getString( jsEngine, "path" );
+			QString configDir = getString( jsEngine, "config_dir" );
 			if (name.isEmpty() || path.isEmpty())  // name or path doesn't exist - skip this entry
 				continue;
 
 			if (QFileInfo( path ).exists()) {
-				engineModel.append({ name, pathHelper.convertPath( path ) });
+				engineModel.append({ name, pathHelper.convertPath( path ), pathHelper.convertPath( configDir ) });
 			} else {
 				QMessageBox::warning( this, "Engine no longer exists",
 					"An engine from the saved options ("%path%") no longer exists. It will be removed from the list." );
@@ -1513,8 +1518,8 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx >= 0) {
-			QDir engineDir = QFileInfo( engineModel[ engineIdx ].path ).dir();
-			QString configPath = engineDir.filePath( ui->configCmbBox->currentText() );
+			QDir configDir( engineModel[ engineIdx ].configDir );
+			QString configPath = configDir.filePath( configModel[ configIdx ] );
 			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
 	}
@@ -1556,7 +1561,9 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 			cmdStream << " " << compatOptsCmdArgs;
 		}
 	} else if (ui->launchMode_savefile->isChecked()) {
-		cmdStream << " -loadgame " << ui->saveFileCmbBox->currentText();
+		QDir saveDir( engineModel[ engineIdx ].configDir );
+		QString savePath = saveDir.filePath( ui->saveFileCmbBox->currentText() );
+		cmdStream << " -loadgame \"" << base.rebasePath( savePath ) << "\"";
 	}
 
 	if (ui->multiplayerChkBox->isChecked()) {

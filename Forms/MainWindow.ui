@@ -1227,12 +1227,12 @@
   </action>
   <action name="exportPresetAction">
    <property name="text">
-    <string>Export preset</string>
+    <string>Export to shell script</string>
    </property>
   </action>
   <action name="importPresetAction">
    <property name="text">
-    <string>Import preset</string>
+    <string>Import from shell script</string>
    </property>
   </action>
   <action name="exitAction">

@@ -33,7 +33,11 @@ class EngineDialog : public QDialog {
  public:
 
 	explicit EngineDialog( QWidget * parent, const PathHelper & pathHelper, const Engine & engine );
-	~EngineDialog();
+	virtual ~EngineDialog() override;
+
+ private: //methods
+
+	virtual void showEvent( QShowEvent * event ) override;
 
  private slots:
 

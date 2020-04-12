@@ -46,8 +46,8 @@ struct Mod {
 struct Preset {
 	QString name;
 	QString selectedEnginePath;  // we store the engine by path, so that it does't break when user renames them or reorders them
-	QString selectedConfig;  // we store the engine by name, so that it does't break when user reorders them
-	QString selectedIWAD;  // we store the IWAD by name, so that it doesn't break when user reorders them
+	QString selectedConfig;  // we store the engine by name instead of index, so that it does't break when user reorders them
+	QString selectedIWAD;  // we store the IWAD by name instead of index, so that it doesn't break when user reorders them
 	//TreePath selectedMapPack;
 	QVector< Mod > mods;  // this list needs to be kept in sync with mod list widget
 };

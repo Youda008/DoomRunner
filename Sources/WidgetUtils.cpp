@@ -106,15 +106,15 @@ void changeSelectionTo( QTreeView * view, const QModelIndex & index )
 	selectItemByIdx( view, index );
 }
 
-TreePath getSelectedItemID( QTreeView * view, const DirTreeModel & model )
+TreePosition getSelectedItemID( QTreeView * view, const DirTreeModel & model )
 {
 	QModelIndex selectedItemIdx = getSelectedItemIdx( view );
-	return model.getItemPath( selectedItemIdx );  // if nothing is selected, this path will be empty
+	return model.getNodePosition( selectedItemIdx );  // if nothing is selected, this path will be empty
 }
 
-bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePath & itemID )
+bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePosition & itemID )
 {
-	QModelIndex newItemIdx = model.getItemByPath( itemID );  // empty or non-existing path will produce invalid index
+	QModelIndex newItemIdx = model.getNodeByPosition( itemID );  // empty or non-existing path will produce invalid index
 	if (newItemIdx.isValid()) {
 		selectItemByIdx( view, newItemIdx );
 		return true;
@@ -136,7 +136,7 @@ void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QS
 		if (entry.isDir()) {
 			QString dirName = entry.fileName();
 			if (dirName != "." && dirName != "..") {
-				QModelIndex dirItem = model.addItem( parent, dirName, NodeType::DIR );
+				QModelIndex dirItem = model.addNode( parent, dirName, NodeType::DIR );
 				fillTreeFromDir( model, dirItem, entry.filePath(), isDesiredFile );
 			}
 		}
@@ -149,7 +149,7 @@ void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QS
 		QFileInfo entry = dirIt2.fileInfo();
 		if (!entry.isDir()) {
 			if (isDesiredFile( entry )) {
-				model.addItem( parent, entry.fileName(), NodeType::FILE );
+				model.addNode( parent, entry.fileName(), NodeType::FILE );
 			}
 		}
 	}
@@ -175,9 +175,9 @@ void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & 
 
 	// note down which directories are expanded
 	QHash< QString, bool > expanded;
-	model.traverseItems( [ view, &model, &expanded ]( const QModelIndex & index ) {
+	model.traverseNodes( [ view, &model, &expanded ]( const QModelIndex & index ) {
 		if (model.isDir( index )) {
-			expanded[ model.getItemPath( index ).toString() ] = view->isExpanded( index );
+			expanded[ model.getFSPath( index ) ] = view->isExpanded( index );
 		}
 	});
 
@@ -190,9 +190,9 @@ void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & 
 	model.finishCompleteUpdate();
 
 	// expand those directories that were expanded before
-	model.traverseItems( [ view, &model, &expanded ]( const QModelIndex & index ) {
+	model.traverseNodes( [ view, &model, &expanded ]( const QModelIndex & index ) {
 		if (model.isDir( index )) {
-			view->setExpanded( index, expanded[ model.getItemPath( index ).toString() ] );
+			view->setExpanded( index, expanded[ model.getFSPath( index ) ] );
 		}
 	});
 

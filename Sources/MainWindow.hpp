@@ -125,11 +125,6 @@ class MainWindow : public QMainWindow {
 
 	Ui::MainWindow * ui;
 
-	// workaround for the Qt not showing the final position in window constructor
-	bool shown;
-	int width;  // these dimensions are the ones loaded from the options file
-	int height;
-
 	uint tickCount;
 
 	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
@@ -152,7 +147,7 @@ class MainWindow : public QMainWindow {
 
 	DirTreeModel mapModel;    ///< model owning a tree structure representing a directory with map files
 	QString mapDir;    ///< directory with map packs to automatically load the list from (value returned by SetupDialog)
-	TreePath selectedMapPack;    ///< which map pack was selected last (workaround to allow user to deselect map pack by clicking it again)
+	TreePosition selectedMapPack;    ///< which map pack was selected last (workaround to allow user to deselect map pack by clicking it again)
 
 	EditableListModel< Mod > modModel;
 	QString modDir;    ///< directory with mods, starting dir for "Add mod" dialog (value returned by SetupDialog)

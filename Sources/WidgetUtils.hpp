@@ -420,10 +420,10 @@ void changeSelectionTo( QTreeView * view, const QModelIndex & index );
 //  complete tree update helpers
 
 /** gets a persistent item ID that survives node shifting, adding or removal */
-TreePath getSelectedItemID( QTreeView * view, const DirTreeModel & model );
+TreePosition getSelectedItemID( QTreeView * view, const DirTreeModel & model );
 
 /** attempts to select a previously selected item defined by persistant itemID */
-bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePath & itemID );
+bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePosition & itemID );
 
 void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile );
 void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile );

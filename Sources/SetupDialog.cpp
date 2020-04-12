@@ -93,8 +93,10 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	//startTimer( 1000 );
 }
 
-void SetupDialog::timerEvent( QTimerEvent * )  // called once per second
+void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
 {
+	QDialog::timerEvent( event );
+
 	tickCount++;
 }
 

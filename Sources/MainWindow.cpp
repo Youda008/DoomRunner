@@ -88,9 +88,6 @@ enum GameMode {
 MainWindow::MainWindow()
 
 	: QMainWindow( nullptr )
-	, shown( false )
-	, width( -1 )
-	, height( -1 )
 	, tickCount( 0 )
 	, pathHelper( false, QDir::currentPath() )
 	, engineModel(
@@ -206,6 +203,14 @@ MainWindow::MainWindow()
 
 	connect( ui->cmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateAdditionalArgs );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
+}
+
+void MainWindow::showEvent( QShowEvent * event )
+{
+	QMainWindow::showEvent( event );
+
+	// In the constructor, some properties of the window are not yet initialized, like window dimensions,
+	// so we have to do this here, when the window is already fully loaded.
 
 	// try to load last saved state
 	if (QFileInfo( defaultOptionsFile ).exists())
@@ -217,19 +222,16 @@ MainWindow::MainWindow()
 	startTimer( 1000 );
 }
 
-void MainWindow::showEvent( QShowEvent * )
+void MainWindow::firstRun()
 {
-	// the window doesn't have the geometry.x and geometry.y set yet in the constructor, so we must do it here
-	if (width > 0 && height > 0) {
-		const QRect & geometry = this->geometry();
-		this->setGeometry( geometry.x(), geometry.y(), width, height );
-	}
-
-	shown = true;
+	// let the user setup the paths and other basic settings
+	QTimer::singleShot( 1, this, &thisClass::runSetupDialog ); // TODO: try directly
 }
 
-void MainWindow::timerEvent( QTimerEvent * )  // called once per second
+void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 {
+	QMainWindow::timerEvent( event );
+
 	tickCount++;
 
  #ifdef QT_DEBUG
@@ -250,18 +252,12 @@ void MainWindow::closeEvent( QCloseEvent * event )
 {
 	saveOptions( defaultOptionsFile );
 
-	QWidget::closeEvent( event );
+	QMainWindow::closeEvent( event );
 }
 
 MainWindow::~MainWindow()
 {
 	delete ui;
-}
-
-void MainWindow::firstRun()
-{
-	// let the user setup the paths and other basic settings
-	QTimer::singleShot( 1, this, &thisClass::runSetupDialog );
 }
 
 
@@ -530,7 +526,7 @@ void MainWindow::toggleIWAD( const QModelIndex & index )
 
 void MainWindow::toggleMapPack( const QModelIndex & index )
 {
-	TreePath clickedMapPack = mapModel.getItemPath( index );
+	TreePosition clickedMapPack = mapModel.getNodePosition( index );
 
 	// allow the user to deselect the map pack by clicking on it again
 	if (clickedMapPack == selectedMapPack) {
@@ -1131,7 +1127,7 @@ void MainWindow::saveOptions( const QString & fileName )
 		QJsonObject jsMaps;
 		jsMaps["directory"] = mapDir;
 		QModelIndex mapIdx = getSelectedItemIdx( ui->mapDirView );
-		jsMaps["selected_file"] = mapIdx.isValid() ? mapModel.getItemPath( mapIdx ).join('/') : "";
+		jsMaps["selected_file"] = mapModel.getNodePosition( mapIdx ).toString();
 		json["maps"] = jsMaps;
 	}
 
@@ -1205,12 +1201,12 @@ void MainWindow::loadOptions( const QString & fileName )
 
 	// window geometry
 	{
-		width = getInt( json, "width", -1 );
-		height = getInt( json, "height", -1 );
-		if (shown && width > 0 && height > 0) {  // the window has been already shown and has the final position, so we can change the dimensions
+		int width = getInt( json, "width", -1 );
+		int height = getInt( json, "height", -1 );
+		if (width > 0 && height > 0) {
 			const QRect & geometry = this->geometry();
 			this->setGeometry( geometry.x(), geometry.y(), width, height );
-		} // otherwise we need to do this in showEvent callback
+		}
 	}
 
 	// path helper must be set before others, because we want to convert the loaded paths accordingly
@@ -1325,8 +1321,7 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		QString selectedFile = getString( jsMaps, "selected_file" );    // TODO: map file vs map pack
 		if (!selectedFile.isEmpty()) {
-			TreePath relativePath = selectedFile.split('/');
-			QModelIndex mapIndex = mapModel.getItemByPath( relativePath );
+			QModelIndex mapIndex = mapModel.getNodeByPosition( TreePosition( selectedFile ) );
 			if (mapIndex.isValid()) {
 				selectItemByIdx( ui->mapDirView, mapIndex );
 			} else {
@@ -1512,27 +1507,26 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 	QString newCommand;
 	QTextStream cmdStream( &newCommand );
 
-	const int engineIdx = ui->engineCmbBox->currentIndex();
-	if (engineIdx >= 0) {
-		cmdStream << "\"" << base.rebasePath( engineModel[ engineIdx ].path ) << "\"";
+	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	if (selectedEngineIdx >= 0) {
+		cmdStream << "\"" << base.rebasePath( engineModel[ selectedEngineIdx ].path ) << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx >= 0) {
-			QDir configDir( engineModel[ engineIdx ].configDir );
+			QDir configDir( engineModel[ selectedEngineIdx ].configDir );
 			QString configPath = configDir.filePath( configModel[ configIdx ] );
 			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
 	}
 
-	const int iwadIdx = getSelectedItemIdx( ui->iwadListView );
-	if (iwadIdx >= 0) {
-		cmdStream << " -iwad \"" << base.rebasePath( iwadModel[ iwadIdx ].path ) << "\"";
+	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
+	if (selectedIwadIdx >= 0) {
+		cmdStream << " -iwad \"" << base.rebasePath( iwadModel[ selectedIwadIdx ].path ) << "\"";
 	}
 
-	QModelIndex mapIdx = getSelectedItemIdx( ui->mapDirView );
-	if (mapIdx.isValid()) {
-		QString mapPath = mapDir+'/'+mapModel.getItemPath( mapIdx ).toString();  // TODO: mapDir is already part of mapModel so it could return full path directly
-		cmdStream << " -file \"" << base.rebasePath( mapPath ) << "\"";
+	QModelIndex selectedMapIdx = getSelectedItemIdx( ui->mapDirView );
+	if (selectedMapIdx.isValid()) {
+		cmdStream << " -file \"" << base.rebasePath( mapModel.getFSPath( selectedMapIdx ) ) << "\"";
 	}
 
 	for (const Mod & mod : modModel) {
@@ -1561,7 +1555,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 			cmdStream << " " << compatOptsCmdArgs;
 		}
 	} else if (ui->launchMode_savefile->isChecked()) {
-		QDir saveDir( engineModel[ engineIdx ].configDir );
+		QDir saveDir( engineModel[ selectedEngineIdx ].configDir );
 		QString savePath = saveDir.filePath( ui->saveFileCmbBox->currentText() );
 		cmdStream << " -loadgame \"" << base.rebasePath( savePath ) << "\"";
 	}

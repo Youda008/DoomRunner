@@ -121,7 +121,7 @@ class AListModel : public QAbstractListModel {
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
-	int rowCount( const QModelIndex & = QModelIndex() ) const override
+	virtual int rowCount( const QModelIndex & = QModelIndex() ) const override
 	{
 		return itemList.size();
 	}
@@ -230,7 +230,7 @@ class EditableListModel : public AListModel< Item > {
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
-	Qt::ItemFlags flags( const QModelIndex & index ) const override
+	virtual Qt::ItemFlags flags( const QModelIndex & index ) const override
 	{
 		if (!index.isValid())
 			return Qt::ItemIsDropEnabled;
@@ -245,7 +245,7 @@ class EditableListModel : public AListModel< Item > {
 		return flags;
 	}
 
-	QVariant data( const QModelIndex & index, int role ) const override
+	virtual QVariant data( const QModelIndex & index, int role ) const override
 	{
 		if (!index.isValid() || index.parent().isValid() || index.row() >= superClass::itemList.size())
 			return QVariant();
@@ -271,7 +271,7 @@ class EditableListModel : public AListModel< Item > {
 		}
 	}
 
-	bool setData( const QModelIndex & index, const QVariant & value, int role ) override
+	virtual bool setData( const QModelIndex & index, const QVariant & value, int role ) override
 	{
 		if (index.parent().isValid() || !index.isValid() || index.row() >= superClass::itemList.size())
 			return false;
@@ -295,7 +295,7 @@ class EditableListModel : public AListModel< Item > {
 		}
 	}
 
-	bool insertRows( int row, int count, const QModelIndex & parent ) override
+	virtual bool insertRows( int row, int count, const QModelIndex & parent ) override
 	{
 		if (parent.isValid()) {
 			return false;
@@ -313,7 +313,7 @@ class EditableListModel : public AListModel< Item > {
 		return true;
 	}
 
-	bool removeRows( int row, int count, const QModelIndex & parent ) override
+	virtual bool removeRows( int row, int count, const QModelIndex & parent ) override
 	{
 		if (parent.isValid() || row < 0 || row + count > superClass::itemList.size()) {
 			return false;
@@ -334,7 +334,7 @@ class EditableListModel : public AListModel< Item > {
 		return true;
 	}
 
-	Qt::DropActions supportedDropActions() const override
+	virtual Qt::DropActions supportedDropActions() const override
 	{
 		return Qt::MoveAction | Qt::CopyAction;
 	}
@@ -343,7 +343,7 @@ class EditableListModel : public AListModel< Item > {
 	//static constexpr const char * const itemListMimeType = "application/x-qabstractitemmodeldatalist";
 	static constexpr const char * const urlMimeType = "text/uri-list";
 
-	QStringList mimeTypes() const override
+	virtual QStringList mimeTypes() const override
 	{
 		QStringList types;
 
@@ -353,14 +353,14 @@ class EditableListModel : public AListModel< Item > {
 		return types;
 	}
 
-	bool canDropMimeData( const QMimeData * mime, Qt::DropAction action, int /*row*/, int /*col*/, const QModelIndex & ) const override
+	virtual bool canDropMimeData( const QMimeData * mime, Qt::DropAction action, int /*row*/, int /*col*/, const QModelIndex & ) const override
 	{
 		return (mime->hasFormat( internalMimeType ) && action == Qt::MoveAction) // for internal drag&drop reordering
 		    || (mime->hasUrls());                                                // for drag&drop from other list list widgets
 	}
 
 	/// serializes items at <indexes> into MIME data
-	QMimeData * mimeData( const QModelIndexList & indexes ) const override
+	virtual QMimeData * mimeData( const QModelIndexList & indexes ) const override
 	{
 		QMimeData * mimeData = new QMimeData;
 
@@ -380,7 +380,7 @@ class EditableListModel : public AListModel< Item > {
 	}
 
 	/// deserializes items from MIME data and inserts them before <row>
-	bool dropMimeData( const QMimeData * mime, Qt::DropAction action, int row, int, const QModelIndex & parent ) override
+	virtual bool dropMimeData( const QMimeData * mime, Qt::DropAction action, int row, int, const QModelIndex & parent ) override
 	{
 		// in edge cases always append to the end of the list
 		if (row < 0 || row > superClass::itemList.size())

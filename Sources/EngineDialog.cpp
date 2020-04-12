@@ -43,6 +43,13 @@ EngineDialog::~EngineDialog()
 	delete ui;
 }
 
+void EngineDialog::showEvent( QShowEvent * event )
+{
+	QDialog::showEvent( event );
+
+	browseEngine();
+}
+
 void EngineDialog::browseEngine()
 {
 	QString path = QFileDialog::getOpenFileName( this, "Locate engine's executable", ui->pathLine->text(),

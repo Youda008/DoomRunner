@@ -35,7 +35,7 @@ class GameOptsDialog : public QDialog {
  public:
 
 	explicit GameOptsDialog( QWidget * parent, const GameplayOptions & gameOpts );
-	~GameOptsDialog();
+	virtual ~GameOptsDialog() override;
 
  private slots:
 

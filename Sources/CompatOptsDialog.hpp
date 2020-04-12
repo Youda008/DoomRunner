@@ -35,7 +35,7 @@ class CompatOptsDialog : public QDialog {
  public:
 
 	explicit CompatOptsDialog( QWidget * parent, const CompatibilityOptions & compatOpts );
-	~CompatOptsDialog();
+	virtual ~CompatOptsDialog() override;
 
 	static QString getCmdArgsFromOptions( const CompatibilityOptions & compatOpts );
 

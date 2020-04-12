@@ -419,21 +419,21 @@ void MainWindow::loadPreset( const QModelIndex & index )
 				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
 		}
 	}
-/*
+
 	// restore selected MapPack
-	deselectSelectedItem( ui->mapListView );
-	selectedPackIdx = -1;
+	deselectSelectedItems( ui->mapDirView );
+	selectedMapPack.clear();
 	if (!preset.selectedMapPack.isEmpty()) {  // the map pack may have not been selected when creating this preset
-		int mapIdx = findSuch< MapPack >( maps, [ &preset ]( const MapPack & pack ) { return pack.name == preset.selectedMapPack; } );
-		if (mapIdx >= 0) {
-			selectItemByIdx( ui->mapListView, mapIdx );
-			selectedPackIdx = mapIdx;
+		QModelIndex mapIdx = mapModel.getNodeByPosition( preset.selectedMapPack );
+		if (mapIdx.isValid()) {
+			selectItemByIdx( ui->mapDirView, mapIdx );
+			selectedMapPack = preset.selectedMapPack;
 		} else {
 			QMessageBox::warning( this, "IWAD no longer exists",
-				"Map pack selected for this preset ("%preset.selectedMapPack%") no longer exists, please select another one." );
+				"Map pack selected for this preset ("%preset.selectedMapPack.toString()%") no longer exists, please select another one." );
 		}
 	}
-*/
+
 	// restore list of mods
 	deselectSelectedItems( ui->modListView );
 	modModel.startCompleteUpdate();
@@ -535,16 +535,16 @@ void MainWindow::toggleMapPack( const QModelIndex & index )
 	} else {
 		selectedMapPack = clickedMapPack;
 	}
-/*
+
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		if (selectedPackIdx >= 0)
-			presetModel[ selectedPresetIdx ].selectedMapPack = maps[ clickedPackIdx ].name;
+		if (selectedMapPack.isEmpty())
+			presetModel[ selectedPresetIdx ].selectedMapPack = clickedMapPack;
 		else
 			presetModel[ selectedPresetIdx ].selectedMapPack.clear();  // deselect it also from preset
 	}
-*/
+
 	updateLaunchCommand();
 }
 
@@ -567,7 +567,7 @@ void MainWindow::presetAdd()
 {
   static uint presetNum = 1;
 
-	appendItem( presetModel, { "Preset"+QString::number( presetNum ), "", "", "", {} } );
+	appendItem( presetModel, { "Preset"+QString::number( presetNum++ ), "", "", "", {}, {} } );
 
 	// clear the widgets to represent an empty preset
 	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will be saved in the old one
@@ -583,8 +583,6 @@ void MainWindow::presetAdd()
 
 	// open edit mode so that user can name the preset
 	ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );
-
-	presetNum++;
 }
 
 void MainWindow::presetDelete()
@@ -1126,8 +1124,6 @@ void MainWindow::saveOptions( const QString & fileName )
 	{
 		QJsonObject jsMaps;
 		jsMaps["directory"] = mapDir;
-		QModelIndex mapIdx = getSelectedItemIdx( ui->mapDirView );
-		jsMaps["selected_file"] = mapModel.getNodePosition( mapIdx ).toString();
 		json["maps"] = jsMaps;
 	}
 
@@ -1149,7 +1145,7 @@ void MainWindow::saveOptions( const QString & fileName )
 			jsPreset["selected_engine"] = preset.selectedEnginePath;
 			jsPreset["selected_config"] = preset.selectedConfig;
 			jsPreset["selected_IWAD"] = preset.selectedIWAD;
-			//jsPreset["selected_mappack"] = preset.selectedMapPack;
+			jsPreset["selected_mappack"] = preset.selectedMapPack.toString();
 			QJsonArray jsModArray;
 			for (const Mod & mod : preset.mods) {
 				QJsonObject jsMod;
@@ -1318,17 +1314,6 @@ void MainWindow::loadOptions( const QString & fileName )
 					"Map directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
 			}
 		}
-
-		QString selectedFile = getString( jsMaps, "selected_file" );    // TODO: map file vs map pack
-		if (!selectedFile.isEmpty()) {
-			QModelIndex mapIndex = mapModel.getNodeByPosition( TreePosition( selectedFile ) );
-			if (mapIndex.isValid()) {
-				selectItemByIdx( ui->mapDirView, mapIndex );
-			} else {
-				QMessageBox::warning( this, "Map file no longer exists",
-					"Map file from the saved options ("%selectedFile%") no longer exists. Please select another one." );
-			}
-		}
 	}
 
 	// mods
@@ -1369,7 +1354,7 @@ void MainWindow::loadOptions( const QString & fileName )
 			preset.selectedEnginePath = pathHelper.convertPath( getString( jsPreset, "selected_engine" ) );
 			preset.selectedConfig = getString( jsPreset, "selected_config" );
 			preset.selectedIWAD = getString( jsPreset, "selected_IWAD" );
-			//preset.selectedMapPack = getString( jsPreset, "selected_mappack" );
+			preset.selectedMapPack = TreePosition( getString( jsPreset, "selected_mappack" ) );
 			QJsonArray jsModArray = getArray( jsPreset, "mods" );
 			for (int i = 0; i < jsModArray.size(); i++)
 			{

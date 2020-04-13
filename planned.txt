@@ -1,6 +1,4 @@
 - extracting map names from IWAD file content
 - support for recording demos
 - better icons for 'add','delete','clone' buttons
-- drag&drop from directory to engine list
-- drag&drop from directory to IWAD list
 - importing presets from .bat/.sh scripts

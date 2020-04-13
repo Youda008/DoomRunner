@@ -347,10 +347,23 @@ QString JsonContext::getString( int index, const QString & defaultVal )
 //----------------------------------------------------------------------------------------------------------------------
 //  error handlers
 
+static const char * typeStr [] = {
+	"Null",
+	"Bool",
+	"Double",
+	"String",
+	"Array",
+	"Object",
+	"Undefined"
+};
+
 void JsonContext::invalidCurrentType( const QString & expectedType )
 {
+	QString actualType = typeStr[ entryStack.last().val.type() ];
+
     QMessageBox::warning( parent, "Error loading options file",
-		"Current element " % currentPath() % " has invalid type, " % expectedType % " expected. Skipping this option. "
+		"Current element " % currentPath() % " has invalid type: " % actualType % ", " % expectedType % " expected. "
+		"Skipping this option. "
 		"If you just switched to a newer version, you can ignore this warning."
 	);
 }
@@ -373,16 +386,22 @@ void JsonContext::indexOutOfBounds( int index )
 
 void JsonContext::invalidTypeAtKey( const QString & key, const QString & expectedType )
 {
+	QString actualType = typeStr[ entryStack.last().val.toObject()[ key ].type() ];
+
     QMessageBox::warning( parent, "Error loading options file",
-		"Element " % elemPath( key ) % " has invalid type, " % expectedType % " expected. Skipping this option. "
+		"Element " % elemPath( key ) % " has invalid type: " % actualType % ", " % expectedType % " expected. "
+		"Skipping this option. "
 		"If you just switched to a newer version, you can ignore this warning."
 	);
 }
 
 void JsonContext::invalidTypeAtIdx( int index, const QString & expectedType )
 {
+	QString actualType = typeStr[ entryStack.last().val.toArray()[ index ].type() ];
+
     QMessageBox::warning( parent, "Error loading options file",
-		"Element " % elemPath( index ) % " has invalid type, " % expectedType % " expected. Skipping this option. "
+		"Element " % elemPath( index ) % " has invalid type: " % actualType % ", " % expectedType % " expected. "
+		"Skipping this option. "
 		"If you just switched to a newer version, you can ignore this warning."
 	);
 }

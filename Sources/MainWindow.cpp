@@ -549,10 +549,7 @@ void MainWindow::toggleMapPack( const QModelIndex & index )
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		if (selectedMapPack.isEmpty())
-			presetModel[ selectedPresetIdx ].selectedMapPack = clickedMapPack;
-		else
-			presetModel[ selectedPresetIdx ].selectedMapPack.clear();  // deselect it also from preset
+		presetModel[ selectedPresetIdx ].selectedMapPack = clickedMapPack;
 	}
 
 	updateLaunchCommand();
@@ -746,7 +743,7 @@ void MainWindow::modsDropped()
 		// update the preset
 		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 		if (selectedPresetIdx >= 0) {
-			presetModel[ selectedPresetIdx ].mods.fromList( modModel.list() );  // not the most optimal way, but the size of the list will be always small
+			presetModel[ selectedPresetIdx ].mods = modModel.list().toVector();  // not the most optimal way, but the size of the list will be always small
 		}
 
 		// TODO: reset was dropped into?
@@ -1329,6 +1326,8 @@ void MainWindow::loadOptions( const QString & fileName )
 				QMessageBox::warning( this, "Mod dir no longer exists",
 					"Mod directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
 		}
+
+		json.exitObject();
 	}
 
 	if (json.enterArray( "presets" ))
@@ -1356,7 +1355,7 @@ void MainWindow::loadOptions( const QString & fileName )
 			json.enterArray( "mods" );
 			for (int i = 0; i < json.arraySize(); i++)
 			{
-				if (json.enterObject( i ))  // wrong type on position i - skip this entry
+				if (!json.enterObject( i ))  // wrong type on position i - skip this entry
 					continue;
 
 				Mod mod;
@@ -1379,10 +1378,8 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		presetModel.finishCompleteUpdate();
 
-		json.exitObject();
+		json.exitArray();
 	}
-
-	ui->cmdArgsLine->setText( json.getString( "additional_args" ) );
 
 	// launch options
 	gameOpts.flags1 = json.getInt( "dmflags1", 0 );

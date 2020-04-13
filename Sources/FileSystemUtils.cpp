@@ -26,7 +26,7 @@ void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QS
 		QString entryPath = pathHelper.convertPath( dirIt1.next() );
 		QFileInfo entry( entryPath );
 		if (entry.isDir()) {
-			QString dirName = entry.fileName();
+			QString dirName = dirIt1.fileName();  // TODO: this is confusing
 			if (dirName != "." && dirName != "..") {
 				QModelIndex dirItem = model.addNode( parent, dirName, NodeType::DIR );
 				fillTreeFromDir( model, dirItem, entry.filePath(), pathHelper, isDesiredFile );

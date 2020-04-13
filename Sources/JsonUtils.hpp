@@ -13,68 +13,92 @@
 #include "Common.hpp"
 
 #include <QString>
+#include <QList>
+#include <QJsonValue>
 #include <QJsonObject>
 #include <QJsonArray>
+class QWidget;
 
 
 //======================================================================================================================
-//  exceptions
-/*
-class JsonKeyMissing {
+/** when parsing JSON file, this context stores info where we are, so that we can print more useful error messages */
+
+class JsonContext {
+
  public:
-	JsonKeyMissing( const char * key ) : _key( key ) {}
-	const QString & key() const { return _key; }
+
+	JsonContext( const QJsonObject & rootObject, QWidget * parent ) : parent( parent )
+		{ entryStack.append({ QString(), rootObject }); }
+	~JsonContext() {}
+
+	// movement through JSON tree
+
+	bool enterObject( const char * key );
+	bool enterObject( int index );
+	void exitObject();
+
+	bool enterArray( const char * key );
+	bool enterArray( int index );
+	void exitArray();
+
+	QString currentPath();
+
+	int arraySize();
+
+	// getters of elementary values
+
+	bool getBool( const char * key, bool defaultVal );
+	int getInt( const char * key, int defaultVal );
+	uint getUInt( const char * key, uint defaultVal );
+	double getDouble( const char * key, double defaultVal );
+	QString getString( const char * key, const QString & defaultVal = QString() );
+
+	bool getBool( int index, bool defaultVal );
+	int getInt( int index, int defaultVal );
+	uint getUInt( int index, uint defaultVal );
+	double getDouble( int index, double defaultVal );
+	QString getString( int index, const QString & defaultVal = QString() );
+
  private:
-	QString _key;
-};
 
-class JsonInvalidTypeAtKey {
- public:
-	JsonInvalidTypeAtKey( const QString & key, const QString & expectedType )
-		: _key( key ), _expectedType( expectedType ) {}
-	const QString & key() const { return _key; }
-	const QString & expectedType() const { return _expectedType; }
+	void invalidCurrentType( const QString & expectedType );
+	void missingKey( const QString & key );
+	void indexOutOfBounds( int index );
+	void invalidTypeAtKey( const QString & key, const QString & expectedType );
+	void invalidTypeAtIdx( int index, const QString & expectedType );
+
+	QString elemPath( const QString & elemName );
+	QString elemPath( int index );
+
  private:
-	QString _key;
-	QString _expectedType;
+
+	struct Key {
+		enum Type {
+			OTHER = 0,
+			OBJECT_KEY,
+			ARRAY_INDEX
+		};
+		Type type;
+		QString key;
+		int idx;
+
+		Key( const QString & key ) : type( OBJECT_KEY ), key( key ), idx( -1 ) {}
+		Key( int idx ) : type( ARRAY_INDEX ), key(), idx( idx ) {}
+	};
+
+	struct Entry {
+		Key key;
+		QJsonValue val;
+
+		Entry( const QString & key, const QJsonValue & val ) : key( key ), val( val ) {}
+		Entry( int idx, const QJsonValue & val ) : key( idx ), val( val ) {}
+	};
+
+	QList< Entry > entryStack;
+
+	QWidget * parent;  ///< the window attempting to parse the json, will be used for error message dialogs
+
 };
-
-class JsonInvalidTypeAtIdx {
- public:
-	JsonInvalidTypeAtIdx( int index, const QString & expectedType )
-		: _index( index ), _expectedType( expectedType ) {}
-	int index() const { return _index; }
-	const QString & expectedType() const { return _expectedType; }
- private:
-	int _index;
-	QString _expectedType;
-};
-*/
-
-//======================================================================================================================
-//  getters using default value
-
-//----------------------------------------------------------------------------------------------------------------------
-//  JSON object variants
-
-bool getBool( const QJsonObject & json, const char * key, bool defaultVal );
-int getInt( const QJsonObject & json, const char * key, int defaultVal );
-uint getUInt( const QJsonObject & json, const char * key, uint defaultVal );
-double getDouble( const QJsonObject & json, const char * key, double defaultVal );
-QString getString( const QJsonObject & json, const char * key, const QString & defaultVal = QString() );
-QJsonObject getObject( const QJsonObject & json, const char * key );
-QJsonArray getArray( const QJsonObject & json, const char * key );
-
-//----------------------------------------------------------------------------------------------------------------------
-//  JSON array variants
-
-bool getBool( const QJsonArray & json, int index, bool defaultVal );
-int getInt( const QJsonArray & json, int index, int defaultVal );
-uint getUInt( const QJsonArray & json, int index, uint defaultVal );
-double getDouble( const QJsonArray & json, int index, double defaultVal );
-QString getString( const QJsonArray & json, int index, const QString & defaultVal = QString() );
-QJsonObject getObject( const QJsonArray & json, int index );
-QJsonArray getArray( const QJsonArray & json, int index );
 
 
 #endif // JSON_HELPER_INCLUDED

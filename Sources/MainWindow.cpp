@@ -87,6 +87,7 @@ MainWindow::MainWindow()
 
 	: QMainWindow( nullptr )
 	, tickCount( 0 )
+	, optionsCorrupted( false )
 	, pathHelper( false, QDir::currentPath() )
 	, engineModel(
 		/*makeDisplayString*/[]( const Engine & engine ) { return engine.name; }
@@ -247,13 +248,15 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 	}
 
 	if (tickCount % 60 == 0) {
-		saveOptions( defaultOptionsFile );
+		if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
+			saveOptions( defaultOptionsFile );
 	}
 }
 
 void MainWindow::closeEvent( QCloseEvent * event )
 {
-	saveOptions( defaultOptionsFile );
+	if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
+		saveOptions( defaultOptionsFile );
 
 	QMainWindow::closeEvent( event );
 }
@@ -1172,49 +1175,54 @@ void MainWindow::loadOptions( const QString & fileName )
 	QFile file( fileName );
 	if (!file.open( QIODevice::ReadOnly )) {
 		QMessageBox::warning( this, "Can't open file", "Loading options failed. Could not open file "+fileName+" for reading." );
+		optionsCorrupted = true;
 		return;
 	}
 
 	QJsonParseError error;
 	QJsonDocument jsonDoc = QJsonDocument::fromJson( file.readAll(), &error );
-	QJsonObject json = jsonDoc.object();
+	if (jsonDoc.isNull()) {
+		QMessageBox::warning( this, "Error loading options file", "Loading options failed: " + error.errorString() );
+		optionsCorrupted = true;
+		return;
+	}
+
+	JsonContext json( jsonDoc.object(), this );
 
 	// window geometry
 	{
-		int width = getInt( json, "width", -1 );
-		int height = getInt( json, "height", -1 );
+		int width = json.getInt( "width", -1 );
+		int height = json.getInt( "height", -1 );
 		if (width > 0 && height > 0) {
 			const QRect & geometry = this->geometry();
 			this->setGeometry( geometry.x(), geometry.y(), width, height );
 		}
 	}
 
-	// path helper must be set before others, because we want to convert the loaded paths accordingly
-	pathHelper.toggleAbsolutePaths( getBool( json, "use_absolute_paths", false ) );
-	// preset must be set before others, so that the cleared selections doesn't save in the preset
+	// preset must be deselected first, so that the cleared selections doesn't save in the preset
 	deselectSelectedItems( ui->presetListView );
 
-	// engines
-	{
-		QJsonObject jsEngines = getObject( json, "engines" );
+	// path helper must be set before others, because we want to convert the loaded paths accordingly
+	pathHelper.toggleAbsolutePaths( json.getBool( "use_absolute_paths", false ) );
 
+	if (json.enterObject( "engines" ))
+	{
 		ui->engineCmbBox->setCurrentIndex( -1 );
 
 		engineModel.startCompleteUpdate();
 
 		engineModel.clear();
 
-		QJsonArray jsEngineArray = getArray( jsEngines, "engines" );
-		for (int i = 0; i < jsEngineArray.size(); i++)
+		json.enterArray( "engines" );
+		for (int i = 0; i < json.arraySize(); i++)
 		{
-			QJsonObject jsEngine = getObject( jsEngineArray, i );
-			if (jsEngine.isEmpty())  // wrong type on position i - skip this entry
+			if (!json.enterObject( i ))  // wrong type on position i - skip this entry
 				continue;
 
 			Engine engine;
-			engine.name = getString( jsEngine, "name" );
-			engine.path = pathHelper.convertPath( getString( jsEngine, "path" ) );
-			engine.configDir = pathHelper.convertPath( getString( jsEngine, "config_dir" ) );
+			engine.name = json.getString( "name" );
+			engine.path = pathHelper.convertPath( json.getString( "path" ) );
+			engine.configDir = pathHelper.convertPath( json.getString( "config_dir" ) );
 			if (engine.name.isEmpty() || engine.path.isEmpty())  // name or path doesn't exist - skip this entry
 				continue;
 
@@ -1224,15 +1232,18 @@ void MainWindow::loadOptions( const QString & fileName )
 				QMessageBox::warning( this, "Engine no longer exists",
 					"An engine from the saved options ("%engine.path%") no longer exists. It will be removed from the list." );
 			}
+
+			json.exitObject();
 		}
+		json.exitArray();
 
 		engineModel.finishCompleteUpdate();
+
+		json.exitObject();
 	}
 
-	// IWADS
+	if (json.enterObject( "IWADs" ))
 	{
-		QJsonObject jsIWADs = getObject( json, "IWADs" );
-
 		deselectSelectedItems( ui->iwadListView );
 		selectedIWAD.clear();
 
@@ -1240,12 +1251,12 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		iwadModel.clear();
 
-		iwadListFromDir = getBool( jsIWADs, "auto_update", false );
+		iwadListFromDir = json.getBool( "auto_update", false );
 
 		if (iwadListFromDir)
 		{
-			iwadSubdirs = getBool( jsIWADs, "subdirs", false );
-			QString dir = getString( jsIWADs, "directory" );
+			iwadSubdirs = json.getBool( "subdirs", false );
+			QString dir = json.getString( "directory" );
 			if (!dir.isEmpty()) {  // non-existing element directory -> skip completely
 				if (QDir( dir ).exists()) {
 					iwadDir = pathHelper.convertPath( dir );
@@ -1258,16 +1269,15 @@ void MainWindow::loadOptions( const QString & fileName )
 		}
 		else
 		{
-			QJsonArray jsIWADArray = getArray( jsIWADs, "IWADs" );
-			for (int i = 0; i < jsIWADArray.size(); i++)
+			json.enterArray( "IWADs" );
+			for (int i = 0; i < json.arraySize(); i++)
 			{
-				QJsonObject jsIWAD = getObject( jsIWADArray, i );
-				if (jsIWAD.isEmpty())  // wrong type on position i - skip this entry
+				if (!json.enterObject( i ))  // wrong type on position i - skip this entry
 					continue;
 
 				IWAD iwad;
-				iwad.name = getString( jsIWAD, "name" );
-				iwad.path = pathHelper.convertPath( getString( jsIWAD, "path" ) );
+				iwad.name = json.getString( "name" );
+				iwad.path = pathHelper.convertPath( json.getString( "path" ) );
 				if (iwad.name.isEmpty() || iwad.path.isEmpty())  // name or path doesn't exist - skip this entry
 					continue;
 
@@ -1277,20 +1287,23 @@ void MainWindow::loadOptions( const QString & fileName )
 					QMessageBox::warning( this, "IWAD no longer exists",
 						"An IWAD from the saved options ("%iwad.path%") no longer exists. It will be removed from the list." );
 				}
+
+				json.exitObject();
 			}
+			json.exitArray();
 		}
 
 		iwadModel.finishCompleteUpdate();
+
+		json.exitObject();
 	}
 
-	// map packs
+	if (json.enterObject( "maps" ))
 	{
-		QJsonObject jsMaps = getObject( json, "maps" );
-
 		deselectSelectedItems( ui->mapDirView );
 		selectedMapPack.clear();
 
-		QString dir = getString( jsMaps, "directory" );
+		QString dir = json.getString( "directory" );
 		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
 			if (QDir( dir ).exists()) {
 				mapDir = pathHelper.convertPath( dir );
@@ -1300,15 +1313,15 @@ void MainWindow::loadOptions( const QString & fileName )
 					"Map directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
 			}
 		}
+
+		json.exitObject();
 	}
 
-	// mods
+	if (json.enterObject( "mods" ))
 	{
-		QJsonObject jsMods = getObject( json, "mods" );
-
 		deselectSelectedItems( ui->modListView );
 
-		QString dir = getString( jsMods, "directory" );
+		QString dir = json.getString( "directory" );
 		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
 			if (QDir( dir ).exists())
 				modDir = pathHelper.convertPath( dir );
@@ -1318,10 +1331,8 @@ void MainWindow::loadOptions( const QString & fileName )
 		}
 	}
 
-	// presets
+	if (json.enterArray( "presets" ))
 	{
-		QJsonArray jsPresetArray = getArray( json, "presets" );
-
 		deselectSelectedItems( ui->presetListView );
 		togglePresetSubWidgets( false );
 
@@ -1329,50 +1340,59 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		presetModel.clear();
 
-		for (int i = 0; i < jsPresetArray.size(); i++)
+		for (int i = 0; i < json.arraySize(); i++)
 		{
-			QJsonObject jsPreset = getObject( jsPresetArray, i );
-			if (jsPreset.isEmpty())  // wrong type on position i - skip this entry
+			if (!json.enterObject( i ))  // wrong type on position i - skip this entry
 				continue;
 
 			Preset preset;
-			preset.name = getString( jsPreset, "name", "<missing name>" );
-			preset.selectedEnginePath = pathHelper.convertPath( getString( jsPreset, "selected_engine" ) );
-			preset.selectedConfig = getString( jsPreset, "selected_config" );
-			preset.selectedIWAD = getString( jsPreset, "selected_IWAD" );
-			preset.selectedMapPack = TreePosition( getString( jsPreset, "selected_mappack" ) );
-			preset.cmdArgs = getString( jsPreset, "additional_args" );
-			QJsonArray jsModArray = getArray( jsPreset, "mods" );
-			for (int i = 0; i < jsModArray.size(); i++)
+			preset.name = json.getString( "name", "<missing name>" );
+			preset.selectedEnginePath = pathHelper.convertPath( json.getString( "selected_engine" ) );
+			preset.selectedConfig = json.getString( "selected_config" );
+			preset.selectedIWAD = json.getString( "selected_IWAD" );
+			preset.selectedMapPack = TreePosition( json.getString( "selected_mappack" ) );
+			preset.cmdArgs = json.getString( "additional_args" );
+
+			json.enterArray( "mods" );
+			for (int i = 0; i < json.arraySize(); i++)
 			{
-				QJsonObject jsMod = getObject( jsModArray, i );
-				if (jsMod.isEmpty())  // wrong type on position i - skip this entry
+				if (json.enterObject( i ))  // wrong type on position i - skip this entry
 					continue;
 
 				Mod mod;
-				mod.name = getString( jsMod, "name" );
-				mod.path = getString( jsMod, "path" );
-				mod.checked = getBool( jsMod, "checked", false );
+				mod.name = json.getString( "name" );
+				mod.path = json.getString( "path" );
+				mod.checked = json.getBool( "checked", false );
 				if (!mod.name.isEmpty() && !mod.path.isEmpty()) {
 					mod.path = pathHelper.convertPath( mod.path );
 					preset.mods.append( mod );
 				}
+
+				json.exitObject();
 			}
+			json.exitArray();
+
 			presetModel.append( preset );
+
+			json.exitObject();
 		}
 
 		presetModel.finishCompleteUpdate();
+
+		json.exitObject();
 	}
 
-	ui->cmdArgsLine->setText( getString( json, "additional_args" ) );
+	ui->cmdArgsLine->setText( json.getString( "additional_args" ) );
 
 	// launch options
-	gameOpts.flags1 = getInt( json, "dmflags1", 0 );
-	gameOpts.flags2 = getInt( json, "dmflags2", 0 );
-	compatOpts.flags1 = getInt( json, "compatflags1", 0 );
-	compatOpts.flags2 = getInt( json, "compatflags2", 0 );
+	gameOpts.flags1 = json.getInt( "dmflags1", 0 );
+	gameOpts.flags2 = json.getInt( "dmflags2", 0 );
+	compatOpts.flags1 = json.getInt( "compatflags1", 0 );
+	compatOpts.flags2 = json.getInt( "compatflags2", 0 );
 
 	file.close();
+
+	optionsCorrupted = false;
 
 	updateListsFromDirs();
 

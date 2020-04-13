@@ -127,6 +127,8 @@ class MainWindow : public QMainWindow {
 
 	uint tickCount;
 
+	bool optionsCorrupted;  ///< true when was a critical error during parsing of options file, such content should not be saved
+
 	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
 
 	// We use model-view design pattern for several widgets, because it allows us to organize the data in a way we need,

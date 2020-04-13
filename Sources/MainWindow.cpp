@@ -160,7 +160,7 @@ MainWindow::MainWindow()
 	// setup signals
 	connect( ui->setupPathsAction, &QAction::triggered, this, &thisClass::runSetupDialog );
 	connect( ui->exportPresetAction, &QAction::triggered, this, &thisClass::exportPreset );
-	connect( ui->importPresetAction, &QAction::triggered, this, &thisClass::importPreset );
+	//connect( ui->importPresetAction, &QAction::triggered, this, &thisClass::importPreset );
 	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::runAboutDialog );
 	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
 

@@ -1214,7 +1214,6 @@
     </property>
     <addaction name="setupPathsAction"/>
     <addaction name="exportPresetAction"/>
-    <addaction name="importPresetAction"/>
     <addaction name="aboutAction"/>
     <addaction name="exitAction"/>
    </widget>

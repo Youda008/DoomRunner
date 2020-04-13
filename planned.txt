@@ -1,4 +1,3 @@
 - extracting map names from IWAD file content
 - support for recording demos
 - better icons for 'add','delete','clone' buttons
-- importing presets from .bat/.sh scripts

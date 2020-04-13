@@ -12,10 +12,12 @@
 
 #include "Common.hpp"
 
-#include "ListModel.hpp"
+class DirTreeModel;
+class QModelIndex;
 
 #include <QString>
 #include <QDir>
+#include <QDirIterator>
 #include <QFileInfo>
 
 
@@ -75,6 +77,33 @@ class PathHelper {
 //======================================================================================================================
 //  misc helper functions
 
+template< typename Item >
+void fillListFromDir( QList< Item > & list, const QString & dir, bool recursively, const PathHelper & pathHelper,
+                      std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+{
+	QDir dir_( dir );
+	if (!dir_.exists())
+		return;
+
+	QDirIterator dirIt( dir_ );
+	while (dirIt.hasNext()) {
+		QString entryPath = pathHelper.convertPath( dirIt.next() );
+		QFileInfo entry( entryPath );
+		if (entry.isDir()) {
+			QString dirName = entry.fileName();
+			if (recursively && dirName != "." && dirName != "..") {
+				fillListFromDir( list, entry.filePath(), recursively, pathHelper, isDesiredFile );
+			}
+		} else {
+			if (isDesiredFile( entry )) {
+				list.append( Item( entry ) );
+			}
+		}
+	}
+}
+
+void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, const PathHelper & pathHelper,
+                      std::function< bool ( const QFileInfo & file ) > isDesiredFile );
 
 
 #endif // FILE_SYSTEM_UTILS_INCLUDED

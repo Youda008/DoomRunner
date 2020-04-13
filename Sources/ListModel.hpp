@@ -13,6 +13,7 @@
 #include "Common.hpp"
 
 #include "LangUtils.hpp"
+#include "FileSystemUtils.hpp"
 
 #include <QAbstractListModel>
 #include <QList>
@@ -56,6 +57,7 @@ class AListModel : public QAbstractListModel {
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
+	QList< Item > & list()                        { return itemList; }
 	const QList< Item > & list() const            { return itemList; }
 	void updateList( const QList< Item > & list ) { itemList = list; }
 
@@ -192,18 +194,20 @@ class EditableListModel : public AListModel< Item > {
 	// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 	// Therefore only author of Item knows how to perform certain operations on it, so he must specify it by functions
 
-	/// function that takes Item and constructs a String that will be displayed in the view
+	/** function that takes Item and constructs a String that will be displayed in the view */
 	std::function< QString ( const Item & ) > makeDisplayString;
 
-	/// function that points the model to a String member of Item containing the editable data
+	/** function that points the model to a String member of Item containing the editable data */
 	std::function< QString & ( Item & ) > editString;
 
-	/// function that assigns a dropped file into a newly created Item
-	std::function< Item ( const QFileInfo & ) > makeItemFromFile;
-
-	/// function that points the model to a bool flag of Item indicating whether the item is checked
+	/** function that points the model to a bool flag of Item indicating whether the item is checked */
 	std::function< bool & ( Item & ) > isChecked;
 
+	/** optional function that assigns a dropped file into a newly created Item,
+	  * must be set before external drag&drop is enabled in the parent widget */
+	std::function< Item ( const QFileInfo & ) > makeItemFromFile;
+
+	/// whether items will have checkboxes
 	bool checkableItems;
 
  public:
@@ -220,13 +224,17 @@ class EditableListModel : public AListModel< Item > {
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
 
-	void setMakeDisplayStringFunc( std::function< QString & ( Item & ) > displayString )
-		{ this->displayString = displayString; }
-	void setMakeItemFromFileFunc( std::function< Item ( const QFileInfo & ) > makeItemFromFile )
-		{ this->makeItemFromFile = makeItemFromFile; }
+	/** must be called before checkboxes are enabled in this model */
 	void setIsCheckedFunc( std::function< bool & ( Item & ) > isChecked )
 		{ this->isChecked = isChecked; }
-	void toggleCheckable( bool enabled ) { checkableItems = enabled; }
+
+	/** enables or disables checkboxes for all items */
+	void toggleCheckboxes( bool enabled )
+		{ this->checkableItems = enabled; }
+
+	/** must be called before external drag&drop is enabled in the parent widget */
+	void setMakeItemFromFileFunc( std::function< Item ( const QFileInfo & ) > makeItemFromFile )
+		{ this->makeItemFromFile = makeItemFromFile; }
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
@@ -340,7 +348,6 @@ class EditableListModel : public AListModel< Item > {
 	}
 
 	static constexpr const char * const internalMimeType = "application/EditableListModel-internal";
-	//static constexpr const char * const itemListMimeType = "application/x-qabstractitemmodeldatalist";
 	static constexpr const char * const urlMimeType = "text/uri-list";
 
 	virtual QStringList mimeTypes() const override

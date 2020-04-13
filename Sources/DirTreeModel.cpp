@@ -20,9 +20,8 @@
 //======================================================================================================================
 //  DirTreeModel
 
-DirTreeModel::DirTreeModel( QString & baseDir )
+DirTreeModel::DirTreeModel()
 	: QAbstractItemModel( nullptr )
-	, _baseDir( baseDir )
 {
 	_rootNode = new FSNode( "", NodeType::DIR, nullptr );
 }

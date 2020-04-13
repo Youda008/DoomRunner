@@ -114,14 +114,18 @@ class TreePosition : public QStringList {
 class DirTreeModel : public QAbstractItemModel {
 
 	FSNode * _rootNode;  ///< internal node that stores all the other nodes without an explicit parent
-	QString & _baseDir;  ///< directory from which the MIME URLs are derived when items are dragged from this model
-	                    // TODO: this should be value and it should be instead of mapDir member in MainWindow
+	QString _baseDir;  ///< directory from which the MIME URLs are derived when items are dragged from this model
+
  public:
 
-	DirTreeModel( QString & _baseDir );
+	DirTreeModel();
 	virtual ~DirTreeModel() override;
 
 	//-- custom methods for manipulating the tree ----------------------------------------------------------------------
+
+	/** Before you can start asking for file-system paths or enabling drag&drop, you have to set base dir,
+	  * from which the paths will be derived from. */
+	void setBaseDir( const QString & baseDir )  { _baseDir = baseDir; }
 
 	/** Note that before you start adding or deleting nodes in this model, you have to call startCompleteUpdate,
 	  * and when you are finished with it, you have to call finishCompleteUpdate. */

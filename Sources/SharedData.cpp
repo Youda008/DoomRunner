@@ -8,12 +8,9 @@
 
 #include "SharedData.hpp"
 
-#include "FileSystemUtils.hpp"
 #include "DoomUtils.hpp"
 
 #include <QHash>
-#include <QFileInfo>
-
 #include <QDebug>
 
 
@@ -50,10 +47,5 @@ bool isIWAD( const QFileInfo & file )
 bool isMapPack( const QFileInfo & file )
 {
 	return mapSuffixes.contains( file.suffix().toLower() ) && getCachedWadType( file ) != WadType::IWAD;
-}
-
-IWAD IWADfromFileMaker::operator()( const QFileInfo & file )
-{
-	return { file.fileName(), pathHelper.convertPath( file.filePath() ) };
 }
 

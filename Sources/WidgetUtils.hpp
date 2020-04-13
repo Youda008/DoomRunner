@@ -12,9 +12,10 @@
 
 #include "Common.hpp"
 
-#include "LangUtils.hpp"
+#include "LangUtils.hpp"  // findSuch
 #include "ListModel.hpp"
-#include "DirTreeModel.hpp"
+#include "DirTreeModel.hpp"  // TreePosition
+#include "FileSystemUtils.hpp"  // fillListFromDir
 
 #include <QListView>
 class QTreeView;
@@ -25,7 +26,6 @@ class QTreeView;
 #include <QDirIterator>
 #include <QFileInfo>
 
-#include <algorithm>
 #include <functional>
 
 
@@ -298,36 +298,8 @@ bool selectItemByID( QListView * view, const AListModel< Item > & model, const d
 }
 
 template< typename Item >
-void fillListFromDir( AListModel< Item > & model, const QString & dir, bool recursively,
-                      std::function< bool ( const QFileInfo & file ) > isDesiredFile,
-                      std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
-{
-	QDir dir_( dir );
-	if (!dir_.exists())
-		return;
-
-	QDirIterator dirIt( dir_ );
-	while (dirIt.hasNext()) {
-		QFileInfo entry( dirIt.next() );
-		if (entry.isDir()) {
-			QString dirName = entry.fileName();
-			if (recursively && dirName != "." && dirName != "..") {
-				fillListFromDir( model, entry.filePath(), recursively, isDesiredFile, makeItemFromFile );
-			}
-		} else {
-			if (isDesiredFile( entry )) {
-				// Because Item is generic template param, we don't know to construct it from file.
-				// So the caller needs to describe it by a function.
-				model.append( makeItemFromFile( entry ) );
-			}
-		}
-	}
-}
-
-template< typename Item >
 void updateListFromDir( AListModel< Item > & model, QListView * view, const QString & dir, bool recursively,
-                        std::function< bool ( const QFileInfo & file ) > isDesiredFile,
-                        std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
+                        const PathHelper & pathHelper, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	if (dir.isEmpty())
 		return;
@@ -349,7 +321,7 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 
 	model.clear();
 
-	fillListFromDir( model, dir, recursively, isDesiredFile, makeItemFromFile );
+	fillListFromDir( model.list(), dir, recursively, pathHelper, isDesiredFile );
 
 	//model.finishCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor
 	model.contentChanged(0);         // and this is an acceptable workaround, instead of differential update
@@ -362,9 +334,8 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 }
 /*
 template< typename Item >
-void updateListFromDirNew( AListModel< Item > & model, const QString & dir, bool recursively,
-                           std::function< bool ( const QFileInfo & file ) > isDesiredFile,
-                           std::function< Item ( const QFileInfo & file ) > makeItemFromFile )
+void updateListFromDirNew( AListModel< Item > & model, QListView * view, const QString & dir, bool recursively,
+                           const PathHelper & pathHelper, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	if (dir.isEmpty())
 		return;
@@ -403,33 +374,6 @@ void updateListFromDirNew( AListModel< Item > & model, const QString & dir, bool
 */
 
 //======================================================================================================================
-//  tree view helpers
-
-
-//----------------------------------------------------------------------------------------------------------------------
-//  selection manipulation
-
-QModelIndex getSelectedItemIdx( QTreeView * view );
-bool isSomethingSelected( QTreeView * view );
-
-void selectItemByIdx( QTreeView * view, const QModelIndex & index );
-void deselectSelectedItems( QTreeView * view );
-void changeSelectionTo( QTreeView * view, const QModelIndex & index );
-
-//----------------------------------------------------------------------------------------------------------------------
-//  complete tree update helpers
-
-/** gets a persistent item ID that survives node shifting, adding or removal */
-TreePosition getSelectedItemID( QTreeView * view, const DirTreeModel & model );
-
-/** attempts to select a previously selected item defined by persistant itemID */
-bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePosition & itemID );
-
-void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile );
-void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile );
-
-
-//======================================================================================================================
 //  combo box helpers
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -459,6 +403,58 @@ bool selectItemByID( QComboBox * view, const AListModel< Item > & model, const d
 	}
 	return false;
 }
+
+template< typename Item >
+void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const QString & dir, bool recursively,
+                            const PathHelper & pathHelper, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+{
+	if (dir.isEmpty())
+		return;
+
+	// note down the currently selected item
+	QString lastText = view->currentText();
+
+	//view->setCurrentIndex( -1 );  // this causes the command line to be regenerated back and forth on every update
+
+	//configModel.startCompleteUpdate();  // this will reset the selection and cause the launch command to regenerate back and forth
+
+	model.clear();
+
+	fillListFromDir( model.list(), dir, recursively, pathHelper, isDesiredFile );
+
+	//configModel.finishCompleteUpdate();
+	model.contentChanged(0);
+
+	// restore the originally selected item (the selection will be reset if the item does not exist in the new content)
+	view->setCurrentIndex( view->findText( lastText ) );
+}
+
+
+//======================================================================================================================
+//  tree view helpers
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  selection manipulation
+
+QModelIndex getSelectedItemIdx( QTreeView * view );
+bool isSomethingSelected( QTreeView * view );
+
+void selectItemByIdx( QTreeView * view, const QModelIndex & index );
+void deselectSelectedItems( QTreeView * view );
+void changeSelectionTo( QTreeView * view, const QModelIndex & index );
+
+//----------------------------------------------------------------------------------------------------------------------
+//  complete tree update helpers
+
+/** gets a persistent item ID that survives node shifting, adding or removal */
+TreePosition getSelectedItemID( QTreeView * view, const DirTreeModel & model );
+
+/** attempts to select a previously selected item defined by persistant itemID */
+bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePosition & itemID );
+
+void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, const PathHelper & pathHelper,
+                        std::function< bool ( const QFileInfo & file ) > isDesiredFile );
 
 
 #endif // WIDGET_UTILS_INCLUDED

@@ -46,8 +46,6 @@
 	static const QString scriptFileExt = "*.sh";
 #endif
 
-static const QString configFileExt = "ini";
-
 static constexpr char defaultOptionsFile [] = "options.json";
 
 
@@ -94,14 +92,17 @@ MainWindow::MainWindow()
 		/*makeDisplayString*/[]( const Engine & engine ) { return engine.name; }
 	  )
 	, configModel(
-		/*makeDisplayString*/[]( const QString & config ) { return config; }
+		/*makeDisplayString*/[]( const ConfigFile & config ) { return config.name; }
+	  )
+	, saveModel(
+		/*makeDisplayString*/[]( const SaveFile & save ) { return save.name; }
 	  )
 	, iwadModel(
 		/*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; }
 	  )
 	, iwadListFromDir( false )
 	, iwadSubdirs( false )
-	, mapModel( mapDir )
+	, mapModel()
 	, modModel(
 		/*makeDisplayString*/[]( const Mod & mod ) { return mod.name; },
 		/*editString*/[]( Mod & mod ) -> QString & { return mod.name; }
@@ -118,40 +119,42 @@ MainWindow::MainWindow()
 	ui->presetListView->setModel( &presetModel );
 	// we use custom model for engines, because we want to display the same list differently in different window
 	ui->engineCmbBox->setModel( &engineModel );
-	// we use custom model for configs, because calling 'clear' or 'add' on a combo box changes current index, which complicates things
+	// we use custom model for configs and saves, because calling 'clear' or 'add' on a combo box changes current index,
+	// which causes the launch command to be regenerated back and forth on every update
 	ui->configCmbBox->setModel( &configModel );
+	ui->saveFileCmbBox->setModel( &saveModel );
 	ui->iwadListView->setModel( &iwadModel );
 	ui->mapDirView->setModel( &mapModel );
 	ui->modListView->setModel( &modModel );
 
 	// setup preset list view
+	ui->presetListView->toggleNameEditing( true );
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
 	connect( ui->presetListView, &EditableListView::itemsDropped, this, &thisClass::presetDropped );
-	ui->presetListView->toggleNameEditing( true );
 
 	// setup map directory view
 	ui->mapDirView->setDragEnabled( true );
 	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
 
 	// setup mod list view
-	ui->modListView->toggleIntraWidgetDragAndDrop( true );
-	ui->modListView->toggleInterWidgetDragAndDrop( true );
-	ui->modListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->modListView, &EditableListView::itemsDropped, this, &thisClass::modsDropped );
-	ui->modListView->toggleNameEditing( false );
-	modModel.setMakeItemFromFileFunc(  // this will be our reaction when a file is dragged and dropped from a directory window
-		[ this ]( const QFileInfo & file ) -> Mod {
-			return { file.fileName(), pathHelper.convertPath( file.filePath() ), true };
-		}
-	);
 	modModel.setIsCheckedFunc(  // here the model will read and write the information about check state
 		[]( Mod & mod ) -> bool & {
 			return mod.checked;
 		}
 	);
-	modModel.toggleCheckable( true );  // allow user to check/uncheck each item in the list
+	modModel.setMakeItemFromFileFunc(  // this will be our reaction when a file is dragged and dropped from a directory window
+		[ this ]( const QFileInfo & file ) -> Mod {
+			return { file.fileName(), pathHelper.convertPath( file.filePath() ), true };
+		}
+	);
+	modModel.toggleCheckboxes( true );  // allow user to check/uncheck each item in the list
+	ui->modListView->toggleNameEditing( false );
+	ui->modListView->toggleIntraWidgetDragAndDrop( true );
+	ui->modListView->toggleInterWidgetDragAndDrop( true );
+	ui->modListView->toggleExternalFileDragAndDrop( true );
+	connect( ui->modListView, &EditableListView::itemsDropped, this, &thisClass::modsDropped );
 
 	// setup signals
 	connect( ui->setupPathsAction, &QAction::triggered, this, &thisClass::runSetupDialog );
@@ -182,7 +185,7 @@ MainWindow::MainWindow()
 	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeSelectedMap );
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
 	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::selectMap );
-	connect( ui->saveFileCmbBox, &QComboBox::currentTextChanged, this, &thisClass::selectSavedGame );
+	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSavedGame );
 	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSkill );
 	connect( ui->skillSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeSkillNum );
 	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoMonsters );
@@ -392,7 +395,8 @@ void MainWindow::loadPreset( const QModelIndex & index )
 
 	// restore selected config
 	if (!preset.selectedConfig.isEmpty()) {  // the preset combo box might have been empty when creating this preset
-		int configIdx = configModel.indexOf( preset.selectedConfig );
+		int configIdx = findSuch( configModel.list(), [ &preset ]( const ConfigFile & config )
+		                                                         { return config.name == preset.selectedConfig; } );
 		if (configIdx >= 0) {
 			ui->configCmbBox->setCurrentIndex( configIdx );
 		} else {
@@ -498,7 +502,7 @@ void MainWindow::selectConfig( int index )
 		if (index < 0)  // engine combo box was reset to "no engine selected" state
 			presetModel[ selectedPresetIdx ].selectedConfig.clear();
 		else
-			presetModel[ selectedPresetIdx ].selectedConfig = configModel[ index ];
+			presetModel[ selectedPresetIdx ].selectedConfig = configModel[ index ].name;
 	}
 
 	updateLaunchCommand();
@@ -573,8 +577,7 @@ void MainWindow::presetAdd()
 	appendItem( presetModel, { "Preset"+QString::number( presetNum++ ) } );
 
 	// clear the widgets to represent an empty preset
-	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will be saved in the old one
-	// TODO: maybe an own function
+	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will clear the prev preset
 	ui->engineCmbBox->setCurrentIndex( -1 );
 	ui->configCmbBox->setCurrentIndex( -1 );
 	deselectSelectedItems( ui->iwadListView );
@@ -627,18 +630,18 @@ void MainWindow::modAdd()
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
-	QString name = QFileInfo( path ).fileName();
-
 	// the path comming out of the file dialog is always absolute
 	if (pathHelper.useRelativePaths())
 		path = pathHelper.getRelativePath( path );
 
-	appendItem( modModel, { name, path, true } );
+	Mod mod = { QFileInfo( path ).fileName(), path, true };
+
+	appendItem( modModel, mod );
 
 	// add it also to the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presetModel[ selectedPresetIdx ].mods.append({ name, path, true });
+		presetModel[ selectedPresetIdx ].mods.append( mod );
 	}
 
 	updateLaunchCommand();
@@ -743,6 +746,8 @@ void MainWindow::modsDropped()
 			presetModel[ selectedPresetIdx ].mods.fromList( modModel.list() );  // not the most optimal way, but the size of the list will be always small
 		}
 
+		// TODO: reset was dropped into?
+
 		updateLaunchCommand();
 	}
 }
@@ -752,7 +757,7 @@ void MainWindow::modsDropped()
 
 void MainWindow::updateIWADsFromDir()
 {
-	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, isIWAD, IWADfromFileMaker( pathHelper ) );
+	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper, isIWAD );
 
 	// the previously selected item might have been removed
 	if (!isSomethingSelected( ui->iwadListView ))
@@ -761,69 +766,40 @@ void MainWindow::updateIWADsFromDir()
 
 void MainWindow::updateMapPacksFromDir()
 {
-	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, isMapPack );
+	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, pathHelper, isMapPack );
 
 	// the previously selected item might have been removed
 	if (!isSomethingSelected( ui->mapDirView ))
 		selectedMapPack.clear();
 }
 
+void MainWindow::updateConfigFilesFromDir()
+{
+	int currentEngineIdx = ui->engineCmbBox->currentIndex();
+	if (currentEngineIdx < 0) {  // no engine is selected
+		return;
+	}
+
+	QString configDir = engineModel[ currentEngineIdx ].configDir;
+
+	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, false, pathHelper,
+		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == configFileExt; }
+	);
+}
+
 void MainWindow::updateSaveFilesFromDir()
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-	if (currentEngineIdx < 0) {  // no save file is selected
+	if (currentEngineIdx < 0) {  // no engine is selected
 		return;
 	}
 
 	// i don't know about a case, where the save dir would be different from config dir, it's not even configurable in zdoom
 	QString saveDir = engineModel[ currentEngineIdx ].configDir;
 
-	// custom implementation, because it doesn't use our item models, but just standard Qt ComboBox model
-
-	// note down the currently selected item
-	QString lastText = ui->saveFileCmbBox->currentText();
-
-	ui->saveFileCmbBox->clear();
-
-	// update the list according to directory content
-	QDirIterator dirIt( saveDir );
-	while (dirIt.hasNext()) {
-		QFileInfo entry( dirIt.next() );
-		if (!entry.isDir() && entry.suffix() == "zds")
-			ui->saveFileCmbBox->addItem( entry.fileName() );
-	}
-
-	// restore the originally selected item
-	ui->saveFileCmbBox->setCurrentText( lastText );
-}
-
-void MainWindow::updateConfigFilesFromDir()
-{
-	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-	if (currentEngineIdx < 0) {  // no config file is selected
-		return;
-	}
-
-	QString configDir = engineModel[ currentEngineIdx ].configDir;
-
-	// write down the currently selected item
-	QString lastText = ui->configCmbBox->currentText();
-
-	//configModel.startCompleteUpdate();  // this will reset the selection and cause the launch command to regenerate back and forth
-
-	configModel.clear();
-
-	fillListFromDir< QString >( configModel, configDir, false,
-		/*isDesiredFile*/[]( const QFileInfo & file ){ return file.suffix().toLower() == configFileExt; },
-		/*makeItemFromFile*/[]( const QFileInfo & file ) { return file.fileName(); }
+	updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, false, pathHelper,
+		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileExt; }
 	);
-
-	//configModel.finishCompleteUpdate();
-
-	// restore the originally selected item (the selection will be reset if the item does not exist in the new content)
-	ui->configCmbBox->setCurrentIndex( ui->configCmbBox->findText( lastText ) );
-
-	configModel.contentChanged(0);
 }
 
 void MainWindow::updateMapsFromIWAD()
@@ -855,8 +831,8 @@ void MainWindow::updateListsFromDirs()
 		updateIWADsFromDir();
 	}
 	updateMapPacksFromDir();
-	updateSaveFilesFromDir();
 	updateConfigFilesFromDir();
+	updateSaveFilesFromDir();
 }
 
 
@@ -878,6 +854,7 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 		iwad.path = pathHelper.convertPath( iwad.path );
 
 	mapDir = pathHelper.convertPath( mapDir );
+	mapModel.setBaseDir( mapDir );
 
 	modDir = pathHelper.convertPath( modDir );
 	for (Mod & mod : modModel)
@@ -948,7 +925,7 @@ void MainWindow::selectMap( const QString & )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectSavedGame( const QString & )
+void MainWindow::selectSavedGame( int )
 {
 	updateLaunchCommand();
 }
@@ -1234,17 +1211,18 @@ void MainWindow::loadOptions( const QString & fileName )
 			if (jsEngine.isEmpty())  // wrong type on position i - skip this entry
 				continue;
 
-			QString name = getString( jsEngine, "name" );
-			QString path = getString( jsEngine, "path" );
-			QString configDir = getString( jsEngine, "config_dir" );
-			if (name.isEmpty() || path.isEmpty())  // name or path doesn't exist - skip this entry
+			Engine engine;
+			engine.name = getString( jsEngine, "name" );
+			engine.path = pathHelper.convertPath( getString( jsEngine, "path" ) );
+			engine.configDir = pathHelper.convertPath( getString( jsEngine, "config_dir" ) );
+			if (engine.name.isEmpty() || engine.path.isEmpty())  // name or path doesn't exist - skip this entry
 				continue;
 
-			if (QFileInfo( path ).exists()) {
-				engineModel.append({ name, pathHelper.convertPath( path ), pathHelper.convertPath( configDir ) });
+			if (QFileInfo( engine.path ).exists()) {
+				engineModel.append( engine );
 			} else {
 				QMessageBox::warning( this, "Engine no longer exists",
-					"An engine from the saved options ("%path%") no longer exists. It will be removed from the list." );
+					"An engine from the saved options ("%engine.path%") no longer exists. It will be removed from the list." );
 			}
 		}
 
@@ -1271,7 +1249,7 @@ void MainWindow::loadOptions( const QString & fileName )
 			if (!dir.isEmpty()) {  // non-existing element directory -> skip completely
 				if (QDir( dir ).exists()) {
 					iwadDir = pathHelper.convertPath( dir );
-					fillListFromDir< IWAD >( iwadModel, iwadDir, iwadSubdirs, isIWAD, IWADfromFileMaker( pathHelper ) );
+					fillListFromDir< IWAD >( iwadModel.list(), iwadDir, iwadSubdirs, pathHelper, isIWAD );
 				} else {
 					QMessageBox::warning( this, "IWAD dir no longer exists",
 						"IWAD directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
@@ -1287,16 +1265,17 @@ void MainWindow::loadOptions( const QString & fileName )
 				if (jsIWAD.isEmpty())  // wrong type on position i - skip this entry
 					continue;
 
-				QString name = getString( jsIWAD, "name" );
-				QString path = getString( jsIWAD, "path" );
-				if (name.isEmpty() || path.isEmpty())  // name or path doesn't exist - skip this entry
+				IWAD iwad;
+				iwad.name = getString( jsIWAD, "name" );
+				iwad.path = pathHelper.convertPath( getString( jsIWAD, "path" ) );
+				if (iwad.name.isEmpty() || iwad.path.isEmpty())  // name or path doesn't exist - skip this entry
 					continue;
 
-				if (QFileInfo( path ).exists()) {
-					iwadModel.append({ name, pathHelper.convertPath( path ) });
+				if (QFileInfo( iwad.path ).exists()) {
+					iwadModel.append( iwad );
 				} else {
 					QMessageBox::warning( this, "IWAD no longer exists",
-						"An IWAD from the saved options ("%path%") no longer exists. It will be removed from the list." );
+						"An IWAD from the saved options ("%iwad.path%") no longer exists. It will be removed from the list." );
 				}
 			}
 		}
@@ -1507,7 +1486,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx >= 0) {
 			QDir configDir( engineModel[ selectedEngineIdx ].configDir );
-			QString configPath = configDir.filePath( configModel[ configIdx ] );
+			QString configPath = configDir.filePath( configModel[ configIdx ].name );
 			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
 	}
@@ -1547,9 +1526,9 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 		if (!compatOptsCmdArgs.isEmpty()) {
 			cmdStream << " " << compatOptsCmdArgs;
 		}
-	} else if (ui->launchMode_savefile->isChecked()) {
+	} else if (ui->launchMode_savefile->isChecked() && selectedEngineIdx >= 0 && ui->saveFileCmbBox->currentIndex() >= 0) {
 		QDir saveDir( engineModel[ selectedEngineIdx ].configDir );
-		QString savePath = saveDir.filePath( ui->saveFileCmbBox->currentText() );
+		QString savePath = saveDir.filePath( saveModel[ ui->saveFileCmbBox->currentIndex() ].name );
 		cmdStream << " -loadgame \"" << base.rebasePath( savePath ) << "\"";
 	}
 

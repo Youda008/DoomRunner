@@ -122,40 +122,8 @@ bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePos
 	return false;
 }
 
-void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
-{
-	QDir dir_( dir );
-	if (!dir_.exists())
-		return;
-
-	// directories first
-	QDirIterator dirIt1( dir_ );
-	while (dirIt1.hasNext()) {
-		dirIt1.next();
-		QFileInfo entry = dirIt1.fileInfo();
-		if (entry.isDir()) {
-			QString dirName = entry.fileName();
-			if (dirName != "." && dirName != "..") {
-				QModelIndex dirItem = model.addNode( parent, dirName, NodeType::DIR );
-				fillTreeFromDir( model, dirItem, entry.filePath(), isDesiredFile );
-			}
-		}
-	}
-
-	// files second
-	QDirIterator dirIt2( dir_ );
-	while (dirIt2.hasNext()) {
-		dirIt2.next();
-		QFileInfo entry = dirIt2.fileInfo();
-		if (!entry.isDir()) {
-			if (isDesiredFile( entry )) {
-				model.addNode( parent, entry.fileName(), NodeType::FILE );
-			}
-		}
-	}
-}
-
-void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, const PathHelper & pathHelper,
+                        std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	if (dir.isEmpty())
 		return;
@@ -185,7 +153,9 @@ void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & 
 
 	model.clear();
 
-	fillTreeFromDir( model, QModelIndex(), dir, isDesiredFile );
+	model.setBaseDir( dir );  // all new items will be relative to this dir
+
+	fillTreeFromDir( model, QModelIndex(), dir, pathHelper, isDesiredFile );
 
 	model.finishCompleteUpdate();
 

@@ -91,7 +91,7 @@ class MainWindow : public QMainWindow {
 	void modeSavedGame();
 
 	void selectMap( const QString & map );
-	void selectSavedGame( const QString & saveName );
+	void selectSavedGame( int index );
 	void selectSkill( int skill );
 	void changeSkillNum( int skillNum );
 	void toggleNoMonsters( bool checked );
@@ -129,15 +129,16 @@ class MainWindow : public QMainWindow {
 
 	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
 
-	// We use model-view design pattern for several list widgets, because it allows us to have all the related data
-	// packed together in one struct, and have the UI automatically mirror the underlying list without manually syncing
-	// the underlying list (backend) with the widget list (frontend).
+	// We use model-view design pattern for several widgets, because it allows us to organize the data in a way we need,
+	// and have the widget (frontend) automatically mirror the underlying data (backend) without syncing them manually.
 	//
 	// You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
 
 	ReadOnlyListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
 
-	ReadOnlyListModel< QString > configModel;    ///< list of config files found inside directory of selected engine
+	ReadOnlyListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
+
+	ReadOnlyListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
 
 	ReadOnlyListModel< IWAD > iwadModel;    ///< user-ordered list of iwads (managed by SetupDialog)
 	bool iwadListFromDir;    ///< whether the IWAD list should be periodically updated from a directory (value returned by SetupDialog)

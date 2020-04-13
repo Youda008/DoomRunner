@@ -16,26 +16,43 @@
 
 #include <QString>
 #include <QVector>
-
-class QFileInfo;
-class PathHelper;
+#include <QFileInfo>
 
 
 //======================================================================================================================
 //  data structures
 
+// constructors from QFileInfo are used in automatic list updates for initializing element from file-system entry
+// getID methods are used in automatic list updates for selecting the same item as before
+
 struct Engine {
 	QString name;
 	QString path;
 	QString configDir;
-	// used in automatic list updates for selecting the same item as before
+
+	Engine() {}
+	Engine( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
 	QString getID() const { return path; }
+};
+
+struct ConfigFile {
+	QString name;
+
+	ConfigFile( const QFileInfo & file ) : name( file.fileName() ) {}
+};
+
+struct SaveFile {
+	QString name;
+
+	SaveFile( const QFileInfo & file ) : name( file.fileName() ) {}
 };
 
 struct IWAD {
 	QString name;
 	QString path;
-	// used in automatic list updates for selecting the same item as before
+
+	IWAD() {}
+	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
 	QString getID() const { return path; }
 };
 
@@ -43,12 +60,15 @@ struct Mod {
 	QString name;
 	QString path;
 	bool checked;
+
+	//Mod() {}
+	//Mod( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ), checked( true ) {}
 };
 
 struct Preset {
 	QString name;
 	QString selectedEnginePath;  // we store the engine by path, so that it does't break when user renames them or reorders them
-	QString selectedConfig;  // we store the engine by name instead of index, so that it does't break when user reorders them
+	QString selectedConfig;  // we store the config by name instead of index, so that it does't break when user reorders them
 	QString selectedIWAD;  // we store the IWAD by name instead of index, so that it doesn't break when user reorders them
 	TreePosition selectedMapPack;
 	QString cmdArgs;
@@ -56,6 +76,7 @@ struct Preset {
 
 	Preset() {}
 	Preset( const QString & name ) : name( name ) {}
+	Preset( const QFileInfo & ) {} // dummy, it isn't actually used
 };
 
 struct GameplayOptions {
@@ -72,16 +93,9 @@ struct CompatibilityOptions {
 //======================================================================================================================
 //  functions
 
-// just to prevent writing the same long lambdas at multiple places
+// just to prevent writing the same lambdas at multiple places
 bool isIWAD( const QFileInfo & file );
 bool isMapPack( const QFileInfo & file );
-
-class IWADfromFileMaker {
-	const PathHelper & pathHelper;
- public:
-	IWADfromFileMaker( const PathHelper & pathHelper ) : pathHelper( pathHelper ) {}
-	IWAD operator()( const QFileInfo & file );
-};
 
 
 #endif // SHARED_DATA_INCLUDED

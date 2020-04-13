@@ -51,7 +51,11 @@ struct Preset {
 	QString selectedConfig;  // we store the engine by name instead of index, so that it does't break when user reorders them
 	QString selectedIWAD;  // we store the IWAD by name instead of index, so that it doesn't break when user reorders them
 	TreePosition selectedMapPack;
+	QString cmdArgs;
 	QVector< Mod > mods;  // this list needs to be kept in sync with mod list widget
+
+	Preset() {}
+	Preset( const QString & name ) : name( name ) {}
 };
 
 struct GameplayOptions {

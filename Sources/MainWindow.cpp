@@ -454,6 +454,9 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	}
 	modModel.finishCompleteUpdate();
 
+	// restore additional command line arguments
+	ui->cmdArgsLine->setText( preset.cmdArgs );
+
 	updateLaunchCommand();
 }
 
@@ -567,7 +570,7 @@ void MainWindow::presetAdd()
 {
   static uint presetNum = 1;
 
-	appendItem( presetModel, { "Preset"+QString::number( presetNum++ ), "", "", "", {}, {} } );
+	appendItem( presetModel, { "Preset"+QString::number( presetNum++ ) } );
 
 	// clear the widgets to represent an empty preset
 	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will be saved in the old one
@@ -1059,8 +1062,14 @@ void MainWindow::changeTimeLimit( int )
 	updateLaunchCommand();
 }
 
-void MainWindow::updateAdditionalArgs( const QString & )
+void MainWindow::updateAdditionalArgs( const QString & text )
 {
+	// update the current preset
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx >= 0) {
+		presetModel[ selectedPresetIdx ].cmdArgs = text;
+	}
+
 	updateLaunchCommand();
 }
 
@@ -1146,6 +1155,7 @@ void MainWindow::saveOptions( const QString & fileName )
 			jsPreset["selected_config"] = preset.selectedConfig;
 			jsPreset["selected_IWAD"] = preset.selectedIWAD;
 			jsPreset["selected_mappack"] = preset.selectedMapPack.toString();
+			jsPreset["additional_args"] = preset.cmdArgs;
 			QJsonArray jsModArray;
 			for (const Mod & mod : preset.mods) {
 				QJsonObject jsMod;
@@ -1165,9 +1175,6 @@ void MainWindow::saveOptions( const QString & fileName )
 	json["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
 
 	json["use_absolute_paths"] = pathHelper.useAbsolutePaths();
-
-	// additional command line arguments
-	json["additional_args"] = ui->cmdArgsLine->text();
 
 	// launch options
 	json["dmflags1"] = qint64( gameOpts.flags1 );
@@ -1355,6 +1362,7 @@ void MainWindow::loadOptions( const QString & fileName )
 			preset.selectedConfig = getString( jsPreset, "selected_config" );
 			preset.selectedIWAD = getString( jsPreset, "selected_IWAD" );
 			preset.selectedMapPack = TreePosition( getString( jsPreset, "selected_mappack" ) );
+			preset.cmdArgs = getString( jsPreset, "additional_args" );
 			QJsonArray jsModArray = getArray( jsPreset, "mods" );
 			for (int i = 0; i < jsModArray.size(); i++)
 			{

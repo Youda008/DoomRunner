@@ -72,6 +72,9 @@ class SetupDialog : public QDialog {
 
 	void editEngine( const QModelIndex & index );
 
+	void enginesDropped();
+	void iwadsDropped();
+
 	void updateIWADsFromDir();
 
 	void toggleAbsolutePaths( bool checked );
@@ -94,10 +97,10 @@ class SetupDialog : public QDialog {
 	PathHelper pathHelper;
 
 	// engine info
-	ReadOnlyListModel< Engine > engineModel;  ///< read-only view model, list content is changed by buttons
+	EditableListModel< Engine > engineModel;
 
 	// IWAD info
-	ReadOnlyListModel< IWAD > iwadModel;  ///< read-only view model, list content is changed by buttons
+	EditableListModel< IWAD > iwadModel;
 	bool iwadListFromDir;
 	QString iwadDir;
 	bool iwadSubdirs;

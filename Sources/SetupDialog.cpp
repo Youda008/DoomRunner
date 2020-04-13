@@ -30,10 +30,12 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	: QDialog( parent )
 	, pathHelper( useAbsolutePaths, baseDir )
 	, engineModel( engines,
-		/*makeDisplayString*/[]( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
+		/*makeDisplayString*/[]( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; },
+		/*editString*/[]( Engine & engine ) -> QString & { return engine.name; }
 	  )
 	, iwadModel( iwads,
-		/*makeDisplayString*/[]( const IWAD & iwad ) -> QString { return iwad.name % "  [" % iwad.path % "]"; }
+		/*makeDisplayString*/[]( const IWAD & iwad ) -> QString { return iwad.name % "  [" % iwad.path % "]"; },
+		/*editString*/[]( IWAD & iwad ) -> QString & { return iwad.name; }
 	  )
 	, iwadListFromDir( iwadListFromDir )
 	, iwadDir( iwadDir )
@@ -44,9 +46,31 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	ui = new Ui::SetupDialog;
 	ui->setupUi(this);
 
-	// setup view models
+	// setup engine view
 	ui->engineListView->setModel( &engineModel );
+	engineModel.setMakeItemFromFileFunc(  // this will be our reaction when a file is dragged and dropped from a directory window
+		[]( const QFileInfo & file ) -> Engine {
+			return Engine( file );
+		}
+	);
+	ui->engineListView->toggleNameEditing( false );
+	ui->engineListView->toggleIntraWidgetDragAndDrop( true );
+	ui->engineListView->toggleInterWidgetDragAndDrop( false );
+	ui->engineListView->toggleExternalFileDragAndDrop( true );
+	connect( ui->engineListView, &EditableListView::itemsDropped, this, &thisClass::enginesDropped );
+
+	// setup iwad view
 	ui->iwadListView->setModel( &iwadModel );
+	iwadModel.setMakeItemFromFileFunc(  // this will be our reaction when a file is dragged and dropped from a directory window
+		[]( const QFileInfo & file ) -> IWAD {
+			return IWAD( file );
+		}
+	);
+	ui->iwadListView->toggleNameEditing( false );
+	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadListFromDir );
+	ui->iwadListView->toggleInterWidgetDragAndDrop( false );
+	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadListFromDir );
+	connect( ui->iwadListView, &EditableListView::itemsDropped, this, &thisClass::iwadsDropped );
 
 	// initialize widget data
 	if (iwadListFromDir) {
@@ -130,6 +154,9 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadBtnDel->setEnabled( !enabled );
 	ui->iwadBtnUp->setEnabled( !enabled );
 	ui->iwadBtnDown->setEnabled( !enabled );
+
+	ui->iwadListView->toggleIntraWidgetDragAndDrop( !enabled );
+	ui->iwadListView->toggleExternalFileDragAndDrop( !enabled );
 
 	if (enabled)
 		updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper, isIWAD );
@@ -258,6 +285,16 @@ void SetupDialog::editEngine( const QModelIndex & index )
 	if (code == QDialog::Accepted) {
 		selectedEngine = dialog.engine;
 	}
+}
+
+void SetupDialog::enginesDropped()
+{
+
+}
+
+void SetupDialog::iwadsDropped()
+{
+
 }
 
 void SetupDialog::updateIWADsFromDir()

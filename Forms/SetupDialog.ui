@@ -28,7 +28,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QListView" name="engineListView">
+           <widget class="EditableListView" name="engineListView">
             <property name="editTriggers">
              <set>QAbstractItemView::NoEditTriggers</set>
             </property>
@@ -267,7 +267,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QListView" name="iwadListView">
+           <widget class="EditableListView" name="iwadListView">
             <property name="editTriggers">
              <set>QAbstractItemView::NoEditTriggers</set>
             </property>
@@ -417,6 +417,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>EditableListView</class>
+   <extends>QListView</extends>
+   <header location="global">Sources/EditableListView.hpp</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

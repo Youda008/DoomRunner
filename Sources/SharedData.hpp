@@ -17,6 +17,7 @@
 #include <QString>
 #include <QVector>
 #include <QFileInfo>
+#include <QDir>
 
 
 //======================================================================================================================
@@ -31,7 +32,7 @@ struct Engine {
 	QString configDir;
 
 	Engine() {}
-	Engine( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
+	Engine( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ), configDir( file.dir().path() ) {}
 	QString getID() const { return path; }
 };
 

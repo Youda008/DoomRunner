@@ -20,8 +20,6 @@ class QString;
 inline constexpr const char configFileExt [] = "ini";
 inline constexpr const char saveFileExt [] = "zds";
 
-QString getMapNumber( const QString & mapName );
-
 bool isDoom1( const QString & iwadName );
 
 enum class WadType {

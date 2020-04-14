@@ -16,15 +16,6 @@
 
 //======================================================================================================================
 
-QString getMapNumber( const QString & mapName )
-{
-	if (mapName.startsWith('E')) {  // E2M7
-		return mapName[1]+QString(' ')+mapName[3];
-	} else {  // MAP21
-		return mapName.mid(3,2);
-	}
-}
-
 bool isDoom1( const QString & iwadName )
 {
 	return iwadName.compare( "doom.wad", Qt::CaseInsensitive ) == 0

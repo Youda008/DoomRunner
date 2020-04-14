@@ -1528,7 +1528,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 	}
 
 	if (ui->launchMode_map->isChecked()) {
-		cmdStream << " -warp " << getMapNumber( ui->mapCmbBox->currentText() );
+		cmdStream << " +map " << ui->mapCmbBox->currentText();
 		cmdStream << " -skill " << ui->skillSpinBox->text();
 		if (ui->noMonstersChkBox->isChecked())
 			cmdStream << " -nomonsters";

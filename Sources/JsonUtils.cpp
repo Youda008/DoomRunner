@@ -10,6 +10,7 @@
 
 #include <QStringBuilder>
 #include <QMessageBox>
+#include <QCheckBox>
 
 
 //======================================================================================================================
@@ -347,6 +348,17 @@ QString JsonContext::getString( int index, const QString & defaultVal )
 //----------------------------------------------------------------------------------------------------------------------
 //  error handlers
 
+static bool checkableMessageBox( QMessageBox::Icon icon, const QString & title, const QString & message )
+{
+	QMessageBox msgBox( icon, title, message, QMessageBox::Ok );
+	QCheckBox chkBox( "don't show this error again" );
+	msgBox.setCheckBox( &chkBox );
+
+	msgBox.exec();
+
+	return chkBox.isChecked();
+}
+
 static const char * typeStr [] = {
 	"Null",
 	"Bool",
@@ -359,50 +371,65 @@ static const char * typeStr [] = {
 
 void JsonContext::invalidCurrentType( const QString & expectedType )
 {
+	if (dontShowAgain)
+		return;
+
 	QString actualType = typeStr[ entryStack.last().val.type() ];
 
-    QMessageBox::warning( parent, "Error loading options file",
-		"Current element " % currentPath() % " has invalid type: " % actualType % ", " % expectedType % " expected. "
-		"Skipping this option. "
-		"If you just switched to a newer version, you can ignore this warning."
+	dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading options file",
+		"Current element " % currentPath() % " has invalid type. "
+		"Expected " % expectedType % ", but found " % actualType % ". "
+		"This is a bug. Please make a copy of options.json before clicking Ok, "
+		"and then create an issue on Github page with that file attached."
 	);
 }
 
 void JsonContext::missingKey( const QString & key )
 {
-	QMessageBox::warning( parent, "Error loading options file",
+	if (dontShowAgain)
+		return;
+
+	dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
 		"Element " % elemPath( key ) % " is missing in the options file. Skipping this option. "
-		"If you just switched to a newer version, you can ignore this warning."
+		"If you just updated to a newer version, you can ignore this warning."
 	);
 }
 
 void JsonContext::indexOutOfBounds( int index )
 {
-	QMessageBox::critical( parent, "Error loading options file",
+	if (dontShowAgain)
+		return;
+
+	dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading options file",
 		"JSON array " % currentPath() % " does not have index " % QString::number( index ) % ". "
-		"This shouldn't be happening and it is a bug. Please create an issue on Github page."
+		"This is a bug. Please make a copy of options.json before clicking Ok, "
+		"and then create an issue on Github page with that file attached."
 	);
 }
 
 void JsonContext::invalidTypeAtKey( const QString & key, const QString & expectedType )
 {
+	if (dontShowAgain)
+		return;
+
 	QString actualType = typeStr[ entryStack.last().val.toObject()[ key ].type() ];
 
-    QMessageBox::warning( parent, "Error loading options file",
-		"Element " % elemPath( key ) % " has invalid type: " % actualType % ", " % expectedType % " expected. "
-		"Skipping this option. "
-		"If you just switched to a newer version, you can ignore this warning."
+	dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
+		"Element " % elemPath( key ) % " has invalid type. Expected " % expectedType % ", but found " % actualType % ". "
+		"Skipping this option. If you just updated to a newer version, you can ignore this warning."
 	);
 }
 
 void JsonContext::invalidTypeAtIdx( int index, const QString & expectedType )
 {
+	if (dontShowAgain)
+		return;
+
 	QString actualType = typeStr[ entryStack.last().val.toArray()[ index ].type() ];
 
-    QMessageBox::warning( parent, "Error loading options file",
-		"Element " % elemPath( index ) % " has invalid type: " % actualType % ", " % expectedType % " expected. "
-		"Skipping this option. "
-		"If you just switched to a newer version, you can ignore this warning."
+	dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
+		"Element " % elemPath( index ) % " has invalid type. Expected " % expectedType % ", but found " % actualType % ". "
+		"Skipping this option. If you just updated to a newer version, you can ignore this warning."
 	);
 }
 

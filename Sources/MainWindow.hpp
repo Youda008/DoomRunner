@@ -42,13 +42,12 @@ class MainWindow : public QMainWindow {
 
  private: //methods
 
-	virtual void showEvent( QShowEvent * event ) override;
 	virtual void timerEvent( QTimerEvent * event ) override;
 	virtual void closeEvent( QCloseEvent * event ) override;
 
-	void firstRun();
-
  private slots:
+
+	void onWindowShown();
 
 	void runSetupDialog();
 	void runGameOptsDialog();

@@ -207,12 +207,15 @@ MainWindow::MainWindow()
 
 	connect( ui->cmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateAdditionalArgs );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
+
+	// This will call the function when the window is fully initialized and displayed.
+	// Not sure, which one of these 2 options is better.
+	QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection );
+	//QTimer::singleShot( 0, this, &thisClass::onWindowShown );
 }
 
-void MainWindow::showEvent( QShowEvent * event )
+void MainWindow::onWindowShown()
 {
-	QMainWindow::showEvent( event );
-
 	// In the constructor, some properties of the window are not yet initialized, like window dimensions,
 	// so we have to do this here, when the window is already fully loaded.
 
@@ -220,16 +223,10 @@ void MainWindow::showEvent( QShowEvent * event )
 	if (QFileInfo( defaultOptionsFile ).exists())
 		loadOptions( defaultOptionsFile );
 	else  // this is a first run, perform an initial setup
-		firstRun();
+		runSetupDialog();
 
 	// setup an update timer
 	startTimer( 1000 );
-}
-
-void MainWindow::firstRun()
-{
-	// let the user setup the paths and other basic settings
-	QTimer::singleShot( 1, this, &thisClass::runSetupDialog ); // TODO: try directly
 }
 
 void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
@@ -1184,7 +1181,7 @@ void MainWindow::loadOptions( const QString & fileName )
 		return;
 	}
 
-	JsonContext json( jsonDoc.object(), this );
+	JsonContext json( jsonDoc.object() );
 
 	// window geometry
 	{

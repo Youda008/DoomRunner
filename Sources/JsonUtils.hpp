@@ -27,7 +27,7 @@ class JsonContext {
 
  public:
 
-	JsonContext( const QJsonObject & rootObject, QWidget * parent ) : parent( parent )
+	JsonContext( const QJsonObject & rootObject ) : dontShowAgain( false )
 		{ entryStack.append({ QString(), rootObject }); }
 	~JsonContext() {}
 
@@ -69,6 +69,8 @@ class JsonContext {
 
 	QString elemPath( const QString & elemName );
 	QString elemPath( int index );
+	QString pathWithoutArrays( const QString & elemName );
+	QString pathWithoutArrays( int index );
 
  private:
 
@@ -96,7 +98,7 @@ class JsonContext {
 
 	QList< Entry > entryStack;
 
-	QWidget * parent;  ///< the window attempting to parse the json, will be used for error message dialogs
+	bool dontShowAgain;
 
 };
 

@@ -113,7 +113,8 @@ class MainWindow : public QMainWindow {
 	void exportPreset();
 	void importPreset();
 
-	void updateAdditionalArgs( const QString & text );
+	void updatePresetCmdArgs( const QString & text );
+	void updateGlobalCmdArgs( const QString & text );
 
 	QString generateLaunchCommand( QString baseDir = "" );
 	void updateLaunchCommand();

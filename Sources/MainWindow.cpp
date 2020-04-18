@@ -205,7 +205,8 @@ MainWindow::MainWindow()
 	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::changeTeamDamage );
 	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeTimeLimit );
 
-	connect( ui->cmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateAdditionalArgs );
+	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updatePresetCmdArgs );
+	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateGlobalCmdArgs );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
 
 	// This will call the function when the window is fully initialized and displayed.
@@ -459,7 +460,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	modModel.finishCompleteUpdate();
 
 	// restore additional command line arguments
-	ui->cmdArgsLine->setText( preset.cmdArgs );
+	ui->presetCmdArgsLine->setText( preset.cmdArgs );
 
 	updateLaunchCommand();
 }
@@ -475,6 +476,7 @@ void MainWindow::togglePresetSubWidgets( bool enabled )
 	ui->modBtnDel->setEnabled( enabled );
 	ui->modBtnUp->setEnabled( enabled );
 	ui->modBtnDown->setEnabled( enabled );
+	ui->presetCmdArgsLine->setEnabled( enabled );
 }
 
 void MainWindow::selectEngine( int index )
@@ -1036,7 +1038,7 @@ void MainWindow::changeTimeLimit( int )
 	updateLaunchCommand();
 }
 
-void MainWindow::updateAdditionalArgs( const QString & text )
+void MainWindow::updatePresetCmdArgs( const QString & text )
 {
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
@@ -1044,6 +1046,11 @@ void MainWindow::updateAdditionalArgs( const QString & text )
 		presetModel[ selectedPresetIdx ].cmdArgs = text;
 	}
 
+	updateLaunchCommand();
+}
+
+void MainWindow::updateGlobalCmdArgs( const QString & )
+{
 	updateLaunchCommand();
 }
 
@@ -1066,6 +1073,8 @@ void MainWindow::saveOptions( const QString & fileName )
 		json["width"] = geometry.width();
 		json["height"] = geometry.height();
 	}
+
+	json["use_absolute_paths"] = pathHelper.useAbsolutePaths();
 
 	// engines
 	{
@@ -1148,7 +1157,8 @@ void MainWindow::saveOptions( const QString & fileName )
 	int presetIdx = getSelectedItemIdx( ui->presetListView );
 	json["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
 
-	json["use_absolute_paths"] = pathHelper.useAbsolutePaths();
+	// additional command line arguments
+	json["additional_args"] = ui->globalCmdArgsLine->text();
 
 	// launch options
 	json["dmflags1"] = qint64( gameOpts.flags1 );
@@ -1378,6 +1388,8 @@ void MainWindow::loadOptions( const QString & fileName )
 		json.exitArray();
 	}
 
+	ui->globalCmdArgsLine->setText( json.getString( "additional_args" ) );
+
 	// launch options
 	gameOpts.flags1 = json.getInt( "dmflags1", 0 );
 	gameOpts.flags2 = json.getInt( "dmflags2", 0 );
@@ -1586,8 +1598,11 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 		}
 	}
 
-	if (!ui->cmdArgsLine->text().isEmpty())
-		cmdStream << " " << ui->cmdArgsLine->text();
+	if (!ui->presetCmdArgsLine->text().isEmpty())
+		cmdStream << " " << ui->presetCmdArgsLine->text();
+
+	if (!ui->globalCmdArgsLine->text().isEmpty())
+		cmdStream << " " << ui->globalCmdArgsLine->text();
 
 	cmdStream.flush();
 

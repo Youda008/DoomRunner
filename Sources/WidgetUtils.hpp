@@ -35,8 +35,8 @@ class QTreeView;
 //----------------------------------------------------------------------------------------------------------------------
 //  selection manipulation
 
-/// assumes a single-selection mode, will throw a message box error otherwise
-int getSelectedItemIdx( QListView * view );
+int getSelectedItemIdx( QListView * view );  // assumes a single-selection mode, will throw a message box error otherwise
+QVector<int> getSelectedItemIdxs( QListView * view );
 bool isSelectedIdx( QListView * view, int index );
 bool isSomethingSelected( QListView * view );
 
@@ -432,6 +432,8 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 //  selection manipulation
 
 QModelIndex getSelectedItemIdx( QTreeView * view );
+QModelIndexList getSelectedItemIdxs( QTreeView * view );
+bool isSelectedIdx( QTreeView * view, const QModelIndex & index );
 bool isSomethingSelected( QTreeView * view );
 
 void selectItemByIdx( QTreeView * view, const QModelIndex & index );
@@ -441,11 +443,11 @@ void changeSelectionTo( QTreeView * view, const QModelIndex & index );
 //----------------------------------------------------------------------------------------------------------------------
 //  complete tree update helpers
 
-/** gets a persistent item ID that survives node shifting, adding or removal */
-TreePosition getSelectedItemID( QTreeView * view, const DirTreeModel & model );
+/** gets a persistent item IDs that survive node shifting, adding or removal */
+QVector< TreePosition > getSelectedItemIDs( QTreeView * view, const DirTreeModel & model );
 
-/** attempts to select a previously selected item defined by persistant itemID */
-bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePosition & itemID );
+/** attempts to select previously selected items defined by persistant itemID */
+void selectItemsByID( QTreeView * view, const DirTreeModel & model, const QVector< TreePosition > & itemIDs );
 
 void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, const PathHelper & pathHelper,
                         std::function< bool ( const QFileInfo & file ) > isDesiredFile );

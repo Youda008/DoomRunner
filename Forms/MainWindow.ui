@@ -38,7 +38,7 @@
                <item>
                 <widget class="EditableListView" name="presetListView">
                  <property name="editTriggers">
-                  <set>QAbstractItemView::NoEditTriggers</set>
+                  <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
                  </property>
                 </widget>
                </item>
@@ -233,6 +233,9 @@
                  </property>
                  <property name="editTriggers">
                   <set>QAbstractItemView::NoEditTriggers</set>
+                 </property>
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::ExtendedSelection</enum>
                  </property>
                  <property name="rootIsDecorated">
                   <bool>true</bool>
@@ -1245,7 +1248,7 @@
      <x>0</x>
      <y>0</y>
      <width>720</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuItemMenu">

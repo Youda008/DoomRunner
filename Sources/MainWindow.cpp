@@ -416,15 +416,15 @@ void MainWindow::loadPreset( const QModelIndex & index )
 
 	// restore selected MapPack
 	deselectSelectedItems( ui->mapDirView );
-	selectedMapPack.clear();
-	if (!preset.selectedMapPack.isEmpty()) {  // the map pack may have not been selected when creating this preset
-		QModelIndex mapIdx = mapModel.getNodeByPosition( preset.selectedMapPack );
-		if (mapIdx.isValid()) {
-			selectItemByIdx( ui->mapDirView, mapIdx );
-			selectedMapPack = preset.selectedMapPack;
-		} else {
-			QMessageBox::warning( this, "IWAD no longer exists",
-				"Map pack selected for this preset ("%preset.selectedMapPack.toString()%") no longer exists, please select another one." );
+	if (!preset.selectedMapPacks.isEmpty()) {
+		for (const TreePosition & pos : preset.selectedMapPacks) {
+			QModelIndex mapIdx = mapModel.getNodeByPosition( pos );
+			if (mapIdx.isValid()) {
+				selectItemByIdx( ui->mapDirView, mapIdx );
+			} else {
+				QMessageBox::warning( this, "Map file no longer exists",
+					"Map file selected for this preset ("%pos.toString()%") no longer exists." );
+			}
 		}
 	}
 
@@ -522,22 +522,16 @@ void MainWindow::toggleIWAD( const QModelIndex & index )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleMapPack( const QModelIndex & index )
+void MainWindow::toggleMapPack( const QModelIndex & )
 {
-	TreePosition clickedMapPack = mapModel.getNodePosition( index );
-
-	// allow the user to deselect the map pack by clicking on it again
-	if (clickedMapPack == selectedMapPack) {
-		selectedMapPack.clear();
-		ui->mapDirView->selectionModel()->select( index, QItemSelectionModel::Deselect );
-	} else {
-		selectedMapPack = clickedMapPack;
-	}
+	QVector< TreePosition > selectedMapPacks;
+	for (const QModelIndex & index : getSelectedItemIdxs( ui->mapDirView ))
+		selectedMapPacks.append( mapModel.getNodePosition( index ) );
 
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presetModel[ selectedPresetIdx ].selectedMapPack = clickedMapPack;
+		presetModel[ selectedPresetIdx ].selectedMapPacks = selectedMapPacks;
 	}
 
 	updateLaunchCommand();
@@ -708,16 +702,12 @@ void MainWindow::updateIWADsFromDir()
 
 	// the previously selected item might have been removed
 	if (!isSomethingSelected( ui->iwadListView ))
-		selectedMapPack.clear();
+		selectedIWAD.clear();
 }
 
 void MainWindow::updateMapPacksFromDir()
 {
 	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, pathHelper, isMapPack );
-
-	// the previously selected item might have been removed
-	if (!isSomethingSelected( ui->mapDirView ))
-		selectedMapPack.clear();
 }
 
 void MainWindow::updateConfigFilesFromDir()
@@ -1085,7 +1075,11 @@ void MainWindow::saveOptions( const QString & fileName )
 			jsPreset["selected_engine"] = preset.selectedEnginePath;
 			jsPreset["selected_config"] = preset.selectedConfig;
 			jsPreset["selected_IWAD"] = preset.selectedIWAD;
-			jsPreset["selected_mappack"] = preset.selectedMapPack.toString();
+			QJsonArray jsMapArray;
+			for (const TreePosition & pos : preset.selectedMapPacks) {
+				jsMapArray.append( pos.toString() );
+			}
+			jsPreset["selected_mappacks"] = jsMapArray;
 			jsPreset["additional_args"] = preset.cmdArgs;
 			QJsonArray jsModArray;
 			for (const Mod & mod : preset.mods) {
@@ -1164,29 +1158,31 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		engineModel.clear();
 
-		json.enterArray( "engines" );
-		for (int i = 0; i < json.arraySize(); i++)
+		if (json.enterArray( "engines" ))
 		{
-			if (!json.enterObject( i ))  // wrong type on position i - skip this entry
-				continue;
+			for (int i = 0; i < json.arraySize(); i++)
+			{
+				if (!json.enterObject( i ))  // wrong type on position i - skip this entry
+					continue;
 
-			Engine engine;
-			engine.name = json.getString( "name", "<missing name>" );
-			engine.path = pathHelper.convertPath( json.getString( "path" ) );
-			engine.configDir = pathHelper.convertPath( json.getString( "config_dir", QFileInfo( engine.path ).dir().path() ) );
-			if (engine.path.isEmpty())  // path doesn't exist - skip this entry
-				continue;
+				Engine engine;
+				engine.name = json.getString( "name", "<missing name>" );
+				engine.path = pathHelper.convertPath( json.getString( "path" ) );
+				engine.configDir = pathHelper.convertPath( json.getString( "config_dir", QFileInfo( engine.path ).dir().path() ) );
+				if (engine.path.isEmpty())  // path doesn't exist - skip this entry
+					continue;
 
-			if (QFileInfo( engine.path ).exists()) {
-				engineModel.append( engine );
-			} else {
-				QMessageBox::warning( this, "Engine no longer exists",
-					"An engine from the saved options ("%engine.path%") no longer exists. It will be removed from the list." );
+				if (QFileInfo( engine.path ).exists()) {
+					engineModel.append( engine );
+				} else {
+					QMessageBox::warning( this, "Engine no longer exists",
+						"An engine from the saved options ("%engine.path%") no longer exists. It will be removed from the list." );
+				}
+
+				json.exitObject();
 			}
-
-			json.exitObject();
+			json.exitArray();
 		}
-		json.exitArray();
 
 		engineModel.finishCompleteUpdate();
 
@@ -1219,28 +1215,30 @@ void MainWindow::loadOptions( const QString & fileName )
 		}
 		else
 		{
-			json.enterArray( "IWADs" );
-			for (int i = 0; i < json.arraySize(); i++)
+			if (json.enterArray( "IWADs" ))
 			{
-				if (!json.enterObject( i ))  // wrong type on position i - skip this entry
-					continue;
+				for (int i = 0; i < json.arraySize(); i++)
+				{
+					if (!json.enterObject( i ))  // wrong type on position i - skip this entry
+						continue;
 
-				IWAD iwad;
-				iwad.path = pathHelper.convertPath( json.getString( "path" ) );
-				iwad.name = json.getString( "name", QFileInfo( iwad.path ).fileName() );
-				if (iwad.name.isEmpty() || iwad.path.isEmpty())  // name or path doesn't exist - skip this entry
-					continue;
+					IWAD iwad;
+					iwad.path = pathHelper.convertPath( json.getString( "path" ) );
+					iwad.name = json.getString( "name", QFileInfo( iwad.path ).fileName() );
+					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // name or path doesn't exist - skip this entry
+						continue;
 
-				if (QFileInfo( iwad.path ).exists()) {
-					iwadModel.append( iwad );
-				} else {
-					QMessageBox::warning( this, "IWAD no longer exists",
-						"An IWAD from the saved options ("%iwad.path%") no longer exists. It will be removed from the list." );
+					if (QFileInfo( iwad.path ).exists()) {
+						iwadModel.append( iwad );
+					} else {
+						QMessageBox::warning( this, "IWAD no longer exists",
+							"An IWAD from the saved options ("%iwad.path%") no longer exists. It will be removed from the list." );
+					}
+
+					json.exitObject();
 				}
-
-				json.exitObject();
+				json.exitArray();
 			}
-			json.exitArray();
 		}
 
 		iwadModel.finishCompleteUpdate();
@@ -1251,7 +1249,6 @@ void MainWindow::loadOptions( const QString & fileName )
 	if (json.enterObject( "maps" ))
 	{
 		deselectSelectedItems( ui->mapDirView );
-		selectedMapPack.clear();
 
 		QString dir = json.getString( "directory" );
 		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
@@ -1302,25 +1299,38 @@ void MainWindow::loadOptions( const QString & fileName )
 			preset.selectedEnginePath = pathHelper.convertPath( json.getString( "selected_engine" ) );
 			preset.selectedConfig = json.getString( "selected_config" );
 			preset.selectedIWAD = json.getString( "selected_IWAD" );
-			preset.selectedMapPack = TreePosition( json.getString( "selected_mappack" ) );
 			preset.cmdArgs = json.getString( "additional_args" );
 
-			json.enterArray( "mods" );
-			for (int i = 0; i < json.arraySize(); i++)
+			if (json.enterArray( "selected_mappacks" ))
 			{
-				if (!json.enterObject( i ))  // wrong type on position i - skip this entry
-					continue;
-
-				QString path = json.getString( "path" );
-				bool checked = json.getBool( "checked", false );
-				if (!path.isEmpty()) {
-					QFileInfo file( pathHelper.convertPath( path ) );
-					preset.mods.append( Mod( file, checked ) );
+				for (int i = 0; i < json.arraySize(); i++)
+				{
+					QString selectedMapPack = json.getString( i );
+					if (!selectedMapPack.isEmpty()) {
+						preset.selectedMapPacks.append( TreePosition( selectedMapPack ) );
+					}
 				}
-
-				json.exitObject();
+				json.exitArray();
 			}
-			json.exitArray();
+
+			if (json.enterArray( "mods" ))
+			{
+				for (int i = 0; i < json.arraySize(); i++)
+				{
+					if (!json.enterObject( i ))  // wrong type on position i - skip this entry
+						continue;
+
+					QString path = json.getString( "path" );
+					bool checked = json.getBool( "checked", false );
+					if (!path.isEmpty()) {
+						QFileInfo file( pathHelper.convertPath( path ) );
+						preset.mods.append( Mod( file, checked ) );
+					}
+
+					json.exitObject();
+				}
+				json.exitArray();
+			}
 
 			presetModel.append( preset );
 
@@ -1466,9 +1476,10 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 		cmdStream << " -iwad \"" << base.rebasePath( iwadModel[ selectedIwadIdx ].path ) << "\"";
 	}
 
-	QModelIndex selectedMapIdx = getSelectedItemIdx( ui->mapDirView );
-	if (selectedMapIdx.isValid()) {
-		cmdStream << " -file \"" << base.rebasePath( mapModel.getFSPath( selectedMapIdx ) ) << "\"";
+	for (QModelIndex & selectedMapIdx : getSelectedItemIdxs( ui->mapDirView )) {
+		if (selectedMapIdx.isValid()) {
+			cmdStream << " -file \"" << base.rebasePath( mapModel.getFSPath( selectedMapIdx ) ) << "\"";
+		}
 	}
 
 	for (const Mod & mod : modModel) {

@@ -149,7 +149,6 @@ class MainWindow : public QMainWindow {
 
 	DirTreeModel mapModel;    ///< model owning a tree structure representing a directory with map files
 	QString mapDir;    ///< directory with map packs to automatically load the list from (value returned by SetupDialog)
-	TreePosition selectedMapPack;    ///< which map pack was selected last (workaround to allow user to deselect map pack by clicking it again)
 
 	EditableListModel< Mod > modModel;
 	QString modDir;    ///< directory with mods, starting dir for "Add mod" dialog (value returned by SetupDialog)

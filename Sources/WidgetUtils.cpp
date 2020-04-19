@@ -30,6 +30,14 @@ int getSelectedItemIdx( QListView * view )   // this function is for single sele
 	return selectedIndexes[0].row();
 }
 
+QVector< int > getSelectedItemIdxs( QListView * view )
+{
+	QVector< int > selected;
+	for (QModelIndex & index : view->selectionModel()->selectedIndexes())
+		selected.append( index.row() );
+	return selected;
+}
+
 bool isSelectedIdx( QListView * view, int index )
 {
 	return view->selectionModel()->isSelected( view->model()->index( index, 0 ) );
@@ -83,6 +91,16 @@ QModelIndex getSelectedItemIdx( QTreeView * view )   // this function is for sin
 	return selectedIndexes[0];
 }
 
+bool isSelectedIdx( QTreeView * view, const QModelIndex & index )
+{
+	return view->selectionModel()->isSelected( index );
+}
+
+QModelIndexList getSelectedItemIdxs( QTreeView * view )
+{
+	return view->selectionModel()->selectedIndexes();
+}
+
 bool isSomethingSelected( QTreeView * view )
 {
 	return !view->selectionModel()->selectedIndexes().isEmpty();
@@ -106,20 +124,22 @@ void changeSelectionTo( QTreeView * view, const QModelIndex & index )
 	selectItemByIdx( view, index );
 }
 
-TreePosition getSelectedItemID( QTreeView * view, const DirTreeModel & model )
+QVector< TreePosition > getSelectedItemIDs( QTreeView * view, const DirTreeModel & model )
 {
-	QModelIndex selectedItemIdx = getSelectedItemIdx( view );
-	return model.getNodePosition( selectedItemIdx );  // if nothing is selected, this path will be empty
+	QVector< TreePosition > itemIDs;
+	for (QModelIndex & selectedItemIdx : getSelectedItemIdxs( view ))
+		itemIDs.append( model.getNodePosition( selectedItemIdx ) );
+	return itemIDs;
 }
 
-bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePosition & itemID )
+void selectItemsByID( QTreeView * view, const DirTreeModel & model, const QVector< TreePosition > & itemIDs )
 {
-	QModelIndex newItemIdx = model.getNodeByPosition( itemID );  // empty or non-existing path will produce invalid index
-	if (newItemIdx.isValid()) {
-		selectItemByIdx( view, newItemIdx );
-		return true;
+	for (const TreePosition & pos : itemIDs) {
+		QModelIndex itemIdx = model.getNodeByPosition( pos );
+		if (itemIdx.isValid()) {
+			selectItemByIdx( view, itemIdx );
+		}
 	}
-	return false;
 }
 
 void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, const PathHelper & pathHelper,
@@ -133,8 +153,8 @@ void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & 
 	// note down the current scroll bar position
 	auto scrollPos = view->verticalScrollBar()->value();
 
-	// note down the currently selected item
-	auto selectedItemID = getSelectedItemID( view, model );  // empty path when nothing is selected
+	// note down the currently selected items
+	auto selectedItemIDs = getSelectedItemIDs( view, model );  // empty path when nothing is selected
 
 	deselectSelectedItems( view );
 
@@ -163,8 +183,8 @@ void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & 
 		}
 	});
 
-	// restore the selection so that the same file remains selected
-	selectItemByID( view, model, selectedItemID );
+	// restore the selection so that the same files remain selected
+	selectItemsByID( view, model, selectedItemIDs );
 
 	// restore the scroll bar position, so that it doesn't move when an item is selected
 	view->verticalScrollBar()->setValue( scrollPos );

@@ -64,9 +64,11 @@ class EditableListView : public QListView {
 	bool isInterWidgetDnD( QDropEvent * event );
 	bool isExternFileDnD( QDropEvent * event );
 
+	void itemsDropped();
+
  signals:
 
-	void itemsDropped();
+	void itemsDropped( int row, int count );
 
  protected: // members
 

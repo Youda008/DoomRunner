@@ -72,9 +72,6 @@ class SetupDialog : public QDialog {
 
 	void editEngine( const QModelIndex & index );
 
-	void enginesDropped();
-	void iwadsDropped();
-
 	void updateIWADsFromDir();
 
 	void toggleAbsolutePaths( bool checked );

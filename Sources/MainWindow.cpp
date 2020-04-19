@@ -132,7 +132,6 @@ MainWindow::MainWindow()
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
-	connect( ui->presetListView, &EditableListView::itemsDropped, this, &thisClass::presetDropped );
 
 	// setup map directory view
 	ui->mapDirView->setDragEnabled( true );
@@ -145,7 +144,7 @@ MainWindow::MainWindow()
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
 	ui->modListView->toggleInterWidgetDragAndDrop( true );
 	ui->modListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->modListView, &EditableListView::itemsDropped, this, &thisClass::modsDropped );
+	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::modsDropped );
 
 	// setup signals
 	connect( ui->setupPathsAction, &QAction::triggered, this, &thisClass::runSetupDialog );
@@ -689,56 +688,15 @@ void MainWindow::modMoveDown()
 	updateLaunchCommand();
 }
 
-// idiotic workaround because Qt is fucking retarded
-//
-// When an internal reordering drag&drop is performed, Qt doesn't update the selection and leaves the selection
-// on the old indexes, where are now some completely different items.
-// You can't manually update the indexes in the view, because at some point after dropMimeData Qt calls removeRows on items
-// that are CURRENTLY SELECTED, instead of on items that were selected at the beginning of this drag&drop operation.
-// So we must update the selection at some point AFTER the drag&drop operation is finished and the rows removed.
-//
-// The right place is in overriden method QAbstractItemView::startDrag.
-// But outside an item model, there is no information abouth the target drop index. So the model must write down
-// the index and then let other classes retrieve it at the right time.
-//
-// And like it wasn't enough, we can't retrieve the drop index in the view, because we cannot cast its abstract model
-// into the correct model, because it's a template class whose template parameter is not known there.
-// So the only way is to emit a signal to the owner of the ListView (MainWindow), which then catches it,
-// queries the model for a drop index and then performs the update.
-//
-// Co-incidentally, this also solves the problem, that when items are dropped into a mod list, we need to update
-// the current preset.
-void MainWindow::presetDropped()
+void MainWindow::modsDropped( int /*row*/, int /*count*/ )
 {
-	if (presetModel.wasDroppedInto()) {
-		// finaly update the selection
-		int row = presetModel.droppedRow();
-		deselectSelectedItems( ui->presetListView );
-		selectItemByIdx( ui->presetListView, row );
+	// update the preset
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx >= 0) {
+		presetModel[ selectedPresetIdx ].mods = modModel.list().toVector();  // not the most optimal way, but the size of the list will be always small
 	}
-}
 
-void MainWindow::modsDropped()
-{
-	if (modModel.wasDroppedInto())
-	{
-		// finaly update the selection
-		int row = modModel.droppedRow();
-		int count = modModel.droppedCount();
-		deselectSelectedItems( ui->modListView );
-		for (int i = 0; i < count; i++)
-			selectItemByIdx( ui->modListView, row + i );
-
-		// update the preset
-		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-		if (selectedPresetIdx >= 0) {
-			presetModel[ selectedPresetIdx ].mods = modModel.list().toVector();  // not the most optimal way, but the size of the list will be always small
-		}
-
-		// TODO: reset was dropped into?
-
-		updateLaunchCommand();
-	}
+	updateLaunchCommand();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

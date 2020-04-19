@@ -9,12 +9,13 @@
 
 #include "EditableListView.hpp"
 
+#include "ListModel.hpp"
+#include "WidgetUtils.hpp"
+
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
-#include <QFileInfo>
 #include <QMimeData>
-#include <QUrl>
 
 
 //======================================================================================================================
@@ -23,6 +24,23 @@
  *  2. Model::mimeTypes() must return the MIME type, that is used by the source widget.
  *  3. Model::canDropMimeData(...) must be correctly implemented to support both the MIME type and the drop action
  */
+
+//======================================================================================================================
+// idiotic workaround because Qt is fucking retarded
+//
+// When an internal drag&drop for item reordering is performed, Qt doesn't update the selection and leaves selected
+// those items sitting at the old indexes where the drag&drop started and where are now some completely different items.
+//
+// We can't manually update the indexes in dropEvent, because after dropEvent Qt calls model.removeRows on items
+// that are CURRENTLY SELECTED, instead of on items that were selected at the beginning of the drag&drop operation.
+// So we must update the selection at some point AFTER the drag&drop operation is finished and the rows removed.
+//
+// The correct place seems to be (despite its confusing name) QAbstractItemView::startDrag. It is a common
+// parent function for Model::dropMimeData and Model::removeRows both of which happen when items are dropped.
+// However this is called only when the source of the drag is this application.
+// When you drag files from a directory window, then dropEvent is called from somewhere else. In that case
+// we update the selection in dropEvent, because there the deletion of the selected items doesn't happen.
+
 
 //======================================================================================================================
 
@@ -134,43 +152,49 @@ void EditableListView::dropEvent( QDropEvent * event )
 	// 1. if mode is InternalMove then discard events from external sources and copy actions
 	// 2. get drop index from cursor position
 	// 3. if model->dropMimeData then accept drop event
-
 	superClass::dropEvent( event );
 
-	// announce dropped files now only if it's an external drag&drop, otherwise postpone it because of the issue decribed below
+	// announce dropped files now only if it's an external drag&drop
+	// otherwise postpone it because of the issue decribed at the top
 	if (isExternFileDnD( event ))
-		emit itemsDropped();
+		itemsDropped();
 }
 
 void EditableListView::startDrag( Qt::DropActions supportedActions )
 {
-	// idiotic workaround because Qt is fucking retarded
-	//
-	// When an internal reordering drag&drop is performed, Qt doesn't update the selection and leaves the selection
-	// on the old indexes, where are now some completely different items.
-	// You can't manually update the indexes in dropEvent, because at some point after it Qt calls removeRows on items
-	// that are CURRENTLY SELECTED, instead of on items that were selected at the beginning of this drag&drop operation.
-	// So we must update the selection at some point AFTER the drag&drop operation is finished and the rows removed.
-	//
-	// QAbstractItemView::startDrag, despite its confusing name, is the common parent function for
-	// Model::dropMimeData and Model::removeRows both of which happen when items are dropped.
-	// So this is the right place to update the selection.
-	//
-	// But outside an item model, there is no information abouth the target drop index. So the model must write down
-	// the index and then let other classes retrieve it at the right time.
-	//
-	// And like it wasn't enough, we can't retrieve the drop index here, because we cannot cast our abstract model
-	// into the correct model, because it's a template class whose template parameter is not known here.
-	// So the only way is to emit a signal to the owner of this ListView, which then catches it, queries the model
-	// for a drop index and then performs the update.
-	//
-	// And even that isn't enough, because this is called only when the source of the drag is this application.
-	// When you drag files from a directory window, then dropEvent is called from somewhere else, so in that case
-	// we send the signal from dropEvent, there the deletion of the selected items doesn't happen.
-
 	superClass::startDrag( supportedActions );
+
 	// at this point the drag&drop should be finished and source rows removed, so we can safely update the selection
-	emit itemsDropped();
+	itemsDropped();
+}
+
+void EditableListView::itemsDropped()
+{
+	// idiotic workaround because Qt is fucking retarded   (read the comment at the top)
+	//
+	// retrieve the destination drop indexes from the model and update the selection accordingly
+
+	if (DropTargetListModel * model = dynamic_cast< DropTargetListModel * >( this->model() ))
+	{
+		if (model->wasDroppedInto())
+		{
+			int row = model->droppedRow();
+			int count = model->droppedCount();
+
+			deselectSelectedItems( this );
+			for (int i = 0; i < count; i++)
+				selectItemByIdx( this, row + i );
+
+			emit itemsDropped( row, count );
+
+			model->resetDropState();
+		}
+	}
+	else
+	{
+		qWarning() << "EditableListView should be used only together with EditableListModel, "
+		              "otherwise drag&drop will not work properly.";
+	}
 }
 
 void EditableListView::toggleNameEditing( bool enabled )

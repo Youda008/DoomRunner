@@ -51,7 +51,6 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	ui->engineListView->toggleIntraWidgetDragAndDrop( true );
 	ui->engineListView->toggleInterWidgetDragAndDrop( false );
 	ui->engineListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->engineListView, &EditableListView::itemsDropped, this, &thisClass::enginesDropped );
 
 	// setup iwad view
 	ui->iwadListView->setModel( &iwadModel );
@@ -60,7 +59,6 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadListFromDir );
 	ui->iwadListView->toggleInterWidgetDragAndDrop( false );
 	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadListFromDir );
-	connect( ui->iwadListView, &EditableListView::itemsDropped, this, &thisClass::iwadsDropped );
 
 	// initialize widget data
 	if (iwadListFromDir) {
@@ -275,16 +273,6 @@ void SetupDialog::editEngine( const QModelIndex & index )
 	if (code == QDialog::Accepted) {
 		selectedEngine = dialog.engine;
 	}
-}
-
-void SetupDialog::enginesDropped()
-{
-
-}
-
-void SetupDialog::iwadsDropped()
-{
-
 }
 
 void SetupDialog::updateIWADsFromDir()

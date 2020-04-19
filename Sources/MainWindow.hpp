@@ -68,13 +68,12 @@ class MainWindow : public QMainWindow {
 	void presetClone();
 	void presetMoveUp();
 	void presetMoveDown();
-	void presetDropped();
 
 	void modAdd();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
-	void modsDropped();
+	void modsDropped( int row, int count );
 
 	void updateIWADsFromDir();
 	void updateMapPacksFromDir();

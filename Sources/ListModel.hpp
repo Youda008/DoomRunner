@@ -40,10 +40,51 @@
 
 
 //======================================================================================================================
+// idiotic workaround because Qt is fucking retarded   (read the comment at the top of EditableListView.cpp)
+//
+// This non-template superclass exists because in EditableListView we don't know the template parameter Item,
+// which is needed for casting in order to retrieve the destination drop index.
+
+class DropTargetListModel : public QAbstractListModel {
+
+ public:
+
+	DropTargetListModel() : QAbstractListModel( nullptr ), _dropped( false ), _droppedRow( 0 ), _droppedCount( 0 ) {}
+
+	bool wasDroppedInto() const { return _dropped; }
+	int droppedRow() const { return _droppedRow; }
+	int droppedCount() const { return _droppedCount; }
+
+	void resetDropState() { _dropped = false; }
+
+ protected:
+
+	void itemsDropped( int row, int count )
+	{
+		_dropped = true;
+		_droppedRow = row;
+		_droppedCount = count;
+	}
+
+	void decrementRow()
+	{
+		_droppedRow--;
+	}
+
+ private:
+
+	bool _dropped;
+	int _droppedRow;
+	int _droppedCount;
+
+};
+
+
+//======================================================================================================================
 /** Abstract wrapper around list of arbitrary objects, mediating their content to UI view elements. */
 
 template< typename Item >
-class AListModel : public QAbstractListModel {
+class AListModel : public DropTargetListModel {
 
  protected:
 
@@ -51,9 +92,8 @@ class AListModel : public QAbstractListModel {
 
  public:
 
-	AListModel() : QAbstractListModel( nullptr ) {}
-
-	AListModel( const QList< Item > & itemList ) : QAbstractListModel( nullptr ), itemList( itemList ) {}
+	AListModel() {}
+	AListModel( const QList< Item > & itemList ) : itemList( itemList ) {}
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
@@ -338,8 +378,8 @@ class EditableListModel : public AListModel< Item > {
 		// but it happens only once in awhile and the number of elements is almost always very low
 		for (int i = 0; i < count; i++) {
 			superClass::itemList.removeAt( row );
-			if (row < _droppedRow)  // we are removing a row that is before the target row
-				_droppedRow--;      // so target row's index is moving backwards
+			if (row < DropTargetListModel::droppedRow())  // we are removing a row that is before the target row
+				DropTargetListModel::decrementRow();      // so target row's index is moving backwards
 		}
 
 		QAbstractListModel::endRemoveRows();
@@ -439,19 +479,10 @@ class EditableListModel : public AListModel< Item > {
 			superClass::itemList[ row + i ] = std::move( *origItemRefs[i] );
 		}
 
-		// idiotic workaround because Qt is fucking retarded
+		// idiotic workaround because Qt is fucking retarded   (read the comment at the top of EditableListView.cpp)
 		//
-		// When an internal reordering drag&drop is performed, Qt doesn't update the selection and leaves the selection
-		// on the old indexes, where are now some completely different items.
-		// You can't manually update the indexes here, because at some point after dropMimeData Qt calls removeRows on items
-		// that are CURRENTLY SELECTED, instead of on items that were selected at the beginning of this drag&drop operation.
-		// So we must update the selection at some point AFTER the drag&drop operation is finished and the rows removed.
-		//
-		// But outside an item model, there is no information abouth the target drop index. So we must write down
-		// the index here and then let other classes retrieve it at the right time.
-		_dropped = true;
-		_droppedRow = row;
-		_droppedCount = count;
+		// note down the destination drop index, so it can be later retrieved by ListView
+		DropTargetListModel::itemsDropped( row, count );
 
 		superClass::contentChanged( row, row + count );
 
@@ -487,28 +518,15 @@ class EditableListModel : public AListModel< Item > {
 			superClass::itemList[ row + i ] = Item( filesToBeInserted[ i ] );
 		}
 
-		// idiotic workaround because Qt is fucking retarded, read the big comment above
-		_dropped = true;
-		_droppedRow = row;
-		_droppedCount = filesToBeInserted.count();
+		// idiotic workaround because Qt is fucking retarded   (read the comment at the top of EditableListView.cpp)
+		//
+		// note down the destination drop index, so it can be later retrieved by ListView
+		DropTargetListModel::itemsDropped( row, filesToBeInserted.count() );
 
-		superClass::contentChanged( row, _droppedCount );
+		superClass::contentChanged( row, filesToBeInserted.count() );
 
 		return true;
 	}
-
- protected:
-
-	// idiotic workaround because Qt is fucking retarded, read the big comment above
-	bool _dropped;
-	int _droppedRow;
-	int _droppedCount;
-
- public:
-
-	bool wasDroppedInto() { bool d = _dropped; _dropped = false; return d; }
-	int droppedRow() const { return _droppedRow; }
-	int droppedCount() const { return _droppedCount; }
 
 };
 

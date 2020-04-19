@@ -351,7 +351,7 @@ QString JsonContext::getString( int index, const QString & defaultVal )
 static bool checkableMessageBox( QMessageBox::Icon icon, const QString & title, const QString & message )
 {
 	QMessageBox msgBox( icon, title, message, QMessageBox::Ok );
-	QCheckBox chkBox( "don't show this error again" );
+	QCheckBox chkBox( "ignore the rest of these warnings" );
 	msgBox.setCheckBox( &chkBox );
 
 	msgBox.exec();
@@ -390,7 +390,7 @@ void JsonContext::missingKey( const QString & key )
 		return;
 
 	dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
-		"Element " % elemPath( key ) % " is missing in the options file. Skipping this option. "
+		"Element " % elemPath( key ) % " is missing in the options file, using default value. "
 		"If you just updated to a newer version, you can ignore this warning."
 	);
 }
@@ -415,8 +415,8 @@ void JsonContext::invalidTypeAtKey( const QString & key, const QString & expecte
 	QString actualType = typeStr[ entryStack.last().val.toObject()[ key ].type() ];
 
 	dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
-		"Element " % elemPath( key ) % " has invalid type. Expected " % expectedType % ", but found " % actualType % ". "
-		"Skipping this option. If you just updated to a newer version, you can ignore this warning."
+		"Element " % elemPath( key ) % " has invalid type, expected " % expectedType % ", but found " % actualType % ". "
+		"Skipping this entry."
 	);
 }
 
@@ -429,7 +429,7 @@ void JsonContext::invalidTypeAtIdx( int index, const QString & expectedType )
 
 	dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
 		"Element " % elemPath( index ) % " has invalid type. Expected " % expectedType % ", but found " % actualType % ". "
-		"Skipping this option. If you just updated to a newer version, you can ignore this warning."
+		"Skipping this entry."
 	);
 }
 

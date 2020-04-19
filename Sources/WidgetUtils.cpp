@@ -125,9 +125,6 @@ bool selectItemByID( QTreeView * view, const DirTreeModel & model, const TreePos
 void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, const PathHelper & pathHelper,
                         std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
-	if (dir.isEmpty())
-		return;
-
 	// Doing a differential update (deleting only things that were deleted and adding only things that were added)
 	// is not worth here. It's too complicated and prone to bugs and its advantages are too small.
 	// Instead we just clear everything and then load it from scratch according to the current state of the directory

@@ -69,4 +69,15 @@ void reverse( Container & cont )
 }
 
 
+//======================================================================================================================
+//  other
+
+// just to be little more explicit when needed
+template< typename Type >
+bool isSet( const Type & obj )
+{
+	return static_cast< bool >( obj );
+}
+
+
 #endif // LANG_UTILS_INCLUDED

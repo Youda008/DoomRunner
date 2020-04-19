@@ -47,7 +47,8 @@ void EngineDialog::showEvent( QShowEvent * event )
 {
 	QDialog::showEvent( event );
 
-	browseEngine();
+	if (engine.path.isEmpty())
+		browseEngine();
 }
 
 void EngineDialog::browseEngine()

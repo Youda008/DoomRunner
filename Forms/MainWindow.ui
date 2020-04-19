@@ -1245,7 +1245,7 @@
      <x>0</x>
      <y>0</y>
      <width>720</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuItemMenu">
@@ -1261,7 +1261,7 @@
   </widget>
   <action name="setupPathsAction">
    <property name="text">
-    <string>Setup paths</string>
+    <string>Initial setup</string>
    </property>
   </action>
   <action name="exportPresetAction">

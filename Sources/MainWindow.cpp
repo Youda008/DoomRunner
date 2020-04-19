@@ -93,10 +93,10 @@ MainWindow::MainWindow()
 		/*makeDisplayString*/[]( const Engine & engine ) { return engine.name; }
 	  )
 	, configModel(
-		/*makeDisplayString*/[]( const ConfigFile & config ) { return config.name; }
+		/*makeDisplayString*/[]( const ConfigFile & config ) { return config.fileName; }
 	  )
 	, saveModel(
-		/*makeDisplayString*/[]( const SaveFile & save ) { return save.name; }
+		/*makeDisplayString*/[]( const SaveFile & save ) { return save.fileName; }
 	  )
 	, iwadModel(
 		/*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; }
@@ -105,12 +105,10 @@ MainWindow::MainWindow()
 	, iwadSubdirs( false )
 	, mapModel()
 	, modModel(
-		/*makeDisplayString*/[]( const Mod & mod ) { return mod.name; },
-		/*editString*/[]( Mod & mod ) -> QString & { return mod.name; }
+		/*makeDisplayString*/[]( const Mod & mod ) { return mod.fileName; }
 	  )
 	, presetModel(
-		/*makeDisplayString*/[]( const Preset & preset ) { return preset.name; },
-		/*editString*/[]( Preset & preset ) -> QString & { return preset.name; }
+		/*makeDisplayString*/[]( const Preset & preset ) { return preset.name; }
 	  )
 {
 	ui = new Ui::MainWindow;
@@ -129,6 +127,7 @@ MainWindow::MainWindow()
 	ui->modListView->setModel( &modModel );
 
 	// setup preset list view
+	presetModel.setEditStringFunc( []( Preset & preset ) -> QString & { return preset.name; } );
 	ui->presetListView->toggleNameEditing( true );
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
@@ -140,17 +139,8 @@ MainWindow::MainWindow()
 	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
 
 	// setup mod list view
-	modModel.setIsCheckedFunc(  // here the model will read and write the information about check state
-		[]( Mod & mod ) -> bool & {
-			return mod.checked;
-		}
-	);
-	modModel.setMakeItemFromFileFunc(  // this will be our reaction when a file is dragged and dropped from a directory window
-		[ this ]( const QFileInfo & file ) -> Mod {
-			return { file.fileName(), pathHelper.convertPath( file.filePath() ), true };
-		}
-	);
-	modModel.toggleCheckboxes( true );  // allow user to check/uncheck each item in the list
+	modModel.setIsCheckedFunc( []( Mod & mod ) -> bool & { return mod.checked; } );
+	modModel.setPathHelper( &pathHelper );  // model needs it for converting paths dropped from directory
 	ui->modListView->toggleNameEditing( false );
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
 	ui->modListView->toggleInterWidgetDragAndDrop( true );
@@ -397,7 +387,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	// restore selected config
 	if (!preset.selectedConfig.isEmpty()) {  // the preset combo box might have been empty when creating this preset
 		int configIdx = findSuch( configModel.list(), [ &preset ]( const ConfigFile & config )
-		                                                         { return config.name == preset.selectedConfig; } );
+		                                                         { return config.fileName == preset.selectedConfig; } );
 		if (configIdx >= 0) {
 			ui->configCmbBox->setCurrentIndex( configIdx );
 		} else {
@@ -504,7 +494,7 @@ void MainWindow::selectConfig( int index )
 		if (index < 0)  // engine combo box was reset to "no engine selected" state
 			presetModel[ selectedPresetIdx ].selectedConfig.clear();
 		else
-			presetModel[ selectedPresetIdx ].selectedConfig = configModel[ index ].name;
+			presetModel[ selectedPresetIdx ].selectedConfig = configModel[ index ].fileName;
 	}
 
 	updateLaunchCommand();
@@ -633,7 +623,7 @@ void MainWindow::modAdd()
 	if (pathHelper.useRelativePaths())
 		path = pathHelper.getRelativePath( path );
 
-	Mod mod = { QFileInfo( path ).fileName(), path, true };
+	Mod mod( QFileInfo( path ), true );
 
 	appendItem( modModel, mod );
 
@@ -1142,7 +1132,6 @@ void MainWindow::saveOptions( const QString & fileName )
 			QJsonArray jsModArray;
 			for (const Mod & mod : preset.mods) {
 				QJsonObject jsMod;
-				jsMod["name"] = mod.name;
 				jsMod["path"] = mod.path;
 				jsMod["checked"] = mod.checked;
 				jsModArray.append( jsMod );
@@ -1224,10 +1213,10 @@ void MainWindow::loadOptions( const QString & fileName )
 				continue;
 
 			Engine engine;
-			engine.name = json.getString( "name" );
+			engine.name = json.getString( "name", "<missing name>" );
 			engine.path = pathHelper.convertPath( json.getString( "path" ) );
-			engine.configDir = pathHelper.convertPath( json.getString( "config_dir" ) );
-			if (engine.name.isEmpty() || engine.path.isEmpty())  // name or path doesn't exist - skip this entry
+			engine.configDir = pathHelper.convertPath( json.getString( "config_dir", QFileInfo( engine.path ).dir().path() ) );
+			if (engine.path.isEmpty())  // path doesn't exist - skip this entry
 				continue;
 
 			if (QFileInfo( engine.path ).exists()) {
@@ -1264,7 +1253,6 @@ void MainWindow::loadOptions( const QString & fileName )
 			if (!dir.isEmpty()) {  // non-existing element directory -> skip completely
 				if (QDir( dir ).exists()) {
 					iwadDir = pathHelper.convertPath( dir );
-					fillListFromDir< IWAD >( iwadModel.list(), iwadDir, iwadSubdirs, pathHelper, isIWAD );
 				} else {
 					QMessageBox::warning( this, "IWAD dir no longer exists",
 						"IWAD directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
@@ -1280,8 +1268,8 @@ void MainWindow::loadOptions( const QString & fileName )
 					continue;
 
 				IWAD iwad;
-				iwad.name = json.getString( "name" );
 				iwad.path = pathHelper.convertPath( json.getString( "path" ) );
+				iwad.name = json.getString( "name", QFileInfo( iwad.path ).fileName() );
 				if (iwad.name.isEmpty() || iwad.path.isEmpty())  // name or path doesn't exist - skip this entry
 					continue;
 
@@ -1311,7 +1299,6 @@ void MainWindow::loadOptions( const QString & fileName )
 		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
 			if (QDir( dir ).exists()) {
 				mapDir = pathHelper.convertPath( dir );
-				updateMapPacksFromDir();
 			} else {
 				QMessageBox::warning( this, "Map dir no longer exists",
 					"Map directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
@@ -1327,11 +1314,12 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		QString dir = json.getString( "directory" );
 		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
-			if (QDir( dir ).exists())
+			if (QDir( dir ).exists()) {
 				modDir = pathHelper.convertPath( dir );
-			else
+			} else {
 				QMessageBox::warning( this, "Mod dir no longer exists",
 					"Mod directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
+			}
 		}
 
 		json.exitObject();
@@ -1365,13 +1353,11 @@ void MainWindow::loadOptions( const QString & fileName )
 				if (!json.enterObject( i ))  // wrong type on position i - skip this entry
 					continue;
 
-				Mod mod;
-				mod.name = json.getString( "name" );
-				mod.path = json.getString( "path" );
-				mod.checked = json.getBool( "checked", false );
-				if (!mod.name.isEmpty() && !mod.path.isEmpty()) {
-					mod.path = pathHelper.convertPath( mod.path );
-					preset.mods.append( mod );
+				QString path = json.getString( "path" );
+				bool checked = json.getBool( "checked", false );
+				if (!path.isEmpty()) {
+					QFileInfo file( pathHelper.convertPath( path ) );
+					preset.mods.append( Mod( file, checked ) );
 				}
 
 				json.exitObject();
@@ -1512,7 +1498,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx >= 0) {
 			QDir configDir( engineModel[ selectedEngineIdx ].configDir );
-			QString configPath = configDir.filePath( configModel[ configIdx ].name );
+			QString configPath = configDir.filePath( configModel[ configIdx ].fileName );
 			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
 	}
@@ -1554,7 +1540,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 		}
 	} else if (ui->launchMode_savefile->isChecked() && selectedEngineIdx >= 0 && ui->saveFileCmbBox->currentIndex() >= 0) {
 		QDir saveDir( engineModel[ selectedEngineIdx ].configDir );
-		QString savePath = saveDir.filePath( saveModel[ ui->saveFileCmbBox->currentIndex() ].name );
+		QString savePath = saveDir.filePath( saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );
 		cmdStream << " -loadgame \"" << base.rebasePath( savePath ) << "\"";
 	}
 

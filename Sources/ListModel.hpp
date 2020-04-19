@@ -197,57 +197,53 @@ class EditableListModel : public AListModel< Item > {
 	/** function that takes Item and constructs a String that will be displayed in the view */
 	std::function< QString ( const Item & ) > makeDisplayString;
 
-	/** function that points the model to a String member of Item containing the editable data */
+	// TODO: whether list is checkable and editable should be template parameter
+	//       with a compile-time check for corresponding struct members or methods
+
+	/** optional function that points the model to a String member of Item containing the editable data */
 	std::function< QString & ( Item & ) > editString;
 
-	/** function that points the model to a bool flag of Item indicating whether the item is checked */
+	/** optional function that points the model to a bool flag of Item indicating whether the item is checked */
 	std::function< bool & ( Item & ) > isChecked;
 
-	/** optional function that assigns a dropped file into a newly created Item,
-	  * must be set before external drag&drop is enabled in the parent widget */
-	std::function< Item ( const QFileInfo & ) > makeItemFromFile;
-
-	/// whether items will have checkboxes
-	bool checkableItems;
+	/** optional path helper that will convert paths dropped from directory to absolute or relative */
+	const PathHelper * pathHelper;
 
  public:
 
-	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString,
-	                   std::function< QString & ( Item & ) > editString )
-		: AListModel< Item >(), makeDisplayString( makeDisplayString )
-		, editString( editString ), checkableItems( false ) {}
+	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString )
+		: AListModel< Item >(), makeDisplayString( makeDisplayString ), pathHelper( nullptr ) {}
 
-	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString,
-	                   std::function< QString & ( Item & ) > editString )
-		: AListModel< Item >( itemList ), makeDisplayString( makeDisplayString )
-		, editString( editString ), checkableItems( false ) {}
+	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
+		: AListModel< Item >( itemList ), makeDisplayString( makeDisplayString ), pathHelper( nullptr ) {}
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
 
-	/** must be called before checkboxes are enabled in this model */
+	/** defines how items should be edited and enables editing */
+	void setEditStringFunc( std::function< QString & ( Item & ) > editString )
+		{ this->editString = editString; }
+
+	/** defines how checkbox state should be read and written and enables checkboxes for all items */
 	void setIsCheckedFunc( std::function< bool & ( Item & ) > isChecked )
 		{ this->isChecked = isChecked; }
 
-	/** enables or disables checkboxes for all items */
-	void toggleCheckboxes( bool enabled )
-		{ this->checkableItems = enabled; }
-
-	/** must be called before external drag&drop is enabled in the parent widget */
-	void setMakeItemFromFileFunc( std::function< Item ( const QFileInfo & ) > makeItemFromFile )
-		{ this->makeItemFromFile = makeItemFromFile; }
+	/** must be set before external drag&drop is enabled in the parent widget */
+	void setPathHelper( const PathHelper * pathHelper )
+		{ this->pathHelper = pathHelper; }
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
 	virtual Qt::ItemFlags flags( const QModelIndex & index ) const override
 	{
 		if (!index.isValid())
-			return Qt::ItemIsDropEnabled;
+			return Qt::ItemIsDropEnabled;  // otherwise you can't append dragged items to the end of the list
 
 		Qt::ItemFlags flags = QAbstractListModel::flags(index);
 
 		flags |= Qt::ItemIsDragEnabled;
-		flags |= Qt::ItemIsEditable;
-		if (checkableItems)
+		if (isSet( editString ))
+			flags |= Qt::ItemIsEditable;
+		if (isSet( isChecked ))
 			flags |= Qt::ItemIsUserCheckable;
 
 		return flags;
@@ -258,22 +254,28 @@ class EditableListModel : public AListModel< Item > {
 		if (!index.isValid() || index.parent().isValid() || index.row() >= superClass::itemList.size())
 			return QVariant();
 
-		if (role == Qt::DisplayRole || role == Qt::EditRole) {
+		if (role == Qt::DisplayRole) {
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 			// Therefore only author of Item knows which of its memebers he wants to display in the widget,
 			// so he must specify it by a function.
 			return makeDisplayString( superClass::itemList[ index.row() ] );
-		} if (role == Qt::CheckStateRole && checkableItems) {
+		} else if (role == Qt::EditRole) {
+			// Same as above, exept that this function is optional to ease up initializations of models
+			// that are supposed to be used in non-editable widgets
+			if (!isSet( editString )) {
+				qWarning() << "Edit has been requested, but no editString function is set. "
+				              "Either specify an editString function or disable editing in the widget.";
+				return QVariant();
+			}
+			return editString( const_cast< Item & >( superClass::itemList[ index.row() ] ) );
+		} else if (role == Qt::CheckStateRole) {
 			// Same as above, exept that this function is optional to ease up initializations of models
 			// that are supposed to be used in non-checkable widgets
-			if (!isChecked) {
-				qWarning() << "checkableItems has been set, but no isChecked function is specified. "
-				              "Either specify an isChecked function or disable disable checkable items.";
+			if (!isSet( isChecked )) {
 				return QVariant();
-			} else {
-				bool checked = isChecked( const_cast< Item & >( superClass::itemList[ index.row() ] ) );
-				return checked ? Qt::Checked : Qt::Unchecked;
 			}
+			bool checked = isChecked( const_cast< Item & >( superClass::itemList[ index.row() ] ) );
+			return checked ? Qt::Checked : Qt::Unchecked;
 		} else {
 			return QVariant();
 		}
@@ -285,19 +287,22 @@ class EditableListModel : public AListModel< Item > {
 			return false;
 
 		if (role == Qt::EditRole) {
+			if (!isSet( editString )) {
+				qWarning() << "Edit has been requested, but no editString function is set. "
+				              "Either specify an editString function or disable editing in the widget.";
+				return false;
+			}
 			editString( superClass::itemList[ index.row() ] ) = value.toString();
 			emit superClass::dataChanged( index, index, {Qt::EditRole} );
 			return true;
-		} else if (role == Qt::CheckStateRole && checkableItems) {
-			if (!isChecked) {
-				qWarning() << "checkableItems has been set, but no isChecked function is specified. "
-				              "Either specify an isChecked function or disable disable checkable items.";
+		} else if (role == Qt::CheckStateRole) {
+			if (!isSet( isChecked )) {
+				qCritical() << "Attempted to change the check state, but no isChecked function is set. WTF?";
 				return false;
-			} else {
-				isChecked( superClass::itemList[ index.row() ] ) = (value == Qt::Checked ? true : false );
-				emit superClass::dataChanged( index, index, {Qt::CheckStateRole} );
-				return true;
 			}
+			isChecked( superClass::itemList[ index.row() ] ) = (value == Qt::Checked ? true : false );
+			emit superClass::dataChanged( index, index, {Qt::CheckStateRole} );
+			return true;
 		} else {
 			return false;
 		}
@@ -455,9 +460,9 @@ class EditableListModel : public AListModel< Item > {
 
 	bool dropMimeUrls( QList< QUrl > urls, int row, const QModelIndex & parent )
 	{
-		if (!makeItemFromFile) {
-			qWarning() << "File has been dropped but no assignFile function was set. "
-			              "Either specify an assignFile function or disable file dropping in the widget";
+		if (!pathHelper) {
+			qWarning() << "File has been dropped but no makeItemFromFile function is set. "
+			              "Either specify a makeItemFromFile function or disable file dropping in the widget.";
 			return false;
 		}
 
@@ -466,7 +471,7 @@ class EditableListModel : public AListModel< Item > {
 		for (const QUrl & droppedUrl : urls) {
 			QString localPath = droppedUrl.toLocalFile();
 			if (!localPath.isEmpty()) {
-				QFileInfo fileInfo( localPath );
+				QFileInfo fileInfo( pathHelper->convertPath( localPath ) );
 				if (fileInfo.exists()) {
 					filesToBeInserted.append( fileInfo );
 				}
@@ -479,7 +484,7 @@ class EditableListModel : public AListModel< Item > {
 		for (int i = 0; i < filesToBeInserted.count(); i++) {
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 			// Therefore only author of Item knows how to assign a dropped file into it, so he must define it by a function.
-			superClass::itemList[ row + i ] = makeItemFromFile( filesToBeInserted[ i ] );
+			superClass::itemList[ row + i ] = Item( filesToBeInserted[ i ] );
 		}
 
 		// idiotic workaround because Qt is fucking retarded, read the big comment above

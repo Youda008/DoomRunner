@@ -37,15 +37,15 @@ struct Engine {
 };
 
 struct ConfigFile {
-	QString name;
+	QString fileName;
 
-	ConfigFile( const QFileInfo & file ) : name( file.fileName() ) {}
+	ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 };
 
 struct SaveFile {
-	QString name;
+	QString fileName;
 
-	SaveFile( const QFileInfo & file ) : name( file.fileName() ) {}
+	SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 };
 
 struct IWAD {
@@ -58,12 +58,12 @@ struct IWAD {
 };
 
 struct Mod {
-	QString name;
 	QString path;
+	QString fileName;  ///< cached last part of path, beware of inconsistencies
 	bool checked;
 
-	//Mod() {}
-	//Mod( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ), checked( true ) {}
+	Mod() {}
+	Mod( const QFileInfo & file, bool checked = true ) : path( file.filePath() ), fileName( file.fileName() ), checked( checked ) {}
 };
 
 struct Preset {
@@ -77,7 +77,7 @@ struct Preset {
 
 	Preset() {}
 	Preset( const QString & name ) : name( name ) {}
-	Preset( const QFileInfo & ) {} // dummy, it isn't actually used
+	Preset( const QFileInfo & ) {} // dummy, it's required by the EditableListModel template, but isn't actually used
 };
 
 struct GameplayOptions {

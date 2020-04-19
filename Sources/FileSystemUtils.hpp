@@ -87,8 +87,9 @@ void fillListFromDir( QList< Item > & list, const QString & dir, bool recursivel
 
 	QDirIterator dirIt( dir_ );
 	while (dirIt.hasNext()) {
-		QString entryPath = pathHelper.convertPath( dirIt.next() );
-		QFileInfo entry( entryPath );
+		QString entryPath = dirIt.next();
+		QString convertedPath = pathHelper.convertPath( entryPath );
+		QFileInfo entry( convertedPath );
 		if (entry.isDir()) {
 			QString dirName = dirIt.fileName();  // TODO: this is confusing
 			if (recursively && dirName != "." && dirName != "..") {

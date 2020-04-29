@@ -73,7 +73,7 @@ class JsonContext {
 	template< typename Enum >
 	Enum getEnum( const char * key, Enum defaultVal )
 	{
-		uint intVal = getUInt( key, 0 );
+		uint intVal = getUInt( key, defaultVal );
 		if (intVal <= enumSize< Enum >()) {
 			return Enum( intVal );
 		} else {

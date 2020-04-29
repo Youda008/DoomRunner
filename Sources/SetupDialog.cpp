@@ -23,7 +23,7 @@
 //======================================================================================================================
 //  local helpers
 
-bool isValidDir( const QString & dirPath )
+static bool isValidDir( const QString & dirPath )
 {
 	return !dirPath.isEmpty() && QDir( dirPath ).exists();
 }

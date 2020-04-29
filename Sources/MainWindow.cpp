@@ -335,7 +335,12 @@ void MainWindow::runSetupDialog()
 
 void MainWindow::runGameOptsDialog()
 {
-	GameOptsDialog dialog( this, opts.gameOpts );
+	GameplayOptions * gameOpts = &opts.gameOpts;
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
+		gameOpts = &presetModel[ selectedPresetIdx ].opts.gameOpts;
+
+	GameOptsDialog dialog( this, *gameOpts );
 
 	int code = dialog.exec();
 
@@ -348,7 +353,12 @@ void MainWindow::runGameOptsDialog()
 
 void MainWindow::runCompatOptsDialog()
 {
-	CompatOptsDialog dialog( this, opts.compatOpts );
+	CompatibilityOptions * compatOpts = &opts.compatOpts;
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
+		compatOpts = &presetModel[ selectedPresetIdx ].opts.compatOpts;
+
+	CompatOptsDialog dialog( this, *compatOpts );
 
 	int code = dialog.exec();
 
@@ -1354,6 +1364,8 @@ void MainWindow::restoreLaunchOptions( const LaunchOptions & opts )
 	ui->noMonstersChkBox->setChecked( opts.noMonsters );
 	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
 	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
+
+	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
 
 	ui->multiplayerChkBox->setChecked( opts.isMultiplayer );
 	ui->multRoleCmbBox->setCurrentIndex( int( opts.multRole ) );

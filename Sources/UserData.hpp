@@ -76,6 +76,15 @@ struct ModSettings
 	QString dir;   ///< directory with mods, starting dir for "Add mod" dialog
 };
 
+enum OptionsStorage
+{
+	DONT_STORE,       ///< Everytime the launcher is closed and re-opened, the launch options are reset to defaults.
+	STORE_GLOBALLY,   ///< When the launcher is closed, current state of launch options is saved. When it's re-opened, launch options are loaded from the last saved state.
+	STORE_TO_PRESET   ///< Launch options are stored to the currently selected preset. When a preset is selected, launch options are loaded from the preset.
+};
+template<> inline const char * enumName< OptionsStorage >() { return "OptionsStorage"; }
+template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorage::STORE_TO_PRESET ) + 1; }
+
 enum LaunchMode {
 	STANDARD,
 	LAUNCH_MAP,

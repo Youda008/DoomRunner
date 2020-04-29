@@ -35,7 +35,8 @@ bool isValidDir( const QString & dirPath )
 SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir,
                           const QList< Engine > & engineList,
                           const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
-                          const MapSettings & mapSettings, const ModSettings & modSettings )
+                          const MapSettings & mapSettings, const ModSettings & modSettings,
+                          OptionsStorage optsStorage )
 :
 	QDialog( parent ),
 	pathHelper( useAbsolutePaths, baseDir ),
@@ -47,10 +48,11 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	),
 	iwadSettings( iwadSettings ),
 	mapSettings( mapSettings ),
-	modSettings( modSettings )
+	modSettings( modSettings ),
+	optsStorage( optsStorage )
 {
 	ui = new Ui::SetupDialog;
-	ui->setupUi(this);
+	ui->setupUi( this );
 
 	// setup engine view
 	ui->engineListView->setModel( &engineModel );
@@ -78,6 +80,12 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	ui->mapDirLine->setText( mapSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
 	ui->absolutePathsChkBox->setChecked( pathHelper.useAbsolutePaths() );
+	if (optsStorage == DONT_STORE)
+		ui->optsStorage_none->click();
+	else if (optsStorage == STORE_GLOBALLY)
+		ui->optsStorage_global->click();
+	else if (optsStorage == STORE_TO_PRESET)
+		ui->optsStorage_preset->click();
 
 	// setup signals
 	connect( ui->manageIWADs_manual, &QRadioButton::clicked, this, &thisClass::manageIWADsManually );
@@ -106,6 +114,10 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::editEngine );
 
 	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAbsolutePaths );
+
+	connect( ui->optsStorage_none, &QRadioButton::clicked, this, &thisClass::optsStorage_none );
+	connect( ui->optsStorage_global, &QRadioButton::clicked, this, &thisClass::optsStorage_global );
+	connect( ui->optsStorage_preset, &QRadioButton::clicked, this, &thisClass::optsStorage_preset );
 
 	connect( ui->doneBtn, &QPushButton::clicked, this, &thisClass::accept );
 
@@ -317,6 +329,21 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 
 	modSettings.dir = pathHelper.convertPath( modSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
+}
+
+void SetupDialog::optsStorage_none()
+{
+	optsStorage = DONT_STORE;
+}
+
+void SetupDialog::optsStorage_global()
+{
+	optsStorage = STORE_GLOBALLY;
+}
+
+void SetupDialog::optsStorage_preset()
+{
+	optsStorage = STORE_TO_PRESET;
 }
 
 void SetupDialog::closeDialog()

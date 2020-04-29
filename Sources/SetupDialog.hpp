@@ -39,7 +39,8 @@ class SetupDialog : public QDialog {
 	explicit SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir,
 	                      const QList< Engine > & engineList,
 	                      const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
-	                      const MapSettings & mapSettings, const ModSettings & modSettings );
+	                      const MapSettings & mapSettings, const ModSettings & modSettings,
+	                      OptionsStorage optsStorage );
 	virtual ~SetupDialog() override;
 
  private:
@@ -76,6 +77,10 @@ class SetupDialog : public QDialog {
 
 	void toggleAbsolutePaths( bool checked );
 
+	void optsStorage_none();
+	void optsStorage_global();
+	void optsStorage_preset();
+
 	void closeDialog();
 
  private: // methods
@@ -101,6 +106,8 @@ class SetupDialog : public QDialog {
 	MapSettings mapSettings;
 
 	ModSettings modSettings;
+
+	OptionsStorage optsStorage;
 
 };
 

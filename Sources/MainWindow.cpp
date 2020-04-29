@@ -108,6 +108,7 @@ MainWindow::MainWindow()
 	modSettings {
 
 	},
+	optsStorage( DONT_STORE ),
 	presetModel(
 		/*makeDisplayString*/ []( const Preset & preset ) { return preset.name; }
 	),
@@ -274,7 +275,8 @@ void MainWindow::runSetupDialog()
 		iwadModel.list(),
 		iwadSettings,
 		mapSettings,
-		modSettings
+		modSettings,
+		optsStorage
 	);
 
 	int code = dialog.exec();
@@ -301,6 +303,7 @@ void MainWindow::runSetupDialog()
 		iwadSettings = dialog.iwadSettings;
 		mapSettings = dialog.mapSettings;
 		modSettings = dialog.modSettings;
+		optsStorage = dialog.optsStorage;
 		// update all stored paths
 		toggleAbsolutePaths( pathHelper.useAbsolutePaths() );
 		selectedEngine = pathHelper.convertPath( selectedEngine );
@@ -1097,7 +1100,10 @@ void MainWindow::saveOptions( const QString & fileName )
 
 	json["additional_args"] = ui->globalCmdArgsLine->text();
 
-	json["options"] = serialize( opts );
+	json["options_storage"] = int( optsStorage );
+	if (optsStorage == STORE_GLOBALLY) {
+		json["options"] = serialize( opts );
+	}
 
 	QJsonDocument jsonDoc( json );
 	file.write( jsonDoc.toJson() );
@@ -1281,7 +1287,8 @@ void MainWindow::loadOptions( const QString & fileName )
 	ui->globalCmdArgsLine->setText( json.getString( "additional_args" ) );
 
 	// launch options
-	if (json.enterObject( "options" ))
+	optsStorage = json.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
+	if (optsStorage == STORE_GLOBALLY && json.enterObject( "options" ))
 	{
 		deserialize( json, opts );
 

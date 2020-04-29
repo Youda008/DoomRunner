@@ -165,6 +165,8 @@ class MainWindow : public QMainWindow {
 	EditableListModel< Mod > modModel;
 	ModSettings modSettings;    ///< mod-related preferences (value returned by SetupDialog)
 
+	OptionsStorage optsStorage;
+
 	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 
 	LaunchOptions opts;

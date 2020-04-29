@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>540</width>
-    <height>537</height>
+    <width>550</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -387,6 +387,39 @@
       </layout>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="launchOptsGrpBox">
+     <property name="title">
+      <string>Behaviour of Launch options (second tab)</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_8">
+      <item>
+       <widget class="QRadioButton" name="optsStorage_none">
+        <property name="text">
+         <string>Don't save at all (Everytime you open the launcher, launch mode will be set to standard)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="optsStorage_global">
+        <property name="text">
+         <string>Save globally (On startup, launch options will be restored to the state when it was closed)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="optsStorage_preset">
+        <property name="text">
+         <string>Save to preset (Launch options will be saved to current preset and restored when preset is selected)</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">

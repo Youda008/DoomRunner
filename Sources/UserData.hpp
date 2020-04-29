@@ -170,6 +170,7 @@ struct Preset
 	QList< TreePosition > selectedMapPacks;
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 	QString cmdArgs;
+	LaunchOptions opts;
 
 	Preset() {}
 	Preset( const QString & name ) : name( name ) {}
@@ -187,7 +188,7 @@ QJsonObject serialize( const IwadSettings & iwadSettings );
 QJsonObject serialize( const MapSettings & mapSettings );
 QJsonObject serialize( const ModSettings & modSettings );
 QJsonObject serialize( const LaunchOptions & options );
-QJsonObject serialize( const Preset & preset );
+QJsonObject serialize( const Preset & preset, bool storeOpts );
 
 template< typename Elem >
 QJsonArray serializeList( const QList< Elem > & list )
@@ -206,7 +207,7 @@ void deserialize( JsonContext & json, IwadSettings & iwadSettings );
 void deserialize( JsonContext & json, MapSettings & mapSettings );
 void deserialize( JsonContext & json, ModSettings & modSettings );
 void deserialize( JsonContext & json, LaunchOptions & options );
-void deserialize( JsonContext & json, Preset & preset );
+void deserialize( JsonContext & json, Preset & preset, bool loadOpts );
 
 
 #endif // USER_DATA_INCLUDED

@@ -52,7 +52,7 @@ static constexpr char defaultOptionsFile [] = "options.json";
 //======================================================================================================================
 //  local helpers
 
-bool verifyDir( const QString & dir, const QString & errorMessage )
+static bool verifyDir( const QString & dir, const QString & errorMessage )
 {
 	if (!QDir( dir ).exists()) {
 		QMessageBox::warning( nullptr, "Directory no longer exists", errorMessage.arg( dir ) );
@@ -61,7 +61,7 @@ bool verifyDir( const QString & dir, const QString & errorMessage )
 	return true;
 }
 
-bool verifyFile( const QString & path, const QString & errorMessage )
+static bool verifyFile( const QString & path, const QString & errorMessage )
 {
 	if (!QFileInfo( path ).exists()) {
 		QMessageBox::warning( nullptr, "File no longer exists", errorMessage.arg( path ) );
@@ -69,6 +69,15 @@ bool verifyFile( const QString & path, const QString & errorMessage )
 	}
 	return true;
 }
+
+#define STORE_OPTION( structElem, value ) \
+	if (optsStorage == STORE_GLOBALLY) { \
+		opts.structElem = value; \
+	} else if (optsStorage == STORE_TO_PRESET) { \
+		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView ); \
+		if (selectedPresetIdx >= 0) \
+			presetModel[ selectedPresetIdx ].opts.structElem = value; \
+	}
 
 
 //======================================================================================================================
@@ -112,7 +121,8 @@ MainWindow::MainWindow()
 	presetModel(
 		/*makeDisplayString*/ []( const Preset & preset ) { return preset.name; }
 	),
-	opts {}
+	opts {},
+	compatOptsCmdArgs()
 {
 	ui = new Ui::MainWindow;
 	ui->setupUi( this );
@@ -331,7 +341,7 @@ void MainWindow::runGameOptsDialog()
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted) {
-		opts.gameOpts = dialog.gameOpts;
+		STORE_OPTION( gameOpts, dialog.gameOpts );
 		updateLaunchCommand();
 	}
 }
@@ -344,7 +354,7 @@ void MainWindow::runCompatOptsDialog()
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted) {
-		opts.compatOpts = dialog.compatOpts;
+		STORE_OPTION( compatOpts, dialog.compatOpts );
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
 		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
 		updateLaunchCommand();
@@ -450,6 +460,8 @@ void MainWindow::loadPreset( const QModelIndex & index )
 		modIt++;
 	}
 	modModel.finishCompleteUpdate();
+
+	restoreLaunchOptions( preset.opts );
 
 	// restore additional command line arguments
 	ui->presetCmdArgsLine->setText( preset.cmdArgs );
@@ -706,7 +718,7 @@ void MainWindow::modsDropped( int /*row*/, int /*count*/ )
 
 void MainWindow::modeStandard()
 {
-	opts.mode = STANDARD;
+	STORE_OPTION( mode, STANDARD );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -726,7 +738,7 @@ void MainWindow::modeStandard()
 
 void MainWindow::modeLaunchMap()
 {
-	opts.mode = LAUNCH_MAP;
+	STORE_OPTION( mode, LAUNCH_MAP );
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -746,7 +758,7 @@ void MainWindow::modeLaunchMap()
 
 void MainWindow::modeSavedGame()
 {
-	opts.mode = LOAD_SAVE;
+	STORE_OPTION( mode, LOAD_SAVE );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
@@ -763,14 +775,14 @@ void MainWindow::modeSavedGame()
 
 void MainWindow::selectMap( const QString & mapName )
 {
-	opts.mapName = mapName;
+	STORE_OPTION( mapName, mapName );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectSavedGame( int saveIdx )
 {
-	opts.saveFile = saveModel[ saveIdx ].fileName;
+	STORE_OPTION( saveFile, saveModel[ saveIdx ].fileName );
 
 	updateLaunchCommand();
 }
@@ -785,7 +797,7 @@ void MainWindow::selectSkill( int skill )
 
 void MainWindow::changeSkillNum( int skill )
 {
-	opts.skillNum = uint( skill );
+	STORE_OPTION( skillNum, uint( skill ) );
 
 	if (skill < Skill::CUSTOM)
 		ui->skillCmbBox->setCurrentIndex( skill );
@@ -795,28 +807,28 @@ void MainWindow::changeSkillNum( int skill )
 
 void MainWindow::toggleNoMonsters( bool checked )
 {
-	opts.noMonsters = checked;
+	STORE_OPTION( noMonsters, checked );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleFastMonsters( bool checked )
 {
-	opts.fastMonsters = checked;
+	STORE_OPTION( fastMonsters, checked );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleMonstersRespawn( bool checked )
 {
-	opts.monstersRespawn = checked;
+	STORE_OPTION( monstersRespawn, checked );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleMultiplayer( bool checked )
 {
-	opts.isMultiplayer = checked;
+	STORE_OPTION( isMultiplayer, checked );
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 
@@ -841,7 +853,7 @@ void MainWindow::toggleMultiplayer( bool checked )
 
 void MainWindow::selectMultRole( int role )
 {
-	opts.multRole = MultRole( role );
+	STORE_OPTION( multRole, MultRole( role ) );
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 
@@ -863,52 +875,55 @@ void MainWindow::selectMultRole( int role )
 
 void MainWindow::changeHost( const QString & hostName )
 {
-	opts.hostName = hostName;
+	STORE_OPTION( hostName, hostName );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changePort( int port )
 {
-	opts.port = uint16_t( port );
+	STORE_OPTION( port, uint16_t( port ) );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectNetMode( int netMode )
 {
-	opts.netMode = NetMode( netMode );
+	STORE_OPTION( netMode, NetMode( netMode ) );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectGameMode( int gameMode )
 {
-	opts.gameMode = GameMode( gameMode );
+	STORE_OPTION( gameMode, GameMode( gameMode ) );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changePlayerCount( int count )
 {
-	opts.playerCount = uint( count );
+	STORE_OPTION( playerCount, uint( count ) );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTeamDamage( double damage )
 {
-	opts.teamDamage = damage;
+	STORE_OPTION( teamDamage, damage );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTimeLimit( int timeLimit )
 {
-	opts.timeLimit = uint( timeLimit );
+	STORE_OPTION( timeLimit, uint( timeLimit ) );
 
 	updateLaunchCommand();
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//  additional command line arguments
 
 void MainWindow::updatePresetCmdArgs( const QString & text )
 {
@@ -1089,7 +1104,7 @@ void MainWindow::saveOptions( const QString & fileName )
 	{
 		QJsonArray jsPresetArray;
 		for (const Preset & preset : presetModel) {
-			QJsonObject jsPreset = serialize( preset );
+			QJsonObject jsPreset = serialize( preset, optsStorage == STORE_TO_PRESET );
 			jsPresetArray.append( jsPreset );
 		}
 		json["presets"] = jsPresetArray;
@@ -1257,6 +1272,9 @@ void MainWindow::loadOptions( const QString & fileName )
 		json.exitObject();
 	}
 
+	// this must be loaded before presets, because we need to know whether to attempt loading the opts from the presets
+	optsStorage = json.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
+
 	if (json.enterArray( "presets" ))
 	{
 		deselectSelectedItems( ui->presetListView );
@@ -1272,7 +1290,7 @@ void MainWindow::loadOptions( const QString & fileName )
 				continue;
 
 			Preset preset;
-			deserialize( json, preset );
+			deserialize( json, preset, optsStorage == STORE_TO_PRESET );
 
 			presetModel.append( std::move( preset ) );
 
@@ -1287,7 +1305,6 @@ void MainWindow::loadOptions( const QString & fileName )
 	ui->globalCmdArgsLine->setText( json.getString( "additional_args" ) );
 
 	// launch options
-	optsStorage = json.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
 	if (optsStorage == STORE_GLOBALLY && json.enterObject( "options" ))
 	{
 		deserialize( json, opts );

@@ -121,7 +121,7 @@ QJsonObject serialize( const LaunchOptions & opts )
 	jsOptions["map_name"] = opts.mapName;
 	jsOptions["save_file"] = opts.saveFile;
 	jsOptions["skill_num"] = int( opts.skillNum );
-	jsOptions["no_monsters"] = opts.fastMonsters;
+	jsOptions["no_monsters"] = opts.noMonsters;
 	jsOptions["fast_monsters"] = opts.fastMonsters;
 	jsOptions["monsters_respawn"] = opts.monstersRespawn;
 
@@ -169,7 +169,7 @@ void deserialize( JsonContext & json, LaunchOptions & opts )
 	opts.timeLimit = json.getUInt( "time_limit", opts.timeLimit );
 }
 
-QJsonObject serialize( const Preset & preset )
+QJsonObject serialize( const Preset & preset, bool storeOpts )
 {
 	QJsonObject jsPreset;
 
@@ -186,12 +186,16 @@ QJsonObject serialize( const Preset & preset )
 
 	jsPreset["mods"] = serializeList( preset.mods );
 
+	if (storeOpts) {
+		jsPreset["options"] = serialize( preset.opts );
+	}
+
 	jsPreset["additional_args"] = preset.cmdArgs;
 
 	return jsPreset;
 }
 
-void deserialize( JsonContext & json, Preset & preset )
+void deserialize( JsonContext & json, Preset & preset, bool loadOpts )
 {
 	preset.name = json.getString( "name", "<missing name>" );
 	preset.selectedEnginePath = json.getString( "selected_engine" );
@@ -231,6 +235,12 @@ void deserialize( JsonContext & json, Preset & preset )
 		json.exitArray();
 	}
 
+	if (loadOpts && json.enterObject( "options" ))
+	{
+		deserialize( json, preset.opts );
+
+		json.exitObject();
+	}
 
 	preset.cmdArgs = json.getString( "additional_args" );
 }

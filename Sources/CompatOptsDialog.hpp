@@ -12,7 +12,7 @@
 
 #include "Common.hpp"
 
-#include "SharedData.hpp"  // CompatibilityOptions
+#include "UserData.hpp"  // CompatibilityOptions
 
 #include <QDialog>
 

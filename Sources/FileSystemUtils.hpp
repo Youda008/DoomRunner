@@ -50,11 +50,11 @@ class PathHelper {
 
 	QString getAbsolutePath( const QString & path ) const
 	{
-		return path.isEmpty() ? "" : QFileInfo( _baseDir, path ).absoluteFilePath();
+		return path.isEmpty() ? QString() : QFileInfo( _baseDir, path ).absoluteFilePath();
 	}
 	QString getRelativePath( const QString & path ) const
 	{
-		return path.isEmpty() ? "" : _baseDir.relativeFilePath( path );
+		return path.isEmpty() ? QString() : _baseDir.relativeFilePath( path );
 	}
 	QString convertPath( const QString & path ) const
 	{

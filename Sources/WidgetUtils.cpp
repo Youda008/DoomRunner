@@ -24,7 +24,7 @@ int getSelectedItemIdx( QListView * view )   // this function is for single sele
 	}
 	if (selectedIndexes.size() > 1) {
 		QMessageBox::critical( view->parentWidget(), "Multiple items selected",
-			"Multiple items are selected. This shouldn't be happening and it is a bug. Please create an issue on Github page." );
+			"Multiple items are selected. This shouldn't be possible, please create an issue on Github page." );
 		return -1;
 	}
 	return selectedIndexes[0].row();
@@ -85,7 +85,7 @@ QModelIndex getSelectedItemIdx( QTreeView * view )   // this function is for sin
 	}
 	if (selectedIndexes.size() > 1) {
 		QMessageBox::critical( view->parentWidget(), "Multiple items selected",
-			"Multiple items are selected. This shouldn't be happening and it is a bug. Please create an issue on Github page." );
+			"Multiple items are selected. This shouldn't be possible, please create an issue on Github page." );
 		return {};
 	}
 	return selectedIndexes[0];

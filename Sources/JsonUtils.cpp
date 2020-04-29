@@ -202,6 +202,30 @@ uint JsonContext::getUInt( const char * key, uint defaultVal )
 	return uint(d);
 }
 
+uint16_t JsonContext::getUInt16( const char * key, uint16_t defaultVal )
+{
+	if (!entryStack.last().val.isObject()) {
+		invalidCurrentType( "object" );
+		return defaultVal;
+	}
+	QJsonObject object = entryStack.last().val.toObject();
+	if (!object.contains( key )) {
+		missingKey( key );
+		return defaultVal;
+	}
+	QJsonValue val = object[ key ];
+	if (!val.isDouble()) {
+		invalidTypeAtKey( key, "uint" );
+		return defaultVal;
+	}
+	double d = val.toDouble();
+	if (d < 0 || d > UINT16_MAX) {
+		invalidTypeAtKey( key, "int" );
+		return defaultVal;
+	}
+	return uint16_t(d);
+}
+
 double JsonContext::getDouble( const char * key, double defaultVal )
 {
 	if (!entryStack.last().val.isObject()) {
@@ -262,6 +286,7 @@ bool JsonContext::getBool( int index, bool defaultVal )
 	return val.toBool();
 
 }
+
 int JsonContext::getInt( int index, int defaultVal )
 {
 	if (!entryStack.last().val.isArray()) {
@@ -285,6 +310,7 @@ int JsonContext::getInt( int index, int defaultVal )
 	}
 	return int(d);
 }
+
 uint JsonContext::getUInt( int index, uint defaultVal )
 {
 	if (!entryStack.last().val.isArray()) {
@@ -308,6 +334,31 @@ uint JsonContext::getUInt( int index, uint defaultVal )
 	}
 	return uint(d);
 }
+
+uint16_t JsonContext::getUInt16( int index, uint16_t defaultVal )
+{
+	if (!entryStack.last().val.isArray()) {
+		invalidCurrentType( "array" );
+		return defaultVal;
+	}
+	QJsonArray array = entryStack.last().val.toArray();
+	if (index < 0 || index >= array.size()) {
+		indexOutOfBounds( index );
+		return defaultVal;
+	}
+	QJsonValue val = array[ index ];
+	if (!val.isDouble()) {
+		invalidTypeAtIdx( index, "uint" );
+		return defaultVal;
+	}
+	double d = val.toDouble();
+	if (d < 0 || d > UINT16_MAX) {
+		invalidTypeAtIdx( index, "int" );
+		return defaultVal;
+	}
+	return uint16_t(d);
+}
+
 double JsonContext::getDouble( int index, double defaultVal )
 {
 	if (!entryStack.last().val.isArray()) {
@@ -326,6 +377,7 @@ double JsonContext::getDouble( int index, double defaultVal )
 	}
 	return val.toDouble();
 }
+
 QString JsonContext::getString( int index, const QString & defaultVal )
 {
 	if (!entryStack.last().val.isArray()) {

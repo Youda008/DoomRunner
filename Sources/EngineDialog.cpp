@@ -47,7 +47,7 @@ void EngineDialog::showEvent( QShowEvent * event )
 {
 	QDialog::showEvent( event );
 
-	if (engine.path.isEmpty())
+	if (engine.path.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())
 		browseEngine();
 }
 
@@ -59,7 +59,7 @@ void EngineDialog::browseEngine()
  #endif
 		"All files (*)"
 	);
-	if (path.isEmpty())  // user probably clicked cancel
+	if (path.isNull())  // user probably clicked cancel TODO
 		return;
 
 	// the path comming out of the file dialog is always absolute

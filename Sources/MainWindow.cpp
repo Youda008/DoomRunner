@@ -50,66 +50,68 @@ static constexpr char defaultOptionsFile [] = "options.json";
 
 
 //======================================================================================================================
-//  fixed combo boxes values
+//  local helpers
 
-enum Skill {
-	TOO_YOUNG_TO_DIE,
-	NOT_TOO_ROUGH,
-	HURT_ME_PLENTY,
-	ULTRA_VIOLENCE,
-	NIGHTMARE,
-	CUSTOM
-};
+bool verifyDir( const QString & dir, const QString & errorMessage )
+{
+	if (!QDir( dir ).exists()) {
+		QMessageBox::warning( nullptr, "Directory no longer exists", errorMessage.arg( dir ) );
+		return false;
+	}
+	return true;
+}
 
-enum MultRole {
-	SERVER,
-	CLIENT
-};
-
-enum NetMode {
-	PEER_TO_PEER,
-	PACKET_SERVER
-};
-
-enum GameMode {
-	DEATHMATCH,
-	TEAM_DEATHMATCH,
-	ALT_DEATHMATCH,
-	ALT_TEAM_DEATHMATCH,
-	COOPERATIVE
-};
+bool verifyFile( const QString & path, const QString & errorMessage )
+{
+	if (!QFileInfo( path ).exists()) {
+		QMessageBox::warning( nullptr, "File no longer exists", errorMessage.arg( path ) );
+		return false;
+	}
+	return true;
+}
 
 
 //======================================================================================================================
 //  MainWindow
 
 MainWindow::MainWindow()
+:
+	QMainWindow( nullptr ),
+	tickCount( 0 ),
+	optionsCorrupted( false ),
+	pathHelper( false, QDir::currentPath() ),
+	engineModel(
+		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
+	),
+	configModel(
+		/*makeDisplayString*/ []( const ConfigFile & config ) { return config.fileName; }
+	),
+	saveModel(
+		/*makeDisplayString*/ []( const SaveFile & save ) { return save.fileName; }
+	),
+	iwadModel(
+		/*makeDisplayString*/ []( const IWAD & iwad ) { return iwad.name; }
+	),
+	iwadSettings {
+		/*dir*/ "",
+		/*loadFromDir*/ false,
+		/*searchSubdirs*/ false
+	},
+	selectedIWAD(),
+	mapModel(),
+	mapSettings {
+		""
+	},
+	modModel(
+		/*makeDisplayString*/ []( const Mod & mod ) { return mod.fileName; }
+	),
+	modSettings {
 
-	: QMainWindow( nullptr )
-	, tickCount( 0 )
-	, optionsCorrupted( false )
-	, pathHelper( false, QDir::currentPath() )
-	, engineModel(
-		/*makeDisplayString*/[]( const Engine & engine ) { return engine.name; }
-	  )
-	, configModel(
-		/*makeDisplayString*/[]( const ConfigFile & config ) { return config.fileName; }
-	  )
-	, saveModel(
-		/*makeDisplayString*/[]( const SaveFile & save ) { return save.fileName; }
-	  )
-	, iwadModel(
-		/*makeDisplayString*/[]( const IWAD & iwad ) { return iwad.name; }
-	  )
-	, iwadListFromDir( false )
-	, iwadSubdirs( false )
-	, mapModel()
-	, modModel(
-		/*makeDisplayString*/[]( const Mod & mod ) { return mod.fileName; }
-	  )
-	, presetModel(
-		/*makeDisplayString*/[]( const Preset & preset ) { return preset.name; }
-	  )
+	},
+	presetModel(
+		/*makeDisplayString*/ []( const Preset & preset ) { return preset.name; }
+	),
+	opts {}
 {
 	ui = new Ui::MainWindow;
 	ui->setupUi( this );
@@ -172,7 +174,7 @@ MainWindow::MainWindow()
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
 	connect( ui->launchMode_standard, &QRadioButton::clicked, this, &thisClass::modeStandard );
-	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeSelectedMap );
+	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeLaunchMap );
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
 	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::selectMap );
 	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSavedGame );
@@ -270,11 +272,9 @@ void MainWindow::runSetupDialog()
 		pathHelper.baseDir(),
 		engineModel.list(),
 		iwadModel.list(),
-		iwadListFromDir,
-		iwadDir,
-		iwadSubdirs,
-		mapDir,
-		modDir
+		iwadSettings,
+		mapSettings,
+		modSettings
 	);
 
 	int code = dialog.exec();
@@ -295,14 +295,12 @@ void MainWindow::runSetupDialog()
 		iwadModel.startCompleteUpdate();
 
 		// update our data from the dialog
-		pathHelper = dialog.pathHelper;
+		pathHelper.toggleAbsolutePaths( dialog.pathHelper.useAbsolutePaths() );
 		engineModel.updateList( dialog.engineModel.list() );
 		iwadModel.updateList( dialog.iwadModel.list() );
-		iwadListFromDir = dialog.iwadListFromDir;
-		iwadDir = dialog.iwadDir;
-		iwadSubdirs = dialog.iwadSubdirs;
-		mapDir = dialog.mapDir;
-		modDir = dialog.modDir;
+		iwadSettings = dialog.iwadSettings;
+		mapSettings = dialog.mapSettings;
+		modSettings = dialog.modSettings;
 		// update all stored paths
 		toggleAbsolutePaths( pathHelper.useAbsolutePaths() );
 		selectedEngine = pathHelper.convertPath( selectedEngine );
@@ -324,28 +322,28 @@ void MainWindow::runSetupDialog()
 
 void MainWindow::runGameOptsDialog()
 {
-	GameOptsDialog dialog( this, gameOpts );
+	GameOptsDialog dialog( this, opts.gameOpts );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted) {
-		gameOpts = dialog.gameOpts;
+		opts.gameOpts = dialog.gameOpts;
 		updateLaunchCommand();
 	}
 }
 
 void MainWindow::runCompatOptsDialog()
 {
-	CompatOptsDialog dialog( this, compatOpts );
+	CompatOptsDialog dialog( this, opts.compatOpts );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted) {
-		compatOpts = dialog.compatOpts;
+		opts.compatOpts = dialog.compatOpts;
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
-		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( compatOpts );
+		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
 		updateLaunchCommand();
 	}
 }
@@ -359,7 +357,7 @@ void MainWindow::runAboutDialog()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  list item selection
+//  preset loading
 
 void MainWindow::loadPreset( const QModelIndex & index )
 {
@@ -373,11 +371,13 @@ void MainWindow::loadPreset( const QModelIndex & index )
 		int engineIdx = findSuch( engineModel.list(), [ &preset ]( const Engine & engine )
 		                                                         { return engine.path == preset.selectedEnginePath; } );
 		if (engineIdx >= 0) {
+			verifyFile( preset.selectedEnginePath,
+				"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please select another one." );
 			ui->engineCmbBox->setCurrentIndex( engineIdx );
 		} else {
 			ui->engineCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Engine no longer exists",
-				"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please select another one." );
+				"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list, please select another one." );
 		}
 	} else {
 		ui->engineCmbBox->setCurrentIndex( -1 );
@@ -392,7 +392,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 		} else {
 			ui->configCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Config no longer exists",
-				"Config selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
+				"Config file selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
 		}
 	} else {
 		ui->configCmbBox->setCurrentIndex( -1 );
@@ -468,6 +468,10 @@ void MainWindow::togglePresetSubWidgets( bool enabled )
 	ui->presetCmdArgsLine->setEnabled( enabled );
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
+//  item selection
+
 void MainWindow::selectEngine( int index )
 {
 	// update the current preset
@@ -524,7 +528,7 @@ void MainWindow::toggleIWAD( const QModelIndex & index )
 
 void MainWindow::toggleMapPack( const QModelIndex & )
 {
-	QVector< TreePosition > selectedMapPacks;
+	QList< TreePosition > selectedMapPacks;
 	for (const QModelIndex & index : getSelectedItemIdxs( ui->mapDirView ))
 		selectedMapPacks.append( mapModel.getNodePosition( index ) );
 
@@ -606,7 +610,7 @@ void MainWindow::presetMoveDown()
 
 void MainWindow::modAdd()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modDir,
+	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modSettings.dir,
 	                                             "Doom mod files (*.wad *.WAD *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
 	                                             "All files (*)" );
 	if (path.isEmpty())  // user probably clicked cancel
@@ -687,18 +691,288 @@ void MainWindow::modsDropped( int /*row*/, int /*count*/ )
 	// update the preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0) {
-		presetModel[ selectedPresetIdx ].mods = modModel.list().toVector();  // not the most optimal way, but the size of the list will be always small
+		presetModel[ selectedPresetIdx ].mods = modModel.list();  // not the most optimal way, but the size of the list will be always small
 	}
 
 	updateLaunchCommand();
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
+//  launch options
+
+void MainWindow::modeStandard()
+{
+	opts.mode = STANDARD;
+
+	ui->mapCmbBox->setEnabled( false );
+	ui->saveFileCmbBox->setEnabled( false );
+	ui->skillCmbBox->setEnabled( false );
+	ui->skillSpinBox->setEnabled( false );
+	ui->noMonstersChkBox->setEnabled( false );
+	ui->fastMonstersChkBox->setEnabled( false );
+	ui->monstersRespawnChkBox->setEnabled( false );
+	ui->gameOptsBtn->setEnabled( false );
+	ui->compatOptsBtn->setEnabled( false );
+
+	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == SERVER)
+		ui->multRoleCmbBox->setCurrentIndex( CLIENT );   // only client can use standard launch mode
+
+	updateLaunchCommand();
+}
+
+void MainWindow::modeLaunchMap()
+{
+	opts.mode = LAUNCH_MAP;
+
+	ui->mapCmbBox->setEnabled( true );
+	ui->saveFileCmbBox->setEnabled( false );
+	ui->skillCmbBox->setEnabled( true );
+	ui->skillSpinBox->setEnabled( ui->skillCmbBox->currentIndex() == Skill::CUSTOM );
+	ui->noMonstersChkBox->setEnabled( true );
+	ui->fastMonstersChkBox->setEnabled( true );
+	ui->monstersRespawnChkBox->setEnabled( true );
+	ui->gameOptsBtn->setEnabled( true );
+	ui->compatOptsBtn->setEnabled( true );
+
+	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == CLIENT)
+		ui->multRoleCmbBox->setCurrentIndex( SERVER );   // only server can select a map
+
+	updateLaunchCommand();
+}
+
+void MainWindow::modeSavedGame()
+{
+	opts.mode = LOAD_SAVE;
+
+	ui->mapCmbBox->setEnabled( false );
+	ui->saveFileCmbBox->setEnabled( true );
+	ui->skillCmbBox->setEnabled( false );
+	ui->skillSpinBox->setEnabled( false );
+	ui->noMonstersChkBox->setEnabled( false );
+	ui->fastMonstersChkBox->setEnabled( false );
+	ui->monstersRespawnChkBox->setEnabled( false );
+	ui->gameOptsBtn->setEnabled( false );
+	ui->compatOptsBtn->setEnabled( false );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectMap( const QString & mapName )
+{
+	opts.mapName = mapName;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectSavedGame( int saveIdx )
+{
+	opts.saveFile = saveModel[ saveIdx ].fileName;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectSkill( int skill )
+{
+	ui->skillSpinBox->setValue( skill );
+	ui->skillSpinBox->setEnabled( skill == Skill::CUSTOM );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeSkillNum( int skill )
+{
+	opts.skillNum = uint( skill );
+
+	if (skill < Skill::CUSTOM)
+		ui->skillCmbBox->setCurrentIndex( skill );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleNoMonsters( bool checked )
+{
+	opts.noMonsters = checked;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleFastMonsters( bool checked )
+{
+	opts.fastMonsters = checked;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleMonstersRespawn( bool checked )
+{
+	opts.monstersRespawn = checked;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleMultiplayer( bool checked )
+{
+	opts.isMultiplayer = checked;
+
+	int multRole = ui->multRoleCmbBox->currentIndex();
+
+	ui->multRoleCmbBox->setEnabled( checked );
+	ui->hostnameLine->setEnabled( checked && multRole == CLIENT );
+	ui->portSpinBox->setEnabled( checked );
+	ui->netModeCmbBox->setEnabled( checked );
+	ui->gameModeCmbBox->setEnabled( checked && multRole == SERVER );
+	ui->playerCountSpinBox->setEnabled( checked && multRole == SERVER );
+	ui->teamDmgSpinBox->setEnabled( checked && multRole == SERVER );
+	ui->timeLimitSpinBox->setEnabled( checked && multRole == SERVER );
+
+	if (checked) {
+		if (multRole == CLIENT && ui->launchMode_map->isChecked())  // client doesn't select map, server does
+			ui->launchMode_standard->click();
+		if (multRole == SERVER && ui->launchMode_standard->isChecked())  // server MUST choose a map
+			ui->launchMode_map->click();
+	}
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectMultRole( int role )
+{
+	opts.multRole = MultRole( role );
+
+	bool multEnabled = ui->multiplayerChkBox->isChecked();
+
+	ui->hostnameLine->setEnabled( multEnabled && role == CLIENT );
+	ui->gameModeCmbBox->setEnabled( multEnabled && role == SERVER );
+	ui->playerCountSpinBox->setEnabled( multEnabled && role == SERVER );
+	ui->teamDmgSpinBox->setEnabled( multEnabled && role == SERVER );
+	ui->timeLimitSpinBox->setEnabled( multEnabled && role == SERVER );
+
+	if (multEnabled) {
+		if (role == CLIENT && ui->launchMode_map->isChecked())  // client doesn't select map, server does
+			ui->launchMode_standard->click();
+		if (role == SERVER && ui->launchMode_standard->isChecked())  // server MUST choose a map
+			ui->launchMode_map->click();
+	}
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeHost( const QString & hostName )
+{
+	opts.hostName = hostName;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changePort( int port )
+{
+	opts.port = uint16_t( port );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectNetMode( int netMode )
+{
+	opts.netMode = NetMode( netMode );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectGameMode( int gameMode )
+{
+	opts.gameMode = GameMode( gameMode );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changePlayerCount( int count )
+{
+	opts.playerCount = uint( count );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeTeamDamage( double damage )
+{
+	opts.teamDamage = damage;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeTimeLimit( int timeLimit )
+{
+	opts.timeLimit = uint( timeLimit );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::updatePresetCmdArgs( const QString & text )
+{
+	// update the current preset
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx >= 0) {
+		presetModel[ selectedPresetIdx ].cmdArgs = text;
+	}
+
+	updateLaunchCommand();
+}
+
+void MainWindow::updateGlobalCmdArgs( const QString & )
+{
+	updateLaunchCommand();
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  misc
+
+void MainWindow::toggleAbsolutePaths( bool absolute )
+{
+	pathHelper.toggleAbsolutePaths( absolute );
+
+	for (Engine & engine : engineModel) {
+		engine.path = pathHelper.convertPath( engine.path );
+		engine.configDir = pathHelper.convertPath( engine.configDir );
+	}
+
+	iwadSettings.dir = pathHelper.convertPath( iwadSettings.dir );
+	for (IWAD & iwad : iwadModel)
+		iwad.path = pathHelper.convertPath( iwad.path );
+
+	mapSettings.dir = pathHelper.convertPath( mapSettings.dir );
+	mapModel.setBaseDir( mapSettings.dir );
+
+	modSettings.dir = pathHelper.convertPath( modSettings.dir );
+	for (Mod & mod : modModel)
+		mod.path = pathHelper.convertPath( mod.path );
+
+	for (Preset & preset : presetModel) {
+		for (Mod & mod : preset.mods)
+			mod.path = pathHelper.convertPath( mod.path );
+		preset.selectedEnginePath = pathHelper.convertPath( preset.selectedEnginePath );
+	}
+
+	updateLaunchCommand();
+}
+
+
 //----------------------------------------------------------------------------------------------------------------------
 //  automatic list updates according to directory content
 
+void MainWindow::updateListsFromDirs()
+{
+	if (iwadSettings.updateFromDir) {
+		updateIWADsFromDir();
+	}
+	updateMapPacksFromDir();
+	updateConfigFilesFromDir();
+	updateSaveFilesFromDir();
+}
+
 void MainWindow::updateIWADsFromDir()
 {
-	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper, isIWAD );
+	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathHelper, isIWAD );
 
 	// the previously selected item might have been removed
 	if (!isSomethingSelected( ui->iwadListView ))
@@ -707,7 +981,7 @@ void MainWindow::updateIWADsFromDir()
 
 void MainWindow::updateMapPacksFromDir()
 {
-	updateTreeFromDir( mapModel, ui->mapDirView, mapDir, pathHelper, isMapPack );
+	updateTreeFromDir( mapModel, ui->mapDirView, mapSettings.dir, pathHelper, isMapPack );
 }
 
 void MainWindow::updateConfigFilesFromDir()
@@ -762,239 +1036,9 @@ void MainWindow::updateMapsFromIWAD()
 	}
 }
 
-void MainWindow::updateListsFromDirs()
-{
-	if (iwadListFromDir) {
-		updateIWADsFromDir();
-	}
-	updateMapPacksFromDir();
-	updateConfigFilesFromDir();
-	updateSaveFilesFromDir();
-}
-
 
 //----------------------------------------------------------------------------------------------------------------------
-//  other options
-
-void MainWindow::toggleAbsolutePaths( bool absolute )
-{
-	pathHelper.toggleAbsolutePaths( absolute );
-
-	for (Engine & engine : engineModel) {
-		engine.path = pathHelper.convertPath( engine.path );
-		engine.configDir = pathHelper.convertPath( engine.configDir );
-	}
-
-	if (iwadListFromDir && !iwadDir.isEmpty())
-		iwadDir = pathHelper.convertPath( iwadDir );
-	for (IWAD & iwad : iwadModel)
-		iwad.path = pathHelper.convertPath( iwad.path );
-
-	mapDir = pathHelper.convertPath( mapDir );
-	mapModel.setBaseDir( mapDir );
-
-	modDir = pathHelper.convertPath( modDir );
-	for (Mod & mod : modModel)
-		mod.path = pathHelper.convertPath( mod.path );
-
-	for (Preset & preset : presetModel) {
-		for (Mod & mod : preset.mods)
-			mod.path = pathHelper.convertPath( mod.path );
-		preset.selectedEnginePath = pathHelper.convertPath( preset.selectedEnginePath );
-	}
-
-	updateLaunchCommand();
-}
-
-void MainWindow::modeStandard()
-{
-	ui->mapCmbBox->setEnabled( false );
-	ui->saveFileCmbBox->setEnabled( false );
-	ui->skillCmbBox->setEnabled( false );
-	ui->skillSpinBox->setEnabled( false );
-	ui->noMonstersChkBox->setEnabled( false );
-	ui->fastMonstersChkBox->setEnabled( false );
-	ui->monstersRespawnChkBox->setEnabled( false );
-	ui->gameOptsBtn->setEnabled( false );
-	ui->compatOptsBtn->setEnabled( false );
-
-	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == SERVER)
-		ui->multRoleCmbBox->setCurrentIndex( CLIENT );   // only client can use standard launch mode
-
-	updateLaunchCommand();
-}
-
-void MainWindow::modeSelectedMap()
-{
-	ui->mapCmbBox->setEnabled( true );
-	ui->saveFileCmbBox->setEnabled( false );
-	ui->skillCmbBox->setEnabled( true );
-	ui->skillSpinBox->setEnabled( ui->skillCmbBox->currentIndex() == Skill::CUSTOM );
-	ui->noMonstersChkBox->setEnabled( true );
-	ui->fastMonstersChkBox->setEnabled( true );
-	ui->monstersRespawnChkBox->setEnabled( true );
-	ui->gameOptsBtn->setEnabled( true );
-	ui->compatOptsBtn->setEnabled( true );
-
-	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == CLIENT)
-		ui->multRoleCmbBox->setCurrentIndex( SERVER );   // only server can select a map
-
-	updateLaunchCommand();
-}
-
-void MainWindow::modeSavedGame()
-{
-	ui->mapCmbBox->setEnabled( false );
-	ui->saveFileCmbBox->setEnabled( true );
-	ui->skillCmbBox->setEnabled( false );
-	ui->skillSpinBox->setEnabled( false );
-	ui->noMonstersChkBox->setEnabled( false );
-	ui->fastMonstersChkBox->setEnabled( false );
-	ui->monstersRespawnChkBox->setEnabled( false );
-	ui->gameOptsBtn->setEnabled( false );
-	ui->compatOptsBtn->setEnabled( false );
-
-	updateLaunchCommand();
-}
-
-void MainWindow::selectMap( const QString & )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::selectSavedGame( int )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::selectSkill( int skill )
-{
-	ui->skillSpinBox->setValue( skill );
-	ui->skillSpinBox->setEnabled( skill == Skill::CUSTOM );
-
-	updateLaunchCommand();
-}
-
-void MainWindow::changeSkillNum( int skill )
-{
-	if (skill < Skill::CUSTOM)
-		ui->skillCmbBox->setCurrentIndex( skill );
-
-	updateLaunchCommand();
-}
-
-void MainWindow::toggleNoMonsters( bool )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::toggleFastMonsters( bool )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::toggleMonstersRespawn( bool )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::toggleMultiplayer( bool checked )
-{
-	int multRole = ui->multRoleCmbBox->currentIndex();
-
-	ui->multRoleCmbBox->setEnabled( checked );
-	ui->hostnameLine->setEnabled( checked && multRole == CLIENT );
-	ui->portSpinBox->setEnabled( checked );
-	ui->netModeCmbBox->setEnabled( checked );
-	ui->gameModeCmbBox->setEnabled( checked && multRole == SERVER );
-	ui->playerCountSpinBox->setEnabled( checked && multRole == SERVER );
-	ui->teamDmgSpinBox->setEnabled( checked && multRole == SERVER );
-	ui->timeLimitSpinBox->setEnabled( checked && multRole == SERVER );
-
-	if (checked) {
-		if (multRole == CLIENT && ui->launchMode_map->isChecked())  // client doesn't select map, server does
-			ui->launchMode_standard->click();
-		if (multRole == SERVER && ui->launchMode_standard->isChecked())  // server MUST choose a map
-			ui->launchMode_map->click();
-	}
-
-	updateLaunchCommand();
-}
-
-void MainWindow::selectMultRole( int role )
-{
-	bool multEnabled = ui->multiplayerChkBox->isChecked();
-
-	ui->hostnameLine->setEnabled( multEnabled && role == CLIENT );
-	ui->gameModeCmbBox->setEnabled( multEnabled && role == SERVER );
-	ui->playerCountSpinBox->setEnabled( multEnabled && role == SERVER );
-	ui->teamDmgSpinBox->setEnabled( multEnabled && role == SERVER );
-	ui->timeLimitSpinBox->setEnabled( multEnabled && role == SERVER );
-
-	if (multEnabled) {
-		if (role == CLIENT && ui->launchMode_map->isChecked())  // client doesn't select map, server does
-			ui->launchMode_standard->click();
-		if (role == SERVER && ui->launchMode_standard->isChecked())  // server MUST choose a map
-			ui->launchMode_map->click();
-	}
-
-	updateLaunchCommand();
-}
-
-void MainWindow::changeHost( const QString & )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::changePort( int )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::selectNetMode( int )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::selectGameMode( int )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::changePlayerCount( int )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::changeTeamDamage( double )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::changeTimeLimit( int )
-{
-	updateLaunchCommand();
-}
-
-void MainWindow::updatePresetCmdArgs( const QString & text )
-{
-	// update the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedPresetIdx >= 0) {
-		presetModel[ selectedPresetIdx ].cmdArgs = text;
-	}
-
-	updateLaunchCommand();
-}
-
-void MainWindow::updateGlobalCmdArgs( const QString & )
-{
-	updateLaunchCommand();
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-//  saving & loading current options
+//  saving and loading user data entered into the launcher
 
 void MainWindow::saveOptions( const QString & fileName )
 {
@@ -1005,111 +1049,59 @@ void MainWindow::saveOptions( const QString & fileName )
 
 	QJsonObject json;
 
-	// window geometry
 	{
+		QJsonObject jsGeometry;
+
 		const QRect & geometry = this->geometry();
-		json["width"] = geometry.width();
-		json["height"] = geometry.height();
+		jsGeometry["width"] = geometry.width();
+		jsGeometry["height"] = geometry.height();
+
+		json["geometry"] = jsGeometry;
 	}
 
 	json["use_absolute_paths"] = pathHelper.useAbsolutePaths();
 
-	// engines
 	{
 		QJsonObject jsEngines;
 
-		QJsonArray jsEngineArray;
-		for (const Engine & engine : engineModel) {
-			QJsonObject jsEngine;
-			jsEngine["name"] = engine.name;
-			jsEngine["path"] = engine.path;
-			jsEngine["config_dir"] = engine.configDir;
-			jsEngineArray.append( jsEngine );
-		}
-		jsEngines["engines"] = jsEngineArray;
+		jsEngines["engines"] = serializeList( engineModel.list() );
 
 		json["engines"] = jsEngines;
 	}
 
-    // IWADs
 	{
-		QJsonObject jsIWADs;
+		QJsonObject jsIWADs = serialize( iwadSettings );
 
-		jsIWADs["auto_update"] = iwadListFromDir;
-		jsIWADs["directory"] = iwadDir;
-		jsIWADs["subdirs"] = iwadSubdirs;
-		QJsonArray jsIWADArray;
-		for (const IWAD & iwad : iwadModel) {
-			QJsonObject jsIWAD;
-			jsIWAD["name"] = iwad.name;
-			jsIWAD["path"] = iwad.path;
-			jsIWADArray.append( jsIWAD );
+		if (iwadSettings.updateFromDir) {
+			jsIWADs["IWADs"] = serializeList( iwadModel.list() );
 		}
-		jsIWADs["IWADs"] = jsIWADArray;
 
 		json["IWADs"] = jsIWADs;
     }
 
-    // map packs
-	{
-		QJsonObject jsMaps;
-		jsMaps["directory"] = mapDir;
-		json["maps"] = jsMaps;
-	}
+	json["maps"] = serialize( mapSettings );
 
-    // mods
-	{
-		QJsonObject jsMods;
-		jsMods["directory"] = modDir;
-		json["mods"] = jsMods;
-	}
+	json["mods"] = serialize( modSettings );
 
-	// presets
 	{
 		QJsonArray jsPresetArray;
-
 		for (const Preset & preset : presetModel) {
-			QJsonObject jsPreset;
-
-			jsPreset["name"] = preset.name;
-			jsPreset["selected_engine"] = preset.selectedEnginePath;
-			jsPreset["selected_config"] = preset.selectedConfig;
-			jsPreset["selected_IWAD"] = preset.selectedIWAD;
-			QJsonArray jsMapArray;
-			for (const TreePosition & pos : preset.selectedMapPacks) {
-				jsMapArray.append( pos.toString() );
-			}
-			jsPreset["selected_mappacks"] = jsMapArray;
-			jsPreset["additional_args"] = preset.cmdArgs;
-			QJsonArray jsModArray;
-			for (const Mod & mod : preset.mods) {
-				QJsonObject jsMod;
-				jsMod["path"] = mod.path;
-				jsMod["checked"] = mod.checked;
-				jsModArray.append( jsMod );
-			}
-			jsPreset["mods"] = jsModArray;
-
+			QJsonObject jsPreset = serialize( preset );
 			jsPresetArray.append( jsPreset );
 		}
-
 		json["presets"] = jsPresetArray;
-	}
-	int presetIdx = getSelectedItemIdx( ui->presetListView );
-	json["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
 
-	// additional command line arguments
+		int presetIdx = getSelectedItemIdx( ui->presetListView );
+		json["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
+	}
+
 	json["additional_args"] = ui->globalCmdArgsLine->text();
 
-	// launch options
-	json["dmflags1"] = qint64( gameOpts.flags1 );
-	json["dmflags2"] = qint64( gameOpts.flags2 );
-	json["compatflags1"] = qint64( compatOpts.flags1 );
-	json["compatflags2"] = qint64( compatOpts.flags2 );
+	json["options"] = serialize( opts );
 
-	// write the json to file
 	QJsonDocument jsonDoc( json );
 	file.write( jsonDoc.toJson() );
+
 	file.close();
 
 	//return file.error() == QFile::NoError;
@@ -1124,17 +1116,21 @@ void MainWindow::loadOptions( const QString & fileName )
 		return;
 	}
 
+	QByteArray data = file.readAll();
+
 	QJsonParseError error;
-	QJsonDocument jsonDoc = QJsonDocument::fromJson( file.readAll(), &error );
+	QJsonDocument jsonDoc = QJsonDocument::fromJson( data, &error );
 	if (jsonDoc.isNull()) {
 		QMessageBox::warning( this, "Error loading options file", "Loading options failed: " + error.errorString() );
 		optionsCorrupted = true;
 		return;
 	}
 
+	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
+	// we want to print a useful error message with information where in the whole JSON the problem is.
 	JsonContext json( jsonDoc.object() );
 
-	// window geometry
+	if (json.enterObject( "geometry" ))
 	{
 		int width = json.getInt( "width", -1 );
 		int height = json.getInt( "height", -1 );
@@ -1142,12 +1138,13 @@ void MainWindow::loadOptions( const QString & fileName )
 			const QRect & geometry = this->geometry();
 			this->setGeometry( geometry.x(), geometry.y(), width, height );
 		}
+
+		json.exitObject();
 	}
 
 	// preset must be deselected first, so that the cleared selections doesn't save in the preset
 	deselectSelectedItems( ui->presetListView );
 
-	// path helper must be set before others, because we want to convert the loaded paths accordingly
 	pathHelper.toggleAbsolutePaths( json.getBool( "use_absolute_paths", false ) );
 
 	if (json.enterObject( "engines" ))
@@ -1162,22 +1159,19 @@ void MainWindow::loadOptions( const QString & fileName )
 		{
 			for (int i = 0; i < json.arraySize(); i++)
 			{
-				if (!json.enterObject( i ))  // wrong type on position i - skip this entry
+				if (!json.enterObject( i ))  // wrong type on position i -> skip this entry
 					continue;
 
 				Engine engine;
-				engine.name = json.getString( "name", "<missing name>" );
-				engine.path = pathHelper.convertPath( json.getString( "path" ) );
-				engine.configDir = pathHelper.convertPath( json.getString( "config_dir", QFileInfo( engine.path ).dir().path() ) );
-				if (engine.path.isEmpty())  // path doesn't exist - skip this entry
+				deserialize( json, engine );
+
+				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				if (QFileInfo( engine.path ).exists()) {
-					engineModel.append( engine );
-				} else {
-					QMessageBox::warning( this, "Engine no longer exists",
-						"An engine from the saved options ("%engine.path%") no longer exists. It will be removed from the list." );
-				}
+				if (!verifyFile( engine.path, "An engine from the saved options (%1) no longer exists. It will be removed from the list." ))
+					continue;
+
+				engineModel.append( std::move( engine ) );
 
 				json.exitObject();
 			}
@@ -1198,20 +1192,11 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		iwadModel.clear();
 
-		iwadListFromDir = json.getBool( "auto_update", false );
+		deserialize( json, iwadSettings );
 
-		if (iwadListFromDir)
+		if (iwadSettings.updateFromDir)
 		{
-			iwadSubdirs = json.getBool( "subdirs", false );
-			QString dir = json.getString( "directory" );
-			if (!dir.isEmpty()) {  // non-existing element directory -> skip completely
-				if (QDir( dir ).exists()) {
-					iwadDir = pathHelper.convertPath( dir );
-				} else {
-					QMessageBox::warning( this, "IWAD dir no longer exists",
-						"IWAD directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
-				}
-			}
+			verifyDir( iwadSettings.dir, "IWAD directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 		}
 		else
 		{
@@ -1223,17 +1208,15 @@ void MainWindow::loadOptions( const QString & fileName )
 						continue;
 
 					IWAD iwad;
-					iwad.path = pathHelper.convertPath( json.getString( "path" ) );
-					iwad.name = json.getString( "name", QFileInfo( iwad.path ).fileName() );
-					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // name or path doesn't exist - skip this entry
+					deserialize( json, iwad );
+
+					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
 						continue;
 
-					if (QFileInfo( iwad.path ).exists()) {
-						iwadModel.append( iwad );
-					} else {
-						QMessageBox::warning( this, "IWAD no longer exists",
-							"An IWAD from the saved options ("%iwad.path%") no longer exists. It will be removed from the list." );
-					}
+					if (!verifyFile( iwad.path, "An IWAD from the saved options (%1) no longer exists. It will be removed from the list." ))
+						continue;
+
+					iwadModel.append( std::move( iwad ) );
 
 					json.exitObject();
 				}
@@ -1250,15 +1233,9 @@ void MainWindow::loadOptions( const QString & fileName )
 	{
 		deselectSelectedItems( ui->mapDirView );
 
-		QString dir = json.getString( "directory" );
-		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
-			if (QDir( dir ).exists()) {
-				mapDir = pathHelper.convertPath( dir );
-			} else {
-				QMessageBox::warning( this, "Map dir no longer exists",
-					"Map directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
-			}
-		}
+		deserialize( json, mapSettings );
+
+		verifyDir( mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 
 		json.exitObject();
 	}
@@ -1267,15 +1244,9 @@ void MainWindow::loadOptions( const QString & fileName )
 	{
 		deselectSelectedItems( ui->modListView );
 
-		QString dir = json.getString( "directory" );
-		if (!dir.isEmpty()) {  // non-existing element directory - skip completely
-			if (QDir( dir ).exists()) {
-				modDir = pathHelper.convertPath( dir );
-			} else {
-				QMessageBox::warning( this, "Mod dir no longer exists",
-					"Mod directory from the saved options ("%dir%") no longer exists. Please update it in Menu -> Setup." );
-			}
-		}
+		deserialize( json, modSettings );
+
+		verifyDir( modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 
 		json.exitObject();
 	}
@@ -1295,44 +1266,9 @@ void MainWindow::loadOptions( const QString & fileName )
 				continue;
 
 			Preset preset;
-			preset.name = json.getString( "name", "<missing name>" );
-			preset.selectedEnginePath = pathHelper.convertPath( json.getString( "selected_engine" ) );
-			preset.selectedConfig = json.getString( "selected_config" );
-			preset.selectedIWAD = json.getString( "selected_IWAD" );
-			preset.cmdArgs = json.getString( "additional_args" );
+			deserialize( json, preset );
 
-			if (json.enterArray( "selected_mappacks" ))
-			{
-				for (int i = 0; i < json.arraySize(); i++)
-				{
-					QString selectedMapPack = json.getString( i );
-					if (!selectedMapPack.isEmpty()) {
-						preset.selectedMapPacks.append( TreePosition( selectedMapPack ) );
-					}
-				}
-				json.exitArray();
-			}
-
-			if (json.enterArray( "mods" ))
-			{
-				for (int i = 0; i < json.arraySize(); i++)
-				{
-					if (!json.enterObject( i ))  // wrong type on position i - skip this entry
-						continue;
-
-					QString path = json.getString( "path" );
-					bool checked = json.getBool( "checked", false );
-					if (!path.isEmpty()) {
-						QFileInfo file( pathHelper.convertPath( path ) );
-						preset.mods.append( Mod( file, checked ) );
-					}
-
-					json.exitObject();
-				}
-				json.exitArray();
-			}
-
-			presetModel.append( preset );
+			presetModel.append( std::move( preset ) );
 
 			json.exitObject();
 		}
@@ -1345,18 +1281,65 @@ void MainWindow::loadOptions( const QString & fileName )
 	ui->globalCmdArgsLine->setText( json.getString( "additional_args" ) );
 
 	// launch options
-	gameOpts.flags1 = json.getInt( "dmflags1", 0 );
-	gameOpts.flags2 = json.getInt( "dmflags2", 0 );
-	compatOpts.flags1 = json.getInt( "compatflags1", 0 );
-	compatOpts.flags2 = json.getInt( "compatflags2", 0 );
+	if (json.enterObject( "options" ))
+	{
+		deserialize( json, opts );
 
-	file.close();
+		json.exitObject();
+	}
+
+	// make sure all paths loaded from JSON are stored in correct format
+	toggleAbsolutePaths( pathHelper.useAbsolutePaths() );
 
 	optionsCorrupted = false;
 
+	file.close();
+
 	updateListsFromDirs();
 
+	// this must be done after the lists are already updated because we want to select existing item in combo boxes
+	restoreLaunchOptions( opts );
+
 	updateLaunchCommand();
+}
+
+void MainWindow::restoreLaunchOptions( const LaunchOptions & opts )
+{
+	if (opts.mode == STANDARD)
+		ui->launchMode_standard->click();
+	else if (opts.mode == LAUNCH_MAP)
+		ui->launchMode_map->click();
+	else if (opts.mode == LOAD_SAVE)
+		ui->launchMode_savefile->click();
+
+	ui->mapCmbBox->setCurrentText( opts.mapName );
+
+	if (!opts.saveFile.isEmpty()) {
+		int saveFileIdx = findSuch( saveModel.list(), [ &opts ]( const SaveFile & save ) { return save.fileName == opts.saveFile; } );
+		if (saveFileIdx >= 0) {
+			ui->saveFileCmbBox->setCurrentIndex( saveFileIdx );
+		} else {
+			ui->saveFileCmbBox->setCurrentIndex( -1 );
+			QMessageBox::warning( this, "Save file no longer exists",
+				"Save file \""%opts.saveFile%"\" no longer exists, please select another one." );
+		}
+	}
+
+	ui->skillSpinBox->setValue( int( opts.skillNum ) );
+
+	ui->noMonstersChkBox->setChecked( opts.noMonsters );
+	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
+	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
+
+	ui->multiplayerChkBox->setChecked( opts.isMultiplayer );
+	ui->multRoleCmbBox->setCurrentIndex( int( opts.multRole ) );
+	ui->hostnameLine->setText( opts.hostName );
+	ui->portSpinBox->setValue( opts.port );
+	ui->netModeCmbBox->setCurrentIndex( int( opts.netMode ) );
+	ui->gameModeCmbBox->setCurrentIndex( int( opts.gameMode ) );
+	ui->playerCountSpinBox->setValue( int( opts.playerCount ) );
+	ui->teamDmgSpinBox->setValue( opts.teamDamage );
+	ui->timeLimitSpinBox->setValue( int( opts.timeLimit ) );
 }
 
 void MainWindow::exportPreset()
@@ -1386,8 +1369,6 @@ void MainWindow::exportPreset()
 
 	file.close();
 }
-
-#include "QDebug"
 
 void MainWindow::importPreset()
 {
@@ -1461,30 +1442,39 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx >= 0) {
-		cmdStream << "\"" << base.rebasePath( engineModel[ selectedEngineIdx ].path ) << "\"";
+		const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
+
+		//verifyFile( selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
+		cmdStream << "\"" << base.rebasePath( selectedEngine.path ) << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx >= 0) {
-			QDir configDir( engineModel[ selectedEngineIdx ].configDir );
+			QDir configDir( selectedEngine.configDir );
 			QString configPath = configDir.filePath( configModel[ configIdx ].fileName );
+
+			//verifyFile( configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
 			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
 	}
 
 	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
 	if (selectedIwadIdx >= 0) {
+		//verifyFile( iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please update it in Menu -> Setup." );
 		cmdStream << " -iwad \"" << base.rebasePath( iwadModel[ selectedIwadIdx ].path ) << "\"";
 	}
 
 	for (QModelIndex & selectedMapIdx : getSelectedItemIdxs( ui->mapDirView )) {
 		if (selectedMapIdx.isValid()) {
-			cmdStream << " -file \"" << base.rebasePath( mapModel.getFSPath( selectedMapIdx ) ) << "\"";
+			QString mapFilePath = mapModel.getFSPath( selectedMapIdx );
+			//verifyFile( mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
+			cmdStream << " -file \"" << base.rebasePath( mapFilePath ) << "\"";
 		}
 	}
 
 	for (const Mod & mod : modModel) {
 		if (mod.checked) {
-			if (QFileInfo(mod.path).suffix() == "deh")
+			//verifyFile( mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
+			if (QFileInfo( mod.path ).suffix() == "deh")
 				cmdStream << " -deh \"" << base.rebasePath( mod.path ) << "\"";
 			else
 				cmdStream << " -file \"" << base.rebasePath( mod.path ) << "\"";
@@ -1500,10 +1490,10 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 			cmdStream << " -fast";
 		if (ui->monstersRespawnChkBox->isChecked())
 			cmdStream << " -respawn";
-		if (gameOpts.flags1 != 0)
-			cmdStream << " +dmflags " << QString::number( gameOpts.flags1 );
-		if (gameOpts.flags2 != 0)
-			cmdStream << " +dmflags2 " << QString::number( gameOpts.flags2 );
+		if (opts.gameOpts.flags1 != 0)
+			cmdStream << " +dmflags " << QString::number( opts.gameOpts.flags1 );
+		if (opts.gameOpts.flags2 != 0)
+			cmdStream << " +dmflags2 " << QString::number( opts.gameOpts.flags2 );
 		if (!compatOptsCmdArgs.isEmpty()) {
 			cmdStream << " " << compatOptsCmdArgs;
 		}
@@ -1536,7 +1526,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 				break;
 			 default:
 				QMessageBox::critical( this, "Invalid game mode index",
-					"The game mode index is out of range. This shouldn't be happening and it is a bug. Please create an issue on Github page." );
+					"The game mode index is out of range. This is a bug, please create an issue on Github page." );
 			}
 			if (ui->teamDmgSpinBox->value() != 0.0)
 				cmdStream << " +teamdamage " << QString::number( ui->teamDmgSpinBox->value(), 'f', 2 );
@@ -1549,7 +1539,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 			break;
 		 default:
 			QMessageBox::critical( this, "Invalid multiplayer role index",
-				"The multiplayer role index is out of range. This shouldn't be happening and it is a bug. Please create an issue on Github page." );
+				"The multiplayer role index is out of range. This is a bug, please create an issue on Github page." );
 		}
 	}
 

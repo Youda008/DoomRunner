@@ -6,8 +6,8 @@
 // Description: JSON parsing helpers
 //======================================================================================================================
 
-#ifndef JSON_HELPER_INCLUDED
-#define JSON_HELPER_INCLUDED
+#ifndef JSON_UTILS_INCLUDED
+#define JSON_UTILS_INCLUDED
 
 
 #include "Common.hpp"
@@ -17,7 +17,16 @@
 #include <QJsonValue>
 #include <QJsonObject>
 #include <QJsonArray>
-class QWidget;
+
+
+//======================================================================================================================
+//  in order for the getEnum method to work, the author of the enum must specialize the following templates
+
+template< typename Enum >
+const char * enumName() { return "unknown"; }
+
+template< typename Enum >
+uint enumSize() { return 0; }
 
 
 //======================================================================================================================
@@ -50,14 +59,28 @@ class JsonContext {
 	bool getBool( const char * key, bool defaultVal );
 	int getInt( const char * key, int defaultVal );
 	uint getUInt( const char * key, uint defaultVal );
+	uint16_t getUInt16( const char * key, uint16_t defaultVal );
 	double getDouble( const char * key, double defaultVal );
 	QString getString( const char * key, const QString & defaultVal = QString() );
 
 	bool getBool( int index, bool defaultVal );
 	int getInt( int index, int defaultVal );
 	uint getUInt( int index, uint defaultVal );
+	uint16_t getUInt16( int index, uint16_t defaultVal );
 	double getDouble( int index, double defaultVal );
 	QString getString( int index, const QString & defaultVal = QString() );
+
+	template< typename Enum >
+	Enum getEnum( const char * key, Enum defaultVal )
+	{
+		uint intVal = getUInt( key, 0 );
+		if (intVal <= enumSize< Enum >()) {
+			return Enum( intVal );
+		} else {
+			invalidTypeAtKey( key, enumName< Enum >() );
+			return defaultVal;
+		}
+	}
 
  private:
 
@@ -66,6 +89,8 @@ class JsonContext {
 	void indexOutOfBounds( int index );
 	void invalidTypeAtKey( const QString & key, const QString & expectedType );
 	void invalidTypeAtIdx( int index, const QString & expectedType );
+
+ private:
 
 	QString elemPath( const QString & elemName );
 	QString elemPath( int index );
@@ -103,4 +128,4 @@ class JsonContext {
 };
 
 
-#endif // JSON_HELPER_INCLUDED
+#endif // JSON_UTILS_INCLUDED

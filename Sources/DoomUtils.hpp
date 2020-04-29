@@ -13,6 +13,7 @@
 #include "Common.hpp"
 
 class QString;
+class QFileInfo;
 
 
 //======================================================================================================================
@@ -28,10 +29,16 @@ enum class WadType {
 	PWAD,
 	NEITHER
 };
-/// this actually opens and reads the file, so don't call it very often, instead cache the results
+
+/** this actually opens and reads the file, so don't call it very often, instead used the cached results below */
 WadType recognizeWadTypeByHeader( const QString & filePath );
 
+/** returns last known WAD type for this file path */
+WadType getCachedWadType( const QFileInfo & file );
 
+// convenience wrappers to be used, where otherwise lambda would have to be written
+bool isIWAD( const QFileInfo & file );
+bool isMapPack( const QFileInfo & file );
 
 
 #endif // DOOM_UTILS_INCLUDED

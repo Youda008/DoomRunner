@@ -10,36 +10,44 @@
 #include "ui_SetupDialog.h"
 
 #include "EngineDialog.hpp"
-#include "SharedData.hpp"
 #include "WidgetUtils.hpp"
+#include "DoomUtils.hpp"
 
 #include <QString>
 #include <QStringBuilder>
 #include <QDir>
-#include <QDirIterator>
 #include <QFileInfo>
 #include <QFileDialog>
 
 
 //======================================================================================================================
+//  local helpers
+
+bool isValidDir( const QString & dirPath )
+{
+	return !dirPath.isEmpty() && QDir( dirPath ).exists();
+}
+
+
+//======================================================================================================================
 //  SetupDialog
 
-SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir, const QList< Engine > & engines,
-                          const QList< IWAD > & iwads, bool iwadListFromDir, const QString & iwadDir, bool iwadSubdirs,
-                          const QString & mapDir, const QString & modDir )
-	: QDialog( parent )
-	, pathHelper( useAbsolutePaths, baseDir )
-	, engineModel( engines,
-		/*makeDisplayString*/[]( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
-	  )
-	, iwadModel( iwads,
-		/*makeDisplayString*/[]( const IWAD & iwad ) -> QString { return iwad.name % "  [" % iwad.path % "]"; }
-	  )
-	, iwadListFromDir( iwadListFromDir )
-	, iwadDir( iwadDir )
-	, iwadSubdirs( iwadSubdirs )
-	, mapDir( mapDir )
-	, modDir( modDir )
+SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir,
+                          const QList< Engine > & engineList,
+                          const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
+                          const MapSettings & mapSettings, const ModSettings & modSettings )
+:
+	QDialog( parent ),
+	pathHelper( useAbsolutePaths, baseDir ),
+	engineModel( engineList,
+		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
+	),
+	iwadModel( iwadList,
+		/*makeDisplayString*/ []( const IWAD & iwad ) -> QString { return iwad.name % "  [" % iwad.path % "]"; }
+	),
+	iwadSettings( iwadSettings ),
+	mapSettings( mapSettings ),
+	modSettings( modSettings )
 {
 	ui = new Ui::SetupDialog;
 	ui->setupUi(this);
@@ -56,19 +64,19 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	ui->iwadListView->setModel( &iwadModel );
 	iwadModel.setPathHelper( &pathHelper );
 	ui->iwadListView->toggleNameEditing( false );
-	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadListFromDir );
+	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadSettings.updateFromDir );
 	ui->iwadListView->toggleInterWidgetDragAndDrop( false );
-	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadListFromDir );
+	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );
 
 	// initialize widget data
-	if (iwadListFromDir) {
+	if (iwadSettings.updateFromDir) {
 		ui->manageIWADs_auto->click();
 		manageIWADsAutomatically();
 	}
-	ui->iwadDirLine->setText( iwadDir );
-	ui->iwadSubdirs->setChecked( iwadSubdirs );
-	ui->mapDirLine->setText( mapDir );
-	ui->modDirLine->setText( modDir );
+	ui->iwadDirLine->setText( iwadSettings.dir );
+	ui->iwadSubdirs->setChecked( iwadSettings.searchSubdirs );
+	ui->mapDirLine->setText( mapSettings.dir );
+	ui->modDirLine->setText( modSettings.dir );
 	ui->absolutePathsChkBox->setChecked( pathHelper.useAbsolutePaths() );
 
 	// setup signals
@@ -110,6 +118,16 @@ void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
 	QDialog::timerEvent( event );
 
 	tickCount++;
+
+ #ifdef QT_DEBUG
+	constexpr uint dirUpdateDelay = 8;
+ #else
+	constexpr uint dirUpdateDelay = 2;
+ #endif
+	if (tickCount % dirUpdateDelay == 0) {
+		if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
+			updateIWADsFromDir();
+	}
 }
 
 SetupDialog::~SetupDialog()
@@ -133,7 +151,7 @@ void SetupDialog::manageIWADsAutomatically()
 
 void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 {
-	iwadListFromDir = enabled;
+	iwadSettings.updateFromDir = enabled;
 
 	ui->iwadDirLine->setEnabled( enabled );
 	ui->iwadDirBtn->setEnabled( enabled );
@@ -146,15 +164,15 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadListView->toggleIntraWidgetDragAndDrop( !enabled );
 	ui->iwadListView->toggleExternalFileDragAndDrop( !enabled );
 
-	if (enabled && QDir( iwadDir ).exists())
+	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
 		updateIWADsFromDir();
 }
 
 void SetupDialog::toggleIWADSubdirs( bool checked )
 {
-	iwadSubdirs = checked;
+	iwadSettings.searchSubdirs = checked;
 
-	if (iwadListFromDir && QDir( iwadDir ).exists())
+	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
 		updateIWADsFromDir();
 }
 
@@ -191,20 +209,20 @@ void SetupDialog::browseDir( const QString & dirPurpose, QLineEdit * targetLine 
 
 void SetupDialog::changeIWADDir( const QString & text )
 {
-	iwadDir = text;
+	iwadSettings.dir = text;
 
-	if (iwadListFromDir && QDir( iwadDir ).exists())
+	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
 		updateIWADsFromDir();
 }
 
 void SetupDialog::changeMapDir( const QString & text )
 {
-	mapDir = text;
+	mapSettings.dir = text;
 }
 
 void SetupDialog::changeModDir( const QString & text )
 {
-	modDir = text;
+	modSettings.dir = text;
 }
 
 void SetupDialog::iwadAdd()
@@ -277,7 +295,7 @@ void SetupDialog::editEngine( const QModelIndex & index )
 
 void SetupDialog::updateIWADsFromDir()
 {
-	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadDir, iwadSubdirs, pathHelper, isIWAD );
+	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathHelper, isIWAD );
 }
 
 void SetupDialog::toggleAbsolutePaths( bool checked )
@@ -288,18 +306,17 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 		engine.path = pathHelper.convertPath( engine.path );
 	engineModel.contentChanged( 0 );
 
-	if (iwadListFromDir && !iwadDir.isEmpty())
-		iwadDir = pathHelper.convertPath( iwadDir );
-	ui->iwadDirLine->setText( iwadDir );
+	iwadSettings.dir = pathHelper.convertPath( iwadSettings.dir );
+	ui->iwadDirLine->setText( iwadSettings.dir );
 	for (IWAD & iwad : iwadModel)
 		iwad.path = pathHelper.convertPath( iwad.path );
 	iwadModel.contentChanged( 0 );
 
-	mapDir = pathHelper.convertPath( mapDir );
-	ui->mapDirLine->setText( mapDir );
+	mapSettings.dir = pathHelper.convertPath( mapSettings.dir );
+	ui->mapDirLine->setText( mapSettings.dir );
 
-	modDir = pathHelper.convertPath( modDir );
-	ui->modDirLine->setText( modDir );
+	modSettings.dir = pathHelper.convertPath( modSettings.dir );
+	ui->modDirLine->setText( modSettings.dir );
 }
 
 void SetupDialog::closeDialog()

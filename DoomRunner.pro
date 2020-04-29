@@ -43,7 +43,7 @@ SOURCES += \
     Sources/ListModel.cpp \
     Sources/MainWindow.cpp \
     Sources/SetupDialog.cpp \
-    Sources/SharedData.cpp \
+    Sources/UserData.cpp \
     Sources/WidgetUtils.cpp \
     Sources/main.cpp
 
@@ -62,7 +62,7 @@ HEADERS += \
     Sources/ListModel.hpp \
     Sources/MainWindow.hpp \
     Sources/SetupDialog.hpp \
-    Sources/SharedData.hpp \
+    Sources/UserData.hpp \
     Sources/WidgetUtils.hpp
 
 FORMS += \

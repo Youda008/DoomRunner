@@ -12,13 +12,14 @@
 
 #include "Common.hpp"
 
-#include "SharedData.hpp"
+#include "UserData.hpp"
 #include "ListModel.hpp"
 #include "DirTreeModel.hpp"
 #include "FileSystemUtils.hpp"  // PathHelper
 
 #include <QMainWindow>
 #include <QString>
+#include <QFileInfo>
 
 class QListView;
 
@@ -40,7 +41,7 @@ class MainWindow : public QMainWindow {
 	explicit MainWindow();
 	virtual ~MainWindow() override;
 
- private: //methods
+ private:// methods
 
 	virtual void timerEvent( QTimerEvent * event ) override;
 	virtual void closeEvent( QCloseEvent * event ) override;
@@ -55,13 +56,12 @@ class MainWindow : public QMainWindow {
 	void runAboutDialog();
 
 	void loadPreset( const QModelIndex & index );
+
 	void selectEngine( int index );
 	void selectConfig( int index );
 	void toggleIWAD( const QModelIndex & index );
 	void toggleMapPack( const QModelIndex & index );
 	void toggleMod( const QModelIndex & index );
-
-	void togglePresetSubWidgets( bool enabled );
 
 	void presetAdd();
 	void presetDelete();
@@ -75,17 +75,8 @@ class MainWindow : public QMainWindow {
 	void modMoveDown();
 	void modsDropped( int row, int count );
 
-	void updateIWADsFromDir();
-	void updateMapPacksFromDir();
-	void updateSaveFilesFromDir();
-	void updateConfigFilesFromDir();
-	void updateMapsFromIWAD();
-	void updateListsFromDirs();
-
-	void toggleAbsolutePaths( bool absolute );
-
 	void modeStandard();
-	void modeSelectedMap();
+	void modeLaunchMap();
 	void modeSavedGame();
 
 	void selectMap( const QString & map );
@@ -106,21 +97,36 @@ class MainWindow : public QMainWindow {
 	void changeTeamDamage( double damage );
 	void changeTimeLimit( int limit );
 
-	void saveOptions( const QString & fileName );
-	void loadOptions( const QString & fileName );
-
 	void exportPreset();
 	void importPreset();
 
 	void updatePresetCmdArgs( const QString & text );
 	void updateGlobalCmdArgs( const QString & text );
 
-	QString generateLaunchCommand( QString baseDir = "" );
-	void updateLaunchCommand();
-
 	void launch();
 
- private: //members
+ private:// methods
+
+	void toggleAbsolutePaths( bool absolute );
+
+	void togglePresetSubWidgets( bool enabled );
+
+	void restoreLaunchOptions( const LaunchOptions & opts );
+
+	void updateListsFromDirs();
+	void updateIWADsFromDir();
+	void updateMapPacksFromDir();
+	void updateSaveFilesFromDir();
+	void updateConfigFilesFromDir();
+	void updateMapsFromIWAD();
+
+	void saveOptions( const QString & fileName );
+	void loadOptions( const QString & fileName );
+
+	void updateLaunchCommand();
+	QString generateLaunchCommand( QString baseDir = "" );
+
+ private:// members
 
 	Ui::MainWindow * ui;
 
@@ -137,27 +143,32 @@ class MainWindow : public QMainWindow {
 
 	ReadOnlyListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
 
+	struct ConfigFile {
+		QString fileName;
+		ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
+	};
 	ReadOnlyListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
 
+	struct SaveFile {
+		QString fileName;
+		SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
+	};
 	ReadOnlyListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
 
 	ReadOnlyListModel< IWAD > iwadModel;    ///< user-ordered list of iwads (managed by SetupDialog)
-	bool iwadListFromDir;    ///< whether the IWAD list should be periodically updated from a directory (value returned by SetupDialog)
-	QString iwadDir;    ///< directory to update IWAD list from (value returned by SetupDialog)
-	bool iwadSubdirs;    ///< whether to search for IWADs recursivelly in subdirectories
-	QString selectedIWAD;    ///< which IWAD was selected last (workaround to allow user to deselect IWAD by clicking it again)
+	IwadSettings iwadSettings;    ///< IWAD-related preferences (value returned by SetupDialog)
+	QString selectedIWAD;   ///< which IWAD was selected last (workaround to allow user to deselect IWAD by clicking it again)
 
 	DirTreeModel mapModel;    ///< model owning a tree structure representing a directory with map files
-	QString mapDir;    ///< directory with map packs to automatically load the list from (value returned by SetupDialog)
+	MapSettings mapSettings;    ///< map-related preferences (value returned by SetupDialog)
 
 	EditableListModel< Mod > modModel;
-	QString modDir;    ///< directory with mods, starting dir for "Add mod" dialog (value returned by SetupDialog)
+	ModSettings modSettings;    ///< mod-related preferences (value returned by SetupDialog)
 
 	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 
-	// options managed by GameOptsDialog and CompatOptsDialog
-	GameplayOptions gameOpts;
-	CompatibilityOptions compatOpts;
+	LaunchOptions opts;
+
 	QString compatOptsCmdArgs;    ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 };

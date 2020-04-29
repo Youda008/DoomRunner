@@ -12,7 +12,7 @@
 
 #include "Common.hpp"
 
-#include "SharedData.hpp"  // Engine, IWAD
+#include "UserData.hpp"  // Engine, IWAD
 #include "ListModel.hpp"
 #include "FileSystemUtils.hpp"  // PathHelper
 
@@ -20,7 +20,6 @@
 
 class QDir;
 class QLineEdit;
-class PathHelper;
 
 namespace Ui {
 	class SetupDialog;
@@ -37,9 +36,10 @@ class SetupDialog : public QDialog {
 
  public:
 
-	explicit SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir, const QList< Engine > & engines,
-	                      const QList< IWAD > & iwads, bool iwadListFromDir, const QString & iwadDir, bool iwadSubdirs,
-	                      const QString & mapDir, const QString & modDir );
+	explicit SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir,
+	                      const QList< Engine > & engineList,
+	                      const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
+	                      const MapSettings & mapSettings, const ModSettings & modSettings );
 	virtual ~SetupDialog() override;
 
  private:
@@ -93,18 +93,14 @@ class SetupDialog : public QDialog {
 
 	PathHelper pathHelper;
 
-	// engine info
 	EditableListModel< Engine > engineModel;
 
-	// IWAD info
 	EditableListModel< IWAD > iwadModel;
-	bool iwadListFromDir;
-	QString iwadDir;
-	bool iwadSubdirs;
+	IwadSettings iwadSettings;
 
-	// additional paths
-	QString mapDir;
-	QString modDir;
+	MapSettings mapSettings;
+
+	ModSettings modSettings;
 
 };
 

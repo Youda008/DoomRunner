@@ -202,7 +202,7 @@ void EditableListView::toggleNameEditing( bool enabled )
 	allowEditNames = enabled;
 
 	if (enabled)
-		setEditTriggers( QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed );
+		setEditTriggers( QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed );
 	else
 		setEditTriggers( QAbstractItemView::NoEditTriggers );
 }

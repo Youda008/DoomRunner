@@ -65,7 +65,8 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	// setup iwad view
 	ui->iwadListView->setModel( &iwadModel );
 	iwadModel.setPathHelper( &pathHelper );
-	ui->iwadListView->toggleNameEditing( false );
+	iwadModel.setEditStringFunc( []( IWAD & iwad ) -> QString & { return iwad.name; } );
+	ui->iwadListView->toggleNameEditing( !iwadSettings.updateFromDir );
 	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadSettings.updateFromDir );
 	ui->iwadListView->toggleInterWidgetDragAndDrop( false );
 	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );

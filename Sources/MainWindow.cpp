@@ -228,6 +228,17 @@ void MainWindow::onWindowShown()
 	else  // this is a first run, perform an initial setup
 		runSetupDialog();
 
+	// if the presets are empty or none is selected, add a default one so that users don't complain that they can't enter anything
+	if (!isSomethingSelected( ui->presetListView )) {
+		int defaultPresetIdx = findSuch( presetModel, []( const Preset & preset ) { return preset.name == "Default"; } );
+		if (defaultPresetIdx < 0) {
+			prependItem( ui->presetListView, presetModel, { "Default" } );
+			defaultPresetIdx = 0;
+		}
+		selectItemByIdx( ui->presetListView, defaultPresetIdx );
+		loadPreset( presetModel.makeIndex( defaultPresetIdx ) );
+	}
+
 	// setup an update timer
 	startTimer( 1000 );
 }
@@ -1143,9 +1154,6 @@ void MainWindow::saveOptions( const QString & fileName )
 			jsPresetArray.append( jsPreset );
 		}
 		json["presets"] = jsPresetArray;
-
-		int presetIdx = getSelectedItemIdx( ui->presetListView );
-		json["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
 	}
 
 	json["additional_args"] = ui->globalCmdArgsLine->text();
@@ -1154,6 +1162,9 @@ void MainWindow::saveOptions( const QString & fileName )
 	if (optsStorage == STORE_GLOBALLY) {
 		json["options"] = serialize( opts );
 	}
+
+	int presetIdx = getSelectedItemIdx( ui->presetListView );
+	json["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
 
 	QJsonDocument jsonDoc( json );
 	file.write( jsonDoc.toJson() );
@@ -1358,6 +1369,20 @@ void MainWindow::loadOptions( const QString & fileName )
 
 	// this must be done after the lists are already updated because we want to select existing item in combo boxes
 	restoreLaunchOptions( opts );
+
+	// load the last selected preset
+	QString selectedPreset = json.getString( "selected_preset" );
+	if (!selectedPreset.isEmpty()) {
+		int selectedPresetIdx = findSuch( presetModel, [ selectedPreset ]( const Preset & preset )
+		                                                                 { return preset.name == selectedPreset; } );
+		if (selectedPresetIdx >= 0) {
+			selectItemByIdx( ui->presetListView, selectedPresetIdx );
+			loadPreset( presetModel.makeIndex( selectedPresetIdx ) );
+		} else {
+			QMessageBox::warning( nullptr, "Preset no longer exists",
+				"Preset that was selected last time ("%selectedPreset%") no longer exists. Did you mess up with the options.json?" );
+		}
+	}
 
 	updateLaunchCommand();
 }

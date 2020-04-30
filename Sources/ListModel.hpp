@@ -107,12 +107,13 @@ class AListModel : public DropTargetListModel {
 	Item & operator[]( int idx )                  { return itemList[ idx ]; }
 	const Item & operator[]( int idx ) const      { return itemList[ idx ]; }
 	decltype( itemList.begin() ) begin()          { return itemList.begin(); }
-	decltype( itemList.begin() ) begin() const    { return itemList.begin(); }
+	decltype( itemList.cbegin() ) begin() const   { return itemList.begin(); }
 	decltype( itemList.end() ) end()              { return itemList.end(); }
-	decltype( itemList.end() ) end() const        { return itemList.end(); }
+	decltype( itemList.cend() ) end() const       { return itemList.end(); }
 	void clear()                                  { itemList.clear(); }
 	void append( const Item & item )              { itemList.append( item ); }
 	void prepend( const Item & item )             { itemList.prepend( item ); }
+	void insert( int idx, const Item & item )     { itemList.insert( idx, item ); }
 	void removeAt( int idx )                      { itemList.removeAt( idx ); }
 	void move( int from, int to )                 { itemList.move( from, to ); }
 	int indexOf( const Item & item ) const        { return itemList.indexOf( item ); }
@@ -139,6 +140,15 @@ class AListModel : public DropTargetListModel {
 		beginInsertRows( QModelIndex(), itemList.size(), itemList.size() + count );
 	}
 	void finishAppending()
+	{
+		endInsertRows();
+	}
+
+	void startInserting( int row )
+	{
+		beginInsertRows( QModelIndex(), row, row + 1 );
+	}
+	void finishInserting()
 	{
 		endInsertRows();
 	}

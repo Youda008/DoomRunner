@@ -49,13 +49,15 @@ void changeSelectionTo( QListView * view, int index );
 //  button actions
 
 template< typename Item >
-void appendItem( AListModel< Item > & model, const Item & item )
+void appendItem( QListView * view, AListModel< Item > & model, const Item & item )
 {
 	model.startAppending( 1 );
 
 	model.append( item );
 
 	model.finishAppending();
+
+	changeSelectionTo( view, model.size() - 1 );
 }
 
 template< typename Item >
@@ -70,11 +72,11 @@ int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 
 	deselectItemByIdx( view, selectedIdx );
 
-	model.startCompleteUpdate();
+	model.startDeleting( selectedIdx );
 
 	model.removeAt( selectedIdx );
 
-	model.finishCompleteUpdate();
+	model.finishDeleting();
 
 	// restore selection
 	if (selectedIdx < model.size()) {                  // try to select the item that follows after the deleted one
@@ -138,7 +140,7 @@ int cloneSelectedItem( QListView * view, AListModel< Item > & model )
 		return -1;
 	}
 
-	model.startAppending();
+	model.startAppending( 1 );
 
 	model.append( model[ selectedIdx ] );
 

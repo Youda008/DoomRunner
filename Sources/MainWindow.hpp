@@ -110,6 +110,7 @@ class MainWindow : public QMainWindow {
 	void toggleAbsolutePaths( bool absolute );
 
 	void togglePresetSubWidgets( bool enabled );
+	void clearPresetSubWidgets();
 
 	void restoreLaunchOptions( const LaunchOptions & opts );
 

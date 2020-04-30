@@ -382,17 +382,23 @@ void MainWindow::runAboutDialog()
 //----------------------------------------------------------------------------------------------------------------------
 //  preset loading
 
-void MainWindow::loadPreset( const QModelIndex & index )
+void MainWindow::loadPreset( const QModelIndex & /*index*/ )
 {
-	Preset & preset = presetModel[ index.row() ];
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx < 0) {  // the preset was actually deselected with CTRL
+		clearPresetSubWidgets();
+		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
+		return;
+	}
 
-	// enable all widgets that contain preset settings
-	togglePresetSubWidgets( true );
+	togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
+
+	Preset & preset = presetModel[ selectedPresetIdx ];
 
 	// restore selected engine
 	if (!preset.selectedEnginePath.isEmpty()) {  // the engine combo box might have been empty when creating this preset
-		int engineIdx = findSuch( engineModel.list(), [ &preset ]( const Engine & engine )
-		                                                         { return engine.path == preset.selectedEnginePath; } );
+		int engineIdx = findSuch( engineModel, [ &preset ]( const Engine & engine )
+		                                                  { return engine.path == preset.selectedEnginePath; } );
 		if (engineIdx >= 0) {
 			verifyFile( preset.selectedEnginePath,
 				"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please select another one." );
@@ -408,8 +414,8 @@ void MainWindow::loadPreset( const QModelIndex & index )
 
 	// restore selected config
 	if (!preset.selectedConfig.isEmpty()) {  // the preset combo box might have been empty when creating this preset
-		int configIdx = findSuch( configModel.list(), [ &preset ]( const ConfigFile & config )
-		                                                         { return config.fileName == preset.selectedConfig; } );
+		int configIdx = findSuch( configModel, [ &preset ]( const ConfigFile & config )
+		                                                  { return config.fileName == preset.selectedConfig; } );
 		if (configIdx >= 0) {
 			ui->configCmbBox->setCurrentIndex( configIdx );
 		} else {
@@ -425,8 +431,8 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	deselectSelectedItems( ui->iwadListView );
 	selectedIWAD.clear();
 	if (!preset.selectedIWAD.isEmpty()) {  // the IWAD may have not been selected when creating this preset
-		int iwadIdx = findSuch( iwadModel.list(), [ &preset ]( const IWAD & iwad )
-		                                                     { return iwad.name == preset.selectedIWAD; } );
+		int iwadIdx = findSuch( iwadModel, [ &preset ]( const IWAD & iwad )
+		                                              { return iwad.path == preset.selectedIWAD; } );
 		if (iwadIdx >= 0) {
 			selectItemByIdx( ui->iwadListView, iwadIdx );
 			selectedIWAD = preset.selectedIWAD;
@@ -479,20 +485,6 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	updateLaunchCommand();
 }
 
-void MainWindow::togglePresetSubWidgets( bool enabled )
-{
-	ui->engineCmbBox->setEnabled( enabled );
-	ui->configCmbBox->setEnabled( enabled );
-	ui->iwadListView->setEnabled( enabled );
-	ui->mapDirView->setEnabled( enabled );
-	ui->modListView->setEnabled( enabled );
-	ui->modBtnAdd->setEnabled( enabled );
-	ui->modBtnDel->setEnabled( enabled );
-	ui->modBtnUp->setEnabled( enabled );
-	ui->modBtnDown->setEnabled( enabled );
-	ui->presetCmdArgsLine->setEnabled( enabled );
-}
-
 
 //----------------------------------------------------------------------------------------------------------------------
 //  item selection
@@ -530,7 +522,7 @@ void MainWindow::selectConfig( int index )
 
 void MainWindow::toggleIWAD( const QModelIndex & index )
 {
-	QString clickedIWAD = iwadModel[ index.row() ].name;
+	QString clickedIWAD = iwadModel[ index.row() ].path;
 
 	// allow the user to deselect the IWAD by clicking on it again
 	if (clickedIWAD == selectedIWAD) {
@@ -585,18 +577,11 @@ void MainWindow::presetAdd()
 {
   static uint presetNum = 1;
 
-	appendItem( presetModel, { "Preset"+QString::number( presetNum++ ) } );
+	appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum++ ) } );
 
 	// clear the widgets to represent an empty preset
 	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will clear the prev preset
-	ui->engineCmbBox->setCurrentIndex( -1 );
-	ui->configCmbBox->setCurrentIndex( -1 );
-	deselectSelectedItems( ui->iwadListView );
-	selectedIWAD.clear();
-	deselectSelectedItems( ui->modListView );
-	modModel.startCompleteUpdate();
-	modModel.clear();
-	modModel.finishCompleteUpdate();
+	clearPresetSubWidgets();
 
 	// open edit mode so that user can name the preset
 	ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );
@@ -606,13 +591,19 @@ void MainWindow::presetDelete()
 {
 	deleteSelectedItem( ui->presetListView, presetModel );
 
-	if (presetModel.isEmpty())  // no preset selected -> nowhere to save the IWAD/map/engine/config selection
-		togglePresetSubWidgets( false );
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx >= 0) {
+		loadPreset( presetModel.makeIndex( selectedPresetIdx ) );
+	} else {
+		clearPresetSubWidgets();
+		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
+	}
 }
 
 void MainWindow::presetClone()
 {
 	int origIdx = cloneSelectedItem( ui->presetListView, presetModel );
+
 	if (origIdx >= 0) {
 		// open edit mode so that user can name the preset
 		ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );
@@ -647,7 +638,7 @@ void MainWindow::modAdd()
 
 	Mod mod( QFileInfo( path ), true );
 
-	appendItem( modModel, mod );
+	appendItem( ui->modListView, modModel, mod );
 
 	// add it also to the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
@@ -984,6 +975,40 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 	updateLaunchCommand();
 }
 
+void MainWindow::togglePresetSubWidgets( bool enabled )
+{
+	ui->engineCmbBox->setEnabled( enabled );
+	ui->configCmbBox->setEnabled( enabled );
+	ui->iwadListView->setEnabled( enabled );
+	ui->mapDirView->setEnabled( enabled );
+	ui->modListView->setEnabled( enabled );
+	ui->modBtnAdd->setEnabled( enabled );
+	ui->modBtnDel->setEnabled( enabled );
+	ui->modBtnUp->setEnabled( enabled );
+	ui->modBtnDown->setEnabled( enabled );
+	ui->presetCmdArgsLine->setEnabled( enabled );
+}
+
+void MainWindow::clearPresetSubWidgets()
+{
+	ui->engineCmbBox->setCurrentIndex( -1 );
+
+	ui->configCmbBox->setCurrentIndex( -1 );
+
+	deselectSelectedItems( ui->iwadListView );
+	selectedIWAD.clear();
+
+	deselectSelectedItems( ui->mapDirView );
+
+	deselectSelectedItems( ui->modListView );
+
+	modModel.startCompleteUpdate();
+	modModel.clear();
+	modModel.finishCompleteUpdate();
+
+	ui->presetCmdArgsLine->clear();
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  automatic list updates according to directory content
@@ -1100,7 +1125,7 @@ void MainWindow::saveOptions( const QString & fileName )
 	{
 		QJsonObject jsIWADs = serialize( iwadSettings );
 
-		if (iwadSettings.updateFromDir) {
+		if (!iwadSettings.updateFromDir) {
 			jsIWADs["IWADs"] = serializeList( iwadModel.list() );
 		}
 
@@ -1349,7 +1374,7 @@ void MainWindow::restoreLaunchOptions( const LaunchOptions & opts )
 	ui->mapCmbBox->setCurrentText( opts.mapName );
 
 	if (!opts.saveFile.isEmpty()) {
-		int saveFileIdx = findSuch( saveModel.list(), [ &opts ]( const SaveFile & save ) { return save.fileName == opts.saveFile; } );
+		int saveFileIdx = findSuch( saveModel, [ &opts ]( const SaveFile & save ) { return save.fileName == opts.saveFile; } );
 		if (saveFileIdx >= 0) {
 			ui->saveFileCmbBox->setCurrentIndex( saveFileIdx );
 		} else {

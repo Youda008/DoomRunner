@@ -250,7 +250,7 @@ void SetupDialog::iwadAdd()
 	if (pathHelper.useRelativePaths())
 		path = pathHelper.getRelativePath( path );
 
-	appendItem( iwadModel, { QFileInfo( path ) } );
+	appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );
 }
 
 void SetupDialog::iwadDelete()
@@ -275,7 +275,7 @@ void SetupDialog::engineAdd()
 	int code = dialog.exec();
 
 	if (code == QDialog::Accepted)
-		appendItem( engineModel, dialog.engine );
+		appendItem( ui->iwadListView, engineModel, dialog.engine );
 }
 
 void SetupDialog::engineDelete()

@@ -41,6 +41,7 @@ SOURCES += \
     Sources/ListModel.cpp \
     Sources/MainWindow.cpp \
     Sources/SetupDialog.cpp \
+    Sources/UpdateChecker.cpp \
     Sources/UserData.cpp \
     Sources/Version.cpp \
     Sources/WidgetUtils.cpp \
@@ -61,6 +62,7 @@ HEADERS += \
     Sources/ListModel.hpp \
     Sources/MainWindow.hpp \
     Sources/SetupDialog.hpp \
+    Sources/UpdateChecker.hpp \
     Sources/UserData.hpp \
     Sources/Version.hpp \
     Sources/WidgetUtils.hpp

@@ -89,6 +89,7 @@ MainWindow::MainWindow()
 	QMainWindow( nullptr ),
 	tickCount( 0 ),
 	optionsCorrupted( false ),
+	compatOptsCmdArgs(),
 	pathHelper( false, QDir::currentPath() ),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
@@ -122,8 +123,7 @@ MainWindow::MainWindow()
 	presetModel(
 		/*makeDisplayString*/ []( const Preset & preset ) { return preset.name; }
 	),
-	opts {},
-	compatOptsCmdArgs()
+	opts {}
 {
 	ui = new Ui::MainWindow;
 	ui->setupUi( this );
@@ -240,6 +240,18 @@ void MainWindow::onWindowShown()
 		}
 		selectItemByIdx( ui->presetListView, defaultPresetIdx );
 		loadPreset( presetModel.makeIndex( defaultPresetIdx ) );
+	}
+
+	if (checkForUpdates) {
+		updateChecker.checkForUpdates(
+			[ this ]( UpdateChecker::Result result, const QString & detail )
+			{
+				if (result == UpdateChecker::UPDATE_AVAILABLE) {
+					checkForUpdates = showUpdateNotification( this, detail, true );
+				}
+				// silently ignore the rest of the results, since nobody asked for anything
+			}
+		);
 	}
 
 	// setup an update timer
@@ -387,9 +399,11 @@ void MainWindow::runCompatOptsDialog()
 
 void MainWindow::runAboutDialog()
 {
-	AboutDialog dialog( this );
+	AboutDialog dialog( this, checkForUpdates );
 
 	dialog.exec();
+
+	checkForUpdates = dialog.checkForUpdates;
 }
 
 
@@ -1128,6 +1142,8 @@ void MainWindow::saveOptions( const QString & fileName )
 
 	json["use_absolute_paths"] = pathHelper.useAbsolutePaths();
 
+	json["check_for_updates"] = checkForUpdates;
+
 	{
 		QJsonObject jsEngines;
 
@@ -1216,6 +1232,8 @@ void MainWindow::loadOptions( const QString & fileName )
 	deselectSelectedItems( ui->presetListView );
 
 	pathHelper.toggleAbsolutePaths( json.getBool( "use_absolute_paths", false ) );
+
+	checkForUpdates = json.getBool( "check_for_updates", true );
 
 	if (json.enterObject( "engines" ))
 	{

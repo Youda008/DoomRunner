@@ -16,6 +16,7 @@
 #include "ListModel.hpp"
 #include "DirTreeModel.hpp"
 #include "FileSystemUtils.hpp"  // PathHelper
+#include "UpdateChecker.hpp"
 
 #include <QMainWindow>
 #include <QString>
@@ -41,7 +42,7 @@ class MainWindow : public QMainWindow {
 	explicit MainWindow();
 	virtual ~MainWindow() override;
 
- private:// methods
+ private: // overridden methods
 
 	virtual void timerEvent( QTimerEvent * event ) override;
 	virtual void closeEvent( QCloseEvent * event ) override;
@@ -105,7 +106,7 @@ class MainWindow : public QMainWindow {
 
 	void launch();
 
- private:// methods
+ private: // methods
 
 	void toggleAbsolutePaths( bool absolute );
 
@@ -127,7 +128,7 @@ class MainWindow : public QMainWindow {
 	void updateLaunchCommand();
 	QString generateLaunchCommand( QString baseDir = "" );
 
- private:// members
+ private: // internal members
 
 	Ui::MainWindow * ui;
 
@@ -135,7 +136,15 @@ class MainWindow : public QMainWindow {
 
 	bool optionsCorrupted;  ///< true when was a critical error during parsing of options file, such content should not be saved
 
+	QString compatOptsCmdArgs;    ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
+
 	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
+
+	UpdateChecker updateChecker;
+
+ private: // user data
+
+	bool checkForUpdates;
 
 	// We use model-view design pattern for several widgets, because it allows us to organize the data in a way we need,
 	// and have the widget (frontend) automatically mirror the underlying data (backend) without syncing them manually.
@@ -171,8 +180,6 @@ class MainWindow : public QMainWindow {
 	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 
 	LaunchOptions opts;
-
-	QString compatOptsCmdArgs;    ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 };
 

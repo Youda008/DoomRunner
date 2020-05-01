@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui widgets network
 
 TARGET = DoomRunner
 TEMPLATE = app
@@ -44,6 +42,7 @@ SOURCES += \
     Sources/MainWindow.cpp \
     Sources/SetupDialog.cpp \
     Sources/UserData.cpp \
+    Sources/Version.cpp \
     Sources/WidgetUtils.cpp \
     Sources/main.cpp
 
@@ -63,6 +62,7 @@ HEADERS += \
     Sources/MainWindow.hpp \
     Sources/SetupDialog.hpp \
     Sources/UserData.hpp \
+    Sources/Version.hpp \
     Sources/WidgetUtils.hpp
 
 FORMS += \

@@ -2,29 +2,29 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Created on:  15.2.2020
-// Description:
+// Created on:  30.4.2020
+// Description: information about application version
 //======================================================================================================================
 
-#include "AboutDialog.hpp"
-#include "ui_AboutDialog.h"
+#ifndef VERSION_INCLUDED
+#define VERSION_INCLUDED
 
-#include "Version.hpp"
+
+#include "Common.hpp"
+
+#include <QString>
+#include <QtGlobal>
 
 
 //======================================================================================================================
 
-AboutDialog::AboutDialog( QWidget * parent )
-	: QDialog( parent )
-	, ui( new Ui::AboutDialog )
-{
-	ui->setupUi(this);
+constexpr const char appVersion [] =
+	#include "../version.txt"
+;
 
-	ui->appLabel->setText( ui->appLabel->text().arg( appVersion ) );
-	ui->qtLabel->setText( ui->qtLabel->text().arg( qtVersion ) );
-}
+constexpr const char qtVersion [] = QT_VERSION_STR;
 
-AboutDialog::~AboutDialog()
-{
-	delete ui;
-}
+int compareVersions( const QString & ver1, const QString & ver2 );
+
+
+#endif // VERSION_INCLUDED

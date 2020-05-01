@@ -54,12 +54,9 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="appLabel">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;App version: 1.2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="textFormat">
-      <enum>Qt::RichText</enum>
+      <string>App version: %1</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -67,9 +64,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_4">
+    <widget class="QLabel" name="qtLabel">
      <property name="text">
-      <string>Qt version: 5.13</string>
+      <string>Qt version: %1</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -90,12 +87,9 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLabel" name="label_6">
+    <widget class="QLabel" name="authorLabel">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Author: Jan Brož (Youda008)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="textFormat">
-      <enum>Qt::RichText</enum>
+      <string>Author: Jan Brož (Youda008)</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -103,7 +97,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_7">
+    <widget class="QLabel" name="licenceLabel">
      <property name="text">
       <string>Licence: GNU GPL v3.0</string>
      </property>
@@ -126,7 +120,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="webPageLabel">
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Project page: &lt;a href=&quot;https://github.com/Youda008/DoomRunner&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/Youda008/DoomRunner&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
@@ -142,7 +136,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_5">
+    <widget class="QLabel" name="bugreportLabel">
      <property name="text">
       <string>Please report all bugs and discuss design flaws at&lt;br/&gt;&lt;a href=&quot;https://github.com/Youda008/DoomRunner/issues&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/Youda008/DoomRunner/issues&lt;/span&gt;&lt;/a&gt;</string>
      </property>

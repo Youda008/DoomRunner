@@ -18,6 +18,7 @@
 #include "JsonUtils.hpp"
 #include "WidgetUtils.hpp"
 #include "DoomUtils.hpp"
+#include "Version.hpp"
 
 #include <QString>
 #include <QStringBuilder>
@@ -126,6 +127,8 @@ MainWindow::MainWindow()
 {
 	ui = new Ui::MainWindow;
 	ui->setupUi( this );
+
+	this->setWindowTitle( windowTitle() + ' ' + appVersion );
 
 	// setup view models
 	ui->presetListView->setModel( &presetModel );

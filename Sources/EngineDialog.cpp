@@ -15,10 +15,10 @@
 //======================================================================================================================
 
 EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, const Engine & engine )
-
-	: QDialog( parent )
-	, pathHelper( pathHelper )
-	, engine( engine )
+:
+	QDialog( parent ),
+	pathHelper( pathHelper ),
+	engine( engine )
 {
 	ui = new Ui::EngineDialog;
 	ui->setupUi(this);

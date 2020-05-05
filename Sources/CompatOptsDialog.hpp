@@ -98,7 +98,7 @@ class CompatOptsDialog : public QDialog {
 
 	Ui::CompatOptsDialog * ui;
 
- public:
+ public: // return value from this dialog
 
 	CompatibilityOptions compatOpts;
 

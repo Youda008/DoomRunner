@@ -90,8 +90,6 @@ class JsonContext {
 	void invalidTypeAtKey( const QString & key, const QString & expectedType );
 	void invalidTypeAtIdx( int index, const QString & expectedType );
 
- private:
-
 	QString elemPath( const QString & elemName );
 	QString elemPath( int index );
 	QString pathWithoutArrays( const QString & elemName );

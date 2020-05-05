@@ -998,6 +998,7 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 		for (Mod & mod : preset.mods)
 			mod.path = pathHelper.convertPath( mod.path );
 		preset.selectedEnginePath = pathHelper.convertPath( preset.selectedEnginePath );
+		preset.selectedIWAD = pathHelper.convertPath( preset.selectedIWAD );
 	}
 
 	updateLaunchCommand();

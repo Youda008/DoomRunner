@@ -105,7 +105,7 @@ class GameOptsDialog : public QDialog {
 
 	Ui::GameOptsDialog * ui;
 
- public:
+ public: // return value from this dialog
 
 	GameplayOptions gameOpts;
 

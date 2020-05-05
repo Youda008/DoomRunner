@@ -85,9 +85,9 @@ static const DMFlag SPAWN_WHERE_DIED             = { DM_FLAGS_2, 4096, false };
 //======================================================================================================================
 
 GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayOptions & gameOpts )
-
-	: QDialog( parent )
-	, gameOpts( gameOpts )
+:
+	QDialog( parent ),
+	gameOpts( gameOpts )
 {
 	ui = new Ui::GameOptsDialog;
 	ui->setupUi( this );

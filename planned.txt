@@ -1,3 +1,5 @@
 - extracting map names from IWAD file content
-- support for recording demos
 - better icons for 'add','delete','clone' buttons
+- allow to select whole directory to load
+- support for recording demos
+- more launch options - music, sound, graphics, ...

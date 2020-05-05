@@ -656,6 +656,7 @@ void MainWindow::modAdd()
 {
 	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modSettings.dir,
 	                                             "Doom mod files (*.wad *.WAD *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
+	                                             "DukeNukem data files (*.grp *.rff);;"
 	                                             "All files (*)" );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;

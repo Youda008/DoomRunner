@@ -22,6 +22,7 @@
 
 static const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
 static const QVector< QString > mapSuffixes = {"wad", "pk3", "pk7", "zip", "7z"};
+static const QVector< QString > dukeSuffixes = {"grp", "rff"};
 
 bool isDoom1( const QString & iwadName )
 {
@@ -71,10 +72,12 @@ WadType getCachedWadType( const QFileInfo & file )
 
 bool isIWAD( const QFileInfo & file )
 {
-	return iwadSuffixes.contains( file.suffix().toLower() ) && getCachedWadType( file ) == WadType::IWAD;
+	return (iwadSuffixes.contains( file.suffix().toLower() ) && getCachedWadType( file ) == WadType::IWAD)
+	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
 }
 
 bool isMapPack( const QFileInfo & file )
 {
-	return mapSuffixes.contains( file.suffix().toLower() ) && getCachedWadType( file ) != WadType::IWAD;
+	return (mapSuffixes.contains( file.suffix().toLower() ) && getCachedWadType( file ) != WadType::IWAD)
+	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
 }

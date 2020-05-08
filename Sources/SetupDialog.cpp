@@ -316,8 +316,10 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 {
 	pathHelper.toggleAbsolutePaths( checked );
 
-	for (Engine & engine : engineModel)
+	for (Engine & engine : engineModel) {
 		engine.path = pathHelper.convertPath( engine.path );
+		engine.configDir = pathHelper.convertPath( engine.configDir );
+	}
 	engineModel.contentChanged( 0 );
 
 	iwadSettings.dir = pathHelper.convertPath( iwadSettings.dir );

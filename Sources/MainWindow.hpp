@@ -60,8 +60,8 @@ class MainWindow : public QMainWindow {
 
 	void selectEngine( int index );
 	void selectConfig( int index );
-	void selectIWAD( const QModelIndex & index );
-	void selectMapPack( const QModelIndex & index );
+	void toggleIWAD( const QModelIndex & index );
+	void toggleMapPack( const QModelIndex & index );
 	void toggleMod( const QModelIndex & index );
 
 	void showMapPackDesc( const QModelIndex & index );

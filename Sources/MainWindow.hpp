@@ -60,8 +60,8 @@ class MainWindow : public QMainWindow {
 
 	void selectEngine( int index );
 	void selectConfig( int index );
-	void toggleIWAD( const QModelIndex & index );
-	void toggleMapPack( const QModelIndex & index );
+	void selectIWAD( const QModelIndex & index );
+	void selectMapPack( const QModelIndex & index );
 	void toggleMod( const QModelIndex & index );
 
 	void presetAdd();
@@ -167,7 +167,6 @@ class MainWindow : public QMainWindow {
 
 	ReadOnlyListModel< IWAD > iwadModel;    ///< user-ordered list of iwads (managed by SetupDialog)
 	IwadSettings iwadSettings;    ///< IWAD-related preferences (value returned by SetupDialog)
-	QString selectedIWAD;   ///< which IWAD was selected last (workaround to allow user to deselect IWAD by clicking it again)
 
 	DirTreeModel mapModel;    ///< model owning a tree structure representing a directory with map files
 	MapSettings mapSettings;    ///< map-related preferences (value returned by SetupDialog)

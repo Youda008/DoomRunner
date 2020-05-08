@@ -108,7 +108,6 @@ MainWindow::MainWindow()
 		/*loadFromDir*/ false,
 		/*searchSubdirs*/ false
 	},
-	selectedIWAD(),
 	mapModel(),
 	mapSettings {
 		""
@@ -457,13 +456,11 @@ void MainWindow::loadPreset( const QModelIndex & /*index*/ )
 
 	// restore selected IWAD
 	deselectSelectedItems( ui->iwadListView );
-	selectedIWAD.clear();
 	if (!preset.selectedIWAD.isEmpty()) {  // the IWAD may have not been selected when creating this preset
 		int iwadIdx = findSuch( iwadModel, [ &preset ]( const IWAD & iwad )
 		                                              { return iwad.path == preset.selectedIWAD; } );
 		if (iwadIdx >= 0) {
 			selectItemByIdx( ui->iwadListView, iwadIdx );
-			selectedIWAD = preset.selectedIWAD;
 			updateMapsFromIWAD();
 		} else {
 			QMessageBox::warning( this, "IWAD no longer exists",
@@ -552,18 +549,10 @@ void MainWindow::toggleIWAD( const QModelIndex & index )
 {
 	QString clickedIWAD = iwadModel[ index.row() ].path;
 
-	// allow the user to deselect the IWAD by clicking on it again
-	if (clickedIWAD == selectedIWAD) {
-		selectedIWAD.clear();
-		ui->iwadListView->selectionModel()->select( index, QItemSelectionModel::Deselect );
-	} else {
-		selectedIWAD = clickedIWAD;
-	}
-
 	// update the current preset
 	int clickedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (clickedPresetIdx >= 0) {
-		presetModel[ clickedPresetIdx ].selectedIWAD = selectedIWAD;
+		presetModel[ clickedPresetIdx ].selectedIWAD = clickedIWAD;
 	}
 
 	updateMapsFromIWAD();
@@ -1026,7 +1015,6 @@ void MainWindow::clearPresetSubWidgets()
 	ui->configCmbBox->setCurrentIndex( -1 );
 
 	deselectSelectedItems( ui->iwadListView );
-	selectedIWAD.clear();
 
 	deselectSelectedItems( ui->mapDirView );
 
@@ -1056,10 +1044,6 @@ void MainWindow::updateListsFromDirs()
 void MainWindow::updateIWADsFromDir()
 {
 	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathHelper, isIWAD );
-
-	// the previously selected item might have been removed
-	if (!isSomethingSelected( ui->iwadListView ))
-		selectedIWAD.clear();
 }
 
 void MainWindow::updateMapPacksFromDir()
@@ -1276,7 +1260,6 @@ void MainWindow::loadOptions( const QString & fileName )
 	if (json.enterObject( "IWADs" ))
 	{
 		deselectSelectedItems( ui->iwadListView );
-		selectedIWAD.clear();
 
 		iwadModel.startCompleteUpdate();
 

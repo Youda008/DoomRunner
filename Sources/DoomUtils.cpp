@@ -21,7 +21,7 @@
 //======================================================================================================================
 
 static const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
-static const QVector< QString > mapSuffixes = {"wad", "pk3", "pk7", "zip", "7z"};
+static const QVector< QString > mapSuffixes = {"wad", "deh", "pk3", "pk7", "zip", "7z"};
 static const QVector< QString > dukeSuffixes = {"grp", "rff"};
 
 bool isDoom1( const QString & iwadName )
@@ -62,7 +62,7 @@ WadType getCachedWadType( const QFileInfo & file )
 	if (pos == g_cachedWadTypes.end()) {
 		WadType type = recognizeWadTypeByHeader( path );
 		if (type == WadType::CANT_READ) {
-			qWarning() << "failed to read from " << pos.key();
+			qWarning() << "failed to read from " << path;
 			return WadType::CANT_READ;
 		}
 		pos = g_cachedWadTypes.insert( path, type );

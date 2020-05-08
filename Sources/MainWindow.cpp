@@ -592,7 +592,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	QString mapDescFilePath = mapDataFilePath.mid( 0, mapDataFilePath.lastIndexOf('.') ) + ".txt";  // QFileInfo won't help with this
 
 	if (!QFileInfo( mapDescFilePath ).exists()) {
-		qInfo() << "Map description file ("%mapDescFileName%") does not exist";
+		qWarning() << "Map description file ("%mapDescFileName%") does not exist";
 		return;
 	}
 
@@ -694,7 +694,7 @@ void MainWindow::presetMoveDown()
 void MainWindow::modAdd()
 {
 	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modSettings.dir,
-	                                             "Doom mod files (*.wad *.WAD *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
+	                                             "Doom mod files (*.wad *.WAD *.deh *.DEH *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
 	                                             "DukeNukem data files (*.grp *.rff);;"
 	                                             "All files (*)" );
 	if (path.isEmpty())  // user probably clicked cancel

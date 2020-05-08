@@ -20,6 +20,8 @@ class QModelIndex;
 #include <QDirIterator>
 #include <QFileInfo>
 
+#include <functional>
+
 
 //======================================================================================================================
 /** helper for calculating relative and absolute paths according to current directory and settings */

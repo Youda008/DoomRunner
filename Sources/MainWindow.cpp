@@ -214,8 +214,8 @@ MainWindow::MainWindow()
 
 	// This will call the function when the window is fully initialized and displayed.
 	// Not sure, which one of these 2 options is better.
-	QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection );
-	//QTimer::singleShot( 0, this, &thisClass::onWindowShown );
+	//QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection ); // this doesn't work in Qt 5.9
+	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
 }
 
 void MainWindow::onWindowShown()
@@ -1197,7 +1197,7 @@ void MainWindow::saveOptions( const QString & fileName )
 		}
 
 		json["IWADs"] = jsIWADs;
-    }
+	}
 
 	json["maps"] = serialize( mapSettings );
 

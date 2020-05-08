@@ -64,6 +64,8 @@ class MainWindow : public QMainWindow {
 	void selectMapPack( const QModelIndex & index );
 	void toggleMod( const QModelIndex & index );
 
+	void showMapPackDesc( const QModelIndex & index );
+
 	void presetAdd();
 	void presetDelete();
 	void presetClone();

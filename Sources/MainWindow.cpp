@@ -25,18 +25,16 @@
 #include <QTextStream>
 #include <QFile>
 #include <QDir>
-#include <QDirIterator>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTimer>
 #include <QProcess>
-#include <QDesktopWidget>
 #include <QJsonDocument>
-#include <QJsonValue>
-#include <QJsonObject>
-#include <QJsonArray>
-
 #include <QDebug>
+
+#include <QVBoxLayout>
+#include <QPlainTextEdit>
+#include <QFontDatabase>
 
 
 //======================================================================================================================
@@ -171,9 +169,10 @@ MainWindow::MainWindow()
 	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectEngine );
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectConfig );
 	connect( ui->presetListView, &QListView::clicked, this, &thisClass::loadPreset );
-	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::toggleIWAD );
-	connect( ui->mapDirView, &QListView::clicked, this, &thisClass::toggleMapPack );
+	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::selectIWAD );
+	connect( ui->mapDirView, &QTreeView::clicked, this, &thisClass::selectMapPack );
 	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
+	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
 
 	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &thisClass::presetAdd );
 	connect( ui->presetBtnDel, &QToolButton::clicked, this, &thisClass::presetDelete );
@@ -545,7 +544,7 @@ void MainWindow::selectConfig( int index )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleIWAD( const QModelIndex & index )
+void MainWindow::selectIWAD( const QModelIndex & index )
 {
 	QString clickedIWAD = iwadModel[ index.row() ].path;
 
@@ -560,7 +559,7 @@ void MainWindow::toggleIWAD( const QModelIndex & index )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleMapPack( const QModelIndex & )
+void MainWindow::selectMapPack( const QModelIndex & )
 {
 	QList< TreePosition > selectedMapPacks;
 	for (const QModelIndex & index : getSelectedItemIdxs( ui->mapDirView ))
@@ -584,6 +583,57 @@ void MainWindow::toggleMod( const QModelIndex & modIndex )
 	}
 
 	updateLaunchCommand();
+}
+
+void MainWindow::showMapPackDesc( const QModelIndex & index )
+{
+	QString mapDataFilePath = mapModel.getFSPath( index );
+	QString mapDescFileName = QFileInfo( mapDataFilePath ).completeBaseName() + ".txt";
+	QString mapDescFilePath = mapDataFilePath.mid( 0, mapDataFilePath.lastIndexOf('.') ) + ".txt";  // QFileInfo won't help with this
+
+	if (!QFileInfo( mapDescFilePath ).exists()) {
+		qInfo() << "Map description file ("%mapDescFileName%") does not exist";
+		return;
+	}
+
+	QFile descFile( mapDescFilePath );
+	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly )) {
+		QMessageBox::warning( this, "Cannot open map description",
+			"Failed to open description file "%mapDescFileName%": "%descFile.errorString() );
+		return;
+	}
+
+	QByteArray desc = descFile.readAll();
+
+	QDialog descDialog( this );
+	descDialog.setObjectName( "MapDescription" );
+	descDialog.setWindowTitle( "Map pack description" );
+	descDialog.setWindowModality( Qt::WindowModal );
+
+	QVBoxLayout * layout = new QVBoxLayout( &descDialog );
+
+	QPlainTextEdit * textEdit = new QPlainTextEdit( &descDialog );
+	textEdit->setReadOnly( true );
+	textEdit->setWordWrapMode( QTextOption::NoWrap );
+	QFont font = QFontDatabase::systemFont( QFontDatabase::FixedFont );
+	font.setPointSize( 10 );
+	textEdit->setFont( font );
+
+	textEdit->setPlainText( desc );
+
+	layout->addWidget( textEdit );
+
+	// estimate the optimal window size
+	int dialogWidth  = int(75 * font.pointSize() * 0.84f) + 30;
+	int dialogHeight = int(40 * font.pointSize() * 1.62f) + 30;
+	descDialog.resize( dialogWidth, dialogHeight );
+
+	// position it to the right of map widget
+	int windowCenterX = this->pos().x() + (this->width() / 2);
+	int windowCenterY = this->pos().y() + (this->height() / 2);
+	descDialog.move( windowCenterX, windowCenterY - (descDialog.height() / 2) );
+
+	descDialog.exec();
 }
 
 
@@ -1111,7 +1161,8 @@ void MainWindow::saveOptions( const QString & fileName )
 {
 	QFile file( fileName );
 	if (!file.open( QIODevice::WriteOnly )) {
-		QMessageBox::warning( this, "Can't open file", "Saving options failed. Could not open file "%fileName%" for writing." );
+		QMessageBox::warning( this, "Error saving options",
+			"Could not open file "%fileName%" for writing: "%file.errorString() );
 	}
 
 	QJsonObject json;
@@ -1183,7 +1234,8 @@ void MainWindow::loadOptions( const QString & fileName )
 {
 	QFile file( fileName );
 	if (!file.open( QIODevice::ReadOnly )) {
-		QMessageBox::warning( this, "Can't open file", "Loading options failed. Could not open file "+fileName+" for reading." );
+		QMessageBox::warning( this, "Error loading options",
+			"Could not open file "%fileName%" for reading: "%file.errorString() );
 		optionsCorrupted = true;
 		return;
 	}
@@ -1193,7 +1245,7 @@ void MainWindow::loadOptions( const QString & fileName )
 	QJsonParseError error;
 	QJsonDocument jsonDoc = QJsonDocument::fromJson( data, &error );
 	if (jsonDoc.isNull()) {
-		QMessageBox::warning( this, "Error loading options file", "Loading options failed: " + error.errorString() );
+		QMessageBox::warning( this, "Error loading options", "Loading options failed: "%error.errorString() );
 		optionsCorrupted = true;
 		return;
 	}
@@ -1207,8 +1259,7 @@ void MainWindow::loadOptions( const QString & fileName )
 		int width = json.getInt( "width", -1 );
 		int height = json.getInt( "height", -1 );
 		if (width > 0 && height > 0) {
-			const QRect & geometry = this->geometry();
-			this->setGeometry( geometry.x(), geometry.y(), width, height );
+			this->resize( width, height );
 		}
 
 		json.exitObject();

@@ -8,11 +8,14 @@ First you perform an initial setup, setting up the paths and adding all your Doo
 Then you create named presets for all your favourite modifications and assign them an engine, an IWAD and mod files.
 ![](Screenshots/2-MainScreen.png "Main screen")
 
-And if you wish to play multiplayer or jump into a map directly, you can do so in the second tab.
+If you wish to play multiplayer or jump into a map directly, you can do so in the second tab.
 ![](Screenshots/3-LaunchOptions.png "Launch options")
 
-You can even configure gameplay flags and compatibility flags.
+You can even configure gameplay flags and compatibility flags, with tooltips from official ZDoom wiki.
 ![](Screenshots/4-DMflags.png "DM flags")
+
+If you extract a .wad file together with an equally named .txt file (for example AV.wad and AV.txt), you can display its content by doubleclicking the wad in the map pack list.
+![](Screenshots/5-MapPackDesc.png "Map pack description")
 
 The map list and IWAD list are automatically updated from selected directory, so everytime you download a new WAD, you don't need to manually add it to the launcher. The mod list supports drag&drop from directory window and internal drag&drop for reordering the files.
 
@@ -21,9 +24,9 @@ The map list and IWAD list are automatically updated from selected directory, so
 
 Pre-compiled executables for different operating systems can be found on [release page](https://github.com/Youda008/DoomRunner/releases)
 
-I provide them only for 64-bit Windows and 64-bit Linux, because in 2019 there shouldn't be anyone still using 32-bit computer. If you really need a 32-bit version, please create an issue.
+32-bit Linux build is currently not supported, because i don't have enough space on disk to install yet another operating system. But you can build it yourself, it shouldn't be hard.
 
-For Windows I only provide statically linked executable, because dynamic one does not make much sense. On Windows installing the Qt DLLs required to run this program is pain in the ass. It's much easier to bundle everything together in a single file. If you really want the dynamic version, because you use lot's of Qt applications and saving those 20MB sounds worth it, create an issue.
+For Windows I only provide statically linked executable, because dynamic one does not make much sense. On Windows installing the Qt DLLs required to run this program is pain in the ass, and it's much easier to bundle everything together in a single file. If you really want the dynamic version, because you use lot's of Qt applications and saving those 20MB sounds worth it, please create an issue.
 
 
 ## How to install and run

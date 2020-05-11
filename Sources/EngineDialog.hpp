@@ -37,7 +37,7 @@ class EngineDialog : public QDialog {
 
  private: // methods
 
-	virtual void showEvent( QShowEvent * event ) override;
+	void onWindowShown();
 
  private slots:
 

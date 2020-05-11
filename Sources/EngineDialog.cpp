@@ -10,6 +10,7 @@
 #include "ui_EngineDialog.h"
 
 #include <QFileDialog>
+#include <QTimer>
 
 
 //======================================================================================================================
@@ -36,6 +37,9 @@ EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, con
 
 	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::accept );
 	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::reject );
+
+	// this will call the function when the window is fully initialized and displayed
+	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
 }
 
 EngineDialog::~EngineDialog()
@@ -43,12 +47,16 @@ EngineDialog::~EngineDialog()
 	delete ui;
 }
 
-void EngineDialog::showEvent( QShowEvent * event )
+void EngineDialog::onWindowShown()
 {
-	QDialog::showEvent( event );
+	// This needs to be called when the window is fully initialized and shown, otherwise it will bug itself in a
+	// half-shown state and not close properly.
 
 	if (engine.path.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())
 		browseEngine();
+
+	if (engine.path.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())  // user closed the browseEngine dialog
+		done( QDialog::Rejected );
 }
 
 void EngineDialog::browseEngine()

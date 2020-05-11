@@ -219,8 +219,8 @@ MainWindow::MainWindow()
 	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateGlobalCmdArgs );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
 
-	// This will call the function when the window is fully initialized and displayed.
-	// Not sure, which one of these 2 options is better.
+	// this will call the function when the window is fully initialized and displayed
+	// not sure, which one of these 2 options is better
 	//QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection ); // this doesn't work in Qt 5.9
 	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
 }

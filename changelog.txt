@@ -1,16 +1,17 @@
 1.3
-- for each engine you can now set custom directory of config files
-- you can now select multiple map packs, but they will always be loaded in alphabetical order
-- selected map packs are now saved to presets instead of globally
+- for each engine you can now set custom directory of config files (required for using it on Linux)
+- you can now select multiple map files, but they will always be loaded in alphabetical order
+- selected map files are now saved to presets instead of globally
 - line for additional command line arguments has been split to preset-related and global one
 - you can now select whether "Launch options" should be saved globally or to presets
 - you can now drag&drop also in Setup dialog to IWAD list and Engine list
+- when using manual IWAD management mode, you can now give each IWAD a custom name by double-clicking on it in Setup dialog
 - IWADs are now distinguished from PWADs by file header instead of filename suffix
 - to select a map, a command +map is now used instead of -warp to allow custom map names
 - added a basic support for Duke Nukem files (.grp and .rff)
 - double-clicking on a map pack will show content of an equally named txt file (if you double-click on AV.wad and there is AV.txt, it will show on screen)
 - fixed that collapsed directories always expanded again on every update
-- fixed the "Allow jump/crouch/aim" checkboxes
+- fixed that "Allow jump/crouch/aim" checkboxes produced incorrect flags
 - error message during parsing options.json file now contains more detailed information and checkbox to ignore them all
 - automatic checking if there is a new version available
 

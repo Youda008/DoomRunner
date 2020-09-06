@@ -17,7 +17,7 @@ void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QS
                       std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	QDir dir_( dir );
-	if (!dir_.exists())
+	if (dir.isEmpty() || !dir_.exists())  // dir not specified or invalid -> leave the list empty
 		return;
 
 	// directories first

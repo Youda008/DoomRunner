@@ -84,7 +84,7 @@ void fillListFromDir( QList< Item > & list, const QString & dir, bool recursivel
                       std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	QDir dir_( dir );
-	if (!dir_.exists())
+	if (dir.isEmpty() || !dir_.exists())  // dir not specified or invalid -> leave the list empty
 		return;
 
 	QDirIterator dirIt( dir_ );

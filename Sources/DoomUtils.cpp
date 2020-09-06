@@ -72,12 +72,12 @@ WadType getCachedWadType( const QFileInfo & file )
 
 bool isIWAD( const QFileInfo & file )
 {
-	return (iwadSuffixes.contains( file.suffix().toLower() ) && getCachedWadType( file ) == WadType::IWAD)
+	return (iwadSuffixes.contains( file.suffix().toLower() ))
 	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
 }
 
 bool isMapPack( const QFileInfo & file )
 {
-	return (mapSuffixes.contains( file.suffix().toLower() ) && getCachedWadType( file ) != WadType::IWAD)
+	return (mapSuffixes.contains( file.suffix().toLower() ))
 	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
 }

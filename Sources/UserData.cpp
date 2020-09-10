@@ -28,11 +28,11 @@ QJsonObject serialize( const Engine & engine )
 	return jsEngine;
 }
 
-void deserialize( JsonContext & json, Engine & engine )
+void deserialize( JsonObjectCtx & jsEngine, Engine & engine )
 {
-	engine.name = json.getString( "name", "<missing name>" );
-	engine.path = json.getString( "path" );
-	engine.configDir = json.getString( "config_dir", QFileInfo( engine.path ).dir().path() );
+	engine.name = jsEngine.getString( "name", "<missing name>" );
+	engine.path = jsEngine.getString( "path" );
+	engine.configDir = jsEngine.getString( "config_dir", QFileInfo( engine.path ).dir().path() );
 }
 
 QJsonObject serialize( const IWAD & iwad )
@@ -45,10 +45,10 @@ QJsonObject serialize( const IWAD & iwad )
 	return jsIWAD;
 }
 
-void deserialize( JsonContext & json, IWAD & iwad )
+void deserialize( JsonObjectCtx & jsEngine, IWAD & iwad )
 {
-	iwad.path = json.getString( "path" );
-	iwad.name = json.getString( "name", QFileInfo( iwad.path ).fileName() );
+	iwad.path = jsEngine.getString( "path" );
+	iwad.name = jsEngine.getString( "name", QFileInfo( iwad.path ).fileName() );
 }
 
 QJsonObject serialize( const Mod & mod )
@@ -61,10 +61,10 @@ QJsonObject serialize( const Mod & mod )
 	return jsMod;
 }
 
-void deserialize( JsonContext & json, Mod & mod )
+void deserialize( JsonObjectCtx & jsMod, Mod & mod )
 {
-	mod.path = json.getString( "path" );
-	mod.checked = json.getBool( "checked", false );
+	mod.path = jsMod.getString( "path" );
+	mod.checked = jsMod.getBool( "checked", false );
 }
 
 QJsonObject serialize( const IwadSettings & iwadSettings )
@@ -78,11 +78,11 @@ QJsonObject serialize( const IwadSettings & iwadSettings )
 	return jsIWADs;
 }
 
-void deserialize( JsonContext & json, IwadSettings & iwadSettings )
+void deserialize( JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings )
 {
-	iwadSettings.updateFromDir = json.getBool( "auto_update", false );
-	iwadSettings.dir = json.getString( "directory" );
-	iwadSettings.searchSubdirs = json.getBool( "subdirs", false );
+	iwadSettings.updateFromDir = jsIWADs.getBool( "auto_update", false );
+	iwadSettings.dir = jsIWADs.getString( "directory" );
+	iwadSettings.searchSubdirs = jsIWADs.getBool( "subdirs", false );
 }
 
 QJsonObject serialize( const MapSettings & mapSettings )
@@ -94,9 +94,9 @@ QJsonObject serialize( const MapSettings & mapSettings )
 	return jsMaps;
 }
 
-void deserialize( JsonContext & json, MapSettings & mapSettings )
+void deserialize( JsonObjectCtx & jsMaps, MapSettings & mapSettings )
 {
-	mapSettings.dir = json.getString( "directory" );
+	mapSettings.dir = jsMaps.getString( "directory" );
 }
 
 QJsonObject serialize( const ModSettings & modSettings )
@@ -108,9 +108,9 @@ QJsonObject serialize( const ModSettings & modSettings )
 	return jsMods;
 }
 
-void deserialize( JsonContext & json, ModSettings & modSettings )
+void deserialize( JsonObjectCtx & jsMods, ModSettings & modSettings )
 {
-	modSettings.dir = json.getString( "directory" );
+	modSettings.dir = jsMods.getString( "directory" );
 }
 
 QJsonObject serialize( const LaunchOptions & opts )
@@ -143,30 +143,30 @@ QJsonObject serialize( const LaunchOptions & opts )
 	return jsOptions;
 }
 
-void deserialize( JsonContext & json, LaunchOptions & opts )
+void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & opts )
 {
-	opts.mode = json.getEnum< LaunchMode >( "launch_mode", opts.mode );
-	opts.mapName = json.getString( "map_name", opts.mapName );
-	opts.saveFile = json.getString( "save_file", opts.saveFile );
-	opts.skillNum = json.getUInt( "skill_num", opts.skillNum );
-	opts.noMonsters = json.getBool( "no_monsters", opts.noMonsters );
-	opts.fastMonsters = json.getBool( "fast_monsters", opts.fastMonsters );
-	opts.monstersRespawn = json.getBool( "monsters_respawn", opts.monstersRespawn );
+	opts.mode = jsOptions.getEnum< LaunchMode >( "launch_mode", opts.mode );
+	opts.mapName = jsOptions.getString( "map_name", opts.mapName );
+	opts.saveFile = jsOptions.getString( "save_file", opts.saveFile );
+	opts.skillNum = jsOptions.getUInt( "skill_num", opts.skillNum );
+	opts.noMonsters = jsOptions.getBool( "no_monsters", opts.noMonsters );
+	opts.fastMonsters = jsOptions.getBool( "fast_monsters", opts.fastMonsters );
+	opts.monstersRespawn = jsOptions.getBool( "monsters_respawn", opts.monstersRespawn );
 
-	opts.gameOpts.flags1 = json.getInt( "dmflags1", opts.gameOpts.flags1 );
-	opts.gameOpts.flags2 = json.getInt( "dmflags2", opts.gameOpts.flags2 );
-	opts.compatOpts.flags1 = json.getInt( "compatflags1", opts.compatOpts.flags1 );
-	opts.compatOpts.flags2 = json.getInt( "compatflags2", opts.compatOpts.flags2 );
+	opts.gameOpts.flags1 = jsOptions.getInt( "dmflags1", opts.gameOpts.flags1 );
+	opts.gameOpts.flags2 = jsOptions.getInt( "dmflags2", opts.gameOpts.flags2 );
+	opts.compatOpts.flags1 = jsOptions.getInt( "compatflags1", opts.compatOpts.flags1 );
+	opts.compatOpts.flags2 = jsOptions.getInt( "compatflags2", opts.compatOpts.flags2 );
 
-	opts.isMultiplayer = json.getBool( "is_multiplayer", opts.isMultiplayer );
-	opts.multRole = json.getEnum< MultRole >( "mult_role", opts.multRole );
-	opts.hostName = json.getString( "host_name", opts.hostName );
-	opts.port = json.getUInt16( "port", opts.port );
-	opts.netMode = json.getEnum< NetMode >( "net_mode", opts.netMode );
-	opts.gameMode = json.getEnum< GameMode >( "game_mode", opts.gameMode );
-	opts.playerCount = json.getUInt( "player_count", opts.playerCount );
-	opts.teamDamage = json.getDouble( "team_damage", opts.teamDamage );
-	opts.timeLimit = json.getUInt( "time_limit", opts.timeLimit );
+	opts.isMultiplayer = jsOptions.getBool( "is_multiplayer", opts.isMultiplayer );
+	opts.multRole = jsOptions.getEnum< MultRole >( "mult_role", opts.multRole );
+	opts.hostName = jsOptions.getString( "host_name", opts.hostName );
+	opts.port = jsOptions.getUInt16( "port", opts.port );
+	opts.netMode = jsOptions.getEnum< NetMode >( "net_mode", opts.netMode );
+	opts.gameMode = jsOptions.getEnum< GameMode >( "game_mode", opts.gameMode );
+	opts.playerCount = jsOptions.getUInt( "player_count", opts.playerCount );
+	opts.teamDamage = jsOptions.getDouble( "team_damage", opts.teamDamage );
+	opts.timeLimit = jsOptions.getUInt( "time_limit", opts.timeLimit );
 }
 
 QJsonObject serialize( const Preset & preset, bool storeOpts )
@@ -195,33 +195,33 @@ QJsonObject serialize( const Preset & preset, bool storeOpts )
 	return jsPreset;
 }
 
-void deserialize( JsonContext & json, Preset & preset, bool loadOpts )
+void deserialize( JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts )
 {
-	preset.name = json.getString( "name", "<missing name>" );
-	preset.selectedEnginePath = json.getString( "selected_engine" );
-	preset.selectedConfig = json.getString( "selected_config" );
-	preset.selectedIWAD = json.getString( "selected_IWAD" );
+	preset.name = jsPreset.getString( "name", "<missing name>" );
+	preset.selectedEnginePath = jsPreset.getString( "selected_engine" );
+	preset.selectedConfig = jsPreset.getString( "selected_config" );
+	preset.selectedIWAD = jsPreset.getString( "selected_IWAD" );
 
-	if (json.enterArray( "selected_mappacks" ))
+	if (JsonArrayCtx jsSelectedMapPacks = jsPreset.getArray( "selected_mappacks" ))
 	{
-		for (int i = 0; i < json.arraySize(); i++) {
-			QString selectedMapPack = json.getString( i );
+		for (int i = 0; i < jsSelectedMapPacks.size(); i++) {
+			QString selectedMapPack = jsSelectedMapPacks.getString( i );
 			if (!selectedMapPack.isEmpty()) {
 				preset.selectedMapPacks.append( TreePosition( selectedMapPack ) );
 			}
 		}
-		json.exitArray();
 	}
 
-	if (json.enterArray( "mods" ))
+	if (JsonArrayCtx jsMods = jsPreset.getArray( "mods" ))
 	{
-		for (int i = 0; i < json.arraySize(); i++)
+		for (int i = 0; i < jsMods.size(); i++)
 		{
-			if (!json.enterObject( i ))  // wrong type on position i - skip this entry
+			JsonObjectCtx jsMod = jsMods.getObject( i );
+			if (!jsMod)  // wrong type on position i - skip this entry
 				continue;
 
 			Mod mod;
-			deserialize( json, mod );
+			deserialize( jsMod, mod );
 
 			if (mod.path.isEmpty())  // element isn't present in JSON -> skip this entry
 				continue;
@@ -229,18 +229,16 @@ void deserialize( JsonContext & json, Preset & preset, bool loadOpts )
 			mod.fileName = QFileInfo( mod.path ).fileName();
 
 			preset.mods.append( std::move( mod ) );
-
-			json.exitObject();
 		}
-		json.exitArray();
 	}
 
-	if (loadOpts && json.enterObject( "options" ))
+	if (loadOpts)
 	{
-		deserialize( json, preset.opts );
-
-		json.exitObject();
+		if (JsonObjectCtx jsOptions = jsPreset.getObject( "options" ))
+		{
+			deserialize( jsOptions, preset.opts );
+		}
 	}
 
-	preset.cmdArgs = json.getString( "additional_args" );
+	preset.cmdArgs = jsPreset.getString( "additional_args" );
 }

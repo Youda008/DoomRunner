@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  15.5.2019
-// Description: JSON parsing helpers
+// Description: JSON parsing helpers that handle errors and simplify parsing code
 //======================================================================================================================
 
 #ifndef JSON_UTILS_INCLUDED
@@ -14,9 +14,12 @@
 
 #include <QString>
 #include <QList>
+#include <QJsonDocument>
 #include <QJsonValue>
 #include <QJsonObject>
 #include <QJsonArray>
+
+template< typename T > class QLinkedList;
 
 
 //======================================================================================================================
@@ -30,48 +33,179 @@ uint enumSize() { return 0; }
 
 
 //======================================================================================================================
-/** when parsing JSON file, this context stores info where we are, so that we can print more useful error messages */
+//  wrappers around JsonObject and JsonArray containing a parsing context that enables us to show useful error messages
+//
+//  implementation notes:
+//
+//  1. JSON path reconstruction - getPath()
+//     Each JsonObject/JsonArray wrapper knows its parent and its key, and is therefore able to reconstruct its path
+//     in the JSON document by traversing the JSON tree from leaf to root, so that we can tell the user exactly which
+//     element is broken.
+//
+//  2. common parsing context
+//     Each wrapper has access to a context that is shared between all elements of a particular JSON Document and that
+//     contains data related to the parsing process of this document. The context struct is stored in JsonDocumentCtx
+//     and all its elements get a pointer.
+//
+//  3. JsonObjectCtxProxy/JsonArrayCtxProxy
+//     These proxy classes exist only because there is a cyclic dependancy between JsonObjectCtx and JsonArrayCtx
+//     (JsonObjectCtx::getArray returns JsonArrayCtx and JsonArrayCtx::getObject returns JsonObjectCtx) and we can't
+//     declare one before the other. Therefore getObject/getArray return a proxy class that is declared before both and
+//     that is then automatically converted (by a constructor) to the final JsonObjectCtx/JsonArrayCtx.
 
-class JsonContext {
+
+/** data related to an ongoing parsing process */
+struct _ParsingContext {
+	bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
+};
+
+/** mechanisms common for JSON objects and arrays */
+class JsonValueCtx {
+
+ protected:
+
+	/** JSON key - either string key for objects or int index for arrays */
+	struct Key {
+		enum Type {
+			OTHER = 0,
+			OBJECT_KEY,
+			ARRAY_INDEX
+		};
+		Type type;
+		QString key; // TODO: std::variant
+		int idx;
+
+		Key() : type( OTHER ), key(), idx( -1 ) {}
+		Key( const QString & key ) : type( OBJECT_KEY ), key( key ), idx( -1 ) {}
+		Key( int idx ) : type( ARRAY_INDEX ), key(), idx( idx ) {}
+	};
+
+	_ParsingContext * _context;  ///< document-wide context shared among all elements of that document, the struct is stored in JsonDocumentCtx
+
+	const JsonValueCtx * _parent;  ///< JSON element that contains this element
+	Key _key;  ///< key or index that this element has in its parent element
 
  public:
 
-	JsonContext( const QJsonObject & rootObject ) : dontShowAgain( false )
-		{ entryStack.append({ QString(), rootObject }); }
-	~JsonContext() {}
+	/** constructs a JSON value with no parent, this should be only used for creating a root element */
+	JsonValueCtx( _ParsingContext * context )
+		: _context( context ), _parent( nullptr ), _key() {}
 
-	// movement through JSON tree
+	/** constructs a JSON value with a parent that is a JSON object */
+	JsonValueCtx( _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+		: _context( context ), _parent( parent ), _key( key ) {}
 
-	bool enterObject( const char * key );
-	bool enterObject( int index );
-	void exitObject();
+	/** constructs a JSON value with a parent that is a JSON array */
+	JsonValueCtx( _ParsingContext * context, const JsonValueCtx * parent, int index )
+		: _context( context ), _parent( parent ), _key( index ) {}
 
-	bool enterArray( const char * key );
-	bool enterArray( int index );
-	void exitArray();
+	/** copy constructor */
+	JsonValueCtx( const JsonValueCtx & other ) = default;
 
-	QString currentPath();
+	/** builds a path of this element in its JSON document */
+	QString getPath() const;
 
-	int arraySize();
+ protected:
 
-	// getters of elementary values
+	void prependPath( QLinkedList< QString > & pathList ) const;
 
-	bool getBool( const char * key, bool defaultVal );
-	int getInt( const char * key, int defaultVal );
-	uint getUInt( const char * key, uint defaultVal );
-	uint16_t getUInt16( const char * key, uint16_t defaultVal );
-	double getDouble( const char * key, double defaultVal );
-	QString getString( const char * key, const QString & defaultVal = QString() );
+};
 
-	bool getBool( int index, bool defaultVal );
-	int getInt( int index, int defaultVal );
-	uint getUInt( int index, uint defaultVal );
-	uint16_t getUInt16( int index, uint16_t defaultVal );
-	double getDouble( int index, double defaultVal );
-	QString getString( int index, const QString & defaultVal = QString() );
+/** proxy class that solves cyclic dependancy between JsonObjectCtx and JsonArrayCtx */
+class JsonObjectCtxProxy : public JsonValueCtx {
 
+ protected:
+
+	std::optional< QJsonObject > _wrappedObject;
+
+ public:
+
+	JsonObjectCtxProxy()
+		: JsonValueCtx( nullptr ), _wrappedObject( std::nullopt ) {}
+
+	JsonObjectCtxProxy( const QJsonObject & wrappedObject, _ParsingContext * context )
+		: JsonValueCtx( context ), _wrappedObject( wrappedObject ) {}
+
+	JsonObjectCtxProxy( const QJsonObject & wrappedObject, _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+		: JsonValueCtx( context, parent, key ), _wrappedObject( wrappedObject ) {}
+
+	JsonObjectCtxProxy( const QJsonObject & wrappedObject, _ParsingContext * context, const JsonValueCtx * parent, int index )
+		: JsonValueCtx( context, parent, index ), _wrappedObject( wrappedObject ) {}
+
+	JsonObjectCtxProxy( const JsonObjectCtxProxy & other ) = default;
+
+	operator bool() const { return _wrappedObject.has_value(); }
+
+};
+
+/** proxy class that solves cyclic dependancy between JsonObjectCtx and JsonArrayCtx */
+class JsonArrayCtxProxy : public JsonValueCtx {
+
+ protected:
+
+	std::optional< QJsonArray > _wrappedArray;
+
+ public:
+
+	JsonArrayCtxProxy()
+		: JsonValueCtx( nullptr ), _wrappedArray( std::nullopt ) {}
+
+	JsonArrayCtxProxy( const QJsonArray & wrappedArray, _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+		: JsonValueCtx( context, parent, key ), _wrappedArray( wrappedArray ) {}
+
+	JsonArrayCtxProxy( const QJsonArray & wrappedArray, _ParsingContext * context, const JsonValueCtx * parent, int index )
+		: JsonValueCtx( context, parent, index ), _wrappedArray( wrappedArray ) {}
+
+	JsonArrayCtxProxy( const JsonArrayCtxProxy & other ) = default;
+
+	operator bool() const { return _wrappedArray.has_value(); }
+
+};
+
+/** wrapper around QJsonObject that knows its position in the JSON document and pops up an error messsage on invalid operations */
+class JsonObjectCtx : public JsonObjectCtxProxy {
+
+ public:
+
+	/** constructs invalid JSON object wrapper */
+	JsonObjectCtx()
+		: JsonObjectCtxProxy() {}
+
+	/** constructs a JSON object wrapper with no parent, this should be only used for creating a root element */
+	JsonObjectCtx( const QJsonObject & wrappedObject, _ParsingContext * context )
+		: JsonObjectCtxProxy( wrappedObject, context ) {}
+
+	/** converts the temporary proxy object into the final object - workaround for cyclic dependancy */
+	JsonObjectCtx( const JsonObjectCtxProxy & proxy )
+		: JsonObjectCtxProxy( proxy ) {}
+
+	/** returns a sub-object at a specified key, if it doesn't exist it shows an error dialog and returns invalid object */
+	JsonObjectCtxProxy getObject( const QString & key ) const;
+
+	/** returns a sub-array at a specified key, if it doesn't exist it shows an error dialog and returns invalid object */
+	JsonArrayCtxProxy getArray( const QString & key ) const;
+
+	/** returns a bool at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	bool getBool( const QString & key, bool defaultVal ) const;
+
+	/** returns an int at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	int getInt( const QString & key, int defaultVal ) const;
+
+	/** returns an uint at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	uint getUInt( const QString & key, uint defaultVal ) const;
+
+	/** returns an uint16_t at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	uint16_t getUInt16( const QString & key, uint16_t defaultVal ) const;
+
+	/** returns a double at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	double getDouble( const QString & key, double defaultVal ) const;
+
+	/** returns a string at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	QString getString( const QString & key, const QString & defaultVal = QString() ) const;
+
+	/** returns an enum at a specified key, if it doesn't exist it shows an error dialog and returns default value */
 	template< typename Enum >
-	Enum getEnum( const char * key, Enum defaultVal )
+	Enum getEnum( const QString & key, Enum defaultVal ) const
 	{
 		uint intVal = getUInt( key, defaultVal );
 		if (intVal <= enumSize< Enum >()) {
@@ -82,46 +216,84 @@ class JsonContext {
 		}
 	}
 
- private:
+ protected:
 
-	void invalidCurrentType( const QString & expectedType );
-	void missingKey( const QString & key );
-	void indexOutOfBounds( int index );
-	void invalidTypeAtKey( const QString & key, const QString & expectedType );
-	void invalidTypeAtIdx( int index, const QString & expectedType );
+	void missingKey( const QString & key ) const;
+	void invalidTypeAtKey( const QString & key, const QString & expectedType ) const;
+	QString elemPath( const QString & elemName ) const;
 
-	QString elemPath( const QString & elemName );
-	QString elemPath( int index );
-	QString pathWithoutArrays( const QString & elemName );
-	QString pathWithoutArrays( int index );
+};
 
- private:
+class JsonArrayCtx : public JsonArrayCtxProxy {
 
-	struct Key {
-		enum Type {
-			OTHER = 0,
-			OBJECT_KEY,
-			ARRAY_INDEX
-		};
-		Type type;
-		QString key;
-		int idx;
+ public:
 
-		Key( const QString & key ) : type( OBJECT_KEY ), key( key ), idx( -1 ) {}
-		Key( int idx ) : type( ARRAY_INDEX ), key(), idx( idx ) {}
-	};
+	/** constructs invalid JSON array wrapper */
+	JsonArrayCtx() : JsonArrayCtxProxy() {}
 
-	struct Entry {
-		Key key;
-		QJsonValue val;
+	/** converts the temporary proxy object into the final object - workaround for cyclic dependancy */
+	JsonArrayCtx( const JsonArrayCtxProxy & proxy ) : JsonArrayCtxProxy( proxy ) {}
 
-		Entry( const QString & key, const QJsonValue & val ) : key( key ), val( val ) {}
-		Entry( int idx, const QJsonValue & val ) : key( idx ), val( val ) {}
-	};
+	int size() const { return _wrappedArray->size(); }
 
-	QList< Entry > entryStack;
+	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns invalid array */
+	JsonObjectCtxProxy getObject( int index ) const;
 
-	bool dontShowAgain;
+	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns invalid array */
+	JsonArrayCtxProxy getArray( int index ) const;
+
+	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	bool getBool( int index, bool defaultVal ) const;
+
+	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	int getInt( int index, int defaultVal ) const;
+
+	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	uint getUInt( int index, uint defaultVal ) const;
+
+	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	uint16_t getUInt16( int index, uint16_t defaultVal ) const;
+
+	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	double getDouble( int index, double defaultVal ) const;
+
+	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	QString getString( int index, const QString & defaultVal = QString() ) const;
+
+	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	template< typename Enum >
+	Enum getEnum( int index, Enum defaultVal ) const
+	{
+		uint intVal = getUInt( index, defaultVal );
+		if (intVal <= enumSize< Enum >()) {
+			return Enum( intVal );
+		} else {
+			invalidTypeAtKey( index, enumName< Enum >() );
+			return defaultVal;
+		}
+	}
+
+ protected:
+
+	void indexOutOfBounds( int index ) const;
+	void invalidTypeAtIdx( int index, const QString & expectedType ) const;
+	QString elemPath( int index ) const;
+
+};
+
+class JsonDocumentCtx {
+
+	//QJsonDocument & _wrappedDoc;
+	JsonObjectCtx _rootObject;
+
+	_ParsingContext _context;  ///< document-wide data related to an ongoing parsing process, each element has a pointer to this
+
+ public:
+
+	JsonDocumentCtx( QJsonDocument & wrappedDoc )
+		: /*_wrappedDoc( wrappedDoc ),*/ _rootObject( wrappedDoc.object(), &_context ) {}
+
+	JsonObjectCtx & rootObject() { return _rootObject; }
 
 };
 

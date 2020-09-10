@@ -200,14 +200,14 @@ QJsonArray serializeList( const QList< Elem > & list )
 	return jsArray;
 }
 
-void deserialize( JsonContext & json, Engine & engine );
-void deserialize( JsonContext & json, IWAD & iwad );
-void deserialize( JsonContext & json, Mod & mod );
-void deserialize( JsonContext & json, IwadSettings & iwadSettings );
-void deserialize( JsonContext & json, MapSettings & mapSettings );
-void deserialize( JsonContext & json, ModSettings & modSettings );
-void deserialize( JsonContext & json, LaunchOptions & options );
-void deserialize( JsonContext & json, Preset & preset, bool loadOpts );
+void deserialize( JsonObjectCtx & jsEngine, Engine & engine );
+void deserialize( JsonObjectCtx & jsIWAD, IWAD & iwad );
+void deserialize( JsonObjectCtx & jsMod, Mod & mod );
+void deserialize( JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings );
+void deserialize( JsonObjectCtx & jsMaps, MapSettings & mapSettings );
+void deserialize( JsonObjectCtx & jsMods, ModSettings & modSettings );
+void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & options );
+void deserialize( JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts );
 
 
 #endif // USER_DATA_INCLUDED

@@ -1194,7 +1194,7 @@ void MainWindow::saveOptions( const QString & fileName )
 			"Could not open file "%fileName%" for writing: "%file.errorString() );
 	}
 
-	QJsonObject json;
+	QJsonObject jsRoot;
 
 	{
 		QJsonObject jsGeometry;
@@ -1203,19 +1203,19 @@ void MainWindow::saveOptions( const QString & fileName )
 		jsGeometry["width"] = geometry.width();
 		jsGeometry["height"] = geometry.height();
 
-		json["geometry"] = jsGeometry;
+		jsRoot["geometry"] = jsGeometry;
 	}
 
-	json["use_absolute_paths"] = pathHelper.useAbsolutePaths();
+	jsRoot["use_absolute_paths"] = pathHelper.useAbsolutePaths();
 
-	json["check_for_updates"] = checkForUpdates;
+	jsRoot["check_for_updates"] = checkForUpdates;
 
 	{
 		QJsonObject jsEngines;
 
 		jsEngines["engines"] = serializeList( engineModel.list() );
 
-		json["engines"] = jsEngines;
+		jsRoot["engines"] = jsEngines;
 	}
 
 	{
@@ -1225,12 +1225,12 @@ void MainWindow::saveOptions( const QString & fileName )
 			jsIWADs["IWADs"] = serializeList( iwadModel.list() );
 		}
 
-		json["IWADs"] = jsIWADs;
+		jsRoot["IWADs"] = jsIWADs;
 	}
 
-	json["maps"] = serialize( mapSettings );
+	jsRoot["maps"] = serialize( mapSettings );
 
-	json["mods"] = serialize( modSettings );
+	jsRoot["mods"] = serialize( modSettings );
 
 	{
 		QJsonArray jsPresetArray;
@@ -1238,20 +1238,20 @@ void MainWindow::saveOptions( const QString & fileName )
 			QJsonObject jsPreset = serialize( preset, optsStorage == STORE_TO_PRESET );
 			jsPresetArray.append( jsPreset );
 		}
-		json["presets"] = jsPresetArray;
+		jsRoot["presets"] = jsPresetArray;
 	}
 
-	json["additional_args"] = ui->globalCmdArgsLine->text();
+	jsRoot["additional_args"] = ui->globalCmdArgsLine->text();
 
-	json["options_storage"] = int( optsStorage );
+	jsRoot["options_storage"] = int( optsStorage );
 	if (optsStorage == STORE_GLOBALLY) {
-		json["options"] = serialize( opts );
+		jsRoot["options"] = serialize( opts );
 	}
 
 	int presetIdx = getSelectedItemIdx( ui->presetListView );
-	json["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
+	jsRoot["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
 
-	QJsonDocument jsonDoc( json );
+	QJsonDocument jsonDoc( jsRoot );
 	file.write( jsonDoc.toJson() );
 
 	file.close();
@@ -1280,28 +1280,27 @@ void MainWindow::loadOptions( const QString & fileName )
 	}
 
 	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
-	// we want to print a useful error message with information where in the whole JSON the problem is.
-	JsonContext json( jsonDoc.object() );
+	// we want to print a useful error message with information exactly which JSON element is broken.
+	JsonDocumentCtx jsonDocCtx( jsonDoc );
+	const JsonObjectCtx & jsRoot = jsonDocCtx.rootObject();
 
-	if (json.enterObject( "geometry" ))
+	if (JsonObjectCtx jsGeometry = jsRoot.getObject( "geometry" ))
 	{
-		int width = json.getInt( "width", -1 );
-		int height = json.getInt( "height", -1 );
+		int width = jsGeometry.getInt( "width", -1 );
+		int height = jsGeometry.getInt( "height", -1 );
 		if (width > 0 && height > 0) {
 			this->resize( width, height );
 		}
-
-		json.exitObject();
 	}
 
 	// preset must be deselected first, so that the cleared selections doesn't save in the preset
 	deselectSelectedItems( ui->presetListView );
 
-	pathHelper.toggleAbsolutePaths( json.getBool( "use_absolute_paths", false ) );
+	pathHelper.toggleAbsolutePaths( jsRoot.getBool( "use_absolute_paths", false ) );
 
-	checkForUpdates = json.getBool( "check_for_updates", true );
+	checkForUpdates = jsRoot.getBool( "check_for_updates", true );
 
-	if (json.enterObject( "engines" ))
+	if (JsonObjectCtx jsEngines = jsRoot.getObject( "engines" ))
 	{
 		ui->engineCmbBox->setCurrentIndex( -1 );
 
@@ -1309,39 +1308,31 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		engineModel.clear();
 
-		if (json.enterArray( "engines" ))
+		if (JsonArrayCtx jsEngineArray = jsEngines.getArray( "engines" ))
 		{
-			for (int i = 0; i < json.arraySize(); i++)
+			for (int i = 0; i < jsEngineArray.size(); i++)
 			{
-				if (!json.enterObject( i ))  // wrong type on position i -> skip this entry
+				JsonObjectCtx jsEngine = jsEngineArray.getObject( i );
+				if (!jsEngine)  // wrong type on position i -> skip this entry
 					continue;
 
 				Engine engine;
-				deserialize( json, engine );
+				deserialize( jsEngine, engine );
 
-				if (engine.path.isEmpty()) {  // element isn't present in JSON -> skip this entry
-					json.exitObject();  // TODO: rework to some RAII mechanism
+				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
-				}
 
-				if (!verifyFile( engine.path, "An engine from the saved options (%1) no longer exists. It will be removed from the list." )) {
-					json.exitObject();
+				if (!verifyFile( engine.path, "An engine from the saved options (%1) no longer exists. It will be removed from the list." ))
 					continue;
-				}
 
 				engineModel.append( std::move( engine ) );
-
-				json.exitObject();
 			}
-			json.exitArray();
 		}
 
 		engineModel.finishCompleteUpdate();
-
-		json.exitObject();
 	}
 
-	if (json.enterObject( "IWADs" ))
+	if (JsonObjectCtx jsIWADs = jsRoot.getObject( "IWADs" ))
 	{
 		deselectSelectedItems( ui->iwadListView );
 
@@ -1349,7 +1340,7 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		iwadModel.clear();
 
-		deserialize( json, iwadSettings );
+		deserialize( jsIWADs, iwadSettings );
 
 		if (iwadSettings.updateFromDir)
 		{
@@ -1357,65 +1348,53 @@ void MainWindow::loadOptions( const QString & fileName )
 		}
 		else
 		{
-			if (json.enterArray( "IWADs" ))
+			if (JsonArrayCtx jsIWADArray = jsIWADs.getArray( "IWADs" ))
 			{
-				for (int i = 0; i < json.arraySize(); i++)
+				for (int i = 0; i < jsIWADArray.size(); i++)
 				{
-					if (!json.enterObject( i ))  // wrong type on position i - skip this entry
+					JsonObjectCtx jsIWAD = jsIWADArray.getObject( i );
+					if (!jsIWAD)  // wrong type on position i - skip this entry
 						continue;
 
 					IWAD iwad;
-					deserialize( json, iwad );
+					deserialize( jsIWAD, iwad );
 
-					if (iwad.name.isEmpty() || iwad.path.isEmpty()) {  // element isn't present in JSON -> skip this entry
-						json.exitObject();
+					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
 						continue;
-					}
 
-					if (!verifyFile( iwad.path, "An IWAD from the saved options (%1) no longer exists. It will be removed from the list." )) {
-						json.exitObject();
+					if (!verifyFile( iwad.path, "An IWAD from the saved options (%1) no longer exists. It will be removed from the list." ))
 						continue;
-					}
 
 					iwadModel.append( std::move( iwad ) );
-
-					json.exitObject();
 				}
-				json.exitArray();
 			}
 		}
 
 		iwadModel.finishCompleteUpdate();
-
-		json.exitObject();
 	}
 
-	if (json.enterObject( "maps" ))
+	if (JsonObjectCtx jsMaps = jsRoot.getObject( "maps" ))
 	{
 		deselectSelectedItems( ui->mapDirView );
 
-		deserialize( json, mapSettings );
+		deserialize( jsMaps, mapSettings );
 
 		verifyDir( mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
-
-		json.exitObject();
 	}
 
-	if (json.enterObject( "mods" ))
+	if (JsonObjectCtx jsMods = jsRoot.getObject( "mods" ))
 	{
 		deselectSelectedItems( ui->modListView );
 
-		deserialize( json, modSettings );
+		deserialize( jsMods, modSettings );
 
 		verifyDir( modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
-
-		json.exitObject();
 	}
 
 	// this must be loaded before presets, because we need to know whether to attempt loading the opts from the presets
-	optsStorage = json.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
+	optsStorage = jsRoot.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
 
-	if (json.enterArray( "presets" ))
+	if (JsonArrayCtx jsPresetArray = jsRoot.getArray( "presets" ))
 	{
 		deselectSelectedItems( ui->presetListView );
 		togglePresetSubWidgets( false );
@@ -1424,32 +1403,30 @@ void MainWindow::loadOptions( const QString & fileName )
 
 		presetModel.clear();
 
-		for (int i = 0; i < json.arraySize(); i++)
+		for (int i = 0; i < jsPresetArray.size(); i++)
 		{
-			if (!json.enterObject( i ))  // wrong type on position i - skip this entry
+			JsonObjectCtx jsPreset = jsPresetArray.getObject( i );
+			if (!jsPreset)  // wrong type on position i - skip this entry
 				continue;
 
 			Preset preset;
-			deserialize( json, preset, optsStorage == STORE_TO_PRESET );
+			deserialize( jsPreset, preset, optsStorage == STORE_TO_PRESET );
 
 			presetModel.append( std::move( preset ) );
-
-			json.exitObject();
 		}
 
 		presetModel.finishCompleteUpdate();
-
-		json.exitArray();
 	}
 
-	ui->globalCmdArgsLine->setText( json.getString( "additional_args" ) );
+	ui->globalCmdArgsLine->setText( jsRoot.getString( "additional_args" ) );
 
 	// launch options
-	if (optsStorage == STORE_GLOBALLY && json.enterObject( "options" ))
+	if (optsStorage == STORE_GLOBALLY)
 	{
-		deserialize( json, opts );
-
-		json.exitObject();
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "options" ))
+		{
+			deserialize( jsOptions, opts );
+		}
 	}
 
 	// make sure all paths loaded from JSON are stored in correct format
@@ -1465,7 +1442,7 @@ void MainWindow::loadOptions( const QString & fileName )
 	restoreLaunchOptions( opts );
 
 	// load the last selected preset
-	QString selectedPreset = json.getString( "selected_preset" );
+	QString selectedPreset = jsRoot.getString( "selected_preset" );
 	if (!selectedPreset.isEmpty()) {
 		int selectedPresetIdx = findSuch( presetModel, [ selectedPreset ]( const Preset & preset )
 		                                                                 { return preset.name == selectedPreset; } );

@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <utility>
+#include <optional>
 #include <cstdint>
 #include <climits>
 

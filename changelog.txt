@@ -1,3 +1,8 @@
+1.3.1
+- IWADs are distinguished from PWADs again by filename suffix and no longer by file header
+- fixed unnecessary disk reading when path to map directory is empty
+- slightly more robust options loading
+
 1.3
 - for each engine you can now set custom directory of config files (required for using it on Linux)
 - you can now select multiple map files, but they will always be loaded in alphabetical order

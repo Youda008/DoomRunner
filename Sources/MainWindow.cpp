@@ -427,7 +427,9 @@ void MainWindow::loadPreset( const QModelIndex & index )
 
 	togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
 
-	Preset & preset = presetModel[ selectedPresetIdx ];
+	// Make a copy because the orig preset in presetModel may get changed during the following UI updates.
+	// The correct solution would be to somehow set the UI elements without having our callbacks called, but i don't know how.
+	Preset preset = presetModel[ selectedPresetIdx ];
 
 	// restore selected engine
 	if (!preset.selectedEnginePath.isEmpty()) {  // the engine combo box might have been empty when creating this preset

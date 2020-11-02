@@ -1625,14 +1625,17 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 		if (selectedMapIdx.isValid()) {
 			QString mapFilePath = mapModel.getFSPath( selectedMapIdx );
 			//verifyFile( mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
-			cmdStream << " -file \"" << base.rebasePath( mapFilePath ) << "\"";
+			if (QFileInfo( mapFilePath ).suffix().toLower() == "deh")
+				cmdStream << " -deh \"" << base.rebasePath( mapFilePath ) << "\"";
+			else
+				cmdStream << " -file \"" << base.rebasePath( mapFilePath ) << "\"";
 		}
 	}
 
 	for (const Mod & mod : modModel) {
 		if (mod.checked) {
 			//verifyFile( mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
-			if (QFileInfo( mod.path ).suffix() == "deh")
+			if (QFileInfo( mod.path ).suffix().toLower() == "deh")
 				cmdStream << " -deh \"" << base.rebasePath( mod.path ) << "\"";
 			else
 				cmdStream << " -file \"" << base.rebasePath( mod.path ) << "\"";

@@ -725,7 +725,7 @@ void MainWindow::presetMoveDown()
 void MainWindow::modAdd()
 {
 	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modSettings.dir,
-	                                             "Doom mod files (*.wad *.WAD *.deh *.DEH *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
+	                                             "Doom mod files (*.wad *.WAD *.deh *.DEH *.bex *.BEX *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
 	                                             "DukeNukem data files (*.grp *.rff);;"
 	                                             "All files (*)" );
 	if (path.isEmpty())  // user probably clicked cancel
@@ -1627,6 +1627,8 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 			//verifyFile( mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
 			if (QFileInfo( mapFilePath ).suffix().toLower() == "deh")
 				cmdStream << " -deh \"" << base.rebasePath( mapFilePath ) << "\"";
+			else if (QFileInfo( mapFilePath ).suffix().toLower() == "bex")
+				cmdStream << " -bex \"" << base.rebasePath( mapFilePath ) << "\"";
 			else
 				cmdStream << " -file \"" << base.rebasePath( mapFilePath ) << "\"";
 		}
@@ -1637,6 +1639,8 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 			//verifyFile( mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
 			if (QFileInfo( mod.path ).suffix().toLower() == "deh")
 				cmdStream << " -deh \"" << base.rebasePath( mod.path ) << "\"";
+			if (QFileInfo( mod.path ).suffix().toLower() == "bex")
+				cmdStream << " -bex \"" << base.rebasePath( mod.path ) << "\"";
 			else
 				cmdStream << " -file \"" << base.rebasePath( mod.path ) << "\"";
 		}

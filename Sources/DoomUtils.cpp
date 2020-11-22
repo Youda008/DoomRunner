@@ -21,7 +21,7 @@
 //======================================================================================================================
 
 static const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
-static const QVector< QString > mapSuffixes = {"wad", "deh", "pk3", "pk7", "zip", "7z"};
+static const QVector< QString > mapSuffixes = {"wad", "deh", "bex", "pk3", "pk7", "zip", "7z"};
 static const QVector< QString > dukeSuffixes = {"grp", "rff"};
 
 bool isDoom1( const QString & iwadName )

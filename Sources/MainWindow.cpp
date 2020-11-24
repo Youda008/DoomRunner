@@ -1639,7 +1639,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 			//verifyFile( mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
 			if (QFileInfo( mod.path ).suffix().toLower() == "deh")
 				cmdStream << " -deh \"" << base.rebasePath( mod.path ) << "\"";
-			if (QFileInfo( mod.path ).suffix().toLower() == "bex")
+			else if (QFileInfo( mod.path ).suffix().toLower() == "bex")
 				cmdStream << " -bex \"" << base.rebasePath( mod.path ) << "\"";
 			else
 				cmdStream << " -file \"" << base.rebasePath( mod.path ) << "\"";

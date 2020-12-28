@@ -1163,25 +1163,29 @@ void MainWindow::updateSaveFilesFromDir()
 
 void MainWindow::updateMapsFromIWAD()
 {
+	// note down the currently selected item
+	QString lastText = ui->mapCmbBox->currentText();
+
+	ui->mapCmbBox->setCurrentIndex( -1 );
+
+	ui->mapCmbBox->clear();
+
 	int iwadIdx = getSelectedItemIdx( ui->iwadListView );
 	if (iwadIdx < 0)
 		return;
 
-	QString selectedIwadName = iwadModel[ iwadIdx ].name;
+	// read the map names from file
+	const WadInfo & wadInfo = getCachedWadInfo( iwadModel[ iwadIdx ].path );
+	if (!wadInfo.successfullyRead)
+		return;
 
-	if (isDoom1( selectedIwadName ) && !ui->mapCmbBox->itemText(0).startsWith('E')) {
-		ui->mapCmbBox->clear();
-		for (int i = 1; i <= 9; i++)
-			ui->mapCmbBox->addItem( QStringLiteral("E1M%1").arg(i) );
-		for (int i = 1; i <= 9; i++)
-			ui->mapCmbBox->addItem( QStringLiteral("E2M%1").arg(i) );
-		for (int i = 1; i <= 9; i++)
-			ui->mapCmbBox->addItem( QStringLiteral("E3M%1").arg(i) );
-	} else if (!ui->mapCmbBox->itemText(0).startsWith('M')) {
-		ui->mapCmbBox->clear();
-		for (int i = 1; i <= 32; i++)
-			ui->mapCmbBox->addItem( QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') ) );
-	}
+	// fill the combox-box
+	for (const QString & mapName : wadInfo.mapNames)
+		ui->mapCmbBox->addItem( mapName );
+
+	// restore the originally selected item
+	int lastTextIdx = ui->mapCmbBox->findText( lastText );
+	ui->mapCmbBox->setCurrentIndex( lastTextIdx >= 0 ? lastTextIdx : 0 );  // if it's no longer there, use the first one
 }
 
 

@@ -12,33 +12,47 @@
 
 #include "Common.hpp"
 
+#include <QVector>
+
 class QString;
 class QFileInfo;
 
 
 //======================================================================================================================
+//  file type recognition
 
-inline constexpr const char configFileExt [] = "ini";
-inline constexpr const char saveFileExt [] = "zds";
+extern const QString configFileExt;
+extern const QString saveFileExt;
 
-bool isDoom1( const QString & iwadName );
+extern const QVector< QString > iwadSuffixes;
+extern const QVector< QString > mapSuffixes;
+extern const QVector< QString > dukeSuffixes;
 
-enum class WadType {
-	CANT_READ,
+// convenience wrappers to be used, where otherwise lambda would have to be written
+bool isIWAD( const QFileInfo & file );
+bool isMapPack( const QFileInfo & file );
+
+
+//======================================================================================================================
+//  WAD info loading
+
+enum class WadType
+{
 	IWAD,
 	PWAD,
 	NEITHER
 };
 
-/** this actually opens and reads the file, so don't call it very often, instead used the cached results below */
-WadType recognizeWadTypeByHeader( const QString & filePath );
+struct WadInfo
+{
+	bool successfullyRead;
+	WadType type;
+	QVector< QString > mapNames;
+};
 
-/** returns last known WAD type for this file path */
-WadType getCachedWadType( const QFileInfo & file );
-
-// convenience wrappers to be used, where otherwise lambda would have to be written
-bool isIWAD( const QFileInfo & file );
-bool isMapPack( const QFileInfo & file );
+/** Reads required data from a wad file and stores it into a cache.
+  * If the file was already read earlier, it returns the cached info. */
+const WadInfo & getCachedWadInfo( const QString & filePath );
 
 
 #endif // DOOM_UTILS_INCLUDED

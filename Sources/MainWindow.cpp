@@ -1262,12 +1262,18 @@ void MainWindow::updateMapsFromIWAD()
 
 	// read the map names from file
 	const WadInfo & wadInfo = getCachedWadInfo( iwadModel[ iwadIdx ].path );
-	if (!wadInfo.successfullyRead)
-		return;
 
 	// fill the combox-box
-	for (const QString & mapName : wadInfo.mapNames)
-		ui->mapCmbBox->addItem( mapName );
+	if (wadInfo.successfullyRead && !wadInfo.mapNames.isEmpty())
+	{
+		for (const QString & mapName : wadInfo.mapNames)
+			ui->mapCmbBox->addItem( mapName );
+	}
+	else  // if we haven't found any map names in the IWAD, fallback to the standard DOOM 2 names
+	{
+		for (int i = 1; i <= 32; i++)
+			ui->mapCmbBox->addItem( QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') ) );
+	}
 
 	// restore the originally selected item
 	int lastTextIdx = ui->mapCmbBox->findText( lastText );

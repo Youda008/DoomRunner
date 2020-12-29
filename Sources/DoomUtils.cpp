@@ -165,15 +165,6 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 		}
 	}
 
-	// if we haven't found any map names in the IWAD, fallback to the standard DOOM 2 names
-	if (wadInfo.mapNames.isEmpty())
-	{
-		for (int i = 1; i <= 32; i++)
-		{
-			wadInfo.mapNames.append( QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') ) );
-		}
-	}
-
 	wadInfo.successfullyRead = true;
 	return wadInfo;
 }

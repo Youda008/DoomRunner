@@ -1,5 +1,6 @@
 1.4
 - map names are now extracted from IWAD file instead of guessing them from IWAD name
+- confirmation dialog before preset is deleted
 
 1.3.3
 - fixed deh recognition for map packs

@@ -737,6 +737,12 @@ void MainWindow::presetAdd()
 
 void MainWindow::presetDelete()
 {
+	QMessageBox::StandardButton reply = QMessageBox::question( this,
+		"Delete preset?", "Are you sure you want to delete this preset?", QMessageBox::Yes | QMessageBox::No
+	);
+	if (reply != QMessageBox::Yes)
+		return;
+
 	deleteSelectedItem( ui->presetListView, presetModel );
 
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );

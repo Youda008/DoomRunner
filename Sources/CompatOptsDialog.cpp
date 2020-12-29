@@ -103,10 +103,13 @@ void CompatOptsDialog::setFlag( const CompatFlag & flag, bool enabled )
 	int32_t * flags;
 	QLineEdit * line;
 
-	if (flag.flags == COMPAT_FLAGS_1) {
+	if (flag.flags == COMPAT_FLAGS_1)
+	{
 		flags = &compatOpts.flags1;
 		line = ui->compatflags1_line;
-	} else {
+	}
+	else
+	{
 		flags = &compatOpts.flags2;
 		line = ui->compatflags2_line;
 	}

@@ -218,11 +218,14 @@ class ReadOnlyListModel : public AListModel< Item > {
 		if (!index.isValid() || index.row() >= superClass::itemList.size())
 			return QVariant();
 
-		if (role == Qt::DisplayRole) {
+		if (role == Qt::DisplayRole)
+		{
 			// Some UI elements may want to display only the Item name, some others a string constructed from multiple
 			// Item elements. This way we generalize from the way the display string is constructed from the Item.
 			return makeDisplayString( superClass::itemList[ index.row() ] );
-		} else {
+		}
+		else
+		{
 			return QVariant();
 		}
 	}
@@ -304,29 +307,40 @@ class EditableListModel : public AListModel< Item > {
 		if (!index.isValid() || index.parent().isValid() || index.row() >= superClass::itemList.size())
 			return QVariant();
 
-		if (role == Qt::DisplayRole) {
+		if (role == Qt::DisplayRole)
+		{
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 			// Therefore only author of Item knows which of its memebers he wants to display in the widget,
 			// so he must specify it by a function.
 			return makeDisplayString( superClass::itemList[ index.row() ] );
-		} else if (role == Qt::EditRole) {
+		}
+		else if (role == Qt::EditRole)
+		{
 			// Same as above, exept that this function is optional to ease up initializations of models
 			// that are supposed to be used in non-editable widgets
-			if (!isSet( editString )) {
+			if (!isSet( editString ))
+			{
 				qWarning() << "Edit has been requested, but no editString function is set. "
 				              "Either specify an editString function or disable editing in the widget.";
 				return QVariant();
 			}
+
 			return editString( const_cast< Item & >( superClass::itemList[ index.row() ] ) );
-		} else if (role == Qt::CheckStateRole) {
+		}
+		else if (role == Qt::CheckStateRole)
+		{
 			// Same as above, exept that this function is optional to ease up initializations of models
 			// that are supposed to be used in non-checkable widgets
-			if (!isSet( isChecked )) {
+			if (!isSet( isChecked ))
+			{
 				return QVariant();
 			}
+
 			bool checked = isChecked( const_cast< Item & >( superClass::itemList[ index.row() ] ) );
 			return checked ? Qt::Checked : Qt::Unchecked;
-		} else {
+		}
+		else
+		{
 			return QVariant();
 		}
 	}
@@ -336,33 +350,41 @@ class EditableListModel : public AListModel< Item > {
 		if (index.parent().isValid() || !index.isValid() || index.row() >= superClass::itemList.size())
 			return false;
 
-		if (role == Qt::EditRole) {
-			if (!isSet( editString )) {
+		if (role == Qt::EditRole)
+		{
+			if (!isSet( editString ))
+			{
 				qWarning() << "Edit has been requested, but no editString function is set. "
 				              "Either specify an editString function or disable editing in the widget.";
 				return false;
 			}
+
 			editString( superClass::itemList[ index.row() ] ) = value.toString();
 			emit superClass::dataChanged( index, index, {Qt::EditRole} );
 			return true;
-		} else if (role == Qt::CheckStateRole) {
-			if (!isSet( isChecked )) {
+		}
+		else if (role == Qt::CheckStateRole)
+		{
+			if (!isSet( isChecked ))
+			{
 				qCritical() << "Attempted to change the check state, but no isChecked function is set. WTF?";
 				return false;
 			}
+
 			isChecked( superClass::itemList[ index.row() ] ) = (value == Qt::Checked ? true : false );
 			emit superClass::dataChanged( index, index, {Qt::CheckStateRole} );
 			return true;
-		} else {
+		}
+		else
+		{
 			return false;
 		}
 	}
 
 	virtual bool insertRows( int row, int count, const QModelIndex & parent ) override
 	{
-		if (parent.isValid()) {
+		if (parent.isValid())
 			return false;
-		}
 
 		QAbstractListModel::beginInsertRows( parent, row, row + count - 1 );
 
@@ -378,15 +400,15 @@ class EditableListModel : public AListModel< Item > {
 
 	virtual bool removeRows( int row, int count, const QModelIndex & parent ) override
 	{
-		if (parent.isValid() || row < 0 || row + count > superClass::itemList.size()) {
+		if (parent.isValid() || row < 0 || row + count > superClass::itemList.size())
 			return false;
-		}
 
 		QAbstractListModel::beginRemoveRows( parent, row, row + count - 1 );
 
 		// n times moving all the elements backward to insert one is not nice
 		// but it happens only once in awhile and the number of elements is almost always very low
-		for (int i = 0; i < count; i++) {
+		for (int i = 0; i < count; i++)
+		{
 			superClass::itemList.removeAt( row );
 			if (row < DropTargetListModel::droppedRow())  // we are removing a row that is before the target row
 				DropTargetListModel::decrementRow();      // so target row's index is moving backwards
@@ -432,7 +454,8 @@ class EditableListModel : public AListModel< Item > {
 		QByteArray encodedData( indexes.size() * int(sizeof(int)), 0 );
 		int * rawData = reinterpret_cast< int * >( encodedData.data() );
 
-		for (const QModelIndex & index : indexes) {
+		for (const QModelIndex & index : indexes)
+		{
 			*rawData = index.row();
 			rawData++;
 		}
@@ -448,11 +471,16 @@ class EditableListModel : public AListModel< Item > {
 		if (row < 0 || row > superClass::itemList.size())
 			row = superClass::itemList.size();
 
-		if (mime->hasFormat( internalMimeType ) && action == Qt::MoveAction) {
+		if (mime->hasFormat( internalMimeType ) && action == Qt::MoveAction)
+		{
 			return dropInternalItems( mime->data( internalMimeType ), row, parent );
-		} else if (mime->hasUrls()) {
+		}
+		else if (mime->hasUrls())
+		{
 			return dropMimeUrls( mime->urls(), row, parent );
-		} else {
+		}
+		else
+		{
 			qWarning() << "This model doesn't support such drop operation. It should have been restricted by the ListView.";
 			return false;
 		}
@@ -476,7 +504,8 @@ class EditableListModel : public AListModel< Item > {
 		// but that would just complicate a lot of other things.
 
 		QVector< Item * > origItemRefs;
-		for (int i = 0; i < count; i++) {
+		for (int i = 0; i < count; i++)
+		{
 			int origRowIdx = rawData[i];
 			origItemRefs.append( &superClass::itemList[ origRowIdx ] );
 		}
@@ -485,7 +514,8 @@ class EditableListModel : public AListModel< Item > {
 		insertRows( row, count, parent );
 
 		// move the original items to the target position
-		for (int i = 0; i < count; i++) {
+		for (int i = 0; i < count; i++)
+		{
 			superClass::itemList[ row + i ] = std::move( *origItemRefs[i] );
 		}
 
@@ -501,7 +531,8 @@ class EditableListModel : public AListModel< Item > {
 
 	bool dropMimeUrls( QList< QUrl > urls, int row, const QModelIndex & parent )
 	{
-		if (!pathHelper) {
+		if (!pathHelper)
+		{
 			qWarning() << "File has been dropped but no makeItemFromFile function is set. "
 			              "Either specify a makeItemFromFile function or disable file dropping in the widget.";
 			return false;
@@ -509,11 +540,14 @@ class EditableListModel : public AListModel< Item > {
 
 		// first we need to know how many items will be inserted, so that we can allocate space for them
 		QList< QFileInfo > filesToBeInserted;
-		for (const QUrl & droppedUrl : urls) {
+		for (const QUrl & droppedUrl : urls)
+		{
 			QString localPath = droppedUrl.toLocalFile();
-			if (!localPath.isEmpty()) {
+			if (!localPath.isEmpty())
+			{
 				QFileInfo fileInfo( pathHelper->convertPath( localPath ) );
-				if (fileInfo.exists()) {
+				if (fileInfo.exists())
+				{
 					filesToBeInserted.append( fileInfo );
 				}
 			}
@@ -522,7 +556,8 @@ class EditableListModel : public AListModel< Item > {
 		// allocate space for the items to be dropped to
 		insertRows( row, filesToBeInserted.count(), parent );
 
-		for (int i = 0; i < filesToBeInserted.count(); i++) {
+		for (int i = 0; i < filesToBeInserted.count(); i++)
+		{
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 			// Therefore only author of Item knows how to assign a dropped file into it, so he must define it by a function.
 			superClass::itemList[ row + i ] = Item( filesToBeInserted[ i ] );

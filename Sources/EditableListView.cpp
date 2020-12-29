@@ -124,9 +124,12 @@ void EditableListView::dragEnterEvent( QDragEnterEvent * event )
 	// 2. accept if event contains at leats one mime type present in model->mimeTypes or model->canDropMimeData
 	// We override it, so that we apply our own rules and restrictions for the drag&drop operation.
 
-	if (isDropAcceptable( event )) {  // does proposed drop operation comply with our settings?
+	if (isDropAcceptable( event ))  // does proposed drop operation comply with our settings?
+	{
 		superClass::dragEnterEvent( event );  // let it calc the index and query the model if the drop is ok there
-	} else {
+	}
+	else
+	{
 		event->ignore();
 	}
 }
@@ -139,9 +142,12 @@ void EditableListView::dragMoveEvent( QDragMoveEvent * event )
 	// 3. draw drop indicator according to position
 	// We override it, so that we apply our own rules and restrictions for the drag&drop operation.
 
-	if (isDropAcceptable( event )) {  // does proposed drop operation comply with our settings?
+	if (isDropAcceptable( event ))  // does proposed drop operation comply with our settings?
+	{
 		superClass::dragMoveEvent( event );  // let it query the model if the drop is ok there and draw the indicator
-	} else {
+	}
+	else
+	{
 		event->ignore();
 	}
 }

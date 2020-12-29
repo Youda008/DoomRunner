@@ -50,7 +50,8 @@ TreePosition DirTreeModel::getNodePosition( const QModelIndex & index ) const
 	TreePosition path;
 
 	FSNode * node = modelIndexToNode( index );
-	while (node != _rootNode) {
+	while (node != _rootNode)
+	{
 		path.append( node->name() );
 		node = node->parent();
 	}
@@ -62,7 +63,8 @@ TreePosition DirTreeModel::getNodePosition( const QModelIndex & index ) const
 QModelIndex DirTreeModel::getNodeByPosition( const TreePosition & path ) const
 {
 	FSNode * node = _rootNode;
-	for (const QString & nodeName : path) {
+	for (const QString & nodeName : path)
+	{
 		node = node->child( nodeName );  // linear complexity, but we expect the sublists to be small
 		if (!node)
 			return QModelIndex();  // node at this path no longer exists
@@ -143,9 +145,12 @@ QVariant DirTreeModel::data( const QModelIndex & index, int role ) const
 
 	FSNode * const node = static_cast< FSNode * >( index.internalPointer() );
 
-	if (role == Qt::DisplayRole) {
+	if (role == Qt::DisplayRole)
+	{
 		return node->name();
-	} else {
+	}
+	else
+	{
 		return QVariant();
 	}
 }
@@ -181,7 +186,8 @@ QMimeData * DirTreeModel::mimeData( const QModelIndexList & indexes ) const
 	QMimeData * mimeData = new QMimeData;
 
 	QList< QUrl > urls;
-	for (const QModelIndex & index : indexes) {
+	for (const QModelIndex & index : indexes)
+	{
 		urls.append( QUrl::fromLocalFile( getFSPath( index ) ) );
 	}
 	mimeData->setUrls( urls );

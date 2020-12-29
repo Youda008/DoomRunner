@@ -36,13 +36,14 @@ bool containsSuch( const Container & cont, Condition condition )
 	return std::find_if( std::begin(cont), std::end(cont), condition ) != std::end(cont);
 }
 
-// own implementation because Qt works with int indexes for position instead of iterators, like std
+// own implementation because Qt works with int indexes for position instead of iterators like std
 
 template< typename Container, typename Element >
 int find( const Container & cont, const Element & elem )
 {
 	int i = 0;
-	for (const auto & elem2 : cont) {
+	for (const auto & elem2 : cont)
+	{
 		if (elem == elem2)
 			return i;
 		i++;
@@ -54,7 +55,8 @@ template< typename Container, typename Condition >
 int findSuch( const Container & list, Condition condition )
 {
 	int i = 0;
-	for (const auto & elem : list) {
+	for (const auto & elem : list)
+	{
 		if (condition( elem ))
 			return i;
 		i++;

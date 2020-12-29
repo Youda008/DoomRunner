@@ -97,11 +97,15 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 
 	QFile file( filePath );
 	if (!file.open( QIODevice::ReadOnly ))
+	{
 		return wadInfo;
+	}
 
 	WadHeader header;
 	if (file.read( (char*)&header, sizeof(header) ) < qint64( sizeof(header) ))
+	{
 		return wadInfo;
+	}
 
 	if (strncmp( header.wadType, "IWAD", sizeof(header.wadType) ) == 0)
 		wadInfo.type = WadType::IWAD;
@@ -111,13 +115,17 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 		wadInfo.type = WadType::NEITHER;
 
 	if (!file.seek( header.lumpDirOffset ))
+	{
 		return wadInfo;
+	}
 
 	// the lump directory is basically an array of LumpEntry structs, so let's read it all at once
 	qint64 lumpDirSize = header.numLumps * sizeof(LumpEntry);
 	std::unique_ptr< LumpEntry [] > lumpDir( new LumpEntry [header.numLumps] );
 	if (file.read( (char*)lumpDir.get(), lumpDirSize ) < lumpDirSize)
+	{
 		return wadInfo;
+	}
 
 	for (uint32_t i = 0; i < header.numLumps; ++i)
 	{
@@ -139,7 +147,9 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 			qint64 origPos = file.pos();
 
 			if (!file.seek( lumpDir[i].dataOffset ))
+			{
 				continue;
+			}
 
 			QByteArray lumpData = file.read( lumpDir[i].size );
 			if (lumpData.size() < int( lumpDir[i].size ))
@@ -159,7 +169,9 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 	if (wadInfo.mapNames.isEmpty())
 	{
 		for (int i = 1; i <= 32; i++)
+		{
 			wadInfo.mapNames.append( QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') ) );
+		}
 	}
 
 	wadInfo.successfullyRead = true;
@@ -174,10 +186,12 @@ static QHash< QString, WadInfo > g_cachedWadTypes;
 const WadInfo & getCachedWadInfo( const QString & filePath )
 {
 	auto pos = g_cachedWadTypes.find( filePath );
-	if (pos == g_cachedWadTypes.end()) {
+	if (pos == g_cachedWadTypes.end())
+	{
 		WadInfo wadInfo = readWadInfoFromFile( filePath );
 		pos = g_cachedWadTypes.insert( filePath, std::move(wadInfo) );
-		if (!pos->successfullyRead) {
+		if (!pos->successfullyRead)
+		{
 			qWarning() << "failed to read from " << filePath;
 		}
 	}

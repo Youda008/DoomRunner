@@ -47,14 +47,16 @@ void UpdateChecker::checkForUpdates( const ResultCallback & callback )
 void UpdateChecker::requestFinished( QNetworkReply * reply )
 {
 	auto callbackIter = registeredCallbacks.find( reply );
-	if (callbackIter == registeredCallbacks.end()) {
+	if (callbackIter == registeredCallbacks.end())
+	{
 		qWarning() << "This reply does not have a registered callback, wtf?";
 		return;
 	}
 
 	ResultCallback & callback = callbackIter.value();
 
-	if (reply->error()) {
+	if (reply->error())
+	{
 		qWarning() << "HTTP request failed: " << reply->errorString();
 		callback( CONNECTION_FAILED, reply->errorString() );
 		return;
@@ -63,7 +65,8 @@ void UpdateChecker::requestFinished( QNetworkReply * reply )
 	QString version( reply->readLine( 16 ) );
 
 	QRegularExpressionMatch match = QRegularExpression("^\"([0-9\\.]+)\"$").match( version );
-	if (!match.hasMatch()) {
+	if (!match.hasMatch())
+	{
 		qWarning() << "Version number from github is in invalid format ("%version%"). Fix it!";
 		callback( INVALID_FORMAT, version );
 		return;

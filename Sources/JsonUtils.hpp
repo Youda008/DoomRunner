@@ -65,8 +65,10 @@ class JsonValueCtx {
  protected:
 
 	/** JSON key - either string key for objects or int index for arrays */
-	struct Key {
-		enum Type {
+	struct Key
+	{
+		enum Type
+		{
 			OTHER = 0,
 			OBJECT_KEY,
 			ARRAY_INDEX

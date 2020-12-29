@@ -22,13 +22,12 @@ void JsonValueCtx::prependPath( QLinkedList< QString > & pathList ) const
 {
 	if (_parent)
 	{
-		if (_key.type == Key::OBJECT_KEY) {
+		if (_key.type == Key::OBJECT_KEY)
 			pathList.prepend( '/' + _key.key );
-		} else if (_key.type == Key::ARRAY_INDEX) {
+		else if (_key.type == Key::ARRAY_INDEX)
 			pathList.prepend( "/[" + QString::number( _key.idx ) + ']' );
-		} else {
+		else
 			pathList.prepend( "/<error>" );
-		}
 
 		_parent->prependPath( pathList );
 	}
@@ -42,7 +41,8 @@ QString JsonValueCtx::getPath() const
 	// TODO: idiotic
 	QString pathStr;
 	QTextStream pathStream( &pathStr );
-	for (const QString & part : path) {
+	for (const QString & part : path)
+	{
 		pathStream << part;
 	}
 	pathStream.flush();
@@ -56,12 +56,15 @@ QString JsonValueCtx::getPath() const
 
 JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key ) const
 {
-	if (!_wrappedObject->contains( key )) {
+	if (!_wrappedObject->contains( key ))
+	{
 		missingKey( key );
 		return JsonObjectCtxProxy();
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
-	if (!val.isObject()) {
+
+	if (!val.isObject())
+	{
 		invalidTypeAtKey( key, "object" );
 		return JsonObjectCtxProxy();
 	}
@@ -70,12 +73,14 @@ JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key ) const
 
 JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key ) const
 {
-	if (!_wrappedObject->contains( key )) {
+	if (!_wrappedObject->contains( key ))
+	{
 		missingKey( key );
 		return JsonArrayCtxProxy();
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
-	if (!val.isArray()) {
+	if (!val.isArray())
+	{
 		invalidTypeAtKey( key, "array" );
 		return JsonArrayCtxProxy();
 	}
@@ -84,12 +89,14 @@ JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key ) const
 
 bool JsonObjectCtx::getBool( const QString & key, bool defaultVal ) const
 {
-	if (!_wrappedObject->contains( key )) {
+	if (!_wrappedObject->contains( key ))
+	{
 		missingKey( key );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
-	if (!val.isBool()) {
+	if (!val.isBool())
+	{
 		invalidTypeAtKey( key, "bool" );
 		return defaultVal;
 	}
@@ -98,17 +105,20 @@ bool JsonObjectCtx::getBool( const QString & key, bool defaultVal ) const
 
 int JsonObjectCtx::getInt( const QString & key, int defaultVal ) const
 {
-	if (!_wrappedObject->contains( key )) {
+	if (!_wrappedObject->contains( key ))
+	{
 		missingKey( key );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
-	if (!val.isDouble()) {
+	if (!val.isDouble())
+	{
 		invalidTypeAtKey( key, "int" );
 		return defaultVal;
 	}
 	double d = val.toDouble();
-	if (d < INT_MIN || d > INT_MAX) {
+	if (d < INT_MIN || d > INT_MAX)
+	{
 		invalidTypeAtKey( key, "int" );
 		return defaultVal;
 	}
@@ -117,17 +127,20 @@ int JsonObjectCtx::getInt( const QString & key, int defaultVal ) const
 
 uint JsonObjectCtx::getUInt( const QString & key, uint defaultVal ) const
 {
-	if (!_wrappedObject->contains( key )) {
+	if (!_wrappedObject->contains( key ))
+	{
 		missingKey( key );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
-	if (!val.isDouble()) {
+	if (!val.isDouble())
+	{
 		invalidTypeAtKey( key, "uint" );
 		return defaultVal;
 	}
 	double d = val.toDouble();
-	if (d < 0 || d > UINT_MAX) {
+	if (d < 0 || d > UINT_MAX)
+	{
 		invalidTypeAtKey( key, "int" );
 		return defaultVal;
 	}
@@ -136,17 +149,20 @@ uint JsonObjectCtx::getUInt( const QString & key, uint defaultVal ) const
 
 uint16_t JsonObjectCtx::getUInt16( const QString & key, uint16_t defaultVal ) const
 {
-	if (!_wrappedObject->contains( key )) {
+	if (!_wrappedObject->contains( key ))
+	{
 		missingKey( key );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
-	if (!val.isDouble()) {
+	if (!val.isDouble())
+	{
 		invalidTypeAtKey( key, "uint" );
 		return defaultVal;
 	}
 	double d = val.toDouble();
-	if (d < 0 || d > UINT16_MAX) {
+	if (d < 0 || d > UINT16_MAX)
+	{
 		invalidTypeAtKey( key, "int" );
 		return defaultVal;
 	}
@@ -155,12 +171,14 @@ uint16_t JsonObjectCtx::getUInt16( const QString & key, uint16_t defaultVal ) co
 
 double JsonObjectCtx::getDouble( const QString & key, double defaultVal ) const
 {
-	if (!_wrappedObject->contains( key )) {
+	if (!_wrappedObject->contains( key ))
+	{
 		missingKey( key );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
-	if (!val.isDouble()) {
+	if (!val.isDouble())
+	{
 		invalidTypeAtKey( key, "double" );
 		return defaultVal;
 	}
@@ -169,12 +187,14 @@ double JsonObjectCtx::getDouble( const QString & key, double defaultVal ) const
 
 QString JsonObjectCtx::getString( const QString & key, const QString & defaultVal ) const
 {
-	if (!_wrappedObject->contains( key )) {
+	if (!_wrappedObject->contains( key ))
+	{
 		missingKey( key );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
-	if (!val.isString()) {
+	if (!val.isString())
+	{
 		invalidTypeAtKey( key, "string" );
 		return defaultVal;
 	}
@@ -187,12 +207,14 @@ QString JsonObjectCtx::getString( const QString & key, const QString & defaultVa
 
 JsonObjectCtxProxy JsonArrayCtx::getObject( int index ) const
 {
-	if (index < 0 || index >= _wrappedArray->size()) {
+	if (index < 0 || index >= _wrappedArray->size())
+	{
 		indexOutOfBounds( index );
 		return JsonObjectCtxProxy();
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
-	if (!val.isObject()) {
+	if (!val.isObject())
+	{
 		invalidTypeAtIdx( index, "object" );
 		return JsonObjectCtxProxy();
 	}
@@ -201,12 +223,14 @@ JsonObjectCtxProxy JsonArrayCtx::getObject( int index ) const
 
 JsonArrayCtxProxy JsonArrayCtx::getArray( int index ) const
 {
-	if (index < 0 || index >= _wrappedArray->size()) {
+	if (index < 0 || index >= _wrappedArray->size())
+	{
 		indexOutOfBounds( index );
 		return JsonArrayCtxProxy();
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
-	if (!val.isArray()) {
+	if (!val.isArray())
+	{
 		invalidTypeAtIdx( index, "array" );
 		return JsonArrayCtxProxy();
 	}
@@ -215,12 +239,14 @@ JsonArrayCtxProxy JsonArrayCtx::getArray( int index ) const
 
 bool JsonArrayCtx::getBool( int index, bool defaultVal ) const
 {
-	if (index < 0 || index >= _wrappedArray->size()) {
+	if (index < 0 || index >= _wrappedArray->size())
+	{
 		indexOutOfBounds( index );
 		return false;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
-	if (!val.isBool()) {
+	if (!val.isBool())
+	{
 		invalidTypeAtIdx( index, "bool" );
 		return defaultVal;
 	}
@@ -230,17 +256,20 @@ bool JsonArrayCtx::getBool( int index, bool defaultVal ) const
 
 int JsonArrayCtx::getInt( int index, int defaultVal ) const
 {
-	if (index < 0 || index >= _wrappedArray->size()) {
+	if (index < 0 || index >= _wrappedArray->size())
+	{
 		indexOutOfBounds( index );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
-	if (!val.isDouble()) {
+	if (!val.isDouble())
+	{
 		invalidTypeAtIdx( index, "int" );
 		return defaultVal;
 	}
 	double d = val.toDouble();
-	if (d < INT_MIN || d > INT_MAX) {
+	if (d < INT_MIN || d > INT_MAX)
+	{
 		invalidTypeAtIdx( index, "int" );
 		return defaultVal;
 	}
@@ -249,17 +278,20 @@ int JsonArrayCtx::getInt( int index, int defaultVal ) const
 
 uint JsonArrayCtx::getUInt( int index, uint defaultVal ) const
 {
-	if (index < 0 || index >= _wrappedArray->size()) {
+	if (index < 0 || index >= _wrappedArray->size())
+	{
 		indexOutOfBounds( index );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
-	if (!val.isDouble()) {
+	if (!val.isDouble())
+	{
 		invalidTypeAtIdx( index, "uint" );
 		return defaultVal;
 	}
 	double d = val.toDouble();
-	if (d < 0 || d > UINT_MAX) {
+	if (d < 0 || d > UINT_MAX)
+	{
 		invalidTypeAtIdx( index, "int" );
 		return defaultVal;
 	}
@@ -268,17 +300,20 @@ uint JsonArrayCtx::getUInt( int index, uint defaultVal ) const
 
 uint16_t JsonArrayCtx::getUInt16( int index, uint16_t defaultVal ) const
 {
-	if (index < 0 || index >= _wrappedArray->size()) {
+	if (index < 0 || index >= _wrappedArray->size())
+	{
 		indexOutOfBounds( index );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
-	if (!val.isDouble()) {
+	if (!val.isDouble())
+	{
 		invalidTypeAtIdx( index, "uint" );
 		return defaultVal;
 	}
 	double d = val.toDouble();
-	if (d < 0 || d > UINT16_MAX) {
+	if (d < 0 || d > UINT16_MAX)
+	{
 		invalidTypeAtIdx( index, "int" );
 		return defaultVal;
 	}
@@ -287,12 +322,14 @@ uint16_t JsonArrayCtx::getUInt16( int index, uint16_t defaultVal ) const
 
 double JsonArrayCtx::getDouble( int index, double defaultVal ) const
 {
-	if (index < 0 || index >= _wrappedArray->size()) {
+	if (index < 0 || index >= _wrappedArray->size())
+	{
 		indexOutOfBounds( index );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
-	if (!val.isDouble()) {
+	if (!val.isDouble())
+	{
 		invalidTypeAtIdx( index, "double" );
 		return defaultVal;
 	}
@@ -301,12 +338,14 @@ double JsonArrayCtx::getDouble( int index, double defaultVal ) const
 
 QString JsonArrayCtx::getString( int index, const QString & defaultVal ) const
 {
-	if (index < 0 || index >= _wrappedArray->size()) {
+	if (index < 0 || index >= _wrappedArray->size())
+	{
 		indexOutOfBounds( index );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
-	if (!val.isString()) {
+	if (!val.isString())
+	{
 		invalidTypeAtIdx( index, "string" );
 		return defaultVal;
 	}

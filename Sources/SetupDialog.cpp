@@ -72,7 +72,8 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );
 
 	// initialize widget data
-	if (iwadSettings.updateFromDir) {
+	if (iwadSettings.updateFromDir)
+	{
 		ui->manageIWADs_auto->click();
 		manageIWADsAutomatically();
 	}
@@ -137,7 +138,9 @@ void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
  #else
 	constexpr uint dirUpdateDelay = 2;
  #endif
-	if (tickCount % dirUpdateDelay == 0) {
+
+	if (tickCount % dirUpdateDelay == 0)
+	{
 		if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
 			updateIWADsFromDir();
 	}
@@ -302,7 +305,8 @@ void SetupDialog::editEngine( const QModelIndex & index )
 
 	int code = dialog.exec();
 
-	if (code == QDialog::Accepted) {
+	if (code == QDialog::Accepted)
+	{
 		selectedEngine = dialog.engine;
 	}
 }
@@ -316,7 +320,8 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 {
 	pathHelper.toggleAbsolutePaths( checked );
 
-	for (Engine & engine : engineModel) {
+	for (Engine & engine : engineModel)
+	{
 		engine.path = pathHelper.convertPath( engine.path );
 		engine.configDir = pathHelper.convertPath( engine.configDir );
 	}
@@ -325,7 +330,9 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 	iwadSettings.dir = pathHelper.convertPath( iwadSettings.dir );
 	ui->iwadDirLine->setText( iwadSettings.dir );
 	for (IWAD & iwad : iwadModel)
+	{
 		iwad.path = pathHelper.convertPath( iwad.path );
+	}
 	iwadModel.contentChanged( 0 );
 
 	mapSettings.dir = pathHelper.convertPath( mapSettings.dir );

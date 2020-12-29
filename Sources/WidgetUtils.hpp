@@ -76,7 +76,8 @@ template< typename Item >
 int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
-	if (selectedIdx < 0) {  // if no item is selected
+	if (selectedIdx < 0)
+	{
 		if (!model.isEmpty())
 			QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
@@ -90,11 +91,15 @@ int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 
 	model.finishDeleting();
 
-	// restore selection
-	if (selectedIdx < model.size()) {                  // try to select the item that follows after the deleted one
+	// try to select the item that follows after the deleted one
+	if (selectedIdx < model.size())
+	{
 		selectItemByIdx( view, selectedIdx );
-	} else {                                           // if the deleted item was the last one
-		if (selectedIdx > 0) {                         // and not the only one
+	}
+	else                                               // if the deleted item was the last one
+	{
+		if (selectedIdx > 0)                           // and not the only one
+		{
 			selectItemByIdx( view, selectedIdx - 1 );  // select the previous
 		}
 	}
@@ -106,7 +111,8 @@ template< typename Item >
 QVector<int> deleteSelectedItems( QListView * view, AListModel< Item > & model )
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
-	if (selectedIndexes.isEmpty()) {
+	if (selectedIndexes.isEmpty())
+	{
 		if (!model.isEmpty())
 			QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return {};
@@ -125,7 +131,8 @@ QVector<int> deleteSelectedItems( QListView * view, AListModel< Item > & model )
 
 	// delete all the selected items
 	uint deletedCnt = 0;
-	for (int selectedIdx : selectedIndexesAsc) {
+	for (int selectedIdx : selectedIndexesAsc)
+	{
 		deselectItemByIdx( view, selectedIdx );
 		model.removeAt( selectedIdx - deletedCnt );
 		deletedCnt++;
@@ -134,9 +141,12 @@ QVector<int> deleteSelectedItems( QListView * view, AListModel< Item > & model )
 	model.finishCompleteUpdate();
 
 	// try to select some nearest item, so that user can click 'delete' repeatedly to delete all of them
-	if (firstSelectedIdx < model.size()) {  // if the first deleted item index is still within range of existing ones
+	if (firstSelectedIdx < model.size())           // if the first deleted item index is still within range of existing ones
+	{
 		selectItemByIdx( view, firstSelectedIdx ); // select that one
-	} else if (!model.isEmpty()) {          // otherwise select the previous, if there is any
+	}
+	else if (!model.isEmpty())                     // otherwise select the previous, if there is any
+	{
 		selectItemByIdx( view, firstSelectedIdx - 1 );
 	}
 
@@ -147,7 +157,8 @@ template< typename Item >
 int cloneSelectedItem( QListView * view, AListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
-	if (selectedIdx < 0) {  // if no item is selected
+	if (selectedIdx < 0)
+	{
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
@@ -174,11 +185,15 @@ template< typename Item >
 int moveUpSelectedItem( QListView * view, AListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
-	if (selectedIdx < 0) {  // if no item is selected
+	if (selectedIdx < 0)
+	{
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
-	if (selectedIdx == 0) {  // if the selected item is the first one, do nothing
+
+	// if the selected item is the first one, do nothing
+	if (selectedIdx == 0)
+	{
 		return selectedIdx;
 	}
 
@@ -197,11 +212,15 @@ template< typename Item >
 int moveDownSelectedItem( QListView * view, AListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );
-	if (selectedIdx < 0) {  // if no item is selected
+	if (selectedIdx < 0)
+	{
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
-	if (selectedIdx == model.size() - 1) {  // if the selected item is the last one, do nothing
+
+	// if the selected item is the last one, do nothing
+	if (selectedIdx == model.size() - 1)
+	{
 		return selectedIdx;
 	}
 
@@ -220,7 +239,8 @@ template< typename Item >
 QVector<int> moveUpSelectedItems( QListView * view, AListModel< Item > & model )
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
-	if (selectedIndexes.isEmpty()) {
+	if (selectedIndexes.isEmpty())
+	{
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return {};
 	}
@@ -234,11 +254,15 @@ QVector<int> moveUpSelectedItems( QListView * view, AListModel< Item > & model )
 
 	// if the selected items are at the bottom, do nothing
 	if (selectedIndexesAsc.first() == 0)
+	{
 		return {};
+	}
 
 	// do the move
 	for (int selectedIdx : selectedIndexesAsc)
+	{
 		model.move( selectedIdx, selectedIdx - 1 );
+	}
 
 	// update selection
 	deselectItemByIdx( view, selectedIndexesAsc.last() );
@@ -253,7 +277,8 @@ template< typename Item >
 QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model )
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
-	if (selectedIndexes.isEmpty()) {
+	if (selectedIndexes.isEmpty())
+	{
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
 		return {};
 	}
@@ -267,11 +292,15 @@ QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model
 
 	// if the selected items are at the top, do nothing
 	if (selectedIndexesDesc.first() == model.size() - 1)
+	{
 		return {};
+	}
 
 	// do the move
 	for (int selectedIdx : selectedIndexesDesc)
+	{
 		model.move( selectedIdx, selectedIdx + 1 );
+	}
 
 	// update selection
 	deselectItemByIdx( view, selectedIndexesDesc.last() );
@@ -301,9 +330,11 @@ auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> 
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
 bool selectItemByID( QListView * view, const AListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
-	if (!itemID.isEmpty()) {
+	if (!itemID.isEmpty())
+	{
 		int newItemIdx = findSuch( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
-		if (newItemIdx >= 0) {
+		if (newItemIdx >= 0)
+		{
 			selectItemByIdx( view, newItemIdx );
 			return true;
 		}
@@ -405,9 +436,11 @@ auto getSelectedItemID( QComboBox * view, const AListModel< Item > & model ) -> 
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
 bool selectItemByID( QComboBox * view, const AListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
-	if (!itemID.isEmpty()) {
+	if (!itemID.isEmpty())
+	{
 		int newItemIdx = findSuch( model.list(), [ &itemID ]( const Item & item ) { return item.getID() == itemID; } );
-		if (newItemIdx >= 0) {
+		if (newItemIdx >= 0)
+		{
 			view->setCurrentIndex( newItemIdx );
 			return true;
 		}

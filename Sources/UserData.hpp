@@ -85,7 +85,8 @@ enum OptionsStorage
 template<> inline const char * enumName< OptionsStorage >() { return "OptionsStorage"; }
 template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorage::STORE_TO_PRESET ) + 1; }
 
-enum LaunchMode {
+enum LaunchMode
+{
 	STANDARD,
 	LAUNCH_MAP,
 	LOAD_SAVE
@@ -93,7 +94,8 @@ enum LaunchMode {
 template<> inline const char * enumName< LaunchMode >() { return "LaunchMode"; }
 template<> inline uint enumSize< LaunchMode >() { return uint( LaunchMode::LOAD_SAVE ) + 1; }
 
-enum Skill {
+enum Skill
+{
 	TOO_YOUNG_TO_DIE,
 	NOT_TOO_ROUGH,
 	HURT_ME_PLENTY,
@@ -104,21 +106,24 @@ enum Skill {
 template<> inline const char * enumName< Skill >() { return "Skill"; }
 template<> inline uint enumSize< Skill >() { return uint( Skill::CUSTOM ) + 1; }
 
-enum MultRole {
+enum MultRole
+{
 	SERVER,
 	CLIENT
 };
 template<> inline const char * enumName< MultRole >() { return "MultRole"; }
 template<> inline uint enumSize< MultRole >() { return uint( MultRole::CLIENT ) + 1; }
 
-enum NetMode {
+enum NetMode
+{
 	PEER_TO_PEER,
 	PACKET_SERVER
 };
 template<> inline const char * enumName< NetMode >() { return "NetMode"; }
 template<> inline uint enumSize< NetMode >() { return uint( NetMode::PACKET_SERVER ) + 1; }
 
-enum GameMode {
+enum GameMode
+{
 	DEATHMATCH,
 	TEAM_DEATHMATCH,
 	ALT_DEATHMATCH,
@@ -128,12 +133,14 @@ enum GameMode {
 template<> inline const char * enumName< GameMode >() { return "GameMode"; }
 template<> inline uint enumSize< GameMode >() { return uint( GameMode::COOPERATIVE ) + 1; }
 
-struct GameplayOptions {
+struct GameplayOptions
+{
 	int32_t flags1 = 0;
 	int32_t flags2 = 0;
 };
 
-struct CompatibilityOptions {
+struct CompatibilityOptions
+{
 	int32_t flags1 = 0;
 	int32_t flags2 = 0;
 };
@@ -194,7 +201,8 @@ template< typename Elem >
 QJsonArray serializeList( const QList< Elem > & list )
 {
 	QJsonArray jsArray;
-	for (const Elem & elem : list) {
+	for (const Elem & elem : list)
+	{
 		jsArray.append( serialize( elem ) );
 	}
 	return jsArray;

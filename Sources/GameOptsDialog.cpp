@@ -114,10 +114,13 @@ void GameOptsDialog::setFlag( const DMFlag & flag, bool enabled )
 	int32_t * flags;
 	QLineEdit * line;
 
-	if (flag.flags == DM_FLAGS_1) {
+	if (flag.flags == DM_FLAGS_1)
+	{
 		flags = &gameOpts.flags1;
 		line = ui->dmflags1_line;
-	} else {
+	}
+	else
+	{
 		flags = &gameOpts.flags2;
 		line = ui->dmflags2_line;
 	}
@@ -225,13 +228,18 @@ void GameOptsDialog::on_allowSuicide_toggled( bool checked )
 
 void GameOptsDialog::on_allowJump_stateChanged( int state )
 {
-	if (state == Qt::Unchecked) {
+	if (state == Qt::Unchecked)
+	{
 		setFlag( ALLOW_JUMP_ALWAYS_ON, false );
 		setFlag( ALLOW_JUMP_ALWAYS_OFF, true );
-	} else if (state == Qt::PartiallyChecked) {
+	}
+	else if (state == Qt::PartiallyChecked)
+	{
 		setFlag( ALLOW_JUMP_ALWAYS_ON, false );
 		setFlag( ALLOW_JUMP_ALWAYS_OFF, false );
-	} else if (state == Qt::Checked) {
+	}
+	else if (state == Qt::Checked)
+	{
 		setFlag( ALLOW_JUMP_ALWAYS_ON, true );
 		setFlag( ALLOW_JUMP_ALWAYS_OFF, false );
 	}
@@ -239,13 +247,18 @@ void GameOptsDialog::on_allowJump_stateChanged( int state )
 
 void GameOptsDialog::on_allowCrouch_stateChanged( int state )
 {
-	if (state == Qt::Unchecked) {
+	if (state == Qt::Unchecked)
+	{
 		setFlag( ALLOW_CROUCH_ALWAYS_ON, false );
 		setFlag( ALLOW_CROUCH_ALWAYS_OFF, true );
-	} else if (state == Qt::PartiallyChecked) {
+	}
+	else if (state == Qt::PartiallyChecked)
+	{
 		setFlag( ALLOW_CROUCH_ALWAYS_ON, false );
 		setFlag( ALLOW_CROUCH_ALWAYS_OFF, false );
-	} else if (state == Qt::Checked) {
+	}
+	else if (state == Qt::Checked)
+	{
 		setFlag( ALLOW_CROUCH_ALWAYS_ON, true );
 		setFlag( ALLOW_CROUCH_ALWAYS_OFF, false );
 	}
@@ -253,13 +266,18 @@ void GameOptsDialog::on_allowCrouch_stateChanged( int state )
 
 void GameOptsDialog::on_allowFreelook_stateChanged( int state )
 {
-	if (state == Qt::Unchecked) {
+	if (state == Qt::Unchecked)
+	{
 		setFlag( ALLOW_FREELOOK_ALWAYS_ON, false );
 		setFlag( ALLOW_FREELOOK_ALWAYS_OFF, true );
-	} else if (state == Qt::PartiallyChecked) {
+	}
+	else if (state == Qt::PartiallyChecked)
+	{
 		setFlag( ALLOW_FREELOOK_ALWAYS_ON, false );
 		setFlag( ALLOW_FREELOOK_ALWAYS_OFF, false );
-	} else if (state == Qt::Checked) {
+	}
+	else if (state == Qt::Checked)
+	{
 		setFlag( ALLOW_FREELOOK_ALWAYS_ON, true );
 		setFlag( ALLOW_FREELOOK_ALWAYS_OFF, false );
 	}

@@ -54,11 +54,10 @@ int compareVersions( const QString & verStr1, const QString & verStr2 )
 	else if (!parsed1 && parsed2)
 		return -1;
 
-	if (ver1.major != ver2.major) {
+	if (ver1.major != ver2.major)
 		return ver1.major - ver2.major;
-	} else if (ver1.minor != ver2.minor) {
+	else if (ver1.minor != ver2.minor)
 		return ver1.minor - ver2.minor;
-	} else {
+	else
 		return ver1.patch - ver2.patch;
-	}
 }

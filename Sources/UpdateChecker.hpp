@@ -33,7 +33,8 @@ class UpdateChecker : public QObject {
 	UpdateChecker();
 	virtual ~UpdateChecker();
 
-	enum Result {
+	enum Result
+	{
 		CONNECTION_FAILED,
 		INVALID_FORMAT,
 		UPDATE_AVAILABLE,

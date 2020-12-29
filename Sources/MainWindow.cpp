@@ -366,10 +366,10 @@ void MainWindow::runSetupDialog()
 
 void MainWindow::runGameOptsDialog()
 {
-	GameplayOptions * gameOpts = &opts.gameOpts;
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
-		gameOpts = &presetModel[ selectedPresetIdx ].opts.gameOpts;
+	GameplayOptions * gameOpts = (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
+	                               ? &presetModel[ selectedPresetIdx ].opts.gameOpts
+	                               : &opts.gameOpts;
 
 	GameOptsDialog dialog( this, *gameOpts );
 
@@ -384,10 +384,10 @@ void MainWindow::runGameOptsDialog()
 
 void MainWindow::runCompatOptsDialog()
 {
-	CompatibilityOptions * compatOpts = &opts.compatOpts;
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
-		compatOpts = &presetModel[ selectedPresetIdx ].opts.compatOpts;
+	CompatibilityOptions * compatOpts = (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
+	                                      ? &presetModel[ selectedPresetIdx ].opts.compatOpts
+	                                      : &opts.compatOpts;
 
 	CompatOptsDialog dialog( this, *compatOpts );
 
@@ -438,7 +438,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 		if (engineIdx >= 0) {
 			verifyFile( preset.selectedEnginePath,
 				"Engine selected for this preset (%1) no longer exists, please select another one." );
-			ui->engineCmbBox->setCurrentIndex( engineIdx );
+			ui->engineCmbBox->setCurrentIndex( engineIdx );  // this causes the callback to be called and the dependent combo-boxes to be updated
 		} else {
 			ui->engineCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Engine no longer exists",
@@ -470,7 +470,7 @@ void MainWindow::loadPreset( const QModelIndex & index )
 		                                              { return iwad.path == preset.selectedIWAD; } );
 		if (iwadIdx >= 0) {
 			selectItemByIdx( ui->iwadListView, iwadIdx );
-			updateMapsFromIWAD();
+			updateMapsFromIWAD();  // manually update this here, so the map names are ready to be selected when launch options are loaded
 		} else {
 			QMessageBox::warning( this, "IWAD no longer exists",
 				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
@@ -511,7 +511,10 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	}
 	modModel.finishCompleteUpdate();
 
-	restoreLaunchOptions( preset.opts );
+	if (optsStorage == STORE_TO_PRESET)
+	{
+		restoreLaunchOptions( preset.opts );
+	}
 
 	// restore additional command line arguments
 	ui->presetCmdArgsLine->setText( preset.cmdArgs );
@@ -1112,6 +1115,13 @@ void MainWindow::clearPresetSubWidgets()
 //----------------------------------------------------------------------------------------------------------------------
 //  automatic list updates according to directory content
 
+// All lists must be updated with special care. In some widgets, when a selection is reset it calls our "item selected"
+// callback and that causes the command to regenerate. Which means on every update tick the command is changed back and
+// forth - first time when the old item is deselected when the list is cleared and second time when the new item is
+// selected after the list is filled. This has an unplesant effect that it isn't possible to inspect the whole launch
+// command or copy from it, because your cursor is cursor position is constantly reset by the constant updates.
+// Therefore we have to make sure that the item selection is changed only when necessary.
+
 void MainWindow::updateListsFromDirs()
 {
 	if (iwadSettings.updateFromDir) {
@@ -1135,11 +1145,8 @@ void MainWindow::updateMapPacksFromDir()
 void MainWindow::updateConfigFilesFromDir()
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-	if (currentEngineIdx < 0) {  // no engine is selected
-		return;
-	}
 
-	QString configDir = engineModel[ currentEngineIdx ].configDir;
+	QString configDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
 
 	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, false, pathHelper,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == configFileExt; }
@@ -1149,18 +1156,16 @@ void MainWindow::updateConfigFilesFromDir()
 void MainWindow::updateSaveFilesFromDir()
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-	if (currentEngineIdx < 0) {  // no engine is selected
-		return;
-	}
 
 	// i don't know about a case, where the save dir would be different from config dir, it's not even configurable in zdoom
-	QString saveDir = engineModel[ currentEngineIdx ].configDir;
+	QString saveDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
 
 	updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, false, pathHelper,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileExt; }
 	);
 }
 
+// this is not called regularly, but only when an IWAD is selected or deselected
 void MainWindow::updateMapsFromIWAD()
 {
 	// note down the currently selected item
@@ -1214,6 +1219,8 @@ void MainWindow::saveOptions( const QString & fileName )
 
 	jsRoot["use_absolute_paths"] = pathHelper.useAbsolutePaths();
 
+	jsRoot["options_storage"] = int( optsStorage );
+
 	jsRoot["check_for_updates"] = checkForUpdates;
 
 	{
@@ -1249,7 +1256,6 @@ void MainWindow::saveOptions( const QString & fileName )
 
 	jsRoot["additional_args"] = ui->globalCmdArgsLine->text();
 
-	jsRoot["options_storage"] = int( optsStorage );
 	if (optsStorage == STORE_GLOBALLY) {
 		jsRoot["options"] = serialize( opts );
 	}
@@ -1299,10 +1305,13 @@ void MainWindow::loadOptions( const QString & fileName )
 		}
 	}
 
-	// preset must be deselected first, so that the cleared selections doesn't save in the preset
+	// preset must be deselected first, so that the cleared selections doesn't save in the selected preset
 	deselectSelectedItems( ui->presetListView );
 
 	pathHelper.toggleAbsolutePaths( jsRoot.getBool( "use_absolute_paths", false ) );
+
+	// this must be loaded early, because we need to know whether to attempt loading the opts from the presets
+	optsStorage = jsRoot.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
 
 	checkForUpdates = jsRoot.getBool( "check_for_updates", true );
 
@@ -1397,9 +1406,6 @@ void MainWindow::loadOptions( const QString & fileName )
 		verifyDir( modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 	}
 
-	// this must be loaded before presets, because we need to know whether to attempt loading the opts from the presets
-	optsStorage = jsRoot.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
-
 	if (JsonArrayCtx jsPresetArray = jsRoot.getArray( "presets" ))
 	{
 		deselectSelectedItems( ui->presetListView );
@@ -1444,9 +1450,6 @@ void MainWindow::loadOptions( const QString & fileName )
 
 	updateListsFromDirs();
 
-	// this must be done after the lists are already updated because we want to select existing item in combo boxes
-	restoreLaunchOptions( opts );
-
 	// load the last selected preset
 	QString selectedPreset = jsRoot.getString( "selected_preset" );
 	if (!selectedPreset.isEmpty()) {
@@ -1459,6 +1462,13 @@ void MainWindow::loadOptions( const QString & fileName )
 			QMessageBox::warning( nullptr, "Preset no longer exists",
 				"Preset that was selected last time ("%selectedPreset%") no longer exists. Did you mess up with the options.json?" );
 		}
+	}
+
+	// this must be done after the lists are already updated because we want to select existing items in combo boxes
+	// and after preset loading because the preset will select IWAD which will fill the map combo box
+	if (optsStorage == STORE_GLOBALLY)
+	{
+		restoreLaunchOptions( opts );
 	}
 
 	updateLaunchCommand();
@@ -1601,7 +1611,7 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 	PathHelper base( pathHelper.useAbsolutePaths(), baseDir, pathHelper.baseDir() );
 
 	QString newCommand;
-	QTextStream cmdStream( &newCommand );
+	QTextStream cmdStream( &newCommand, QIODevice::WriteOnly );
 
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx >= 0) {

@@ -433,7 +433,9 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 	//configModel.finishCompleteUpdate();
 	model.contentChanged(0);
 
-	// restore the originally selected item (the selection will be reset if the item does not exist in the new content)
+	// restore the originally selected item
+	//   the selection will be reset if the item does not exist in the new content because find returns -1 which is valid value for setCurrentIndex
+	//   if the new index is same as the current index, the change callbacks are not called and the command not re-generated
 	view->setCurrentIndex( view->findText( lastText ) );
 }
 

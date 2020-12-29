@@ -16,6 +16,7 @@
 #include "ListModel.hpp"
 #include "DirTreeModel.hpp"
 #include "FileSystemUtils.hpp"  // PathHelper
+#include "KeyPressEmitter.hpp"
 #include "UpdateChecker.hpp"
 
 #include <QMainWindow>
@@ -77,6 +78,11 @@ class MainWindow : public QMainWindow {
 	void modMoveUp();
 	void modMoveDown();
 	void modsDropped( int row, int count );
+
+	void presetKeyPressed( int key, uint8_t modifiers );
+	void modKeyPressed( int key, uint8_t modifiers );
+	void iwadKeyPressed( int key, uint8_t modifiers );
+	void mapKeyPressed( int key, uint8_t modifiers );
 
 	void modeStandard();
 	void modeLaunchMap();
@@ -141,6 +147,11 @@ class MainWindow : public QMainWindow {
 	QString compatOptsCmdArgs;    ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
+
+	KeyPressEmitter presetKeyEmitter;
+	KeyPressEmitter modKeyEmitter;
+	KeyPressEmitter iwadKeyEmitter;
+	KeyPressEmitter mapKeyEmitter;
 
 	UpdateChecker updateChecker;
 

@@ -197,6 +197,15 @@ MainWindow::MainWindow()
 	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
+	ui->presetListView->installEventFilter( &presetKeyEmitter );
+	connect( &presetKeyEmitter, &KeyPressEmitter::keyPressed, this, &thisClass::presetKeyPressed );
+	ui->modListView->installEventFilter( &modKeyEmitter );
+	connect( &modKeyEmitter, &KeyPressEmitter::keyPressed, this, &thisClass::modKeyPressed );
+	ui->iwadListView->installEventFilter( &iwadKeyEmitter );
+	connect( &iwadKeyEmitter, &KeyPressEmitter::keyPressed, this, &thisClass::iwadKeyPressed );
+	ui->mapDirView->installEventFilter( &mapKeyEmitter );
+	connect( &mapKeyEmitter, &KeyPressEmitter::keyPressed, this, &thisClass::mapKeyPressed );
+
 	connect( ui->launchMode_standard, &QRadioButton::clicked, this, &thisClass::modeStandard );
 	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeLaunchMap );
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
@@ -878,6 +887,80 @@ void MainWindow::modsDropped( int /*row*/, int /*count*/ )
 	}
 
 	updateLaunchCommand();
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  keyboard control
+
+void MainWindow::presetKeyPressed( int key, uint8_t modifiers )
+{
+	if (key == Qt::Key_Enter || key == Qt::Key_Return)
+	{
+		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+			loadPreset( presetModel.makeIndex( selectedPresetIdx ) );
+	}
+	else if (key == Qt::Key_Insert)
+	{
+		presetAdd();
+	}
+	else if (key == Qt::Key_Delete)
+	{
+		presetDelete();
+	}
+	else if (key == Qt::Key_C && modifiers & Modifier::CTRL)
+	{
+		presetClone();
+	}
+	else if (key == Qt::Key_Up && modifiers & Modifier::CTRL)
+	{
+		presetMoveUp();
+	}
+	else if (key == Qt::Key_Down && modifiers & Modifier::CTRL)
+	{
+		presetMoveDown();
+	}
+}
+
+void MainWindow::modKeyPressed( int key, uint8_t modifiers )
+{
+	if (key == Qt::Key_Insert)
+	{
+		modAdd();
+	}
+	else if (key == Qt::Key_Delete)
+	{
+		modDelete();
+	}
+	else if (key == Qt::Key_Up && modifiers & Modifier::CTRL)
+	{
+		modMoveUp();
+	}
+	else if (key == Qt::Key_Down && modifiers & Modifier::CTRL)
+	{
+		modMoveDown();
+	}
+}
+
+void MainWindow::iwadKeyPressed( int key, uint8_t /*modifiers*/ )
+{
+	if (key == Qt::Key_Enter || key == Qt::Key_Return)
+	{
+		int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
+		if (selectedIwadIdx >= 0)
+			toggleIWAD( iwadModel.makeIndex( selectedIwadIdx ) );
+	}
+}
+
+void MainWindow::mapKeyPressed( int key, uint8_t /*modifiers*/ )
+{
+	if (key == Qt::Key_Enter || key == Qt::Key_Return)
+	{
+		QModelIndex selectedMapIdx = getSelectedItemIdx( ui->mapDirView );
+		if (selectedMapIdx.isValid())
+			toggleMapPack( selectedMapIdx );
+	}
 }
 
 

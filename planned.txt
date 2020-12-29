@@ -1,6 +1,7 @@
-- extracting map names from IWAD file content
+- right-click context menu for presets, mods
+- more launch options - save dir, screenshot dir, music, sound, graphics, ...
+
 - better icons for 'add','delete','clone' buttons
 - allow to select whole directory to load
-- support for recording demos
-- more launch options - save dir, screenshot dir, music, sound, graphics, ...
 - add map files as colored items to Mod list, where user can select order
+- support for recording demos

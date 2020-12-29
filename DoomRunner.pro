@@ -37,6 +37,7 @@ SOURCES += \
     Sources/FileSystemUtils.cpp \
     Sources/GameOptsDialog.cpp \
     Sources/JsonUtils.cpp \
+    Sources/KeyPressEmitter.cpp \
     Sources/LangUtils.cpp \
     Sources/ListModel.cpp \
     Sources/MainWindow.cpp \
@@ -58,6 +59,7 @@ HEADERS += \
     Sources/FileSystemUtils.hpp \
     Sources/GameOptsDialog.hpp \
     Sources/JsonUtils.hpp \
+    Sources/KeyPressEmitter.hpp \
     Sources/LangUtils.hpp \
     Sources/ListModel.hpp \
     Sources/MainWindow.hpp \

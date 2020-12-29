@@ -41,7 +41,7 @@ struct Engine
 
 struct IWAD
 {
-	QString name;   ///< TODO: allow the user to name the IWAD, currently just a cashed file name
+	QString name;   ///< initially set to file name, but user can edit it by double-clicking on it in SetupDialog
 	QString path;   ///< path to the IWAD file
 
 	IWAD() {}

@@ -1639,7 +1639,7 @@ void MainWindow::exportPreset()
 
 	QTextStream stream( &file );
 
-	stream << generateLaunchCommand( fileInfo.path() ) << endl;
+	stream << generateLaunchCommand( fileInfo.path() ) << Qt::endl;
 
 	file.close();
 }

@@ -10,24 +10,26 @@
 
 #include <QStringBuilder>
 #include <QTextStream>
-#include <QLinkedList>
 #include <QMessageBox>
 #include <QCheckBox>
+
+//#include <QLinkedList> // obsolete? why???
+#include <list>
 
 
 //======================================================================================================================
 //  JsonValueContext
 
-void JsonValueCtx::prependPath( QLinkedList< QString > & pathList ) const
+void JsonValueCtx::prependPath( std::list< QString > & pathList ) const
 {
 	if (_parent)
 	{
 		if (_key.type == Key::OBJECT_KEY)
-			pathList.prepend( '/' + _key.key );
+			pathList.push_front( '/' + _key.key );
 		else if (_key.type == Key::ARRAY_INDEX)
-			pathList.prepend( "/[" + QString::number( _key.idx ) + ']' );
+			pathList.push_front( "/[" + QString::number( _key.idx ) + ']' );
 		else
-			pathList.prepend( "/<error>" );
+			pathList.push_front( "/<error>" );
 
 		_parent->prependPath( pathList );
 	}
@@ -35,7 +37,7 @@ void JsonValueCtx::prependPath( QLinkedList< QString > & pathList ) const
 
 QString JsonValueCtx::getPath() const
 {
-	QLinkedList< QString > path;
+	std::list< QString > path;
 	prependPath( path );
 
 	// TODO: idiotic

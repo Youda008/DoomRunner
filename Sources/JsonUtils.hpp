@@ -19,7 +19,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-template< typename T > class QLinkedList;
+#include <list>
 
 
 //======================================================================================================================
@@ -109,7 +109,7 @@ class JsonValueCtx {
 
  protected:
 
-	void prependPath( QLinkedList< QString > & pathList ) const;
+	void prependPath( std::list< QString > & pathList ) const;
 
 };
 

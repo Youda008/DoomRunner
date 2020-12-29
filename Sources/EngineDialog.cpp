@@ -67,7 +67,7 @@ void EngineDialog::browseEngine()
  #endif
 		"All files (*)"
 	);
-	if (path.isNull())  // user probably clicked cancel TODO
+	if (path.isNull())  // user probably clicked cancel
 		return;
 
 	// the path comming out of the file dialog is always absolute

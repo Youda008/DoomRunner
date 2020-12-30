@@ -13,6 +13,8 @@
 
 #include "Common.hpp"
 
+#include "EventFilters.hpp"  // ModifierHandler
+
 #include <QListView>
 
 
@@ -49,6 +51,8 @@ class EditableListView : public QListView {
 
  protected: // methods
 
+	// drag&drop
+
 	virtual void dragEnterEvent( QDragEnterEvent * event ) override;
 	virtual void dragMoveEvent( QDragMoveEvent * event ) override;
 	virtual void dropEvent( QDropEvent * event ) override;
@@ -66,9 +70,19 @@ class EditableListView : public QListView {
 
 	void itemsDropped();
 
+	// keyboard control
+
+	virtual void keyPressEvent( QKeyEvent * event ) override;
+	virtual void keyReleaseEvent( QKeyEvent * event ) override;
+
  signals:
 
 	void itemsDropped( int row, int count );
+
+	void addActionTriggered();
+	void deleteActionTriggered();
+	void moveUpActionTriggered();
+	void moveDownActionTriggered();
 
  protected: // members
 
@@ -76,6 +90,8 @@ class EditableListView : public QListView {
 	bool allowInterWidgetDnD;
 	bool allowExternFileDnD;
 	bool allowEditNames;
+
+	ModifierHandler modifierHandler;
 
 };
 

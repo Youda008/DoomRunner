@@ -139,52 +139,96 @@ MainWindow::MainWindow()
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
 
-	// setup view models
-	ui->presetListView->setModel( &presetModel );
-	// we use custom model for engines, because we want to display the same list differently in different window
-	ui->engineCmbBox->setModel( &engineModel );
-	// we use custom model for configs and saves, because calling 'clear' or 'add' on a combo box changes current index,
-	// which causes the launch command to be regenerated back and forth on every update
-	ui->configCmbBox->setModel( &configModel );
-	ui->saveFileCmbBox->setModel( &saveModel );
-	ui->iwadListView->setModel( &iwadModel );
-	ui->mapDirView->setModel( &mapModel );
-	ui->modListView->setModel( &modModel );
+	// setup main menu actions
 
-	// setup preset list view
-	presetModel.setEditStringFunc( []( Preset & preset ) -> QString & { return preset.name; } );
-	ui->presetListView->toggleNameEditing( true );
-	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
-	ui->presetListView->toggleInterWidgetDragAndDrop( false );
-	ui->presetListView->toggleExternalFileDragAndDrop( false );
-
-	// setup map directory view
-	ui->mapDirView->setDragEnabled( true );
-	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
-
-	// setup mod list view
-	modModel.setIsCheckedFunc( []( Mod & mod ) -> bool & { return mod.checked; } );
-	modModel.setPathHelper( &pathHelper );  // model needs it for converting paths dropped from directory
-	ui->modListView->toggleNameEditing( false );
-	ui->modListView->toggleIntraWidgetDragAndDrop( true );
-	ui->modListView->toggleInterWidgetDragAndDrop( true );
-	ui->modListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::modsDropped );
-
-	// setup signals
 	connect( ui->setupPathsAction, &QAction::triggered, this, &thisClass::runSetupDialog );
 	connect( ui->exportPresetAction, &QAction::triggered, this, &thisClass::exportPreset );
 	//connect( ui->importPresetAction, &QAction::triggered, this, &thisClass::importPreset );
 	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::runAboutDialog );
 	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
 
+	// setup preset list view
+
+	// specify where to get the string for edit mode
+	presetModel.setEditStringFunc( []( Preset & preset ) -> QString & { return preset.name; } );
+	// set data source for the view
+	ui->presetListView->setModel( &presetModel );
+	// set drag&drop behaviour
+	ui->presetListView->toggleNameEditing( true );
+	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
+	ui->presetListView->toggleInterWidgetDragAndDrop( false );
+	ui->presetListView->toggleExternalFileDragAndDrop( false );
+	// set reaction to a click on an item
+	connect( ui->presetListView, &QListView::clicked, this, &thisClass::loadPreset );
+	// setup enter key detection and reaction
+	ui->presetListView->installEventFilter( &presetConfirmationEmitter );
+	connect( &presetConfirmationEmitter, &ConfirmationEmitter::choiceConfirmed, this, &thisClass::presetConfirm );
+	// setup reaction to key shortcuts and right click
+	connect( ui->presetListView, &EditableListView::addActionTriggered, this, &thisClass::presetAdd );
+	connect( ui->presetListView, &EditableListView::deleteActionTriggered, this, &thisClass::presetDelete );
+	connect( ui->presetListView, &EditableListView::moveUpActionTriggered, this, &thisClass::presetMoveUp );
+	connect( ui->presetListView, &EditableListView::moveDownActionTriggered, this, &thisClass::presetMoveDown );
+
+	// setup iwad list view
+
+	ui->iwadListView->setModel( &iwadModel );
+	// set reaction to a click on an item
+	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::toggleIWAD );
+	// setup enter key detection and reaction
+	ui->iwadListView->installEventFilter( &iwadConfirmationEmitter );
+	connect( &iwadConfirmationEmitter, &ConfirmationEmitter::choiceConfirmed, this, &thisClass::iwadConfirm );
+
+	// setup map directory view
+
+	// set data source for the view
+	ui->mapDirView->setModel( &mapModel );
+	//
+	ui->mapDirView->setDragEnabled( true );
+	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
+	// set reaction to a click on an item
+	connect( ui->mapDirView, &QTreeView::clicked, this, &thisClass::toggleMapPack );
+	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
+	// setup enter key detection and reaction
+	ui->mapDirView->installEventFilter( &mapConfirmationEmitter );
+	connect( &mapConfirmationEmitter, &ConfirmationEmitter::choiceConfirmed, this, &thisClass::mapPackConfirm );
+
+	// setup mod list view
+
+	// specify where to get the bool flag for the checkbox
+	modModel.setIsCheckedFunc( []( Mod & mod ) -> bool & { return mod.checked; } );
+	// give the model our path convertor, it will need it for converting paths dropped from directory
+	modModel.setPathHelper( &pathHelper );
+	// set data source for the view
+	ui->modListView->setModel( &modModel );
+	// set drag&drop behaviour
+	ui->modListView->toggleNameEditing( false );
+	ui->modListView->toggleIntraWidgetDragAndDrop( true );
+	ui->modListView->toggleInterWidgetDragAndDrop( true );
+	ui->modListView->toggleExternalFileDragAndDrop( true );
+	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::modsDropped );
+	// set reaction to a click on an item
+	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
+	// setup enter key detection and reaction
+	ui->modListView->installEventFilter( &modConfirmationEmitter );
+	connect( &modConfirmationEmitter, &ConfirmationEmitter::choiceConfirmed, this, &thisClass::modConfirm );
+	// setup reaction to key shortcuts and right click
+	connect( ui->modListView, &EditableListView::addActionTriggered, this, &thisClass::modAdd );
+	connect( ui->modListView, &EditableListView::deleteActionTriggered, this, &thisClass::modDelete );
+	connect( ui->modListView, &EditableListView::moveUpActionTriggered, this, &thisClass::modMoveUp );
+	connect( ui->modListView, &EditableListView::moveDownActionTriggered, this, &thisClass::modMoveDown );
+
+	// setup combo-boxes
+
+	// we use custom model for engines, because we want to display the same list differently in different window
+	ui->engineCmbBox->setModel( &engineModel );
+	// we use custom model for configs and saves, because calling 'clear' or 'add' on a combo box changes current index,
+	// which causes the launch command to be regenerated back and forth on every update
+	ui->configCmbBox->setModel( &configModel );
+	ui->saveFileCmbBox->setModel( &saveModel );
 	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectEngine );
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectConfig );
-	connect( ui->presetListView, &QListView::clicked, this, &thisClass::loadPreset );
-	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::toggleIWAD );
-	connect( ui->mapDirView, &QTreeView::clicked, this, &thisClass::toggleMapPack );
-	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
-	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
+
+	// setup buttons
 
 	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &thisClass::presetAdd );
 	connect( ui->presetBtnDel, &QToolButton::clicked, this, &thisClass::presetDelete );
@@ -197,14 +241,7 @@ MainWindow::MainWindow()
 	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
-	ui->presetListView->installEventFilter( &presetKeyEmitter );
-	connect( &presetKeyEmitter, &KeyPressEmitter::keyPressed, this, &thisClass::presetKeyPressed );
-	ui->modListView->installEventFilter( &modKeyEmitter );
-	connect( &modKeyEmitter, &KeyPressEmitter::keyPressed, this, &thisClass::modKeyPressed );
-	ui->iwadListView->installEventFilter( &iwadKeyEmitter );
-	connect( &iwadKeyEmitter, &KeyPressEmitter::keyPressed, this, &thisClass::iwadKeyPressed );
-	ui->mapDirView->installEventFilter( &mapKeyEmitter );
-	connect( &mapKeyEmitter, &KeyPressEmitter::keyPressed, this, &thisClass::mapKeyPressed );
+	// setup launch options callbacks
 
 	connect( ui->launchMode_standard, &QRadioButton::clicked, this, &thisClass::modeStandard );
 	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeLaunchMap );
@@ -228,6 +265,8 @@ MainWindow::MainWindow()
 	connect( ui->playerCountSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changePlayerCount );
 	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::changeTeamDamage );
 	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeTimeLimit );
+
+	//
 
 	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updatePresetCmdArgs );
 	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateGlobalCmdArgs );
@@ -893,73 +932,35 @@ void MainWindow::modsDropped( int /*row*/, int /*count*/ )
 //----------------------------------------------------------------------------------------------------------------------
 //  keyboard control
 
-void MainWindow::presetKeyPressed( int key, uint8_t modifiers )
+void MainWindow::presetConfirm()
 {
-	if (key == Qt::Key_Enter || key == Qt::Key_Return)
-	{
-		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-		if (selectedPresetIdx >= 0)
-			loadPreset( presetModel.makeIndex( selectedPresetIdx ) );
-	}
-	else if (key == Qt::Key_Insert)
-	{
-		presetAdd();
-	}
-	else if (key == Qt::Key_Delete)
-	{
-		presetDelete();
-	}
-	else if (key == Qt::Key_C && modifiers & Modifier::CTRL)
-	{
-		presetClone();
-	}
-	else if (key == Qt::Key_Up && modifiers & Modifier::CTRL)
-	{
-		presetMoveUp();
-	}
-	else if (key == Qt::Key_Down && modifiers & Modifier::CTRL)
-	{
-		presetMoveDown();
-	}
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx >= 0)
+		loadPreset( presetModel.makeIndex( selectedPresetIdx ) );
 }
 
-void MainWindow::modKeyPressed( int key, uint8_t modifiers )
+void MainWindow::iwadConfirm()
 {
-	if (key == Qt::Key_Insert)
-	{
-		modAdd();
-	}
-	else if (key == Qt::Key_Delete)
-	{
-		modDelete();
-	}
-	else if (key == Qt::Key_Up && modifiers & Modifier::CTRL)
-	{
-		modMoveUp();
-	}
-	else if (key == Qt::Key_Down && modifiers & Modifier::CTRL)
-	{
-		modMoveDown();
-	}
+	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
+	if (selectedIwadIdx >= 0)
+		toggleIWAD( iwadModel.makeIndex( selectedIwadIdx ) );
 }
 
-void MainWindow::iwadKeyPressed( int key, uint8_t /*modifiers*/ )
+void MainWindow::mapPackConfirm()
 {
-	if (key == Qt::Key_Enter || key == Qt::Key_Return)
-	{
-		int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
-		if (selectedIwadIdx >= 0)
-			toggleIWAD( iwadModel.makeIndex( selectedIwadIdx ) );
-	}
+	QModelIndex selectedMapPackIdx = getSelectedItemIdx( ui->mapDirView );
+	if (selectedMapPackIdx.isValid())
+		toggleMapPack( selectedMapPackIdx );
 }
 
-void MainWindow::mapKeyPressed( int key, uint8_t /*modifiers*/ )
+void MainWindow::modConfirm()
 {
-	if (key == Qt::Key_Enter || key == Qt::Key_Return)
+	int selectedModIdx = getSelectedItemIdx( ui->modListView );
+	if (selectedModIdx >= 0)
 	{
-		QModelIndex selectedMapIdx = getSelectedItemIdx( ui->mapDirView );
-		if (selectedMapIdx.isValid())
-			toggleMapPack( selectedMapIdx );
+		modModel[ selectedModIdx ].checked = !modModel[ selectedModIdx ].checked;
+		modModel.contentChanged( selectedModIdx, selectedModIdx + 1 );
+		toggleMod( modModel.makeIndex( selectedModIdx ) );
 	}
 }
 

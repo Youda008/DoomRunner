@@ -44,6 +44,9 @@
 
 //======================================================================================================================
 
+//----------------------------------------------------------------------------------------------------------------------
+//  drag&drop
+
 EditableListView::EditableListView( QWidget * parent ) : QListView ( parent )
 {
 	allowIntraWidgetDnD = true;
@@ -180,7 +183,7 @@ void EditableListView::itemsDropped()
 	//
 	// retrieve the destination drop indexes from the model and update the selection accordingly
 
-	if (DropTargetListModel * model = dynamic_cast< DropTargetListModel * >( this->model() ))
+	if (DropTarget * model = dynamic_cast< DropTarget * >( this->model() ))
 	{
 		if (model->wasDroppedInto())
 		{
@@ -203,6 +206,9 @@ void EditableListView::itemsDropped()
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+//  name editing
+
 void EditableListView::toggleNameEditing( bool enabled )
 {
 	allowEditNames = enabled;
@@ -212,3 +218,52 @@ void EditableListView::toggleNameEditing( bool enabled )
 	else
 		setEditTriggers( QAbstractItemView::NoEditTriggers );
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//  keyboard control
+
+void EditableListView::keyPressEvent( QKeyEvent * event )
+{
+	int key = event->key();
+
+	bool isModifier = modifierHandler.updateModifiers_pressed( key );
+
+	if (isModifier)
+		return;
+
+	uint8_t modifiers = modifierHandler.pressedModifiers();
+
+	if (key == Qt::Key_Insert)
+	{
+		emit addActionTriggered();
+	}
+	else if (key == Qt::Key_Delete)
+	{
+		emit deleteActionTriggered();
+	}
+	else if (key == Qt::Key_Up && modifiers & Modifier::CTRL)
+	{
+		emit moveUpActionTriggered();
+		return;
+	}
+	else if (key == Qt::Key_Down && modifiers & Modifier::CTRL)
+	{
+		emit moveDownActionTriggered();
+		return;
+	}
+
+	superClass::keyPressEvent( event );
+}
+
+void EditableListView::keyReleaseEvent( QKeyEvent * event )
+{
+	int key = event->key();
+
+	modifierHandler.updateModifiers_released( key );
+
+	superClass::keyReleaseEvent( event );
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//  right-click menu
+

@@ -45,11 +45,11 @@
 // This non-template superclass exists because in EditableListView we don't know the template parameter Item,
 // which is needed for casting in order to retrieve the destination drop index.
 
-class DropTargetListModel : public QAbstractListModel {
+class DropTarget {
 
  public:
 
-	DropTargetListModel() : QAbstractListModel( nullptr ), _dropped( false ), _droppedRow( 0 ), _droppedCount( 0 ) {}
+	DropTarget() : _dropped( false ), _droppedRow( 0 ), _droppedCount( 0 ) {}
 
 	bool wasDroppedInto() const { return _dropped; }
 	int droppedRow() const { return _droppedRow; }
@@ -84,7 +84,7 @@ class DropTargetListModel : public QAbstractListModel {
 /** Abstract wrapper around list of arbitrary objects, mediating their content to UI view elements. */
 
 template< typename Item >
-class AListModel : public DropTargetListModel {
+class AListModel : public QAbstractListModel {
 
  protected:
 
@@ -238,7 +238,7 @@ class ReadOnlyListModel : public AListModel< Item > {
   * Supports in-place editing, internal drag&drop reordering, and external file drag&drops. */
 
 template< typename Item >
-class EditableListModel : public AListModel< Item > {
+class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	using superClass = AListModel< Item >;
 
@@ -265,10 +265,10 @@ class EditableListModel : public AListModel< Item > {
  public:
 
 	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString )
-		: AListModel< Item >(), makeDisplayString( makeDisplayString ), pathHelper( nullptr ) {}
+		: AListModel< Item >(), DropTarget(), makeDisplayString( makeDisplayString ), pathHelper( nullptr ) {}
 
 	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
-		: AListModel< Item >( itemList ), makeDisplayString( makeDisplayString ), pathHelper( nullptr ) {}
+		: AListModel< Item >( itemList ), DropTarget(), makeDisplayString( makeDisplayString ), pathHelper( nullptr ) {}
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
 
@@ -410,8 +410,8 @@ class EditableListModel : public AListModel< Item > {
 		for (int i = 0; i < count; i++)
 		{
 			superClass::itemList.removeAt( row );
-			if (row < DropTargetListModel::droppedRow())  // we are removing a row that is before the target row
-				DropTargetListModel::decrementRow();      // so target row's index is moving backwards
+			if (row < DropTarget::droppedRow())  // we are removing a row that is before the target row
+				DropTarget::decrementRow();      // so target row's index is moving backwards
 		}
 
 		QAbstractListModel::endRemoveRows();
@@ -522,7 +522,7 @@ class EditableListModel : public AListModel< Item > {
 		// idiotic workaround because Qt is fucking retarded   (read the comment at the top of EditableListView.cpp)
 		//
 		// note down the destination drop index, so it can be later retrieved by ListView
-		DropTargetListModel::itemsDropped( row, count );
+		DropTarget::itemsDropped( row, count );
 
 		superClass::contentChanged( row, row + count );
 
@@ -566,7 +566,7 @@ class EditableListModel : public AListModel< Item > {
 		// idiotic workaround because Qt is fucking retarded   (read the comment at the top of EditableListView.cpp)
 		//
 		// note down the destination drop index, so it can be later retrieved by ListView
-		DropTargetListModel::itemsDropped( row, filesToBeInserted.count() );
+		DropTarget::itemsDropped( row, filesToBeInserted.count() );
 
 		superClass::contentChanged( row, filesToBeInserted.count() );
 

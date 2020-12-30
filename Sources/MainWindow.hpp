@@ -16,7 +16,7 @@
 #include "ListModel.hpp"
 #include "DirTreeModel.hpp"
 #include "FileSystemUtils.hpp"  // PathHelper
-#include "KeyPressEmitter.hpp"
+#include "EventFilters.hpp"
 #include "UpdateChecker.hpp"
 
 #include <QMainWindow>
@@ -72,17 +72,17 @@ class MainWindow : public QMainWindow {
 	void presetClone();
 	void presetMoveUp();
 	void presetMoveDown();
+	void presetConfirm();
 
 	void modAdd();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
 	void modsDropped( int row, int count );
+	void modConfirm();
 
-	void presetKeyPressed( int key, uint8_t modifiers );
-	void modKeyPressed( int key, uint8_t modifiers );
-	void iwadKeyPressed( int key, uint8_t modifiers );
-	void mapKeyPressed( int key, uint8_t modifiers );
+	void iwadConfirm();
+	void mapPackConfirm();
 
 	void modeStandard();
 	void modeLaunchMap();
@@ -148,10 +148,10 @@ class MainWindow : public QMainWindow {
 
 	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
 
-	KeyPressEmitter presetKeyEmitter;
-	KeyPressEmitter modKeyEmitter;
-	KeyPressEmitter iwadKeyEmitter;
-	KeyPressEmitter mapKeyEmitter;
+	ConfirmationEmitter presetConfirmationEmitter;
+	ConfirmationEmitter modConfirmationEmitter;
+	ConfirmationEmitter iwadConfirmationEmitter;
+	ConfirmationEmitter mapConfirmationEmitter;
 
 	UpdateChecker updateChecker;
 

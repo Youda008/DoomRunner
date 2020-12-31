@@ -40,7 +40,8 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
                           const QList< Engine > & engineList,
                           const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
                           const MapSettings & mapSettings, const ModSettings & modSettings,
-                          OptionsStorage optsStorage )
+                          OptionsStorage optsStorage,
+                          bool closeOnLaunch )
 :
 	QDialog( parent ),
 	pathHelper( useAbsolutePaths, baseDir ),
@@ -53,7 +54,8 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	iwadSettings( iwadSettings ),
 	mapSettings( mapSettings ),
 	modSettings( modSettings ),
-	optsStorage( optsStorage )
+	optsStorage( optsStorage ),
+	closeOnLaunch( closeOnLaunch )
 {
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
@@ -81,6 +83,7 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 		ui->optsStorage_global->click();
 	else if (optsStorage == STORE_TO_PRESET)
 		ui->optsStorage_preset->click();
+	ui->closeOnLaunchChkBox->setChecked( closeOnLaunch );
 
 	// setup signals
 
@@ -112,6 +115,8 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	connect( ui->optsStorage_none, &QRadioButton::clicked, this, &thisClass::optsStorage_none );
 	connect( ui->optsStorage_global, &QRadioButton::clicked, this, &thisClass::optsStorage_global );
 	connect( ui->optsStorage_preset, &QRadioButton::clicked, this, &thisClass::optsStorage_preset );
+
+	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::toggleCloseOnLaunch );
 
 	connect( ui->doneBtn, &QPushButton::clicked, this, &thisClass::accept );
 
@@ -415,6 +420,11 @@ void SetupDialog::optsStorage_global()
 void SetupDialog::optsStorage_preset()
 {
 	optsStorage = STORE_TO_PRESET;
+}
+
+void SetupDialog::toggleCloseOnLaunch( bool checked )
+{
+	closeOnLaunch = checked;
 }
 
 void SetupDialog::closeDialog()

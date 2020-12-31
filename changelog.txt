@@ -1,8 +1,9 @@
 1.4
 - map names are now extracted from IWAD file instead of guessing them from IWAD name
-- confirmation dialog before preset is deleted
-- keyboard control (Enter, Insert, Delete, CTRL+arrows)
+- added confirmation dialog when attempted to delete a preset
+- enabled keyboard control (Enter, Insert, Delete, CTRL+arrows)
 - right-click inside an editable list widget pops-up a context menu with available actions
+- added "close on launch" option
 
 1.3.3
 - fixed deh recognition for map packs

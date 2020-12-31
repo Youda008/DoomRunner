@@ -104,6 +104,8 @@ MainWindow::MainWindow()
 	compatOptsCmdArgs(),
 	pathHelper( false, QDir::currentPath() ),
 	checkForUpdates( true ),
+	optsStorage( STORE_GLOBALLY ),
+	closeOnLaunch( false ),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
@@ -131,7 +133,6 @@ MainWindow::MainWindow()
 	modSettings {
 
 	},
-	optsStorage( STORE_GLOBALLY ),
 	presetModel(
 		/*makeDisplayString*/ []( const Preset & preset ) { return preset.name; }
 	),
@@ -412,7 +413,8 @@ void MainWindow::runSetupDialog()
 		iwadSettings,
 		mapSettings,
 		modSettings,
-		optsStorage
+		optsStorage,
+		closeOnLaunch
 	);
 
 	int code = dialog.exec();
@@ -440,6 +442,7 @@ void MainWindow::runSetupDialog()
 		mapSettings = dialog.mapSettings;
 		modSettings = dialog.modSettings;
 		optsStorage = dialog.optsStorage;
+		closeOnLaunch = dialog.closeOnLaunch;
 		// update all stored paths
 		toggleAbsolutePaths( pathHelper.useAbsolutePaths() );
 		selectedEngine = pathHelper.convertPath( selectedEngine );
@@ -1430,11 +1433,13 @@ void MainWindow::saveOptions( const QString & fileName )
 		jsRoot["geometry"] = jsGeometry;
 	}
 
+	jsRoot["check_for_updates"] = checkForUpdates;
+
 	jsRoot["use_absolute_paths"] = pathHelper.useAbsolutePaths();
 
 	jsRoot["options_storage"] = int( optsStorage );
 
-	jsRoot["check_for_updates"] = checkForUpdates;
+	jsRoot["close_on_launch"] = closeOnLaunch;
 
 	{
 		QJsonObject jsEngines;
@@ -1523,12 +1528,14 @@ void MainWindow::loadOptions( const QString & fileName )
 	// preset must be deselected first, so that the cleared selections doesn't save in the selected preset
 	deselectSelectedItems( ui->presetListView );
 
+	checkForUpdates = jsRoot.getBool( "check_for_updates", true );
+
 	pathHelper.toggleAbsolutePaths( jsRoot.getBool( "use_absolute_paths", false ) );
 
 	// this must be loaded early, because we need to know whether to attempt loading the opts from the presets
 	optsStorage = jsRoot.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
 
-	checkForUpdates = jsRoot.getBool( "check_for_updates", true );
+	closeOnLaunch = jsRoot.getBool( "close_on_launch", false );
 
 	if (JsonObjectCtx jsEngines = jsRoot.getObject( "engines" ))
 	{
@@ -1981,5 +1988,11 @@ void MainWindow::launch()
 	if (!success)
 	{
 		QMessageBox::warning( this, tr("Launch error"), tr("Failed to execute launch command.") );
+		return;
+	}
+
+	if (closeOnLaunch)
+	{
+		QApplication::quit();
 	}
 }

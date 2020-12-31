@@ -164,6 +164,10 @@ class MainWindow : public QMainWindow {
 
 	bool checkForUpdates;
 
+	OptionsStorage optsStorage;
+
+	bool closeOnLaunch;
+
 	// We use model-view design pattern for several widgets, because it allows us to organize the data in a way we need,
 	// and have the widget (frontend) automatically mirror the underlying data (backend) without syncing them manually.
 	//
@@ -193,8 +197,6 @@ class MainWindow : public QMainWindow {
 
 	EditableListModel< Mod > modModel;
 	ModSettings modSettings;    ///< mod-related preferences (value returned by SetupDialog)
-
-	OptionsStorage optsStorage;
 
 	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 

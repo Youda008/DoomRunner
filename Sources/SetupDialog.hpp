@@ -41,7 +41,8 @@ class SetupDialog : public QDialog {
 	                      const QList< Engine > & engineList,
 	                      const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
 	                      const MapSettings & mapSettings, const ModSettings & modSettings,
-	                      OptionsStorage optsStorage );
+	                      OptionsStorage optsStorage,
+	                      bool closeOnLaunch );
 	virtual ~SetupDialog() override;
 
  private:
@@ -83,6 +84,8 @@ class SetupDialog : public QDialog {
 	void optsStorage_global();
 	void optsStorage_preset();
 
+	void toggleCloseOnLaunch( bool checked );
+
 	void closeDialog();
 
  private: // methods
@@ -115,6 +118,8 @@ class SetupDialog : public QDialog {
 	ModSettings modSettings;
 
 	OptionsStorage optsStorage;
+
+	bool closeOnLaunch;
 
 };
 

@@ -422,6 +422,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="closeOnLaunchChkBox">
+     <property name="text">
+      <string>Close the launcher when the game is started</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <spacer name="horizontalSpacer">

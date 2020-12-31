@@ -34,10 +34,10 @@ SOURCES += \
     Sources/DoomUtils.cpp \
     Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
+    Sources/EventFilters.cpp \
     Sources/FileSystemUtils.cpp \
     Sources/GameOptsDialog.cpp \
     Sources/JsonUtils.cpp \
-    Sources/KeyPressEmitter.cpp \
     Sources/LangUtils.cpp \
     Sources/ListModel.cpp \
     Sources/MainWindow.cpp \
@@ -56,10 +56,10 @@ HEADERS += \
     Sources/DoomUtils.hpp \
     Sources/EditableListView.hpp \
     Sources/EngineDialog.hpp \
+    Sources/EventFilters.hpp \
     Sources/FileSystemUtils.hpp \
     Sources/GameOptsDialog.hpp \
     Sources/JsonUtils.hpp \
-    Sources/KeyPressEmitter.hpp \
     Sources/LangUtils.hpp \
     Sources/ListModel.hpp \
     Sources/MainWindow.hpp \

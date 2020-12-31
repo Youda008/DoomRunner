@@ -10,7 +10,10 @@
 #include "ui_SetupDialog.h"
 
 #include "EngineDialog.hpp"
+
+#include "EventFilters.hpp"  // ConfirmationFilter
 #include "WidgetUtils.hpp"
+#include "FileSystemUtils.hpp"  // PathHelper
 #include "DoomUtils.hpp"
 
 #include <QString>
@@ -18,6 +21,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QFileDialog>
+#include <QAction>
 
 
 //======================================================================================================================
@@ -54,24 +58,13 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
 
-	// setup engine view
-	ui->engineListView->setModel( &engineModel );
-	engineModel.setPathHelper( &pathHelper );
-	ui->engineListView->toggleNameEditing( false );
-	ui->engineListView->toggleIntraWidgetDragAndDrop( true );
-	ui->engineListView->toggleInterWidgetDragAndDrop( false );
-	ui->engineListView->toggleExternalFileDragAndDrop( true );
+	// setup list view
 
-	// setup iwad view
-	ui->iwadListView->setModel( &iwadModel );
-	iwadModel.setPathHelper( &pathHelper );
-	iwadModel.setEditStringFunc( []( IWAD & iwad ) -> QString & { return iwad.name; } );
-	ui->iwadListView->toggleNameEditing( !iwadSettings.updateFromDir );
-	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadSettings.updateFromDir );
-	ui->iwadListView->toggleInterWidgetDragAndDrop( false );
-	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );
+	setupEngineView();
+	setupIWADView();
 
 	// initialize widget data
+
 	if (iwadSettings.updateFromDir)
 	{
 		ui->manageIWADs_auto->click();
@@ -90,6 +83,7 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 		ui->optsStorage_preset->click();
 
 	// setup signals
+
 	connect( ui->manageIWADs_manual, &QRadioButton::clicked, this, &thisClass::manageIWADsManually );
 	connect( ui->manageIWADs_auto, &QRadioButton::clicked, this, &thisClass::manageIWADsAutomatically );
 
@@ -113,8 +107,6 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	connect( ui->engineBtnUp, &QPushButton::clicked, this, &thisClass::engineMoveUp );
 	connect( ui->engineBtnDown, &QPushButton::clicked, this, &thisClass::engineMoveDown );
 
-	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::editEngine );
-
 	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAbsolutePaths );
 
 	connect( ui->optsStorage_none, &QRadioButton::clicked, this, &thisClass::optsStorage_none );
@@ -125,6 +117,60 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 
 	// setup an update timer
 	//startTimer( 1000 );
+}
+
+void SetupDialog::setupEngineView()
+{
+	// give the model our path convertor, it will need it for converting paths dropped from directory
+	engineModel.setPathHelper( &pathHelper );
+
+	// set data source for the view
+	ui->engineListView->setModel( &engineModel );
+
+	// set drag&drop behaviour
+	ui->engineListView->toggleNameEditing( false );
+	ui->engineListView->toggleIntraWidgetDragAndDrop( true );
+	ui->engineListView->toggleInterWidgetDragAndDrop( false );
+	ui->engineListView->toggleExternalFileDragAndDrop( true );
+
+	// set reaction to a double-click on an item
+	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::editEngine );
+
+	// setup enter key detection and reaction
+	ui->engineListView->installEventFilter( &engineConfirmationFilter );
+	connect( &engineConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::editCurrentEngine );
+
+	// setup reaction to key shortcuts and right click
+	ui->engineListView->toggleContextMenu( true );
+	connect( ui->engineListView->addAction, &QAction::triggered, this, &thisClass::engineAdd );
+	connect( ui->engineListView->deleteAction, &QAction::triggered, this, &thisClass::engineDelete );
+	connect( ui->engineListView->moveUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
+	connect( ui->engineListView->moveDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
+}
+
+void SetupDialog::setupIWADView()
+{
+	// give the model our path convertor, it will need it for converting paths dropped from directory
+	iwadModel.setPathHelper( &pathHelper );
+
+	// specify where to get the string for edit mode
+	iwadModel.setEditStringFunc( []( IWAD & iwad ) -> QString & { return iwad.name; } );
+
+	// set data source for the view
+	ui->iwadListView->setModel( &iwadModel );
+
+	// set drag&drop behaviour
+	ui->iwadListView->toggleNameEditing( !iwadSettings.updateFromDir );
+	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadSettings.updateFromDir );
+	ui->iwadListView->toggleInterWidgetDragAndDrop( false );
+	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );
+
+	// setup reaction to key shortcuts and right click
+	ui->iwadListView->toggleContextMenu( iwadSettings.updateFromDir );
+	connect( ui->iwadListView->addAction, &QAction::triggered, this, &thisClass::engineAdd );
+	connect( ui->iwadListView->deleteAction, &QAction::triggered, this, &thisClass::engineDelete );
+	connect( ui->iwadListView->moveUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
+	connect( ui->iwadListView->moveDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
 }
 
 void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
@@ -169,6 +215,8 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 {
 	iwadSettings.updateFromDir = enabled;
 
+	// activate/deactivate the corresponding widgets
+
 	ui->iwadDirLine->setEnabled( enabled );
 	ui->iwadDirBtn->setEnabled( enabled );
 	ui->iwadSubdirs->setEnabled( enabled );
@@ -180,7 +228,10 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadListView->toggleIntraWidgetDragAndDrop( !enabled );
 	ui->iwadListView->toggleExternalFileDragAndDrop( !enabled );
 
-	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
+	ui->iwadListView->toggleContextMenu( !enabled );
+
+	// populate the list
+	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is empty
 		updateIWADsFromDir();
 }
 
@@ -188,7 +239,7 @@ void SetupDialog::toggleIWADSubdirs( bool checked )
 {
 	iwadSettings.searchSubdirs = checked;
 
-	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
+	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is empty
 		updateIWADsFromDir();
 }
 
@@ -308,6 +359,15 @@ void SetupDialog::editEngine( const QModelIndex & index )
 	if (code == QDialog::Accepted)
 	{
 		selectedEngine = dialog.engine;
+	}
+}
+
+void SetupDialog::editCurrentEngine()
+{
+	int selectedEngineIdx = getSelectedItemIdx( ui->engineListView );
+	if (selectedEngineIdx >= 0)
+	{
+		editEngine( engineModel.makeIndex( selectedEngineIdx ) );
 	}
 }
 

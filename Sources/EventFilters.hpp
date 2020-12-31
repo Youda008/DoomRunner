@@ -58,14 +58,14 @@ class ModifierHandler {
 //======================================================================================================================
 /** event filter that captures key presses and emits them as signals */
 
-class KeyPressEmitter : public QObject {
+class KeyPressFilter : public QObject {
 
 	Q_OBJECT
 
  public:
 
-	KeyPressEmitter() {}
-	virtual ~KeyPressEmitter() override {}
+	KeyPressFilter() {}
+	virtual ~KeyPressFilter() override {}
 
 	virtual bool eventFilter( QObject * obj, QEvent * event ) override;
 
@@ -87,14 +87,14 @@ class KeyPressEmitter : public QObject {
 //======================================================================================================================
 /** event filter that captures enter presses and emits them as signal */
 
-class ConfirmationEmitter : public QObject {
+class ConfirmationFilter : public QObject {
 
 	Q_OBJECT
 
  public:
 
-	ConfirmationEmitter() {}
-	virtual ~ConfirmationEmitter() override {}
+	ConfirmationFilter() {}
+	virtual ~ConfirmationFilter() override {}
 
 	virtual bool eventFilter( QObject * obj, QEvent * event ) override;
 

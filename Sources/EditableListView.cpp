@@ -11,11 +11,14 @@
 
 #include "ListModel.hpp"
 #include "WidgetUtils.hpp"
+#include "EventFilters.hpp"
 
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QKeyEvent>
+#include <QMenu>
 
 
 //======================================================================================================================
@@ -44,9 +47,6 @@
 
 //======================================================================================================================
 
-//----------------------------------------------------------------------------------------------------------------------
-//  drag&drop
-
 EditableListView::EditableListView( QWidget * parent ) : QListView ( parent )
 {
 	allowIntraWidgetDnD = true;
@@ -58,7 +58,21 @@ EditableListView::EditableListView( QWidget * parent ) : QListView ( parent )
 
 	allowEditNames = false;
 	setEditTriggers( QAbstractItemView::NoEditTriggers );
+
+	contexMenuActive = false;
+	itemCloningEnabled = false;
+
+	contextMenu.reset( new QMenu( this ) );
+	addAction = contextMenu->addAction( "Add" );
+	deleteAction = contextMenu->addAction( "Delete" );
+	moveUpAction = contextMenu->addAction( "Move up" );
+	moveDownAction = contextMenu->addAction( "Move down" );
 }
+
+EditableListView::~EditableListView() {}
+
+//----------------------------------------------------------------------------------------------------------------------
+//  drag&drop
 
 void EditableListView::updateDragDropMode()
 {
@@ -222,34 +236,47 @@ void EditableListView::toggleNameEditing( bool enabled )
 //----------------------------------------------------------------------------------------------------------------------
 //  keyboard control
 
+static inline bool isArrowKey( int key )
+{
+	return key >= Qt::Key_Left && key <= Qt::Key_Down;
+}
+
 void EditableListView::keyPressEvent( QKeyEvent * event )
 {
 	int key = event->key();
 
 	bool isModifier = modifierHandler.updateModifiers_pressed( key );
 
-	if (isModifier)
-		return;
+	if (!isModifier)
+	{
+		uint8_t modifiers = modifierHandler.pressedModifiers();
 
-	uint8_t modifiers = modifierHandler.pressedModifiers();
+		if (key == Qt::Key_Insert)
+		{
+			addAction->trigger();
+		}
+		else if (key == Qt::Key_Delete)
+		{
+			deleteAction->trigger();
+		}
+		else if (key == Qt::Key_C && modifiers & Modifier::CTRL && itemCloningEnabled)
+		{
+			cloneAction->trigger();
+		}
+		else if (key == Qt::Key_Up && modifiers & Modifier::CTRL)
+		{
+			moveUpAction->trigger();
+		}
+		else if (key == Qt::Key_Down && modifiers & Modifier::CTRL)
+		{
+			moveDownAction->trigger();
+		}
 
-	if (key == Qt::Key_Insert)
-	{
-		emit addActionTriggered();
-	}
-	else if (key == Qt::Key_Delete)
-	{
-		emit deleteActionTriggered();
-	}
-	else if (key == Qt::Key_Up && modifiers & Modifier::CTRL)
-	{
-		emit moveUpActionTriggered();
-		return;
-	}
-	else if (key == Qt::Key_Down && modifiers & Modifier::CTRL)
-	{
-		emit moveDownActionTriggered();
-		return;
+		// supress arrow navigation when CTRL is pressed, otherwise the selection would get messed up
+		if (isArrowKey( key ) && modifiers != 0)
+		{
+			return;
+		}
 	}
 
 	superClass::keyPressEvent( event );
@@ -261,9 +288,43 @@ void EditableListView::keyReleaseEvent( QKeyEvent * event )
 
 	modifierHandler.updateModifiers_released( key );
 
+	// supress arrow navigation when CTRL is pressed, otherwise the selection would get messed up
+	if (isArrowKey( key ) && modifierHandler.pressedModifiers() != 0)
+	{
+		return;
+	}
+
 	superClass::keyReleaseEvent( event );
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //  right-click menu
 
+void EditableListView::toggleContextMenu( bool enabled )
+{
+	contexMenuActive = enabled;
+}
+
+void EditableListView::enableItemCloning()
+{
+	itemCloningEnabled = true;
+	cloneAction = contextMenu->addAction( "Clone" );
+}
+
+void EditableListView::contextMenuEvent( QContextMenuEvent * e )
+{
+	QModelIndex eventIndex = this->indexAt( e->pos() );
+
+	if (addAction)
+		addAction->setEnabled( contexMenuActive );
+	if (deleteAction)
+		deleteAction->setEnabled( contexMenuActive && eventIndex.isValid() );
+	if (cloneAction)
+		cloneAction->setEnabled( contexMenuActive && eventIndex.isValid() );
+	if (moveUpAction)
+		moveUpAction->setEnabled( contexMenuActive && eventIndex.isValid() );
+	if (moveDownAction)
+		moveDownAction->setEnabled( contexMenuActive && eventIndex.isValid() );
+
+	contextMenu->popup( e->globalPos() );
+}

@@ -1,4 +1,3 @@
-- right-click context menu for presets, mods
 - more launch options - save dir, screenshot dir, music, sound, graphics, ...
 
 - better icons for 'add','delete','clone' buttons

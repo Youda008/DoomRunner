@@ -16,7 +16,7 @@
 #include "ListModel.hpp"
 #include "DirTreeModel.hpp"
 #include "FileSystemUtils.hpp"  // PathHelper
-#include "EventFilters.hpp"
+#include "EventFilters.hpp"  // ConfirmationFilter
 #include "UpdateChecker.hpp"
 
 #include <QMainWindow>
@@ -116,6 +116,11 @@ class MainWindow : public QMainWindow {
 
  private: // methods
 
+	void setupPresetView();
+	void setupIWADView();
+	void setupMapPackView();
+	void setupModView();
+
 	void toggleAbsolutePaths( bool absolute );
 
 	void togglePresetSubWidgets( bool enabled );
@@ -148,10 +153,10 @@ class MainWindow : public QMainWindow {
 
 	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
 
-	ConfirmationEmitter presetConfirmationEmitter;
-	ConfirmationEmitter modConfirmationEmitter;
-	ConfirmationEmitter iwadConfirmationEmitter;
-	ConfirmationEmitter mapConfirmationEmitter;
+	ConfirmationFilter presetConfirmationFilter;
+	ConfirmationFilter modConfirmationFilter;
+	ConfirmationFilter iwadConfirmationFilter;
+	ConfirmationFilter mapConfirmationFilter;
 
 	UpdateChecker updateChecker;
 
@@ -166,13 +171,15 @@ class MainWindow : public QMainWindow {
 
 	ReadOnlyListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
 
-	struct ConfigFile {
+	struct ConfigFile
+	{
 		QString fileName;
 		ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 	};
 	ReadOnlyListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
 
-	struct SaveFile {
+	struct SaveFile
+	{
 		QString fileName;
 		SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 	};

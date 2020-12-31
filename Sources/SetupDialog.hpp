@@ -14,6 +14,7 @@
 
 #include "UserData.hpp"  // Engine, IWAD
 #include "ListModel.hpp"
+#include "EventFilters.hpp"  // ConfirmationFilter
 #include "FileSystemUtils.hpp"  // PathHelper
 
 #include <QDialog>
@@ -72,6 +73,7 @@ class SetupDialog : public QDialog {
 	void engineMoveDown();
 
 	void editEngine( const QModelIndex & index );
+	void editCurrentEngine();
 
 	void updateIWADsFromDir();
 
@@ -85,6 +87,9 @@ class SetupDialog : public QDialog {
 
  private: // methods
 
+	void setupEngineView();
+	void setupIWADView();
+
 	void toggleAutoIWADUpdate( bool enabled );
 	void browseDir( const QString & dirPurpose, QLineEdit * targetLine );
 
@@ -93,6 +98,8 @@ class SetupDialog : public QDialog {
 	Ui::SetupDialog * ui;
 
 	uint tickCount;
+
+	ConfirmationFilter engineConfirmationFilter;
 
  public: // return values from this dialog
 

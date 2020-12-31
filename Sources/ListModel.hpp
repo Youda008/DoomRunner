@@ -533,8 +533,8 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 	{
 		if (!pathHelper)
 		{
-			qWarning() << "File has been dropped but no makeItemFromFile function is set. "
-			              "Either specify a makeItemFromFile function or disable file dropping in the widget.";
+			qWarning() << "File has been dropped but no PathHelper is set. "
+			              "Either use setPathHelper or disable file dropping in the widget.";
 			return false;
 		}
 

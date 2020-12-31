@@ -83,21 +83,30 @@ template< typename Item >
 void fillListFromDir( QList< Item > & list, const QString & dir, bool recursively, const PathHelper & pathHelper,
                       std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
+	if (dir.isEmpty())  // dir is not set -> leave the list empty
+		return;
+
 	QDir dir_( dir );
-	if (dir.isEmpty() || !dir_.exists())  // dir not specified or invalid -> leave the list empty
+	if (!dir_.exists())  // dir is invalid -> leave the list empty
 		return;
 
 	QDirIterator dirIt( dir_ );
-	while (dirIt.hasNext()) {
+	while (dirIt.hasNext())
+	{
 		QString entryPath = pathHelper.convertPath( dirIt.next() );
 		QFileInfo entry( entryPath );
-		if (entry.isDir()) {
+		if (entry.isDir())
+		{
 			QString dirName = dirIt.fileName();  // we need the original entry name including "." and "..", entry is already converted
-			if (recursively && dirName != "." && dirName != "..") {
+			if (recursively && dirName != "." && dirName != "..")
+			{
 				fillListFromDir( list, entry.filePath(), recursively, pathHelper, isDesiredFile );
 			}
-		} else {
-			if (isDesiredFile( entry )) {
+		}
+		else
+		{
+			if (isDesiredFile( entry ))
+			{
 				list.append( Item( entry ) );
 			}
 		}

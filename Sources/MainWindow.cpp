@@ -14,10 +14,13 @@
 #include "CompatOptsDialog.hpp"
 #include "AboutDialog.hpp"
 
+#include "EventFilters.hpp"  // ConfirmationFilter
 #include "LangUtils.hpp"
 #include "JsonUtils.hpp"
 #include "WidgetUtils.hpp"
+#include "FileSystemUtils.hpp"
 #include "DoomUtils.hpp"
+#include "UpdateChecker.hpp"
 #include "Version.hpp"
 
 #include <QString>
@@ -147,75 +150,12 @@ MainWindow::MainWindow()
 	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::runAboutDialog );
 	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
 
-	// setup preset list view
+	// setup main list views
 
-	// specify where to get the string for edit mode
-	presetModel.setEditStringFunc( []( Preset & preset ) -> QString & { return preset.name; } );
-	// set data source for the view
-	ui->presetListView->setModel( &presetModel );
-	// set drag&drop behaviour
-	ui->presetListView->toggleNameEditing( true );
-	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
-	ui->presetListView->toggleInterWidgetDragAndDrop( false );
-	ui->presetListView->toggleExternalFileDragAndDrop( false );
-	// set reaction to a click on an item
-	connect( ui->presetListView, &QListView::clicked, this, &thisClass::loadPreset );
-	// setup enter key detection and reaction
-	ui->presetListView->installEventFilter( &presetConfirmationEmitter );
-	connect( &presetConfirmationEmitter, &ConfirmationEmitter::choiceConfirmed, this, &thisClass::presetConfirm );
-	// setup reaction to key shortcuts and right click
-	connect( ui->presetListView, &EditableListView::addActionTriggered, this, &thisClass::presetAdd );
-	connect( ui->presetListView, &EditableListView::deleteActionTriggered, this, &thisClass::presetDelete );
-	connect( ui->presetListView, &EditableListView::moveUpActionTriggered, this, &thisClass::presetMoveUp );
-	connect( ui->presetListView, &EditableListView::moveDownActionTriggered, this, &thisClass::presetMoveDown );
-
-	// setup iwad list view
-
-	ui->iwadListView->setModel( &iwadModel );
-	// set reaction to a click on an item
-	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::toggleIWAD );
-	// setup enter key detection and reaction
-	ui->iwadListView->installEventFilter( &iwadConfirmationEmitter );
-	connect( &iwadConfirmationEmitter, &ConfirmationEmitter::choiceConfirmed, this, &thisClass::iwadConfirm );
-
-	// setup map directory view
-
-	// set data source for the view
-	ui->mapDirView->setModel( &mapModel );
-	//
-	ui->mapDirView->setDragEnabled( true );
-	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
-	// set reaction to a click on an item
-	connect( ui->mapDirView, &QTreeView::clicked, this, &thisClass::toggleMapPack );
-	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
-	// setup enter key detection and reaction
-	ui->mapDirView->installEventFilter( &mapConfirmationEmitter );
-	connect( &mapConfirmationEmitter, &ConfirmationEmitter::choiceConfirmed, this, &thisClass::mapPackConfirm );
-
-	// setup mod list view
-
-	// specify where to get the bool flag for the checkbox
-	modModel.setIsCheckedFunc( []( Mod & mod ) -> bool & { return mod.checked; } );
-	// give the model our path convertor, it will need it for converting paths dropped from directory
-	modModel.setPathHelper( &pathHelper );
-	// set data source for the view
-	ui->modListView->setModel( &modModel );
-	// set drag&drop behaviour
-	ui->modListView->toggleNameEditing( false );
-	ui->modListView->toggleIntraWidgetDragAndDrop( true );
-	ui->modListView->toggleInterWidgetDragAndDrop( true );
-	ui->modListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::modsDropped );
-	// set reaction to a click on an item
-	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
-	// setup enter key detection and reaction
-	ui->modListView->installEventFilter( &modConfirmationEmitter );
-	connect( &modConfirmationEmitter, &ConfirmationEmitter::choiceConfirmed, this, &thisClass::modConfirm );
-	// setup reaction to key shortcuts and right click
-	connect( ui->modListView, &EditableListView::addActionTriggered, this, &thisClass::modAdd );
-	connect( ui->modListView, &EditableListView::deleteActionTriggered, this, &thisClass::modDelete );
-	connect( ui->modListView, &EditableListView::moveUpActionTriggered, this, &thisClass::modMoveUp );
-	connect( ui->modListView, &EditableListView::moveDownActionTriggered, this, &thisClass::modMoveDown );
+	setupPresetView();
+	setupIWADView();
+	setupMapPackView();
+	setupModView();
 
 	// setup combo-boxes
 
@@ -266,7 +206,7 @@ MainWindow::MainWindow()
 	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::changeTeamDamage );
 	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeTimeLimit );
 
-	//
+	// the rest
 
 	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updatePresetCmdArgs );
 	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateGlobalCmdArgs );
@@ -276,6 +216,101 @@ MainWindow::MainWindow()
 	// not sure, which one of these 2 options is better
 	//QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection ); // this doesn't work in Qt 5.9
 	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
+}
+
+void MainWindow::setupPresetView()
+{
+	// specify where to get the string for edit mode
+	presetModel.setEditStringFunc( []( Preset & preset ) -> QString & { return preset.name; } );
+
+	// set data source for the view
+	ui->presetListView->setModel( &presetModel );
+
+	// set drag&drop behaviour
+	ui->presetListView->toggleNameEditing( true );
+	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
+	ui->presetListView->toggleInterWidgetDragAndDrop( false );
+	ui->presetListView->toggleExternalFileDragAndDrop( false );
+
+	// set reaction to a click on an item
+	connect( ui->presetListView, &QListView::clicked, this, &thisClass::loadPreset );
+
+	// setup enter key detection and reaction
+	ui->presetListView->installEventFilter( &presetConfirmationFilter );
+	connect( &presetConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::presetConfirm );
+
+	// setup reaction to key shortcuts and right click
+	ui->presetListView->toggleContextMenu( true );
+	ui->presetListView->enableItemCloning();
+	connect( ui->presetListView->addAction, &QAction::triggered, this, &thisClass::presetAdd );
+	connect( ui->presetListView->deleteAction, &QAction::triggered, this, &thisClass::presetDelete );
+	connect( ui->presetListView->cloneAction, &QAction::triggered, this, &thisClass::presetClone );
+	connect( ui->presetListView->moveUpAction, &QAction::triggered, this, &thisClass::presetMoveUp );
+	connect( ui->presetListView->moveDownAction, &QAction::triggered, this, &thisClass::presetMoveDown );
+}
+
+void MainWindow::setupIWADView()
+{
+	// set data source for the view
+	ui->iwadListView->setModel( &iwadModel );
+
+	// set reaction to a click on an item
+	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::toggleIWAD );
+
+	// setup enter key detection and reaction
+	ui->iwadListView->installEventFilter( &iwadConfirmationFilter );
+	connect( &iwadConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::iwadConfirm );
+}
+
+void MainWindow::setupMapPackView()
+{
+	// set data source for the view
+	ui->mapDirView->setModel( &mapModel );
+
+	// set drag&drop behaviour
+	ui->mapDirView->setDragEnabled( true );
+	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
+
+	// set reaction to a click on an item
+	connect( ui->mapDirView, &QTreeView::clicked, this, &thisClass::toggleMapPack );
+	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
+
+	// setup enter key detection and reaction
+	ui->mapDirView->installEventFilter( &mapConfirmationFilter );
+	connect( &mapConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::mapPackConfirm );
+}
+
+void MainWindow::setupModView()
+{
+	// specify where to get the bool flag for the checkbox
+	modModel.setIsCheckedFunc( []( Mod & mod ) -> bool & { return mod.checked; } );
+
+	// give the model our path convertor, it will need it for converting paths dropped from directory
+	modModel.setPathHelper( &pathHelper );
+
+	// set data source for the view
+	ui->modListView->setModel( &modModel );
+
+	// set drag&drop behaviour
+	ui->modListView->toggleNameEditing( false );
+	ui->modListView->toggleIntraWidgetDragAndDrop( true );
+	ui->modListView->toggleInterWidgetDragAndDrop( true );
+	ui->modListView->toggleExternalFileDragAndDrop( true );
+	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::modsDropped );
+
+	// set reaction to a click on an item
+	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
+
+	// setup enter key detection and reaction
+	ui->modListView->installEventFilter( &modConfirmationFilter );
+	connect( &modConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::modConfirm );
+
+	// setup reaction to key shortcuts and right click
+	ui->modListView->toggleContextMenu( true );
+	connect( ui->modListView->addAction, &QAction::triggered, this, &thisClass::modAdd );
+	connect( ui->modListView->deleteAction, &QAction::triggered, this, &thisClass::modDelete );
+	connect( ui->modListView->moveUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
+	connect( ui->modListView->moveDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
 }
 
 void MainWindow::onWindowShown()

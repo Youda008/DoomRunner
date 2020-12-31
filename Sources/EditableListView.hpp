@@ -16,6 +16,7 @@
 #include "EventFilters.hpp"  // ModifierHandler
 
 #include <QListView>
+class QMenu;
 
 
 //======================================================================================================================
@@ -31,6 +32,7 @@ class EditableListView : public QListView {
  public:
 
 	EditableListView( QWidget * parent );
+	virtual ~EditableListView() override;
 
 	// We support 3 kinds of drag&drop operations, that can be separately enabled/disabled
 	// 1. intra-widget d&d - drag&drop from inside this widget for manual reordering of items on the list
@@ -48,6 +50,21 @@ class EditableListView : public QListView {
 
 	/** enables/disables editing the item names by double-clicking on them */
 	void toggleNameEditing( bool enabled );
+
+	/** setting this to false will grey-out the context menu items so that they can't be clicked */
+	void toggleContextMenu( bool enabled );
+
+	/** enables clone action in a right-click context menu and CTRL+C shortcut */
+	void enableItemCloning();
+
+ public: // members
+
+	// these actions will emit trigger signals when a menu item is clicked or a shortcut is pressed
+	QAction * addAction = nullptr;
+	QAction * deleteAction = nullptr;
+	QAction * cloneAction = nullptr;
+	QAction * moveUpAction = nullptr;
+	QAction * moveDownAction = nullptr;
 
  protected: // methods
 
@@ -75,14 +92,13 @@ class EditableListView : public QListView {
 	virtual void keyPressEvent( QKeyEvent * event ) override;
 	virtual void keyReleaseEvent( QKeyEvent * event ) override;
 
+	// right-click menu
+
+	virtual void contextMenuEvent( QContextMenuEvent * e ) override;
+
  signals:
 
 	void itemsDropped( int row, int count );
-
-	void addActionTriggered();
-	void deleteActionTriggered();
-	void moveUpActionTriggered();
-	void moveDownActionTriggered();
 
  protected: // members
 
@@ -92,6 +108,11 @@ class EditableListView : public QListView {
 	bool allowEditNames;
 
 	ModifierHandler modifierHandler;
+
+	bool contexMenuActive;
+	bool itemCloningEnabled;
+
+	std::unique_ptr< QMenu > contextMenu;
 
 };
 

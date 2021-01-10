@@ -79,6 +79,16 @@ class PathHelper {
 //======================================================================================================================
 //  misc helper functions
 
+inline QString getPathFromFileName( const QString & dirPath, const QString & fileName )
+{
+	return QDir( dirPath ).filePath( fileName );
+}
+
+inline QString getDirOfFile( const QString & filePath )
+{
+	return QFileInfo( filePath ).path();
+}
+
 template< typename Item >
 void fillListFromDir( QList< Item > & list, const QString & dir, bool recursively, const PathHelper & pathHelper,
                       std::function< bool ( const QFileInfo & file ) > isDesiredFile )

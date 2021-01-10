@@ -54,12 +54,6 @@ static constexpr char defaultOptionsFile [] = "options.json";
 //======================================================================================================================
 //  local helpers
 
-static QString getPathFromFileName( const QString & dirPath, const QString & fileName )
-{
-	QDir dir( dirPath );
-	return dir.filePath( fileName );
-}
-
 static bool verifyDir( const QString & dir, const QString & errorMessage )
 {
 	if (!QDir( dir ).exists())
@@ -103,7 +97,7 @@ MainWindow::MainWindow()
 	optionsCorrupted( false ),
 	listUpdateInProgress( false ),
 	compatOptsCmdArgs(),
-	pathHelper( false, QDir::currentPath() ),
+	pathHelper( false, QApplication::applicationDirPath() ), // all paths will internally be stored relative to the application's dir
 	checkForUpdates( true ),
 	optsStorage( STORE_GLOBALLY ),
 	closeOnLaunch( false ),
@@ -1831,9 +1825,20 @@ void MainWindow::importPreset()
 
 void MainWindow::updateLaunchCommand()
 {
+	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	if (selectedEngineIdx < 0)
+	{
+		ui->commandLine->clear();
+		return;  // no sense to generate a command when we don't even know the engine
+	}
+
 	QString curCommand = ui->commandLine->text();
 
-	QString newCommand = generateLaunchCommand();
+	// the command needs to be relative to the engine's directory,
+	// because it will be executes with the current directory set to engine's directory
+	QString baseDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
+
+	QString newCommand = generateLaunchCommand( baseDir );
 
 	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
 	// and copy part of the line, by constantly reseting his selection.
@@ -1841,13 +1846,9 @@ void MainWindow::updateLaunchCommand()
 		ui->commandLine->setText( newCommand );
 }
 
-QString MainWindow::generateLaunchCommand( QString baseDir )
+QString MainWindow::generateLaunchCommand( const QString & baseDir )
 {
-	// Allow the caller to specify which base directory he wants to derive the relative paths from.
-	// This is required because of the "Export preset" function that needs to write the correct paths to the bat.
-	// If no argument is given (empty string), fallback to system current directory.
-	if (baseDir.isEmpty())
-		baseDir = QDir::currentPath();
+	// baseDir - which base directory to derive the relative paths from
 
 	// All stored paths are relative to pathHelper.baseDir(), but we need them relative to baseDir
 	PathHelper base( pathHelper.useAbsolutePaths(), baseDir, pathHelper.baseDir() );
@@ -1871,6 +1872,10 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 			//verifyFile( configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
 			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
+	}
+	else
+	{
+		return {};  // no sense to generate a command when we don't even know the engine
 	}
 
 	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
@@ -1988,13 +1993,26 @@ QString MainWindow::generateLaunchCommand( QString baseDir )
 
 void MainWindow::launch()
 {
-	if (ui->engineCmbBox->currentIndex() < 0)
+	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	if (selectedEngineIdx < 0)
 	{
 		QMessageBox::warning( this, "No engine selected", "No Doom engine is selected." );
 		return;
 	}
 
+	QString currentDir = QDir::currentPath();
+	QString engineDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
+
+	// before we execute the command, we need to switch the current dir to the engine's dir
+	// because some engines search for their own files in the current dir and would fail if started from elsewhere
+	QDir::setCurrent( engineDir );
+
+	// the command paths are always generated relative to the engine's dir
 	bool success = QProcess::startDetached( ui->commandLine->text() );
+
+	// restore the previous current dir
+	QDir::setCurrent( currentDir );
+
 	if (!success)
 	{
 		QMessageBox::warning( this, tr("Launch error"), tr("Failed to execute launch command.") );

@@ -4,6 +4,7 @@
 - enabled keyboard control (Enter, Insert, Delete, CTRL+arrows)
 - right-click inside an editable list widget pops-up a context menu with available actions
 - added "close on launch" option
+- before launch, the current directory is changed to engine's directory, improving compatibility with some engines
 
 1.3.3
 - fixed deh recognition for map packs

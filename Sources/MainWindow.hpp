@@ -135,7 +135,7 @@ class MainWindow : public QMainWindow {
 	void loadOptions( const QString & fileName );
 
 	void updateLaunchCommand();
-	QString generateLaunchCommand( QString baseDir = "" );
+	QString generateLaunchCommand( const QString & baseDir );
 
  private: // internal members
 

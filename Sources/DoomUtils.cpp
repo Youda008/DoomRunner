@@ -24,8 +24,8 @@
 //======================================================================================================================
 //  file type recognition
 
-const QString configFileExt = "ini";
-const QString saveFileExt = "zds";
+const QVector< QString > configFileSuffixes = {"ini", "cfg"};
+const QString saveFileSuffix = "zds";
 
 const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
 const QVector< QString > mapSuffixes = {"wad", "deh", "bex", "pk3", "pk7", "zip", "7z"};

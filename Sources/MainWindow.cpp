@@ -43,9 +43,9 @@
 //======================================================================================================================
 
 #ifdef _WIN32
-	static const QString scriptFileExt = "*.bat";
+	static const QString scriptFileSuffix = "*.bat";
 #else
-	static const QString scriptFileExt = "*.sh";
+	static const QString scriptFileSuffix = "*.sh";
 #endif
 
 static constexpr char defaultOptionsFile [] = "options.json";
@@ -1362,7 +1362,7 @@ void MainWindow::updateConfigFilesFromDir()
 	listUpdateInProgress = true;  // workaround (read the big comment above)
 
 	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, false, pathHelper,
-		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == configFileExt; }
+		/*isDesiredFile*/[]( const QFileInfo & file ) { return configFileSuffixes.contains( file.suffix().toLower() ); }
 	);
 
 	listUpdateInProgress = false;
@@ -1378,7 +1378,7 @@ void MainWindow::updateSaveFilesFromDir()
 	listUpdateInProgress = true;  // workaround (read the big comment above)
 
 	updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, false, pathHelper,
-		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileExt; }
+		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileSuffix; }
 	);
 
 	listUpdateInProgress = false;
@@ -1764,7 +1764,7 @@ void MainWindow::exportPreset()
 		return;
 	}
 
-	QString filePath = QFileDialog::getSaveFileName( this, "Export preset", QString(), scriptFileExt );
+	QString filePath = QFileDialog::getSaveFileName( this, "Export preset", QString(), scriptFileSuffix );
 	if (filePath.isEmpty())  // user probably clicked cancel
 	{
 		return;

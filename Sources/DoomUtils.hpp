@@ -21,8 +21,8 @@ class QFileInfo;
 //======================================================================================================================
 //  file type recognition
 
-extern const QString configFileExt;
-extern const QString saveFileExt;
+extern const QVector< QString > configFileSuffixes;
+extern const QString saveFileSuffix;
 
 extern const QVector< QString > iwadSuffixes;
 extern const QVector< QString > mapSuffixes;

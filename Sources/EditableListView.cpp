@@ -47,7 +47,7 @@
 
 //======================================================================================================================
 
-EditableListView::EditableListView( QWidget * parent ) : QListView ( parent )
+EditableListView::EditableListView( QWidget * parent ) : QListView( parent )
 {
 	allowIntraWidgetDnD = true;
 	allowInterWidgetDnD = false;
@@ -59,14 +59,25 @@ EditableListView::EditableListView( QWidget * parent ) : QListView ( parent )
 	allowEditNames = false;
 	setEditTriggers( QAbstractItemView::NoEditTriggers );
 
+	contextMenu = new QMenu( this );  // will be deleted when the parent (this widget) is deleted
+
 	contexMenuActive = false;
 	itemCloningEnabled = false;
 
-	contextMenu.reset( new QMenu( this ) );
-	addAction = contextMenu->addAction( "Add" );
-	deleteAction = contextMenu->addAction( "Delete" );
-	moveUpAction = contextMenu->addAction( "Move up" );
-	moveDownAction = contextMenu->addAction( "Move down" );
+	addAction = addOwnAction( "Add", { Qt::Key_Insert } );
+	deleteAction = addOwnAction( "Delete", { Qt::Key_Delete } );
+	moveUpAction = addOwnAction( "Move up", { Qt::CTRL + Qt::Key_Up } );
+	moveDownAction = addOwnAction( "Move down", { Qt::CTRL + Qt::Key_Down } );
+}
+
+QAction * EditableListView::addOwnAction( const QString & text, const QKeySequence & shortcut )
+{
+	QAction * action = new QAction( text, this );
+	action->setShortcut( shortcut );
+	action->setShortcutContext( Qt::WidgetShortcut );  // only listen to this shortcut when this widget has focus
+	QWidget::addAction( action );  // register it to this widget, so the shortcut is checked
+	contextMenu->addAction( action );  // register it to the menu, so that it appears there when right-clicked
+	return action;
 }
 
 EditableListView::~EditableListView() {}
@@ -241,6 +252,14 @@ static inline bool isArrowKey( int key )
 	return key >= Qt::Key_Left && key <= Qt::Key_Down;
 }
 
+bool EditableListView::isCheckable() const
+{
+	if (model()->rowCount() == 0)
+		return false;
+
+	return model()->flags( model()->index( 0, 0 ) ) & Qt::ItemIsUserCheckable;
+}
+
 void EditableListView::keyPressEvent( QKeyEvent * event )
 {
 	int key = event->key();
@@ -249,33 +268,16 @@ void EditableListView::keyPressEvent( QKeyEvent * event )
 
 	if (!isModifier)
 	{
-		uint8_t modifiers = modifierHandler.pressedModifiers();
-
-		if (key == Qt::Key_Insert)
+		if (key == Qt::Key_Space && isCheckable())
 		{
-			addAction->trigger();
-		}
-		else if (key == Qt::Key_Delete)
-		{
-			deleteAction->trigger();
-		}
-		else if (key == Qt::Key_C && modifiers & Modifier::CTRL && itemCloningEnabled)
-		{
-			cloneAction->trigger();
-		}
-		else if (key == Qt::Key_Up && modifiers & Modifier::CTRL)
-		{
-			moveUpAction->trigger();
-		}
-		else if (key == Qt::Key_Down && modifiers & Modifier::CTRL)
-		{
-			moveDownAction->trigger();
-		}
-
-		// supress arrow navigation when CTRL is pressed, otherwise the selection would get messed up
-		if (isArrowKey( key ) && modifiers != 0)
-		{
-			return;
+			// When user has multiple items selected and presses space, default implementation only checks/unchecks
+			// the current item, not all the selected ones. Therefore we have to do it manually here.
+			for (const QModelIndex & selectedIdx : this->selectionModel()->selectedIndexes())
+			{
+				Qt::CheckState state = Qt::CheckState( model()->data( selectedIdx, Qt::CheckStateRole ).toInt() );
+				model()->setData( selectedIdx, state == Qt::Checked ? Qt::Unchecked : Qt::Checked, Qt::CheckStateRole );
+			}
+			return;  // supress the original handling of spacebar
 		}
 	}
 
@@ -308,12 +310,12 @@ void EditableListView::toggleContextMenu( bool enabled )
 void EditableListView::enableItemCloning()
 {
 	itemCloningEnabled = true;
-	cloneAction = contextMenu->addAction( "Clone" );
+	cloneAction = addOwnAction( "Clone", { Qt::CTRL + Qt::Key_C } );
 }
 
-void EditableListView::contextMenuEvent( QContextMenuEvent * e )
+void EditableListView::contextMenuEvent( QContextMenuEvent * event )
 {
-	QModelIndex eventIndex = this->indexAt( e->pos() );
+	QModelIndex eventIndex = this->indexAt( event->pos() );
 
 	if (addAction)
 		addAction->setEnabled( contexMenuActive );
@@ -326,5 +328,5 @@ void EditableListView::contextMenuEvent( QContextMenuEvent * e )
 	if (moveDownAction)
 		moveDownAction->setEnabled( contexMenuActive && eventIndex.isValid() );
 
-	contextMenu->popup( e->globalPos() );
+	contextMenu->popup( event->globalPos() );
 }

@@ -677,7 +677,7 @@ void MainWindow::selectEngine( int index )
 void MainWindow::selectConfig( int index )
 {
 	// workaround (read the comment at automatic list updates)
-	if (listUpdateInProgress)
+	if (listUpdateInProgress && index < 0)
 		return;
 
 	// update the current preset
@@ -719,7 +719,7 @@ void MainWindow::togglePreset( const QItemSelection & selected, const QItemSelec
 void MainWindow::toggleIWAD( const QItemSelection & selected, const QItemSelection & /*deselected*/ )
 {
 	// workaround (read the comment at automatic list updates)
-	if (listUpdateInProgress)
+	if (listUpdateInProgress && selected.indexes().isEmpty())
 		return;
 
 	int selectedIWADIdx = selected.indexes().isEmpty() ? -1 : selected.indexes()[0].row();
@@ -747,7 +747,7 @@ void MainWindow::toggleIWAD( const QItemSelection & selected, const QItemSelecti
 void MainWindow::toggleMapPack( const QItemSelection & selected, const QItemSelection & /*deselected*/ )
 {
 	// workaround (read the comment at automatic list updates)
-	if (listUpdateInProgress)
+	if (listUpdateInProgress && selected.indexes().isEmpty())
 		return;
 
 	QList< TreePosition > selectedMapPacks;
@@ -764,23 +764,24 @@ void MainWindow::toggleMapPack( const QItemSelection & selected, const QItemSele
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleMod( const QModelIndex & modIndex, bool checked )
-{
-	// update the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedPresetIdx >= 0)
-	{
-		presetModel[ selectedPresetIdx ].mods[ modIndex.row() ].checked = checked;
-	}
-
-	updateLaunchCommand();
-}
-
 void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles )
 {
-	if (topLeft.row() == bottomRight.row() && roles.contains( Qt::CheckStateRole ))
+	int topModIdx = topLeft.row();
+	int bottomModIdx = bottomRight.row();
+
+	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
 	{
-		toggleMod( topLeft, modModel[ topLeft.row() ].checked );
+		// update the current preset
+		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+		{
+			for (int idx = topModIdx; idx <= bottomModIdx; idx++)
+			{
+				presetModel[ selectedPresetIdx ].mods[ idx ].checked = modModel[ idx ].checked;
+			}
+		}
+
+		updateLaunchCommand();
 	}
 }
 
@@ -1843,7 +1844,11 @@ void MainWindow::updateLaunchCommand()
 	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
 	// and copy part of the line, by constantly reseting his selection.
 	if (newCommand != curCommand)
+	{
+		//static int i = 0;
+		//qDebug() << "updating " << i++;
 		ui->commandLine->setText( newCommand );
+	}
 }
 
 QString MainWindow::generateLaunchCommand( const QString & baseDir )

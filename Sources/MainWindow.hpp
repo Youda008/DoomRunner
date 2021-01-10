@@ -62,7 +62,6 @@ class MainWindow : public QMainWindow {
 	void togglePreset( const QItemSelection & selected, const QItemSelection & deselected );
 	void toggleIWAD( const QItemSelection & selected, const QItemSelection & deselected );
 	void toggleMapPack( const QItemSelection & selected, const QItemSelection & deselected );
-	void toggleMod( const QModelIndex & index, bool checked );
 	void modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 
 	void showMapPackDesc( const QModelIndex & index );
@@ -147,7 +146,9 @@ class MainWindow : public QMainWindow {
 
 	bool listUpdateInProgress;  ///< whether the list models are currently being updated (read more in the place of usage)
 
-	QString compatOptsCmdArgs;    ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
+	QString compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
+
+	KeyPressFilter modKeyFilter;  ///< event filter that captures the presses of spacebar to correct the unsuitable default behaviour
 
 	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
 

@@ -96,6 +96,12 @@ class EditableListView : public QListView {
 
 	virtual void contextMenuEvent( QContextMenuEvent * e ) override;
 
+	// misc
+
+	QAction * addOwnAction( const QString & text, const QKeySequence & shortcut );
+
+	bool isCheckable() const;
+
  signals:
 
 	void itemsDropped( int row, int count );
@@ -112,7 +118,7 @@ class EditableListView : public QListView {
 	bool contexMenuActive;
 	bool itemCloningEnabled;
 
-	std::unique_ptr< QMenu > contextMenu;
+	QMenu * contextMenu;
 
 };
 

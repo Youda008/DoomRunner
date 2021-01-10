@@ -359,14 +359,13 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 
 	deselectSelectedItems( view );
 
-	//model.startCompleteUpdate();
-
+	model.startCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor,
+	                              // but that's an acceptable drawback, instead of making differential update
 	model.clear();
 
 	fillListFromDir( model.list(), dir, recursively, pathHelper, isDesiredFile );
 
-	//model.finishCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor
-	model.contentChanged(0);         // and this is an acceptable workaround, instead of differential update
+	model.finishCompleteUpdate();
 
 	// restore the selection so that the same file remains selected
 	selectItemByID( view, model, selectedItemID );
@@ -455,20 +454,18 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 	// note down the currently selected item
 	QString lastText = view->currentText();
 
-	//view->setCurrentIndex( -1 );  // this causes the command line to be regenerated back and forth on every update
+	view->setCurrentIndex( -1 );
 
-	//configModel.startCompleteUpdate();  // this will reset the selection and cause the launch command to regenerate back and forth
+	model.startCompleteUpdate();
 
 	model.clear();
 
 	fillListFromDir( model.list(), dir, recursively, pathHelper, isDesiredFile );
 
-	//configModel.finishCompleteUpdate();
-	model.contentChanged(0);
+	model.finishCompleteUpdate();
 
-	// restore the originally selected item
-	//   the selection will be reset if the item does not exist in the new content because find returns -1 which is valid value for setCurrentIndex
-	//   if the new index is same as the current index, the change callbacks are not called and the command not re-generated
+	// restore the originally selected item, the selection will be reset if the item does not exist in the new content
+	// because findText returns -1 which is valid value for setCurrentIndex
 	view->setCurrentIndex( view->findText( lastText ) );
 }
 

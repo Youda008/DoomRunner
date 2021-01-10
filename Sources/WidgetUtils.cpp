@@ -172,8 +172,8 @@ void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & 
 		}
 	});
 
-	model.startCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor
-
+	model.startCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor,
+	                              // but that's an acceptable drawback, instead of making differential update
 	model.clear();
 
 	model.setBaseDir( dir );  // all new items will be relative to this dir

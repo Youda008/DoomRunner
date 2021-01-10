@@ -101,6 +101,7 @@ MainWindow::MainWindow()
 	QMainWindow( nullptr ),
 	tickCount( 0 ),
 	optionsCorrupted( false ),
+	listUpdateInProgress( false ),
 	compatOptsCmdArgs(),
 	pathHelper( false, QDir::currentPath() ),
 	checkForUpdates( true ),
@@ -233,12 +234,8 @@ void MainWindow::setupPresetView()
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
 
-	// set reaction to a click on an item
-	connect( ui->presetListView, &QListView::clicked, this, &thisClass::loadPreset );
-
-	// setup enter key detection and reaction
-	ui->presetListView->installEventFilter( &presetConfirmationFilter );
-	connect( &presetConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::presetConfirm );
+	// set reaction when an item is selected
+	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::togglePreset );
 
 	// setup reaction to key shortcuts and right click
 	ui->presetListView->toggleContextMenu( true );
@@ -255,12 +252,8 @@ void MainWindow::setupIWADView()
 	// set data source for the view
 	ui->iwadListView->setModel( &iwadModel );
 
-	// set reaction to a click on an item
-	connect( ui->iwadListView, &QListView::clicked, this, &thisClass::toggleIWAD );
-
-	// setup enter key detection and reaction
-	ui->iwadListView->installEventFilter( &iwadConfirmationFilter );
-	connect( &iwadConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::iwadConfirm );
+	// set reaction when an item is selected
+	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::toggleIWAD );
 }
 
 void MainWindow::setupMapPackView()
@@ -272,13 +265,9 @@ void MainWindow::setupMapPackView()
 	ui->mapDirView->setDragEnabled( true );
 	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
 
-	// set reaction to a click on an item
-	connect( ui->mapDirView, &QTreeView::clicked, this, &thisClass::toggleMapPack );
+	// set reaction when an item is selected
+	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::toggleMapPack );
 	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
-
-	// setup enter key detection and reaction
-	ui->mapDirView->installEventFilter( &mapConfirmationFilter );
-	connect( &mapConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::mapPackConfirm );
 }
 
 void MainWindow::setupModView()
@@ -299,12 +288,8 @@ void MainWindow::setupModView()
 	ui->modListView->toggleExternalFileDragAndDrop( true );
 	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::modsDropped );
 
-	// set reaction to a click on an item
-	connect( ui->modListView, &QListView::clicked, this, &thisClass::toggleMod );
-
-	// setup enter key detection and reaction
-	ui->modListView->installEventFilter( &modConfirmationFilter );
-	connect( &modConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::modConfirm );
+	// set reaction when an item is checked or unchecked
+	connect( &modModel, &QAbstractListModel::dataChanged, this, &thisClass::modDataChanged );
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
@@ -335,7 +320,7 @@ void MainWindow::onWindowShown()
 			defaultPresetIdx = 0;
 		}
 		selectItemByIdx( ui->presetListView, defaultPresetIdx );
-		loadPreset( presetModel.makeIndex( defaultPresetIdx ) );
+		loadPreset( defaultPresetIdx );
 	}
 
 	if (checkForUpdates)
@@ -515,22 +500,12 @@ void MainWindow::runAboutDialog()
 //----------------------------------------------------------------------------------------------------------------------
 //  preset loading
 
-void MainWindow::loadPreset( const QModelIndex & index )
+// loads the content of a preset into the other widgets
+void MainWindow::loadPreset( int presetIdx )
 {
-	int selectedPresetIdx = index.row();
-
-	if (!isSelectedIdx( ui->presetListView, selectedPresetIdx ))  // the preset was deselected with CTRL
-	{
-		clearPresetSubWidgets();
-		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
-		return;
-	}
-
-	togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
-
 	// Make a copy because the orig preset in presetModel may get changed during the following UI updates.
 	// The correct solution would be to somehow set the UI elements without having our callbacks called, but i don't know how.
-	Preset preset = presetModel[ selectedPresetIdx ];
+	Preset preset = presetModel[ presetIdx ];
 
 	// restore selected engine
 	if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
@@ -645,6 +620,39 @@ void MainWindow::loadPreset( const QModelIndex & index )
 	updateLaunchCommand();
 }
 
+void MainWindow::togglePresetSubWidgets( bool enabled )
+{
+	ui->engineCmbBox->setEnabled( enabled );
+	ui->configCmbBox->setEnabled( enabled );
+	ui->iwadListView->setEnabled( enabled );
+	ui->mapDirView->setEnabled( enabled );
+	ui->modListView->setEnabled( enabled );
+	ui->modBtnAdd->setEnabled( enabled );
+	ui->modBtnDel->setEnabled( enabled );
+	ui->modBtnUp->setEnabled( enabled );
+	ui->modBtnDown->setEnabled( enabled );
+	ui->presetCmdArgsLine->setEnabled( enabled );
+}
+
+void MainWindow::clearPresetSubWidgets()
+{
+	ui->engineCmbBox->setCurrentIndex( -1 );
+
+	ui->configCmbBox->setCurrentIndex( -1 );
+
+	deselectSelectedItems( ui->iwadListView );
+
+	deselectSelectedItems( ui->mapDirView );
+
+	deselectSelectedItems( ui->modListView );
+
+	modModel.startCompleteUpdate();
+	modModel.clear();
+	modModel.finishCompleteUpdate();
+
+	ui->presetCmdArgsLine->clear();
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  item selection
@@ -674,6 +682,10 @@ void MainWindow::selectEngine( int index )
 
 void MainWindow::selectConfig( int index )
 {
+	// workaround (read the comment at automatic list updates)
+	if (listUpdateInProgress)
+		return;
+
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
@@ -696,25 +708,41 @@ void MainWindow::selectConfig( int index )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleIWAD( const QModelIndex & index )
+void MainWindow::togglePreset( const QItemSelection & selected, const QItemSelection & /*deselected*/ )
 {
-	bool deselected = !isSelectedIdx( ui->iwadListView, index.row() );  // it may have been actually deselected with CTRL
+	if (!selected.indexes().isEmpty())
+	{
+		togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
+		loadPreset( selected.indexes()[0].row() );  // load the content of the selected preset into the other widgets
+	}
+	else  // the preset was deselected using CTRL
+	{
+		clearPresetSubWidgets();  // clear the other widgets that display the content of the preset
+		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
+	}
+}
 
-	QString clickedIWAD = iwadModel[ index.row() ].path;
+void MainWindow::toggleIWAD( const QItemSelection & selected, const QItemSelection & /*deselected*/ )
+{
+	// workaround (read the comment at automatic list updates)
+	if (listUpdateInProgress)
+		return;
+
+	int selectedIWADIdx = selected.indexes().isEmpty() ? -1 : selected.indexes()[0].row();
 
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
-		if (deselected)
-			presetModel[ selectedPresetIdx ].selectedIWAD.clear();
+		if (selectedIWADIdx >= 0)
+			presetModel[ selectedPresetIdx ].selectedIWAD = iwadModel[ selectedIWADIdx ].path;
 		else
-			presetModel[ selectedPresetIdx ].selectedIWAD = clickedIWAD;
+			presetModel[ selectedPresetIdx ].selectedIWAD.clear();
 	}
 
-	if (!deselected)
+	if (selectedIWADIdx >= 0)
 	{
-		verifyFile( clickedIWAD, "The selected IWAD (%1) no longer exists, please select another one." );
+		verifyFile( iwadModel[ selectedIWADIdx ].path, "The selected IWAD (%1) no longer exists, please select another one." );
 	}
 
 	updateMapsFromIWAD();
@@ -722,10 +750,14 @@ void MainWindow::toggleIWAD( const QModelIndex & index )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleMapPack( const QModelIndex & /*index*/ )
+void MainWindow::toggleMapPack( const QItemSelection & selected, const QItemSelection & /*deselected*/ )
 {
+	// workaround (read the comment at automatic list updates)
+	if (listUpdateInProgress)
+		return;
+
 	QList< TreePosition > selectedMapPacks;
-	for (const QModelIndex & index : getSelectedItemIdxs( ui->mapDirView ))
+	for (const QModelIndex & index : selected.indexes())
 		selectedMapPacks.append( mapModel.getNodePosition( index ) );
 
 	// update the current preset
@@ -738,16 +770,24 @@ void MainWindow::toggleMapPack( const QModelIndex & /*index*/ )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleMod( const QModelIndex & modIndex )
+void MainWindow::toggleMod( const QModelIndex & modIndex, bool checked )
 {
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
-		presetModel[ selectedPresetIdx ].mods[ modIndex.row() ].checked = modModel[ modIndex.row() ].checked;
+		presetModel[ selectedPresetIdx ].mods[ modIndex.row() ].checked = checked;
 	}
 
 	updateLaunchCommand();
+}
+
+void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles )
+{
+	if (topLeft.row() == bottomRight.row() && roles.contains( Qt::CheckStateRole ))
+	{
+		toggleMod( topLeft, modModel[ topLeft.row() ].checked );
+	}
 }
 
 void MainWindow::showMapPackDesc( const QModelIndex & index )
@@ -834,7 +874,7 @@ void MainWindow::presetDelete()
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
-		loadPreset( presetModel.makeIndex( selectedPresetIdx ) );
+		loadPreset( selectedPresetIdx );
 	}
 	else
 	{
@@ -970,28 +1010,7 @@ void MainWindow::modsDropped( int /*row*/, int /*count*/ )
 //----------------------------------------------------------------------------------------------------------------------
 //  keyboard control
 
-void MainWindow::presetConfirm()
-{
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedPresetIdx >= 0)
-		loadPreset( presetModel.makeIndex( selectedPresetIdx ) );
-}
-
-void MainWindow::iwadConfirm()
-{
-	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
-	if (selectedIwadIdx >= 0)
-		toggleIWAD( iwadModel.makeIndex( selectedIwadIdx ) );
-}
-
-void MainWindow::mapPackConfirm()
-{
-	QModelIndex selectedMapPackIdx = getSelectedItemIdx( ui->mapDirView );
-	if (selectedMapPackIdx.isValid())
-		toggleMapPack( selectedMapPackIdx );
-}
-
-void MainWindow::modConfirm()
+/*void MainWindow::modConfirm()
 {
 	int selectedModIdx = getSelectedItemIdx( ui->modListView );
 	if (selectedModIdx >= 0)
@@ -1000,7 +1019,7 @@ void MainWindow::modConfirm()
 		modModel.contentChanged( selectedModIdx, selectedModIdx + 1 );
 		toggleMod( modModel.makeIndex( selectedModIdx ) );
 	}
-}
+}*/
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1076,6 +1095,13 @@ void MainWindow::selectMap( const QString & mapName )
 
 void MainWindow::selectSavedGame( int saveIdx )
 {
+	// workaround (read the comment at automatic list updates)
+	if (listUpdateInProgress)
+		return;
+
+	if (saveIdx < 0)  // the savegame might be deselected some times, for example when swithing presets
+		return;
+
 	STORE_OPTION( saveFile, saveModel[ saveIdx ].fileName );
 
 	updateLaunchCommand();
@@ -1288,39 +1314,6 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 	updateLaunchCommand();
 }
 
-void MainWindow::togglePresetSubWidgets( bool enabled )
-{
-	ui->engineCmbBox->setEnabled( enabled );
-	ui->configCmbBox->setEnabled( enabled );
-	ui->iwadListView->setEnabled( enabled );
-	ui->mapDirView->setEnabled( enabled );
-	ui->modListView->setEnabled( enabled );
-	ui->modBtnAdd->setEnabled( enabled );
-	ui->modBtnDel->setEnabled( enabled );
-	ui->modBtnUp->setEnabled( enabled );
-	ui->modBtnDown->setEnabled( enabled );
-	ui->presetCmdArgsLine->setEnabled( enabled );
-}
-
-void MainWindow::clearPresetSubWidgets()
-{
-	ui->engineCmbBox->setCurrentIndex( -1 );
-
-	ui->configCmbBox->setCurrentIndex( -1 );
-
-	deselectSelectedItems( ui->iwadListView );
-
-	deselectSelectedItems( ui->mapDirView );
-
-	deselectSelectedItems( ui->modListView );
-
-	modModel.startCompleteUpdate();
-	modModel.clear();
-	modModel.finishCompleteUpdate();
-
-	ui->presetCmdArgsLine->clear();
-}
-
 
 //----------------------------------------------------------------------------------------------------------------------
 //  automatic list updates according to directory content
@@ -1330,7 +1323,8 @@ void MainWindow::clearPresetSubWidgets()
 // forth - first time when the old item is deselected when the list is cleared and second time when the new item is
 // selected after the list is filled. This has an unplesant effect that it isn't possible to inspect the whole launch
 // command or copy from it, because your cursor is cursor position is constantly reset by the constant updates.
-// Therefore we have to make sure that the item selection is changed only when necessary.
+// We work around this by setting a flag before the update starts and unsetting it after the update finishes.
+// This flag is then used to abort the callbacks that are called during the update.
 
 void MainWindow::updateListsFromDirs()
 {
@@ -1343,12 +1337,20 @@ void MainWindow::updateListsFromDirs()
 
 void MainWindow::updateIWADsFromDir()
 {
+	listUpdateInProgress = true;  // workaround (read the big comment above)
+
 	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathHelper, isIWAD );
+
+	listUpdateInProgress = false;
 }
 
 void MainWindow::updateMapPacksFromDir()
 {
+	listUpdateInProgress = true;  // workaround (read the big comment above)
+
 	updateTreeFromDir( mapModel, ui->mapDirView, mapSettings.dir, pathHelper, isMapPack );
+
+	listUpdateInProgress = false;
 }
 
 void MainWindow::updateConfigFilesFromDir()
@@ -1357,9 +1359,13 @@ void MainWindow::updateConfigFilesFromDir()
 
 	QString configDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
 
+	listUpdateInProgress = true;  // workaround (read the big comment above)
+
 	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, false, pathHelper,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == configFileExt; }
 	);
+
+	listUpdateInProgress = false;
 }
 
 void MainWindow::updateSaveFilesFromDir()
@@ -1369,9 +1375,13 @@ void MainWindow::updateSaveFilesFromDir()
 	// i don't know about a case, where the save dir would be different from config dir, it's not even configurable in zdoom
 	QString saveDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
 
+	listUpdateInProgress = true;  // workaround (read the big comment above)
+
 	updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, false, pathHelper,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileExt; }
 	);
+
+	listUpdateInProgress = false;
 }
 
 // this is not called regularly, but only when an IWAD is selected or deselected
@@ -1681,7 +1691,7 @@ void MainWindow::loadOptions( const QString & fileName )
 		if (selectedPresetIdx >= 0)
 		{
 			selectItemByIdx( ui->presetListView, selectedPresetIdx );
-			loadPreset( presetModel.makeIndex( selectedPresetIdx ) );
+			loadPreset( selectedPresetIdx );
 		}
 		else
 		{

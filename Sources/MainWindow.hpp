@@ -23,7 +23,7 @@
 #include <QString>
 #include <QFileInfo>
 
-class QListView;
+class QItemSelection;
 
 namespace Ui {
 	class MainWindow;
@@ -57,13 +57,13 @@ class MainWindow : public QMainWindow {
 	void runCompatOptsDialog();
 	void runAboutDialog();
 
-	void loadPreset( const QModelIndex & index );
-
 	void selectEngine( int index );
 	void selectConfig( int index );
-	void toggleIWAD( const QModelIndex & index );
-	void toggleMapPack( const QModelIndex & index );
-	void toggleMod( const QModelIndex & index );
+	void togglePreset( const QItemSelection & selected, const QItemSelection & deselected );
+	void toggleIWAD( const QItemSelection & selected, const QItemSelection & deselected );
+	void toggleMapPack( const QItemSelection & selected, const QItemSelection & deselected );
+	void toggleMod( const QModelIndex & index, bool checked );
+	void modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 
 	void showMapPackDesc( const QModelIndex & index );
 
@@ -72,17 +72,12 @@ class MainWindow : public QMainWindow {
 	void presetClone();
 	void presetMoveUp();
 	void presetMoveDown();
-	void presetConfirm();
 
 	void modAdd();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
 	void modsDropped( int row, int count );
-	void modConfirm();
-
-	void iwadConfirm();
-	void mapPackConfirm();
 
 	void modeStandard();
 	void modeLaunchMap();
@@ -123,6 +118,7 @@ class MainWindow : public QMainWindow {
 
 	void toggleAbsolutePaths( bool absolute );
 
+	void loadPreset( int index );
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();
 
@@ -149,14 +145,11 @@ class MainWindow : public QMainWindow {
 
 	bool optionsCorrupted;  ///< true when was a critical error during parsing of options file, such content should not be saved
 
+	bool listUpdateInProgress;  ///< whether the list models are currently being updated (read more in the place of usage)
+
 	QString compatOptsCmdArgs;    ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
-
-	ConfirmationFilter presetConfirmationFilter;
-	ConfirmationFilter modConfirmationFilter;
-	ConfirmationFilter iwadConfirmationFilter;
-	ConfirmationFilter mapConfirmationFilter;
 
 	UpdateChecker updateChecker;
 

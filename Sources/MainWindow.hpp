@@ -144,7 +144,7 @@ class MainWindow : public QMainWindow {
 
 	bool optionsCorrupted;  ///< true when was a critical error during parsing of options file, such content should not be saved
 
-	bool listUpdateInProgress;  ///< whether the list models are currently being updated (read more in the place of usage)
+	bool disableSelectionCallbacks;  ///< whether the list models are currently being updated (read more in the place of usage)
 
 	QString compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
@@ -172,6 +172,7 @@ class MainWindow : public QMainWindow {
 	struct ConfigFile
 	{
 		QString fileName;
+		ConfigFile( const QString & fileName ) : fileName( fileName ) {}
 		ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 	};
 	ReadOnlyListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
@@ -179,6 +180,7 @@ class MainWindow : public QMainWindow {
 	struct SaveFile
 	{
 		QString fileName;
+		SaveFile( const QString & fileName ) : fileName( fileName ) {}
 		SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 	};
 	ReadOnlyListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory

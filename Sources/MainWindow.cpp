@@ -95,7 +95,7 @@ MainWindow::MainWindow()
 	QMainWindow( nullptr ),
 	tickCount( 0 ),
 	optionsCorrupted( false ),
-	listUpdateInProgress( false ),
+	disableSelectionCallbacks( false ),
 	compatOptsCmdArgs(),
 	pathHelper( false, QApplication::applicationDirPath() ), // all paths will internally be stored relative to the application's dir
 	checkForUpdates( true ),
@@ -677,7 +677,7 @@ void MainWindow::selectEngine( int index )
 void MainWindow::selectConfig( int index )
 {
 	// workaround (read the comment at automatic list updates)
-	if (listUpdateInProgress && index < 0)
+	if (disableSelectionCallbacks)
 		return;
 
 	// update the current preset
@@ -719,7 +719,7 @@ void MainWindow::togglePreset( const QItemSelection & selected, const QItemSelec
 void MainWindow::toggleIWAD( const QItemSelection & selected, const QItemSelection & /*deselected*/ )
 {
 	// workaround (read the comment at automatic list updates)
-	if (listUpdateInProgress && selected.indexes().isEmpty())
+	if (disableSelectionCallbacks)
 		return;
 
 	int selectedIWADIdx = selected.indexes().isEmpty() ? -1 : selected.indexes()[0].row();
@@ -747,7 +747,7 @@ void MainWindow::toggleIWAD( const QItemSelection & selected, const QItemSelecti
 void MainWindow::toggleMapPack( const QItemSelection & selected, const QItemSelection & /*deselected*/ )
 {
 	// workaround (read the comment at automatic list updates)
-	if (listUpdateInProgress && selected.indexes().isEmpty())
+	if (disableSelectionCallbacks)
 		return;
 
 	QList< TreePosition > selectedMapPacks;
@@ -1091,13 +1091,12 @@ void MainWindow::selectMap( const QString & mapName )
 void MainWindow::selectSavedGame( int saveIdx )
 {
 	// workaround (read the comment at automatic list updates)
-	if (listUpdateInProgress)
+	if (disableSelectionCallbacks)
 		return;
 
-	if (saveIdx < 0)  // the savegame might be deselected some times, for example when swithing presets
-		return;
+	QString saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : "";
 
-	STORE_OPTION( saveFile, saveModel[ saveIdx ].fileName );
+	STORE_OPTION( saveFile, saveFileName );
 
 	updateLaunchCommand();
 }
@@ -1318,8 +1317,11 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 // forth - first time when the old item is deselected when the list is cleared and second time when the new item is
 // selected after the list is filled. This has an unplesant effect that it isn't possible to inspect the whole launch
 // command or copy from it, because your cursor is cursor position is constantly reset by the constant updates.
-// We work around this by setting a flag before the update starts and unsetting it after the update finishes.
-// This flag is then used to abort the callbacks that are called during the update.
+// We work around this by setting a flag before the update starts and unsetting it after the update finishes. This flag
+// is then used to abort the callbacks that are called during the update.
+// However the originally selected file might have been deleted from the directory and then it is no longer in the list
+// to be re-selected, so we have to manually notify the callbacks (which were disabled before) that the selection was
+// reset, so that everything updates correctly.
 
 void MainWindow::updateListsFromDirs()
 {
@@ -1332,20 +1334,40 @@ void MainWindow::updateListsFromDirs()
 
 void MainWindow::updateIWADsFromDir()
 {
-	listUpdateInProgress = true;  // workaround (read the big comment above)
+	QItemSelection origSelection = ui->iwadListView->selectionModel()->selection();
+
+	// workaround (read the big comment above)
+	disableSelectionCallbacks = true;
 
 	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathHelper, isIWAD );
 
-	listUpdateInProgress = false;
+	disableSelectionCallbacks = false;
+
+	QItemSelection newSelection = ui->iwadListView->selectionModel()->selection();
+	if (newSelection != origSelection)
+	{
+		// orig IWAD couldn't be selected because it no longer exists, let's notify the app that the selection changed
+		toggleIWAD( newSelection, origSelection );
+	}
 }
 
 void MainWindow::updateMapPacksFromDir()
 {
-	listUpdateInProgress = true;  // workaround (read the big comment above)
+	// workaround (read the big comment above)
+	QItemSelection origSelection = ui->mapDirView->selectionModel()->selection();
+
+	disableSelectionCallbacks = true;
 
 	updateTreeFromDir( mapModel, ui->mapDirView, mapSettings.dir, pathHelper, isMapPack );
 
-	listUpdateInProgress = false;
+	disableSelectionCallbacks = false;
+
+	QItemSelection newSelection = ui->mapDirView->selectionModel()->selection();
+	if (newSelection != origSelection)
+	{
+		// orig IWAD couldn't be selected because it no longer exists, let's notify the app that the selection changed
+		toggleMapPack( newSelection, origSelection );
+	}
 }
 
 void MainWindow::updateConfigFilesFromDir()
@@ -1354,13 +1376,23 @@ void MainWindow::updateConfigFilesFromDir()
 
 	QString configDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
 
-	listUpdateInProgress = true;  // workaround (read the big comment above)
+	// workaround (read the big comment above)
+	int origConfigIdx = ui->configCmbBox->currentIndex();
+
+	disableSelectionCallbacks = true;
 
 	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, false, pathHelper,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return configFileSuffixes.contains( file.suffix().toLower() ); }
 	);
 
-	listUpdateInProgress = false;
+	disableSelectionCallbacks = false;
+
+	int newConfigIdx = ui->configCmbBox->currentIndex();
+	if (newConfigIdx != origConfigIdx)
+	{
+		// orig IWAD couldn't be selected because it no longer exists, let's notify the app that the selection changed
+		selectConfig( newConfigIdx );
+	}
 }
 
 void MainWindow::updateSaveFilesFromDir()
@@ -1370,13 +1402,23 @@ void MainWindow::updateSaveFilesFromDir()
 	// i don't know about a case, where the save dir would be different from config dir, it's not even configurable in zdoom
 	QString saveDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
 
-	listUpdateInProgress = true;  // workaround (read the big comment above)
+	// workaround (read the big comment above)
+	int origConfigIdx = ui->saveFileCmbBox->currentIndex();
+
+	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
 	updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, false, pathHelper,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileSuffix; }
 	);
 
-	listUpdateInProgress = false;
+	disableSelectionCallbacks = false;
+
+	int newConfigIdx = ui->saveFileCmbBox->currentIndex();
+	if (newConfigIdx != origConfigIdx)
+	{
+		// orig IWAD couldn't be selected because it no longer exists, let's notify the app that the selection changed
+		selectConfig( newConfigIdx );
+	}
 }
 
 // this is not called regularly, but only when an IWAD is selected or deselected

@@ -24,6 +24,7 @@
 #include <QFileInfo>
 
 class QItemSelection;
+class QComboBox;
 
 namespace Ui {
 	class MainWindow;
@@ -81,14 +82,28 @@ class MainWindow : public QMainWindow {
 	void modeStandard();
 	void modeLaunchMap();
 	void modeSavedGame();
-
 	void selectMap( const QString & map );
 	void selectSavedGame( int index );
+
 	void selectSkill( int skill );
 	void changeSkillNum( int skillNum );
 	void toggleNoMonsters( bool checked );
 	void toggleFastMonsters( bool checked );
 	void toggleMonstersRespawn( bool checked );
+	void toggleAllowCheats( bool checked );
+
+	void selectMonitor( int index );
+	void changeResolutionX( const QString & xStr );
+	void changeResolutionY( const QString & yStr );
+
+	void toggleNoSound( bool checked );
+	void toggleNoSFX( bool checked );
+	void toggleNoMusic( bool checked );
+
+	void changeSaveDir( const QString & dir );
+	void changeScreenshotDir( const QString & dir );
+	void browseSaveDir();
+	void browseScreenshotDir();
 
 	void toggleMultiplayer( bool checked );
 	void selectMultRole( int role );
@@ -114,6 +129,8 @@ class MainWindow : public QMainWindow {
 	void setupIWADView();
 	void setupMapPackView();
 	void setupModView();
+
+	void loadMonitorInfo( QComboBox * box );
 
 	void toggleAbsolutePaths( bool absolute );
 

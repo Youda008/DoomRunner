@@ -147,16 +147,35 @@ struct CompatibilityOptions
 
 struct LaunchOptions
 {
+	// launch mode
 	LaunchMode mode = STANDARD;
 	QString mapName;
 	QString saveFile;
+
+	// gameplay
 	uint skillNum = uint( TOO_YOUNG_TO_DIE );
 	bool noMonsters = false;
 	bool fastMonsters = false;
 	bool monstersRespawn = false;
 	GameplayOptions gameOpts = { 0, 0 };
 	CompatibilityOptions compatOpts = { 0, 0 };
+	bool allowCheats = false;
 
+	// video
+	int monitorIdx;
+	uint resolutionX;
+	uint resolutionY;
+
+	// audio
+	bool noSound = false;
+	bool noSFX = false;
+	bool noMusic = false;
+
+	// alternative paths
+	QString saveDir;
+	QString screenshotDir;
+
+	// multiplayer
 	bool isMultiplayer = false;
 	MultRole multRole = SERVER;
 	QString hostName;

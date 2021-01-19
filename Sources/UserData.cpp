@@ -117,19 +117,37 @@ QJsonObject serialize( const LaunchOptions & opts )
 {
 	QJsonObject jsOptions;
 
+	// launch mode
 	jsOptions["launch_mode"] = int( opts.mode );
 	jsOptions["map_name"] = opts.mapName;
 	jsOptions["save_file"] = opts.saveFile;
+
+	// gameplay
 	jsOptions["skill_num"] = int( opts.skillNum );
 	jsOptions["no_monsters"] = opts.noMonsters;
 	jsOptions["fast_monsters"] = opts.fastMonsters;
 	jsOptions["monsters_respawn"] = opts.monstersRespawn;
-
 	jsOptions["dmflags1"] = qint64( opts.gameOpts.flags1 );
 	jsOptions["dmflags2"] = qint64( opts.gameOpts.flags2 );
 	jsOptions["compatflags1"] = qint64( opts.compatOpts.flags1 );
 	jsOptions["compatflags2"] = qint64( opts.compatOpts.flags2 );
+	jsOptions["allow_cheats"] = opts.allowCheats;
 
+	// video
+	jsOptions["monitor_idx"] = opts.monitorIdx;
+	jsOptions["resolution_x"] = qint64( opts.resolutionX );
+	jsOptions["resolution_y"] = qint64( opts.resolutionY );
+
+	// audio
+	jsOptions["no_sound"] = opts.noSound;
+	jsOptions["no_sfx"] = opts.noSFX;
+	jsOptions["no_music"] = opts.noMusic;
+
+	// alternative paths
+	jsOptions["save_dir"] = opts.saveDir;
+	jsOptions["screenshot_dir"] = opts.screenshotDir;
+
+	// multiplayer
 	jsOptions["is_multiplayer"] = opts.isMultiplayer;
 	jsOptions["mult_role"] = int( opts.multRole );
 	jsOptions["host_name"] = opts.hostName;
@@ -145,19 +163,37 @@ QJsonObject serialize( const LaunchOptions & opts )
 
 void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & opts )
 {
+	// launch mode
 	opts.mode = jsOptions.getEnum< LaunchMode >( "launch_mode", opts.mode );
 	opts.mapName = jsOptions.getString( "map_name", opts.mapName );
 	opts.saveFile = jsOptions.getString( "save_file", opts.saveFile );
+
+	// gameplay
 	opts.skillNum = jsOptions.getUInt( "skill_num", opts.skillNum );
 	opts.noMonsters = jsOptions.getBool( "no_monsters", opts.noMonsters );
 	opts.fastMonsters = jsOptions.getBool( "fast_monsters", opts.fastMonsters );
 	opts.monstersRespawn = jsOptions.getBool( "monsters_respawn", opts.monstersRespawn );
-
 	opts.gameOpts.flags1 = jsOptions.getInt( "dmflags1", opts.gameOpts.flags1 );
 	opts.gameOpts.flags2 = jsOptions.getInt( "dmflags2", opts.gameOpts.flags2 );
 	opts.compatOpts.flags1 = jsOptions.getInt( "compatflags1", opts.compatOpts.flags1 );
 	opts.compatOpts.flags2 = jsOptions.getInt( "compatflags2", opts.compatOpts.flags2 );
+	opts.allowCheats = jsOptions.getBool( "allow_cheats", opts.allowCheats );
 
+	// video
+	opts.monitorIdx = jsOptions.getInt( "monitor_idx", opts.monitorIdx );
+	opts.resolutionX = jsOptions.getUInt( "resolution_x", opts.resolutionX );
+	opts.resolutionY = jsOptions.getUInt( "resolution_y", opts.resolutionY );
+
+	// audio
+	opts.noSound = jsOptions.getBool( "no_sound", opts.noSound );
+	opts.noSFX = jsOptions.getBool( "no_sfx", opts.noSFX );
+	opts.noMusic = jsOptions.getBool( "no_music", opts.noMusic );
+
+	// alternative paths
+	opts.saveDir = jsOptions.getString( "save_dir", opts.saveDir );
+	opts.screenshotDir = jsOptions.getString( "screenshot_dir", opts.screenshotDir );
+
+	// multiplayer
 	opts.isMultiplayer = jsOptions.getBool( "is_multiplayer", opts.isMultiplayer );
 	opts.multRole = jsOptions.getEnum< MultRole >( "mult_role", opts.multRole );
 	opts.hostName = jsOptions.getString( "host_name", opts.hostName );

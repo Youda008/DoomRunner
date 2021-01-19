@@ -41,6 +41,7 @@ SOURCES += \
     Sources/LangUtils.cpp \
     Sources/ListModel.cpp \
     Sources/MainWindow.cpp \
+    Sources/OSUtils.cpp \
     Sources/SetupDialog.cpp \
     Sources/UpdateChecker.cpp \
     Sources/UserData.cpp \
@@ -63,6 +64,7 @@ HEADERS += \
     Sources/LangUtils.hpp \
     Sources/ListModel.hpp \
     Sources/MainWindow.hpp \
+    Sources/OSUtils.hpp \
     Sources/SetupDialog.hpp \
     Sources/UpdateChecker.hpp \
     Sources/UserData.hpp \
@@ -77,13 +79,15 @@ FORMS += \
     Forms/MainWindow.ui \
     Forms/SetupDialog.ui
 
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
-
 DISTFILES += \
     Resources/DoomRunner.ico \
     Resources/DoomRunner2.ico
 
 win32:RC_ICONS += Resources/DoomRunner.ico
+
+unix: LIBS += -lX11 -lXrandr
+
+# Default rules for deployment.
+qnx: target.path = /tmp/$${TARGET}/bin
+else: unix:!android: target.path = /opt/$${TARGET}/bin
+!isEmpty(target.path): INSTALLS += target

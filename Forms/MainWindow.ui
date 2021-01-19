@@ -569,134 +569,297 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <property name="sizeConstraint">
-             <enum>QLayout::SetDefaultConstraint</enum>
+           <widget class="QGroupBox" name="gameplayGrpBox">
+            <property name="title">
+             <string>Gameplay</string>
             </property>
-            <item>
-             <widget class="QLabel" name="skillLabel">
-              <property name="text">
-               <string>Skill</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="skillCmbBox">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <item>
-               <property name="text">
-                <string>I'm too young to die</string>
+            <layout class="QVBoxLayout" name="verticalLayout_16">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_7">
+               <property name="sizeConstraint">
+                <enum>QLayout::SetDefaultConstraint</enum>
                </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Hey, not too rough</string>
+               <item>
+                <widget class="QLabel" name="skillLabel">
+                 <property name="text">
+                  <string>Skill</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="skillCmbBox">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>I'm too young to die</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Hey, not too rough</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Hurt me plenty</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Ultra-Violence</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Nightmare</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>custom number...</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="skillSpinBox">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>40</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="noMonstersChkBox">
+               <property name="enabled">
+                <bool>false</bool>
                </property>
-              </item>
-              <item>
                <property name="text">
-                <string>Hurt me plenty</string>
+                <string>No monsters</string>
                </property>
-              </item>
-              <item>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="fastMonstersChkBox">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="text">
-                <string>Ultra-Violence</string>
+                <string>Fast monsters</string>
                </property>
-              </item>
-              <item>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="monstersRespawnChkBox">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="text">
-                <string>Nightmare</string>
+                <string>Monsters respawn</string>
                </property>
-              </item>
-              <item>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <item>
+                <widget class="QPushButton" name="gameOptsBtn">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="text">
+                  <string>Gameplay options</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="compatOptsBtn">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="text">
+                  <string>Compatibility options</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="allowCheatsChkBox">
                <property name="text">
-                <string>custom number...</string>
+                <string>Force allow cheats (sv_cheats 1)</string>
                </property>
-              </item>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="skillSpinBox">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>40</width>
-                <height>0</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="noMonstersChkBox">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>No monsters</string>
-            </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="fastMonstersChkBox">
-            <property name="enabled">
-             <bool>false</bool>
+           <widget class="QGroupBox" name="videoGrpBox">
+            <property name="title">
+             <string>Video</string>
             </property>
-            <property name="text">
-             <string>Fast monsters</string>
-            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_17">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_13">
+               <item>
+                <widget class="QLabel" name="monitorLabel">
+                 <property name="text">
+                  <string>Monitor</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="monitorCmbBox">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>Default</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_21">
+               <item>
+                <widget class="QLabel" name="resolutionLabel">
+                 <property name="text">
+                  <string>Resolution</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_10">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QLabel" name="resolutionXLabel">
+                 <property name="text">
+                  <string>width</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="resolutionXLine">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>50</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>1920</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="resolutionYLabel">
+                 <property name="text">
+                  <string>height</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="resolutionYLine">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>50</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>1080</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="monstersRespawnChkBox">
-            <property name="enabled">
-             <bool>false</bool>
+           <widget class="QGroupBox" name="audioGrpBox">
+            <property name="title">
+             <string>Audio</string>
             </property>
-            <property name="text">
-             <string>Monsters respawn</string>
-            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_18">
+             <item>
+              <widget class="QCheckBox" name="noSoundChkBox">
+               <property name="text">
+                <string>No sound (SFX + music)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="noSfxChkBox">
+               <property name="text">
+                <string>No SFX</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="noMusicChkBox">
+               <property name="text">
+                <string>No music</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <item>
-             <widget class="QPushButton" name="gameOptsBtn">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string>Gameplay options</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="compatOptsBtn">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string>Compatibility options</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
           </item>
           <item>
            <spacer name="verticalSpacer">
@@ -1130,6 +1293,57 @@
                   </spacer>
                  </item>
                 </layout>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="pathsGrpBox">
+            <property name="title">
+             <string>Alternative paths</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_19">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_25">
+               <item>
+                <widget class="QLabel" name="saveDirLabel">
+                 <property name="text">
+                  <string>Save dir</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="saveDirLine"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="saveDirBtn">
+                 <property name="text">
+                  <string>Browse</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_26">
+               <item>
+                <widget class="QLabel" name="screenshotDirLabel">
+                 <property name="text">
+                  <string>Screenshot dir</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="screenshotDirLine"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="screenshotDirBtn">
+                 <property name="text">
+                  <string>Browse</string>
+                 </property>
+                </widget>
                </item>
               </layout>
              </item>

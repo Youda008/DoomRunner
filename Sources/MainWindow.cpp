@@ -19,6 +19,7 @@
 #include "JsonUtils.hpp"
 #include "WidgetUtils.hpp"
 #include "FileSystemUtils.hpp"
+#include "OSUtils.hpp"
 #include "DoomUtils.hpp"
 #include "UpdateChecker.hpp"
 #include "Version.hpp"
@@ -53,6 +54,11 @@ static constexpr char defaultOptionsFile [] = "options.json";
 
 //======================================================================================================================
 //  local helpers
+
+static bool isValidDir( const QString & dirPath )
+{
+	return !dirPath.isEmpty() && QDir( dirPath ).exists();
+}
 
 static bool verifyDir( const QString & dir, const QString & errorMessage )
 {
@@ -179,11 +185,14 @@ MainWindow::MainWindow()
 
 	// setup launch options callbacks
 
+	// launch mode
 	connect( ui->launchMode_standard, &QRadioButton::clicked, this, &thisClass::modeStandard );
 	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeLaunchMap );
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
 	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::selectMap );
 	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSavedGame );
+
+	// gameplay
 	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSkill );
 	connect( ui->skillSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeSkillNum );
 	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoMonsters );
@@ -191,7 +200,26 @@ MainWindow::MainWindow()
 	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::toggleMonstersRespawn );
 	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runGameOptsDialog );
 	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatOptsDialog );
+	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAllowCheats );
 
+	// video
+	loadMonitorInfo( ui->monitorCmbBox );
+	connect( ui->monitorCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMonitor );
+	connect( ui->resolutionXLine, &QLineEdit::textChanged, this, &thisClass::changeResolutionX );
+	connect( ui->resolutionYLine, &QLineEdit::textChanged, this, &thisClass::changeResolutionY );
+
+	// audio
+	connect( ui->noSoundChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoSound );
+	connect( ui->noSfxChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoSFX);
+	connect( ui->noMusicChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoMusic );
+
+	// alternative paths
+	connect( ui->saveDirLine, &QLineEdit::textChanged, this, &thisClass::changeSaveDir );
+	connect( ui->screenshotDirLine, &QLineEdit::textChanged, this, &thisClass::changeScreenshotDir );
+	connect( ui->saveDirBtn, &QPushButton::clicked, this, &thisClass::browseSaveDir );
+	connect( ui->screenshotDirBtn, &QPushButton::clicked, this, &thisClass::browseScreenshotDir );
+
+	// mutiplayer
 	connect( ui->multiplayerChkBox, &QCheckBox::toggled, this, &thisClass::toggleMultiplayer );
 	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMultRole );
 	connect( ui->hostnameLine, &QLineEdit::textChanged, this, &thisClass::changeHost );
@@ -291,6 +319,22 @@ void MainWindow::setupModView()
 	connect( ui->modListView->deleteAction, &QAction::triggered, this, &thisClass::modDelete );
 	connect( ui->modListView->moveUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
 	connect( ui->modListView->moveDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
+}
+
+void MainWindow::loadMonitorInfo( QComboBox * box )
+{
+	for (const MonitorInfo & monitor : listMonitors())
+	{
+		QString monitorDesc;
+		QTextStream descStream( &monitorDesc, QIODevice::WriteOnly );
+
+		descStream << monitor.name.c_str() << " - " << QString::number( monitor.width ) << 'x' << QString::number( monitor.height );
+		if (monitor.isPrimary)
+			descStream << " (primary)";
+
+		descStream.flush();
+		box->addItem( monitorDesc );
+	}
 }
 
 void MainWindow::onWindowShown()
@@ -1140,6 +1184,100 @@ void MainWindow::toggleMonstersRespawn( bool checked )
 	updateLaunchCommand();
 }
 
+void MainWindow::toggleAllowCheats( bool checked )
+{
+	STORE_OPTION( allowCheats, checked );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectMonitor( int index )
+{
+	STORE_OPTION( monitorIdx, index );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeResolutionX( const QString & xStr )
+{
+	STORE_OPTION( resolutionX, xStr.toUInt() );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeResolutionY( const QString & yStr )
+{
+	STORE_OPTION( resolutionY, yStr.toUInt() );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleNoSound( bool checked )
+{
+	STORE_OPTION( noSound, checked );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleNoSFX( bool checked )
+{
+	STORE_OPTION( noSFX, checked );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleNoMusic( bool checked )
+{
+	STORE_OPTION( noMusic, checked );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeSaveDir( const QString & dir )
+{
+	STORE_OPTION( saveDir, dir );
+
+	if (isValidDir( dir ))
+		updateSaveFilesFromDir();
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeScreenshotDir( const QString & dir )
+{
+	STORE_OPTION( screenshotDir, dir );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::browseSaveDir()
+{
+	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory with saves", pathHelper.baseDir().path() );
+	if (path.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path comming out of the file dialog is always absolute
+	if (pathHelper.useRelativePaths())
+		path = pathHelper.getRelativePath( path );
+
+	ui->saveDirLine->setText( path );
+	// the rest is done in saveDirLine callback
+}
+
+void MainWindow::browseScreenshotDir()
+{
+	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory for screenshots", pathHelper.baseDir().path() );
+	if (path.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path comming out of the file dialog is always absolute
+	if (pathHelper.useRelativePaths())
+		path = pathHelper.getRelativePath( path );
+
+	ui->screenshotDirLine->setText( path );
+	// the rest is done in screenshotDirLine callback
+}
+
 void MainWindow::toggleMultiplayer( bool checked )
 {
 	STORE_OPTION( isMultiplayer, checked );
@@ -1399,8 +1537,10 @@ void MainWindow::updateSaveFilesFromDir()
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
 
-	// i don't know about a case, where the save dir would be different from config dir, it's not even configurable in zdoom
-	QString saveDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
+	QString saveDir =
+		!ui->saveDirLine->text().isEmpty()  // if custom save dir is specified
+			? ui->saveDirLine->text()       // then use it
+			: currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";  // otherwise use config dir
 
 	// workaround (read the big comment above)
 	int origConfigIdx = ui->saveFileCmbBox->currentIndex();
@@ -1773,14 +1913,31 @@ void MainWindow::restoreLaunchOptions( const LaunchOptions & opts )
 		}
 	}
 
+	// gameplay
 	ui->skillSpinBox->setValue( int( opts.skillNum ) );
-
 	ui->noMonstersChkBox->setChecked( opts.noMonsters );
 	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
 	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
-
 	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
+	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
 
+	// video
+	ui->monitorCmbBox->setCurrentIndex( opts.monitorIdx );
+	if (opts.resolutionX > 0)
+		ui->resolutionXLine->setText( QString::number( opts.resolutionX ) );
+	if (opts.resolutionY > 0)
+		ui->resolutionYLine->setText( QString::number( opts.resolutionY ) );
+
+	// audio
+	ui->noSoundChkBox->setChecked( opts.noSound );
+	ui->noSfxChkBox->setChecked( opts.noSFX );
+	ui->noMusicChkBox->setChecked( opts.noMusic );
+
+	// alternative paths
+	ui->saveDirLine->setText( opts.saveDir );
+	ui->screenshotDirLine->setText( opts.screenshotDir );
+
+	// multiplayer
 	ui->multiplayerChkBox->setChecked( opts.isMultiplayer );
 	ui->multRoleCmbBox->setCurrentIndex( int( opts.multRole ) );
 	ui->hostnameLine->setText( opts.hostName );
@@ -1960,6 +2117,28 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 				cmdStream << " -file \"" << base.rebasePath( mod.path ) << "\"";
 		}
 	}
+
+	if (ui->allowCheatsChkBox->isChecked())
+		cmdStream << " +sv_cheats 1";
+
+	if (ui->monitorCmbBox->currentIndex() > 0)  // the first item is a placeholder for leaving it default
+		cmdStream << " +vid_adapter " << ui->monitorCmbBox->currentIndex();  // and ZDoom indexes monitors from 1
+	if (!ui->resolutionXLine->text().isEmpty())
+		cmdStream << " -width " << ui->resolutionXLine->text();
+	if (!ui->resolutionYLine->text().isEmpty())
+		cmdStream << " -height " << ui->resolutionYLine->text();
+
+	if (ui->noSoundChkBox->isChecked())
+		cmdStream << " -nosound";
+	if (ui->noSfxChkBox->isChecked())
+		cmdStream << " -nosfx";
+	if (ui->noMusicChkBox->isChecked())
+		cmdStream << " -nomusic";
+
+	if (!ui->saveDirLine->text().isEmpty())
+		cmdStream << " -savedir " << ui->saveDirLine->text();
+	if (!ui->screenshotDirLine->text().isEmpty())
+		cmdStream << " +screenshot_dir " << ui->screenshotDirLine->text();
 
 	if (ui->launchMode_map->isChecked())
 	{

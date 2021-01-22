@@ -103,7 +103,7 @@ class TreePosition : public QStringList {
 	using QStringList::QStringList;
 
 	/** makes TreePosition from string in file-system format ("node1/node2/leaf") */
-	TreePosition( const QString & pathStr ) : QStringList( pathStr.split( '/', Qt::SkipEmptyParts ) ) {}
+	TreePosition( const QString & pathStr ) : QStringList( pathStr.split( '/', QString::SkipEmptyParts ) ) {}
 
 	/** converts TreePosition back to string in file-system format ("node1/node2/leaf") */
 	QString toString() const { return this->join('/'); }

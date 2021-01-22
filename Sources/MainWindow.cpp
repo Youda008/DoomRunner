@@ -1975,7 +1975,7 @@ void MainWindow::exportPreset()
 
 	QTextStream stream( &file );
 
-	stream << generateLaunchCommand( fileInfo.path() ) << Qt::endl;
+	stream << generateLaunchCommand( fileInfo.path() ) << endl;
 
 	file.close();
 }

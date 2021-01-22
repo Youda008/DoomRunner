@@ -13,7 +13,7 @@
 #include "Common.hpp"
 
 #include "UserData.hpp"  // Engine
-#include "FileSystemUtils.hpp"  // PathHelper
+#include "FileSystemUtils.hpp"  // PathContext
 
 #include <QDialog>
 
@@ -32,7 +32,7 @@ class EngineDialog : public QDialog {
 
  public:
 
-	explicit EngineDialog( QWidget * parent, const PathHelper & pathHelper, const Engine & engine );
+	explicit EngineDialog( QWidget * parent, const PathContext & pathContext, const Engine & engine );
 	virtual ~EngineDialog() override;
 
  private: // methods
@@ -52,7 +52,7 @@ class EngineDialog : public QDialog {
 
 	Ui::EngineDialog * ui;
 
-	PathHelper pathHelper;
+	PathContext pathContext;
 
  public: // return values from this dialog
 

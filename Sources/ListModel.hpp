@@ -260,15 +260,15 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 	std::function< bool & ( Item & ) > isChecked;
 
 	/** optional path helper that will convert paths dropped from directory to absolute or relative */
-	const PathHelper * pathHelper;
+	const PathContext * pathContext;
 
  public:
 
 	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString )
-		: AListModel< Item >(), DropTarget(), makeDisplayString( makeDisplayString ), pathHelper( nullptr ) {}
+		: AListModel< Item >(), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
 
 	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
-		: AListModel< Item >( itemList ), DropTarget(), makeDisplayString( makeDisplayString ), pathHelper( nullptr ) {}
+		: AListModel< Item >( itemList ), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
 
@@ -281,8 +281,8 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		{ this->isChecked = isChecked; }
 
 	/** must be set before external drag&drop is enabled in the parent widget */
-	void setPathHelper( const PathHelper * pathHelper )
-		{ this->pathHelper = pathHelper; }
+	void setPathContext( const PathContext * pathContext )
+		{ this->pathContext = pathContext; }
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
@@ -531,10 +531,10 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	bool dropMimeUrls( QList< QUrl > urls, int row, const QModelIndex & parent )
 	{
-		if (!pathHelper)
+		if (!pathContext)
 		{
-			qWarning() << "File has been dropped but no PathHelper is set. "
-			              "Either use setPathHelper or disable file dropping in the widget.";
+			qWarning() << "File has been dropped but no PathContext is set. "
+			              "Either use setPathContext or disable file dropping in the widget.";
 			return false;
 		}
 
@@ -545,7 +545,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			QString localPath = droppedUrl.toLocalFile();
 			if (!localPath.isEmpty())
 			{
-				QFileInfo fileInfo( pathHelper->convertPath( localPath ) );
+				QFileInfo fileInfo( pathContext->convertPath( localPath ) );
 				if (fileInfo.exists())
 				{
 					filesToBeInserted.append( fileInfo );

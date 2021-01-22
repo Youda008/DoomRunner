@@ -13,7 +13,7 @@
 
 //======================================================================================================================
 
-void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, const PathHelper & pathHelper,
+void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, const PathContext & pathContext,
                       std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	if (dir.isEmpty())  // dir is not set -> leave the list empty
@@ -27,7 +27,7 @@ void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QS
 	QDirIterator dirIt1( dir_ );
 	while (dirIt1.hasNext())
 	{
-		QString entryPath = pathHelper.convertPath( dirIt1.next() );
+		QString entryPath = pathContext.convertPath( dirIt1.next() );
 		QFileInfo entry( entryPath );
 		if (entry.isDir())
 		{
@@ -35,7 +35,7 @@ void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QS
 			if (dirName != "." && dirName != "..")
 			{
 				QModelIndex dirItem = model.addNode( parent, dirName, NodeType::DIR );
-				fillTreeFromDir( model, dirItem, entry.filePath(), pathHelper, isDesiredFile );
+				fillTreeFromDir( model, dirItem, entry.filePath(), pathContext, isDesiredFile );
 			}
 		}
 	}
@@ -44,7 +44,7 @@ void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QS
 	QDirIterator dirIt2( dir_ );
 	while (dirIt2.hasNext())
 	{
-		QString entryPath = pathHelper.convertPath( dirIt2.next() );
+		QString entryPath = pathContext.convertPath( dirIt2.next() );
 		QFileInfo entry( entryPath );
 		if (!entry.isDir())
 		{

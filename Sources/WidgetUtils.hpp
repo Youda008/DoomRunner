@@ -344,7 +344,7 @@ bool selectItemByID( QListView * view, const AListModel< Item > & model, const d
 
 template< typename Item >
 void updateListFromDir( AListModel< Item > & model, QListView * view, const QString & dir, bool recursively,
-                        const PathHelper & pathHelper, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+                        const PathContext & pathContext, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	// Doing a differential update (deleting only things that were deleted and adding only things that were added)
 	// is not worth here. It's too complicated and prone to bugs and its advantages are too small.
@@ -363,7 +363,7 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 	                              // but that's an acceptable drawback, instead of making differential update
 	model.clear();
 
-	fillListFromDir( model.list(), dir, recursively, pathHelper, isDesiredFile );
+	fillListFromDir( model.list(), dir, recursively, pathContext, isDesiredFile );
 
 	model.finishCompleteUpdate();
 
@@ -376,7 +376,7 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 /*
 template< typename Item >
 void updateListFromDirNew( AListModel< Item > & model, QListView * view, const QString & dir, bool recursively,
-                           const PathHelper & pathHelper, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+                           const PathContext & pathContext, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	if (dir.isEmpty())
 		return;
@@ -449,7 +449,7 @@ bool selectItemByID( QComboBox * view, const AListModel< Item > & model, const d
 
 template< typename Item >
 void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const QString & dir, bool recursively,
-                            const PathHelper & pathHelper, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+                            const PathContext & pathContext, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	// note down the currently selected item
 	QString lastText = view->currentText();
@@ -460,7 +460,7 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 
 	model.clear();
 
-	fillListFromDir( model.list(), dir, recursively, pathHelper, isDesiredFile );
+	fillListFromDir( model.list(), dir, recursively, pathContext, isDesiredFile );
 
 	model.finishCompleteUpdate();
 
@@ -495,7 +495,7 @@ QVector< TreePosition > getSelectedItemIDs( QTreeView * view, const DirTreeModel
 /** attempts to select previously selected items defined by persistant itemID */
 void selectItemsByID( QTreeView * view, const DirTreeModel & model, const QVector< TreePosition > & itemIDs );
 
-void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, const PathHelper & pathHelper,
+void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, const PathContext & pathContext,
                         std::function< bool ( const QFileInfo & file ) > isDesiredFile );
 
 

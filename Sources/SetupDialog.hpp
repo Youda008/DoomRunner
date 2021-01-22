@@ -15,7 +15,7 @@
 #include "UserData.hpp"  // Engine, IWAD
 #include "ListModel.hpp"
 #include "EventFilters.hpp"  // ConfirmationFilter
-#include "FileSystemUtils.hpp"  // PathHelper
+#include "FileSystemUtils.hpp"  // PathContext
 
 #include <QDialog>
 
@@ -106,7 +106,7 @@ class SetupDialog : public QDialog {
 
  public: // return values from this dialog
 
-	PathHelper pathHelper;
+	PathContext pathContext;
 
 	EditableListModel< Engine > engineModel;
 

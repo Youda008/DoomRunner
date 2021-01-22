@@ -26,7 +26,7 @@ class QModelIndex;
 //======================================================================================================================
 /** helper for calculating relative and absolute paths according to current directory and settings */
 
-class PathHelper {
+class PathContext {
 
 	QDir _baseDir;  ///< directory which relative paths are relative to
 	QDir _prevBaseDir;  ///< original base dir for rebasing paths to another base
@@ -34,13 +34,13 @@ class PathHelper {
 
  public:
 
-	PathHelper( bool useAbsolutePaths, const QDir & baseDir, const QDir & prevBaseDir = QDir() )
+	PathContext( bool useAbsolutePaths, const QDir & baseDir, const QDir & prevBaseDir = QDir() )
 		: _baseDir( baseDir ), _prevBaseDir( prevBaseDir ), _useAbsolutePaths( useAbsolutePaths ) {}
 
-	PathHelper( const PathHelper & other )
+	PathContext( const PathContext & other )
 		: _baseDir( other._baseDir ), _prevBaseDir( other._prevBaseDir ), _useAbsolutePaths( other._useAbsolutePaths ) {}
 
-	void operator=( const PathHelper & other )
+	void operator=( const PathContext & other )
 		{ _baseDir = other._baseDir; _prevBaseDir = other._prevBaseDir; _useAbsolutePaths = other._useAbsolutePaths; }
 
 	const QDir & baseDir() const                       { return _baseDir; }
@@ -90,7 +90,7 @@ inline QString getDirOfFile( const QString & filePath )
 }
 
 template< typename Item >
-void fillListFromDir( QList< Item > & list, const QString & dir, bool recursively, const PathHelper & pathHelper,
+void fillListFromDir( QList< Item > & list, const QString & dir, bool recursively, const PathContext & pathContext,
                       std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	if (dir.isEmpty())  // dir is not set -> leave the list empty
@@ -103,14 +103,14 @@ void fillListFromDir( QList< Item > & list, const QString & dir, bool recursivel
 	QDirIterator dirIt( dir_ );
 	while (dirIt.hasNext())
 	{
-		QString entryPath = pathHelper.convertPath( dirIt.next() );
+		QString entryPath = pathContext.convertPath( dirIt.next() );
 		QFileInfo entry( entryPath );
 		if (entry.isDir())
 		{
 			QString dirName = dirIt.fileName();  // we need the original entry name including "." and "..", entry is already converted
 			if (recursively && dirName != "." && dirName != "..")
 			{
-				fillListFromDir( list, entry.filePath(), recursively, pathHelper, isDesiredFile );
+				fillListFromDir( list, entry.filePath(), recursively, pathContext, isDesiredFile );
 			}
 		}
 		else
@@ -123,7 +123,7 @@ void fillListFromDir( QList< Item > & list, const QString & dir, bool recursivel
 	}
 }
 
-void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, const PathHelper & pathHelper,
+void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, const PathContext & pathContext,
                       std::function< bool ( const QFileInfo & file ) > isDesiredFile );
 
 

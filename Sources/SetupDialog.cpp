@@ -13,7 +13,7 @@
 
 #include "EventFilters.hpp"  // ConfirmationFilter
 #include "WidgetUtils.hpp"
-#include "FileSystemUtils.hpp"  // PathHelper
+#include "FileSystemUtils.hpp"  // PathContext
 #include "DoomUtils.hpp"
 
 #include <QString>
@@ -44,7 +44,7 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
                           bool closeOnLaunch )
 :
 	QDialog( parent ),
-	pathHelper( useAbsolutePaths, baseDir ),
+	pathContext( useAbsolutePaths, baseDir ),
 	engineModel( engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
 	),
@@ -76,7 +76,7 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	ui->iwadSubdirs->setChecked( iwadSettings.searchSubdirs );
 	ui->mapDirLine->setText( mapSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
-	ui->absolutePathsChkBox->setChecked( pathHelper.useAbsolutePaths() );
+	ui->absolutePathsChkBox->setChecked( pathContext.useAbsolutePaths() );
 	if (optsStorage == DONT_STORE)
 		ui->optsStorage_none->click();
 	else if (optsStorage == STORE_GLOBALLY)
@@ -127,7 +127,7 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 void SetupDialog::setupEngineView()
 {
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	engineModel.setPathHelper( &pathHelper );
+	engineModel.setPathContext( &pathContext );
 
 	// set data source for the view
 	ui->engineListView->setModel( &engineModel );
@@ -156,7 +156,7 @@ void SetupDialog::setupEngineView()
 void SetupDialog::setupIWADView()
 {
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	iwadModel.setPathHelper( &pathHelper );
+	iwadModel.setPathContext( &pathContext );
 
 	// specify where to get the string for edit mode
 	iwadModel.setEditStringFunc( []( IWAD & iwad ) -> QString & { return iwad.name; } );
@@ -271,8 +271,8 @@ void SetupDialog::browseDir( const QString & dirPurpose, QLineEdit * targetLine 
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathHelper.useRelativePaths())
-		path = pathHelper.getRelativePath( path );
+	if (pathContext.useRelativePaths())
+		path = pathContext.getRelativePath( path );
 
 	targetLine->setText( path );
 	// the rest of the actions will be performed in the line edit callback,
@@ -307,8 +307,8 @@ void SetupDialog::iwadAdd()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathHelper.useRelativePaths())
-		path = pathHelper.getRelativePath( path );
+	if (pathContext.useRelativePaths())
+		path = pathContext.getRelativePath( path );
 
 	appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );
 }
@@ -330,7 +330,7 @@ void SetupDialog::iwadMoveDown()
 
 void SetupDialog::engineAdd()
 {
-	EngineDialog dialog( this, pathHelper, {} );
+	EngineDialog dialog( this, pathContext, {} );
 
 	int code = dialog.exec();
 
@@ -357,7 +357,7 @@ void SetupDialog::editEngine( const QModelIndex & index )
 {
 	Engine & selectedEngine = engineModel[ index.row() ];
 
-	EngineDialog dialog( this, pathHelper, selectedEngine );
+	EngineDialog dialog( this, pathContext, selectedEngine );
 
 	int code = dialog.exec();
 
@@ -378,32 +378,32 @@ void SetupDialog::editCurrentEngine()
 
 void SetupDialog::updateIWADsFromDir()
 {
-	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathHelper, isIWAD );
+	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
 }
 
 void SetupDialog::toggleAbsolutePaths( bool checked )
 {
-	pathHelper.toggleAbsolutePaths( checked );
+	pathContext.toggleAbsolutePaths( checked );
 
 	for (Engine & engine : engineModel)
 	{
-		engine.path = pathHelper.convertPath( engine.path );
-		engine.configDir = pathHelper.convertPath( engine.configDir );
+		engine.path = pathContext.convertPath( engine.path );
+		engine.configDir = pathContext.convertPath( engine.configDir );
 	}
 	engineModel.contentChanged( 0 );
 
-	iwadSettings.dir = pathHelper.convertPath( iwadSettings.dir );
+	iwadSettings.dir = pathContext.convertPath( iwadSettings.dir );
 	ui->iwadDirLine->setText( iwadSettings.dir );
 	for (IWAD & iwad : iwadModel)
 	{
-		iwad.path = pathHelper.convertPath( iwad.path );
+		iwad.path = pathContext.convertPath( iwad.path );
 	}
 	iwadModel.contentChanged( 0 );
 
-	mapSettings.dir = pathHelper.convertPath( mapSettings.dir );
+	mapSettings.dir = pathContext.convertPath( mapSettings.dir );
 	ui->mapDirLine->setText( mapSettings.dir );
 
-	modSettings.dir = pathHelper.convertPath( modSettings.dir );
+	modSettings.dir = pathContext.convertPath( modSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
 }
 

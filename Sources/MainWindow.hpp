@@ -15,7 +15,7 @@
 #include "UserData.hpp"
 #include "ListModel.hpp"
 #include "DirTreeModel.hpp"
-#include "FileSystemUtils.hpp"  // PathHelper
+#include "FileSystemUtils.hpp"  // PathContext
 #include "EventFilters.hpp"  // ConfirmationFilter
 #include "UpdateChecker.hpp"
 
@@ -167,7 +167,7 @@ class MainWindow : public QMainWindow {
 
 	KeyPressFilter modKeyFilter;  ///< event filter that captures the presses of spacebar to correct the unsuitable default behaviour
 
-	PathHelper pathHelper;  ///< stores path settings and automatically converts paths to relative or absolute
+	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
 
 	UpdateChecker updateChecker;
 

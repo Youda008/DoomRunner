@@ -15,10 +15,10 @@
 
 //======================================================================================================================
 
-EngineDialog::EngineDialog( QWidget * parent, const PathHelper & pathHelper, const Engine & engine )
+EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, const Engine & engine )
 :
 	QDialog( parent ),
-	pathHelper( pathHelper ),
+	pathContext( pathContext ),
 	engine( engine )
 {
 	ui = new Ui::EngineDialog;
@@ -71,8 +71,8 @@ void EngineDialog::browseEngine()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathHelper.useRelativePaths())
-		path = pathHelper.getRelativePath( path );
+	if (pathContext.useRelativePaths())
+		path = pathContext.getRelativePath( path );
 
 	ui->pathLine->setText( path );
 
@@ -90,8 +90,8 @@ void EngineDialog::browseConfigDir()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathHelper.useRelativePaths())
-		dirPath = pathHelper.getRelativePath( dirPath );
+	if (pathContext.useRelativePaths())
+		dirPath = pathContext.getRelativePath( dirPath );
 
 	ui->configDirLine->setText( dirPath );
 }

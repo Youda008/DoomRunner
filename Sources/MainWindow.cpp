@@ -108,7 +108,7 @@ MainWindow::MainWindow()
 	optionsCorrupted( false ),
 	disableSelectionCallbacks( false ),
 	compatOptsCmdArgs(),
-	pathHelper( false, QApplication::applicationDirPath() ), // all paths will internally be stored relative to the application's dir
+	pathContext( false, QApplication::applicationDirPath() ), // all paths will internally be stored relative to the application's dir
 	checkForUpdates( true ),
 	optsStorage( STORE_GLOBALLY ),
 	closeOnLaunch( false ),
@@ -303,7 +303,7 @@ void MainWindow::setupModView()
 	modModel.setIsCheckedFunc( []( Mod & mod ) -> bool & { return mod.checked; } );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	modModel.setPathHelper( &pathHelper );
+	modModel.setPathContext( &pathContext );
 
 	// set data source for the view
 	ui->modListView->setModel( &modModel );
@@ -442,8 +442,8 @@ void MainWindow::runSetupDialog()
 	// And thirdly, we no longer have to split the data itself from the logic of displaying them.
 
 	SetupDialog dialog( this,
-		pathHelper.useAbsolutePaths(),
-		pathHelper.baseDir(),
+		pathContext.useAbsolutePaths(),
+		pathContext.baseDir(),
 		engineModel.list(),
 		iwadModel.list(),
 		iwadSettings,
@@ -471,7 +471,7 @@ void MainWindow::runSetupDialog()
 		iwadModel.startCompleteUpdate();
 
 		// update our data from the dialog
-		pathHelper.toggleAbsolutePaths( dialog.pathHelper.useAbsolutePaths() );
+		pathContext.toggleAbsolutePaths( dialog.pathContext.useAbsolutePaths() );
 		engineModel.updateList( dialog.engineModel.list() );
 		iwadModel.updateList( dialog.iwadModel.list() );
 		iwadSettings = dialog.iwadSettings;
@@ -480,9 +480,9 @@ void MainWindow::runSetupDialog()
 		optsStorage = dialog.optsStorage;
 		closeOnLaunch = dialog.closeOnLaunch;
 		// update all stored paths
-		toggleAbsolutePaths( pathHelper.useAbsolutePaths() );
-		selectedEngine = pathHelper.convertPath( selectedEngine );
-		selectedIWAD = pathHelper.convertPath( selectedIWAD );
+		toggleAbsolutePaths( pathContext.useAbsolutePaths() );
+		selectedEngine = pathContext.convertPath( selectedEngine );
+		selectedIWAD = pathContext.convertPath( selectedIWAD );
 
 		// notify the widgets to re-draw their content
 		engineModel.finishCompleteUpdate();
@@ -970,8 +970,8 @@ void MainWindow::modAdd()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathHelper.useRelativePaths())
-		path = pathHelper.getRelativePath( path );
+	if (pathContext.useRelativePaths())
+		path = pathContext.getRelativePath( path );
 
 	Mod mod( QFileInfo( path ), true );
 
@@ -1265,13 +1265,13 @@ void MainWindow::changeScreenshotDir( const QString & dir )
 
 void MainWindow::browseSaveDir()
 {
-	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory with saves", pathHelper.baseDir().path() );
+	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory with saves", pathContext.baseDir().path() );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathHelper.useRelativePaths())
-		path = pathHelper.getRelativePath( path );
+	if (pathContext.useRelativePaths())
+		path = pathContext.getRelativePath( path );
 
 	ui->saveDirLine->setText( path );
 	// the rest is done in saveDirLine callback
@@ -1279,13 +1279,13 @@ void MainWindow::browseSaveDir()
 
 void MainWindow::browseScreenshotDir()
 {
-	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory for screenshots", pathHelper.baseDir().path() );
+	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory for screenshots", pathContext.baseDir().path() );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathHelper.useRelativePaths())
-		path = pathHelper.getRelativePath( path );
+	if (pathContext.useRelativePaths())
+		path = pathContext.getRelativePath( path );
 
 	ui->screenshotDirLine->setText( path );
 	// the rest is done in screenshotDirLine callback
@@ -1423,37 +1423,37 @@ void MainWindow::updateGlobalCmdArgs( const QString & )
 
 void MainWindow::toggleAbsolutePaths( bool absolute )
 {
-	pathHelper.toggleAbsolutePaths( absolute );
+	pathContext.toggleAbsolutePaths( absolute );
 
 	for (Engine & engine : engineModel)
 	{
-		engine.path = pathHelper.convertPath( engine.path );
-		engine.configDir = pathHelper.convertPath( engine.configDir );
+		engine.path = pathContext.convertPath( engine.path );
+		engine.configDir = pathContext.convertPath( engine.configDir );
 	}
 
-	iwadSettings.dir = pathHelper.convertPath( iwadSettings.dir );
+	iwadSettings.dir = pathContext.convertPath( iwadSettings.dir );
 	for (IWAD & iwad : iwadModel)
 	{
-		iwad.path = pathHelper.convertPath( iwad.path );
+		iwad.path = pathContext.convertPath( iwad.path );
 	}
 
-	mapSettings.dir = pathHelper.convertPath( mapSettings.dir );
+	mapSettings.dir = pathContext.convertPath( mapSettings.dir );
 	mapModel.setBaseDir( mapSettings.dir );
 
-	modSettings.dir = pathHelper.convertPath( modSettings.dir );
+	modSettings.dir = pathContext.convertPath( modSettings.dir );
 	for (Mod & mod : modModel)
 	{
-		mod.path = pathHelper.convertPath( mod.path );
+		mod.path = pathContext.convertPath( mod.path );
 	}
 
 	for (Preset & preset : presetModel)
 	{
 		for (Mod & mod : preset.mods)
 		{
-			mod.path = pathHelper.convertPath( mod.path );
+			mod.path = pathContext.convertPath( mod.path );
 		}
-		preset.selectedEnginePath = pathHelper.convertPath( preset.selectedEnginePath );
-		preset.selectedIWAD = pathHelper.convertPath( preset.selectedIWAD );
+		preset.selectedEnginePath = pathContext.convertPath( preset.selectedEnginePath );
+		preset.selectedIWAD = pathContext.convertPath( preset.selectedIWAD );
 	}
 
 	updateLaunchCommand();
@@ -1490,7 +1490,7 @@ void MainWindow::updateIWADsFromDir()
 	// workaround (read the big comment above)
 	disableSelectionCallbacks = true;
 
-	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathHelper, isIWAD );
+	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
 
 	disableSelectionCallbacks = false;
 
@@ -1509,7 +1509,7 @@ void MainWindow::updateMapPacksFromDir()
 
 	disableSelectionCallbacks = true;
 
-	updateTreeFromDir( mapModel, ui->mapDirView, mapSettings.dir, pathHelper, isMapPack );
+	updateTreeFromDir( mapModel, ui->mapDirView, mapSettings.dir, pathContext, isMapPack );
 
 	disableSelectionCallbacks = false;
 
@@ -1532,7 +1532,7 @@ void MainWindow::updateConfigFilesFromDir()
 
 	disableSelectionCallbacks = true;
 
-	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, false, pathHelper,
+	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, false, pathContext,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return configFileSuffixes.contains( file.suffix().toLower() ); }
 	);
 
@@ -1560,7 +1560,7 @@ void MainWindow::updateSaveFilesFromDir()
 
 	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
-	updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, false, pathHelper,
+	updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, false, pathContext,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileSuffix; }
 	);
 
@@ -1635,7 +1635,7 @@ void MainWindow::saveOptions( const QString & filePath )
 
 	jsRoot["check_for_updates"] = checkForUpdates;
 
-	jsRoot["use_absolute_paths"] = pathHelper.useAbsolutePaths();
+	jsRoot["use_absolute_paths"] = pathContext.useAbsolutePaths();
 
 	jsRoot["options_storage"] = int( optsStorage );
 
@@ -1730,7 +1730,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	checkForUpdates = jsRoot.getBool( "check_for_updates", true );
 
-	pathHelper.toggleAbsolutePaths( jsRoot.getBool( "use_absolute_paths", false ) );
+	pathContext.toggleAbsolutePaths( jsRoot.getBool( "use_absolute_paths", false ) );
 
 	// this must be loaded early, because we need to know whether to attempt loading the opts from the presets
 	optsStorage = jsRoot.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
@@ -1864,7 +1864,7 @@ void MainWindow::loadOptions( const QString & filePath )
 	}
 
 	// make sure all paths loaded from JSON are stored in correct format
-	toggleAbsolutePaths( pathHelper.useAbsolutePaths() );
+	toggleAbsolutePaths( pathContext.useAbsolutePaths() );
 
 	optionsCorrupted = false;
 
@@ -2067,8 +2067,8 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 {
 	// baseDir - which base directory to derive the relative paths from
 
-	// All stored paths are relative to pathHelper.baseDir(), but we need them relative to baseDir
-	PathHelper base( pathHelper.useAbsolutePaths(), baseDir, pathHelper.baseDir() );
+	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir
+	PathContext base( pathContext.useAbsolutePaths(), baseDir, pathContext.baseDir() );
 
 	QString newCommand;
 	QTextStream cmdStream( &newCommand, QIODevice::WriteOnly );

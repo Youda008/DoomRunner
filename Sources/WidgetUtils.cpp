@@ -146,7 +146,7 @@ void selectItemsByID( QTreeView * view, const DirTreeModel & model, const QVecto
 	}
 }
 
-void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, const PathHelper & pathHelper,
+void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & dir, const PathContext & pathContext,
                         std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	// Doing a differential update (deleting only things that were deleted and adding only things that were added)
@@ -178,7 +178,7 @@ void updateTreeFromDir( DirTreeModel & model, QTreeView * view, const QString & 
 
 	model.setBaseDir( dir );  // all new items will be relative to this dir
 
-	fillTreeFromDir( model, QModelIndex(), dir, pathHelper, isDesiredFile );
+	fillTreeFromDir( model, QModelIndex(), dir, pathContext, isDesiredFile );
 
 	model.finishCompleteUpdate();
 

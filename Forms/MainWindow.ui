@@ -715,148 +715,52 @@
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="videoGrpBox">
+           <widget class="QGroupBox" name="pathsGrpBox">
             <property name="title">
-             <string>Video</string>
+             <string>Alternative paths</string>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_17">
+            <layout class="QVBoxLayout" name="verticalLayout_19">
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_13">
+              <layout class="QHBoxLayout" name="horizontalLayout_25">
                <item>
-                <widget class="QLabel" name="monitorLabel">
+                <widget class="QLabel" name="saveDirLabel">
                  <property name="text">
-                  <string>Monitor</string>
+                  <string>Save dir</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QComboBox" name="monitorCmbBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
+                <widget class="QLineEdit" name="saveDirLine"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="saveDirBtn">
+                 <property name="text">
+                  <string>Browse</string>
                  </property>
-                 <item>
-                  <property name="text">
-                   <string>Default</string>
-                  </property>
-                 </item>
                 </widget>
                </item>
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_21">
+              <layout class="QHBoxLayout" name="horizontalLayout_26">
                <item>
-                <widget class="QLabel" name="resolutionLabel">
+                <widget class="QLabel" name="screenshotDirLabel">
                  <property name="text">
-                  <string>Resolution</string>
+                  <string>Screenshot dir</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <spacer name="horizontalSpacer_10">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
+                <widget class="QLineEdit" name="screenshotDirLine"/>
                </item>
                <item>
-                <widget class="QLabel" name="resolutionXLabel">
+                <widget class="QPushButton" name="screenshotDirBtn">
                  <property name="text">
-                  <string>width</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="resolutionXLine">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>50</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>1920</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="resolutionYLabel">
-                 <property name="text">
-                  <string>height</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="resolutionYLine">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>50</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>1080</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  <string>Browse</string>
                  </property>
                 </widget>
                </item>
               </layout>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="audioGrpBox">
-            <property name="title">
-             <string>Audio</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_18">
-             <item>
-              <widget class="QCheckBox" name="noSoundChkBox">
-               <property name="text">
-                <string>No sound (SFX + music)</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="noSfxChkBox">
-               <property name="text">
-                <string>No SFX</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="noMusicChkBox">
-               <property name="text">
-                <string>No music</string>
-               </property>
-              </widget>
              </item>
             </layout>
            </widget>
@@ -1300,52 +1204,148 @@
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="pathsGrpBox">
+           <widget class="QGroupBox" name="videoGrpBox">
             <property name="title">
-             <string>Alternative paths</string>
+             <string>Video</string>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_19">
+            <layout class="QVBoxLayout" name="verticalLayout_17">
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_25">
+              <layout class="QHBoxLayout" name="horizontalLayout_13">
                <item>
-                <widget class="QLabel" name="saveDirLabel">
+                <widget class="QLabel" name="monitorLabel">
                  <property name="text">
-                  <string>Save dir</string>
+                  <string>Monitor</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="saveDirLine"/>
-               </item>
-               <item>
-                <widget class="QPushButton" name="saveDirBtn">
-                 <property name="text">
-                  <string>Browse</string>
+                <widget class="QComboBox" name="monitorCmbBox">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
+                 <item>
+                  <property name="text">
+                   <string>Default</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_26">
+              <layout class="QHBoxLayout" name="horizontalLayout_21">
                <item>
-                <widget class="QLabel" name="screenshotDirLabel">
+                <widget class="QLabel" name="resolutionLabel">
                  <property name="text">
-                  <string>Screenshot dir</string>
+                  <string>Resolution</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="screenshotDirLine"/>
+                <spacer name="horizontalSpacer_10">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
                <item>
-                <widget class="QPushButton" name="screenshotDirBtn">
+                <widget class="QLabel" name="resolutionXLabel">
                  <property name="text">
-                  <string>Browse</string>
+                  <string>width</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="resolutionXLine">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>50</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="resolutionYLabel">
+                 <property name="text">
+                  <string>height</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="resolutionYLine">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>50</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                  </property>
                 </widget>
                </item>
               </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="audioGrpBox">
+            <property name="title">
+             <string>Audio</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_18">
+             <item>
+              <widget class="QCheckBox" name="noSoundChkBox">
+               <property name="text">
+                <string>No sound (SFX + music)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="noSfxChkBox">
+               <property name="text">
+                <string>No SFX</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="noMusicChkBox">
+               <property name="text">
+                <string>No music</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>

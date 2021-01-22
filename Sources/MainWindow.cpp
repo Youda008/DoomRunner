@@ -55,6 +55,11 @@ static constexpr char defaultOptionsFile [] = "options.json";
 //======================================================================================================================
 //  local helpers
 
+static QString getOptionsFilePath()
+{
+	return QDir( getAppDataDir() ).filePath( defaultOptionsFile );
+}
+
 static bool isValidDir( const QString & dirPath )
 {
 	return !dirPath.isEmpty() && QDir( dirPath ).exists();
@@ -328,7 +333,7 @@ void MainWindow::loadMonitorInfo( QComboBox * box )
 		QString monitorDesc;
 		QTextStream descStream( &monitorDesc, QIODevice::WriteOnly );
 
-		descStream << monitor.name.c_str() << " - " << QString::number( monitor.width ) << 'x' << QString::number( monitor.height );
+		descStream << monitor.name << " - " << QString::number( monitor.width ) << 'x' << QString::number( monitor.height );
 		if (monitor.isPrimary)
 			descStream << " (primary)";
 
@@ -342,9 +347,17 @@ void MainWindow::onWindowShown()
 	// In the constructor, some properties of the window are not yet initialized, like window dimensions,
 	// so we have to do this here, when the window is already fully loaded.
 
+	// create a directory for application data, if it doesn't exist already
+	QDir appDataDir( getAppDataDir() );
+	if (!appDataDir.exists())
+	{
+		appDataDir.mkpath(".");
+	}
+
 	// try to load last saved state
-	if (QFileInfo( defaultOptionsFile ).exists())
-		loadOptions( defaultOptionsFile );
+	QString optionsFilePath = appDataDir.filePath( defaultOptionsFile );
+	if (QFileInfo( optionsFilePath ).exists())
+		loadOptions( optionsFilePath );
 	else  // this is a first run, perform an initial setup
 		runSetupDialog();
 
@@ -399,14 +412,14 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 	if (tickCount % 60 == 0)
 	{
 		if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
-			saveOptions( defaultOptionsFile );
+			saveOptions( getOptionsFilePath() );
 	}
 }
 
 void MainWindow::closeEvent( QCloseEvent * event )
 {
 	if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
-		saveOptions( defaultOptionsFile );
+		saveOptions( getOptionsFilePath() );
 
 	QMainWindow::closeEvent( event );
 }
@@ -1599,13 +1612,13 @@ void MainWindow::updateMapsFromIWAD()
 //----------------------------------------------------------------------------------------------------------------------
 //  saving and loading user data entered into the launcher
 
-void MainWindow::saveOptions( const QString & fileName )
+void MainWindow::saveOptions( const QString & filePath )
 {
-	QFile file( fileName );
+	QFile file( filePath );
 	if (!file.open( QIODevice::WriteOnly ))
 	{
 		QMessageBox::warning( this, "Error saving options",
-			"Could not open file "%fileName%" for writing: "%file.errorString() );
+			"Could not open file "%filePath%" for writing: "%file.errorString() );
 	}
 
 	QJsonObject jsRoot;
@@ -1677,13 +1690,13 @@ void MainWindow::saveOptions( const QString & fileName )
 	//return file.error() == QFile::NoError;
 }
 
-void MainWindow::loadOptions( const QString & fileName )
+void MainWindow::loadOptions( const QString & filePath )
 {
-	QFile file( fileName );
+	QFile file( filePath );
 	if (!file.open( QIODevice::ReadOnly ))
 	{
 		QMessageBox::warning( this, "Error loading options",
-			"Could not open file "%fileName%" for reading: "%file.errorString() );
+			"Could not open file "%filePath%" for reading: "%file.errorString() );
 		optionsCorrupted = true;
 		return;
 	}

@@ -8,28 +8,32 @@
 
 #include "OSUtils.hpp"
 
+#include <QStandardPaths>
+#include <QApplication>
 #include <QDebug>
 
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <X11/Xlib.h>
-//#include <X11/extensions/Xinerama.h>
 #include <X11/extensions/Xrandr.h>
 #endif // _WIN32
 
 
 //======================================================================================================================
 
-std::vector< MonitorInfo > listMonitors()
+QVector< MonitorInfo > listMonitors()
 {
-	std::vector< MonitorInfo > monitors;
+	QVector< MonitorInfo > monitors;
+
+	// We can't use Qt for that because Qt reorders the monitors so that the primary one is always first,
+	// but we need them in the original order given by system.
 
 #ifdef _WIN32
 
 	auto enumMonitorCallback = []( HMONITOR hMonitor, HDC /*hdc*/, LPRECT /*lprcClip*/, LPARAM userData ) -> BOOL
 	{
-		vector< MonitorInfo > * monitors = (QVector< MonitorInfo > *)userData;
+		QVector< MonitorInfo > * monitors = (QVector< MonitorInfo > *)userData;
 
 		MONITORINFOEXA theirInfo;
 		theirInfo.cbSize = sizeof( theirInfo );
@@ -40,7 +44,7 @@ std::vector< MonitorInfo > listMonitors()
 			myInfo.width = theirInfo.rcMonitor.right - theirInfo.rcMonitor.left;
 			myInfo.height = theirInfo.rcMonitor.bottom - theirInfo.rcMonitor.top;
 			myInfo.isPrimary = theirInfo.dwFlags & MONITORINFOF_PRIMARY;
-			monitors->push_back( myInfo );
+			monitors->append( myInfo );
 		}
 
 		return TRUE;
@@ -102,4 +106,14 @@ std::vector< MonitorInfo > listMonitors()
 #endif // _WIN32
 
 	return monitors;
+}
+
+QString getAppDataDir()
+{
+	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
+#ifdef _WIN32
+	return QApplication::applicationDirPath();
+#else
+	return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
+#endif
 }

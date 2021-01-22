@@ -12,20 +12,23 @@
 
 #include "Common.hpp"
 
-#include <string>
-#include <vector>
+#include <QString>
+#include <QVector>
 
 
 //======================================================================================================================
 
 struct MonitorInfo
 {
-	std::string name;
+	QString name;
 	int width;
 	int height;
 	bool isPrimary;
 };
-std::vector< MonitorInfo > listMonitors();
+QVector< MonitorInfo > listMonitors();
+
+/// returns directory for the application to save its data into
+QString getAppDataDir();
 
 
 #endif // OS_UTILS_INCLUDED

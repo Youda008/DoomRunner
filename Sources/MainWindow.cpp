@@ -229,6 +229,7 @@ MainWindow::MainWindow()
 	connect( ui->playerCountSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changePlayerCount );
 	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::changeTeamDamage );
 	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeTimeLimit );
+	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeFragLimit );
 
 	// the rest
 
@@ -1291,6 +1292,9 @@ void MainWindow::toggleMultiplayer( bool checked )
 	STORE_OPTION( isMultiplayer, checked );
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
+	int gameMode = ui->gameModeCmbBox->currentIndex();
+	bool isDeathMatch = gameMode >= DEATHMATCH && gameMode <= ALT_TEAM_DEATHMATCH;
+	bool isTeamPlay = gameMode == TEAM_DEATHMATCH || gameMode == ALT_TEAM_DEATHMATCH || gameMode == COOPERATIVE;
 
 	ui->multRoleCmbBox->setEnabled( checked );
 	ui->hostnameLine->setEnabled( checked && multRole == CLIENT );
@@ -1298,8 +1302,9 @@ void MainWindow::toggleMultiplayer( bool checked )
 	ui->netModeCmbBox->setEnabled( checked );
 	ui->gameModeCmbBox->setEnabled( checked && multRole == SERVER );
 	ui->playerCountSpinBox->setEnabled( checked && multRole == SERVER );
-	ui->teamDmgSpinBox->setEnabled( checked && multRole == SERVER );
-	ui->timeLimitSpinBox->setEnabled( checked && multRole == SERVER );
+	ui->teamDmgSpinBox->setEnabled( checked && multRole == SERVER && isTeamPlay );
+	ui->timeLimitSpinBox->setEnabled( checked && multRole == SERVER && isDeathMatch );
+	ui->fragLimitSpinBox->setEnabled( checked && multRole == SERVER && isDeathMatch );
 
 	if (checked)
 	{
@@ -1321,12 +1326,16 @@ void MainWindow::selectMultRole( int role )
 	STORE_OPTION( multRole, MultRole( role ) );
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
+	int gameMode = ui->gameModeCmbBox->currentIndex();
+	bool isDeathMatch = gameMode >= DEATHMATCH && gameMode <= ALT_TEAM_DEATHMATCH;
+	bool isTeamPlay = gameMode == TEAM_DEATHMATCH || gameMode == ALT_TEAM_DEATHMATCH || gameMode == COOPERATIVE;
 
 	ui->hostnameLine->setEnabled( multEnabled && role == CLIENT );
 	ui->gameModeCmbBox->setEnabled( multEnabled && role == SERVER );
 	ui->playerCountSpinBox->setEnabled( multEnabled && role == SERVER );
-	ui->teamDmgSpinBox->setEnabled( multEnabled && role == SERVER );
-	ui->timeLimitSpinBox->setEnabled( multEnabled && role == SERVER );
+	ui->teamDmgSpinBox->setEnabled( multEnabled && role == SERVER && isTeamPlay );
+	ui->timeLimitSpinBox->setEnabled( multEnabled && role == SERVER && isDeathMatch );
+	ui->fragLimitSpinBox->setEnabled( multEnabled && role == SERVER && isDeathMatch );
 
 	if (multEnabled)
 	{
@@ -1368,6 +1377,15 @@ void MainWindow::selectGameMode( int gameMode )
 {
 	STORE_OPTION( gameMode, GameMode( gameMode ) );
 
+	bool multEnabled = ui->multiplayerChkBox->isChecked();
+	int multRole = ui->multRoleCmbBox->currentIndex();
+	bool isDeathMatch = gameMode >= DEATHMATCH && gameMode <= ALT_TEAM_DEATHMATCH;
+	bool isTeamPlay = gameMode == TEAM_DEATHMATCH || gameMode == ALT_TEAM_DEATHMATCH || gameMode == COOPERATIVE;
+
+	ui->teamDmgSpinBox->setEnabled( multEnabled && multRole == SERVER && isTeamPlay );
+	ui->timeLimitSpinBox->setEnabled( multEnabled && multRole == SERVER && isDeathMatch );
+	ui->fragLimitSpinBox->setEnabled( multEnabled && multRole == SERVER && isDeathMatch );
+
 	updateLaunchCommand();
 }
 
@@ -1388,6 +1406,13 @@ void MainWindow::changeTeamDamage( double damage )
 void MainWindow::changeTimeLimit( int timeLimit )
 {
 	STORE_OPTION( timeLimit, uint( timeLimit ) );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeFragLimit( int fragLimit )
+{
+	STORE_OPTION( fragLimit, uint( fragLimit ) );
 
 	updateLaunchCommand();
 }
@@ -1964,6 +1989,7 @@ void MainWindow::restoreLaunchOptions( const LaunchOptions & opts )
 	ui->playerCountSpinBox->setValue( int( opts.playerCount ) );
 	ui->teamDmgSpinBox->setValue( opts.teamDamage );
 	ui->timeLimitSpinBox->setValue( int( opts.timeLimit ) );
+	ui->fragLimitSpinBox->setValue( int( opts.fragLimit ) );
 }
 
 void MainWindow::exportPreset()
@@ -2212,6 +2238,8 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 				cmdStream << " +teamdamage " << QString::number( ui->teamDmgSpinBox->value(), 'f', 2 );
 			if (ui->timeLimitSpinBox->value() != 0)
 				cmdStream << " -timer " << ui->timeLimitSpinBox->text();
+			if (ui->fragLimitSpinBox->value() != 0)
+				cmdStream << " +fraglimit " << ui->fragLimitSpinBox->text();
 			cmdStream << " -netmode " << QString::number( ui->netModeCmbBox->currentIndex() );
 			break;
 		 case MultRole::CLIENT:

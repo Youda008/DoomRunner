@@ -922,6 +922,13 @@
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QLabel" name="fragLimitLabel">
+                 <property name="text">
+                  <string>Frag limit</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
              <item>
@@ -1215,6 +1222,36 @@
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_9">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_27">
+                 <item>
+                  <widget class="QSpinBox" name="fragLimitSpinBox">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                   <property name="maximum">
+                    <number>999</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_11">
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>

@@ -114,6 +114,7 @@ class MainWindow : public QMainWindow {
 	void changePlayerCount( int count );
 	void changeTeamDamage( double damage );
 	void changeTimeLimit( int limit );
+	void changeFragLimit( int limit );
 
 	void exportPreset();
 	void importPreset();

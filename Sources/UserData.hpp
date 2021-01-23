@@ -185,6 +185,7 @@ struct LaunchOptions
 	uint playerCount = 2;
 	double teamDamage = 0.0;
 	uint timeLimit = 0;
+	uint fragLimit = 0;
 };
 
 struct Preset

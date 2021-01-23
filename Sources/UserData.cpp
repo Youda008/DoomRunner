@@ -157,6 +157,7 @@ QJsonObject serialize( const LaunchOptions & opts )
 	jsOptions["player_count"] = int( opts.playerCount );
 	jsOptions["team_damage"] = opts.teamDamage;
 	jsOptions["time_limit"] = int( opts.timeLimit );
+	jsOptions["frag_limit"] = int( opts.fragLimit );
 
 	return jsOptions;
 }
@@ -203,6 +204,7 @@ void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & opts )
 	opts.playerCount = jsOptions.getUInt( "player_count", opts.playerCount );
 	opts.teamDamage = jsOptions.getDouble( "team_damage", opts.teamDamage );
 	opts.timeLimit = jsOptions.getUInt( "time_limit", opts.timeLimit );
+	opts.fragLimit = jsOptions.getUInt( "frag_limit", opts.fragLimit );
 }
 
 QJsonObject serialize( const Preset & preset, bool storeOpts )

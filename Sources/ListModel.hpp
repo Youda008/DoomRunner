@@ -524,8 +524,6 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		// note down the destination drop index, so it can be later retrieved by ListView
 		DropTarget::itemsDropped( row, count );
 
-		superClass::contentChanged( row, row + count );
-
 		return true;
 	}
 
@@ -567,8 +565,6 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		//
 		// note down the destination drop index, so it can be later retrieved by ListView
 		DropTarget::itemsDropped( row, filesToBeInserted.count() );
-
-		superClass::contentChanged( row, filesToBeInserted.count() );
 
 		return true;
 	}

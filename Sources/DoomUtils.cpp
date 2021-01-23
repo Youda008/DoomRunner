@@ -131,7 +131,8 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 	{
 		// we need to make sure we have a null-terminated string, because the original one isn't when it's 8 chars long
 		char lumpName0 [9];
-		strncpy( lumpName0, lumpDir[i].name, sizeof(lumpName0) );
+		strncpy( lumpName0, lumpDir[i].name, sizeof(lumpDir[i].name) );
+		lumpName0[8] = '\0';
 		QString lumpName( lumpName0 );
 
 		// try to gather the map names from the marker lumps,

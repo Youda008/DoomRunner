@@ -1,5 +1,6 @@
 1.4
 - added new launch options for video, audio and save/screenshot directory
+- added tooltips for some of the launch options
 - map names are now extracted from IWAD file instead of guessing them from IWAD name
 - added confirmation dialog when attempted to delete a preset
 - enabled keyboard control (Enter, Insert, Delete, CTRL+arrows)

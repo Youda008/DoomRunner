@@ -655,6 +655,9 @@
                <property name="enabled">
                 <bool>false</bool>
                </property>
+               <property name="toolTip">
+                <string>Sets the dmflags CVAR so that monsters are not spawned on levels.</string>
+               </property>
                <property name="text">
                 <string>No monsters</string>
                </property>
@@ -665,6 +668,9 @@
                <property name="enabled">
                 <bool>false</bool>
                </property>
+               <property name="toolTip">
+                <string>Sets the dmflags CVAR to make the monsters as fast as in Nightmare mode even if you are not playing Nightmare.</string>
+               </property>
                <property name="text">
                 <string>Fast monsters</string>
                </property>
@@ -674,6 +680,9 @@
               <widget class="QCheckBox" name="monstersRespawnChkBox">
                <property name="enabled">
                 <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>Sets the dmflags CVAR so that monsters respawn even if you are not playing at Nightmare difficulty.</string>
                </property>
                <property name="text">
                 <string>Monsters respawn</string>
@@ -706,8 +715,11 @@
              </item>
              <item>
               <widget class="QCheckBox" name="allowCheatsChkBox">
+               <property name="toolTip">
+                <string>When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &quot;disablecheats&quot; property, as well as network games; however, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.</string>
+               </property>
                <property name="text">
-                <string>Force allow cheats (sv_cheats 1)</string>
+                <string>Force allow cheats</string>
                </property>
               </widget>
              </item>
@@ -844,6 +856,9 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Network mode</string>
                  </property>
@@ -883,6 +898,9 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Controls how much damage players can do to their teammates. This is multiplied to the normal damage done, so a value of 0 means that players cannot hurt their teammates. A value of 1 means that players deal full damage to their teammates. You can also set this to values greater than 1 to deal extra punishment to your teammates.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Team damage</string>
                  </property>
@@ -895,6 +913,9 @@
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When the time limit is non-zero, the game will automatically advance to the next level after this many minutes have elapsed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Time limit</string>
@@ -1010,6 +1031,9 @@
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <item>
                     <property name="text">
@@ -1142,11 +1166,14 @@
                    <property name="enabled">
                     <bool>false</bool>
                    </property>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Controls how much damage players can do to their teammates. This is multiplied to the normal damage done, so a value of 0 means that players cannot hurt their teammates. A value of 1 means that players deal full damage to their teammates. You can also set this to values greater than 1 to deal extra punishment to your teammates.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                    <property name="maximum">
-                    <double>1.000000000000000</double>
+                    <double>9.990000000000000</double>
                    </property>
                    <property name="singleStep">
                     <double>0.100000000000000</double>
@@ -1174,6 +1201,9 @@
                   <widget class="QSpinBox" name="timeLimitSpinBox">
                    <property name="enabled">
                     <bool>false</bool>
+                   </property>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When the time limit is non-zero, the game will automatically advance to the next level after this many minutes have elapsed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1213,6 +1243,9 @@
               <layout class="QHBoxLayout" name="horizontalLayout_13">
                <item>
                 <widget class="QLabel" name="monitorLabel">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Defines which screen is used if multiple monitors are available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Monitor</string>
                  </property>
@@ -1225,6 +1258,9 @@
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Defines which screen is used if multiple monitors are available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <item>
                   <property name="text">
@@ -1328,6 +1364,9 @@
             <layout class="QVBoxLayout" name="verticalLayout_18">
              <item>
               <widget class="QCheckBox" name="noSoundChkBox">
+               <property name="toolTip">
+                <string>Disables both music and sound effects.</string>
+               </property>
                <property name="text">
                 <string>No sound (SFX + music)</string>
                </property>
@@ -1335,6 +1374,9 @@
              </item>
              <item>
               <widget class="QCheckBox" name="noSfxChkBox">
+               <property name="toolTip">
+                <string>Prevents the playback of sound effects.</string>
+               </property>
                <property name="text">
                 <string>No SFX</string>
                </property>
@@ -1342,6 +1384,9 @@
              </item>
              <item>
               <widget class="QCheckBox" name="noMusicChkBox">
+               <property name="toolTip">
+                <string>Prevents the playback of music.</string>
+               </property>
                <property name="text">
                 <string>No music</string>
                </property>

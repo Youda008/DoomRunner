@@ -22,6 +22,27 @@
 
 //======================================================================================================================
 
+#ifdef _WIN32
+static BOOL CALLBACK enumMonitorCallback( HMONITOR hMonitor, HDC /*hdc*/, LPRECT /*lprcClip*/, LPARAM userData )
+{
+	QVector< MonitorInfo > * monitors = (QVector< MonitorInfo > *)userData;
+
+	MONITORINFOEXA theirInfo;
+	theirInfo.cbSize = sizeof( theirInfo );
+	if (GetMonitorInfoA( hMonitor, &theirInfo ))
+	{
+		MonitorInfo myInfo;
+		myInfo.name = theirInfo.szDevice;
+		myInfo.width = theirInfo.rcMonitor.right - theirInfo.rcMonitor.left;
+		myInfo.height = theirInfo.rcMonitor.bottom - theirInfo.rcMonitor.top;
+		myInfo.isPrimary = theirInfo.dwFlags & MONITORINFOF_PRIMARY;
+		monitors->append( myInfo );
+	}
+
+	return TRUE;
+};
+#endif // _WIN32
+
 QVector< MonitorInfo > listMonitors()
 {
 	QVector< MonitorInfo > monitors;
@@ -30,25 +51,6 @@ QVector< MonitorInfo > listMonitors()
 	// but we need them in the original order given by system.
 
 #ifdef _WIN32
-
-	auto enumMonitorCallback = []( HMONITOR hMonitor, HDC /*hdc*/, LPRECT /*lprcClip*/, LPARAM userData ) -> BOOL
-	{
-		QVector< MonitorInfo > * monitors = (QVector< MonitorInfo > *)userData;
-
-		MONITORINFOEXA theirInfo;
-		theirInfo.cbSize = sizeof( theirInfo );
-		if (GetMonitorInfoA( hMonitor, &theirInfo ))
-		{
-			MonitorInfo myInfo;
-			myInfo.name = theirInfo.szDevice;
-			myInfo.width = theirInfo.rcMonitor.right - theirInfo.rcMonitor.left;
-			myInfo.height = theirInfo.rcMonitor.bottom - theirInfo.rcMonitor.top;
-			myInfo.isPrimary = theirInfo.dwFlags & MONITORINFOF_PRIMARY;
-			monitors->append( myInfo );
-		}
-
-		return TRUE;
-	};
 
 	EnumDisplayMonitors( nullptr, nullptr, (MONITORENUMPROC)enumMonitorCallback, (LONG_PTR)&monitors );
 

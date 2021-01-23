@@ -385,8 +385,7 @@ void JsonObjectCtx::missingKey( const QString & key ) const
 		return;
 
 	_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
-		"Element " % elemPath( key ) % " is missing in the options file, using default value. "
-		"If you just updated to a newer version, you can ignore this warning."
+		"Element " % elemPath( key ) % " is missing in the options file, using default value."
 	);
 }
 

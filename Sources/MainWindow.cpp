@@ -1618,6 +1618,9 @@ void MainWindow::saveOptions( const QString & filePath )
 
 	QJsonObject jsRoot;
 
+	// this will be used to detect options created by older versions and supress "missing element" warnings
+	jsRoot["version"] = appVersion;
+
 	{
 		QJsonObject jsGeometry;
 
@@ -1711,6 +1714,12 @@ void MainWindow::loadOptions( const QString & filePath )
 	// we want to print a useful error message with information exactly which JSON element is broken.
 	JsonDocumentCtx jsonDocCtx( jsonDoc );
 	const JsonObjectCtx & jsRoot = jsonDocCtx.rootObject();
+
+	// detect that we are loading options from older versions so that we can supress "missing element" warnings
+	jsonDocCtx.toggleWarnings( false );  // read version with warnings disabled
+	QString version = jsRoot.getString( "version" );
+	if (!version.isEmpty() && compareVersions( version, appVersion ) >= 0)  // missing "version" means old version
+		jsonDocCtx.toggleWarnings( true );  // only re-enable warnings if the options are up to date
 
 	if (JsonObjectCtx jsGeometry = jsRoot.getObject( "geometry" ))
 	{

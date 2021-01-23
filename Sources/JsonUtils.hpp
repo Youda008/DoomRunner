@@ -297,6 +297,8 @@ class JsonDocumentCtx {
 
 	JsonObjectCtx & rootObject() { return _rootObject; }
 
+	void toggleWarnings( bool enable ) { _context.dontShowAgain = !enable; }
+
 };
 
 

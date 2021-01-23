@@ -25,15 +25,6 @@
 
 
 //======================================================================================================================
-//  local helpers
-
-static bool isValidDir( const QString & dirPath )
-{
-	return !dirPath.isEmpty() && QDir( dirPath ).exists();
-}
-
-
-//======================================================================================================================
 //  SetupDialog
 
 SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir,

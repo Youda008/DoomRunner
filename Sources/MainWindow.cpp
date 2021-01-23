@@ -60,11 +60,6 @@ static QString getOptionsFilePath()
 	return QDir( getAppDataDir() ).filePath( defaultOptionsFile );
 }
 
-static bool isValidDir( const QString & dirPath )
-{
-	return !dirPath.isEmpty() && QDir( dirPath ).exists();
-}
-
 static bool verifyDir( const QString & dir, const QString & errorMessage )
 {
 	if (!QDir( dir ).exists())

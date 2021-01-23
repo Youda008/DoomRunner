@@ -10,6 +10,8 @@
 #include "ui_EngineDialog.h"
 
 #include <QFileDialog>
+#include <QStandardPaths>
+#include <QDir>
 #include <QTimer>
 
 
@@ -59,28 +61,41 @@ void EngineDialog::onWindowShown()
 		done( QDialog::Rejected );
 }
 
+static QString getConfigDirOfEngine( QString enginePath )
+{
+#ifdef _WIN32
+	// in Windows ZDoom stores its config in the directory of its binaries
+	return getDirOfFile( enginePath );
+#else
+	// in Linux ZDoom stores its config in standard user's app config dir (usually something like /home/user/.config/)
+	QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
+	QString engineDirName = getDirnameOfFile( enginePath );
+	return standardConfigDir.filePath( engineDirName );  // -> /home/user/.config/ZDoom
+#endif
+}
+
 void EngineDialog::browseEngine()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate engine's executable", ui->pathLine->text(),
+	QString enginePath = QFileDialog::getOpenFileName( this, "Locate engine's executable", ui->pathLine->text(),
  #ifdef _WIN32
 		"Executable files (*.exe);;"
  #endif
 		"All files (*)"
 	);
-	if (path.isNull())  // user probably clicked cancel
+	if (enginePath.isNull())  // user probably clicked cancel
 		return;
 
 	// the path comming out of the file dialog is always absolute
 	if (pathContext.useRelativePaths())
-		path = pathContext.getRelativePath( path );
+		enginePath = pathContext.getRelativePath( enginePath );
 
-	ui->pathLine->setText( path );
+	ui->pathLine->setText( enginePath );
 
 	if (ui->nameLine->text().isEmpty())  // don't overwrite existing name
-		ui->nameLine->setText( QFileInfo( path ).dir().dirName() );
+		ui->nameLine->setText( getDirnameOfFile( enginePath ) );
 
 	if (ui->configDirLine->text().isEmpty())  // don't overwrite existing config dir
-		ui->configDirLine->setText( QFileInfo( path ).dir().path() );
+		ui->configDirLine->setText( getConfigDirOfEngine( enginePath ) );
 }
 
 void EngineDialog::browseConfigDir()

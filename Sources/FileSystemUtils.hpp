@@ -79,6 +79,11 @@ class PathContext {
 //======================================================================================================================
 //  misc helper functions
 
+inline bool isValidDir( const QString & dirPath )
+{
+	return !dirPath.isEmpty() && QDir( dirPath ).exists();
+}
+
 inline QString getPathFromFileName( const QString & dirPath, const QString & fileName )
 {
 	return QDir( dirPath ).filePath( fileName );
@@ -87,6 +92,11 @@ inline QString getPathFromFileName( const QString & dirPath, const QString & fil
 inline QString getDirOfFile( const QString & filePath )
 {
 	return QFileInfo( filePath ).path();
+}
+
+inline QString getDirnameOfFile( const QString & filePath )
+{
+	return QFileInfo( filePath ).dir().dirName();
 }
 
 template< typename Item >

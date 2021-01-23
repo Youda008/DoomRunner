@@ -449,7 +449,8 @@ bool selectItemByID( QComboBox * view, const AListModel< Item > & model, const d
 
 template< typename Item >
 void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const QString & dir, bool recursively,
-                            const PathContext & pathContext, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+                            bool includeEmptyItem, const PathContext & pathContext,
+                            std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	// note down the currently selected item
 	QString lastText = view->currentText();
@@ -459,6 +460,10 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 	model.startCompleteUpdate();
 
 	model.clear();
+
+	// in combo-box item cannot be deselected, so we provide an empty item to express "no selection"
+	if (includeEmptyItem)
+		model.append( QString() );
 
 	fillListFromDir( model.list(), dir, recursively, pathContext, isDesiredFile );
 

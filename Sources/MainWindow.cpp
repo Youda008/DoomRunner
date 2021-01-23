@@ -582,7 +582,7 @@ void MainWindow::loadPreset( int presetIdx )
 	}
 
 	// restore selected config
-	if (!preset.selectedConfig.isEmpty())  // the preset combo box might have been empty when creating this preset
+	if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
 	{
 		int configIdx = findSuch( configModel, [ &preset ]( const ConfigFile & config )
 		                                                  { return config.fileName == preset.selectedConfig; } );
@@ -741,13 +741,13 @@ void MainWindow::selectConfig( int index )
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
-		if (index < 0)  // engine combo box was reset to "no engine selected" state
+		if (index < 0)  // config combo box was reset to "no config selected" state
 			presetModel[ selectedPresetIdx ].selectedConfig.clear();
 		else
 			presetModel[ selectedPresetIdx ].selectedConfig = configModel[ index ].fileName;
 	}
 
-	if (index >= 0)
+	if (index > 0)  // at index 0 there is an empty placeholder to allow deselecting config
 	{
 		QString configPath = getPathFromFileName(
 			engineModel[ ui->engineCmbBox->currentIndex() ].configDir,  // if config was selected, engine selection must be valid too
@@ -1497,7 +1497,7 @@ void MainWindow::updateIWADsFromDir()
 	QItemSelection newSelection = ui->iwadListView->selectionModel()->selection();
 	if (newSelection != origSelection)
 	{
-		// orig IWAD couldn't be selected because it no longer exists, let's notify the app that the selection changed
+		// selection changed while the callbacks were disable, we need to call them manually
 		toggleIWAD( newSelection, origSelection );
 	}
 }
@@ -1516,7 +1516,7 @@ void MainWindow::updateMapPacksFromDir()
 	QItemSelection newSelection = ui->mapDirView->selectionModel()->selection();
 	if (newSelection != origSelection)
 	{
-		// orig IWAD couldn't be selected because it no longer exists, let's notify the app that the selection changed
+		// selection changed while the callbacks were disable, we need to call them manually
 		toggleMapPack( newSelection, origSelection );
 	}
 }
@@ -1532,7 +1532,7 @@ void MainWindow::updateConfigFilesFromDir()
 
 	disableSelectionCallbacks = true;
 
-	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, false, pathContext,
+	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, /*recursively*/false, /*emptyItem*/true, pathContext,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return configFileSuffixes.contains( file.suffix().toLower() ); }
 	);
 
@@ -1541,7 +1541,7 @@ void MainWindow::updateConfigFilesFromDir()
 	int newConfigIdx = ui->configCmbBox->currentIndex();
 	if (newConfigIdx != origConfigIdx)
 	{
-		// orig IWAD couldn't be selected because it no longer exists, let's notify the app that the selection changed
+		// selection changed while the callbacks were disable, we need to call them manually
 		selectConfig( newConfigIdx );
 	}
 }
@@ -1560,7 +1560,7 @@ void MainWindow::updateSaveFilesFromDir()
 
 	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
-	updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, false, pathContext,
+	updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, /*recursively*/false, /*emptyItem*/false, pathContext,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileSuffix; }
 	);
 
@@ -1569,7 +1569,7 @@ void MainWindow::updateSaveFilesFromDir()
 	int newConfigIdx = ui->saveFileCmbBox->currentIndex();
 	if (newConfigIdx != origConfigIdx)
 	{
-		// orig IWAD couldn't be selected because it no longer exists, let's notify the app that the selection changed
+		// selection changed while the callbacks were disable, we need to call them manually
 		selectConfig( newConfigIdx );
 	}
 }
@@ -2067,7 +2067,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 {
 	// baseDir - which base directory to derive the relative paths from
 
-	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir
+	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir.
 	PathContext base( pathContext.useAbsolutePaths(), baseDir, pathContext.baseDir() );
 
 	QString newCommand;
@@ -2082,7 +2082,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 		cmdStream << "\"" << base.rebasePath( selectedEngine.path ) << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
-		if (configIdx >= 0)
+		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
 		{
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 

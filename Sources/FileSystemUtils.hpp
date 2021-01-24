@@ -89,6 +89,11 @@ inline QString getPathFromFileName( const QString & dirPath, const QString & fil
 	return QDir( dirPath ).filePath( fileName );
 }
 
+inline QString getFileNameFromPath( const QString & filePath )
+{
+	return QFileInfo( filePath ).fileName();
+}
+
 inline QString getDirOfFile( const QString & filePath )
 {
 	return QFileInfo( filePath ).path();

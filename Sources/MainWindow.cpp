@@ -1964,7 +1964,8 @@ void MainWindow::restoreLaunchOptions( const LaunchOptions & opts )
 	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
 
 	// video
-	ui->monitorCmbBox->setCurrentIndex( opts.monitorIdx );
+	if (opts.monitorIdx < ui->monitorCmbBox->count())
+		ui->monitorCmbBox->setCurrentIndex( opts.monitorIdx );
 	if (opts.resolutionX > 0)
 		ui->resolutionXLine->setText( QString::number( opts.resolutionX ) );
 	if (opts.resolutionY > 0)
@@ -2165,7 +2166,15 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 		cmdStream << " +sv_cheats 1";
 
 	if (ui->monitorCmbBox->currentIndex() > 0)  // the first item is a placeholder for leaving it default
-		cmdStream << " +vid_adapter " << ui->monitorCmbBox->currentIndex();  // and ZDoom indexes monitors from 1
+	{
+		// terrible hack, but it's not my fault
+		int vid_adapter;
+		if (selectedEngineIdx >= 0 && getFileNameFromPath( engineModel[ selectedEngineIdx ].path ).startsWith("zdoom"))
+			vid_adapter = ui->monitorCmbBox->currentIndex();      // in ZDoom monitors are indexed from 1
+		else
+			vid_adapter = ui->monitorCmbBox->currentIndex() - 1;  // but in newer derivatives from 0
+		cmdStream << " +vid_adapter " << vid_adapter;
+	}
 	if (!ui->resolutionXLine->text().isEmpty())
 		cmdStream << " -width " << ui->resolutionXLine->text();
 	if (!ui->resolutionYLine->text().isEmpty())

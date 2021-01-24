@@ -10,21 +10,26 @@
 
 #include <QStandardPaths>
 #include <QApplication>
+#include <QGuiApplication>
+#include <QScreen>
+
 #include <QDebug>
 
 #ifdef _WIN32
-#include <windows.h>
+//#include <windows.h>
 #else
-#include <X11/Xlib.h>
-#include <X11/extensions/Xrandr.h>
+//#include <X11/Xlib.h>
+//#include <X11/extensions/Xrandr.h>
+//#include <SDL2/SDL.h>
+//#include <SDL2/SDL_vulkan.h>
 #endif // _WIN32
 
 
 //======================================================================================================================
 
 #ifdef _WIN32
-static BOOL CALLBACK enumMonitorCallback( HMONITOR hMonitor, HDC /*hdc*/, LPRECT /*lprcClip*/, LPARAM userData )
-{
+//static BOOL CALLBACK enumMonitorCallback( HMONITOR hMonitor, HDC /*hdc*/, LPRECT /*lprcClip*/, LPARAM userData )
+/*{
 	QVector< MonitorInfo > * monitors = (QVector< MonitorInfo > *)userData;
 
 	MONITORINFOEXA theirInfo;
@@ -40,22 +45,34 @@ static BOOL CALLBACK enumMonitorCallback( HMONITOR hMonitor, HDC /*hdc*/, LPRECT
 	}
 
 	return TRUE;
-};
+};*/
 #endif // _WIN32
 
 QVector< MonitorInfo > listMonitors()
 {
 	QVector< MonitorInfo > monitors;
 
-	// We can't use Qt for that because Qt reorders the monitors so that the primary one is always first,
-	// but we need them in the original order given by system.
+	// in the end this work well for both platforms, just ZDoom indexes the monitors from 1 while GZDoom from 0
+	QList<QScreen *> screens = QGuiApplication::screens();
+	for (int monitorIdx = 0; monitorIdx < screens.count(); monitorIdx++)
+	{
+		MonitorInfo myInfo;
+		myInfo.name = screens[ monitorIdx ]->name();
+		myInfo.width = screens[ monitorIdx ]->size().width();
+		myInfo.height = screens[ monitorIdx ]->size().height();
+		myInfo.isPrimary = monitorIdx == 0;
+		monitors.push_back( myInfo );
+	}
 
 #ifdef _WIN32
 
+/* WinAPI
 	EnumDisplayMonitors( nullptr, nullptr, (MONITORENUMPROC)enumMonitorCallback, (LONG_PTR)&monitors );
+*/
 
 #else
 
+/* libXrandr
 	Display * display = XOpenDisplay( nullptr );
 	if (!display)
 	{
@@ -104,6 +121,26 @@ QVector< MonitorInfo > listMonitors()
 
 	XFree( xMonitors );
 	XCloseDisplay( display );
+*/
+
+/* SDL2
+	SDL_Init( SDL_INIT_VIDEO );
+
+	int monitorCnt = SDL_GetNumVideoDisplays();
+	for (int monitorIdx = 0; monitorIdx < monitorCnt; monitorIdx++)
+	{
+		MonitorInfo myInfo;
+		SDL_DisplayMode mode;
+		SDL_GetCurrentDisplayMode( monitorIdx, &mode );
+		myInfo.name = SDL_GetDisplayName( monitorIdx );
+		myInfo.width = mode.w;
+		myInfo.height = mode.h;
+		myInfo.isPrimary = monitorIdx == 0;
+		monitors.push_back( myInfo );
+	}
+
+	SDL_Quit();
+*/
 
 #endif // _WIN32
 

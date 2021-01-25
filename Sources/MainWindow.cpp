@@ -179,6 +179,7 @@ MainWindow::MainWindow()
 	connect( ui->presetBtnDown, &QToolButton::clicked, this, &thisClass::presetMoveDown );
 
 	connect( ui->modBtnAdd, &QToolButton::clicked, this, &thisClass::modAdd );
+	connect( ui->modBtnAddDir, &QToolButton::clicked, this, &thisClass::modAddDir );
 	connect( ui->modBtnDel, &QToolButton::clicked, this, &thisClass::modDelete );
 	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
@@ -675,6 +676,7 @@ void MainWindow::togglePresetSubWidgets( bool enabled )
 	ui->mapDirView->setEnabled( enabled );
 	ui->modListView->setEnabled( enabled );
 	ui->modBtnAdd->setEnabled( enabled );
+	ui->modBtnAddDir->setEnabled( enabled );
 	ui->modBtnDel->setEnabled( enabled );
 	ui->modBtnUp->setEnabled( enabled );
 	ui->modBtnDown->setEnabled( enabled );
@@ -962,6 +964,30 @@ void MainWindow::modAdd()
 	                                             "Doom mod files (*.wad *.WAD *.deh *.DEH *.bex *.BEX *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
 	                                             "DukeNukem data files (*.grp *.rff);;"
 	                                             "All files (*)" );
+	if (path.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path comming out of the file dialog is always absolute
+	if (pathContext.useRelativePaths())
+		path = pathContext.getRelativePath( path );
+
+	Mod mod( QFileInfo( path ), true );
+
+	appendItem( ui->modListView, modModel, mod );
+
+	// add it also to the current preset
+	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedPresetIdx >= 0)
+	{
+		presetModel[ selectedPresetIdx ].mods.append( mod );
+	}
+
+	updateLaunchCommand();
+}
+
+void MainWindow::modAddDir()
+{
+	QString path = QFileDialog::getExistingDirectory( this, "Locate the mod directory", modSettings.dir );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 

@@ -74,6 +74,7 @@ class MainWindow : public QMainWindow {
 	void presetMoveDown();
 
 	void modAdd();
+	void modAddDir();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();

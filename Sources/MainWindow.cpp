@@ -1634,13 +1634,6 @@ void MainWindow::updateMapsFromIWAD()
 
 void MainWindow::saveOptions( const QString & filePath )
 {
-	QFile file( filePath );
-	if (!file.open( QIODevice::WriteOnly ))
-	{
-		QMessageBox::warning( this, "Error saving options",
-			"Could not open file "%filePath%" for writing: "%file.errorString() );
-	}
-
 	QJsonObject jsRoot;
 
 	// this will be used to detect options created by older versions and supress "missing element" warnings
@@ -1706,8 +1699,19 @@ void MainWindow::saveOptions( const QString & filePath )
 	jsRoot["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
 
 	QJsonDocument jsonDoc( jsRoot );
-	file.write( jsonDoc.toJson() );
+	QByteArray rawData = jsonDoc.toJson();
 
+	// Open the file after the JSON is filled up and serialized to minimize the time
+	// where the file is empty (after it's opened for writing) and waiting for the data to be written.
+	QFile file( filePath );
+	if (!file.open( QIODevice::WriteOnly ))
+	{
+		QMessageBox::warning( this, "Error saving options",
+			"Could not open file "%filePath%" for writing: "%file.errorString() );
+		return;
+	}
+
+	file.write( rawData );
 	file.close();
 
 	//return file.error() == QFile::NoError;

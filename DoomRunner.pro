@@ -80,9 +80,11 @@ FORMS += \
     Forms/MainWindow.ui \
     Forms/SetupDialog.ui
 
+RESOURCES += \
+    Resources/Resources.qrc
+
 DISTFILES += \
-    Resources/DoomRunner.ico \
-    Resources/DoomRunner2.ico
+    Resources/DoomRunner.ico
 
 win32:RC_ICONS += Resources/DoomRunner.ico
 

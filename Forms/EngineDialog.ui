@@ -61,8 +61,18 @@
      </item>
      <item>
       <widget class="QPushButton" name="browseEngineBtn">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>24</height>
+        </size>
+       </property>
        <property name="text">
         <string>Browse</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../Resources/Resources.qrc">
+         <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
        </property>
       </widget>
      </item>
@@ -82,8 +92,18 @@
      </item>
      <item>
       <widget class="QPushButton" name="browseConfigsBtn">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>24</height>
+        </size>
+       </property>
        <property name="text">
         <string>Browse</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../Resources/Resources.qrc">
+         <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
        </property>
       </widget>
      </item>
@@ -101,7 +121,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../Resources/Resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

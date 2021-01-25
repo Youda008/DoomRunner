@@ -58,16 +58,15 @@
                      <height>26</height>
                     </size>
                    </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;add new preset&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
-                    <string>+</string>
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../Resources/Resources.qrc">
+                     <normaloff>:/AddItem.png</normaloff>:/AddItem.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -85,16 +84,15 @@
                      <height>26</height>
                     </size>
                    </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;delete selected preset&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
-                    <string>‒</string>
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../Resources/Resources.qrc">
+                     <normaloff>:/DeleteItem.png</normaloff>:/DeleteItem.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -116,7 +114,11 @@
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;clone selected preset&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
-                    <string>C</string>
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../Resources/Resources.qrc">
+                     <normaloff>:/CopyFile.png</normaloff>:/CopyFile.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -137,11 +139,9 @@
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;move selected preset up&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
-                   <property name="text">
-                    <string>...</string>
-                   </property>
-                   <property name="arrowType">
-                    <enum>Qt::UpArrow</enum>
+                   <property name="icon">
+                    <iconset resource="../Resources/Resources.qrc">
+                     <normaloff>:/MoveUp.png</normaloff>:/MoveUp.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -162,11 +162,9 @@
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;move selected preset down&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
-                   <property name="text">
-                    <string>...</string>
-                   </property>
-                   <property name="arrowType">
-                    <enum>Qt::DownArrow</enum>
+                   <property name="icon">
+                    <iconset resource="../Resources/Resources.qrc">
+                     <normaloff>:/MoveDown.png</normaloff>:/MoveDown.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -306,16 +304,15 @@
                      <height>26</height>
                     </size>
                    </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;add new mod file&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
-                    <string>+</string>
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../Resources/Resources.qrc">
+                     <normaloff>:/AddItem.png</normaloff>:/AddItem.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -336,16 +333,15 @@
                      <height>26</height>
                     </size>
                    </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;remove mod file&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
-                    <string>‒</string>
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../Resources/Resources.qrc">
+                     <normaloff>:/DeleteItem.png</normaloff>:/DeleteItem.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -369,11 +365,9 @@
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;move selected mod up&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
-                   <property name="text">
-                    <string>...</string>
-                   </property>
-                   <property name="arrowType">
-                    <enum>Qt::UpArrow</enum>
+                   <property name="icon">
+                    <iconset resource="../Resources/Resources.qrc">
+                     <normaloff>:/MoveUp.png</normaloff>:/MoveUp.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -397,11 +391,9 @@
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;move selected mod down&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
-                   <property name="text">
-                    <string>...</string>
-                   </property>
-                   <property name="arrowType">
-                    <enum>Qt::DownArrow</enum>
+                   <property name="icon">
+                    <iconset resource="../Resources/Resources.qrc">
+                     <normaloff>:/MoveDown.png</normaloff>:/MoveDown.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -439,12 +431,6 @@
            <widget class="QLineEdit" name="presetCmdArgsLine">
             <property name="enabled">
              <bool>false</bool>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>22</height>
-             </size>
             </property>
            </widget>
           </item>
@@ -746,8 +732,18 @@
                </item>
                <item>
                 <widget class="QPushButton" name="saveDirBtn">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>24</height>
+                  </size>
+                 </property>
                  <property name="text">
                   <string>Browse</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../Resources/Resources.qrc">
+                   <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
                  </property>
                 </widget>
                </item>
@@ -767,8 +763,18 @@
                </item>
                <item>
                 <widget class="QPushButton" name="screenshotDirBtn">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>24</height>
+                  </size>
+                 </property>
                  <property name="text">
                   <string>Browse</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../Resources/Resources.qrc">
+                   <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
                  </property>
                 </widget>
                </item>
@@ -1473,14 +1479,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="globalCmdArgsLine">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>22</height>
-         </size>
-        </property>
-       </widget>
+       <widget class="QLineEdit" name="globalCmdArgsLine"/>
       </item>
      </layout>
     </item>
@@ -1510,12 +1509,6 @@
         <property name="enabled">
          <bool>true</bool>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>22</height>
-         </size>
-        </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -1531,6 +1524,10 @@
         </property>
         <property name="text">
          <string>Launch!</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../Resources/Resources.qrc">
+          <normaloff>:/Play.png</normaloff>:/Play.png</iconset>
         </property>
        </widget>
       </item>
@@ -1592,6 +1589,8 @@
    <header location="global">Sources/EditableListView.hpp</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../Resources/Resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

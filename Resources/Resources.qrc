@@ -1,0 +1,18 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="AddItem.png">Icons/AddItem.png</file>
+    <file alias="AddFile.png">Icons/AddFile.png</file>
+    <file alias="AddDir.png">Icons/AddDir.png</file>
+    <file alias="DeleteItem.png">Icons/DeleteItem.png</file>
+    <file alias="DeleteFile.png">Icons/DeleteFile.png</file>
+    <file alias="CopyFile.png">Icons/CopyFile.png</file>
+
+    <file alias="MoveUp.png">Icons/MoveUp.png</file>
+    <file alias="MoveDown.png">Icons/MoveDown.png</file>
+
+    <file alias="BrowseDir.png">Icons/BrowseDir.png</file>
+
+    <file alias="Checkmark.png">Icons/Checkmark.png</file>
+    <file alias="Play.png">Icons/Play.png</file>
+</qresource>
+</RCC>

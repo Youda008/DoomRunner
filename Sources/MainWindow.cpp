@@ -9,10 +9,11 @@
 #include "MainWindow.hpp"
 #include "ui_MainWindow.h"
 
+#include "AboutDialog.hpp"
 #include "SetupDialog.hpp"
+#include "ConfigDialog.hpp"
 #include "GameOptsDialog.hpp"
 #include "CompatOptsDialog.hpp"
-#include "AboutDialog.hpp"
 
 #include "EventFilters.hpp"  // ConfirmationFilter
 #include "LangUtils.hpp"
@@ -171,6 +172,8 @@ MainWindow::MainWindow()
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectConfig );
 
 	// setup buttons
+
+	connect( ui->configAddBtn, &QToolButton::clicked, this, &thisClass::cloneConfig );
 
 	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &thisClass::presetAdd );
 	connect( ui->presetBtnDel, &QToolButton::clicked, this, &thisClass::presetDelete );
@@ -430,6 +433,15 @@ MainWindow::~MainWindow()
 //----------------------------------------------------------------------------------------------------------------------
 //  dialogs
 
+void MainWindow::runAboutDialog()
+{
+	AboutDialog dialog( this, checkForUpdates );
+
+	dialog.exec();
+
+	checkForUpdates = dialog.checkForUpdates;
+}
+
 void MainWindow::runSetupDialog()
 {
 	// The dialog gets a copy of all the required data and when it's confirmed, we copy them back.
@@ -535,13 +547,27 @@ void MainWindow::runCompatOptsDialog()
 	}
 }
 
-void MainWindow::runAboutDialog()
+void MainWindow::cloneConfig()
 {
-	AboutDialog dialog( this, checkForUpdates );
+	QDir configDir( engineModel[ ui->engineCmbBox->currentIndex() ].configDir );  // if config was selected, engine selection must be valid too
+	QFileInfo oldConfig( configDir.filePath( ui->configCmbBox->currentText() ) );
 
-	dialog.exec();
+	ConfigDialog dialog( this, oldConfig.completeBaseName() );
 
-	checkForUpdates = dialog.checkForUpdates;
+	int code = dialog.exec();
+
+	// perform the action only if user clicked Ok
+	if (code == QDialog::Accepted)
+	{
+		QString oldConfigPath = oldConfig.filePath();
+		QString newConfigPath = configDir.filePath( dialog.newConfigName + '.' + oldConfig.suffix() );
+		bool copied = QFile::copy( oldConfigPath, newConfigPath );
+		if (!copied)
+		{
+			QMessageBox::warning( this, "Error copying file",
+				"Couldn't create file "%newConfigPath%". Check permissions." );
+		}
+	}
 }
 
 
@@ -672,6 +698,7 @@ void MainWindow::togglePresetSubWidgets( bool enabled )
 {
 	ui->engineCmbBox->setEnabled( enabled );
 	ui->configCmbBox->setEnabled( enabled );
+	ui->configAddBtn->setEnabled( enabled );
 	ui->iwadListView->setEnabled( enabled );
 	ui->mapDirView->setEnabled( enabled );
 	ui->modListView->setEnabled( enabled );
@@ -745,14 +772,19 @@ void MainWindow::selectConfig( int index )
 			presetModel[ selectedPresetIdx ].selectedConfig = configModel[ index ].fileName;
 	}
 
+	bool validConfigSelected = false;
+
 	if (index > 0)  // at index 0 there is an empty placeholder to allow deselecting config
 	{
 		QString configPath = getPathFromFileName(
 			engineModel[ ui->engineCmbBox->currentIndex() ].configDir,  // if config was selected, engine selection must be valid too
 			configModel[ index ].fileName
 		);
-		verifyFile( configPath, "The selected config (%1) no longer exists, please select another one." );
+		validConfigSelected = verifyFile( configPath, "The selected config (%1) no longer exists, please select another one." );
 	}
+
+	// update related UI elements
+	ui->configAddBtn->setEnabled( validConfigSelected );
 
 	updateLaunchCommand();
 }

@@ -53,10 +53,10 @@ class MainWindow : public QMainWindow {
 
 	void onWindowShown();
 
+	void runAboutDialog();
 	void runSetupDialog();
 	void runGameOptsDialog();
 	void runCompatOptsDialog();
-	void runAboutDialog();
 
 	void selectEngine( int index );
 	void selectConfig( int index );
@@ -66,6 +66,8 @@ class MainWindow : public QMainWindow {
 	void modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 
 	void showMapPackDesc( const QModelIndex & index );
+
+	void cloneConfig();
 
 	void presetAdd();
 	void presetDelete();

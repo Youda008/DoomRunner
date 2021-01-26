@@ -31,6 +31,7 @@ QMAKE_CXXFLAGS += -Wno-deprecated-copy
 SOURCES += \
     Sources/AboutDialog.cpp \
     Sources/CompatOptsDialog.cpp \
+    Sources/ConfigDialog.cpp \
     Sources/DirTreeModel.cpp \
     Sources/DoomUtils.cpp \
     Sources/EditableListView.cpp \
@@ -54,6 +55,7 @@ HEADERS += \
     Sources/AboutDialog.hpp \
     Sources/Common.hpp \
     Sources/CompatOptsDialog.hpp \
+    Sources/ConfigDialog.hpp \
     Sources/DirTreeModel.hpp \
     Sources/DoomUtils.hpp \
     Sources/EditableListView.hpp \
@@ -78,7 +80,8 @@ FORMS += \
     Forms/EngineDialog.ui \
     Forms/GameOptsDialog.ui \
     Forms/MainWindow.ui \
-    Forms/SetupDialog.ui
+    Forms/SetupDialog.ui \
+    Forms/ConfigDialog.ui
 
 RESOURCES += \
     Resources/Resources.qrc

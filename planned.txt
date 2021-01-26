@@ -1,5 +1,2 @@
-- better icons for 'add','delete','clone' buttons
-- allow to select whole directory to load
 - add map files as colored items to Mod list, where user can select order
-- support for recording demos
-- "clone config" button
+- new launch options for recording/replaying demos

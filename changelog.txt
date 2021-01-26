@@ -1,3 +1,8 @@
+1.5
+- tool-buttons got icons instead of symbols
+- added button to add a directory of mods
+- added button to create a new config from an existing one
+
 1.4
 - added new launch options for video, audio and save/screenshot directory
 - added tooltips for some of the launch options

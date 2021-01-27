@@ -49,6 +49,10 @@ sudo apt install libname
 ```
 or some graphical package manager like Muon.
 
+#### Arch Linux
+
+Thanks to PopeRigby, Arch Linux users can now install DoomRunner via package manager from repository https://aur.archlinux.org/packages/doomrunner
+
 
 ## How to build
 

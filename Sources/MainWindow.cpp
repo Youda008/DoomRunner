@@ -2250,9 +2250,9 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 		cmdStream << " -nomusic";
 
 	if (!ui->saveDirLine->text().isEmpty())
-		cmdStream << " -savedir " << ui->saveDirLine->text();
+		cmdStream << " -savedir \"" << ui->saveDirLine->text() << "\"";
 	if (!ui->screenshotDirLine->text().isEmpty())
-		cmdStream << " +screenshot_dir " << ui->screenshotDirLine->text();
+		cmdStream << " +screenshot_dir \"" << ui->screenshotDirLine->text() << "\"";
 
 	if (ui->launchMode_map->isChecked())
 	{

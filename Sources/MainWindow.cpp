@@ -577,83 +577,109 @@ void MainWindow::cloneConfig()
 // loads the content of a preset into the other widgets
 void MainWindow::loadPreset( int presetIdx )
 {
-	Preset & presetOrig = presetModel[ presetIdx ];
-	// Make a copy because the orig preset in presetModel may get changed during the following UI updates.
-	// The correct solution would be to somehow set the UI elements without having our callbacks called, but i don't know how.
-	const Preset presetCopy = presetOrig;
+	Preset & preset = presetModel[ presetIdx ];
+
+	// NOTE: Every change of a selection, like cmbBox->setCurrentIndex( idx ) or selectItemByIdx( idx )
+	//       causes the corresponding callbacks to be called which in turn changes the value stored in the preset.
+	//       You have to update the selection as the last operation after the preset value is not needed anymore,
+	//       or make a copy of the value prior to updating the selection.
 
 	// restore selected engine
-	if (!presetCopy.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
+	if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
 	{
-		int engineIdx = findSuch( engineModel, [ &presetCopy ]( const Engine & engine )
-		                                                      { return engine.path == presetCopy.selectedEnginePath; } );
+		int engineIdx = findSuch( engineModel, [ &preset ]( const Engine & engine )
+		                                                  { return engine.path == preset.selectedEnginePath; } );
 		if (engineIdx >= 0)
 		{
-			verifyFile( presetCopy.selectedEnginePath,
-				"Engine selected for this preset (%1) no longer exists, please select another one." );
-			ui->engineCmbBox->setCurrentIndex( engineIdx );  // this causes the callback to be called and the dependent combo-boxes to be updated
+			if (QFileInfo::exists( preset.selectedEnginePath ))
+			{
+				ui->engineCmbBox->setCurrentIndex( engineIdx );  // this invokes the callback, which updates the preset and the dependent combo-boxes
+			}
+			else
+			{
+				QMessageBox::warning( this, "Engine no longer exists",
+					"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please update the engines at Menu -> Initial Setup." );
+				ui->engineCmbBox->setCurrentIndex( -1 );  // this invokes the callback, which updates the preset and the dependent combo-boxes
+			}
 		}
 		else
 		{
-			ui->engineCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Engine no longer exists",
-				"Engine selected for this preset ("%presetCopy.selectedEnginePath%") was removed from engine list, please select another one." );
+				"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list, please select another one." );
+			ui->engineCmbBox->setCurrentIndex( -1 );  // this invokes the callback, which updates the preset and the dependent combo-boxes
 		}
 	}
 	else
 	{
-		ui->engineCmbBox->setCurrentIndex( -1 );
+		ui->engineCmbBox->setCurrentIndex( -1 );  // this invokes the callback, which updates the preset and the dependent combo-boxes
 	}
 
 	// restore selected config
 	if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
 	{
-		int configIdx = findSuch( configModel, [ &presetCopy ]( const ConfigFile & config )
-		                                                      { return config.fileName == presetCopy.selectedConfig; } );
+		int configIdx = findSuch( configModel, [ &preset ]( const ConfigFile & config )
+		                                                  { return config.fileName == preset.selectedConfig; } );
 		if (configIdx >= 0)
 		{
-			ui->configCmbBox->setCurrentIndex( configIdx );
+			// No sense to verify if this config file exists, the configModel has just been updated during
+			// engineCmbBox->setCurrentIndex(...) so there are only existing files.
+			ui->configCmbBox->setCurrentIndex( configIdx );  // this invokes the callback, which updates the preset
 		}
 		else
 		{
-			ui->configCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Config no longer exists",
-				"Config file selected for this preset ("%presetCopy.selectedConfig%") no longer exists, please select another one." );
+				"Config file selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
+			ui->configCmbBox->setCurrentIndex( -1 );  // this invokes the callback, which updates the preset
 		}
 	}
 	else
 	{
-		ui->configCmbBox->setCurrentIndex( -1 );
+		ui->configCmbBox->setCurrentIndex( -1 );  // this invokes the callback, which updates the preset
 	}
 
 	// restore selected IWAD
-	deselectSelectedItems( ui->iwadListView );
-	if (!presetCopy.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
+	if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
 	{
-		int iwadIdx = findSuch( iwadModel, [ &presetCopy ]( const IWAD & iwad )
-		                                                  { return iwad.path == presetCopy.selectedIWAD; } );
+		int iwadIdx = findSuch( iwadModel, [ &preset ]( const IWAD & iwad )
+		                                              { return iwad.path == preset.selectedIWAD; } );
 		if (iwadIdx >= 0)
 		{
-			selectItemByIdx( ui->iwadListView, iwadIdx );
-			updateMapsFromIWAD();  // manually update this here, so the map names are ready to be selected when launch options are loaded
+			if (QFileInfo::exists( preset.selectedIWAD ))
+			{
+				deselectSelectedItems( ui->iwadListView );     // This invokes the callback, which updates the preset and calls updateMapsFromIWAD(),
+				selectItemByIdx( ui->iwadListView, iwadIdx );  // which is needed, so that the map names are ready to be selected when launch options are loaded.
+				                                               // If these 2 could be collapsed into a single updateMapsFromIWAD(), that would be great.
+			}
+			else
+			{
+				QMessageBox::warning( this, "IWAD no longer exists",
+					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
+				deselectSelectedItems( ui->iwadListView );  // this invokes the callback, which updates the preset and clears the list of maps
+			}
 		}
 		else
 		{
 			QMessageBox::warning( this, "IWAD no longer exists",
-				"IWAD selected for this preset ("%presetCopy.selectedIWAD%") no longer exists, please select another one." );
+				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
+			deselectSelectedItems( ui->iwadListView );  // this invokes the callback, which updates the preset and clears the list of maps
 		}
+	}
+	else
+	{
+		deselectSelectedItems( ui->iwadListView );  // this invokes the callback, which updates the preset and clears the list of maps
 	}
 
 	// restore selected MapPack
-	deselectSelectedItems( ui->mapDirView );
-	if (!presetCopy.selectedMapPacks.isEmpty())
+	QList< TreePosition > selectedMapPacks = preset.selectedMapPacks;  // make a copy before it is deleted in the callback
+	deselectSelectedItems( ui->mapDirView );  // this invokes the callback, which updates the preset and clears the list
+	for (const TreePosition & pos : selectedMapPacks)
 	{
-		for (const TreePosition & pos : presetCopy.selectedMapPacks)
+		QModelIndex mapIdx = mapModel.getNodeByPosition( pos );
+		if (mapIdx.isValid())
 		{
-			QModelIndex mapIdx = mapModel.getNodeByPosition( pos );
-			if (mapIdx.isValid())
+			if (QFileInfo::exists( mapModel.getFSPath( mapIdx ) ))
 			{
-				selectItemByIdx( ui->mapDirView, mapIdx );
+				selectItemByIdx( ui->mapDirView, mapIdx );  // this invokes the callback, which updates the preset
 			}
 			else
 			{
@@ -661,36 +687,42 @@ void MainWindow::loadPreset( int presetIdx )
 					"Map file selected for this preset ("%pos.toString()%") no longer exists." );
 			}
 		}
+		else
+		{
+			QMessageBox::warning( this, "Map file no longer exists",
+				"Map file selected for this preset ("%pos.toString()%") no longer exists." );
+		}
 	}
 
 	// restore list of mods
-	deselectSelectedItems( ui->modListView );
+	deselectSelectedItems( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
 	modModel.startCompleteUpdate();
 	modModel.clear();
-	for (auto modIt = presetOrig.mods.begin(); modIt != presetOrig.mods.end(); )  // need iterator, so that we can erase non-existing
+	for (auto modIt = preset.mods.begin(); modIt != preset.mods.end(); )  // need iterator, so that we can erase non-existing
 	{
 		const Mod & mod = *modIt;
 
-		if (!QFileInfo( mod.path ).exists())
+		if (QFileInfo::exists( mod.path ))
+		{
+			modModel.append( mod );
+			++modIt;
+		}
+		else
 		{
 			QMessageBox::warning( this, "Mod no longer exists",
 				"A mod from the preset ("%mod.path%") no longer exists. It will be removed from the list." );
-			modIt = presetOrig.mods.erase( modIt );  // keep the list widget in sync with the preset list
-			continue;
+			modIt = preset.mods.erase( modIt );  // keep the list widget in sync with the preset list
 		}
-
-		modModel.append( mod );
-		modIt++;
 	}
 	modModel.finishCompleteUpdate();
 
 	if (optsStorage == STORE_TO_PRESET)
 	{
-		restoreLaunchOptions( presetCopy.opts );
+		restoreLaunchOptions( preset.opts );
 	}
 
 	// restore additional command line arguments
-	ui->presetCmdArgsLine->setText( presetCopy.cmdArgs );
+	ui->presetCmdArgsLine->setText( preset.cmdArgs );
 
 	updateLaunchCommand();
 }
@@ -1583,9 +1615,9 @@ void MainWindow::updateIWADsFromDir()
 
 void MainWindow::updateMapPacksFromDir()
 {
-	// workaround (read the big comment above)
 	QItemSelection origSelection = ui->mapDirView->selectionModel()->selection();
 
+	// workaround (read the big comment above)
 	disableSelectionCallbacks = true;
 
 	updateTreeFromDir( mapModel, ui->mapDirView, mapSettings.dir, pathContext, isMapPack );
@@ -2082,7 +2114,7 @@ void MainWindow::exportPreset()
 
 	QTextStream stream( &file );
 
-	stream << generateLaunchCommand( fileInfo.path() ) << endl;
+	stream << generateLaunchCommand( fileInfo.path() ) << endl;  // keep endl to maintain compatibility with older Qt
 
 	file.close();
 }

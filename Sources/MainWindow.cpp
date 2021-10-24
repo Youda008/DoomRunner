@@ -577,18 +577,19 @@ void MainWindow::cloneConfig()
 // loads the content of a preset into the other widgets
 void MainWindow::loadPreset( int presetIdx )
 {
+	Preset & presetOrig = presetModel[ presetIdx ];
 	// Make a copy because the orig preset in presetModel may get changed during the following UI updates.
 	// The correct solution would be to somehow set the UI elements without having our callbacks called, but i don't know how.
-	Preset preset = presetModel[ presetIdx ];
+	const Preset presetCopy = presetOrig;
 
 	// restore selected engine
-	if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
+	if (!presetCopy.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
 	{
-		int engineIdx = findSuch( engineModel, [ &preset ]( const Engine & engine )
-		                                                  { return engine.path == preset.selectedEnginePath; } );
+		int engineIdx = findSuch( engineModel, [ &presetCopy ]( const Engine & engine )
+		                                                      { return engine.path == presetCopy.selectedEnginePath; } );
 		if (engineIdx >= 0)
 		{
-			verifyFile( preset.selectedEnginePath,
+			verifyFile( presetCopy.selectedEnginePath,
 				"Engine selected for this preset (%1) no longer exists, please select another one." );
 			ui->engineCmbBox->setCurrentIndex( engineIdx );  // this causes the callback to be called and the dependent combo-boxes to be updated
 		}
@@ -596,7 +597,7 @@ void MainWindow::loadPreset( int presetIdx )
 		{
 			ui->engineCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Engine no longer exists",
-				"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list, please select another one." );
+				"Engine selected for this preset ("%presetCopy.selectedEnginePath%") was removed from engine list, please select another one." );
 		}
 	}
 	else
@@ -607,8 +608,8 @@ void MainWindow::loadPreset( int presetIdx )
 	// restore selected config
 	if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
 	{
-		int configIdx = findSuch( configModel, [ &preset ]( const ConfigFile & config )
-		                                                  { return config.fileName == preset.selectedConfig; } );
+		int configIdx = findSuch( configModel, [ &presetCopy ]( const ConfigFile & config )
+		                                                      { return config.fileName == presetCopy.selectedConfig; } );
 		if (configIdx >= 0)
 		{
 			ui->configCmbBox->setCurrentIndex( configIdx );
@@ -617,7 +618,7 @@ void MainWindow::loadPreset( int presetIdx )
 		{
 			ui->configCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Config no longer exists",
-				"Config file selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
+				"Config file selected for this preset ("%presetCopy.selectedConfig%") no longer exists, please select another one." );
 		}
 	}
 	else
@@ -627,10 +628,10 @@ void MainWindow::loadPreset( int presetIdx )
 
 	// restore selected IWAD
 	deselectSelectedItems( ui->iwadListView );
-	if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
+	if (!presetCopy.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
 	{
-		int iwadIdx = findSuch( iwadModel, [ &preset ]( const IWAD & iwad )
-		                                              { return iwad.path == preset.selectedIWAD; } );
+		int iwadIdx = findSuch( iwadModel, [ &presetCopy ]( const IWAD & iwad )
+		                                                  { return iwad.path == presetCopy.selectedIWAD; } );
 		if (iwadIdx >= 0)
 		{
 			selectItemByIdx( ui->iwadListView, iwadIdx );
@@ -639,15 +640,15 @@ void MainWindow::loadPreset( int presetIdx )
 		else
 		{
 			QMessageBox::warning( this, "IWAD no longer exists",
-				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
+				"IWAD selected for this preset ("%presetCopy.selectedIWAD%") no longer exists, please select another one." );
 		}
 	}
 
 	// restore selected MapPack
 	deselectSelectedItems( ui->mapDirView );
-	if (!preset.selectedMapPacks.isEmpty())
+	if (!presetCopy.selectedMapPacks.isEmpty())
 	{
-		for (const TreePosition & pos : preset.selectedMapPacks)
+		for (const TreePosition & pos : presetCopy.selectedMapPacks)
 		{
 			QModelIndex mapIdx = mapModel.getNodeByPosition( pos );
 			if (mapIdx.isValid())
@@ -666,7 +667,7 @@ void MainWindow::loadPreset( int presetIdx )
 	deselectSelectedItems( ui->modListView );
 	modModel.startCompleteUpdate();
 	modModel.clear();
-	for (auto modIt = preset.mods.begin(); modIt != preset.mods.end(); )  // need iterator, so that we can erase non-existing
+	for (auto modIt = presetOrig.mods.begin(); modIt != presetOrig.mods.end(); )  // need iterator, so that we can erase non-existing
 	{
 		const Mod & mod = *modIt;
 
@@ -674,7 +675,7 @@ void MainWindow::loadPreset( int presetIdx )
 		{
 			QMessageBox::warning( this, "Mod no longer exists",
 				"A mod from the preset ("%mod.path%") no longer exists. It will be removed from the list." );
-			modIt = preset.mods.erase( modIt );  // keep the list widget in sync with the preset list
+			modIt = presetOrig.mods.erase( modIt );  // keep the list widget in sync with the preset list
 			continue;
 		}
 
@@ -685,11 +686,11 @@ void MainWindow::loadPreset( int presetIdx )
 
 	if (optsStorage == STORE_TO_PRESET)
 	{
-		restoreLaunchOptions( preset.opts );
+		restoreLaunchOptions( presetCopy.opts );
 	}
 
 	// restore additional command line arguments
-	ui->presetCmdArgsLine->setText( preset.cmdArgs );
+	ui->presetCmdArgsLine->setText( presetCopy.cmdArgs );
 
 	updateLaunchCommand();
 }
@@ -815,10 +816,10 @@ void MainWindow::toggleIWAD( const QItemSelection & selected, const QItemSelecti
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
-		if (selectedIWADIdx >= 0)
-			presetModel[ selectedPresetIdx ].selectedIWAD = iwadModel[ selectedIWADIdx ].path;
-		else
+		if (selectedIWADIdx < 0)
 			presetModel[ selectedPresetIdx ].selectedIWAD.clear();
+		else
+			presetModel[ selectedPresetIdx ].selectedIWAD = iwadModel[ selectedIWADIdx ].path;
 	}
 
 	if (selectedIWADIdx >= 0)
@@ -2141,7 +2142,7 @@ void MainWindow::updateLaunchCommand()
 	QString curCommand = ui->commandLine->text();
 
 	// the command needs to be relative to the engine's directory,
-	// because it will be executes with the current directory set to engine's directory
+	// because it will be executed with the current directory set to engine's directory
 	QString baseDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
 
 	QString newCommand = generateLaunchCommand( baseDir );

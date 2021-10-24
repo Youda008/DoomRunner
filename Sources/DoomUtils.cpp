@@ -171,12 +171,13 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 }
 
 
-// Opening and reading from a file is expensive, so we cache the results here so that subsequent calls are fast.
-// The cache is global for the whole process because why not.
-static QHash< QString, WadInfo > g_cachedWadTypes;
 
 const WadInfo & getCachedWadInfo( const QString & filePath )
 {
+  // Opening and reading from a file is expensive, so we cache the results here so that subsequent calls are fast.
+  // The cache is global for the whole process because why not.
+  static QHash< QString, WadInfo > g_cachedWadTypes;
+
 	auto pos = g_cachedWadTypes.find( filePath );
 	if (pos == g_cachedWadTypes.end())
 	{

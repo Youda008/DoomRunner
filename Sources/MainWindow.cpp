@@ -73,7 +73,7 @@ static bool verifyDir( const QString & dir, const QString & errorMessage )
 
 static bool verifyFile( const QString & path, const QString & errorMessage )
 {
-	if (!QFileInfo( path ).exists())
+	if (!QFileInfo::exists( path ))
 	{
 		QMessageBox::warning( nullptr, "File no longer exists", errorMessage.arg( path ) );
 		return false;
@@ -328,7 +328,8 @@ void MainWindow::setupModView()
 
 void MainWindow::loadMonitorInfo( QComboBox * box )
 {
-	for (const MonitorInfo & monitor : listMonitors())
+	const auto monitors = listMonitors();
+	for (const MonitorInfo & monitor : monitors)
 	{
 		QString monitorDesc;
 		QTextStream descStream( &monitorDesc, QIODevice::WriteOnly );
@@ -356,7 +357,7 @@ void MainWindow::onWindowShown()
 
 	// try to load last saved state
 	QString optionsFilePath = appDataDir.filePath( defaultOptionsFile );
-	if (QFileInfo( optionsFilePath ).exists())
+	if (QFileInfo::exists( optionsFilePath ))
 		loadOptions( optionsFilePath );
 	else  // this is a first run, perform an initial setup
 		runSetupDialog();
@@ -521,7 +522,7 @@ void MainWindow::runGameOptsDialog()
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		STORE_OPTION( gameOpts, dialog.gameOpts );
+		STORE_OPTION( gameOpts, dialog.gameOpts )
 		updateLaunchCommand();
 	}
 }
@@ -540,7 +541,7 @@ void MainWindow::runCompatOptsDialog()
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		STORE_OPTION( compatOpts, dialog.compatOpts );
+		STORE_OPTION( compatOpts, dialog.compatOpts )
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
 		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
 		updateLaunchCommand();
@@ -911,7 +912,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	QString mapDescFileName = QFileInfo( mapDataFilePath ).completeBaseName() + ".txt";
 	QString mapDescFilePath = mapDataFilePath.mid( 0, mapDataFilePath.lastIndexOf('.') ) + ".txt";  // QFileInfo won't help with this
 
-	if (!QFileInfo( mapDescFilePath ).exists())
+	if (!QFileInfo::exists( mapDescFilePath ))
 	{
 		qWarning() << "Map description file ("%mapDescFileName%") does not exist";
 		return;
@@ -946,8 +947,8 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	layout->addWidget( textEdit );
 
 	// estimate the optimal window size
-	int dialogWidth  = int(75 * font.pointSize() * 0.84f) + 30;
-	int dialogHeight = int(40 * font.pointSize() * 1.62f) + 30;
+	int dialogWidth  = int( 75.0f * float( font.pointSize() ) * 0.84f ) + 30;
+	int dialogHeight = int( 40.0f * float( font.pointSize() ) * 1.62f ) + 30;
 	descDialog.resize( dialogWidth, dialogHeight );
 
 	// position it to the right of map widget
@@ -1166,7 +1167,7 @@ void MainWindow::modsDropped( int /*row*/, int /*count*/ )
 
 void MainWindow::modeStandard()
 {
-	STORE_OPTION( mode, STANDARD );
+	STORE_OPTION( mode, STANDARD )
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1188,7 +1189,7 @@ void MainWindow::modeStandard()
 
 void MainWindow::modeLaunchMap()
 {
-	STORE_OPTION( mode, LAUNCH_MAP );
+	STORE_OPTION( mode, LAUNCH_MAP )
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1210,7 +1211,7 @@ void MainWindow::modeLaunchMap()
 
 void MainWindow::modeSavedGame()
 {
-	STORE_OPTION( mode, LOAD_SAVE );
+	STORE_OPTION( mode, LOAD_SAVE )
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
@@ -1227,7 +1228,7 @@ void MainWindow::modeSavedGame()
 
 void MainWindow::selectMap( const QString & mapName )
 {
-	STORE_OPTION( mapName, mapName );
+	STORE_OPTION( mapName, mapName )
 
 	updateLaunchCommand();
 }
@@ -1240,7 +1241,7 @@ void MainWindow::selectSavedGame( int saveIdx )
 
 	QString saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : "";
 
-	STORE_OPTION( saveFile, saveFileName );
+	STORE_OPTION( saveFile, saveFileName )
 
 	updateLaunchCommand();
 }
@@ -1255,7 +1256,7 @@ void MainWindow::selectSkill( int skill )
 
 void MainWindow::changeSkillNum( int skill )
 {
-	STORE_OPTION( skillNum, uint( skill ) );
+	STORE_OPTION( skillNum, uint( skill ) )
 
 	if (skill < Skill::CUSTOM)
 		ui->skillCmbBox->setCurrentIndex( skill );
@@ -1265,77 +1266,77 @@ void MainWindow::changeSkillNum( int skill )
 
 void MainWindow::toggleNoMonsters( bool checked )
 {
-	STORE_OPTION( noMonsters, checked );
+	STORE_OPTION( noMonsters, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleFastMonsters( bool checked )
 {
-	STORE_OPTION( fastMonsters, checked );
+	STORE_OPTION( fastMonsters, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleMonstersRespawn( bool checked )
 {
-	STORE_OPTION( monstersRespawn, checked );
+	STORE_OPTION( monstersRespawn, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleAllowCheats( bool checked )
 {
-	STORE_OPTION( allowCheats, checked );
+	STORE_OPTION( allowCheats, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectMonitor( int index )
 {
-	STORE_OPTION( monitorIdx, index );
+	STORE_OPTION( monitorIdx, index )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionX( const QString & xStr )
 {
-	STORE_OPTION( resolutionX, xStr.toUInt() );
+	STORE_OPTION( resolutionX, xStr.toUInt() )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionY( const QString & yStr )
 {
-	STORE_OPTION( resolutionY, yStr.toUInt() );
+	STORE_OPTION( resolutionY, yStr.toUInt() )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoSound( bool checked )
 {
-	STORE_OPTION( noSound, checked );
+	STORE_OPTION( noSound, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoSFX( bool checked )
 {
-	STORE_OPTION( noSFX, checked );
+	STORE_OPTION( noSFX, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoMusic( bool checked )
 {
-	STORE_OPTION( noMusic, checked );
+	STORE_OPTION( noMusic, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeSaveDir( const QString & dir )
 {
-	STORE_OPTION( saveDir, dir );
+	STORE_OPTION( saveDir, dir )
 
 	if (isValidDir( dir ))
 		updateSaveFilesFromDir();
@@ -1345,7 +1346,7 @@ void MainWindow::changeSaveDir( const QString & dir )
 
 void MainWindow::changeScreenshotDir( const QString & dir )
 {
-	STORE_OPTION( screenshotDir, dir );
+	STORE_OPTION( screenshotDir, dir )
 
 	updateLaunchCommand();
 }
@@ -1380,7 +1381,7 @@ void MainWindow::browseScreenshotDir()
 
 void MainWindow::toggleMultiplayer( bool checked )
 {
-	STORE_OPTION( isMultiplayer, checked );
+	STORE_OPTION( isMultiplayer, checked )
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -1414,7 +1415,7 @@ void MainWindow::toggleMultiplayer( bool checked )
 
 void MainWindow::selectMultRole( int role )
 {
-	STORE_OPTION( multRole, MultRole( role ) );
+	STORE_OPTION( multRole, MultRole( role ) )
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -1445,28 +1446,28 @@ void MainWindow::selectMultRole( int role )
 
 void MainWindow::changeHost( const QString & hostName )
 {
-	STORE_OPTION( hostName, hostName );
+	STORE_OPTION( hostName, hostName )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changePort( int port )
 {
-	STORE_OPTION( port, uint16_t( port ) );
+	STORE_OPTION( port, uint16_t( port ) )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectNetMode( int netMode )
 {
-	STORE_OPTION( netMode, NetMode( netMode ) );
+	STORE_OPTION( netMode, NetMode( netMode ) )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectGameMode( int gameMode )
 {
-	STORE_OPTION( gameMode, GameMode( gameMode ) );
+	STORE_OPTION( gameMode, GameMode( gameMode ) )
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
@@ -1482,28 +1483,28 @@ void MainWindow::selectGameMode( int gameMode )
 
 void MainWindow::changePlayerCount( int count )
 {
-	STORE_OPTION( playerCount, uint( count ) );
+	STORE_OPTION( playerCount, uint( count ) )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTeamDamage( double damage )
 {
-	STORE_OPTION( teamDamage, damage );
+	STORE_OPTION( teamDamage, damage )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTimeLimit( int timeLimit )
 {
-	STORE_OPTION( timeLimit, uint( timeLimit ) );
+	STORE_OPTION( timeLimit, uint( timeLimit ) )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeFragLimit( int fragLimit )
 {
-	STORE_OPTION( fragLimit, uint( fragLimit ) );
+	STORE_OPTION( fragLimit, uint( fragLimit ) )
 
 	updateLaunchCommand();
 }

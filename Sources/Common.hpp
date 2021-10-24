@@ -20,6 +20,9 @@ using uint = unsigned int;
 using ushort = unsigned short;
 using byte = uint8_t;
 
+using std::move;
+using std::as_const;
+
 //using namespace std;  // we're working with Qt, so not a good idea
 
 

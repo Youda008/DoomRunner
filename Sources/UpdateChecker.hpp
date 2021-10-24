@@ -31,7 +31,7 @@ class UpdateChecker : public QObject {
  public:
 
 	UpdateChecker();
-	virtual ~UpdateChecker();
+	virtual ~UpdateChecker() override;
 
 	enum Result
 	{

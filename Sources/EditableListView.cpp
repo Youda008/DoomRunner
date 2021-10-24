@@ -66,7 +66,7 @@ EditableListView::EditableListView( QWidget * parent ) : QListView( parent )
 
 	addAction = addOwnAction( "Add", { Qt::Key_Insert } );
 	deleteAction = addOwnAction( "Delete", { Qt::Key_Delete } );
-	moveUpAction = addOwnAction( "Move up", { Qt::CTRL + Qt::Key_Up } );
+	moveUpAction = addOwnAction( "Move up", { Qt::CTRL + Qt::Key_Up } );  // shut-up clang, this is the official way to do it by Qt doc
 	moveDownAction = addOwnAction( "Move down", { Qt::CTRL + Qt::Key_Down } );
 }
 
@@ -272,7 +272,8 @@ void EditableListView::keyPressEvent( QKeyEvent * event )
 		{
 			// When user has multiple items selected and presses space, default implementation only checks/unchecks
 			// the current item, not all the selected ones. Therefore we have to do it manually here.
-			for (const QModelIndex & selectedIdx : this->selectionModel()->selectedIndexes())
+			const auto selectedIndexes = this->selectionModel()->selectedIndexes();
+			for (const QModelIndex & selectedIdx : selectedIndexes)
 			{
 				Qt::CheckState state = Qt::CheckState( model()->data( selectedIdx, Qt::CheckStateRole ).toInt() );
 				model()->setData( selectedIdx, state == Qt::Checked ? Qt::Unchecked : Qt::Checked, Qt::CheckStateRole );

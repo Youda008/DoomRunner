@@ -512,12 +512,9 @@
        <attribute name="title">
         <string>Launch options</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="10,10">
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_8">
-          <property name="spacing">
-           <number>10</number>
-          </property>
           <item>
            <widget class="QGroupBox" name="launchModeGrpBox">
             <property name="title">
@@ -568,6 +565,18 @@
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>75</width>
+                   <height>0</height>
+                  </size>
+                 </property>
                  <property name="editable">
                   <bool>true</bool>
                  </property>
@@ -589,9 +598,12 @@
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
                  </property>
+                 <property name="sizeType">
+                  <enum>QSizePolicy::Fixed</enum>
+                 </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>40</width>
+                   <width>60</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -603,7 +615,7 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -616,6 +628,104 @@
                  </property>
                  <property name="editable">
                   <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_29">
+               <item>
+                <widget class="QRadioButton" name="launchMode_recordDemo">
+                 <property name="text">
+                  <string>Record demo</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="mapCmbBox_demo">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>75</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="editable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="demoFileLine_record">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_30">
+               <item>
+                <widget class="QRadioButton" name="launchMode_replayDemo">
+                 <property name="text">
+                  <string>Play demo</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_13">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeType">
+                  <enum>QSizePolicy::Fixed</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>95</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QComboBox" name="demoFileCmbBox_replay">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>100</width>
+                   <height>0</height>
+                  </size>
                  </property>
                 </widget>
                </item>

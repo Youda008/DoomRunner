@@ -2,6 +2,8 @@
 - tool-buttons got icons instead of symbols
 - added button to add a directory of mods
 - added button to create a new config from an existing one
+- added launch modes for recording/replaying demos
+- fixed non-existing mod file not being correctly removed from the list
 
 1.4
 - added new launch options for video, audio and save/screenshot directory

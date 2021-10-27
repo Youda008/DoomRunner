@@ -118,8 +118,7 @@ void selectItemByIdx( QTreeView * view, const QModelIndex & index )
 
 void deselectSelectedItems( QTreeView * view )
 {
-	for (QModelIndex & index : view->selectionModel()->selectedIndexes())
-		view->selectionModel()->select( index, QItemSelectionModel::Deselect );
+	view->selectionModel()->clearSelection();
 }
 
 void changeSelectionTo( QTreeView * view, const QModelIndex & index )

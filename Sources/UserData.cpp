@@ -121,6 +121,9 @@ QJsonObject serialize( const LaunchOptions & opts )
 	jsOptions["launch_mode"] = int( opts.mode );
 	jsOptions["map_name"] = opts.mapName;
 	jsOptions["save_file"] = opts.saveFile;
+	jsOptions["map_name_demo"] = opts.mapName_demo;
+	jsOptions["demo_file_record"] = opts.demoFile_record;
+	jsOptions["demo_file_replay"] = opts.demoFile_replay;
 
 	// gameplay
 	jsOptions["skill_num"] = int( opts.skillNum );
@@ -168,6 +171,9 @@ void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & opts )
 	opts.mode = jsOptions.getEnum< LaunchMode >( "launch_mode", opts.mode );
 	opts.mapName = jsOptions.getString( "map_name", opts.mapName );
 	opts.saveFile = jsOptions.getString( "save_file", opts.saveFile );
+	opts.mapName_demo = jsOptions.getString( "map_name_demo", opts.mapName_demo );
+	opts.demoFile_record = jsOptions.getString( "demo_file_record", opts.demoFile_record );
+	opts.demoFile_replay = jsOptions.getString( "demo_file_replay", opts.demoFile_replay );
 
 	// gameplay
 	opts.skillNum = jsOptions.getUInt( "skill_num", opts.skillNum );

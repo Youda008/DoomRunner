@@ -85,8 +85,13 @@ class MainWindow : public QMainWindow {
 	void modeStandard();
 	void modeLaunchMap();
 	void modeSavedGame();
-	void selectMap( const QString & map );
+	void modeRecordDemo();
+	void modeReplayDemo();
+	void selectMap( const QString & mapName );
 	void selectSavedGame( int index );
+	void selectMap_demo( const QString & mapName );
+	void changeDemoFile_record( const QString & fileName );
+	void selectDemoFile_replay( int index );
 
 	void selectSkill( int skill );
 	void changeSkillNum( int skillNum );
@@ -148,8 +153,11 @@ class MainWindow : public QMainWindow {
 	void updateIWADsFromDir();
 	void updateMapPacksFromDir();
 	void updateSaveFilesFromDir();
+	void updateDemoFilesFromDir();
 	void updateConfigFilesFromDir();
 	void updateMapsFromIWAD();
+
+	void toggleOptionsSubwidgets( bool enabled );
 
 	void saveOptions( const QString & fileName );
 	void loadOptions( const QString & fileName );
@@ -205,6 +213,14 @@ class MainWindow : public QMainWindow {
 		SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 	};
 	ReadOnlyListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
+
+	struct DemoFile
+	{
+		QString fileName;
+		DemoFile( const QString & fileName ) : fileName( fileName ) {}
+		DemoFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
+	};
+	ReadOnlyListModel< DemoFile > demoModel;    ///< list of demo files found in pre-defined directory
 
 	ReadOnlyListModel< IWAD > iwadModel;    ///< user-ordered list of iwads (managed by SetupDialog)
 	IwadSettings iwadSettings;    ///< IWAD-related preferences (value returned by SetupDialog)

@@ -89,10 +89,12 @@ enum LaunchMode
 {
 	STANDARD,
 	LAUNCH_MAP,
-	LOAD_SAVE
+	LOAD_SAVE,
+	RECORD_DEMO,
+	REPLAY_DEMO
 };
 template<> inline const char * enumName< LaunchMode >() { return "LaunchMode"; }
-template<> inline uint enumSize< LaunchMode >() { return uint( LaunchMode::LOAD_SAVE ) + 1; }
+template<> inline uint enumSize< LaunchMode >() { return uint( LaunchMode::REPLAY_DEMO ) + 1; }
 
 enum Skill
 {
@@ -151,6 +153,9 @@ struct LaunchOptions
 	LaunchMode mode = STANDARD;
 	QString mapName;
 	QString saveFile;
+	QString mapName_demo;
+	QString demoFile_record;
+	QString demoFile_replay;
 
 	// gameplay
 	uint skillNum = uint( TOO_YOUNG_TO_DIE );

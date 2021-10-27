@@ -23,6 +23,7 @@ class QFileInfo;
 
 extern const QVector< QString > configFileSuffixes;
 extern const QString saveFileSuffix;
+extern const QString demoFileSuffix;
 
 extern const QVector< QString > iwadSuffixes;
 extern const QVector< QString > mapSuffixes;

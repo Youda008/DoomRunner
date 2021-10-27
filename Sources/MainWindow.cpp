@@ -117,6 +117,9 @@ MainWindow::MainWindow()
 	saveModel(
 		/*makeDisplayString*/ []( const SaveFile & save ) { return save.fileName; }
 	),
+	demoModel(
+		/*makeDisplayString*/ []( const DemoFile & demo ) { return demo.fileName; }
+	),
 	iwadModel(
 		/*makeDisplayString*/ []( const IWAD & iwad ) { return iwad.name; }
 	),
@@ -168,6 +171,7 @@ MainWindow::MainWindow()
 	// which causes the launch command to be regenerated back and forth on every update
 	ui->configCmbBox->setModel( &configModel );
 	ui->saveFileCmbBox->setModel( &saveModel );
+	ui->demoFileCmbBox_replay->setModel( &demoModel );
 	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectEngine );
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectConfig );
 
@@ -193,8 +197,13 @@ MainWindow::MainWindow()
 	connect( ui->launchMode_standard, &QRadioButton::clicked, this, &thisClass::modeStandard );
 	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeLaunchMap );
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
+	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &thisClass::modeRecordDemo );
+	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &thisClass::modeReplayDemo );
 	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::selectMap );
 	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSavedGame );
+	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &thisClass::selectMap_demo );
+	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::changeDemoFile_record );
+	connect( ui->demoFileCmbBox_replay, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectDemoFile_replay );
 
 	// gameplay
 	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSkill );
@@ -784,8 +793,9 @@ void MainWindow::selectEngine( int index )
 		verifyFile( engineModel[ index ].path, "The selected engine (%1) no longer exists, please select another one." );
 	}
 
-	updateSaveFilesFromDir();
 	updateConfigFilesFromDir();
+	updateSaveFilesFromDir();
+	updateDemoFilesFromDir();
 
 	updateLaunchCommand();
 }
@@ -872,7 +882,8 @@ void MainWindow::toggleMapPack( const QItemSelection & selected, const QItemSele
 		return;
 
 	QList< TreePosition > selectedMapPacks;
-	for (const QModelIndex & index : selected.indexes())
+	const auto selectedIndexes = selected.indexes();
+	for (const QModelIndex & index : selectedIndexes)
 		selectedMapPacks.append( mapModel.getNodePosition( index ) );
 
 	// update the current preset
@@ -1171,13 +1182,11 @@ void MainWindow::modeStandard()
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
-	ui->skillCmbBox->setEnabled( false );
-	ui->skillSpinBox->setEnabled( false );
-	ui->noMonstersChkBox->setEnabled( false );
-	ui->fastMonstersChkBox->setEnabled( false );
-	ui->monstersRespawnChkBox->setEnabled( false );
-	ui->gameOptsBtn->setEnabled( false );
-	ui->compatOptsBtn->setEnabled( false );
+	ui->mapCmbBox_demo->setEnabled( false );
+	ui->demoFileLine_record->setEnabled( false );
+	ui->demoFileCmbBox_replay->setEnabled( false );
+
+	toggleOptionsSubwidgets( false );
 
 	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == SERVER)
 	{
@@ -1193,13 +1202,11 @@ void MainWindow::modeLaunchMap()
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
-	ui->skillCmbBox->setEnabled( true );
-	ui->skillSpinBox->setEnabled( ui->skillCmbBox->currentIndex() == Skill::CUSTOM );
-	ui->noMonstersChkBox->setEnabled( true );
-	ui->fastMonstersChkBox->setEnabled( true );
-	ui->monstersRespawnChkBox->setEnabled( true );
-	ui->gameOptsBtn->setEnabled( true );
-	ui->compatOptsBtn->setEnabled( true );
+	ui->mapCmbBox_demo->setEnabled( false );
+	ui->demoFileLine_record->setEnabled( false );
+	ui->demoFileCmbBox_replay->setEnabled( false );
+
+	toggleOptionsSubwidgets( true );
 
 	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == CLIENT)
 	{
@@ -1215,19 +1222,64 @@ void MainWindow::modeSavedGame()
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
-	ui->skillCmbBox->setEnabled( false );
-	ui->skillSpinBox->setEnabled( false );
-	ui->noMonstersChkBox->setEnabled( false );
-	ui->fastMonstersChkBox->setEnabled( false );
-	ui->monstersRespawnChkBox->setEnabled( false );
-	ui->gameOptsBtn->setEnabled( false );
-	ui->compatOptsBtn->setEnabled( false );
+	ui->mapCmbBox_demo->setEnabled( false );
+	ui->demoFileLine_record->setEnabled( false );
+	ui->demoFileCmbBox_replay->setEnabled( false );
+
+	toggleOptionsSubwidgets( false );
 
 	updateLaunchCommand();
 }
 
+void MainWindow::modeRecordDemo()
+{
+	STORE_OPTION( mode, RECORD_DEMO )
+
+	ui->mapCmbBox->setEnabled( false );
+	ui->saveFileCmbBox->setEnabled( false );
+	ui->mapCmbBox_demo->setEnabled( true );
+	ui->demoFileLine_record->setEnabled( true );
+	ui->demoFileCmbBox_replay->setEnabled( false );
+
+	toggleOptionsSubwidgets( true );
+
+	updateLaunchCommand();
+}
+
+void MainWindow::modeReplayDemo()
+{
+	STORE_OPTION( mode, REPLAY_DEMO )
+
+	ui->mapCmbBox->setEnabled( false );
+	ui->saveFileCmbBox->setEnabled( false );
+	ui->mapCmbBox_demo->setEnabled( false );
+	ui->demoFileLine_record->setEnabled( false );
+	ui->demoFileCmbBox_replay->setEnabled( true );
+
+	toggleOptionsSubwidgets( false );
+
+	ui->multiplayerChkBox->setEnabled( false );   // no multiplayer when replaying demo
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleOptionsSubwidgets( bool enabled )
+{
+	ui->skillCmbBox->setEnabled( enabled );
+	ui->skillSpinBox->setEnabled( enabled && ui->skillCmbBox->currentIndex() == Skill::CUSTOM );
+	ui->noMonstersChkBox->setEnabled( enabled );
+	ui->fastMonstersChkBox->setEnabled( enabled );
+	ui->monstersRespawnChkBox->setEnabled( enabled );
+	ui->gameOptsBtn->setEnabled( enabled );
+	ui->compatOptsBtn->setEnabled( enabled );
+}
+
 void MainWindow::selectMap( const QString & mapName )
 {
+	// workaround (read the comment at automatic list updates)
+	if (disableSelectionCallbacks)
+		return;
+
 	STORE_OPTION( mapName, mapName )
 
 	updateLaunchCommand();
@@ -1242,6 +1294,37 @@ void MainWindow::selectSavedGame( int saveIdx )
 	QString saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : "";
 
 	STORE_OPTION( saveFile, saveFileName )
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectMap_demo( const QString & mapName )
+{
+	// workaround (read the comment at automatic list updates)
+	if (disableSelectionCallbacks)
+		return;
+
+	STORE_OPTION( mapName_demo, mapName )
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeDemoFile_record( const QString & fileName )
+{
+	STORE_OPTION( demoFile_record, fileName )
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectDemoFile_replay( int demoIdx )
+{
+	// workaround (read the comment at automatic list updates)
+	if (disableSelectionCallbacks)
+		return;
+
+	QString demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : "";
+
+	STORE_OPTION( demoFile_replay, demoFileName )
 
 	updateLaunchCommand();
 }
@@ -1400,13 +1483,17 @@ void MainWindow::toggleMultiplayer( bool checked )
 
 	if (checked)
 	{
-		if (multRole == CLIENT && ui->launchMode_map->isChecked())  // client doesn't select map, server does
+		if (ui->launchMode_map->isChecked() && multRole == CLIENT)  // client doesn't select map, server does
 		{
 			ui->launchMode_standard->click();
 		}
-		if (multRole == SERVER && ui->launchMode_standard->isChecked())  // server MUST choose a map
+		if (ui->launchMode_standard->isChecked() && multRole == SERVER)  // server MUST choose a map
 		{
 			ui->launchMode_map->click();
+		}
+		if (ui->launchMode_replayDemo->isChecked())  // can't replay demo in multiplayer
+		{
+			ui->launchMode_standard->click();
 		}
 	}
 
@@ -1431,11 +1518,11 @@ void MainWindow::selectMultRole( int role )
 
 	if (multEnabled)
 	{
-		if (role == CLIENT && ui->launchMode_map->isChecked())  // client doesn't select map, server does
+		if (ui->launchMode_map->isChecked() && role == CLIENT)  // client doesn't select map, server does
 		{
 			ui->launchMode_standard->click();
 		}
-		if (role == SERVER && ui->launchMode_standard->isChecked())  // server MUST choose a map
+		if (ui->launchMode_standard->isChecked() && role == SERVER)  // server MUST choose a map
 		{
 			ui->launchMode_map->click();
 		}
@@ -1593,6 +1680,7 @@ void MainWindow::updateListsFromDirs()
 	updateMapPacksFromDir();
 	updateConfigFilesFromDir();
 	updateSaveFilesFromDir();
+	updateDemoFilesFromDir();
 }
 
 void MainWindow::updateIWADsFromDir()
@@ -1609,7 +1697,7 @@ void MainWindow::updateIWADsFromDir()
 	QItemSelection newSelection = ui->iwadListView->selectionModel()->selection();
 	if (newSelection != origSelection)
 	{
-		// selection changed while the callbacks were disable, we need to call them manually
+		// selection changed while the callbacks were disabled, we need to call them manually
 		toggleIWAD( newSelection, origSelection );
 	}
 }
@@ -1628,7 +1716,7 @@ void MainWindow::updateMapPacksFromDir()
 	QItemSelection newSelection = ui->mapDirView->selectionModel()->selection();
 	if (newSelection != origSelection)
 	{
-		// selection changed while the callbacks were disable, we need to call them manually
+		// selection changed while the callbacks were disabled, we need to call them manually
 		toggleMapPack( newSelection, origSelection );
 	}
 }
@@ -1653,7 +1741,7 @@ void MainWindow::updateConfigFilesFromDir()
 	int newConfigIdx = ui->configCmbBox->currentIndex();
 	if (newConfigIdx != origConfigIdx)
 	{
-		// selection changed while the callbacks were disable, we need to call them manually
+		// selection changed while the callbacks were disabled, we need to call them manually
 		selectConfig( newConfigIdx );
 	}
 }
@@ -1668,7 +1756,7 @@ void MainWindow::updateSaveFilesFromDir()
 			: currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";  // otherwise use config dir
 
 	// workaround (read the big comment above)
-	int origConfigIdx = ui->saveFileCmbBox->currentIndex();
+	int origSaveIdx = ui->saveFileCmbBox->currentIndex();
 
 	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
@@ -1678,11 +1766,35 @@ void MainWindow::updateSaveFilesFromDir()
 
 	disableSelectionCallbacks = false;
 
-	int newConfigIdx = ui->saveFileCmbBox->currentIndex();
-	if (newConfigIdx != origConfigIdx)
+	int newSaveIdx = ui->saveFileCmbBox->currentIndex();
+	if (newSaveIdx != origSaveIdx)
 	{
-		// selection changed while the callbacks were disable, we need to call them manually
-		selectConfig( newConfigIdx );
+		// selection changed while the callbacks were disabled, we need to call them manually
+		selectSavedGame( newSaveIdx );
+	}
+}
+
+void MainWindow::updateDemoFilesFromDir()
+{
+	int currentEngineIdx = ui->engineCmbBox->currentIndex();
+	QString demoDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
+
+	// workaround (read the big comment above)
+	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
+
+	disableSelectionCallbacks = true;  // workaround (read the big comment above)
+
+	updateComboBoxFromDir( demoModel, ui->demoFileCmbBox_replay, demoDir, /*recursively*/false, /*emptyItem*/false, pathContext,
+		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == demoFileSuffix; }
+	);
+
+	disableSelectionCallbacks = false;
+
+	int newDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
+	if (newDemoIdx != origDemoIdx)
+	{
+		// selection changed while the callbacks were disabled, we need to call them manually
+		selectDemoFile_replay( newDemoIdx );
 	}
 }
 
@@ -1690,15 +1802,24 @@ void MainWindow::updateSaveFilesFromDir()
 void MainWindow::updateMapsFromIWAD()
 {
 	// note down the currently selected item
-	QString lastText = ui->mapCmbBox->currentText();
+	QString origText = ui->mapCmbBox->currentText();
+	QString origText_demo = ui->mapCmbBox_demo->currentText();
+
+	// TODO: refactor to a single shared mapModel
+
+	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
 	ui->mapCmbBox->setCurrentIndex( -1 );
-
 	ui->mapCmbBox->clear();
+	ui->mapCmbBox_demo->setCurrentIndex( -1 );
+	ui->mapCmbBox_demo->clear();
 
 	int iwadIdx = getSelectedItemIdx( ui->iwadListView );
 	if (iwadIdx < 0)
+	{
+		disableSelectionCallbacks = false;
 		return;
+	}
 
 	// read the map names from file
 	const WadInfo & wadInfo = getCachedWadInfo( iwadModel[ iwadIdx ].path );
@@ -1707,17 +1828,39 @@ void MainWindow::updateMapsFromIWAD()
 	if (wadInfo.successfullyRead && !wadInfo.mapNames.isEmpty())
 	{
 		for (const QString & mapName : wadInfo.mapNames)
+		{
 			ui->mapCmbBox->addItem( mapName );
+			ui->mapCmbBox_demo->addItem( mapName );
+		}
 	}
 	else  // if we haven't found any map names in the IWAD, fallback to the standard DOOM 2 names
 	{
 		for (int i = 1; i <= 32; i++)
-			ui->mapCmbBox->addItem( QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') ) );
+		{
+			QString mapName = QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') );
+			ui->mapCmbBox->addItem( mapName );
+			ui->mapCmbBox_demo->addItem( mapName );
+		}
 	}
 
 	// restore the originally selected item
-	int lastTextIdx = ui->mapCmbBox->findText( lastText );
-	ui->mapCmbBox->setCurrentIndex( lastTextIdx >= 0 ? lastTextIdx : 0 );  // if it's no longer there, use the first one
+	int newIdx = ui->mapCmbBox->findText( origText );
+	ui->mapCmbBox->setCurrentIndex( newIdx );
+	int newIdx_demo = ui->mapCmbBox_demo->findText( origText_demo );
+	ui->mapCmbBox_demo->setCurrentIndex( newIdx_demo );
+
+	disableSelectionCallbacks = false;
+
+	if (ui->mapCmbBox->currentText() != origText)
+	{
+		// selection changed while the callbacks were disabled, we need to call them manually
+		selectMap( origText );
+	}
+	if (ui->mapCmbBox_demo->currentText() != origText_demo)
+	{
+		// selection changed while the callbacks were disabled, we need to call them manually
+		selectMap_demo( origText_demo );
+	}
 }
 
 
@@ -2027,6 +2170,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 void MainWindow::restoreLaunchOptions( const LaunchOptions & opts )
 {
+	// launch mode
 	if (opts.mode == STANDARD)
 		ui->launchMode_standard->click();
 	else if (opts.mode == LAUNCH_MAP)
@@ -2034,8 +2178,8 @@ void MainWindow::restoreLaunchOptions( const LaunchOptions & opts )
 	else if (opts.mode == LOAD_SAVE)
 		ui->launchMode_savefile->click();
 
+	// details of launch mode
 	ui->mapCmbBox->setCurrentText( opts.mapName );
-
 	if (!opts.saveFile.isEmpty())
 	{
 		int saveFileIdx = findSuch( saveModel, [ &opts ]( const SaveFile & save ) { return save.fileName == opts.saveFile; } );
@@ -2048,6 +2192,22 @@ void MainWindow::restoreLaunchOptions( const LaunchOptions & opts )
 			ui->saveFileCmbBox->setCurrentIndex( -1 );
 			QMessageBox::warning( this, "Save file no longer exists",
 				"Save file \""%opts.saveFile%"\" no longer exists, please select another one." );
+		}
+	}
+	ui->mapCmbBox_demo->setCurrentText( opts.mapName_demo );
+	ui->demoFileLine_record->setText( opts.demoFile_record );
+	if (!opts.demoFile_replay.isEmpty())
+	{
+		int demoFileIdx = findSuch( demoModel, [ &opts ]( const DemoFile & demo ) { return demo.fileName == opts.demoFile_replay; } );
+		if (demoFileIdx >= 0)
+		{
+			ui->demoFileCmbBox_replay->setCurrentIndex( demoFileIdx );
+		}
+		else
+		{
+			ui->demoFileCmbBox_replay->setCurrentIndex( -1 );
+			QMessageBox::warning( this, "Demo file no longer exists",
+				"Demo file \""%opts.demoFile_replay%"\" no longer exists, please select another one." );
 		}
 	}
 
@@ -2291,6 +2451,24 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 	if (ui->launchMode_map->isChecked())
 	{
 		cmdStream << " +map " << ui->mapCmbBox->currentText();
+	}
+	else if (ui->launchMode_savefile->isChecked() && ui->saveFileCmbBox->currentIndex() >= 0)
+	{
+		QString savePath = getPathFromFileName( engineModel[ selectedEngineIdx ].configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );
+		cmdStream << " -loadgame \"" << base.rebasePath( savePath ) << "\"";
+	}
+	else if (ui->launchMode_recordDemo->isChecked() && !ui->demoFileLine_record->text().isEmpty())
+	{
+		cmdStream << " -record " << ui->demoFileLine_record->text();
+		cmdStream << " +map " << ui->mapCmbBox_demo->currentText();
+	}
+	else if (ui->launchMode_replayDemo->isChecked() && ui->demoFileCmbBox_replay->currentIndex() >= 0)
+	{
+		cmdStream << " -playdemo " << ui->demoFileCmbBox_replay->currentText();
+	}
+
+	if (ui->launchMode_map->isChecked() || ui->launchMode_recordDemo->isChecked())
+	{
 		cmdStream << " -skill " << ui->skillSpinBox->text();
 		if (ui->noMonstersChkBox->isChecked())
 			cmdStream << " -nomonsters";
@@ -2304,11 +2482,6 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 			cmdStream << " +dmflags2 " << QString::number( opts.gameOpts.flags2 );
 		if (!compatOptsCmdArgs.isEmpty())
 			cmdStream << " " << compatOptsCmdArgs;
-	}
-	else if (ui->launchMode_savefile->isChecked() && selectedEngineIdx >= 0 && ui->saveFileCmbBox->currentIndex() >= 0)
-	{
-		QString savePath = getPathFromFileName( engineModel[ selectedEngineIdx ].configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );
-		cmdStream << " -loadgame \"" << base.rebasePath( savePath ) << "\"";
 	}
 
 	if (ui->multiplayerChkBox->isChecked())

@@ -112,7 +112,7 @@ SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & 
 	connect( ui->doneBtn, &QPushButton::clicked, this, &thisClass::accept );
 
 	// setup an update timer
-	//startTimer( 1000 );
+	startTimer( 1000 );
 }
 
 void SetupDialog::setupEngineView()

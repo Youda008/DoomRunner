@@ -65,8 +65,7 @@ void deselectItemByIdx( QListView * view, int index )
 
 void deselectSelectedItems( QListView * view )
 {
-	for (QModelIndex & index : view->selectionModel()->selectedIndexes())
-		view->selectionModel()->select( index, QItemSelectionModel::Deselect );
+	view->selectionModel()->clearSelection();
 }
 
 void changeSelectionTo( QListView * view, int index )

@@ -143,7 +143,7 @@ class MainWindow : public QMainWindow {
 
 	void toggleAbsolutePaths( bool absolute );
 
-	void loadPreset( int index );
+	void restorePreset( int index );
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();
 
@@ -173,7 +173,8 @@ class MainWindow : public QMainWindow {
 
 	bool optionsCorrupted;  ///< true when was a critical error during parsing of options file, such content should not be saved
 
-	bool disableSelectionCallbacks;  ///< whether the list models are currently being updated (read more in the place of usage)
+	bool disableSelectionCallbacks;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD() \
+	                                      used to prevent unnecessary or unwanted operations when updating the lists
 
 	QString compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 

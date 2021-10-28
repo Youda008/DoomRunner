@@ -380,8 +380,8 @@ void MainWindow::onWindowShown()
 			prependItem( ui->presetListView, presetModel, { "Default" } );
 			defaultPresetIdx = 0;
 		}
-		selectItemByIdx( ui->presetListView, defaultPresetIdx );
-		loadPreset( defaultPresetIdx );
+		selectItemByIdx( ui->presetListView, defaultPresetIdx );  // this invokes the callback, which enables the dependent widgets
+		                                                          // and calls restorePreset(...);
 	}
 
 	if (checkForUpdates)
@@ -460,7 +460,8 @@ void MainWindow::runSetupDialog()
 	// or that previously selected items in the view no longer exist.
 	// And thirdly, we no longer have to split the data itself from the logic of displaying them.
 
-	SetupDialog dialog( this,
+	SetupDialog dialog(
+		this,
 		pathContext.useAbsolutePaths(),
 		pathContext.baseDir(),
 		engineModel.list(),
@@ -585,7 +586,7 @@ void MainWindow::cloneConfig()
 //  preset loading
 
 // loads the content of a preset into the other widgets
-void MainWindow::loadPreset( int presetIdx )
+void MainWindow::restorePreset( int presetIdx )
 {
 	Preset & preset = presetModel[ presetIdx ];
 
@@ -756,13 +757,10 @@ void MainWindow::togglePresetSubWidgets( bool enabled )
 void MainWindow::clearPresetSubWidgets()
 {
 	ui->engineCmbBox->setCurrentIndex( -1 );
-
-	ui->configCmbBox->setCurrentIndex( -1 );
+	// map names, saves and demos will be cleared and deselected automatically
 
 	deselectSelectedItems( ui->iwadListView );
-
 	deselectSelectedItems( ui->mapDirView );
-
 	deselectSelectedItems( ui->modListView );
 
 	modModel.startCompleteUpdate();
@@ -778,6 +776,10 @@ void MainWindow::clearPresetSubWidgets()
 
 void MainWindow::selectEngine( int index )
 {
+	// sometimes, when doing list updates, we don't want this to happen
+	if (disableSelectionCallbacks)
+		return;
+
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
@@ -802,7 +804,7 @@ void MainWindow::selectEngine( int index )
 
 void MainWindow::selectConfig( int index )
 {
-	// workaround (read the comment at automatic list updates)
+	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
@@ -838,7 +840,7 @@ void MainWindow::togglePreset( const QItemSelection & selected, const QItemSelec
 	if (!selected.indexes().isEmpty())
 	{
 		togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
-		loadPreset( selected.indexes()[0].row() );  // load the content of the selected preset into the other widgets
+		restorePreset( selected.indexes()[0].row() );  // load the content of the selected preset into the other widgets
 	}
 	else  // the preset was deselected using CTRL
 	{
@@ -849,7 +851,7 @@ void MainWindow::togglePreset( const QItemSelection & selected, const QItemSelec
 
 void MainWindow::toggleIWAD( const QItemSelection & selected, const QItemSelection & /*deselected*/ )
 {
-	// workaround (read the comment at automatic list updates)
+	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
@@ -877,7 +879,7 @@ void MainWindow::toggleIWAD( const QItemSelection & selected, const QItemSelecti
 
 void MainWindow::toggleMapPack( const QItemSelection & selected, const QItemSelection & /*deselected*/ )
 {
-	// workaround (read the comment at automatic list updates)
+	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
@@ -1001,7 +1003,7 @@ void MainWindow::presetDelete()
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
-		loadPreset( selectedPresetIdx );
+		restorePreset( selectedPresetIdx );
 	}
 	else
 	{
@@ -1276,7 +1278,7 @@ void MainWindow::toggleOptionsSubwidgets( bool enabled )
 
 void MainWindow::selectMap( const QString & mapName )
 {
-	// workaround (read the comment at automatic list updates)
+	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
@@ -1287,7 +1289,7 @@ void MainWindow::selectMap( const QString & mapName )
 
 void MainWindow::selectSavedGame( int saveIdx )
 {
-	// workaround (read the comment at automatic list updates)
+	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
@@ -1300,7 +1302,7 @@ void MainWindow::selectSavedGame( int saveIdx )
 
 void MainWindow::selectMap_demo( const QString & mapName )
 {
-	// workaround (read the comment at automatic list updates)
+	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
@@ -1318,7 +1320,7 @@ void MainWindow::changeDemoFile_record( const QString & fileName )
 
 void MainWindow::selectDemoFile_replay( int demoIdx )
 {
-	// workaround (read the comment at automatic list updates)
+	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
@@ -1730,7 +1732,7 @@ void MainWindow::updateConfigFilesFromDir()
 	// workaround (read the big comment above)
 	int origConfigIdx = ui->configCmbBox->currentIndex();
 
-	disableSelectionCallbacks = true;
+	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
 	updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, /*recursively*/false, /*emptyItem*/true, pathContext,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return configFileSuffixes.contains( file.suffix().toLower() ); }
@@ -2007,6 +2009,8 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	if (JsonObjectCtx jsEngines = jsRoot.getObject( "engines" ))
 	{
+		disableSelectionCallbacks = true;  // prevent unnecessary reloading of config/save/demo lists
+
 		ui->engineCmbBox->setCurrentIndex( -1 );
 
 		engineModel.startCompleteUpdate();
@@ -2035,11 +2039,13 @@ void MainWindow::loadOptions( const QString & filePath )
 		}
 
 		engineModel.finishCompleteUpdate();
+
+		disableSelectionCallbacks = false;
 	}
 
 	if (JsonObjectCtx jsIWADs = jsRoot.getObject( "IWADs" ))
 	{
-		deselectSelectedItems( ui->iwadListView );
+		deselectSelectedItems( ui->iwadListView );  // this invokes the callback, which updates the dependent widgets
 
 		iwadModel.startCompleteUpdate();
 
@@ -2098,8 +2104,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	if (JsonArrayCtx jsPresetArray = jsRoot.getArray( "presets" ))
 	{
-		deselectSelectedItems( ui->presetListView );
-		togglePresetSubWidgets( false );
+		deselectSelectedItems( ui->presetListView );  // this invokes the callback, which disables the dependent widgets
 
 		presetModel.startCompleteUpdate();
 
@@ -2138,7 +2143,11 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	file.close();
 
-	updateListsFromDirs();
+	// update the lists from which the restored preset will select items
+	if (iwadSettings.updateFromDir)
+		updateIWADsFromDir();
+	updateMapPacksFromDir();
+	// the rest of the lists will get updated when an engine is restored from a preset
 
 	// load the last selected preset
 	QString selectedPreset = jsRoot.getString( "selected_preset" );
@@ -2148,8 +2157,8 @@ void MainWindow::loadOptions( const QString & filePath )
 		                                                                 { return preset.name == selectedPreset; } );
 		if (selectedPresetIdx >= 0)
 		{
-			selectItemByIdx( ui->presetListView, selectedPresetIdx );
-			loadPreset( selectedPresetIdx );
+			selectItemByIdx( ui->presetListView, selectedPresetIdx );  // this invokes the callback, which enables the dependent widgets
+			                                                           // and calls restorePreset(...);
 		}
 		else
 		{
@@ -2158,8 +2167,8 @@ void MainWindow::loadOptions( const QString & filePath )
 		}
 	}
 
-	// this must be done after the lists are already updated because we want to select existing items in combo boxes
-	// and after preset loading because the preset will select IWAD which will fill the map combo box
+	// this must be done after the lists are already updated because we want to select existing items in combo boxes,
+	//               and after preset loading because the preset will select IWAD which will fill the map combo box
 	if (optsStorage == STORE_GLOBALLY)
 	{
 		restoreLaunchOptions( opts );

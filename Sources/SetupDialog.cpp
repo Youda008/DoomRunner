@@ -27,12 +27,15 @@
 //======================================================================================================================
 //  SetupDialog
 
-SetupDialog::SetupDialog( QWidget * parent, bool useAbsolutePaths, const QDir & baseDir,
-                          const QList< Engine > & engineList,
-                          const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
-                          const MapSettings & mapSettings, const ModSettings & modSettings,
-                          OptionsStorage optsStorage,
-                          bool closeOnLaunch )
+SetupDialog::SetupDialog(
+	QWidget * parent,
+	bool useAbsolutePaths, const QDir & baseDir,
+	const QList< Engine > & engineList,
+	const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
+	const MapSettings & mapSettings, const ModSettings & modSettings,
+	OptionsStorage optsStorage,
+	bool closeOnLaunch
+)
 :
 	QDialog( parent ),
 	pathContext( useAbsolutePaths, baseDir ),

@@ -28,6 +28,8 @@ QMAKE_CXXFLAGS += -std=c++17
 # This will silence them and prevent them from shadowing our own potentially important warnings.
 QMAKE_CXXFLAGS += -Wno-deprecated-copy
 
+QMAKE_CXXFLAGS += -Wno-comment
+
 SOURCES += \
     Sources/AboutDialog.cpp \
     Sources/CompatOptsDialog.cpp \

@@ -223,9 +223,9 @@ QJsonObject serialize( const Preset & preset, bool storeOpts )
 	jsPreset["selected_IWAD"] = preset.selectedIWAD;
 
 	QJsonArray jsMapArray;
-	for (const TreePosition & pos : preset.selectedMapPacks)
+	for (const QString & pos : preset.selectedMapPacks)
 	{
-		jsMapArray.append( pos.toString() );
+		jsMapArray.append( pos );
 	}
 	jsPreset["selected_mappacks"] = jsMapArray;
 
@@ -255,7 +255,7 @@ void deserialize( JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts )
 			QString selectedMapPack = jsSelectedMapPacks.getString( i );
 			if (!selectedMapPack.isEmpty())
 			{
-				preset.selectedMapPacks.append( TreePosition( selectedMapPack ) );
+				preset.selectedMapPacks.append( selectedMapPack );
 			}
 		}
 	}

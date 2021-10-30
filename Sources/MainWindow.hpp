@@ -14,7 +14,6 @@
 
 #include "UserData.hpp"
 #include "ListModel.hpp"
-#include "DirTreeModel.hpp"
 #include "FileSystemUtils.hpp"  // PathContext
 #include "EventFilters.hpp"  // ConfirmationFilter
 #include "UpdateChecker.hpp"
@@ -22,6 +21,7 @@
 #include <QMainWindow>
 #include <QString>
 #include <QFileInfo>
+#include <QFileSystemModel>
 
 class QItemSelection;
 class QComboBox;
@@ -149,9 +149,8 @@ class MainWindow : public QMainWindow {
 
 	void restoreLaunchOptions( const LaunchOptions & opts );
 
-	void updateListsFromDirs();
 	void updateIWADsFromDir();
-	void updateMapPacksFromDir();
+	void refreshMapPacks();
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
 	void updateConfigFilesFromDir();
@@ -226,7 +225,7 @@ class MainWindow : public QMainWindow {
 	ReadOnlyListModel< IWAD > iwadModel;    ///< user-ordered list of iwads (managed by SetupDialog)
 	IwadSettings iwadSettings;    ///< IWAD-related preferences (value returned by SetupDialog)
 
-	DirTreeModel mapModel;    ///< model owning a tree structure representing a directory with map files
+	QFileSystemModel mapModel;  ///< model representing a directory with map files
 	MapSettings mapSettings;    ///< map-related preferences (value returned by SetupDialog)
 
 	EditableListModel< Mod > modModel;

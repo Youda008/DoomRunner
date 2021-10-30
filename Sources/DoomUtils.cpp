@@ -46,6 +46,16 @@ bool isMapPack( const QFileInfo & file )
 	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
 }
 
+QStringList getMapPackSuffixes()
+{
+	QStringList suffixes;
+	for (const QString & suffix : mapSuffixes)
+		suffixes.append( "*."+suffix );
+	for (const QString & suffix : dukeSuffixes)
+		suffixes.append( "*."+suffix );
+	return suffixes;
+}
+
 
 //======================================================================================================================
 //  WAD info loading

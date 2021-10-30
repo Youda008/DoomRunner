@@ -12,7 +12,6 @@
 
 #include "Common.hpp"
 
-class DirTreeModel;
 class QModelIndex;
 
 #include <QString>
@@ -44,7 +43,7 @@ class PathContext {
 		{ _baseDir = other._baseDir; _prevBaseDir = other._prevBaseDir; _useAbsolutePaths = other._useAbsolutePaths; }
 
 	const QDir & baseDir() const                       { return _baseDir; }
-	bool useAbsolutePaths() const                      { return _useAbsolutePaths; }
+	bool useAbsolutePaths() const                      { return _useAbsolutePaths; }  // TODO: use enum instead of bool
 	bool useRelativePaths() const                      { return !_useAbsolutePaths; }
 
 	void toggleAbsolutePaths( bool useAbsolutePaths )  { _useAbsolutePaths = useAbsolutePaths; }
@@ -104,42 +103,52 @@ inline QString getDirnameOfFile( const QString & filePath )
 	return QFileInfo( filePath ).dir().dirName();
 }
 
-template< typename Item >
-void fillListFromDir( QList< Item > & list, const QString & dir, bool recursively, const PathContext & pathContext,
-                      std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+inline bool isInsideDir( const QString & entryPath, const QDir & dir )
 {
-	if (dir.isEmpty())  // dir is not set -> leave the list empty
-		return;
-
-	QDir dir_( dir );
-	if (!dir_.exists())  // dir is invalid -> leave the list empty
-		return;
-
-	QDirIterator dirIt( dir_ );
-	while (dirIt.hasNext())
-	{
-		QString entryPath = pathContext.convertPath( dirIt.next() );
-		QFileInfo entry( entryPath );
-		if (entry.isDir())
-		{
-			QString dirName = dirIt.fileName();  // we need the original entry name including "." and "..", entry is already converted
-			if (recursively && dirName != "." && dirName != "..")
-			{
-				fillListFromDir( list, entry.filePath(), recursively, pathContext, isDesiredFile );
-			}
-		}
-		else
-		{
-			if (isDesiredFile( entry ))
-			{
-				list.append( Item( entry ) );
-			}
-		}
-	}
+	QFileInfo entry( entryPath );
+	return entry.absoluteFilePath().startsWith( dir.absolutePath() );
 }
 
-void fillTreeFromDir( DirTreeModel & model, const QModelIndex & parent, const QString & dir, const PathContext & pathContext,
-                      std::function< bool ( const QFileInfo & file ) > isDesiredFile );
+
+//======================================================================================================================
+//  traversing directory content
+
+// Plain enum just makes the elements polute global namespace and makes the FILE collide with declaration in stdio.h,
+// and enum class would make all bit operations incredibly painful.
+class EntryTypes
+{
+	uint8_t _types;
+ public:
+	constexpr EntryTypes( uint8_t types ) : _types( types ) {}
+	constexpr friend EntryTypes operator|( EntryTypes a, EntryTypes b ) { return EntryTypes( a._types | b._types ); }
+	constexpr bool isSet( EntryTypes types ) const { return (_types & types._types) != 0; }
+};
+struct EntryType
+{
+	static constexpr EntryTypes DIR  = { 1 << 0 };
+	static constexpr EntryTypes FILE = { 1 << 1 };
+	static constexpr EntryTypes BOTH = DIR | FILE;
+};
+
+void traverseDirectory(
+	const QString & dir, bool recursively, EntryTypes typesToVisit,
+	const PathContext & pathContext, const std::function< void ( const QFileInfo & entry ) > & visitEntry
+);
+
+template< typename Item >
+void fillListFromDir(
+	QList< Item > & list, const QString & dir, bool recursively,
+	const PathContext & pathContext, const std::function< bool ( const QFileInfo & file ) > & isDesiredFile
+)
+{
+	traverseDirectory( dir, recursively, EntryType::FILE, pathContext, [&]( const QFileInfo & file )
+	{
+		if (isDesiredFile( file ))
+		{
+			list.append( Item( file ) );
+		}
+	});
+}
 
 
 #endif // FILE_SYSTEM_UTILS_INCLUDED

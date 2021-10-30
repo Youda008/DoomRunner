@@ -13,7 +13,6 @@
 #include "Common.hpp"
 
 #include "ListModel.hpp"
-#include "DirTreeModel.hpp"
 #include "JsonUtils.hpp"
 
 #include <QString>
@@ -199,7 +198,7 @@ struct Preset
 	QString selectedEnginePath;   // we store the engine by path, so that it does't break when user renames them or reorders them
 	QString selectedConfig;   // we store the config by name instead of index, so that it does't break when user reorders them
 	QString selectedIWAD;   // we store the IWAD by path instead of index, so that it doesn't break when user reorders them
-	QList< TreePosition > selectedMapPacks;
+	QList< QString > selectedMapPacks;
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 	QString cmdArgs;
 	LaunchOptions opts;

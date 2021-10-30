@@ -34,7 +34,6 @@ SOURCES += \
     Sources/AboutDialog.cpp \
     Sources/CompatOptsDialog.cpp \
     Sources/ConfigDialog.cpp \
-    Sources/DirTreeModel.cpp \
     Sources/DoomUtils.cpp \
     Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
@@ -58,7 +57,6 @@ HEADERS += \
     Sources/Common.hpp \
     Sources/CompatOptsDialog.hpp \
     Sources/ConfigDialog.hpp \
-    Sources/DirTreeModel.hpp \
     Sources/DoomUtils.hpp \
     Sources/EditableListView.hpp \
     Sources/EngineDialog.hpp \

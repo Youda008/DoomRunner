@@ -13,6 +13,7 @@
 #include "Common.hpp"
 
 #include <QVector>
+#include <QStringList>
 
 class QString;
 class QFileInfo;
@@ -32,6 +33,9 @@ extern const QVector< QString > dukeSuffixes;
 // convenience wrappers to be used, where otherwise lambda would have to be written
 bool isIWAD( const QFileInfo & file );
 bool isMapPack( const QFileInfo & file );
+
+// used to setup file filter in QFileSystemModel
+QStringList getMapPackSuffixes();
 
 
 //======================================================================================================================

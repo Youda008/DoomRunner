@@ -148,6 +148,7 @@ class MainWindow : public QMainWindow {
 	void clearPresetSubWidgets();
 
 	void restoreLaunchOptions( LaunchOptions & opts );
+	void restoreOutputOptions( OutputOptions & opts );
 
 	void updateIWADsFromDir();
 	void refreshMapPacks();
@@ -234,6 +235,7 @@ class MainWindow : public QMainWindow {
 	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 
 	LaunchOptions opts;
+	OutputOptions opts2;
 
 };
 

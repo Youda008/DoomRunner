@@ -165,16 +165,6 @@ struct LaunchOptions
 	CompatibilityOptions compatOpts = { 0, 0 };
 	bool allowCheats = false;
 
-	// video
-	int monitorIdx;
-	uint resolutionX;
-	uint resolutionY;
-
-	// audio
-	bool noSound = false;
-	bool noSFX = false;
-	bool noMusic = false;
-
 	// alternative paths
 	QString saveDir;
 	QString screenshotDir;
@@ -190,6 +180,19 @@ struct LaunchOptions
 	double teamDamage = 0.0;
 	uint timeLimit = 0;
 	uint fragLimit = 0;
+};
+
+struct OutputOptions
+{
+	// video
+	int monitorIdx;
+	uint resolutionX;
+	uint resolutionY;
+
+	// audio
+	bool noSound = false;
+	bool noSFX = false;
+	bool noMusic = false;
 };
 
 struct Preset
@@ -219,6 +222,7 @@ QJsonObject serialize( const IwadSettings & iwadSettings );
 QJsonObject serialize( const MapSettings & mapSettings );
 QJsonObject serialize( const ModSettings & modSettings );
 QJsonObject serialize( const LaunchOptions & options );
+QJsonObject serialize( const OutputOptions & options );
 QJsonObject serialize( const Preset & preset, bool storeOpts );
 
 template< typename Elem >
@@ -239,6 +243,7 @@ void deserialize( JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings );
 void deserialize( JsonObjectCtx & jsMaps, MapSettings & mapSettings );
 void deserialize( JsonObjectCtx & jsMods, ModSettings & modSettings );
 void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & options );
+void deserialize( JsonObjectCtx & jsOptions, OutputOptions & options );
 void deserialize( JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts );
 
 

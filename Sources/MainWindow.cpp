@@ -151,7 +151,8 @@ MainWindow::MainWindow()
 	presetModel(
 		/*makeDisplayString*/ []( const Preset & preset ) { return preset.name; }
 	),
-	opts {}
+	opts {},
+	opts2 {}
 {
 	ui = new Ui::MainWindow;
 	ui->setupUi( this );
@@ -1448,48 +1449,6 @@ void MainWindow::toggleAllowCheats( bool checked )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectMonitor( int index )
-{
-	STORE_OPTION( monitorIdx, index )
-
-	updateLaunchCommand();
-}
-
-void MainWindow::changeResolutionX( const QString & xStr )
-{
-	STORE_OPTION( resolutionX, xStr.toUInt() )
-
-	updateLaunchCommand();
-}
-
-void MainWindow::changeResolutionY( const QString & yStr )
-{
-	STORE_OPTION( resolutionY, yStr.toUInt() )
-
-	updateLaunchCommand();
-}
-
-void MainWindow::toggleNoSound( bool checked )
-{
-	STORE_OPTION( noSound, checked )
-
-	updateLaunchCommand();
-}
-
-void MainWindow::toggleNoSFX( bool checked )
-{
-	STORE_OPTION( noSFX, checked )
-
-	updateLaunchCommand();
-}
-
-void MainWindow::toggleNoMusic( bool checked )
-{
-	STORE_OPTION( noMusic, checked )
-
-	updateLaunchCommand();
-}
-
 void MainWindow::changeSaveDir( const QString & dir )
 {
 	STORE_OPTION( saveDir, dir )
@@ -1665,6 +1624,48 @@ void MainWindow::changeTimeLimit( int timeLimit )
 void MainWindow::changeFragLimit( int fragLimit )
 {
 	STORE_OPTION( fragLimit, uint( fragLimit ) )
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectMonitor( int index )
+{
+	opts2.monitorIdx = index;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeResolutionX( const QString & xStr )
+{
+	opts2.resolutionX = xStr.toUInt();
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeResolutionY( const QString & yStr )
+{
+	opts2.resolutionY = yStr.toUInt();
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleNoSound( bool checked )
+{
+	opts2.noSound = checked;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleNoSFX( bool checked )
+{
+	opts2.noSFX = checked;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleNoMusic( bool checked )
+{
+	opts2.noMusic = checked;
 
 	updateLaunchCommand();
 }
@@ -1984,8 +1985,10 @@ void MainWindow::saveOptions( const QString & filePath )
 
 	if (optsStorage == STORE_GLOBALLY)
 	{
-		jsRoot["options"] = serialize( opts );
+		jsRoot["launch_options"] = serialize( opts );
 	}
+
+	jsRoot["output_options"] = serialize( opts2 );
 
 	int presetIdx = getSelectedItemIdx( ui->presetListView );
 	jsRoot["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
@@ -2185,10 +2188,15 @@ void MainWindow::loadOptions( const QString & filePath )
 	// launch options
 	if (optsStorage == STORE_GLOBALLY)
 	{
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "options" ))
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "launch_options" ))
 		{
 			deserialize( jsOptions, opts );
 		}
+	}
+
+	if (JsonObjectCtx jsOptions = jsRoot.getObject( "output_options" ))
+	{
+		deserialize( jsOptions, opts2 );
 	}
 
 	// make sure all paths loaded from JSON are stored in correct format
@@ -2228,6 +2236,8 @@ void MainWindow::loadOptions( const QString & filePath )
 	{
 		restoreLaunchOptions( opts );
 	}
+
+	restoreOutputOptions( opts2 );
 
 	updateLaunchCommand();
 }
@@ -2287,19 +2297,6 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
 	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
 
-	// video
-	if (opts.monitorIdx < ui->monitorCmbBox->count())
-		ui->monitorCmbBox->setCurrentIndex( opts.monitorIdx );
-	if (opts.resolutionX > 0)
-		ui->resolutionXLine->setText( QString::number( opts.resolutionX ) );
-	if (opts.resolutionY > 0)
-		ui->resolutionYLine->setText( QString::number( opts.resolutionY ) );
-
-	// audio
-	ui->noSoundChkBox->setChecked( opts.noSound );
-	ui->noSfxChkBox->setChecked( opts.noSFX );
-	ui->noMusicChkBox->setChecked( opts.noMusic );
-
 	// alternative paths
 	ui->saveDirLine->setText( opts.saveDir );
 	ui->screenshotDirLine->setText( opts.screenshotDir );
@@ -2315,6 +2312,22 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 	ui->teamDmgSpinBox->setValue( opts.teamDamage );
 	ui->timeLimitSpinBox->setValue( int( opts.timeLimit ) );
 	ui->fragLimitSpinBox->setValue( int( opts.fragLimit ) );
+}
+
+void MainWindow::restoreOutputOptions( OutputOptions & opts )
+{
+	// video
+	if (opts.monitorIdx < ui->monitorCmbBox->count())
+		ui->monitorCmbBox->setCurrentIndex( opts.monitorIdx );
+	if (opts.resolutionX > 0)
+		ui->resolutionXLine->setText( QString::number( opts.resolutionX ) );
+	if (opts.resolutionY > 0)
+		ui->resolutionYLine->setText( QString::number( opts.resolutionY ) );
+
+	// audio
+	ui->noSoundChkBox->setChecked( opts.noSound );
+	ui->noSfxChkBox->setChecked( opts.noSFX );
+	ui->noMusicChkBox->setChecked( opts.noMusic );
 }
 
 void MainWindow::exportPreset()

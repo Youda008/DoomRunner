@@ -136,16 +136,6 @@ QJsonObject serialize( const LaunchOptions & opts )
 	jsOptions["compatflags2"] = qint64( opts.compatOpts.flags2 );
 	jsOptions["allow_cheats"] = opts.allowCheats;
 
-	// video
-	jsOptions["monitor_idx"] = opts.monitorIdx;
-	jsOptions["resolution_x"] = qint64( opts.resolutionX );
-	jsOptions["resolution_y"] = qint64( opts.resolutionY );
-
-	// audio
-	jsOptions["no_sound"] = opts.noSound;
-	jsOptions["no_sfx"] = opts.noSFX;
-	jsOptions["no_music"] = opts.noMusic;
-
 	// alternative paths
 	jsOptions["save_dir"] = opts.saveDir;
 	jsOptions["screenshot_dir"] = opts.screenshotDir;
@@ -186,16 +176,6 @@ void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & opts )
 	opts.compatOpts.flags2 = jsOptions.getInt( "compatflags2", opts.compatOpts.flags2 );
 	opts.allowCheats = jsOptions.getBool( "allow_cheats", opts.allowCheats );
 
-	// video
-	opts.monitorIdx = jsOptions.getInt( "monitor_idx", opts.monitorIdx );
-	opts.resolutionX = jsOptions.getUInt( "resolution_x", opts.resolutionX );
-	opts.resolutionY = jsOptions.getUInt( "resolution_y", opts.resolutionY );
-
-	// audio
-	opts.noSound = jsOptions.getBool( "no_sound", opts.noSound );
-	opts.noSFX = jsOptions.getBool( "no_sfx", opts.noSFX );
-	opts.noMusic = jsOptions.getBool( "no_music", opts.noMusic );
-
 	// alternative paths
 	opts.saveDir = jsOptions.getString( "save_dir", opts.saveDir );
 	opts.screenshotDir = jsOptions.getString( "screenshot_dir", opts.screenshotDir );
@@ -211,6 +191,36 @@ void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & opts )
 	opts.teamDamage = jsOptions.getDouble( "team_damage", opts.teamDamage );
 	opts.timeLimit = jsOptions.getUInt( "time_limit", opts.timeLimit );
 	opts.fragLimit = jsOptions.getUInt( "frag_limit", opts.fragLimit );
+}
+
+QJsonObject serialize( const OutputOptions & opts )
+{
+	QJsonObject jsOptions;
+
+	// video
+	jsOptions["monitor_idx"] = opts.monitorIdx;
+	jsOptions["resolution_x"] = qint64( opts.resolutionX );
+	jsOptions["resolution_y"] = qint64( opts.resolutionY );
+
+	// audio
+	jsOptions["no_sound"] = opts.noSound;
+	jsOptions["no_sfx"] = opts.noSFX;
+	jsOptions["no_music"] = opts.noMusic;
+
+	return jsOptions;
+}
+
+void deserialize( JsonObjectCtx & jsOptions, OutputOptions & opts )
+{
+	// video
+	opts.monitorIdx = jsOptions.getInt( "monitor_idx", opts.monitorIdx );
+	opts.resolutionX = jsOptions.getUInt( "resolution_x", opts.resolutionX );
+	opts.resolutionY = jsOptions.getUInt( "resolution_y", opts.resolutionY );
+
+	// audio
+	opts.noSound = jsOptions.getBool( "no_sound", opts.noSound );
+	opts.noSFX = jsOptions.getBool( "no_sfx", opts.noSFX );
+	opts.noMusic = jsOptions.getBool( "no_music", opts.noMusic );
 }
 
 QJsonObject serialize( const Preset & preset, bool storeOpts )
@@ -233,7 +243,7 @@ QJsonObject serialize( const Preset & preset, bool storeOpts )
 
 	if (storeOpts)
 	{
-		jsPreset["options"] = serialize( preset.opts );
+		jsPreset["launch_options"] = serialize( preset.opts );
 	}
 
 	jsPreset["additional_args"] = preset.cmdArgs;
@@ -282,7 +292,7 @@ void deserialize( JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts )
 
 	if (loadOpts)
 	{
-		if (JsonObjectCtx jsOptions = jsPreset.getObject( "options" ))
+		if (JsonObjectCtx jsOptions = jsPreset.getObject( "launch_options" ))
 		{
 			deserialize( jsOptions, preset.opts );
 		}

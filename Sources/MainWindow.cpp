@@ -2259,12 +2259,24 @@ void MainWindow::loadOptions( const QString & filePath )
 void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 {
 	// launch mode
-	if (opts.mode == STANDARD)
-		ui->launchMode_standard->click();
-	else if (opts.mode == LAUNCH_MAP)
+	switch (opts.mode)
+	{
+	 case LaunchMode::LAUNCH_MAP:
 		ui->launchMode_map->click();
-	else if (opts.mode == LOAD_SAVE)
+		break;
+	 case LaunchMode::LOAD_SAVE:
 		ui->launchMode_savefile->click();
+		break;
+	 case LaunchMode::RECORD_DEMO:
+		ui->launchMode_recordDemo->click();
+		break;
+	 case LaunchMode::REPLAY_DEMO:
+		ui->launchMode_replayDemo->click();
+		break;
+	 default:
+		ui->launchMode_standard->click();
+		break;
+	}
 
 	// details of launch mode
 	ui->mapCmbBox->setCurrentText( opts.mapName );

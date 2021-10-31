@@ -1345,7 +1345,7 @@ void MainWindow::modeReplayDemo()
 
 	toggleOptionsSubwidgets( false );
 
-	ui->multiplayerChkBox->setEnabled( false );   // no multiplayer when replaying demo
+	ui->multiplayerChkBox->setChecked( false );   // no multiplayer when replaying demo
 
 	updateLaunchCommand();
 }

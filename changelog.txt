@@ -3,7 +3,8 @@
 - added button to add a directory of mods
 - added button to create a new config from an existing one
 - added launch modes for recording/replaying demos
-- fixed non-existing mod file not being correctly removed from the list
+- reworked map file view so that it no longer lags when you try to load a directory with huge number of files
+- fixed non-existing files not being correctly removed from the saved options
 
 1.4
 - added new launch options for video, audio and save/screenshot directory

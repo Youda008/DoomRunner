@@ -147,7 +147,7 @@ class MainWindow : public QMainWindow {
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();
 
-	void restoreLaunchOptions( const LaunchOptions & opts );
+	void restoreLaunchOptions( LaunchOptions & opts );
 
 	void updateIWADsFromDir();
 	void refreshMapPacks();

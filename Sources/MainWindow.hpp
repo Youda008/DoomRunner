@@ -161,8 +161,8 @@ class MainWindow : public QMainWindow {
 	void saveOptions( const QString & fileName );
 	void loadOptions( const QString & fileName );
 
-	void updateLaunchCommand();
-	QString generateLaunchCommand( const QString & baseDir );
+	void updateLaunchCommand( bool verifyPaths = false );
+	QString generateLaunchCommand( const QString & baseDir, bool verifyPaths );
 
  private: // internal members
 

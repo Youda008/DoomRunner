@@ -82,6 +82,15 @@ static bool verifyFile( const QString & path, const QString & errorMessage )
 	return true;
 }
 
+class FileNotFound {};
+
+static void throwIfInvalid( bool doVerify, const QString & path, const QString & errorMessage )
+{
+	if (doVerify)
+		if (!verifyFile( path, errorMessage ))
+			throw FileNotFound();
+}
+
 #define STORE_OPTION( structElem, value ) \
 	if (optsStorage == STORE_GLOBALLY) \
 	{\
@@ -820,7 +829,7 @@ void MainWindow::clearPresetSubWidgets()
 //----------------------------------------------------------------------------------------------------------------------
 //  item selection
 
-void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )  // TODO: move
+void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
@@ -2334,7 +2343,7 @@ void MainWindow::exportPreset()
 
 	QTextStream stream( &file );
 
-	stream << generateLaunchCommand( fileInfo.path() ) << endl;  // keep endl to maintain compatibility with older Qt
+	stream << generateLaunchCommand( fileInfo.path(), false ) << endl;  // keep endl to maintain compatibility with older Qt
 
 	file.close();
 }
@@ -2382,7 +2391,7 @@ void MainWindow::importPreset()
 //----------------------------------------------------------------------------------------------------------------------
 //  launch command generation
 
-void MainWindow::updateLaunchCommand()
+void MainWindow::updateLaunchCommand( bool verifyPaths )
 {
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx < 0)
@@ -2397,7 +2406,7 @@ void MainWindow::updateLaunchCommand()
 	// because it will be executed with the current directory set to engine's directory
 	QString baseDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
 
-	QString newCommand = generateLaunchCommand( baseDir );
+	QString newCommand = generateLaunchCommand( baseDir, verifyPaths );
 
 	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
 	// and copy part of the line, by constantly reseting his selection.
@@ -2409,7 +2418,7 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
-QString MainWindow::generateLaunchCommand( const QString & baseDir )
+QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths )
 {
 	// baseDir - which base directory to derive the relative paths from
 
@@ -2424,7 +2433,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 	{
 		const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
 
-		//verifyFile( selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
+		throwIfInvalid( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
 		cmdStream << "\"" << base.rebasePath( selectedEngine.path ) << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
@@ -2432,7 +2441,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 		{
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
-			//verifyFile( configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
+			throwIfInvalid( verifyPaths, configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
 			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
 	}
@@ -2444,7 +2453,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
 	{
-		//verifyFile( iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please update it in Menu -> Setup." );
+		throwIfInvalid( verifyPaths, iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please select another one." );
 		cmdStream << " -iwad \"" << base.rebasePath( iwadModel[ selectedIwadIdx ].path ) << "\"";
 	}
 
@@ -2453,7 +2462,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 	{
 		QString modelPath = mapModel.filePath( selectedMapIdx );
 		QString mapFilePath = pathContext.convertPath( modelPath );
-		//verifyFile( mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
+		throwIfInvalid( verifyPaths, mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
 		if (QFileInfo( mapFilePath ).suffix().toLower() == "deh")
 			cmdStream << " -deh \"" << base.rebasePath( mapFilePath ) << "\"";
 		else if (QFileInfo( mapFilePath ).suffix().toLower() == "bex")
@@ -2466,7 +2475,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 	{
 		if (mod.checked)
 		{
-			//verifyFile( mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
+			throwIfInvalid( verifyPaths, mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
 			if (QFileInfo( mod.path ).suffix().toLower() == "deh")
 				cmdStream << " -deh \"" << base.rebasePath( mod.path ) << "\"";
 			else if (QFileInfo( mod.path ).suffix().toLower() == "bex")
@@ -2513,16 +2522,19 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 	else if (ui->launchMode_savefile->isChecked() && ui->saveFileCmbBox->currentIndex() >= 0)
 	{
 		QString savePath = getPathFromFileName( engineModel[ selectedEngineIdx ].configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );
+		throwIfInvalid( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
 		cmdStream << " -loadgame \"" << base.rebasePath( savePath ) << "\"";
 	}
 	else if (ui->launchMode_recordDemo->isChecked() && !ui->demoFileLine_record->text().isEmpty())
 	{
-		cmdStream << " -record " << ui->demoFileLine_record->text();
+		cmdStream << " -record \"" << ui->demoFileLine_record->text() << "\"";
 		cmdStream << " +map " << ui->mapCmbBox_demo->currentText();
 	}
 	else if (ui->launchMode_replayDemo->isChecked() && ui->demoFileCmbBox_replay->currentIndex() >= 0)
 	{
-		cmdStream << " -playdemo " << ui->demoFileCmbBox_replay->currentText();
+		QString demoPath = ui->demoFileCmbBox_replay->currentText();
+		throwIfInvalid( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
+		cmdStream << " -playdemo \"" << base.rebasePath( demoPath ) << "\"";
 	}
 
 	if (ui->launchMode_map->isChecked() || ui->launchMode_recordDemo->isChecked())
@@ -2604,6 +2616,13 @@ void MainWindow::launch()
 	if (selectedEngineIdx < 0)
 	{
 		QMessageBox::warning( this, "No engine selected", "No Doom engine is selected." );
+		return;
+	}
+
+	// re-run the command construction, but display error message and abort when there is invalid path
+	try {
+		updateLaunchCommand( true );
+	} catch (const FileNotFound &) {
 		return;
 	}
 

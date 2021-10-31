@@ -2456,10 +2456,14 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 	QTextStream cmdStream( &newCommand, QIODevice::WriteOnly );
 
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
-	if (selectedEngineIdx >= 0)
+	if (selectedEngineIdx < 0)
 	{
-		const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
+		return {};  // no sense to generate a command when we don't even know the engine
+	}
 
+	const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
+
+	{
 		throwIfInvalid( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
 		cmdStream << "\"" << base.rebasePath( selectedEngine.path ) << "\"";
 
@@ -2472,10 +2476,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
 		}
 	}
-	else
-	{
-		return {};  // no sense to generate a command when we don't even know the engine
-	}
+
 
 	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
@@ -2519,7 +2520,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 	{
 		// terrible hack, but it's not my fault
 		int vid_adapter;
-		if (selectedEngineIdx >= 0 && getFileNameFromPath( engineModel[ selectedEngineIdx ].path ).startsWith("zdoom"))
+		if (selectedEngineIdx >= 0 && getFileNameFromPath( selectedEngine.path ).startsWith("zdoom"))
 			vid_adapter = ui->monitorCmbBox->currentIndex();      // in ZDoom monitors are indexed from 1
 		else
 			vid_adapter = ui->monitorCmbBox->currentIndex() - 1;  // but in newer derivatives from 0
@@ -2548,7 +2549,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 	}
 	else if (ui->launchMode_savefile->isChecked() && ui->saveFileCmbBox->currentIndex() >= 0)
 	{
-		QString savePath = getPathFromFileName( engineModel[ selectedEngineIdx ].configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );
+		QString savePath = getPathFromFileName( selectedEngine.configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );
 		throwIfInvalid( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
 		cmdStream << " -loadgame \"" << base.rebasePath( savePath ) << "\"";
 	}
@@ -2559,7 +2560,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 	}
 	else if (ui->launchMode_replayDemo->isChecked() && ui->demoFileCmbBox_replay->currentIndex() >= 0)
 	{
-		QString demoPath = ui->demoFileCmbBox_replay->currentText();
+		QString demoPath = getPathFromFileName( selectedEngine.configDir, demoModel[ ui->demoFileCmbBox_replay->currentIndex() ].fileName );
 		throwIfInvalid( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
 		cmdStream << " -playdemo \"" << base.rebasePath( demoPath ) << "\"";
 	}

@@ -731,11 +731,11 @@ void MainWindow::restorePreset( int presetIdx )
 		disableSelectionCallbacks = true;  // prevent unnecessary launch command regeneration and modifying our preset in the middle of our work
 
 		deselectSelectedItems( ui->mapDirView );
-		QDir rootDir = mapModel.rootDirectory();
+		QDir mapRootDir = mapModel.rootDirectory();
 		for (const QString & path : presetCopy.selectedMapPacks)
 		{
 			QModelIndex mapIdx = mapModel.index( path );
-			if (mapIdx.isValid() && isInsideDir( path, rootDir ))
+			if (mapIdx.isValid() && isInsideDir( path, mapRootDir ))
 			{
 				if (QFileInfo::exists( path ))
 				{
@@ -750,7 +750,7 @@ void MainWindow::restorePreset( int presetIdx )
 			else
 			{
 				QMessageBox::warning( this, "Map file no longer exists",
-					"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%rootDir.path()%")." );
+					"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")." );
 			}
 		}
 
@@ -1225,6 +1225,20 @@ void MainWindow::modsDropped( int /*row*/, int /*count*/ )
 	if (selectedPresetIdx >= 0)
 	{
 		presetModel[ selectedPresetIdx ].mods = modModel.list();  // not the most optimal way, but the size of the list will be always small
+	}
+
+	// if these files were dragged here from the map pack list, deselect them there
+	QDir mapRootDir = mapModel.rootDirectory();
+	for (const Mod & mod : std::as_const( modModel.list() ))
+	{
+		if (isInsideDir( mod.path, mapRootDir ))
+		{
+			QModelIndex mapPackIdx = mapModel.index( mod.path );
+			if (mapPackIdx.isValid())
+			{
+				deselectItemByIdx( ui->mapDirView, mapPackIdx );
+			}
+		}
 	}
 
 	updateLaunchCommand();

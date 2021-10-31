@@ -127,6 +127,12 @@ void selectItemByIdx( QTreeView * view, const QModelIndex & index )
 	view->selectionModel()->setCurrentIndex( index, QItemSelectionModel::NoUpdate );
 }
 
+void deselectItemByIdx( QTreeView * view, const QModelIndex & index )
+{
+	view->selectionModel()->select( index, QItemSelectionModel::Deselect );
+	view->selectionModel()->setCurrentIndex( index, QItemSelectionModel::ToggleCurrent );
+}
+
 void deselectSelectedItems( QTreeView * view )
 {
 	view->selectionModel()->clearSelection();

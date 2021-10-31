@@ -484,6 +484,7 @@ bool isSelectedIdx( QTreeView * view, const QModelIndex & index );
 bool isSomethingSelected( QTreeView * view );
 
 void selectItemByIdx( QTreeView * view, const QModelIndex & index );
+void deselectItemByIdx( QTreeView * view, const QModelIndex & index );
 void deselectSelectedItems( QTreeView * view );
 void changeSelectionTo( QTreeView * view, const QModelIndex & index );
 

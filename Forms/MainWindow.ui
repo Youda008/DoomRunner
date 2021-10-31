@@ -220,7 +220,7 @@
                   </sizepolicy>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;IWAD can be de-selected by holding CTRL.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;IWAD can be de-selected by holding CTRL and left-clicking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="editTriggers">
                   <set>QAbstractItemView::NoEditTriggers</set>
@@ -233,7 +233,7 @@
             <item>
              <widget class="QGroupBox" name="mapGrpBox">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Map pack can be de-selected by holding CTRL.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Map pack can be de-selected by holding CTRL and left-clicking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="title">
                <string>4. Select map pack</string>

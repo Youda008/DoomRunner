@@ -186,7 +186,7 @@ void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
 
 	if (tickCount % dirUpdateDelay == 0)
 	{
-		if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
+		if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))  // the second prevents clearing the list when the path is invalid
 			updateIWADsFromDir();
 	}
 }

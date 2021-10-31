@@ -87,9 +87,9 @@ class MainWindow : public QMainWindow {
 	void modeSavedGame();
 	void modeRecordDemo();
 	void modeReplayDemo();
-	void selectMap( const QString & mapName );
+	void changeMap( const QString & mapName );
 	void selectSavedGame( int index );
-	void selectMap_demo( const QString & mapName );
+	void changeMap_demo( const QString & mapName );
 	void changeDemoFile_record( const QString & fileName );
 	void selectDemoFile_replay( int index );
 

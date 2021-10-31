@@ -168,13 +168,19 @@ MainWindow::MainWindow()
 
 	// we use custom model for engines, because we want to display the same list differently in different window
 	ui->engineCmbBox->setModel( &engineModel );
-	// we use custom model for configs and saves, because calling 'clear' or 'add' on a combo box changes current index,
-	// which causes the launch command to be regenerated back and forth on every update
-	ui->configCmbBox->setModel( &configModel );
-	ui->saveFileCmbBox->setModel( &saveModel );
-	ui->demoFileCmbBox_replay->setModel( &demoModel );
 	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectEngine );
+
+	ui->configCmbBox->setModel( &configModel );
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectConfig );
+
+	ui->saveFileCmbBox->setModel( &saveModel );
+	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSavedGame );
+
+	ui->demoFileCmbBox_replay->setModel( &demoModel );
+	connect( ui->demoFileCmbBox_replay, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectDemoFile_replay );
+
+	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::changeMap );
+	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &thisClass::changeMap_demo );
 
 	// setup buttons
 
@@ -200,11 +206,8 @@ MainWindow::MainWindow()
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
 	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &thisClass::modeRecordDemo );
 	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &thisClass::modeReplayDemo );
-	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::selectMap );
-	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSavedGame );
-	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &thisClass::selectMap_demo );
+
 	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::changeDemoFile_record );
-	connect( ui->demoFileCmbBox_replay, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectDemoFile_replay );
 
 	// gameplay
 	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSkill );
@@ -731,22 +734,20 @@ void MainWindow::restorePreset( int presetIdx )
 
 	// restore list of mods
 	deselectSelectedItems( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
+	presetRef.mods.clear();  // clear the list in the preset and let it repopulate only with valid items
 	modModel.startCompleteUpdate();
 	modModel.clear();
-	for (auto modIt = presetRef.mods.begin(); modIt != presetRef.mods.end(); )  // need iterator, so that we can erase non-existing
+	for (const Mod & mod : presetCopy.mods)
 	{
-		const Mod & mod = *modIt;
-
 		if (QFileInfo::exists( mod.path ))
 		{
 			modModel.append( mod );
-			++modIt;
+			presetRef.mods.append( mod );  // put back only items that are valid
 		}
 		else
 		{
 			QMessageBox::warning( this, "Mod no longer exists",
 				"A mod from the preset ("%mod.path%") no longer exists. It will be removed from the list." );
-			modIt = presetRef.mods.erase( modIt );  // keep the list widget in sync with the preset list
 		}
 	}
 	modModel.finishCompleteUpdate();
@@ -1315,7 +1316,7 @@ void MainWindow::toggleOptionsSubwidgets( bool enabled )
 	ui->compatOptsBtn->setEnabled( enabled );
 }
 
-void MainWindow::selectMap( const QString & mapName )
+void MainWindow::changeMap( const QString & mapName )
 {
 	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
@@ -1339,7 +1340,7 @@ void MainWindow::selectSavedGame( int saveIdx )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectMap_demo( const QString & mapName )
+void MainWindow::changeMap_demo( const QString & mapName )
 {
 	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
@@ -1821,65 +1822,70 @@ void MainWindow::updateDemoFilesFromDir()
 // this is not called regularly, but only when an IWAD is selected or deselected
 void MainWindow::updateMapsFromIWAD()
 {
-	// note down the currently selected item
+	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
+	QString selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : "";
+
+	// note down the currently selected items
 	QString origText = ui->mapCmbBox->currentText();
 	QString origText_demo = ui->mapCmbBox_demo->currentText();
 
-	// TODO: refactor to a single shared mapModel
+	disableSelectionCallbacks = true;  // prevent unnecessary command regeneration
 
-	disableSelectionCallbacks = true;  // workaround (read the big comment above)
-
-	ui->mapCmbBox->setCurrentIndex( -1 );
-	ui->mapCmbBox->clear();
-	ui->mapCmbBox_demo->setCurrentIndex( -1 );
-	ui->mapCmbBox_demo->clear();
-
-	int iwadIdx = getSelectedItemIdx( ui->iwadListView );
-	if (iwadIdx < 0)
+	do
 	{
-		disableSelectionCallbacks = false;
-		return;
-	}
+		// We don't use the model-view architecture like with the rest of combo-boxes,
+		// because the editable combo-box doesn't work well with a custom model.
 
-	// read the map names from file
-	const WadInfo & wadInfo = getCachedWadInfo( iwadModel[ iwadIdx ].path );
+		ui->mapCmbBox->setCurrentIndex( -1 );
+		ui->mapCmbBox_demo->setCurrentIndex( -1 );
 
-	// fill the combox-box
-	if (wadInfo.successfullyRead && !wadInfo.mapNames.isEmpty())
-	{
-		for (const QString & mapName : wadInfo.mapNames)
+		ui->mapCmbBox->clear();
+		ui->mapCmbBox_demo->clear();
+
+		if (selectedIwadIdx < 0)
 		{
-			ui->mapCmbBox->addItem( mapName );
-			ui->mapCmbBox_demo->addItem( mapName );
+			break;
 		}
-	}
-	else  // if we haven't found any map names in the IWAD, fallback to the standard DOOM 2 names
-	{
-		for (int i = 1; i <= 32; i++)
-		{
-			QString mapName = QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') );
-			ui->mapCmbBox->addItem( mapName );
-			ui->mapCmbBox_demo->addItem( mapName );
-		}
-	}
 
-	// restore the originally selected item
-	int newIdx = ui->mapCmbBox->findText( origText );
-	ui->mapCmbBox->setCurrentIndex( newIdx );
-	int newIdx_demo = ui->mapCmbBox_demo->findText( origText_demo );
-	ui->mapCmbBox_demo->setCurrentIndex( newIdx_demo );
+		// read the map names from file
+		const WadInfo & wadInfo = getCachedWadInfo( selectedIwadPath );
+
+		// fill the combox-box
+		if (wadInfo.successfullyRead && !wadInfo.mapNames.isEmpty())
+		{
+			for (const QString & mapName : wadInfo.mapNames)
+			{
+				ui->mapCmbBox->addItem( mapName );
+				ui->mapCmbBox_demo->addItem( mapName );
+			}
+		}
+		else  // if we haven't found any map names in the IWAD, fallback to the standard DOOM 2 names
+		{
+			for (int i = 1; i <= 32; i++)
+			{
+				QString mapName = QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') );
+				ui->mapCmbBox->addItem( mapName );
+				ui->mapCmbBox_demo->addItem( mapName );
+			}
+		}
+
+		// restore the originally selected item
+		ui->mapCmbBox->setCurrentIndex( ui->mapCmbBox->findText( origText ) );
+		ui->mapCmbBox_demo->setCurrentIndex( ui->mapCmbBox_demo->findText( origText_demo ) );
+	}
+	while (false);  // this trick allows us to exit from the block without returning from a function
 
 	disableSelectionCallbacks = false;
 
 	if (ui->mapCmbBox->currentText() != origText)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		selectMap( origText );
+		changeMap( ui->mapCmbBox->currentText() );
 	}
 	if (ui->mapCmbBox_demo->currentText() != origText_demo)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		selectMap_demo( origText_demo );
+		changeMap_demo( ui->mapCmbBox->currentText() );
 	}
 }
 
@@ -2418,7 +2424,8 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir )
 		cmdStream << " -iwad \"" << base.rebasePath( iwadModel[ selectedIwadIdx ].path ) << "\"";
 	}
 
-	for (const QModelIndex & selectedMapIdx : getSelectedRows( ui->mapDirView ))
+	const auto selectedMapPacks = getSelectedRows( ui->mapDirView );
+	for (const QModelIndex & selectedMapIdx : selectedMapPacks)
 	{
 		QString modelPath = mapModel.filePath( selectedMapIdx );
 		QString mapFilePath = pathContext.convertPath( modelPath );

@@ -43,7 +43,7 @@ class PathContext {
 		{ _baseDir = other._baseDir; _prevBaseDir = other._prevBaseDir; _useAbsolutePaths = other._useAbsolutePaths; }
 
 	const QDir & baseDir() const                       { return _baseDir; }
-	bool useAbsolutePaths() const                      { return _useAbsolutePaths; }  // TODO: use enum instead of bool
+	bool useAbsolutePaths() const                      { return _useAbsolutePaths; }
 	bool useRelativePaths() const                      { return !_useAbsolutePaths; }
 
 	void toggleAbsolutePaths( bool useAbsolutePaths )  { _useAbsolutePaths = useAbsolutePaths; }
@@ -134,21 +134,6 @@ void traverseDirectory(
 	const QString & dir, bool recursively, EntryTypes typesToVisit,
 	const PathContext & pathContext, const std::function< void ( const QFileInfo & entry ) > & visitEntry
 );
-
-template< typename Item >
-void fillListFromDir(
-	QList< Item > & list, const QString & dir, bool recursively,
-	const PathContext & pathContext, const std::function< bool ( const QFileInfo & file ) > & isDesiredFile
-)
-{
-	traverseDirectory( dir, recursively, EntryType::FILE, pathContext, [&]( const QFileInfo & file )
-	{
-		if (isDesiredFile( file ))
-		{
-			list.append( Item( file ) );
-		}
-	});
-}
 
 
 #endif // FILE_SYSTEM_UTILS_INCLUDED

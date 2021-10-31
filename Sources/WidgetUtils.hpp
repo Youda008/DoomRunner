@@ -385,7 +385,13 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 	                              // but that's an acceptable drawback, instead of making differential update
 	model.clear();
 
-	fillListFromDir( model.list(), dir, recursively, pathContext, isDesiredFile );
+	traverseDirectory( dir, recursively, EntryType::FILE, pathContext, [&]( const QFileInfo & file )
+	{
+		if (isDesiredFile( file ))
+		{
+			model.list().append( Item( file ) );
+		}
+	});
 
 	model.finishCompleteUpdate();
 
@@ -448,7 +454,13 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 	if (includeEmptyItem)
 		model.append( QString() );
 
-	fillListFromDir( model.list(), dir, recursively, pathContext, isDesiredFile );
+	traverseDirectory( dir, recursively, EntryType::FILE, pathContext, [&]( const QFileInfo & file )
+	{
+		if (isDesiredFile( file ))
+		{
+			model.list().append( Item( file ) );
+		}
+	});
 
 	model.finishCompleteUpdate();
 

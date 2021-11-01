@@ -71,12 +71,17 @@ For instructions how to install Msys2 check www.msys2.org
 
 Use Msys2-MinGW-64 terminal to enter the following commands.
 
-##### 1. Install g++ compiler
+##### 1. Install package management simplification utils
+```
+pacman -S pactoys
+```
+
+##### 2. Install g++ compiler
 ```
 pacboy -S gcc:x
 ```
 
-##### 2. Install Qt
+##### 3. Install Qt
 
 for dynamically linked version
 ```
@@ -87,7 +92,7 @@ for statically linked version
 pacboy -S qt5-static:x
 ```
 
-##### 3. Build the project
+##### 4. Build the project
 ```
 cd <DoomRunner directory>
 ```

@@ -41,25 +41,43 @@ class UpdateChecker : public QObject {
 		UPDATE_NOT_AVAILABLE
 	};
 
-	using ResultCallback = std::function< void ( Result result, const QString & detail ) >;
+	using ResultCallback = std::function< void ( Result result, QString errorDetail, QStringList versionInfo ) >;
 
-	void checkForUpdates( const ResultCallback & callback );
+	void checkForUpdates( ResultCallback && callback );
 
  private:
 
 	void requestFinished( QNetworkReply * reply );
 
+	// one update check consists of 2 phases - request to version file and request to changelog
+	enum class Phase
+	{
+		VERSION_REQUEST,
+		CHANGELOG_REQUEST,
+	};
+	struct RequestData
+	{
+		Phase phase;
+		QString newVersion;
+		ResultCallback callback;
+	};
+
+	void versionReceived( QNetworkReply * reply, RequestData & requestData );
+	void changelogReceived( QNetworkReply * reply, RequestData & requestData );
+
  private:
 
 	QNetworkAccessManager manager;
-	QHash< QNetworkReply *, ResultCallback > registeredCallbacks;
+
+	QHash< QNetworkReply *, RequestData > pendingRequests;
 
 };
 
 
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
+//  common result reactions
 
-bool showUpdateNotification( QWidget * parent, const QString & newVersion, bool includeCheckbox );
+bool showUpdateNotification( QWidget * parent, QStringList versionInfo, bool includeCheckbox );
 
 
 #endif // UPDATE_CHECKER_INCLUDED

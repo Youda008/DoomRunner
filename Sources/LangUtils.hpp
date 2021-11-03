@@ -72,6 +72,32 @@ void reverse( Container & cont )
 
 
 //======================================================================================================================
+//  scope guards
+
+template< typename EndFunc >
+class ScopeGuard
+{
+	EndFunc _atEnd;
+ public:
+	ScopeGuard( const EndFunc & endFunc ) : _atEnd( endFunc ) {}
+	ScopeGuard( EndFunc && endFunc ) : _atEnd( std::move(endFunc) ) {}
+	~ScopeGuard() noexcept { _atEnd(); }
+};
+
+template< typename EndFunc >
+ScopeGuard< EndFunc > atScopeEndDo( const EndFunc & endFunc )
+{
+	return ScopeGuard< EndFunc >( endFunc );
+}
+
+template< typename EndFunc >
+ScopeGuard< EndFunc > atScopeEndDo( EndFunc && endFunc )
+{
+	return ScopeGuard< EndFunc >( std::move(endFunc) );
+}
+
+
+//======================================================================================================================
 //  other
 
 // just to be little more explicit when needed

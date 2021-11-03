@@ -9,6 +9,7 @@
 #include "UpdateChecker.hpp"
 
 #include "Version.hpp"
+#include "LangUtils.hpp"
 
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -16,9 +17,13 @@
 #include <QRegularExpression>
 
 #include <QStringBuilder>
-#include <QDebug>
 #include <QMessageBox>
+#include <QGridLayout>
+#include <QLabel>
+#include <QDialogButtonBox>
 #include <QCheckBox>
+#include <QTextBrowser>
+#include <QDebug>
 
 
 //======================================================================================================================
@@ -26,6 +31,11 @@
 
 static const QString availableVersionUrl = "https://raw.githubusercontent.com/Youda008/DoomRunner/master/version.txt";
 static const QString releasePageUrl = "https://github.com/Youda008/DoomRunner/releases";
+static const QString changelogUrl = "https://raw.githubusercontent.com/Youda008/DoomRunner/master/changelog.txt";
+
+#define HYPERLINK( text, url ) \
+	"<a href=\""%url%"\"><span style=\" text-decoration: underline; color:#0000ff;\">"%text%"</span></a>"
+
 
 UpdateChecker::UpdateChecker()
 {
@@ -34,71 +44,273 @@ UpdateChecker::UpdateChecker()
 
 UpdateChecker::~UpdateChecker() {}
 
-void UpdateChecker::checkForUpdates( const ResultCallback & callback )
+void UpdateChecker::checkForUpdates( ResultCallback && callback )
 {
 	QNetworkRequest request;
 	request.setUrl( availableVersionUrl );
-
 	QNetworkReply * reply = manager.get( request );
 
-	registeredCallbacks[ reply ] = callback;
+	pendingRequests[ reply ] = { Phase::VERSION_REQUEST, {}, std::move(callback) };
 }
 
 void UpdateChecker::requestFinished( QNetworkReply * reply )
 {
-	auto callbackIter = registeredCallbacks.find( reply );
-	if (callbackIter == registeredCallbacks.end())
+	auto requestIter = pendingRequests.find( reply );
+	if (requestIter == pendingRequests.end())
 	{
 		qWarning() << "This reply does not have a registered callback, wtf?";
 		return;
 	}
+	RequestData & requestData = requestIter.value();
 
-	ResultCallback & callback = callbackIter.value();
+	auto guard = atScopeEndDo( [&](){ pendingRequests.erase( requestIter ); } );
 
 	if (reply->error())
 	{
 		qWarning() << "HTTP request failed: " << reply->errorString();
-		callback( CONNECTION_FAILED, reply->errorString() );
+		requestData.callback( CONNECTION_FAILED, reply->errorString(), {} );
 		return;
 	}
 
+	if (requestData.phase == Phase::VERSION_REQUEST)
+	{
+		versionReceived( reply, requestData );
+	}
+	else
+	{
+		changelogReceived( reply, requestData );
+	}
+}
+
+void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & requestData )
+{
 	QString version( reply->readLine( 16 ) );
 
 	QRegularExpressionMatch match = QRegularExpression("^\"([0-9\\.]+)\"$").match( version );
 	if (!match.hasMatch())
 	{
 		qWarning() << "Version number from github is in invalid format ("%version%"). Fix it!";
-		callback( INVALID_FORMAT, version );
+		requestData.callback( INVALID_FORMAT, version, {} );
 		return;
 	}
 	QString availableVersion = match.captured(1);
 
 	bool updateAvailable = compareVersions( availableVersion, appVersion ) > 0;
+	if (!updateAvailable)
+	{
+		requestData.callback( UPDATE_NOT_AVAILABLE, {}, { availableVersion } );
+		return;
+	}
 
-	callback( updateAvailable ? UPDATE_AVAILABLE : UPDATE_NOT_AVAILABLE, availableVersion );
+	QNetworkRequest request;
+	request.setUrl( changelogUrl );
+	QNetworkReply * reply2 = manager.get( request );
+
+	pendingRequests[ reply2 ] = { Phase::CHANGELOG_REQUEST, availableVersion, std::move(requestData.callback) };
 }
 
-bool showUpdateNotification( QWidget * parent, const QString & newVersion, bool includeCheckbox )
+// fucking Qt, are you fucking kidding me?
+static QString getLine( QNetworkReply * reply )
 {
-	QMessageBox msgBox( QMessageBox::Information, "Update available",
-		"<html><head/><body>"
-		"<p>"
-			"Version "%newVersion%" is available. You can download it here:<br>"
-			"<a href=\""%releasePageUrl%"\">"
-			"<span style=\" text-decoration: underline; color:#0000ff;\">"
-				%releasePageUrl%
-			"</span>"
-			"</a>"
-		"</p>"
-		"</body></html>",
-		QMessageBox::Ok,
-		parent
-	);
+	QString line( reply->readLine() );  // what fucking sense does it make to include the '\n' char at every line
+	line.chop(1);                       // so that the user has to chop it himself???
+	return line;
+}
 
+void UpdateChecker::changelogReceived( QNetworkReply * reply, RequestData & requestData )
+{
+	/* changelog format
+	1.5
+	- tool-buttons got icons instead of symbols
+	- added button to add a directory of mods
+	- added button to create a new config from an existing one
+
+	1.4
+	- added new launch options for video, audio and save/screenshot directory
+	- added tooltips for some of the launch options
+	- map names are now extracted from IWAD file instead of guessing them from IWAD name
+
+	1.3
+	...
+	*/
+
+	QString line;
+	QStringList versionInfo;
+
+	// find the line with our version
+	while ((line = getLine( reply )) != requestData.newVersion && !reply->atEnd()) {}
+	versionInfo.append( line );
+
+	// get all lines related to our version
+	while ((line = getLine( reply )).startsWith("- "))
+		versionInfo.append( line );
+
+	// finally, call the user callback with all the data
+	requestData.callback( UPDATE_AVAILABLE, {}, versionInfo );
+}
+
+
+//======================================================================================================================
+//  common result reactions
+
+struct NewElements
+{
+	QLabel * firstLabel = nullptr;
+	QTextBrowser * textBrowser = nullptr;
+	QLabel * secondLabel = nullptr;
+
+	operator bool() const { return firstLabel && textBrowser && secondLabel; }
+};
+static NewElements reworkLayout( QMessageBox & msgBox )
+{
+	NewElements newElements;
+
+	// We need to do all of this mess just to customize the content of the message box and add a text field.
+	// Beware: This code is kinda fragile since it depends on the exact implementation of QMessageBox and its layout.
+
+	QGridLayout * layout = qobject_cast< QGridLayout * >( msgBox.layout() );
+	if (!layout)
+	{
+		qWarning() << "MessageBox doesn't use grid layout, wtf?";
+		return newElements;
+	}
+
+	/* the original layout looks like this
+	 QIcon             QSpacerItem       QLabel
+	 QIcon             QSpacerItem      (QCheckBox)
+	(QSpacerItem       nullptr           nullptr)
+	 QDialogButtonBox  QDialogButtonBox  QDialogButtonBox
+	*/
+	/* but we want it like this
+	 QIcon             QSpacerItem       QLabel
+	 QIcon             QSpacerItem       QTextBrowser
+	 nullptr           nullptr           QLabel
+	 nullptr           nullptr          (QCheckBox)
+	(QSpacerItem       nullptr           nullptr)
+	 QDialogButtonBox  QDialogButtonBox  QDialogButtonBox
+	*/
+
+	int origLastRow = layout->rowCount() - 1;
+
+	// move button box 2 rows down
+	QDialogButtonBox * btnBox = msgBox.findChild< QDialogButtonBox * >();
+	if (!btnBox)
+	{
+		qWarning() << "MessageBox doesn't have button box, wtf?";
+		return newElements;
+	}
+	layout->removeWidget( btnBox );
+	layout->addWidget( btnBox, origLastRow + 2, 0, 1, layout->columnCount() );
+
+	// move checkbox and its related layout items 2 rows down
+	QCheckBox * chkBox = msgBox.findChild< QCheckBox * >();
+	if (chkBox)
+	{
+		int boxRow, boxColumn, boxRowSpan, boxColumnSpan;
+		layout->getItemPosition( layout->indexOf( chkBox ), &boxRow, &boxColumn, &boxRowSpan, &boxColumnSpan );
+		layout->removeWidget( chkBox );
+		layout->addWidget( chkBox, boxRow + 2, boxColumn, boxRowSpan, boxColumnSpan, Qt::AlignLeft );
+
+		for (int itemColumn = 0; itemColumn < layout->columnCount(); ++itemColumn)
+		{
+			QLayoutItem * item = layout->itemAtPosition( boxRow + 1, itemColumn );
+			if (item)
+			{
+				layout->removeItem( item );
+				layout->addItem( item, boxRow + 3, itemColumn, 1, 1 );  // we asume only 1x1 items, hopefully this is not gonna change
+			}
+		}
+	}
+
+	// find the original label
+	newElements.firstLabel = msgBox.findChild< QLabel * >( "qt_msgbox_label" );
+	if (!newElements.firstLabel)
+	{
+		qWarning() << "MessageBox doesn't have this label, incorrect name?";
+		return newElements;
+	}
+	int labelRow, labelColumn, labelRowSpan, labelColumnSpan;
+	layout->getItemPosition( layout->indexOf( newElements.firstLabel ), &labelRow, &labelColumn, &labelRowSpan, &labelColumnSpan );
+
+	// add new elements under the original label
+	newElements.textBrowser = new QTextBrowser;
+	newElements.textBrowser->setMinimumSize( 500, 200 );
+	newElements.textBrowser->setLineWrapMode( QTextBrowser::LineWrapMode::WidgetWidth );
+	layout->addWidget( newElements.textBrowser, labelRow + 1, labelColumn, 1, 1 );
+
+	newElements.secondLabel = new QLabel;
+	layout->addWidget( newElements.secondLabel, labelRow + 2, labelColumn, 1, 1 );
+
+	return newElements;
+}
+
+bool showUpdateNotification( QWidget * parent, QStringList versionInfo, bool includeCheckbox )
+{
+	QString newVersion = versionInfo.takeFirst();
+
+	QMessageBox msgBox( QMessageBox::Information, "Update available", "", QMessageBox::Ok, parent );
+
+	// add checkbox for automatic update checks
 	QCheckBox chkBox( "Check for updates on every start" );
-	chkBox.setChecked( true );
 	if (includeCheckbox)
+	{
+		chkBox.setChecked( true );  // if this was called with includeCheckbox, it must be true
 		msgBox.setCheckBox( &chkBox );
+	}
+
+	NewElements newElements = reworkLayout( msgBox );
+
+	if (newElements)
+	{
+		newElements.firstLabel->setText(
+			"<html><head/><body>"
+			"<p>"
+				"Version "%newVersion%" is available."
+			"</p><p>"
+				"Here is what's new."
+			"</p>"
+			"</body></html>"
+		);
+
+		newElements.textBrowser->setText( versionInfo.join('\n') );
+
+		newElements.secondLabel->setText(
+			"<html><head/><body>"
+			"<p>"
+				"You can download it at " HYPERLINK( releasePageUrl, releasePageUrl ) "."
+			"</p>"
+			"</body></html>"
+		);
+	}
+	else  // layout rework failed
+	{
+		msgBox.setText(
+			"<html><head/><body>"
+			"<p>"
+				"Version "%newVersion%" is available."
+			"</p><p>"
+				"You can download it at<br>"
+				HYPERLINK( releasePageUrl, releasePageUrl ) "."
+			"</p><p>"
+				"Bellow you can see what's new."
+			"</p>"
+			"</body></html>"
+		);
+
+		// show changelog at least in the message box details
+		msgBox.setDetailedText( versionInfo.join('\n') );
+
+		// automatically expand the details section
+		const QList<QAbstractButton *> buttons = msgBox.buttons();
+		for (QAbstractButton * button : buttons)
+		{
+			if (button->text().startsWith("Show Details"))
+			{
+				button->click();
+				break;
+			}
+		}
+	}
 
 	msgBox.exec();
 

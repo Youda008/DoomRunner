@@ -420,11 +420,11 @@ void MainWindow::onWindowShown()
 	if (checkForUpdates)
 	{
 		updateChecker.checkForUpdates(
-			/* result callback */[ this ]( UpdateChecker::Result result, const QString & detail )
+			/* result callback */[ this ]( UpdateChecker::Result result, QString /*errorDetail*/, QStringList versionInfo )
 			{
 				if (result == UpdateChecker::UPDATE_AVAILABLE)
 				{
-					checkForUpdates = showUpdateNotification( this, detail, true );
+					checkForUpdates = showUpdateNotification( this, versionInfo, /*checkbox*/true );
 				}
 				// silently ignore the rest of the results, since nobody asked for anything
 			}

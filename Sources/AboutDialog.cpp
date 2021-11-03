@@ -53,7 +53,7 @@ void AboutDialog::checkForUpdate()
 	ui->checkUpdateBtn->setEnabled( false );  // prevent him spamming the button and starting many requests simultaneously
 
 	updateChecker.checkForUpdates(
-		[ this, origText ]( UpdateChecker::Result result, const QString & detail )
+		[ this, origText ]( UpdateChecker::Result result, QString errorDetail, QStringList versionInfo )
 		{
 			// request finished, restore the button
 			ui->checkUpdateBtn->setText( origText );
@@ -61,23 +61,23 @@ void AboutDialog::checkForUpdate()
 
 			switch (result) {
 			 case UpdateChecker::CONNECTION_FAILED:
-				QMessageBox::warning( nullptr, "Update check failed",
+				QMessageBox::warning( this, "Update check failed",
 					"Failed to connect to the project web page. Is your internet down?"
-					"Details: "%detail
+					"Details: "%errorDetail
 				);
 				break;
 			 case UpdateChecker::INVALID_FORMAT:
-				QMessageBox::warning( nullptr, "Update check failed",
-					"Version number from github is in invalid format: "%detail
+				QMessageBox::warning( this, "Update check failed",
+					"Version number from github is in invalid format: "%errorDetail
 				);
 				break;
 			 case UpdateChecker::UPDATE_NOT_AVAILABLE:
-				QMessageBox::information( nullptr, "No update available",
+				QMessageBox::information( this, "No update available",
 					"No update is available, you have the newest version."
 				);
 				break;
 			 case UpdateChecker::UPDATE_AVAILABLE:
-				showUpdateNotification( this, detail, false );
+				showUpdateNotification( this, versionInfo, /*checkbox*/false );
 				break;
 			}
 		}

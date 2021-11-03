@@ -2,19 +2,19 @@
 
 Doom Runner is yet another launcher of ZDoom and derivatives with graphical user interface. It is written in C++ and Qt, and it is designed around the idea of presets for various multi-file modifications (Brutal Doom with mutators, Project Brutality with UDV, Complex Doom Clusterfuck, ...) to allow one-click switching between them and minimize any repetitive work.
 
-First you perform an initial setup, setting up the paths and adding all your Doom engines and IWADs. 
+First you perform an initial setup, setting up the paths and adding all your Doom engines and IWADs.\
 ![](Screenshots/1-InitialSetup.png "Initial setup")
 
-Then you create named presets for all your favourite modifications and assign them an engine, an IWAD and mod files.
+Then you create named presets for all your favourite modifications and assign them an engine, an IWAD and mod files.\
 ![](Screenshots/2-MainScreen.png "Main screen")
 
-If you wish to play multiplayer or jump into a map directly, you can do so in the second tab.
+If you wish to play multiplayer or jump into a map directly, you can do so in the second tab.\
 ![](Screenshots/3-LaunchOptions.png "Launch options")
 
-You can even configure gameplay flags and compatibility flags, with tooltips from official ZDoom wiki.
+You can even configure gameplay flags and compatibility flags, with tooltips from official ZDoom wiki.\
 ![](Screenshots/4-DMflags.png "DM flags")
 
-If you extract a .wad file together with an equally named .txt file (for example AV.wad and AV.txt), you can display its content by doubleclicking the wad in the map pack list.
+If you extract a .wad file together with an equally named .txt file (for example AV.wad and AV.txt), you can display its content by doubleclicking the wad in the map pack list.\
 ![](Screenshots/5-MapPackDesc.png "Map pack description")
 
 The map list and IWAD list are automatically updated from selected directory, so everytime you download a new WAD, you don't need to manually add it to the launcher. The mod list supports drag&drop from directory window and internal drag&drop for reordering the files.

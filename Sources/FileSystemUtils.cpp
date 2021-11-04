@@ -8,6 +8,10 @@
 
 #include "FileSystemUtils.hpp"
 
+#include <QDirIterator>
+#include <QFile>
+#include <QStringBuilder>
+
 
 //======================================================================================================================
 
@@ -45,4 +49,41 @@ void traverseDirectory(
 				visitEntry( entry );
 		}
 	}
+}
+
+QString updateFile( const QString & filePath, const QByteArray & newContent )
+{
+	// Write to a different file than the original and after it's done and closed, replace the original with the new.
+	// This is done to prevent data loss, when the program (or OS) crashes during writing to disc.
+
+	QString newFilePath = filePath+".new";
+	QFile newFile( newFilePath );
+	if (!newFile.open( QIODevice::WriteOnly ))
+	{
+		return "Could not open file "%newFilePath%" for writing: "%newFile.errorString();
+	}
+
+	newFile.write( newContent );
+	if (newFile.error() != QFile::NoError)
+	{
+		return "Could not write to file "%newFilePath%": "%newFile.errorString();
+	}
+
+	newFile.close();
+
+	QFile oldFile( filePath );
+	if (oldFile.exists())
+	{
+		if (!oldFile.remove())
+		{
+			return "Could not delete the previous options file "%filePath%": "%newFile.errorString();
+		}
+	}
+
+	if (!newFile.rename( filePath ))
+	{
+		return "Could rename new file "%newFilePath%" back to "%filePath%": "%newFile.errorString();
+	}
+
+	return {};
 }

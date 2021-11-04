@@ -16,7 +16,6 @@ class QModelIndex;
 
 #include <QString>
 #include <QDir>
-#include <QDirIterator>
 #include <QFileInfo>
 
 #include <functional>
@@ -108,6 +107,8 @@ inline bool isInsideDir( const QString & entryPath, const QDir & dir )
 	QFileInfo entry( entryPath );
 	return entry.absoluteFilePath().startsWith( dir.absolutePath() );
 }
+
+QString updateFile( const QString & filePath, const QByteArray & newContent );
 
 
 //======================================================================================================================

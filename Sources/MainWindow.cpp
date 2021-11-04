@@ -2010,20 +2010,12 @@ void MainWindow::saveOptions( const QString & filePath )
 	QJsonDocument jsonDoc( jsRoot );
 	QByteArray rawData = jsonDoc.toJson();
 
-	// Open the file after the JSON is filled up and serialized to minimize the time
-	// where the file is empty (after it's opened for writing) and waiting for the data to be written.
-	QFile file( filePath );
-	if (!file.open( QIODevice::WriteOnly ))
+	QString error = updateFile( filePath, rawData );
+	if (!error.isEmpty())
 	{
-		QMessageBox::warning( this, "Error saving options",
-			"Could not open file "%filePath%" for writing: "%file.errorString() );
-		return;
+		QMessageBox::warning( this, "Error saving options", error );
 	}
-
-	file.write( rawData );
-	file.close();
-
-	//return file.error() == QFile::NoError;
+	// return error.isEmpty();
 }
 
 void MainWindow::loadOptions( const QString & filePath )

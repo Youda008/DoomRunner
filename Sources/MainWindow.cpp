@@ -1218,7 +1218,7 @@ void MainWindow::modMoveDown()
 	updateLaunchCommand();
 }
 
-void MainWindow::modsDropped( int /*row*/, int /*count*/ )
+void MainWindow::modsDropped( int dropRow, int count )
 {
 	// update the preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
@@ -1229,8 +1229,9 @@ void MainWindow::modsDropped( int /*row*/, int /*count*/ )
 
 	// if these files were dragged here from the map pack list, deselect them there
 	QDir mapRootDir = mapModel.rootDirectory();
-	for (const Mod & mod : std::as_const( modModel.list() ))
+	for (int row = dropRow; row < dropRow + count; ++row)
 	{
+		const Mod & mod = modModel[ row ];
 		if (isInsideDir( mod.path, mapRootDir ))
 		{
 			QModelIndex mapPackIdx = mapModel.index( mod.path );

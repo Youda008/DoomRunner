@@ -1110,26 +1110,32 @@ void MainWindow::presetMoveDown()
 
 void MainWindow::modAdd()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate the mod file", modSettings.dir,
-	                                             "Doom mod files (*.wad *.WAD *.deh *.DEH *.bex *.BEX *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
-	                                             "DukeNukem data files (*.grp *.rff);;"
-	                                             "All files (*)" );
-	if (path.isEmpty())  // user probably clicked cancel
+	QStringList paths = QFileDialog::getOpenFileNames( this, "Locate the mod file", modSettings.dir,
+		"Doom mod files (*.wad *.WAD *.deh *.DEH *.bex *.BEX *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
+		"DukeNukem data files (*.grp *.rff);;"
+		"All files (*)"
+	);
+	if (paths.isEmpty())  // user probably clicked cancel
 		return;
 
 	// the path comming out of the file dialog is always absolute
 	if (pathContext.useRelativePaths())
-		path = pathContext.getRelativePath( path );
+		for (QString & path : paths)
+			path = pathContext.getRelativePath( path );
 
-	Mod mod( QFileInfo( path ), true );
-
-	appendItem( ui->modListView, modModel, mod );
-
-	// add it also to the current preset
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+
+	for (const QString & path : paths)
 	{
-		presetModel[ selectedPresetIdx ].mods.append( mod );
+		Mod mod( QFileInfo( path ), true );
+
+		appendItem( ui->modListView, modModel, mod );
+
+		// add it also to the current preset
+		if (selectedPresetIdx >= 0)
+		{
+			presetModel[ selectedPresetIdx ].mods.append( mod );
+		}
 	}
 
 	updateLaunchCommand();

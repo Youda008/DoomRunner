@@ -47,7 +47,7 @@
                  <item>
                   <widget class="QToolButton" name="presetBtnAdd">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -70,7 +70,7 @@
                  <item>
                   <widget class="QToolButton" name="presetBtnDel">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -93,7 +93,7 @@
                  <item>
                   <widget class="QToolButton" name="presetBtnClone">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -116,7 +116,7 @@
                  <item>
                   <widget class="QToolButton" name="presetBtnUp">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -139,7 +139,7 @@
                  <item>
                   <widget class="QToolButton" name="presetBtnDown">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -170,12 +170,6 @@
            <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,8,10">
             <item>
              <widget class="QGroupBox" name="engineGrpBox">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>0</height>
-               </size>
-              </property>
               <property name="title">
                <string>2. Select engine</string>
               </property>
@@ -198,11 +192,14 @@
             </item>
             <item>
              <widget class="QGroupBox" name="iwadGrpBox">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>210</height>
-               </size>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;IWAD can be de-selected by holding CTRL and left-clicking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="title">
                <string>3. Select IWAD</string>
@@ -214,13 +211,16 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;IWAD can be de-selected by holding CTRL and left-clicking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>180</height>
+                  </size>
                  </property>
                  <property name="editTriggers">
                   <set>QAbstractItemView::NoEditTriggers</set>
@@ -245,7 +245,7 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -273,12 +273,6 @@
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
              <widget class="QGroupBox" name="configGrpBox">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>0</height>
-               </size>
-              </property>
               <property name="title">
                <string>5. Select config (optional)</string>
               </property>
@@ -349,7 +343,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -375,7 +369,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -401,7 +395,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -427,7 +421,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -453,7 +447,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -560,8 +554,8 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>40</width>
-                   <height>20</height>
+                   <width>0</width>
+                   <height>0</height>
                   </size>
                  </property>
                 </spacer>
@@ -571,33 +565,51 @@
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
                  <property name="minimumSize">
                   <size>
-                   <width>75</width>
+                   <width>65</width>
                    <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>65</width>
+                   <height>16777215</height>
                   </size>
                  </property>
                  <property name="editable">
                   <bool>true</bool>
                  </property>
+                 <item>
+                  <property name="text">
+                   <string>MAP32</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_8">
+              <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,4,0,10">
                <item>
                 <widget class="QRadioButton" name="launchMode_savefile">
                  <property name="text">
                   <string>Load saved game</string>
                  </property>
                 </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_12">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
                <item>
                 <spacer name="horizontalSpacer_6">
@@ -609,8 +621,8 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>60</width>
-                   <height>20</height>
+                   <width>44</width>
+                   <height>0</height>
                   </size>
                  </property>
                 </spacer>
@@ -621,14 +633,14 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>100</width>
+                   <width>70</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -640,7 +652,7 @@
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_29">
+              <layout class="QHBoxLayout" name="horizontalLayout_29" stretch="0,4,0,10">
                <item>
                 <widget class="QRadioButton" name="launchMode_recordDemo">
                  <property name="text">
@@ -649,25 +661,43 @@
                 </widget>
                </item>
                <item>
+                <spacer name="horizontalSpacer_14">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
                 <widget class="QComboBox" name="mapCmbBox_demo">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
                  <property name="minimumSize">
                   <size>
-                   <width>75</width>
+                   <width>65</width>
                    <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>65</width>
+                   <height>16777215</height>
                   </size>
                  </property>
                  <property name="editable">
                   <bool>true</bool>
                  </property>
+                 <item>
+                  <property name="text">
+                   <string>MAP32</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
                <item>
@@ -676,14 +706,14 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>100</width>
+                   <width>70</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -692,13 +722,26 @@
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_30">
+              <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0,4,0,10">
                <item>
                 <widget class="QRadioButton" name="launchMode_replayDemo">
                  <property name="text">
                   <string>Play demo</string>
                  </property>
                 </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_15">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
                <item>
                 <spacer name="horizontalSpacer_13">
@@ -710,8 +753,8 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>95</width>
-                   <height>20</height>
+                   <width>79</width>
+                   <height>0</height>
                   </size>
                  </property>
                 </spacer>
@@ -722,14 +765,14 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>100</width>
+                   <width>70</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -1133,13 +1176,10 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
-                   </property>
-                   <property name="editable">
-                    <bool>false</bool>
                    </property>
                    <item>
                     <property name="text">
@@ -1226,7 +1266,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -1269,19 +1309,19 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
                    <property name="minimumSize">
                     <size>
-                     <width>170</width>
+                     <width>1</width>
                      <height>0</height>
                     </size>
                    </property>
-                   <property name="currentIndex">
-                    <number>0</number>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <item>
                     <property name="text">
@@ -1295,12 +1335,12 @@
                    </item>
                    <item>
                     <property name="text">
-                     <string>Alternative Deathmatch</string>
+                     <string>Alt. Deathmatch</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Alternative Team Deathmatch</string>
+                     <string>Alt. Team Deathmatch</string>
                     </property>
                    </item>
                    <item>

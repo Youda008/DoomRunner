@@ -3,6 +3,7 @@
 - fixed a bug where right-click menu actions for IWADs would apply to engines
 - allowed the application window to be downsized little more
 - allowed to select multiple files at once when adding a mod via the |+| button
+- allowed to select only 1 player for multiplayer
 - added right-click menu action "Open file location" for editable lists
 
 1.5

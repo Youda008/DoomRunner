@@ -361,10 +361,12 @@ void MainWindow::setupModView()
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
+	ui->modListView->enableOpenFileLocation();
 	connect( ui->modListView->addAction, &QAction::triggered, this, &thisClass::modAdd );
 	connect( ui->modListView->deleteAction, &QAction::triggered, this, &thisClass::modDelete );
 	connect( ui->modListView->moveUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
 	connect( ui->modListView->moveDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
+	connect( ui->modListView->openFileLocationAction, &QAction::triggered, this, &thisClass::modOpenFileLocation );
 }
 
 void MainWindow::loadMonitorInfo( QComboBox * box )
@@ -1222,6 +1224,23 @@ void MainWindow::modMoveDown()
 	}
 
 	updateLaunchCommand();
+}
+
+void MainWindow::modOpenFileLocation()
+{
+	int currentIdx = getCurrentItemIdx( ui->modListView );
+	if (currentIdx < 0)
+	{
+		QMessageBox::warning( this, "No item chosen", "You did not click on any mod." );
+		return;
+	}
+
+	const Mod & mod = modModel[ currentIdx ];
+
+	if (!openFileLocation( mod.path ))
+	{
+		QMessageBox::warning( this, "Error opening directory", "Unknown error prevented opening a directory." );
+	}
 }
 
 void MainWindow::modsDropped( int dropRow, int count )

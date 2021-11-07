@@ -57,6 +57,9 @@ class EditableListView : public QListView {
 	/** enables clone action in a right-click context menu and CTRL+C shortcut */
 	void enableItemCloning();
 
+	/** enables "Open file location" action in a right-click context menu */
+	void enableOpenFileLocation();
+
  public: // members
 
 	// these actions will emit trigger signals when a menu item is clicked or a shortcut is pressed
@@ -65,6 +68,7 @@ class EditableListView : public QListView {
 	QAction * cloneAction = nullptr;
 	QAction * moveUpAction = nullptr;
 	QAction * moveDownAction = nullptr;
+	QAction * openFileLocationAction = nullptr;
 
  protected: // methods
 
@@ -116,7 +120,6 @@ class EditableListView : public QListView {
 	ModifierHandler modifierHandler;
 
 	bool contexMenuActive;
-	bool itemCloningEnabled;
 
 	QMenu * contextMenu;
 

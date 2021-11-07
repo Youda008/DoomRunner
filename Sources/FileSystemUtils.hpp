@@ -110,6 +110,8 @@ inline bool isInsideDir( const QString & entryPath, const QDir & dir )
 
 QString updateFile( const QString & filePath, const QByteArray & newContent );
 
+bool openFileLocation( const QString & filePath );
+
 
 //======================================================================================================================
 //  traversing directory content

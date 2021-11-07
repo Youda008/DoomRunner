@@ -34,6 +34,7 @@ class QTreeView;
 //----------------------------------------------------------------------------------------------------------------------
 //  selection manipulation
 
+int getCurrentItemIdx( QListView * view );
 int getSelectedItemIdx( QListView * view );  // assumes a single-selection mode, will throw a message box error otherwise
 QVector<int> getSelectedItemIdxs( QListView * view );
 bool isSelectedIdx( QListView * view, int index );

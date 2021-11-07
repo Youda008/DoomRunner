@@ -141,10 +141,12 @@ void SetupDialog::setupEngineView()
 
 	// setup reaction to key shortcuts and right click
 	ui->engineListView->toggleContextMenu( true );
+	ui->engineListView->enableOpenFileLocation();
 	connect( ui->engineListView->addAction, &QAction::triggered, this, &thisClass::engineAdd );
 	connect( ui->engineListView->deleteAction, &QAction::triggered, this, &thisClass::engineDelete );
 	connect( ui->engineListView->moveUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
 	connect( ui->engineListView->moveDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
+	connect( ui->engineListView->openFileLocationAction, &QAction::triggered, this, &thisClass::engineOpenFileLocation );
 }
 
 void SetupDialog::setupIWADView()
@@ -166,10 +168,12 @@ void SetupDialog::setupIWADView()
 
 	// setup reaction to key shortcuts and right click
 	ui->iwadListView->toggleContextMenu( iwadSettings.updateFromDir );
-	connect( ui->iwadListView->addAction, &QAction::triggered, this, &thisClass::engineAdd );
-	connect( ui->iwadListView->deleteAction, &QAction::triggered, this, &thisClass::engineDelete );
-	connect( ui->iwadListView->moveUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
-	connect( ui->iwadListView->moveDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
+	ui->iwadListView->enableOpenFileLocation();
+	connect( ui->iwadListView->addAction, &QAction::triggered, this, &thisClass::iwadAdd );
+	connect( ui->iwadListView->deleteAction, &QAction::triggered, this, &thisClass::iwadDelete );
+	connect( ui->iwadListView->moveUpAction, &QAction::triggered, this, &thisClass::iwadMoveUp );
+	connect( ui->iwadListView->moveDownAction, &QAction::triggered, this, &thisClass::iwadMoveDown );
+	connect( ui->iwadListView->openFileLocationAction, &QAction::triggered, this, &thisClass::iwadOpenFileLocation );
 }
 
 void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
@@ -322,6 +326,23 @@ void SetupDialog::iwadMoveDown()
 	moveDownSelectedItem( ui->iwadListView, iwadModel );
 }
 
+void SetupDialog::iwadOpenFileLocation()
+{
+	int currentIdx = getCurrentItemIdx( ui->iwadListView );
+	if (currentIdx < 0)
+	{
+		QMessageBox::warning( this, "No item chosen", "You did not click on any IWAD." );
+		return;
+	}
+
+	const IWAD & iwad = iwadModel[ currentIdx ];
+
+	if (!openFileLocation( iwad.path ))
+	{
+		QMessageBox::warning( this, "Error opening directory", "Unknown error prevented opening a directory." );
+	}
+}
+
 void SetupDialog::engineAdd()
 {
 	EngineDialog dialog( this, pathContext, {} );
@@ -345,6 +366,23 @@ void SetupDialog::engineMoveUp()
 void SetupDialog::engineMoveDown()
 {
 	moveDownSelectedItem( ui->engineListView, engineModel );
+}
+
+void SetupDialog::engineOpenFileLocation()
+{
+	int currentIdx = getCurrentItemIdx( ui->engineListView );
+	if (currentIdx < 0)
+	{
+		QMessageBox::warning( this, "No item chosen", "You did not click on any engine." );
+		return;
+	}
+
+	const Engine & engine = engineModel[ currentIdx ];
+
+	if (!openFileLocation( engine.path ))
+	{
+		QMessageBox::warning( this, "Error opening directory", "Unknown error prevented opening a directory." );
+	}
 }
 
 void SetupDialog::editEngine( const QModelIndex & index )

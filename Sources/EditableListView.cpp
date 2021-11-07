@@ -62,7 +62,6 @@ EditableListView::EditableListView( QWidget * parent ) : QListView( parent )
 	contextMenu = new QMenu( this );  // will be deleted when the parent (this widget) is deleted
 
 	contexMenuActive = false;
-	itemCloningEnabled = false;
 
 	addAction = addOwnAction( "Add", { Qt::Key_Insert } );
 	deleteAction = addOwnAction( "Delete", { Qt::Key_Delete } );
@@ -310,8 +309,12 @@ void EditableListView::toggleContextMenu( bool enabled )
 
 void EditableListView::enableItemCloning()
 {
-	itemCloningEnabled = true;
 	cloneAction = addOwnAction( "Clone", { Qt::CTRL + Qt::Key_C } );
+}
+
+void EditableListView::enableOpenFileLocation()
+{
+	openFileLocationAction = addOwnAction( "Open file location", {} );
 }
 
 void EditableListView::contextMenuEvent( QContextMenuEvent * event )
@@ -328,6 +331,8 @@ void EditableListView::contextMenuEvent( QContextMenuEvent * event )
 		moveUpAction->setEnabled( contexMenuActive && eventIndex.isValid() );
 	if (moveDownAction)
 		moveDownAction->setEnabled( contexMenuActive && eventIndex.isValid() );
+	if (openFileLocationAction)
+		openFileLocationAction->setEnabled( eventIndex.isValid() );
 
 	contextMenu->popup( event->globalPos() );
 }

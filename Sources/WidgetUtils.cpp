@@ -14,6 +14,11 @@
 //======================================================================================================================
 //  1D list view helpers
 
+int getCurrentItemIdx( QListView * view )
+{
+	return view->selectionModel()->currentIndex().row();
+}
+
 int getSelectedItemIdx( QListView * view )   // this function is for single selection lists
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
@@ -130,7 +135,6 @@ void selectItemByIdx( QTreeView * view, const QModelIndex & index )
 void deselectItemByIdx( QTreeView * view, const QModelIndex & index )
 {
 	view->selectionModel()->select( index, QItemSelectionModel::Deselect );
-	//view->selectionModel()->setCurrentIndex( index, QItemSelectionModel::NoUpdate );
 }
 
 void deselectSelectedItems( QTreeView * view )

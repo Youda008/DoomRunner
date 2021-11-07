@@ -70,11 +70,13 @@ class SetupDialog : public QDialog {
 	void iwadDelete();
 	void iwadMoveUp();
 	void iwadMoveDown();
+	void iwadOpenFileLocation();
 
 	void engineAdd();
 	void engineDelete();
 	void engineMoveUp();
 	void engineMoveDown();
+	void engineOpenFileLocation();
 
 	void editEngine( const QModelIndex & index );
 	void editCurrentEngine();

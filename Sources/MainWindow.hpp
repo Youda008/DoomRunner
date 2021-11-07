@@ -80,6 +80,7 @@ class MainWindow : public QMainWindow {
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
+	void modOpenFileLocation();
 	void modsDropped( int row, int count );
 
 	void modeStandard();

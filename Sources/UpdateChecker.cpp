@@ -239,6 +239,7 @@ static NewElements reworkLayout( QMessageBox & msgBox )
 	layout->addWidget( newElements.textBrowser, labelRow + 1, labelColumn, 1, 1 );
 
 	newElements.secondLabel = new QLabel;
+	newElements.secondLabel->setOpenExternalLinks( true );
 	layout->addWidget( newElements.secondLabel, labelRow + 2, labelColumn, 1, 1 );
 
 	return newElements;

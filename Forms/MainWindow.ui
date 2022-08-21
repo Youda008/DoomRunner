@@ -291,7 +291,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QToolButton" name="configAddBtn">
+                <widget class="QToolButton" name="configCloneBtn">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>

@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  5.4.2020
-// Description: doom specific utilities
+// Description: doom-specific utilities
 //======================================================================================================================
 
 #include "DoomUtils.hpp"
@@ -140,16 +140,18 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 
 	for (uint32_t i = 0; i < header.numLumps; ++i)
 	{
+		LumpEntry & lump = lumpDir[i];
+
 		// we need to make sure we have a null-terminated string, because the original one isn't when it's 8 chars long
 		char lumpName0 [9];
-		strncpy( lumpName0, lumpDir[i].name, sizeof(lumpDir[i].name) );
+		strncpy( lumpName0, lump.name, sizeof(lump.name) );
 		lumpName0[8] = '\0';
 		QString lumpName( lumpName0 );
 
 		// try to gather the map names from the marker lumps,
 		// but if we find a MAPINFO lump, let that one override the markers
 
-		if (isMapMarker( lumpDir[i], lumpName ))
+		if (isMapMarker( lump, lumpName ))
 		{
 			wadInfo.mapNames.append( lumpName );
 		}
@@ -158,13 +160,13 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 		{
 			qint64 origPos = file.pos();
 
-			if (!file.seek( lumpDir[i].dataOffset ))
+			if (!file.seek( lump.dataOffset ))
 			{
 				continue;
 			}
 
-			QByteArray lumpData = file.read( lumpDir[i].size );
-			if (lumpData.size() < int( lumpDir[i].size ))
+			QByteArray lumpData = file.read( lump.size );
+			if (lumpData.size() < int( lump.size ))
 			{
 				file.seek( origPos );
 				continue;

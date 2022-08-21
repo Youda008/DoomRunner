@@ -11,7 +11,8 @@
 #include <QString>
 #include <QStringList>
 
-struct Version {
+struct Version
+{
 	ushort major;
 	ushort minor;
 	ushort patch;

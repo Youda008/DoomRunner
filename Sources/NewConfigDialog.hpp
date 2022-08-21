@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  25.1.2021
-// Description:
+// Description: logic of the New Config dialog that appears when you click the Clone Config button
 //======================================================================================================================
 
 #ifndef CONFIG_DIALOG_INCLUDED
@@ -21,16 +21,16 @@ namespace Ui {
 
 //======================================================================================================================
 
-class ConfigDialog : public QDialog {
+class NewConfigDialog : public QDialog {
 
 	Q_OBJECT
 
-	using thisClass = ConfigDialog;
+	using thisClass = NewConfigDialog;
 
  public:
 
-	explicit ConfigDialog( QWidget * parent, const QString & currentConfigName );
-	virtual ~ConfigDialog() override;
+	explicit NewConfigDialog( QWidget * parent, const QString & currentConfigName );
+	virtual ~NewConfigDialog() override;
 
 	void confirmed();
 

@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  13.5.2019
-// Description: general helper functions
+// Description: general language-specific helper functions
 //======================================================================================================================
 
 //#include "LangUtils.hpp"

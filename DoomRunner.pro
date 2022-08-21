@@ -33,7 +33,6 @@ QMAKE_CXXFLAGS += -Wno-comment
 SOURCES += \
     Sources/AboutDialog.cpp \
     Sources/CompatOptsDialog.cpp \
-    Sources/ConfigDialog.cpp \
     Sources/DoomUtils.cpp \
     Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
@@ -44,6 +43,7 @@ SOURCES += \
     Sources/LangUtils.cpp \
     Sources/ListModel.cpp \
     Sources/MainWindow.cpp \
+    Sources/NewConfigDialog.cpp \
     Sources/OSUtils.cpp \
     Sources/SetupDialog.cpp \
     Sources/UpdateChecker.cpp \
@@ -56,7 +56,6 @@ HEADERS += \
     Sources/AboutDialog.hpp \
     Sources/Common.hpp \
     Sources/CompatOptsDialog.hpp \
-    Sources/ConfigDialog.hpp \
     Sources/DoomUtils.hpp \
     Sources/EditableListView.hpp \
     Sources/EngineDialog.hpp \
@@ -67,6 +66,7 @@ HEADERS += \
     Sources/LangUtils.hpp \
     Sources/ListModel.hpp \
     Sources/MainWindow.hpp \
+    Sources/NewConfigDialog.hpp \
     Sources/OSUtils.hpp \
     Sources/SetupDialog.hpp \
     Sources/UpdateChecker.hpp \
@@ -80,8 +80,8 @@ FORMS += \
     Forms/EngineDialog.ui \
     Forms/GameOptsDialog.ui \
     Forms/MainWindow.ui \
-    Forms/SetupDialog.ui \
-    Forms/ConfigDialog.ui
+    Forms/NewConfigDialog.ui \
+    Forms/SetupDialog.ui
 
 RESOURCES += \
     Resources/Resources.qrc

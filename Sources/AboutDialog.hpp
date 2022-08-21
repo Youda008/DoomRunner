@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  15.2.2020
-// Description:
+// Description: logic of the About dialog that appears when you click Menu -> About
 //======================================================================================================================
 
 #ifndef ABOUT_DIALOG_INCLUDED

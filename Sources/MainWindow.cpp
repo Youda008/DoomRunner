@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  13.5.2019
-// Description:
+// Description: logic of the main window, including all its tabs
 //======================================================================================================================
 
 #include "MainWindow.hpp"
@@ -11,7 +11,7 @@
 
 #include "AboutDialog.hpp"
 #include "SetupDialog.hpp"
-#include "ConfigDialog.hpp"
+#include "NewConfigDialog.hpp"
 #include "GameOptsDialog.hpp"
 #include "CompatOptsDialog.hpp"
 
@@ -194,7 +194,7 @@ MainWindow::MainWindow()
 
 	// setup buttons
 
-	connect( ui->configAddBtn, &QToolButton::clicked, this, &thisClass::cloneConfig );
+	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::cloneConfig );
 
 	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &thisClass::presetAdd );
 	connect( ui->presetBtnDel, &QToolButton::clicked, this, &thisClass::presetDelete );
@@ -601,7 +601,7 @@ void MainWindow::cloneConfig()
 	QDir configDir( engineModel[ ui->engineCmbBox->currentIndex() ].configDir );  // if config was selected, engine selection must be valid too
 	QFileInfo oldConfig( configDir.filePath( ui->configCmbBox->currentText() ) );
 
-	ConfigDialog dialog( this, oldConfig.completeBaseName() );
+	NewConfigDialog dialog( this, oldConfig.completeBaseName() );
 
 	int code = dialog.exec();
 
@@ -800,7 +800,7 @@ void MainWindow::togglePresetSubWidgets( bool enabled )
 {
 	ui->engineCmbBox->setEnabled( enabled );
 	ui->configCmbBox->setEnabled( enabled );
-	ui->configAddBtn->setEnabled( enabled );
+	ui->configCloneBtn->setEnabled( enabled );
 	ui->iwadListView->setEnabled( enabled );
 	ui->mapDirView->setEnabled( enabled );
 	ui->modListView->setEnabled( enabled );
@@ -903,7 +903,7 @@ void MainWindow::selectConfig( int index )
 	}
 
 	// update related UI elements
-	ui->configAddBtn->setEnabled( validConfigSelected );
+	ui->configCloneBtn->setEnabled( validConfigSelected );
 
 	updateLaunchCommand();
 }

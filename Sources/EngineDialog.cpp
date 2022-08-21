@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  13.5.2019
-// Description:
+// Description: logic of Engine Properties dialog that appears when you try to add of modify an engine
 //======================================================================================================================
 
 #include "EngineDialog.hpp"

@@ -3,16 +3,16 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
 // Created on:  25.1.2021
-// Description:
+// Description: logic of the New Config dialog that appears when you click the Clone Config button
 //======================================================================================================================
 
-#include "ConfigDialog.hpp"
+#include "NewConfigDialog.hpp"
 #include "ui_ConfigDialog.h"
 
 
 //======================================================================================================================
 
-ConfigDialog::ConfigDialog( QWidget * parent, const QString & currentConfigName )
+NewConfigDialog::NewConfigDialog( QWidget * parent, const QString & currentConfigName )
 :
 	QDialog( parent )
 {
@@ -24,12 +24,12 @@ ConfigDialog::ConfigDialog( QWidget * parent, const QString & currentConfigName 
 	connect( this, &QDialog::accepted, this, &thisClass::confirmed );
 }
 
-void ConfigDialog::confirmed()
+void NewConfigDialog::confirmed()
 {
 	newConfigName = ui->configNameLine->text();
 }
 
-ConfigDialog::~ConfigDialog()
+NewConfigDialog::~NewConfigDialog()
 {
 	delete ui;
 }

@@ -2,6 +2,7 @@
 /Releases
 /TestDoomDir
 *.autosave
+*.pro.user
 /todo.txt
 /OtherLaunchers
 /*.bat

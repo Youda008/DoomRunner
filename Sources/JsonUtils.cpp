@@ -56,11 +56,11 @@ QString JsonValueCtx::getPath() const
 //======================================================================================================================
 //  JsonObjectCtx
 
-JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key ) const
+JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
-		missingKey( key );
+		missingKey( key, showError );
 		return JsonObjectCtxProxy();
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
@@ -73,11 +73,11 @@ JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key ) const
 	return JsonObjectCtxProxy( val.toObject(), _context, this, key );
 }
 
-JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key ) const
+JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
-		missingKey( key );
+		missingKey( key, showError );
 		return JsonArrayCtxProxy();
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
@@ -105,11 +105,11 @@ bool JsonObjectCtx::getBool( const QString & key, bool defaultVal, bool showErro
 	return val.toBool();
 }
 
-int JsonObjectCtx::getInt( const QString & key, int defaultVal ) const
+int JsonObjectCtx::getInt( const QString & key, int defaultVal, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
-		missingKey( key );
+		missingKey( key, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
@@ -127,11 +127,11 @@ int JsonObjectCtx::getInt( const QString & key, int defaultVal ) const
 	return int(d);
 }
 
-uint JsonObjectCtx::getUInt( const QString & key, uint defaultVal ) const
+uint JsonObjectCtx::getUInt( const QString & key, uint defaultVal, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
-		missingKey( key );
+		missingKey( key, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
@@ -149,11 +149,11 @@ uint JsonObjectCtx::getUInt( const QString & key, uint defaultVal ) const
 	return uint(d);
 }
 
-uint16_t JsonObjectCtx::getUInt16( const QString & key, uint16_t defaultVal ) const
+uint16_t JsonObjectCtx::getUInt16( const QString & key, uint16_t defaultVal, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
-		missingKey( key );
+		missingKey( key, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
@@ -171,11 +171,11 @@ uint16_t JsonObjectCtx::getUInt16( const QString & key, uint16_t defaultVal ) co
 	return uint16_t(d);
 }
 
-double JsonObjectCtx::getDouble( const QString & key, double defaultVal ) const
+double JsonObjectCtx::getDouble( const QString & key, double defaultVal, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
-		missingKey( key );
+		missingKey( key, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
@@ -187,11 +187,11 @@ double JsonObjectCtx::getDouble( const QString & key, double defaultVal ) const
 	return val.toDouble();
 }
 
-QString JsonObjectCtx::getString( const QString & key, const QString & defaultVal ) const
+QString JsonObjectCtx::getString( const QString & key, const QString & defaultVal, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
-		missingKey( key );
+		missingKey( key, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
@@ -207,11 +207,11 @@ QString JsonObjectCtx::getString( const QString & key, const QString & defaultVa
 //======================================================================================================================
 //  JsonArrayCtx
 
-JsonObjectCtxProxy JsonArrayCtx::getObject( int index ) const
+JsonObjectCtxProxy JsonArrayCtx::getObject( int index, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{
-		indexOutOfBounds( index );
+		indexOutOfBounds( index, showError );
 		return JsonObjectCtxProxy();
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
@@ -223,11 +223,11 @@ JsonObjectCtxProxy JsonArrayCtx::getObject( int index ) const
 	return JsonObjectCtxProxy( val.toObject(), _context, this, index );
 }
 
-JsonArrayCtxProxy JsonArrayCtx::getArray( int index ) const
+JsonArrayCtxProxy JsonArrayCtx::getArray( int index, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{
-		indexOutOfBounds( index );
+		indexOutOfBounds( index, showError );
 		return JsonArrayCtxProxy();
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
@@ -239,11 +239,11 @@ JsonArrayCtxProxy JsonArrayCtx::getArray( int index ) const
 	return JsonArrayCtxProxy( val.toArray(), _context, this, index );
 }
 
-bool JsonArrayCtx::getBool( int index, bool defaultVal ) const
+bool JsonArrayCtx::getBool( int index, bool defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{
-		indexOutOfBounds( index );
+		indexOutOfBounds( index, showError );
 		return false;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
@@ -256,11 +256,11 @@ bool JsonArrayCtx::getBool( int index, bool defaultVal ) const
 
 }
 
-int JsonArrayCtx::getInt( int index, int defaultVal ) const
+int JsonArrayCtx::getInt( int index, int defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{
-		indexOutOfBounds( index );
+		indexOutOfBounds( index, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
@@ -278,11 +278,11 @@ int JsonArrayCtx::getInt( int index, int defaultVal ) const
 	return int(d);
 }
 
-uint JsonArrayCtx::getUInt( int index, uint defaultVal ) const
+uint JsonArrayCtx::getUInt( int index, uint defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{
-		indexOutOfBounds( index );
+		indexOutOfBounds( index, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
@@ -300,11 +300,11 @@ uint JsonArrayCtx::getUInt( int index, uint defaultVal ) const
 	return uint(d);
 }
 
-uint16_t JsonArrayCtx::getUInt16( int index, uint16_t defaultVal ) const
+uint16_t JsonArrayCtx::getUInt16( int index, uint16_t defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{
-		indexOutOfBounds( index );
+		indexOutOfBounds( index, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
@@ -322,11 +322,11 @@ uint16_t JsonArrayCtx::getUInt16( int index, uint16_t defaultVal ) const
 	return uint16_t(d);
 }
 
-double JsonArrayCtx::getDouble( int index, double defaultVal ) const
+double JsonArrayCtx::getDouble( int index, double defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{
-		indexOutOfBounds( index );
+		indexOutOfBounds( index, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
@@ -338,11 +338,11 @@ double JsonArrayCtx::getDouble( int index, double defaultVal ) const
 	return val.toDouble();
 }
 
-QString JsonArrayCtx::getString( int index, const QString & defaultVal ) const
+QString JsonArrayCtx::getString( int index, const QString & defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{
-		indexOutOfBounds( index );
+		indexOutOfBounds( index, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
@@ -381,53 +381,55 @@ static const char * typeStr [] = {
 
 void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
 {
+	QString message = "Element " % elemPath( key ) % " is missing in the options file, using default value.";
+
 	if (!showError)
 		return;
-
-	if (_context->dontShowAgain)
-		return;
-
-	_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
-		"Element " % elemPath( key ) % " is missing in the options file, using default value."
-	);
+	else if (_context->dontShowAgain)
+		qWarning() << message;
+	else
+		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
 }
 
-void JsonArrayCtx::indexOutOfBounds( int index ) const
+void JsonArrayCtx::indexOutOfBounds( int index, bool showError ) const
 {
-	if (_context->dontShowAgain)
-		return;
-
-	_context->dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading options file",
+	QString message =
 		"JSON array " % getPath() % " does not have index " % QString::number( index ) % ". "
 		"This is a bug. Please make a copy of options.json before clicking Ok, "
-		"and then create an issue on Github page with that file attached."
-	);
+		"and then create an issue on Github page with that file attached.";
+
+	if (!showError)
+		return;
+	else if (_context->dontShowAgain)
+		qWarning() << message;
+	else
+		_context->dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading options file", message );
 }
 
 void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expectedType ) const
 {
-	if (_context->dontShowAgain)
-		return;
-
 	QString actualType = typeStr[ (*_wrappedObject)[ key ].type() ];
-
-	_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
+	QString message =
 		"Element " % elemPath( key ) % " has invalid type, expected " % expectedType % ", but found " % actualType % ". "
-		"Skipping this entry."
-	);
+		"Skipping this entry.";
+
+	if (_context->dontShowAgain)
+		qWarning() << message;
+	else
+		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
 }
 
 void JsonArrayCtx::invalidTypeAtIdx( int index, const QString & expectedType ) const
 {
-	if (_context->dontShowAgain)
-		return;
-
 	QString actualType = typeStr[ (*_wrappedArray)[ index ].type() ];
-
-	_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file",
+	QString message =
 		"Element " % elemPath( index ) % " has invalid type. Expected " % expectedType % ", but found " % actualType % ". "
-		"Skipping this entry."
-	);
+		"Skipping this entry.";
+
+	if (_context->dontShowAgain)
+		qWarning() << message;
+	else
+		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
 }
 
 QString JsonObjectCtx::elemPath( const QString & elemName ) const

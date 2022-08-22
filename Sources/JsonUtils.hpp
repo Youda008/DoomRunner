@@ -54,8 +54,12 @@ uint enumSize() { return 0; }
 //     that is then automatically converted (by a constructor) to the final JsonObjectCtx/JsonArrayCtx.
 
 
+constexpr bool showError = true;
+constexpr bool dontShowError = false;
+
 /** data related to an ongoing parsing process */
-struct _ParsingContext {
+struct _ParsingContext
+{
 	bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
 };
 
@@ -182,34 +186,34 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 		: JsonObjectCtxProxy( proxy ) {}
 
 	/** returns a sub-object at a specified key, if it doesn't exist it shows an error dialog and returns invalid object */
-	JsonObjectCtxProxy getObject( const QString & key ) const;
+	JsonObjectCtxProxy getObject( const QString & key, bool showError = true ) const;
 
 	/** returns a sub-array at a specified key, if it doesn't exist it shows an error dialog and returns invalid object */
-	JsonArrayCtxProxy getArray( const QString & key ) const;
+	JsonArrayCtxProxy getArray( const QString & key, bool showError = true ) const;
 
 	/** returns a bool at a specified key, if it doesn't exist it shows an error dialog and returns default value */
 	bool getBool( const QString & key, bool defaultVal, bool showError = true ) const;
 
 	/** returns an int at a specified key, if it doesn't exist it shows an error dialog and returns default value */
-	int getInt( const QString & key, int defaultVal ) const;
+	int getInt( const QString & key, int defaultVal, bool showError = true ) const;
 
 	/** returns an uint at a specified key, if it doesn't exist it shows an error dialog and returns default value */
-	uint getUInt( const QString & key, uint defaultVal ) const;
+	uint getUInt( const QString & key, uint defaultVal, bool showError = true ) const;
 
 	/** returns an uint16_t at a specified key, if it doesn't exist it shows an error dialog and returns default value */
-	uint16_t getUInt16( const QString & key, uint16_t defaultVal ) const;
+	uint16_t getUInt16( const QString & key, uint16_t defaultVal, bool showError = true ) const;
 
 	/** returns a double at a specified key, if it doesn't exist it shows an error dialog and returns default value */
-	double getDouble( const QString & key, double defaultVal ) const;
+	double getDouble( const QString & key, double defaultVal, bool showError = true ) const;
 
 	/** returns a string at a specified key, if it doesn't exist it shows an error dialog and returns default value */
-	QString getString( const QString & key, const QString & defaultVal = QString() ) const;
+	QString getString( const QString & key, const QString & defaultVal = QString(), bool showError = true ) const;
 
 	/** returns an enum at a specified key, if it doesn't exist it shows an error dialog and returns default value */
 	template< typename Enum >
-	Enum getEnum( const QString & key, Enum defaultVal ) const
+	Enum getEnum( const QString & key, Enum defaultVal, bool showError = true ) const
 	{
-		uint intVal = getUInt( key, defaultVal );
+		uint intVal = getUInt( key, defaultVal, showError );
 		if (intVal <= enumSize< Enum >()) {
 			return Enum( intVal );
 		} else {
@@ -220,7 +224,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 
  protected:
 
-	void missingKey( const QString & key, bool showError = true ) const;
+	void missingKey( const QString & key, bool showError ) const;
 	void invalidTypeAtKey( const QString & key, const QString & expectedType ) const;
 	QString elemPath( const QString & elemName ) const;
 
@@ -239,34 +243,34 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 	int size() const { return _wrappedArray->size(); }
 
 	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns invalid array */
-	JsonObjectCtxProxy getObject( int index ) const;
+	JsonObjectCtxProxy getObject( int index, bool showError = true ) const;
 
 	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns invalid array */
-	JsonArrayCtxProxy getArray( int index ) const;
+	JsonArrayCtxProxy getArray( int index, bool showError = true ) const;
 
 	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
-	bool getBool( int index, bool defaultVal ) const;
+	bool getBool( int index, bool defaultVal, bool showError = true ) const;
 
 	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
-	int getInt( int index, int defaultVal ) const;
+	int getInt( int index, int defaultVal, bool showError = true ) const;
 
 	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
-	uint getUInt( int index, uint defaultVal ) const;
+	uint getUInt( int index, uint defaultVal, bool showError = true ) const;
 
 	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
-	uint16_t getUInt16( int index, uint16_t defaultVal ) const;
+	uint16_t getUInt16( int index, uint16_t defaultVal, bool showError = true ) const;
 
 	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
-	double getDouble( int index, double defaultVal ) const;
+	double getDouble( int index, double defaultVal, bool showError = true ) const;
 
 	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
-	QString getString( int index, const QString & defaultVal = QString() ) const;
+	QString getString( int index, const QString & defaultVal = QString(), bool showError = true ) const;
 
 	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
 	template< typename Enum >
-	Enum getEnum( int index, Enum defaultVal ) const
+	Enum getEnum( int index, Enum defaultVal, bool showError = true ) const
 	{
-		uint intVal = getUInt( index, defaultVal );
+		uint intVal = getUInt( index, defaultVal, showError );
 		if (intVal <= enumSize< Enum >()) {
 			return Enum( intVal );
 		} else {
@@ -277,7 +281,7 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 
  protected:
 
-	void indexOutOfBounds( int index ) const;
+	void indexOutOfBounds( int index, bool showError ) const;
 	void invalidTypeAtIdx( int index, const QString & expectedType ) const;
 	QString elemPath( int index ) const;
 

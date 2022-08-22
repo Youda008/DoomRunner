@@ -324,7 +324,7 @@ void EditableListView::enableOpenFileLocation()
 	openFileLocationAction = addOwnAction( "Open file location", {} );
 }
 
-void EditableListView::enableSeparators()
+void EditableListView::enableInsertSeparator()
 {
 	insertSeparatorAction = addOwnAction( "Insert separator", {} );
 }

@@ -273,10 +273,8 @@ MainWindow::MainWindow()
 void MainWindow::setupPresetView()
 {
 	// setup editing and separators
-	presetModel.enableEditing();
-	presetModel.setIsSeparatorFunc( []( const Preset & preset ) -> bool { return preset.isSeparator; } );
-	// specify where to get the string for edit mode
-	presetModel.setEditStringFunc( []( Preset & preset ) -> QString & { return preset.name; } );
+	presetModel.toggleEditing( true );
+	presetModel.toggleSeparators( true );
 	ui->presetListView->toggleNameEditing( true );
 
 	// set data source for the view
@@ -293,7 +291,7 @@ void MainWindow::setupPresetView()
 	// setup reaction to key shortcuts and right click
 	ui->presetListView->toggleContextMenu( true );
 	ui->presetListView->enableItemCloning();
-	ui->presetListView->enableSeparators();
+	ui->presetListView->enableInsertSeparator();
 	connect( ui->presetListView->addAction, &QAction::triggered, this, &thisClass::presetAdd );
 	connect( ui->presetListView->deleteAction, &QAction::triggered, this, &thisClass::presetDelete );
 	connect( ui->presetListView->cloneAction, &QAction::triggered, this, &thisClass::presetClone );
@@ -345,13 +343,8 @@ void MainWindow::setupMapPackView()
 
 void MainWindow::setupModView()
 {
-	// specify where to get the bool flag for the checkbox
-	modModel.setIsCheckedFunc( []( Mod & mod ) -> bool & { return mod.checked; } );
-
 	// setup separators
-	modModel.setIsSeparatorFunc( []( const Mod & mod ) -> bool { return mod.isSeparator; } );
-	// specify where to get the string for editing separators
-	modModel.setEditStringFunc( []( Mod & mod ) -> QString & { return mod.fileName; } );
+	modModel.toggleSeparators( true );
 	ui->modListView->toggleNameEditing( true );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
@@ -372,7 +365,7 @@ void MainWindow::setupModView()
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
 	ui->modListView->enableOpenFileLocation();
-	ui->modListView->enableSeparators();
+	ui->modListView->enableInsertSeparator();
 	connect( ui->modListView->addAction, &QAction::triggered, this, &thisClass::modAdd );
 	connect( ui->modListView->deleteAction, &QAction::triggered, this, &thisClass::modDelete );
 	connect( ui->modListView->moveUpAction, &QAction::triggered, this, &thisClass::modMoveUp );

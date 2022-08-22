@@ -24,6 +24,7 @@
 #include <QBrush>
 
 #include <functional>
+#include <stdexcept>
 
 #include <QDebug>
 
@@ -78,6 +79,54 @@ class DropTarget {
 	int _droppedRow;
 	int _droppedCount;
 
+};
+
+
+//======================================================================================================================
+//  support structs
+
+/** Each item of ReadOnlyListModel must inherit from this struct to satisfy the requirements of the model.
+  * The following methods should be overriden to point to the appropriate members. */
+struct ReadOnlyListModelItem
+{
+	bool isSeparator = false;  ///< true means this is a special item used to mark a section
+};
+
+/** Each item of EditableListModel must inherit from this struct to satisfy the requirements of the model.
+  * The following methods should be overriden to point to the appropriate members. */
+struct EditableListModelItem : public ReadOnlyListModelItem
+{
+	const QString & getEditString() const
+	{
+		throw std::runtime_error(
+			"Edit has been requested, but editing this Item is not implemented. "
+			"Either re-implement getEditString() or disable editing in the view."
+		);
+	}
+
+	void setEditString( const QString & /*str*/ )
+	{
+		throw std::runtime_error(
+			"Edit has been requested, but editing this Item is not implemented. "
+			"Either re-implement setEditString() or disable editing in the view."
+		);
+	}
+
+	bool isChecked() const
+	{
+		throw std::runtime_error(
+			"Check state has been requested, but checking this Item is not implemented. "
+			"Either re-implement isChecked() or disable checkable items in the view."
+		);
+	}
+
+	void setChecked( bool /*checked*/ ) const
+	{
+		throw std::runtime_error(
+			"Check state has been requested, but checking this Item is not implemented. "
+			"Either re-implement setChecked() or disable checkable items in the view."
+		);
+	}
 };
 
 
@@ -192,15 +241,16 @@ class AListModel : public QAbstractListModel {
 //======================================================================================================================
 /** Wrapper around list of arbitrary objects, mediating their content to UI view elements with read-only access. */
 
-template< typename Item >
+template< typename Item >  // must be a subclass of ReadOnlyListModelItem
 class ReadOnlyListModel : public AListModel< Item > {
 
 	using superClass = AListModel< Item >;
 
  protected:
 
-	// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
-	// Therefore only author of Item knows how to display Item in the widget, so he must specify it by a function.
+	// Each list view might want to display the same data differently, so we allow the user of the list model
+	// to specify it by a function for each view separately.
+	/** function that takes Item and constructs a String that will be displayed in the view */
 	std::function< QString ( const Item & ) > makeDisplayString;
 
  public:
@@ -219,11 +269,13 @@ class ReadOnlyListModel : public AListModel< Item > {
 		if (!index.isValid() || index.row() >= superClass::itemList.size())
 			return QVariant();
 
+		const Item & item = superClass::itemList[ index.row() ];
+
 		if (role == Qt::DisplayRole)
 		{
 			// Some UI elements may want to display only the Item name, some others a string constructed from multiple
 			// Item elements. This way we generalize from the way the display string is constructed from the Item.
-			return makeDisplayString( superClass::itemList[ index.row() ] );
+			return makeDisplayString( item );
 		}
 		else
 		{
@@ -238,37 +290,26 @@ class ReadOnlyListModel : public AListModel< Item > {
 /** Wrapper around list of arbitrary objects, mediating their names to UI view elements.
   * Supports in-place editing, internal drag&drop reordering, and external file drag&drops. */
 
-template< typename Item >
+template< typename Item >  // must be a subclass of EditableListModelItem
 class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	using superClass = AListModel< Item >;
 
  protected:
 
-	// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
-	// Therefore only author of Item knows how to perform certain operations on it, so he must specify it by functions
-	//
-	// We intentionally don't want to rely on the Item to have some members like isChecked, isSeparator, editString,
-	// because that would require items of all instances of EditableListModel to have those members even if that list
-	// does not support checkable items, separators or editing.
-
+	// Each list view might want to display the same data differently, so we allow the user of the list model
+	// to specify it by a function for each view separately.
 	/** function that takes Item and constructs a String that will be displayed in the view */
 	std::function< QString ( const Item & ) > makeDisplayString;
-
-	// TODO: whether list is checkable and editable should be template parameter
-	//       with a compile-time check for corresponding struct members or methods
-
-	/** optional function that points the model to a String member of Item containing the editable data */
-	std::function< QString & ( Item & ) > editString;
 
 	/** whether editing of regular non-separator items is allowed */
 	bool editingEnabled = false;
 
-	/** optional function that points the model to a bool flag of Item indicating whether the item is checked */
-	std::function< bool & ( Item & ) > isChecked;
+	/** whether separators are allowed */
+	bool separatorsEnabled = false;
 
-	/** optional function that points the model to a bool flag of Item indicating whether the item is a separator */
-	std::function< bool ( const Item & ) > isSeparator;
+	/** whether items have a checkbox that can be checked and unchecked */
+	bool checkableItems = false;
 
 	/** optional path helper that will convert paths dropped from directory to absolute or relative */
 	const PathContext * pathContext;
@@ -281,29 +322,21 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
 		: AListModel< Item >( itemList ), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
 
+
 	//-- customization of how data will be represented -----------------------------------------------------------------
 
-	/** defines how items should be edited, needed either for editing regular items or for separators */
-	void setEditStringFunc( std::function< QString & ( Item & ) > editString )
-		{ this->editString = editString; }
+	void setDisplayStringFunc( std::function< QString ( const Item & ) > makeDisplayString )
+		{ this->makeDisplayString = makeDisplayString; }
 
-	/** enables editing of regular non-separator items
-	  * You must also call setEditStringFunc() for this to work. */
-	void enableEditing()
-		{ this->editingEnabled = true; }
+	void toggleEditing( bool enabled ) { editingEnabled = enabled; }
 
-	/** defines how checkbox state should be read and written and enables checkboxes for all items */
-	void setIsCheckedFunc( std::function< bool & ( Item & ) > isChecked )
-		{ this->isChecked = isChecked; }
+	void toggleSeparators( bool enabled ) { separatorsEnabled = enabled; }
 
-	/** defines how to read whether the item is a separator and enables separators for the list
-	  * You must also call setEditStringFunc() for this to work. */
-	void setIsSeparatorFunc( std::function< bool ( const Item & ) > isSeparator )
-		{ this->isSeparator = isSeparator; }
+	void toggleCheckableItems( bool enabled ) { checkableItems = enabled; }
 
 	/** must be set before external drag&drop is enabled in the parent widget */
-	void setPathContext( const PathContext * pathContext )
-		{ this->pathContext = pathContext; }
+	void setPathContext( const PathContext * pathContext ) { this->pathContext = pathContext; }
+
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
@@ -312,14 +345,16 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		if (!index.isValid())
 			return Qt::ItemIsDropEnabled;  // otherwise you can't append dragged items to the end of the list
 
-		bool isSeparator = isSet( this->isSeparator ) && this->isSeparator( superClass::itemList[ index.row() ] );
+		const Item & item = superClass::itemList[ index.row() ];
+
+		bool isSeparator = separatorsEnabled && item.isSeparator;
 
 		Qt::ItemFlags flags = QAbstractListModel::flags(index);
 
 		flags |= Qt::ItemIsDragEnabled;
 		if (editingEnabled || isSeparator)
 			flags |= Qt::ItemIsEditable;
-		if (isSet( isChecked ) && !isSeparator)
+		if (checkableItems && !isSeparator)
 			flags |= Qt::ItemIsUserCheckable;
 
 		return flags;
@@ -330,56 +365,48 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		if (!index.isValid() || index.parent().isValid() || index.row() >= superClass::itemList.size())
 			return QVariant();
 
-		bool isSeparator = isSet( this->isSeparator ) && this->isSeparator( superClass::itemList[ index.row() ] );
+		const Item & item = superClass::itemList[ index.row() ];
 
-		if (role == Qt::DisplayRole)
+		bool isSeparator = separatorsEnabled && item.isSeparator;
+
+		try
 		{
-			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
-			// Therefore only author of Item knows which of its memebers he wants to display in the widget,
-			// so he must specify it by a function.
-			return makeDisplayString( superClass::itemList[ index.row() ] );
-		}
-		else if (role == Qt::EditRole)
-		{
-			// Same as above, exept that this function is optional to ease up initializations of models
-			// that are supposed to be used in non-editable widgets
-			if (!isSet( editString ))
+			if (role == Qt::DisplayRole)
 			{
-				qWarning() << "Edit has been requested, but no editString function is set. "
-				              "Either specify an editString function or disable editing in the widget.";
+				// Each list view might want to display the same data differently, so we allow the user of the list model
+				// to specify it by a function for each view separately.
+				return makeDisplayString( item );
+			}
+			else if (role == Qt::EditRole && editingEnabled)
+			{
+				return item.getEditString();
+			}
+			else if (role == Qt::CheckStateRole && checkableItems)
+			{
+				return item.isChecked() ? Qt::Checked : Qt::Unchecked;
+			}
+			else if (role == Qt::BackgroundRole && separatorsEnabled)
+			{
+				if (isSeparator)
+					return QBrush( Qt::lightGray );
+				else
+					return QVariant();  // default
+			}
+			else if (role == Qt::TextAlignmentRole && separatorsEnabled)
+			{
+				if (isSeparator)
+					return Qt::AlignHCenter;
+				else
+					return QVariant();  // default
+			}
+			else
+			{
 				return QVariant();
 			}
-
-			return editString( const_cast< Item & >( superClass::itemList[ index.row() ] ) );
 		}
-		else if (role == Qt::CheckStateRole)
+		catch (const std::runtime_error & e)
 		{
-			// Same as above, exept that this function is optional to ease up initializations of models
-			// that are supposed to be used in non-checkable widgets
-			if (!isSet( isChecked ))
-			{
-				return QVariant();
-			}
-
-			bool checked = isChecked( const_cast< Item & >( superClass::itemList[ index.row() ] ) );
-			return checked ? Qt::Checked : Qt::Unchecked;
-		}
-		else if (role == Qt::BackgroundRole)
-		{
-			if (isSeparator)
-				return QBrush( Qt::lightGray );
-			else
-				return QVariant();  // default
-		}
-		else if (role == Qt::TextAlignmentRole)
-		{
-			if (isSeparator)
-				return Qt::AlignHCenter;
-			else
-				return QVariant();  // default
-		}
-		else
-		{
+			qWarning() << e.what();
 			return QVariant();
 		}
 	}
@@ -389,33 +416,30 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		if (index.parent().isValid() || !index.isValid() || index.row() >= superClass::itemList.size())
 			return false;
 
-		if (role == Qt::EditRole)
+		Item & item = superClass::itemList[ index.row() ];
+
+		try
 		{
-			if (!isSet( editString ))
+			if (role == Qt::EditRole)
 			{
-				qWarning() << "Edit has been requested, but no editString function is set. "
-				              "Either specify an editString function or disable editing in the widget.";
+				item.setEditString( value.toString() );
+				emit superClass::dataChanged( index, index, {Qt::EditRole} );
+				return true;
+			}
+			else if (role == Qt::CheckStateRole)
+			{
+				item.setChecked( value == Qt::Checked ? true : false );
+				emit superClass::dataChanged( index, index, {Qt::CheckStateRole} );
+				return true;
+			}
+			else
+			{
 				return false;
 			}
-
-			editString( superClass::itemList[ index.row() ] ) = value.toString();
-			emit superClass::dataChanged( index, index, {Qt::EditRole} );
-			return true;
 		}
-		else if (role == Qt::CheckStateRole)
+		catch (const std::runtime_error & e)
 		{
-			if (!isSet( isChecked ))
-			{
-				qCritical() << "Attempted to change the check state, but no isChecked function is set. WTF?";
-				return false;
-			}
-
-			isChecked( superClass::itemList[ index.row() ] ) = (value == Qt::Checked ? true : false );
-			emit superClass::dataChanged( index, index, {Qt::CheckStateRole} );
-			return true;
-		}
-		else
-		{
+			qWarning() << e.what();
 			return false;
 		}
 	}

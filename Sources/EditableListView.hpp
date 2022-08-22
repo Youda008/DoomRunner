@@ -61,7 +61,7 @@ class EditableListView : public QListView {
 	void enableOpenFileLocation();
 
 	/** enables adding a named separator line between items of this list view */
-	void enableSeparators();
+	void enableInsertSeparator();
 
  public: // members
 

@@ -27,45 +27,52 @@
 // Constructors from QFileInfo are used in automatic list updates for initializing an element from a file-system entry.
 // getID methods are used in automatic list updates for ensuring the same items remain selected.
 
-struct Engine
+struct Engine : public EditableListModelItem
 {
-	QString name;   ///< user defined engine name
-	QString path;   ///< path to the engine's executable
+	QString name;        ///< user defined engine name
+	QString path;        ///< path to the engine's executable
 	QString configDir;   ///< directory with engine's .ini files
-	bool isSeparator;    ///< true means this is a special list item marking a section
 
-	Engine() : isSeparator( false ) {}
+	Engine() {}
 	Engine( const QFileInfo & file )
-		: name( file.fileName() ), path( file.filePath() ), configDir( file.dir().path() ), isSeparator( false ) {}
+		: name( file.fileName() ), path( file.filePath() ), configDir( file.dir().path() ) {}
+
 	QString getID() const { return path; }
 };
 
-struct IWAD
+struct IWAD : public EditableListModelItem
 {
 	QString name;   ///< initially set to file name, but user can edit it by double-clicking on it in SetupDialog
 	QString path;   ///< path to the IWAD file
-	bool isSeparator;    ///< true means this is a special list item marking a section
 
-	IWAD() : isSeparator( false ) {}
-	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ), isSeparator( false ) {}
+	IWAD() {}
+	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
+
+	const QString & getEditString() const { return name; }
+	void setEditString( const QString & str ) { name = str; }
+
 	QString getID() const { return path; }
 };
 
-struct Mod
+struct Mod : public EditableListModelItem
 {
-	QString path;   ///< path to the mod file
-	QString fileName;   ///< cached last part of path, beware of inconsistencies
-	bool checked;   ///< whether this mod is selected to be loaded
-	bool isSeparator;    ///< true means this is a special list item marking a section
+	QString path;           ///< path to the mod file
+	QString fileName;       ///< cached last part of path, beware of inconsistencies
+	bool checked = false;   ///< whether this mod is selected to be loaded
 
-	Mod() : checked( false ), isSeparator( false ) {}
+	const QString & getEditString() const { return fileName; }
+	void setEditString( const QString & str ) { fileName = str; }
+	bool isChecked() const { return checked; }
+	void setChecked( bool checked ) { this->checked = checked; }
+
+	Mod() {}
 	Mod( const QFileInfo & file, bool checked = true )
-		: path( file.filePath() ), fileName( file.fileName() ), checked( checked ), isSeparator( false ) {}
+		: path( file.filePath() ), fileName( file.fileName() ), checked( checked ) {}
 };
 
 struct IwadSettings
 {
-	QString dir;   ///< directory to update IWAD list from (value returned by SetupDialog)
+	QString dir;          ///< directory to update IWAD list from (value returned by SetupDialog)
 	bool updateFromDir;   ///< whether the IWAD list should be periodically updated from a directory
 	bool searchSubdirs;   ///< whether to search for IWADs recursivelly in subdirectories
 };
@@ -200,7 +207,7 @@ struct OutputOptions
 	bool noMusic = false;
 };
 
-struct Preset
+struct Preset : public EditableListModelItem
 {
 	QString name;
 	QString selectedEnginePath;   // we store the engine by path, so that it does't break when user renames them or reorders them
@@ -210,10 +217,12 @@ struct Preset
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 	QString cmdArgs;
 	LaunchOptions opts;
-	bool isSeparator;    ///< true means this is a special list item marking a section
 
-	Preset() : isSeparator( false ) {}
-	Preset( const QString & name ) : name( name ), isSeparator( false ) {}
+	const QString & getEditString() const { return name; }
+	void setEditString( const QString & str ) { name = str; }
+
+	Preset() {}
+	Preset( const QString & name ) : name( name ) {}
 	Preset( const QFileInfo & ) {}  // dummy, it's required by the EditableListModel template, but isn't actually used
 };
 

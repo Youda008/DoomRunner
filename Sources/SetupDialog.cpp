@@ -155,15 +155,13 @@ void SetupDialog::setupIWADView()
 	iwadModel.setPathContext( &pathContext );
 
 	// setup editing
-	iwadModel.enableEditing();
-	// specify where to get the string for edit mode
-	iwadModel.setEditStringFunc( []( IWAD & iwad ) -> QString & { return iwad.name; } );
+	iwadModel.toggleEditing( !iwadSettings.updateFromDir );
+	ui->iwadListView->toggleNameEditing( !iwadSettings.updateFromDir );
 
 	// set data source for the view
 	ui->iwadListView->setModel( &iwadModel );
 
 	// set drag&drop behaviour
-	ui->iwadListView->toggleNameEditing( !iwadSettings.updateFromDir );
 	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadSettings.updateFromDir );
 	ui->iwadListView->toggleInterWidgetDragAndDrop( false );
 	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );

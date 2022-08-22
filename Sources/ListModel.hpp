@@ -138,7 +138,7 @@ class AListModel : public QAbstractListModel {
 
 	void startAppending( int count = 1 )
 	{
-		beginInsertRows( QModelIndex(), itemList.size(), itemList.size() + count );
+		beginInsertRows( QModelIndex(), itemList.size(), itemList.size() + count - 1 );
 	}
 	void finishAppending()
 	{
@@ -147,7 +147,7 @@ class AListModel : public QAbstractListModel {
 
 	void startInserting( int row )
 	{
-		beginInsertRows( QModelIndex(), row, row + 1 );
+		beginInsertRows( QModelIndex(), row, row );
 	}
 	void finishInserting()
 	{

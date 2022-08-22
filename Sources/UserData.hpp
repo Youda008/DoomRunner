@@ -32,9 +32,11 @@ struct Engine
 	QString name;   ///< user defined engine name
 	QString path;   ///< path to the engine's executable
 	QString configDir;   ///< directory with engine's .ini files
+	bool isSeparator;    ///< true means this is a special list item marking a section
 
-	Engine() {}
-	Engine( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ), configDir( file.dir().path() ) {}
+	Engine() : isSeparator( false ) {}
+	Engine( const QFileInfo & file )
+		: name( file.fileName() ), path( file.filePath() ), configDir( file.dir().path() ), isSeparator( false ) {}
 	QString getID() const { return path; }
 };
 
@@ -42,9 +44,10 @@ struct IWAD
 {
 	QString name;   ///< initially set to file name, but user can edit it by double-clicking on it in SetupDialog
 	QString path;   ///< path to the IWAD file
+	bool isSeparator;    ///< true means this is a special list item marking a section
 
-	IWAD() {}
-	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
+	IWAD() : isSeparator( false ) {}
+	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ), isSeparator( false ) {}
 	QString getID() const { return path; }
 };
 
@@ -53,9 +56,11 @@ struct Mod
 	QString path;   ///< path to the mod file
 	QString fileName;   ///< cached last part of path, beware of inconsistencies
 	bool checked;   ///< whether this mod is selected to be loaded
+	bool isSeparator;    ///< true means this is a special list item marking a section
 
-	Mod() {}
-	Mod( const QFileInfo & file, bool checked = true ) : path( file.filePath() ), fileName( file.fileName() ), checked( checked ) {}
+	Mod() : checked( false ), isSeparator( false ) {}
+	Mod( const QFileInfo & file, bool checked = true )
+		: path( file.filePath() ), fileName( file.fileName() ), checked( checked ), isSeparator( false ) {}
 };
 
 struct IwadSettings
@@ -205,9 +210,10 @@ struct Preset
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 	QString cmdArgs;
 	LaunchOptions opts;
+	bool isSeparator;    ///< true means this is a special list item marking a section
 
-	Preset() {}
-	Preset( const QString & name ) : name( name ) {}
+	Preset() : isSeparator( false ) {}
+	Preset( const QString & name ) : name( name ), isSeparator( false ) {}
 	Preset( const QFileInfo & ) {}  // dummy, it's required by the EditableListModel template, but isn't actually used
 };
 

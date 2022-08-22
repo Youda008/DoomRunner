@@ -60,6 +60,9 @@ class EditableListView : public QListView {
 	/** enables "Open file location" action in a right-click context menu */
 	void enableOpenFileLocation();
 
+	/** enables adding a named separator line between items of this list view */
+	void enableSeparators();
+
  public: // members
 
 	// these actions will emit trigger signals when a menu item is clicked or a shortcut is pressed
@@ -69,6 +72,7 @@ class EditableListView : public QListView {
 	QAction * moveUpAction = nullptr;
 	QAction * moveDownAction = nullptr;
 	QAction * openFileLocationAction = nullptr;
+	QAction * insertSeparatorAction = nullptr;
 
  protected: // methods
 

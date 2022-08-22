@@ -59,7 +59,7 @@ EditableListView::EditableListView( QWidget * parent ) : QListView( parent )
 	allowEditNames = false;
 	setEditTriggers( QAbstractItemView::NoEditTriggers );
 
-	contextMenu = new QMenu( this );  // will be deleted when the parent (this widget) is deleted
+	contextMenu = new QMenu( this );  // will be deleted when this QListView (their parent) is deleted
 
 	contexMenuActive = false;
 
@@ -79,7 +79,10 @@ QAction * EditableListView::addOwnAction( const QString & text, const QKeySequen
 	return action;
 }
 
-EditableListView::~EditableListView() {}
+EditableListView::~EditableListView()
+{
+	// QAction members get deleted as children of this QListView (their parent)
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 //  drag&drop
@@ -274,8 +277,12 @@ void EditableListView::keyPressEvent( QKeyEvent * event )
 			const auto selectedIndexes = this->selectionModel()->selectedIndexes();
 			for (const QModelIndex & selectedIdx : selectedIndexes)
 			{
-				Qt::CheckState state = Qt::CheckState( model()->data( selectedIdx, Qt::CheckStateRole ).toInt() );
-				model()->setData( selectedIdx, state == Qt::Checked ? Qt::Unchecked : Qt::Checked, Qt::CheckStateRole );
+				Qt::ItemFlags flags = model()->flags( selectedIdx );
+				if (flags & Qt::ItemIsUserCheckable)
+				{
+					Qt::CheckState state = Qt::CheckState( model()->data( selectedIdx, Qt::CheckStateRole ).toInt() );
+					model()->setData( selectedIdx, state == Qt::Checked ? Qt::Unchecked : Qt::Checked, Qt::CheckStateRole );
+				}
 			}
 			return;  // supress the original handling of spacebar
 		}
@@ -317,6 +324,11 @@ void EditableListView::enableOpenFileLocation()
 	openFileLocationAction = addOwnAction( "Open file location", {} );
 }
 
+void EditableListView::enableSeparators()
+{
+	insertSeparatorAction = addOwnAction( "Insert separator", {} );
+}
+
 void EditableListView::contextMenuEvent( QContextMenuEvent * event )
 {
 	QModelIndex eventIndex = this->indexAt( event->pos() );
@@ -333,6 +345,8 @@ void EditableListView::contextMenuEvent( QContextMenuEvent * event )
 		moveDownAction->setEnabled( contexMenuActive && eventIndex.isValid() );
 	if (openFileLocationAction)
 		openFileLocationAction->setEnabled( eventIndex.isValid() );
+	if (insertSeparatorAction)
+		insertSeparatorAction->setEnabled( contexMenuActive );
 
 	contextMenu->popup( event->globalPos() );
 }

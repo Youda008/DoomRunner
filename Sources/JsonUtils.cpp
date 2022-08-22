@@ -89,11 +89,11 @@ JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key ) const
 	return JsonArrayCtxProxy( val.toArray(), _context, this, key );
 }
 
-bool JsonObjectCtx::getBool( const QString & key, bool defaultVal ) const
+bool JsonObjectCtx::getBool( const QString & key, bool defaultVal, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
-		missingKey( key );
+		missingKey( key, showError );
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
@@ -379,8 +379,11 @@ static const char * typeStr [] = {
 	"Undefined"
 };
 
-void JsonObjectCtx::missingKey( const QString & key ) const
+void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
 {
+	if (!showError)
+		return;
+
 	if (_context->dontShowAgain)
 		return;
 

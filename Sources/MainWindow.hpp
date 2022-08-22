@@ -74,6 +74,7 @@ class MainWindow : public QMainWindow {
 	void presetClone();
 	void presetMoveUp();
 	void presetMoveDown();
+	void presetInsertSeparator();
 
 	void modAdd();
 	void modAddDir();
@@ -81,6 +82,7 @@ class MainWindow : public QMainWindow {
 	void modMoveUp();
 	void modMoveDown();
 	void modOpenFileLocation();
+	void modInsertSeparator();
 	void modsDropped( int row, int count );
 
 	void modeStandard();

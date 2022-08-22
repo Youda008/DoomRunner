@@ -21,50 +21,99 @@ QJsonObject serialize( const Engine & engine )
 {
 	QJsonObject jsEngine;
 
-	jsEngine["name"] = engine.name;
-	jsEngine["path"] = engine.path;
-	jsEngine["config_dir"] = engine.configDir;
+	if (engine.isSeparator)
+	{
+		jsEngine["separator"] = true;
+		jsEngine["name"] = engine.name;
+	}
+	else
+	{
+		jsEngine["name"] = engine.name;
+		jsEngine["path"] = engine.path;
+		jsEngine["config_dir"] = engine.configDir;
+	}
 
 	return jsEngine;
 }
 
 void deserialize( JsonObjectCtx & jsEngine, Engine & engine )
 {
-	engine.name = jsEngine.getString( "name", "<missing name>" );
-	engine.path = jsEngine.getString( "path" );
-	engine.configDir = jsEngine.getString( "config_dir", QFileInfo( engine.path ).dir().path() );
+	engine.isSeparator = jsEngine.getBool( "separator", false, false );
+	if (engine.isSeparator)
+	{
+		engine.name = jsEngine.getString( "name", "<missing name>" );
+	}
+	else
+	{
+		engine.name = jsEngine.getString( "name", "<missing name>" );
+		engine.path = jsEngine.getString( "path" );
+		engine.configDir = jsEngine.getString( "config_dir", QFileInfo( engine.path ).dir().path() );
+	}
 }
 
 QJsonObject serialize( const IWAD & iwad )
 {
 	QJsonObject jsIWAD;
 
-	jsIWAD["name"] = iwad.name;
-	jsIWAD["path"] = iwad.path;
+	if (iwad.isSeparator)
+	{
+		jsIWAD["separator"] = true;
+		jsIWAD["name"] = iwad.name;
+	}
+	else
+	{
+		jsIWAD["name"] = iwad.name;
+		jsIWAD["path"] = iwad.path;
+	}
 
 	return jsIWAD;
 }
 
 void deserialize( JsonObjectCtx & jsEngine, IWAD & iwad )
 {
-	iwad.path = jsEngine.getString( "path" );
-	iwad.name = jsEngine.getString( "name", QFileInfo( iwad.path ).fileName() );
+	iwad.isSeparator = jsEngine.getBool( "separator", false, false );
+	if (iwad.isSeparator)
+	{
+		iwad.name = jsEngine.getString( "name", "<missing name>" );
+	}
+	else
+	{
+		iwad.path = jsEngine.getString( "path" );
+		iwad.name = jsEngine.getString( "name", QFileInfo( iwad.path ).fileName() );
+	}
 }
 
 QJsonObject serialize( const Mod & mod )
 {
 	QJsonObject jsMod;
 
-	jsMod["path"] = mod.path;
-	jsMod["checked"] = mod.checked;
+	if (mod.isSeparator)
+	{
+		jsMod["separator"] = true;
+		jsMod["name"] = mod.fileName;
+	}
+	else
+	{
+		jsMod["path"] = mod.path;
+		jsMod["checked"] = mod.checked;
+	}
 
 	return jsMod;
 }
 
 void deserialize( JsonObjectCtx & jsMod, Mod & mod )
 {
-	mod.path = jsMod.getString( "path" );
-	mod.checked = jsMod.getBool( "checked", false );
+	mod.isSeparator = jsMod.getBool( "separator", false, false );
+	if (mod.isSeparator)
+	{
+		mod.fileName = jsMod.getString( "name", "<missing name>" );
+	}
+	else
+	{
+		mod.path = jsMod.getString( "path" );
+		mod.fileName = QFileInfo( mod.path ).fileName();
+		mod.checked = jsMod.getBool( "checked", false );
+	}
 }
 
 QJsonObject serialize( const IwadSettings & iwadSettings )
@@ -227,76 +276,92 @@ QJsonObject serialize( const Preset & preset, bool storeOpts )
 {
 	QJsonObject jsPreset;
 
-	jsPreset["name"] = preset.name;
-	jsPreset["selected_engine"] = preset.selectedEnginePath;
-	jsPreset["selected_config"] = preset.selectedConfig;
-	jsPreset["selected_IWAD"] = preset.selectedIWAD;
-
-	QJsonArray jsMapArray;
-	for (const QString & pos : preset.selectedMapPacks)
+	if (preset.isSeparator)
 	{
-		jsMapArray.append( pos );
+		jsPreset["separator"] = true;
+		jsPreset["name"] = preset.name;
 	}
-	jsPreset["selected_mappacks"] = jsMapArray;
-
-	jsPreset["mods"] = serializeList( preset.mods );
-
-	if (storeOpts)
+	else
 	{
-		jsPreset["launch_options"] = serialize( preset.opts );
-	}
+		jsPreset["name"] = preset.name;
+		jsPreset["selected_engine"] = preset.selectedEnginePath;
+		jsPreset["selected_config"] = preset.selectedConfig;
+		jsPreset["selected_IWAD"] = preset.selectedIWAD;
 
-	jsPreset["additional_args"] = preset.cmdArgs;
+		QJsonArray jsMapArray;
+		for (const QString & pos : preset.selectedMapPacks)
+		{
+			jsMapArray.append( pos );
+		}
+		jsPreset["selected_mappacks"] = jsMapArray;
+
+		jsPreset["mods"] = serializeList( preset.mods );
+
+		if (storeOpts)
+		{
+			jsPreset["launch_options"] = serialize( preset.opts );
+		}
+
+		jsPreset["additional_args"] = preset.cmdArgs;
+	}
 
 	return jsPreset;
 }
 
 void deserialize( JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts )
 {
-	preset.name = jsPreset.getString( "name", "<missing name>" );
-	preset.selectedEnginePath = jsPreset.getString( "selected_engine" );
-	preset.selectedConfig = jsPreset.getString( "selected_config" );
-	preset.selectedIWAD = jsPreset.getString( "selected_IWAD" );
-
-	if (JsonArrayCtx jsSelectedMapPacks = jsPreset.getArray( "selected_mappacks" ))
+	preset.isSeparator = jsPreset.getBool( "separator", false, false );
+	if (preset.isSeparator)
 	{
-		for (int i = 0; i < jsSelectedMapPacks.size(); i++)
+		preset.name = jsPreset.getString( "name", "<missing name>" );
+	}
+	else
+	{
+		preset.name = jsPreset.getString( "name", "<missing name>" );
+		preset.selectedEnginePath = jsPreset.getString( "selected_engine" );
+		preset.selectedConfig = jsPreset.getString( "selected_config" );
+		preset.selectedIWAD = jsPreset.getString( "selected_IWAD" );
+
+		if (JsonArrayCtx jsSelectedMapPacks = jsPreset.getArray( "selected_mappacks" ))
 		{
-			QString selectedMapPack = jsSelectedMapPacks.getString( i );
-			if (!selectedMapPack.isEmpty())
+			for (int i = 0; i < jsSelectedMapPacks.size(); i++)
 			{
-				preset.selectedMapPacks.append( selectedMapPack );
+				QString selectedMapPack = jsSelectedMapPacks.getString( i );
+				if (!selectedMapPack.isEmpty())
+				{
+					preset.selectedMapPacks.append( selectedMapPack );
+				}
 			}
 		}
-	}
 
-	if (JsonArrayCtx jsMods = jsPreset.getArray( "mods" ))
-	{
-		for (int i = 0; i < jsMods.size(); i++)
+		if (JsonArrayCtx jsMods = jsPreset.getArray( "mods" ))
 		{
-			JsonObjectCtx jsMod = jsMods.getObject( i );
-			if (!jsMod)  // wrong type on position i - skip this entry
-				continue;
+			for (int i = 0; i < jsMods.size(); i++)
+			{
+				JsonObjectCtx jsMod = jsMods.getObject( i );
+				if (!jsMod)  // wrong type on position i - skip this entry
+					continue;
 
-			Mod mod;
-			deserialize( jsMod, mod );
+				Mod mod;
+				deserialize( jsMod, mod );
 
-			if (mod.path.isEmpty())  // element isn't present in JSON -> skip this entry
-				continue;
+				if (!mod.isSeparator && mod.path.isEmpty())  // element isn't present in JSON -> skip this entry
+					continue;
+				else if (mod.isSeparator && mod.fileName.isEmpty())  // element isn't present in JSON -> skip this entry
+					continue;
 
-			mod.fileName = QFileInfo( mod.path ).fileName();
-
-			preset.mods.append( std::move( mod ) );
+				preset.mods.append( std::move( mod ) );
+			}
 		}
-	}
 
-	if (loadOpts)
-	{
-		if (JsonObjectCtx jsOptions = jsPreset.getObject( "launch_options" ))
+		if (loadOpts)
 		{
-			deserialize( jsOptions, preset.opts );
+			if (JsonObjectCtx jsOptions = jsPreset.getObject( "launch_options" ))
+			{
+				deserialize( jsOptions, preset.opts );
+			}
 		}
-	}
 
-	preset.cmdArgs = jsPreset.getString( "additional_args" );
+		preset.cmdArgs = jsPreset.getString( "additional_args" );
+	}
 }

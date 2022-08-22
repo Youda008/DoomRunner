@@ -21,6 +21,7 @@
 #include <QMimeData>
 #include <QUrl>
 #include <QFileInfo>
+#include <QBrush>
 
 #include <functional>
 
@@ -246,6 +247,10 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 	// Therefore only author of Item knows how to perform certain operations on it, so he must specify it by functions
+	//
+	// We intentionally don't want to rely on the Item to have some members like isChecked, isSeparator, editString,
+	// because that would require items of all instances of EditableListModel to have those members even if that list
+	// does not support checkable items, separators or editing.
 
 	/** function that takes Item and constructs a String that will be displayed in the view */
 	std::function< QString ( const Item & ) > makeDisplayString;
@@ -256,8 +261,14 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 	/** optional function that points the model to a String member of Item containing the editable data */
 	std::function< QString & ( Item & ) > editString;
 
+	/** whether editing of regular non-separator items is allowed */
+	bool editingEnabled = false;
+
 	/** optional function that points the model to a bool flag of Item indicating whether the item is checked */
 	std::function< bool & ( Item & ) > isChecked;
+
+	/** optional function that points the model to a bool flag of Item indicating whether the item is a separator */
+	std::function< bool ( const Item & ) > isSeparator;
 
 	/** optional path helper that will convert paths dropped from directory to absolute or relative */
 	const PathContext * pathContext;
@@ -272,13 +283,23 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
 
-	/** defines how items should be edited and enables editing */
+	/** defines how items should be edited, needed either for editing regular items or for separators */
 	void setEditStringFunc( std::function< QString & ( Item & ) > editString )
 		{ this->editString = editString; }
+
+	/** enables editing of regular non-separator items
+	  * You must also call setEditStringFunc() for this to work. */
+	void enableEditing()
+		{ this->editingEnabled = true; }
 
 	/** defines how checkbox state should be read and written and enables checkboxes for all items */
 	void setIsCheckedFunc( std::function< bool & ( Item & ) > isChecked )
 		{ this->isChecked = isChecked; }
+
+	/** defines how to read whether the item is a separator and enables separators for the list
+	  * You must also call setEditStringFunc() for this to work. */
+	void setIsSeparatorFunc( std::function< bool ( const Item & ) > isSeparator )
+		{ this->isSeparator = isSeparator; }
 
 	/** must be set before external drag&drop is enabled in the parent widget */
 	void setPathContext( const PathContext * pathContext )
@@ -291,12 +312,14 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		if (!index.isValid())
 			return Qt::ItemIsDropEnabled;  // otherwise you can't append dragged items to the end of the list
 
+		bool isSeparator = isSet( this->isSeparator ) && this->isSeparator( superClass::itemList[ index.row() ] );
+
 		Qt::ItemFlags flags = QAbstractListModel::flags(index);
 
 		flags |= Qt::ItemIsDragEnabled;
-		if (isSet( editString ))
+		if (editingEnabled || isSeparator)
 			flags |= Qt::ItemIsEditable;
-		if (isSet( isChecked ))
+		if (isSet( isChecked ) && !isSeparator)
 			flags |= Qt::ItemIsUserCheckable;
 
 		return flags;
@@ -306,6 +329,8 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 	{
 		if (!index.isValid() || index.parent().isValid() || index.row() >= superClass::itemList.size())
 			return QVariant();
+
+		bool isSeparator = isSet( this->isSeparator ) && this->isSeparator( superClass::itemList[ index.row() ] );
 
 		if (role == Qt::DisplayRole)
 		{
@@ -338,6 +363,20 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 			bool checked = isChecked( const_cast< Item & >( superClass::itemList[ index.row() ] ) );
 			return checked ? Qt::Checked : Qt::Unchecked;
+		}
+		else if (role == Qt::BackgroundRole)
+		{
+			if (isSeparator)
+				return QBrush( Qt::lightGray );
+			else
+				return QVariant();  // default
+		}
+		else if (role == Qt::TextAlignmentRole)
+		{
+			if (isSeparator)
+				return Qt::AlignHCenter;
+			else
+				return QVariant();  // default
 		}
 		else
 		{
@@ -557,7 +596,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		for (int i = 0; i < filesToBeInserted.count(); i++)
 		{
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
-			// Therefore only author of Item knows how to assign a dropped file into it, so he must define it by a function.
+			// Therefore only author of Item knows how to assign a dropped file into it, so he must define it by a constructor.
 			superClass::itemList[ row + i ] = Item( filesToBeInserted[ i ] );
 		}
 

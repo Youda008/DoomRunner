@@ -188,7 +188,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 	JsonArrayCtxProxy getArray( const QString & key ) const;
 
 	/** returns a bool at a specified key, if it doesn't exist it shows an error dialog and returns default value */
-	bool getBool( const QString & key, bool defaultVal ) const;
+	bool getBool( const QString & key, bool defaultVal, bool showError = true ) const;
 
 	/** returns an int at a specified key, if it doesn't exist it shows an error dialog and returns default value */
 	int getInt( const QString & key, int defaultVal ) const;
@@ -220,7 +220,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 
  protected:
 
-	void missingKey( const QString & key ) const;
+	void missingKey( const QString & key, bool showError = true ) const;
 	void invalidTypeAtKey( const QString & key, const QString & expectedType ) const;
 	QString elemPath( const QString & elemName ) const;
 

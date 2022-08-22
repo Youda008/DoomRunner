@@ -272,14 +272,17 @@ MainWindow::MainWindow()
 
 void MainWindow::setupPresetView()
 {
+	// setup editing and separators
+	presetModel.enableEditing();
+	presetModel.setIsSeparatorFunc( []( const Preset & preset ) -> bool { return preset.isSeparator; } );
 	// specify where to get the string for edit mode
 	presetModel.setEditStringFunc( []( Preset & preset ) -> QString & { return preset.name; } );
+	ui->presetListView->toggleNameEditing( true );
 
 	// set data source for the view
 	ui->presetListView->setModel( &presetModel );
 
 	// set drag&drop behaviour
-	ui->presetListView->toggleNameEditing( true );
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
@@ -290,11 +293,13 @@ void MainWindow::setupPresetView()
 	// setup reaction to key shortcuts and right click
 	ui->presetListView->toggleContextMenu( true );
 	ui->presetListView->enableItemCloning();
+	ui->presetListView->enableSeparators();
 	connect( ui->presetListView->addAction, &QAction::triggered, this, &thisClass::presetAdd );
 	connect( ui->presetListView->deleteAction, &QAction::triggered, this, &thisClass::presetDelete );
 	connect( ui->presetListView->cloneAction, &QAction::triggered, this, &thisClass::presetClone );
 	connect( ui->presetListView->moveUpAction, &QAction::triggered, this, &thisClass::presetMoveUp );
 	connect( ui->presetListView->moveDownAction, &QAction::triggered, this, &thisClass::presetMoveDown );
+	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::presetInsertSeparator );
 }
 
 void MainWindow::setupIWADView()
@@ -343,6 +348,12 @@ void MainWindow::setupModView()
 	// specify where to get the bool flag for the checkbox
 	modModel.setIsCheckedFunc( []( Mod & mod ) -> bool & { return mod.checked; } );
 
+	// setup separators
+	modModel.setIsSeparatorFunc( []( const Mod & mod ) -> bool { return mod.isSeparator; } );
+	// specify where to get the string for editing separators
+	modModel.setEditStringFunc( []( Mod & mod ) -> QString & { return mod.fileName; } );
+	ui->modListView->toggleNameEditing( true );
+
 	// give the model our path convertor, it will need it for converting paths dropped from directory
 	modModel.setPathContext( &pathContext );
 
@@ -350,7 +361,6 @@ void MainWindow::setupModView()
 	ui->modListView->setModel( &modModel );
 
 	// set drag&drop behaviour
-	ui->modListView->toggleNameEditing( false );
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
 	ui->modListView->toggleInterWidgetDragAndDrop( true );
 	ui->modListView->toggleExternalFileDragAndDrop( true );
@@ -362,11 +372,13 @@ void MainWindow::setupModView()
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
 	ui->modListView->enableOpenFileLocation();
+	ui->modListView->enableSeparators();
 	connect( ui->modListView->addAction, &QAction::triggered, this, &thisClass::modAdd );
 	connect( ui->modListView->deleteAction, &QAction::triggered, this, &thisClass::modDelete );
 	connect( ui->modListView->moveUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
 	connect( ui->modListView->moveDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
 	connect( ui->modListView->openFileLocationAction, &QAction::triggered, this, &thisClass::modOpenFileLocation );
+	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::modInsertSeparator );
 }
 
 void MainWindow::loadMonitorInfo( QComboBox * box )
@@ -770,7 +782,7 @@ void MainWindow::restorePreset( int presetIdx )
 		modModel.clear();
 		for (const Mod & mod : presetCopy.mods)
 		{
-			if (QFileInfo::exists( mod.path ))
+			if (mod.isSeparator || QFileInfo::exists( mod.path ))
 			{
 				presetRef.mods.append( mod );  // put back only items that are valid
 				modModel.append( mod );
@@ -835,7 +847,7 @@ void MainWindow::clearPresetSubWidgets()
 void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	if (selectedPresetIdx >= 0 && !presetModel[ selectedPresetIdx ].isSeparator)
 	{
 		togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
 		restorePreset( selectedPresetIdx );  // load the content of the selected preset into the other widgets
@@ -1065,13 +1077,20 @@ void MainWindow::presetAdd()
 
 void MainWindow::presetDelete()
 {
-	QMessageBox::StandardButton reply = QMessageBox::question( this,
-		"Delete preset?", "Are you sure you want to delete this preset?", QMessageBox::Yes | QMessageBox::No
-	);
-	if (reply != QMessageBox::Yes)
-		return;
+	int selectedIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedIdx >= 0 && !presetModel[ selectedIdx ].isSeparator)
+	{
+		QMessageBox::StandardButton reply = QMessageBox::question( this,
+			"Delete preset?", "Are you sure you want to delete preset " % presetModel[ selectedIdx ].name % "?",
+			QMessageBox::Yes | QMessageBox::No
+		);
+		if (reply != QMessageBox::Yes)
+			return;
+	}
 
-	deleteSelectedItem( ui->presetListView, presetModel );
+	int deletedIdx = deleteSelectedItem( ui->presetListView, presetModel );
+	if (deletedIdx < 0)  // no item was selected
+		return;
 
 	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
 	if (selectedPresetIdx >= 0)
@@ -1104,6 +1123,25 @@ void MainWindow::presetMoveUp()
 void MainWindow::presetMoveDown()
 {
 	moveDownSelectedItem( ui->presetListView, presetModel );
+}
+
+void MainWindow::presetInsertSeparator()
+{
+	Preset separator;
+	separator.isSeparator = true;
+	separator.name = "New Separator";
+
+	int selectedIdx = getSelectedItemIdx( ui->presetListView );
+	if (selectedIdx >= 0)
+	{
+		insertItem( ui->presetListView, presetModel, separator, selectedIdx );
+	}
+	else
+	{
+		appendItem( ui->presetListView, presetModel, separator );
+	}
+
+	updateLaunchCommand();
 }
 
 
@@ -1241,6 +1279,40 @@ void MainWindow::modOpenFileLocation()
 	{
 		QMessageBox::warning( this, "Error opening directory", "Unknown error prevented opening a directory." );
 	}
+}
+
+void MainWindow::modInsertSeparator()
+{
+	Mod separator;
+	separator.isSeparator = true;
+	separator.fileName = "New Separator";
+	separator.checked = false;
+
+	QVector<int> selectedIndexes = getSelectedItemIdxs( ui->modListView );
+	if (selectedIndexes.size() > 0)
+	{
+		insertItem( ui->modListView, modModel, separator, selectedIndexes[0] );
+
+		// insert it also to the current preset
+		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+		{
+			presetModel[ selectedPresetIdx ].mods.insert( selectedIndexes[0], separator );
+		}
+	}
+	else
+	{
+		appendItem( ui->modListView, modModel, separator );
+
+		// append it also to the current preset
+		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+		{
+			presetModel[ selectedPresetIdx ].mods.append( separator );
+		}
+	}
+
+	updateLaunchCommand();
 }
 
 void MainWindow::modsDropped( int dropRow, int count )

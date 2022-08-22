@@ -154,6 +154,8 @@ void SetupDialog::setupIWADView()
 	// give the model our path convertor, it will need it for converting paths dropped from directory
 	iwadModel.setPathContext( &pathContext );
 
+	// setup editing
+	iwadModel.enableEditing();
 	// specify where to get the string for edit mode
 	iwadModel.setEditStringFunc( []( IWAD & iwad ) -> QString & { return iwad.name; } );
 

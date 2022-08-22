@@ -73,6 +73,18 @@ void prependItem( QListView * view, AListModel< Item > & model, const Item & ite
 }
 
 template< typename Item >
+void insertItem( QListView * view, AListModel< Item > & model, const Item & item, int index )
+{
+	model.startInserting( index );
+
+	model.insert( index, item );
+
+	model.finishInserting();
+
+	changeSelectionTo( view, index );
+}
+
+template< typename Item >
 int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 {
 	int selectedIdx = getSelectedItemIdx( view );

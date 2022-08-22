@@ -27,6 +27,7 @@ class EditableListView : public QListView {
 
 	Q_OBJECT
 
+	using thisClass = EditableListView;
 	using superClass = QListView;
 
  public:
@@ -108,7 +109,9 @@ class EditableListView : public QListView {
 
 	QAction * addOwnAction( const QString & text, const QKeySequence & shortcut );
 
-	bool isCheckable() const;
+ protected slots:
+
+	void openFileLocation();
 
  signals:
 

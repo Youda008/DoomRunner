@@ -90,6 +90,14 @@ class DropTarget {
 struct ReadOnlyListModelItem
 {
 	bool isSeparator = false;  ///< true means this is a special item used to mark a section
+
+	const QString & getFilePath() const
+	{
+		throw std::runtime_error(
+			"File path has been requested, but getting Item's file path is not implemented. "
+			"Either re-implement getFilePath() or disable actions requiring path in the view."
+		);
+	}
 };
 
 /** Each item of EditableListModel must inherit from this struct to satisfy the requirements of the model.
@@ -398,6 +406,10 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 					return Qt::AlignHCenter;
 				else
 					return QVariant();  // default
+			}
+			else if (role == Qt::UserRole)  // required for "Open File Location" action
+			{
+				return item.getFilePath();
 			}
 			else
 			{

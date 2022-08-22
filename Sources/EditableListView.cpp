@@ -254,14 +254,6 @@ static inline bool isArrowKey( int key )
 	return key >= Qt::Key_Left && key <= Qt::Key_Down;
 }
 
-bool EditableListView::isCheckable() const
-{
-	if (model()->rowCount() == 0)
-		return false;
-
-	return model()->flags( model()->index( 0, 0 ) ) & Qt::ItemIsUserCheckable;
-}
-
 void EditableListView::keyPressEvent( QKeyEvent * event )
 {
 	int key = event->key();
@@ -270,7 +262,7 @@ void EditableListView::keyPressEvent( QKeyEvent * event )
 
 	if (!isModifier)
 	{
-		if (key == Qt::Key_Space && isCheckable())
+		if (key == Qt::Key_Space)
 		{
 			// When user has multiple items selected and presses space, default implementation only checks/unchecks
 			// the current item, not all the selected ones. Therefore we have to do it manually here.
@@ -322,6 +314,7 @@ void EditableListView::enableItemCloning()
 void EditableListView::enableOpenFileLocation()
 {
 	openFileLocationAction = addOwnAction( "Open file location", {} );
+	connect( openFileLocationAction, &QAction::triggered, this, &thisClass::openFileLocation );
 }
 
 void EditableListView::enableInsertSeparator()
@@ -349,4 +342,21 @@ void EditableListView::contextMenuEvent( QContextMenuEvent * event )
 		insertSeparatorAction->setEnabled( contexMenuActive );
 
 	contextMenu->popup( event->globalPos() );
+}
+
+void EditableListView::openFileLocation()
+{
+	QModelIndex currentIdx = selectionModel()->currentIndex();
+	if (!currentIdx.isValid())
+	{
+		QMessageBox::warning( this->parentWidget(), "No item chosen", "You did not click on any file." );
+		return;
+	}
+
+	QString filePath = model()->data( currentIdx, Qt::CheckStateRole ).toString();
+
+	if (!::openFileLocation( filePath ))
+	{
+		QMessageBox::warning( this->parentWidget(), "Error opening directory", "Unknown error prevented opening a directory." );
+	}
 }

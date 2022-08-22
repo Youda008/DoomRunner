@@ -37,6 +37,8 @@ struct Engine : public EditableListModelItem
 	Engine( const QFileInfo & file )
 		: name( file.fileName() ), path( file.filePath() ), configDir( file.dir().path() ) {}
 
+	const QString & getFilePath() const { return path; }
+
 	QString getID() const { return path; }
 };
 
@@ -50,6 +52,7 @@ struct IWAD : public EditableListModelItem
 
 	const QString & getEditString() const { return name; }
 	void setEditString( const QString & str ) { name = str; }
+	const QString & getFilePath() const { return path; }
 
 	QString getID() const { return path; }
 };
@@ -64,6 +67,7 @@ struct Mod : public EditableListModelItem
 	void setEditString( const QString & str ) { fileName = str; }
 	bool isChecked() const { return checked; }
 	void setChecked( bool checked ) { this->checked = checked; }
+	const QString & getFilePath() const { return path; }
 
 	Mod() {}
 	Mod( const QFileInfo & file, bool checked = true )

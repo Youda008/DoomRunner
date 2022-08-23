@@ -27,7 +27,7 @@ extern const QString saveFileSuffix;
 extern const QString demoFileSuffix;
 
 extern const QVector< QString > iwadSuffixes;
-extern const QVector< QString > mapSuffixes;
+extern const QVector< QString > pwadSuffixes;
 extern const QVector< QString > dukeSuffixes;
 
 // convenience wrappers to be used, where otherwise lambda would have to be written
@@ -35,7 +35,7 @@ bool isIWAD( const QFileInfo & file );
 bool isMapPack( const QFileInfo & file );
 
 // used to setup file filter in QFileSystemModel
-QStringList getMapPackSuffixes();
+QStringList getModFileSuffixes();
 
 
 //======================================================================================================================

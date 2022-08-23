@@ -28,8 +28,8 @@ const QVector< QString > configFileSuffixes = {"ini", "cfg"};
 const QString saveFileSuffix = "zds";
 const QString demoFileSuffix = "lmp";
 
-const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7"};
-const QVector< QString > mapSuffixes = {"wad", "deh", "bex", "pk3", "pk7", "zip", "7z"};
+const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz"};
+const QVector< QString > pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "zip", "7z", "deh", "bex"};
 const QVector< QString > dukeSuffixes = {"grp", "rff"};
 
 // The correct way would be to recognize the type by file header, but there are incorrectly made mods
@@ -42,14 +42,14 @@ bool isIWAD( const QFileInfo & file )
 
 bool isMapPack( const QFileInfo & file )
 {
-	return (mapSuffixes.contains( file.suffix().toLower() ))
+	return (pwadSuffixes.contains( file.suffix().toLower() ))
 	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
 }
 
-QStringList getMapPackSuffixes()
+QStringList getModFileSuffixes()
 {
 	QStringList suffixes;
-	for (const QString & suffix : mapSuffixes)
+	for (const QString & suffix : pwadSuffixes)
 		suffixes.append( "*."+suffix );
 	for (const QString & suffix : dukeSuffixes)
 		suffixes.append( "*."+suffix );
@@ -144,7 +144,7 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 
 		// we need to make sure we have a null-terminated string, because the original one isn't when it's 8 chars long
 		char lumpName0 [9];
-		strncpy( lumpName0, lump.name, sizeof(lump.name) );
+		strncpy( lumpName0, lump.name, sizeof(lump.name) );  // no, g++, this code is correct, lump.name is [8], sizeof(lumpName0) would make it read out of bounds
 		lumpName0[8] = '\0';
 		QString lumpName( lumpName0 );
 

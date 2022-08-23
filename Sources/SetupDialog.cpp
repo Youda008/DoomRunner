@@ -296,9 +296,10 @@ void SetupDialog::changeModDir( const QString & text )
 void SetupDialog::iwadAdd()
 {
 	QString path = QFileDialog::getOpenFileName( this, "Locate the IWAD", QString(),
-	                                             "Doom data files (*.wad *.WAD *.iwad *.IWAD *.pk3 *.PK3 *.ipk3 *.IPK3 *.pk7 *.PK7 *.ipk7 *.IPK7);;"
-	                                             "DukeNukem data files (*.grp *.rff);;"
-	                                             "All files (*)" );
+		  makeFileFilter( "Doom data files", iwadSuffixes )
+		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
+		+ "All files (*)"
+	);
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 

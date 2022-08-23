@@ -316,7 +316,7 @@ void MainWindow::setupMapPackView()
 
 	// set item filters
 	mapModel.setFilter( QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot | QDir::NoSymLinks );
-	mapModel.setNameFilters( getMapPackSuffixes() );
+	mapModel.setNameFilters( getModFileSuffixes() );
 	mapModel.setNameFilterDisables( false );
 
 	// remove all other columns except the first one with name
@@ -1143,9 +1143,9 @@ void MainWindow::presetInsertSeparator()
 void MainWindow::modAdd()
 {
 	QStringList paths = QFileDialog::getOpenFileNames( this, "Locate the mod file", modSettings.dir,
-		"Doom mod files (*.wad *.WAD *.deh *.DEH *.bex *.BEX *.pk3 *.PK3 *.pk7 *.PK7 *.zip *.ZIP *.7z *.7Z);;"
-		"DukeNukem data files (*.grp *.rff);;"
-		"All files (*)"
+		  makeFileFilter( "Doom mod files", pwadSuffixes )
+		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
+		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel
 		return;

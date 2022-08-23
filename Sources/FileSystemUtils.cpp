@@ -11,6 +11,7 @@
 #include <QDirIterator>
 #include <QFile>
 #include <QStringBuilder>
+#include <QTextStream>
 #include <QDesktopServices>
 #include <QProcess>
 #include <QUrl>
@@ -126,4 +127,21 @@ bool openFileLocation( const QString & filePath )
 	return QDesktopServices::openUrl( QUrl::fromLocalFile( fileInfo.isDir()? fileInfo.filePath() : fileInfo.path() ) );
 
 #endif
+}
+
+QString makeFileFilter( const char * filterName, const QVector<QString> & suffixes )
+{
+	QString filter;
+	QTextStream filterStream( &filter, QIODevice::WriteOnly );
+
+	filterStream << filterName << " (";
+	for (const QString & suffix : suffixes)
+		if (&suffix == &suffixes[0])
+			filterStream <<  "*." << suffix << " *." << suffix.toUpper();
+		else
+			filterStream << " *." << suffix << " *." << suffix.toUpper();
+	filterStream << ");;";
+
+	filterStream.flush();
+	return filter;
 }

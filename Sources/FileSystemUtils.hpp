@@ -110,7 +110,11 @@ inline bool isInsideDir( const QString & entryPath, const QDir & dir )
 
 QString updateFile( const QString & filePath, const QByteArray & newContent );
 
+/// Opens a directory of a file in a new File Explorer window
 bool openFileLocation( const QString & filePath );
+
+/// Creates a file filter for the QFileDialog::getOpenFileNames
+QString makeFileFilter( const char * filterName, const QVector<QString> & suffixes );
 
 
 //======================================================================================================================

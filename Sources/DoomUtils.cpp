@@ -61,21 +61,20 @@ QStringList getModFileSuffixes()
 //  properties and capabilities of different engines
 
 static const EngineProperties defaultEngineProperties =
-	{ "-savedir" };
+	{ "-savedir", 0 };
 
 static const QHash< QString, EngineProperties > engineProperties =
 {
-	{ "zdoom",          { "-savedir" } },
-	{ "lzdoom",         { "-savedir" } },
-	{ "gzdoom",         { "-savedir" } },
-	{ "qzdoom",         { "-savedir" } },
-	{ "zandronum",      { "-savedir" } },
-	{ "boom",           { "-save" } },
-	{ "prboom",         { "-save" } },
-	{ "glboom",         { "-save" } },
-	//{ "chocolate-doom", { nullptr } },
-	{ "doomretro",      { "-save" } },
-	{ "eternity",       { "-save" } },
+	{ "zdoom",          { "-savedir", 1 } },
+	{ "lzdoom",         { "-savedir", 0 } },
+	{ "gzdoom",         { "-savedir", 0 } },
+	{ "qzdoom",         { "-savedir", 0 } },
+	{ "zandronum",      { "-savedir", 0 } },
+	{ "boom",           { "-save", 0 } },
+	{ "prboom",         { "-save", 0 } },
+	{ "glboom",         { "-save", 0 } },
+	{ "doomretro",      { "-save", 0 } },
+	{ "eternity",       { "-save", 0 } },
 };
 
 const EngineProperties & getEngineProperties( const QString & enginePath )

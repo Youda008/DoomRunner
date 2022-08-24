@@ -2610,15 +2610,11 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 	if (ui->allowCheatsChkBox->isChecked())
 		cmdStream << " +sv_cheats 1";
 
-	if (ui->monitorCmbBox->currentIndex() > 0)  // the first item is a placeholder for leaving it default
+	if (ui->monitorCmbBox->currentIndex() > 0)
 	{
-		// terrible hack, but it's not my fault
-		int vid_adapter;
-		if (selectedEngineIdx >= 0 && getFileNameFromPath( selectedEngine.path ).startsWith("zdoom"))
-			vid_adapter = ui->monitorCmbBox->currentIndex();      // in ZDoom monitors are indexed from 1
-		else
-			vid_adapter = ui->monitorCmbBox->currentIndex() - 1;  // but in newer derivatives from 0
-		cmdStream << " +vid_adapter " << vid_adapter;
+		int monitorIndex = ui->monitorCmbBox->currentIndex() - 1;  // the first item is a placeholder for leaving it default
+		int engineMonitorIndex = engineProperties.firstMonitorIndex + monitorIndex;  // some engines index monitors from 1 and others from 0
+		cmdStream << " +vid_adapter " << engineMonitorIndex;
 	}
 	if (!ui->resolutionXLine->text().isEmpty())
 		cmdStream << " -width " << ui->resolutionXLine->text();

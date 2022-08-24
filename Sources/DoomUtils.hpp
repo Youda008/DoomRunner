@@ -44,6 +44,7 @@ QStringList getModFileSuffixes();
 struct EngineProperties
 {
 	const char * saveDirParam;
+	int firstMonitorIndex;  // some engines index monitors from 1 and others from 0
 };
 
 const EngineProperties & getEngineProperties( const QString & enginePath );

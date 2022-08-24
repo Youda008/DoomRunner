@@ -2,7 +2,6 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Created on:  2.7.2019
 // Description: list view that supports editing of item names and behaves correctly on both internal and external
 //              drag&drop operations
 //======================================================================================================================

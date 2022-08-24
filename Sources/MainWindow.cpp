@@ -343,6 +343,9 @@ void MainWindow::setupMapPackView()
 
 void MainWindow::setupModView()
 {
+	// setup item checkboxes
+	modModel.toggleCheckableItems( true );
+
 	// setup separators
 	modModel.toggleSeparators( true );
 	ui->modListView->toggleNameEditing( true );

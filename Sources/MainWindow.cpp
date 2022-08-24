@@ -1264,7 +1264,6 @@ void MainWindow::modInsertSeparator()
 	Mod separator;
 	separator.isSeparator = true;
 	separator.fileName = "New Separator";
-	separator.checked = false;
 
 	QVector<int> selectedIndexes = getSelectedItemIdxs( ui->modListView );
 	if (selectedIndexes.size() > 0)
@@ -2542,6 +2541,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 	}
 
 	const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
+	const EngineProperties & engineProperties = getEngineProperties( selectedEngine.path );
 
 	{
 		throwIfInvalid( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
@@ -2565,18 +2565,23 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 		cmdStream << " -iwad \"" << base.rebasePath( iwadModel[ selectedIwadIdx ].path ) << "\"";
 	}
 
+	QVector<QString> selectedFiles;
+
 	const auto selectedMapPacks = getSelectedRows( ui->mapDirView );
 	for (const QModelIndex & selectedMapIdx : selectedMapPacks)
 	{
 		QString modelPath = mapModel.filePath( selectedMapIdx );
 		QString mapFilePath = pathContext.convertPath( modelPath );
 		throwIfInvalid( verifyPaths, mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
-		if (QFileInfo( mapFilePath ).suffix().toLower() == "deh")
+
+		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
+		if (suffix == "deh")
 			cmdStream << " -deh \"" << base.rebasePath( mapFilePath ) << "\"";
-		else if (QFileInfo( mapFilePath ).suffix().toLower() == "bex")
+		else if (suffix == "bex")
 			cmdStream << " -bex \"" << base.rebasePath( mapFilePath ) << "\"";
 		else
-			cmdStream << " -file \"" << base.rebasePath( mapFilePath ) << "\"";
+			// combine all files under a single -file parameter
+			selectedFiles.append( base.rebasePath( mapFilePath ) );
 	}
 
 	for (const Mod & mod : modModel)
@@ -2584,14 +2589,23 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 		if (mod.checked)
 		{
 			throwIfInvalid( verifyPaths, mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
-			if (QFileInfo( mod.path ).suffix().toLower() == "deh")
+
+			QString suffix = QFileInfo( mod.path ).suffix().toLower();
+			if (suffix == "deh")
 				cmdStream << " -deh \"" << base.rebasePath( mod.path ) << "\"";
-			else if (QFileInfo( mod.path ).suffix().toLower() == "bex")
+			else if (suffix == "bex")
 				cmdStream << " -bex \"" << base.rebasePath( mod.path ) << "\"";
 			else
-				cmdStream << " -file \"" << base.rebasePath( mod.path ) << "\"";
+				// combine all files under a single -file parameter
+				selectedFiles.append( base.rebasePath( mod.path ) );
 		}
 	}
+
+	// Older engines only accept single file parameter, we must list them here all together.
+	if (!selectedFiles.empty())
+		cmdStream << " -file";
+	for (const QString & filePath : selectedFiles)
+		cmdStream << " \"" << filePath << "\"";
 
 	if (ui->allowCheatsChkBox->isChecked())
 		cmdStream << " +sv_cheats 1";
@@ -2619,7 +2633,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 		cmdStream << " -nomusic";
 
 	if (!ui->saveDirLine->text().isEmpty())
-		cmdStream << " -savedir \"" << ui->saveDirLine->text() << "\"";
+		cmdStream << " " << engineProperties.saveDirParam << " \"" << ui->saveDirLine->text() << "\"";
 	if (!ui->screenshotDirLine->text().isEmpty())
 		cmdStream << " +screenshot_dir \"" << ui->screenshotDirLine->text() << "\"";
 

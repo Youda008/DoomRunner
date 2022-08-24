@@ -28,8 +28,8 @@ const QVector< QString > configFileSuffixes = {"ini", "cfg"};
 const QString saveFileSuffix = "zds";
 const QString demoFileSuffix = "lmp";
 
-const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz"};
-const QVector< QString > pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "zip", "7z", "deh", "bex"};
+const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke"};
+const QVector< QString > pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex"};
 const QVector< QString > dukeSuffixes = {"grp", "rff"};
 
 // The correct way would be to recognize the type by file header, but there are incorrectly made mods
@@ -54,6 +54,39 @@ QStringList getModFileSuffixes()
 	for (const QString & suffix : dukeSuffixes)
 		suffixes.append( "*."+suffix );
 	return suffixes;
+}
+
+
+//======================================================================================================================
+//  properties and capabilities of different engines
+
+static const EngineProperties defaultEngineProperties =
+	{ "-savedir" };
+
+static const QHash< QString, EngineProperties > engineProperties =
+{
+	{ "zdoom",          { "-savedir" } },
+	{ "lzdoom",         { "-savedir" } },
+	{ "gzdoom",         { "-savedir" } },
+	{ "qzdoom",         { "-savedir" } },
+	{ "zandronum",      { "-savedir" } },
+	{ "boom",           { "-save" } },
+	{ "prboom",         { "-save" } },
+	{ "glboom",         { "-save" } },
+	//{ "chocolate-doom", { nullptr } },
+	{ "doomretro",      { "-save" } },
+	{ "eternity",       { "-save" } },
+};
+
+const EngineProperties & getEngineProperties( const QString & enginePath )
+{
+	QString executableName = QFileInfo( enginePath ).baseName();
+
+	auto iter = engineProperties.find( executableName );
+	if (iter != engineProperties.end())
+		return *iter;
+	else
+		return defaultEngineProperties;
 }
 
 

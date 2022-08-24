@@ -39,6 +39,17 @@ QStringList getModFileSuffixes();
 
 
 //======================================================================================================================
+//  properties and capabilities of different engines
+
+struct EngineProperties
+{
+	const char * saveDirParam;
+};
+
+const EngineProperties & getEngineProperties( const QString & enginePath );
+
+
+//======================================================================================================================
 //  WAD info loading
 
 enum class WadType

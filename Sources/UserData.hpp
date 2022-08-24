@@ -12,7 +12,7 @@
 
 #include "Common.hpp"
 
-#include "ListModel.hpp"
+#include "ListModel.hpp"  // ReadOnlyListModelItem, EditableListModelItem
 #include "JsonUtils.hpp"
 
 #include <QString>

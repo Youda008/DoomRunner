@@ -35,6 +35,14 @@ For Windows I only provide statically linked executable, because dynamic one doe
 
 Because of the static linking, everything is present in the executable. You just need to extract the executable into some directory and it is good to run.
 
+#### Scoop
+
+`doomrunner` is available in the games bucket:
+```
+scoop bucket add games
+scoop install doomrunner
+```
+
 ### Linux
 
 On Linux, i wasn't able to make a static build yet. Therefore you need to install the following shared libraries to make the app run.

@@ -71,7 +71,9 @@ static const QHash< QString, EngineProperties > engineProperties =
 	{ "zandronum",      { "-savedir", 0 } },
 	{ "boom",           { "-save", 0 } },
 	{ "prboom",         { "-save", 0 } },
+	{ "prboom-plus",    { "-save", 0 } },
 	{ "glboom",         { "-save", 0 } },
+	{ "dsda-doom",      { "-save", 0 } },
 	{ "doomretro",      { "-save", 0 } },
 	{ "eternity",       { "-save", 0 } },
 };

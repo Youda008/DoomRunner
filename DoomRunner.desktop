@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=DoomRunner
+Comment=Preset-oriented graphical launcher of ZDoom and derivatives
+Exec=doomrunner
+Icon=/usr/share/icons/doomrunner.ico
+Type=Application
+Categories=Game
+X-Desktop-File-Install-Version=0.26

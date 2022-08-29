@@ -1,3 +1,8 @@
+1.5.2
+- ability to insert visual separators into mod list and preset list
+- improved support for more Doom engines and file types
+- minor bug-fixes
+
 1.5.1
 - fixed a bug where drag&dropping a file in the mod list would cause the same files to be selected in map-pack list
 - fixed a bug where right-click menu actions for IWADs would apply to engines

@@ -13,12 +13,12 @@
 //======================================================================================================================
 //  1D list view helpers
 
-int getCurrentItemIdx( QListView * view )
+int getCurrentItemIndex( QListView * view )
 {
 	return view->selectionModel()->currentIndex().row();
 }
 
-int getSelectedItemIdx( QListView * view )   // this function is for single selection lists
+int getSelectedItemIndex( QListView * view )   // this function is for single selection lists
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.empty())
@@ -34,7 +34,7 @@ int getSelectedItemIdx( QListView * view )   // this function is for single sele
 	return selectedIndexes[0].row();
 }
 
-QVector< int > getSelectedItemIdxs( QListView * view )
+QVector< int > getSelectedItemIndexes( QListView * view )
 {
 	QVector< int > selected;
 	for (QModelIndex & index : view->selectionModel()->selectedIndexes())
@@ -42,7 +42,7 @@ QVector< int > getSelectedItemIdxs( QListView * view )
 	return selected;
 }
 
-bool isSelectedIdx( QListView * view, int index )
+bool isSelectedIndex( QListView * view, int index )
 {
 	return view->selectionModel()->isSelected( view->model()->index( index, 0 ) );
 }
@@ -52,14 +52,14 @@ bool isSomethingSelected( QListView * view )
 	return !view->selectionModel()->selectedIndexes().isEmpty();
 }
 
-void selectItemByIdx( QListView * view, int index )
+void selectItemByIndex( QListView * view, int index )
 {
 	QModelIndex modelIndex = view->model()->index( index, 0 );
 	view->selectionModel()->select( modelIndex, QItemSelectionModel::Select );
 	view->selectionModel()->setCurrentIndex( modelIndex, QItemSelectionModel::NoUpdate );
 }
 
-void deselectItemByIdx( QListView * view, int index )
+void deselectItemByIndex( QListView * view, int index )
 {
 	QModelIndex modelIndex = view->model()->index( index, 0 );
 	view->selectionModel()->select( modelIndex, QItemSelectionModel::Deselect );
@@ -73,14 +73,14 @@ void deselectSelectedItems( QListView * view )
 void changeSelectionTo( QListView * view, int index )
 {
 	deselectSelectedItems( view );
-	selectItemByIdx( view, index );
+	selectItemByIndex( view, index );
 }
 
 
 //======================================================================================================================
 //  tree view helpers
 
-QModelIndex getSelectedItemIdx( QTreeView * view )   // this function is for single selection lists
+QModelIndex getSelectedItemIndex( QTreeView * view )   // this function is for single selection lists
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.empty())
@@ -96,12 +96,12 @@ QModelIndex getSelectedItemIdx( QTreeView * view )   // this function is for sin
 	return selectedIndexes[0];
 }
 
-bool isSelectedIdx( QTreeView * view, const QModelIndex & index )
+bool isSelectedIndex( QTreeView * view, const QModelIndex & index )
 {
 	return view->selectionModel()->isSelected( index );
 }
 
-QModelIndexList getSelectedItemIdxs( QTreeView * view )
+QModelIndexList getSelectedItemIndexes( QTreeView * view )
 {
 	return view->selectionModel()->selectedIndexes();
 }
@@ -125,13 +125,13 @@ bool isSomethingSelected( QTreeView * view )
 	return !view->selectionModel()->selectedIndexes().isEmpty();
 }
 
-void selectItemByIdx( QTreeView * view, const QModelIndex & index )
+void selectItemByIndex( QTreeView * view, const QModelIndex & index )
 {
 	view->selectionModel()->select( index, QItemSelectionModel::Select );
 	view->selectionModel()->setCurrentIndex( index, QItemSelectionModel::NoUpdate );
 }
 
-void deselectItemByIdx( QTreeView * view, const QModelIndex & index )
+void deselectItemByIndex( QTreeView * view, const QModelIndex & index )
 {
 	view->selectionModel()->select( index, QItemSelectionModel::Deselect );
 }
@@ -144,5 +144,5 @@ void deselectSelectedItems( QTreeView * view )
 void changeSelectionTo( QTreeView * view, const QModelIndex & index )
 {
 	deselectSelectedItems( view );
-	selectItemByIdx( view, index );
+	selectItemByIndex( view, index );
 }

@@ -26,6 +26,7 @@
 // Constructors from QFileInfo are used in automatic list updates for initializing an element from a file-system entry.
 // getID methods are used in automatic list updates for ensuring the same items remain selected.
 
+/// a ported Doom engine (source port) located somewhere on the disc
 struct Engine : public EditableListModelItem
 {
 	QString name;        ///< user defined engine name
@@ -36,6 +37,7 @@ struct Engine : public EditableListModelItem
 	Engine( const QFileInfo & file )
 		: name( file.fileName() ), path( file.filePath() ), configDir( file.dir().path() ) {}
 
+	// requirements of EditableListModel
 	const QString & getFilePath() const { return path; }
 
 	QString getID() const { return path; }
@@ -49,6 +51,7 @@ struct IWAD : public EditableListModelItem
 	IWAD() {}
 	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
 
+	// requirements of EditableListModel
 	const QString & getEditString() const { return name; }
 	void setEditString( const QString & str ) { name = str; }
 	const QString & getFilePath() const { return path; }
@@ -62,6 +65,7 @@ struct Mod : public EditableListModelItem
 	QString fileName;       ///< cached last part of path, beware of inconsistencies
 	bool checked = false;   ///< whether this mod is selected to be loaded
 
+	// requirements of EditableListModel
 	const QString & getEditString() const { return fileName; }
 	void setEditString( const QString & str ) { fileName = str; }
 	bool isChecked() const { return checked; }
@@ -161,6 +165,7 @@ struct CompatibilityOptions
 	int32_t flags2 = 0;
 };
 
+/// data of the second tab
 struct LaunchOptions
 {
 	// launch mode
@@ -221,6 +226,7 @@ struct Preset : public EditableListModelItem
 	QString cmdArgs;
 	LaunchOptions opts;
 
+	// requirements of EditableListModel
 	const QString & getEditString() const { return name; }
 	void setEditString( const QString & str ) { name = str; }
 

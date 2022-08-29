@@ -21,7 +21,7 @@ class QModelIndex;
 
 
 //======================================================================================================================
-/** helper for calculating relative and absolute paths according to current directory and settings */
+/** Helper for calculating relative and absolute paths according to current directory and settings. */
 
 class PathContext {
 
@@ -109,10 +109,10 @@ inline bool isInsideDir( const QString & entryPath, const QDir & dir )
 
 QString updateFile( const QString & filePath, const QByteArray & newContent );
 
-/// Opens a directory of a file in a new File Explorer window
+/// Opens a directory of a file in a new File Explorer window.
 bool openFileLocation( const QString & filePath );
 
-/// Creates a file filter for the QFileDialog::getOpenFileNames
+/// Creates a file filter for the QFileDialog::getOpenFileNames.
 QString makeFileFilter( const char * filterName, const QVector<QString> & suffixes );
 
 

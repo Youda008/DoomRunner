@@ -40,12 +40,14 @@ QStringList getModFileSuffixes();
 //======================================================================================================================
 //  properties and capabilities of different engines
 
+/// Properties of a different engine types such as GZDoom, Zandronum, PrBoom, ...
 struct EngineProperties
 {
 	const char * saveDirParam;
 	int firstMonitorIndex;  // some engines index monitors from 1 and others from 0
 };
 
+/// Returns properties of an engine based on its executable name, or default properties if it's not recognized.
 const EngineProperties & getEngineProperties( const QString & enginePath );
 
 
@@ -66,8 +68,8 @@ struct WadInfo
 	QVector< QString > mapNames;
 };
 
-/** Reads required data from a wad file and stores it into a cache.
-  * If the file was already read earlier, it returns the cached info. */
+/// Reads required data from a wad file and stores it into a cache.
+/** If the file was already read earlier, it returns the cached info. */
 const WadInfo & getCachedWadInfo( const QString & filePath );
 
 

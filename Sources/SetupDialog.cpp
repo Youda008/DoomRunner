@@ -365,7 +365,7 @@ void SetupDialog::editEngine( const QModelIndex & index )
 
 void SetupDialog::editCurrentEngine()
 {
-	int selectedEngineIdx = getSelectedItemIdx( ui->engineListView );
+	int selectedEngineIdx = getSelectedItemIndex( ui->engineListView );
 	if (selectedEngineIdx >= 0)
 	{
 		editEngine( engineModel.makeIndex( selectedEngineIdx ) );

@@ -26,7 +26,7 @@ struct MonitorInfo
 };
 QVector< MonitorInfo > listMonitors();
 
-/// returns directory for the application to save its data into
+/// Returns directory for the application to save its data into.
 QString getAppDataDir();
 
 

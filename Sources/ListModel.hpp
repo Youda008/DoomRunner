@@ -177,7 +177,7 @@ class AListModel : public QAbstractListModel {
 
 	//-- data change notifications -------------------------------------------------------------------------------------
 
-	/** notifies the view that the content of some items has been changed */
+	/// Notifies the view that the content of some items has been changed.
 	void contentChanged( int changedRowsBegin, int changedRowsEnd = -1 )
 	{
 		if (changedRowsEnd < 0)

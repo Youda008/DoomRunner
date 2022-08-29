@@ -97,7 +97,7 @@ static void throwIfInvalid( bool doVerify, const QString & path, const QString &
 	}\
 	else if (optsStorage == STORE_TO_PRESET) \
 	{\
-		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView ); \
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView ); \
 		if (selectedPresetIdx >= 0) \
 			presetModel[ selectedPresetIdx ].opts.structElem = value; \
 	}
@@ -421,13 +421,13 @@ void MainWindow::onWindowShown()
 			prependItem( ui->presetListView, presetModel, { "Default" } );
 			defaultPresetIdx = 0;
 		}
-		selectItemByIdx( ui->presetListView, defaultPresetIdx );  // this invokes the callback, which enables the dependent widgets
+		selectItemByIndex( ui->presetListView, defaultPresetIdx );  // this invokes the callback, which enables the dependent widgets
 		                                                          // and calls restorePreset(...);
 	}
 
 	if (checkForUpdates)
 	{
-		updateChecker.checkForUpdates(
+		updateChecker.checkForUpdates_async(
 			/* result callback */[ this ]( UpdateChecker::Result result, QString /*errorDetail*/, QStringList versionInfo )
 			{
 				if (result == UpdateChecker::UPDATE_AVAILABLE)
@@ -564,7 +564,7 @@ void MainWindow::runSetupDialog()
 
 void MainWindow::runGameOptsDialog()
 {
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	GameplayOptions * gameOpts = (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
 	                               ? &presetModel[ selectedPresetIdx ].opts.gameOpts
 	                               : &opts.gameOpts;
@@ -583,7 +583,7 @@ void MainWindow::runGameOptsDialog()
 
 void MainWindow::runCompatOptsDialog()
 {
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	CompatibilityOptions * compatOpts = (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
 	                                      ? &presetModel[ selectedPresetIdx ].opts.compatOpts
 	                                      : &opts.compatOpts;
@@ -713,7 +713,7 @@ void MainWindow::restorePreset( int presetIdx )
 			{
 				if (QFileInfo::exists( presetCopy.selectedIWAD ))
 				{
-					selectItemByIdx( ui->iwadListView, iwadIdx );
+					selectItemByIndex( ui->iwadListView, iwadIdx );
 				}
 				else
 				{
@@ -747,7 +747,7 @@ void MainWindow::restorePreset( int presetIdx )
 			{
 				if (QFileInfo::exists( path ))
 				{
-					selectItemByIdx( ui->mapDirView, mapIdx );
+					selectItemByIndex( ui->mapDirView, mapIdx );
 				}
 				else
 				{
@@ -840,7 +840,7 @@ void MainWindow::clearPresetSubWidgets()
 
 void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0 && !presetModel[ selectedPresetIdx ].isSeparator)
 	{
 		togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
@@ -860,7 +860,7 @@ void MainWindow::selectEngine( int index )
 		return;
 
 	// update the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		if (index < 0)  // engine combo box was reset to "no engine selected" state
@@ -888,7 +888,7 @@ void MainWindow::selectConfig( int index )
 		return;
 
 	// update the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		if (index < 0)  // config combo box was reset to "no config selected" state
@@ -920,10 +920,10 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 	if (disableSelectionCallbacks)
 		return;
 
-	int selectedIWADIdx = getSelectedItemIdx( ui->iwadListView );
+	int selectedIWADIdx = getSelectedItemIndex( ui->iwadListView );
 
 	// update the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		if (selectedIWADIdx < 0)
@@ -960,7 +960,7 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 	}
 
 	// update the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		presetModel[ selectedPresetIdx ].selectedMapPacks = selectedMapPacks;
@@ -977,7 +977,7 @@ void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex 
 	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
 	{
 		// update the current preset
-		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 		if (selectedPresetIdx >= 0)
 		{
 			for (int idx = topModIdx; idx <= bottomModIdx; idx++)
@@ -1071,7 +1071,7 @@ void MainWindow::presetAdd()
 
 void MainWindow::presetDelete()
 {
-	int selectedIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedIdx >= 0 && !presetModel[ selectedIdx ].isSeparator)
 	{
 		QMessageBox::StandardButton reply = QMessageBox::question( this,
@@ -1086,7 +1086,7 @@ void MainWindow::presetDelete()
 	if (deletedIdx < 0)  // no item was selected
 		return;
 
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		restorePreset( selectedPresetIdx );
@@ -1125,7 +1125,7 @@ void MainWindow::presetInsertSeparator()
 	separator.isSeparator = true;
 	separator.name = "New Separator";
 
-	int selectedIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedIdx >= 0)
 	{
 		insertItem( ui->presetListView, presetModel, separator, selectedIdx );
@@ -1157,7 +1157,7 @@ void MainWindow::modAdd()
 		for (QString & path : paths)
 			path = pathContext.getRelativePath( path );
 
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 
 	for (const QString & path : paths)
 	{
@@ -1190,7 +1190,7 @@ void MainWindow::modAddDir()
 	appendItem( ui->modListView, modModel, mod );
 
 	// add it also to the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		presetModel[ selectedPresetIdx ].mods.append( mod );
@@ -1206,7 +1206,7 @@ void MainWindow::modDelete()
 		return;
 
 	// remove it also from the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		int deletedCnt = 0;
@@ -1227,7 +1227,7 @@ void MainWindow::modMoveUp()
 		return;
 
 	// move it up also in the preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		for (int movedIdx : movedIndexes)
@@ -1246,7 +1246,7 @@ void MainWindow::modMoveDown()
 		return;
 
 	// move it down also in the preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		for (int movedIdx : movedIndexes)
@@ -1264,13 +1264,13 @@ void MainWindow::modInsertSeparator()
 	separator.isSeparator = true;
 	separator.fileName = "New Separator";
 
-	QVector<int> selectedIndexes = getSelectedItemIdxs( ui->modListView );
+	QVector<int> selectedIndexes = getSelectedItemIndexes( ui->modListView );
 	if (selectedIndexes.size() > 0)
 	{
 		insertItem( ui->modListView, modModel, separator, selectedIndexes[0] );
 
 		// insert it also to the current preset
-		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 		if (selectedPresetIdx >= 0)
 		{
 			presetModel[ selectedPresetIdx ].mods.insert( selectedIndexes[0], separator );
@@ -1281,7 +1281,7 @@ void MainWindow::modInsertSeparator()
 		appendItem( ui->modListView, modModel, separator );
 
 		// append it also to the current preset
-		int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 		if (selectedPresetIdx >= 0)
 		{
 			presetModel[ selectedPresetIdx ].mods.append( separator );
@@ -1294,7 +1294,7 @@ void MainWindow::modInsertSeparator()
 void MainWindow::modsDropped( int dropRow, int count )
 {
 	// update the preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		presetModel[ selectedPresetIdx ].mods = modModel.list();  // not the most optimal way, but the size of the list will be always small
@@ -1310,7 +1310,7 @@ void MainWindow::modsDropped( int dropRow, int count )
 			QModelIndex mapPackIdx = mapModel.index( mod.path );
 			if (mapPackIdx.isValid())
 			{
-				deselectItemByIdx( ui->mapDirView, mapPackIdx );
+				deselectItemByIndex( ui->mapDirView, mapPackIdx );
 			}
 		}
 	}
@@ -1764,7 +1764,7 @@ void MainWindow::toggleNoMusic( bool checked )
 void MainWindow::updatePresetCmdArgs( const QString & text )
 {
 	// update the current preset
-	int selectedPresetIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
 		presetModel[ selectedPresetIdx ].cmdArgs = text;
@@ -1942,7 +1942,7 @@ void MainWindow::updateDemoFilesFromDir()
 // this is not called regularly, but only when an IWAD is selected or deselected
 void MainWindow::updateMapsFromIWAD()
 {
-	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
+	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	QString selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : "";
 
 	// note down the currently selected items
@@ -2078,7 +2078,7 @@ void MainWindow::saveOptions( const QString & filePath )
 
 	jsRoot["output_options"] = serialize( opts2 );
 
-	int presetIdx = getSelectedItemIdx( ui->presetListView );
+	int presetIdx = getSelectedItemIndex( ui->presetListView );
 	jsRoot["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
 
 	QJsonDocument jsonDoc( jsRoot );
@@ -2424,7 +2424,7 @@ void MainWindow::restoreOutputOptions( OutputOptions & opts )
 
 void MainWindow::exportPreset()
 {
-	int selectedIdx = getSelectedItemIdx( ui->presetListView );
+	int selectedIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedIdx < 0)
 	{
 		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
@@ -2557,7 +2557,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 	}
 
 
-	int selectedIwadIdx = getSelectedItemIdx( ui->iwadListView );
+	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
 	{
 		throwIfInvalid( verifyPaths, iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please select another one." );

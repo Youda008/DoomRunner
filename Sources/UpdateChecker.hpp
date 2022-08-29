@@ -20,8 +20,8 @@
 
 
 //======================================================================================================================
-/** Asynchronous update checking tool.
-  * The object must live until a response is received, i.e. it can't be local in a function. */
+/// Asynchronous update checking tool.
+/** The object must live until a response is received, i.e. it can't be local in a function. */
 
 class UpdateChecker : public QObject {
 
@@ -42,7 +42,8 @@ class UpdateChecker : public QObject {
 
 	using ResultCallback = std::function< void ( Result result, QString errorDetail, QStringList versionInfo ) >;
 
-	void checkForUpdates( ResultCallback && callback );
+	/// Asynchronously checks for updates via HTTP connection and calls your callback when it's ready.
+	void checkForUpdates_async( ResultCallback && callback );
 
  private:
 

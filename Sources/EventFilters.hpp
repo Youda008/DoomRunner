@@ -55,7 +55,7 @@ class ModifierHandler {
 
 
 //======================================================================================================================
-/** event filter that captures key presses and emits them as signals */
+/** Event filter that captures key presses and emits them as signals. */
 
 class KeyPressFilter : public QObject {
 
@@ -84,7 +84,7 @@ class KeyPressFilter : public QObject {
 
 
 //======================================================================================================================
-/** event filter that captures enter presses and emits them as signal */
+/** Event filter that captures enter presses and emits them as signal. */
 
 class ConfirmationFilter : public QObject {
 

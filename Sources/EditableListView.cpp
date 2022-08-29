@@ -218,7 +218,7 @@ void EditableListView::itemsDropped()
 
 			deselectSelectedItems( this );
 			for (int i = 0; i < count; i++)
-				selectItemByIdx( this, row + i );
+				selectItemByIndex( this, row + i );
 
 			emit itemsDropped( row, count );
 

@@ -56,18 +56,18 @@ uint enumSize() { return 0; }
 constexpr bool showError = true;
 constexpr bool dontShowError = false;
 
-/** data related to an ongoing parsing process */
+/// data related to an ongoing parsing process
 struct _ParsingContext
 {
 	bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
 };
 
-/** mechanisms common for JSON objects and arrays */
+/// mechanisms common for JSON objects and arrays
 class JsonValueCtx {
 
  protected:
 
-	/** JSON key - either string key for objects or int index for arrays */
+	/// JSON key - either string key for objects or int index for arrays
 	struct Key
 	{
 		enum Type
@@ -92,22 +92,23 @@ class JsonValueCtx {
 
  public:
 
-	/** constructs a JSON value with no parent, this should be only used for creating a root element */
+	/// Constructs a JSON value with no parent.
+	/** This should be only used for creating a root element. */
 	JsonValueCtx( _ParsingContext * context )
 		: _context( context ), _parent( nullptr ), _key() {}
 
-	/** constructs a JSON value with a parent that is a JSON object */
+	/// Constructs a JSON value with a parent that is a JSON object.
 	JsonValueCtx( _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
 		: _context( context ), _parent( parent ), _key( key ) {}
 
-	/** constructs a JSON value with a parent that is a JSON array */
+	/// Constructs a JSON value with a parent that is a JSON array.
 	JsonValueCtx( _ParsingContext * context, const JsonValueCtx * parent, int index )
 		: _context( context ), _parent( parent ), _key( index ) {}
 
-	/** copy constructor */
+	/// copy constructor
 	JsonValueCtx( const JsonValueCtx & other ) = default;
 
-	/** builds a path of this element in its JSON document */
+	/// Builds a path of this element in its JSON document.
 	QString getPath() const;
 
  protected:
@@ -116,7 +117,7 @@ class JsonValueCtx {
 
 };
 
-/** proxy class that solves cyclic dependancy between JsonObjectCtx and JsonArrayCtx */
+/// proxy class that solves cyclic dependancy between JsonObjectCtx and JsonArrayCtx
 class JsonObjectCtxProxy : public JsonValueCtx {
 
  protected:
@@ -143,7 +144,7 @@ class JsonObjectCtxProxy : public JsonValueCtx {
 
 };
 
-/** proxy class that solves cyclic dependancy between JsonObjectCtx and JsonArrayCtx */
+/// proxy class that solves cyclic dependancy between JsonObjectCtx and JsonArrayCtx
 class JsonArrayCtxProxy : public JsonValueCtx {
 
  protected:
@@ -167,48 +168,56 @@ class JsonArrayCtxProxy : public JsonValueCtx {
 
 };
 
-/** wrapper around QJsonObject that knows its position in the JSON document and pops up an error messsage on invalid operations */
+/** Wrapper around QJsonObject that knows its position in the JSON document and pops up an error messsage on invalid operations. */
 class JsonObjectCtx : public JsonObjectCtxProxy {
 
  public:
 
-	/** constructs invalid JSON object wrapper */
+	/// Constructs invalid JSON object wrapper.
 	JsonObjectCtx()
 		: JsonObjectCtxProxy() {}
 
-	/** constructs a JSON object wrapper with no parent, this should be only used for creating a root element */
+	/// Constructs a JSON object wrapper with no parent, this should be only used for creating a root element.
 	JsonObjectCtx( const QJsonObject & wrappedObject, _ParsingContext * context )
 		: JsonObjectCtxProxy( wrappedObject, context ) {}
 
-	/** converts the temporary proxy object into the final object - workaround for cyclic dependancy */
+	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
 	JsonObjectCtx( const JsonObjectCtxProxy & proxy )
 		: JsonObjectCtxProxy( proxy ) {}
 
-	/** returns a sub-object at a specified key, if it doesn't exist it shows an error dialog and returns invalid object */
+	/// Returns a sub-object at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns invalid object. */
 	JsonObjectCtxProxy getObject( const QString & key, bool showError = true ) const;
 
-	/** returns a sub-array at a specified key, if it doesn't exist it shows an error dialog and returns invalid object */
+	/// Returns a sub-array at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns invalid object. */
 	JsonArrayCtxProxy getArray( const QString & key, bool showError = true ) const;
 
-	/** returns a bool at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns a bool at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	bool getBool( const QString & key, bool defaultVal, bool showError = true ) const;
 
-	/** returns an int at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns an int at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	int getInt( const QString & key, int defaultVal, bool showError = true ) const;
 
-	/** returns an uint at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns an uint at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	uint getUInt( const QString & key, uint defaultVal, bool showError = true ) const;
 
-	/** returns an uint16_t at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns an uint16_t at a specified key.
 	uint16_t getUInt16( const QString & key, uint16_t defaultVal, bool showError = true ) const;
 
-	/** returns a double at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns a double at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	double getDouble( const QString & key, double defaultVal, bool showError = true ) const;
 
-	/** returns a string at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns a string at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	QString getString( const QString & key, const QString & defaultVal = QString(), bool showError = true ) const;
 
-	/** returns an enum at a specified key, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns an enum at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	template< typename Enum >
 	Enum getEnum( const QString & key, Enum defaultVal, bool showError = true ) const
 	{
@@ -229,43 +238,53 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 
 };
 
+/** Wrapper around QJsonArray that knows its position in the JSON document and pops up an error messsage on invalid operations. */
 class JsonArrayCtx : public JsonArrayCtxProxy {
 
  public:
 
-	/** constructs invalid JSON array wrapper */
+	/// Constructs invalid JSON array wrapper.
 	JsonArrayCtx() : JsonArrayCtxProxy() {}
 
-	/** converts the temporary proxy object into the final object - workaround for cyclic dependancy */
+	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
 	JsonArrayCtx( const JsonArrayCtxProxy & proxy ) : JsonArrayCtxProxy( proxy ) {}
 
 	int size() const { return _wrappedArray->size(); }
 
-	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns invalid array */
+	/// Returns a sub-object at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns invalid array. */
 	JsonObjectCtxProxy getObject( int index, bool showError = true ) const;
 
-	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns invalid array */
+	/// Returns a sub-array at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns invalid array. */
 	JsonArrayCtxProxy getArray( int index, bool showError = true ) const;
 
-	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns a bool at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	bool getBool( int index, bool defaultVal, bool showError = true ) const;
 
-	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns an int at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	int getInt( int index, int defaultVal, bool showError = true ) const;
 
-	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns an uint at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	uint getUInt( int index, uint defaultVal, bool showError = true ) const;
 
-	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns an uint16_t at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	uint16_t getUInt16( int index, uint16_t defaultVal, bool showError = true ) const;
 
-	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns a double at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	double getDouble( int index, double defaultVal, bool showError = true ) const;
 
-	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns a string at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	QString getString( int index, const QString & defaultVal = QString(), bool showError = true ) const;
 
-	/** returns a sub-object at a specified index, if it doesn't exist it shows an error dialog and returns default value */
+	/// Returns a sub-object at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	template< typename Enum >
 	Enum getEnum( int index, Enum defaultVal, bool showError = true ) const
 	{

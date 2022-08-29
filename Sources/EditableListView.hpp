@@ -39,28 +39,28 @@ class EditableListView : public QListView {
 	// 2. inter-widget d&d - drag&drop from another widget for moving items between different widgets
 	// 3. external file d&d - drag&drop from directory window for inserting file paths into the list
 
-	/** internal drag&drop for reordering items inside this widget, enabled by default */
+	/// internal drag&drop for reordering items inside this widget, enabled by default
 	void toggleIntraWidgetDragAndDrop( bool enabled );
 
-	/** internal drag&drop for moving items from other widgets, disabled by default */
+	/// internal drag&drop for moving items from other widgets, disabled by default
 	void toggleInterWidgetDragAndDrop( bool enabled );
 
-	/** external drag&drop for moving files from directory window, disabled by default */
+	/// external drag&drop for moving files from directory window, disabled by default
 	void toggleExternalFileDragAndDrop( bool enabled );
 
-	/** enables/disables editing the item names by double-clicking on them */
+	/// Enables/disables editing the item names by double-clicking on them.
 	void toggleNameEditing( bool enabled );
 
-	/** setting this to false will grey-out the context menu items so that they can't be clicked */
+	/// Setting this to false will grey-out the context menu items so that they can't be clicked.
 	void toggleContextMenu( bool enabled );
 
-	/** enables clone action in a right-click context menu and CTRL+C shortcut */
+	/// Enables clone action in a right-click context menu and CTRL+C shortcut.
 	void enableItemCloning();
 
-	/** enables "Open file location" action in a right-click context menu */
+	/// Enables "Open file location" action in a right-click context menu.
 	void enableOpenFileLocation();
 
-	/** enables adding a named separator line between items of this list view */
+	/// Enables adding a named separator line between items of this list view.
 	void enableInsertSeparator();
 
  public: // members
@@ -83,16 +83,17 @@ class EditableListView : public QListView {
 	virtual void dropEvent( QDropEvent * event ) override;
 	virtual void startDrag( Qt::DropActions supportedActions ) override;
 
-	/** update QAbstractItemView's properties based on our new settings */
+	/// Updates QAbstractItemView's properties based on our new settings
 	void updateDragDropMode();
 
-	/** does proposed drop operation comply with our settings? */
+	/// Does proposed drop operation comply with our settings?
 	bool isDropAcceptable( QDragMoveEvent * event );
 
 	bool isIntraWidgetDnD( QDropEvent * event );
 	bool isInterWidgetDnD( QDropEvent * event );
 	bool isExternFileDnD( QDropEvent * event );
 
+	/// Retrieves drop indexes, updates selection and emits a signal.
 	void itemsDropped();
 
 	// keyboard control
@@ -114,6 +115,7 @@ class EditableListView : public QListView {
 
  signals:
 
+	/// emitted either when items are dropped to this view from another widget or just moved within this view itself
 	void itemsDropped( int row, int count );
 
  protected: // members

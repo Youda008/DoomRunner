@@ -33,20 +33,21 @@ class QTreeView;
 //----------------------------------------------------------------------------------------------------------------------
 //  selection manipulation
 
-int getCurrentItemIdx( QListView * view );
-int getSelectedItemIdx( QListView * view );  // assumes a single-selection mode, will throw a message box error otherwise
-QVector<int> getSelectedItemIdxs( QListView * view );
-bool isSelectedIdx( QListView * view, int index );
+int getCurrentItemIndex( QListView * view );
+int getSelectedItemIndex( QListView * view );  // assumes a single-selection mode, will throw a message box error otherwise
+QVector<int> getSelectedItemIndexes( QListView * view );
+bool isSelectedIndex( QListView * view, int index );
 bool isSomethingSelected( QListView * view );
 
-void selectItemByIdx( QListView * view, int index );
-void deselectItemByIdx( QListView * view, int index );
+void selectItemByIndex( QListView * view, int index );
+void deselectItemByIndex( QListView * view, int index );
 void deselectSelectedItems( QListView * view );
 void changeSelectionTo( QListView * view, int index );
 
 //----------------------------------------------------------------------------------------------------------------------
 //  button actions
 
+/// Adds an item to the end of the list and selects it.
 template< typename Item >
 void appendItem( QListView * view, AListModel< Item > & model, const Item & item )
 {
@@ -59,6 +60,7 @@ void appendItem( QListView * view, AListModel< Item > & model, const Item & item
 	changeSelectionTo( view, model.size() - 1 );
 }
 
+/// Adds an item to the begining of the list and selects it.
 template< typename Item >
 void prependItem( QListView * view, AListModel< Item > & model, const Item & item )
 {
@@ -71,6 +73,7 @@ void prependItem( QListView * view, AListModel< Item > & model, const Item & ite
 	changeSelectionTo( view, 0 );
 }
 
+/// Adds an item to the middle of the list and selects it.
 template< typename Item >
 void insertItem( QListView * view, AListModel< Item > & model, const Item & item, int index )
 {
@@ -83,10 +86,11 @@ void insertItem( QListView * view, AListModel< Item > & model, const Item & item
 	changeSelectionTo( view, index );
 }
 
+/// Deletes a selected item or pops up a warning box if nothing is selected.
 template< typename Item >
 int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 {
-	int selectedIdx = getSelectedItemIdx( view );
+	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
 		if (!model.isEmpty())
@@ -94,7 +98,7 @@ int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 		return -1;
 	}
 
-	deselectItemByIdx( view, selectedIdx );
+	deselectItemByIndex( view, selectedIdx );
 
 	model.startDeleting( selectedIdx );
 
@@ -105,19 +109,20 @@ int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 	// try to select the item that follows after the deleted one
 	if (selectedIdx < model.size())
 	{
-		selectItemByIdx( view, selectedIdx );
+		selectItemByIndex( view, selectedIdx );
 	}
 	else                                               // if the deleted item was the last one
 	{
 		if (selectedIdx > 0)                           // and not the only one
 		{
-			selectItemByIdx( view, selectedIdx - 1 );  // select the previous
+			selectItemByIndex( view, selectedIdx - 1 );  // select the previous
 		}
 	}
 
 	return selectedIdx;
 }
 
+/// Deletes all selected items or pops up a warning box if nothing is selected.
 template< typename Item >
 QVector<int> deleteSelectedItems( QListView * view, AListModel< Item > & model )
 {
@@ -144,7 +149,7 @@ QVector<int> deleteSelectedItems( QListView * view, AListModel< Item > & model )
 	uint deletedCnt = 0;
 	for (int selectedIdx : selectedIndexesAsc)
 	{
-		deselectItemByIdx( view, selectedIdx );
+		deselectItemByIndex( view, selectedIdx );
 		model.removeAt( selectedIdx - deletedCnt );
 		deletedCnt++;
 	}
@@ -152,22 +157,23 @@ QVector<int> deleteSelectedItems( QListView * view, AListModel< Item > & model )
 	model.finishCompleteUpdate();
 
 	// try to select some nearest item, so that user can click 'delete' repeatedly to delete all of them
-	if (firstSelectedIdx < model.size())           // if the first deleted item index is still within range of existing ones
+	if (firstSelectedIdx < model.size())             // if the first deleted item index is still within range of existing ones
 	{
-		selectItemByIdx( view, firstSelectedIdx ); // select that one
+		selectItemByIndex( view, firstSelectedIdx ); // select that one
 	}
-	else if (!model.isEmpty())                     // otherwise select the previous, if there is any
+	else if (!model.isEmpty())                       // otherwise select the previous, if there is any
 	{
-		selectItemByIdx( view, firstSelectedIdx - 1 );
+		selectItemByIndex( view, firstSelectedIdx - 1 );
 	}
 
 	return selectedIndexesAsc;
 }
 
+/// Creates a copy of a selected item or pops up a warning box if nothing is selected.
 template< typename Item >
 int cloneSelectedItem( QListView * view, AListModel< Item > & model )
 {
-	int selectedIdx = getSelectedItemIdx( view );
+	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
@@ -192,10 +198,11 @@ int cloneSelectedItem( QListView * view, AListModel< Item > & model )
 	return selectedIdx;
 }
 
+/// Moves a selected item up or pops up a warning box if nothing is selected.
 template< typename Item >
 int moveUpSelectedItem( QListView * view, AListModel< Item > & model )
 {
-	int selectedIdx = getSelectedItemIdx( view );
+	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
@@ -211,18 +218,19 @@ int moveUpSelectedItem( QListView * view, AListModel< Item > & model )
 	model.move( selectedIdx, selectedIdx - 1 );
 
 	// update selection
-	deselectItemByIdx( view, selectedIdx );
-	selectItemByIdx( view, selectedIdx - 1 );
+	deselectItemByIndex( view, selectedIdx );
+	selectItemByIndex( view, selectedIdx - 1 );
 
 	model.contentChanged( selectedIdx - 1 );  // this is basically just swapping content of 2 items
 
 	return selectedIdx;
 }
 
+/// Moves a selected item down or pops up a warning box if nothing is selected.
 template< typename Item >
 int moveDownSelectedItem( QListView * view, AListModel< Item > & model )
 {
-	int selectedIdx = getSelectedItemIdx( view );
+	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
@@ -238,14 +246,15 @@ int moveDownSelectedItem( QListView * view, AListModel< Item > & model )
 	model.move( selectedIdx, selectedIdx + 1 );
 
 	// update selection
-	deselectItemByIdx( view, selectedIdx );
-	selectItemByIdx( view, selectedIdx + 1 );
+	deselectItemByIndex( view, selectedIdx );
+	selectItemByIndex( view, selectedIdx + 1 );
 
 	model.contentChanged( selectedIdx );  // this is basically just swapping content of 2 items
 
 	return selectedIdx;
 }
 
+/// Moves all selected items up or pops up a warning box if nothing is selected.
 template< typename Item >
 QVector<int> moveUpSelectedItems( QListView * view, AListModel< Item > & model )
 {
@@ -276,14 +285,15 @@ QVector<int> moveUpSelectedItems( QListView * view, AListModel< Item > & model )
 	}
 
 	// update selection
-	deselectItemByIdx( view, selectedIndexesAsc.last() );
-	selectItemByIdx( view, selectedIndexesAsc.first() - 1 );
+	deselectItemByIndex( view, selectedIndexesAsc.last() );
+	selectItemByIndex( view, selectedIndexesAsc.first() - 1 );
 
 	model.contentChanged( selectedIndexesAsc.first() - 1 );  // this is basically just swapping content of few items
 
 	return selectedIndexesAsc;
 }
 
+/// Moves all selected items down or pops up a warning box if nothing is selected.
 template< typename Item >
 QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model )
 {
@@ -314,8 +324,8 @@ QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model
 	}
 
 	// update selection
-	deselectItemByIdx( view, selectedIndexesDesc.last() );
-	selectItemByIdx( view, selectedIndexesDesc.first() + 1 );
+	deselectItemByIndex( view, selectedIndexesDesc.last() );
+	selectItemByIndex( view, selectedIndexesDesc.first() + 1 );
 
 	model.contentChanged( selectedIndexesDesc.last() );  // this is basically just swapping content of few items
 
@@ -326,18 +336,18 @@ QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model
 //----------------------------------------------------------------------------------------------------------------------
 //  complete list update helpers
 
-/** gets a persistent item ID that survives node shifting, adding or removal */
+/// Gets a persistent item ID that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
 auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> decltype( model[0].getID() )
 {
-	int selectedItemIdx = getSelectedItemIdx( view );
+	int selectedItemIdx = getSelectedItemIndex( view );
 	if (selectedItemIdx >= 0)
 		return model[ selectedItemIdx ].getID();
 	else
 		return {};
 }
 
-/** attempts to select a previously selected item defined by its persistant itemID */
+/// Attempts to select a previously selected item defined by its persistant itemID.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
 bool selectItemByID( QListView * view, const AListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
@@ -346,24 +356,24 @@ bool selectItemByID( QListView * view, const AListModel< Item > & model, const d
 		int newItemIdx = findSuch( model.list(), [&]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0)
 		{
-			selectItemByIdx( view, newItemIdx );
+			selectItemByIndex( view, newItemIdx );
 			return true;
 		}
 	}
 	return false;
 }
 
-/** gets persistent item IDs that survive node shifting, adding or removal */
+/// Gets persistent item IDs that survive node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
 auto getSelectedItemIDs( QListView * view, const AListModel< Item > & model ) -> QVector< decltype( model[0].getID() ) >
 {
 	QVector< decltype( model[0].getID() ) > itemIDs;
-	for (int selectedItemIdx : getSelectedItemIdxs( view ))
+	for (int selectedItemIdx : getSelectedItemIndexes( view ))
 		itemIDs.append( model[ selectedItemIdx ].getID() );
 	return itemIDs;
 }
 
-/** attempts to select previously selected items defined by their persistant itemIDs */
+/// Attempts to select previously selected items defined by their persistant itemIDs.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
 void selectItemsByIDs( QListView * view, const AListModel< Item > & model, const QVector< decltype( model[0].getID() ) > & itemIDs )
 {
@@ -371,11 +381,11 @@ void selectItemsByIDs( QListView * view, const AListModel< Item > & model, const
 	{
 		int newItemIdx = findSuch( model.list(), [&]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0)
-			selectItemByIdx( view, newItemIdx );
+			selectItemByIndex( view, newItemIdx );
 	}
 }
 
-
+/// Fills a list with entries found in a directory.
 template< typename Item >
 void updateListFromDir( AListModel< Item > & model, QListView * view, const QString & dir, bool recursively,
                         const PathContext & pathContext, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
@@ -416,12 +426,12 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 
 
 //======================================================================================================================
-//  combo box helpers
+//  combo-box helpers
 
 //----------------------------------------------------------------------------------------------------------------------
 //  complete box update helpers
 
-/** gets a persistent item ID that survives node shifting, adding or removal */
+/// Gets a persistent item ID that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
 auto getSelectedItemID( QComboBox * view, const AListModel< Item > & model ) -> decltype( model[0].getID() )
 {
@@ -432,7 +442,7 @@ auto getSelectedItemID( QComboBox * view, const AListModel< Item > & model ) -> 
 		return {};
 }
 
-/** attempts to select a previously selected item defined by persistant itemID */
+/// Attempts to select a previously selected item defined by persistant itemID.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
 bool selectItemByID( QComboBox * view, const AListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
 {
@@ -448,6 +458,7 @@ bool selectItemByID( QComboBox * view, const AListModel< Item > & model, const d
 	return false;
 }
 
+/// Fills a combo-box with entries found in a directory.
 template< typename Item >
 void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const QString & dir, bool recursively,
                             bool includeEmptyItem, const PathContext & pathContext,
@@ -489,14 +500,14 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 //----------------------------------------------------------------------------------------------------------------------
 //  selection manipulation
 
-QModelIndex getSelectedItemIdx( QTreeView * view );
-QModelIndexList getSelectedItemIdxs( QTreeView * view );
+QModelIndex getSelectedItemIndex( QTreeView * view );
+QModelIndexList getSelectedItemIndexes( QTreeView * view );
 QModelIndexList getSelectedRows( QTreeView * view );
-bool isSelectedIdx( QTreeView * view, const QModelIndex & index );
+bool isSelectedIndex( QTreeView * view, const QModelIndex & index );
 bool isSomethingSelected( QTreeView * view );
 
-void selectItemByIdx( QTreeView * view, const QModelIndex & index );
-void deselectItemByIdx( QTreeView * view, const QModelIndex & index );
+void selectItemByIndex( QTreeView * view, const QModelIndex & index );
+void deselectItemByIndex( QTreeView * view, const QModelIndex & index );
 void deselectSelectedItems( QTreeView * view );
 void changeSelectionTo( QTreeView * view, const QModelIndex & index );
 

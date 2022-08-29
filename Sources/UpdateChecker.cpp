@@ -43,7 +43,7 @@ UpdateChecker::UpdateChecker()
 
 UpdateChecker::~UpdateChecker() {}
 
-void UpdateChecker::checkForUpdates( ResultCallback && callback )
+void UpdateChecker::checkForUpdates_async( ResultCallback && callback )
 {
 	QNetworkRequest request;
 	request.setUrl( availableVersionUrl );

@@ -14,7 +14,7 @@
 #include <QDialog>
 
 namespace Ui {
-	class ConfigDialog;
+	class NewConfigDialog;
 }
 
 
@@ -35,7 +35,7 @@ class NewConfigDialog : public QDialog {
 
  private:
 
-	Ui::ConfigDialog * ui;
+	Ui::NewConfigDialog * ui;
 
  public: // return values from this dialog
 

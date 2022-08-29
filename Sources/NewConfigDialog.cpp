@@ -6,7 +6,7 @@
 //======================================================================================================================
 
 #include "NewConfigDialog.hpp"
-#include "ui_ConfigDialog.h"
+#include "ui_NewConfigDialog.h"
 
 
 //======================================================================================================================
@@ -15,7 +15,7 @@ NewConfigDialog::NewConfigDialog( QWidget * parent, const QString & currentConfi
 :
 	QDialog( parent )
 {
-	ui = new Ui::ConfigDialog;
+	ui = new Ui::NewConfigDialog;
 	ui->setupUi(this);
 
 	ui->configNameLine->setText( currentConfigName );

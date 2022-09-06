@@ -85,7 +85,7 @@ QString updateFile( const QString & filePath, const QByteArray & newContent )
 
 	if (!newFile.rename( filePath ))
 	{
-		return "Could rename new file "%newFilePath%" back to "%filePath%": "%newFile.errorString();
+		return "Could not rename new file "%newFilePath%" back to "%filePath%": "%newFile.errorString();
 	}
 
 	return {};

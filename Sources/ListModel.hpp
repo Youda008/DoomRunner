@@ -257,7 +257,7 @@ class ReadOnlyListModel : public AListModel< Item > {
 
 	// Each list view might want to display the same data differently, so we allow the user of the list model
 	// to specify it by a function for each view separately.
-	/** function that takes Item and constructs a String that will be displayed in the view */
+	/// function that takes Item and constructs a String that will be displayed in the view
 	std::function< QString ( const Item & ) > makeDisplayString;
 
  public:
@@ -306,19 +306,19 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	// Each list view might want to display the same data differently, so we allow the user of the list model
 	// to specify it by a function for each view separately.
-	/** function that takes Item and constructs a String that will be displayed in the view */
+	/// function that takes Item and constructs a String that will be displayed in the view
 	std::function< QString ( const Item & ) > makeDisplayString;
 
-	/** whether editing of regular non-separator items is allowed */
+	/// whether editing of regular non-separator items is allowed
 	bool editingEnabled = false;
 
-	/** whether separators are allowed */
+	/// whether separators are allowed
 	bool separatorsEnabled = false;
 
-	/** whether items have a checkbox that can be checked and unchecked */
+	/// whether items have a checkbox that can be checked and unchecked
 	bool checkableItems = false;
 
-	/** optional path helper that will convert paths dropped from directory to absolute or relative */
+	/// optional path helper that will convert paths dropped from directory to absolute or relative
 	const PathContext * pathContext;
 
  public:
@@ -341,7 +341,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	void toggleCheckableItems( bool enabled ) { checkableItems = enabled; }
 
-	/** must be set before external drag&drop is enabled in the parent widget */
+	/** Must be set before external drag&drop is enabled in the parent widget. */
 	void setPathContext( const PathContext * pathContext ) { this->pathContext = pathContext; }
 
 
@@ -353,7 +353,6 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			return Qt::ItemIsDropEnabled;  // otherwise you can't append dragged items to the end of the list
 
 		const Item & item = superClass::itemList[ index.row() ];
-
 		bool isSeparator = separatorsEnabled && item.isSeparator;
 
 		Qt::ItemFlags flags = QAbstractListModel::flags(index);
@@ -373,7 +372,6 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			return QVariant();
 
 		const Item & item = superClass::itemList[ index.row() ];
-
 		bool isSeparator = separatorsEnabled && item.isSeparator;
 
 		try
@@ -384,7 +382,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 				// to specify it by a function for each view separately.
 				return makeDisplayString( item );
 			}
-			else if (role == Qt::EditRole && editingEnabled)
+			else if (role == Qt::EditRole && (editingEnabled || isSeparator))
 			{
 				return item.getEditString();
 			}
@@ -428,16 +426,17 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			return false;
 
 		Item & item = superClass::itemList[ index.row() ];
+		bool isSeparator = separatorsEnabled && item.isSeparator;
 
 		try
 		{
-			if (role == Qt::EditRole)
+			if (role == Qt::EditRole && (editingEnabled || isSeparator))
 			{
 				item.setEditString( value.toString() );
 				emit superClass::dataChanged( index, index, {Qt::EditRole} );
 				return true;
 			}
-			else if (role == Qt::CheckStateRole)
+			else if (role == Qt::CheckStateRole && checkableItems)
 			{
 				item.setChecked( value == Qt::Checked ? true : false );
 				emit superClass::dataChanged( index, index, {Qt::CheckStateRole} );

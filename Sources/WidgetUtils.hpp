@@ -444,6 +444,8 @@ QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model
 	return selectedIndexesDesc;
 }
 
+bool editItemAtIndex( QListView * view, int index );
+
 
 
 

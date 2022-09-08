@@ -219,3 +219,19 @@ void chooseItemByIndex( QTreeView * view, const QModelIndex & index )
 	selectItemByIndex( view, index );
 	setCurrentItemByIndex( view, index );
 }
+
+
+
+
+//======================================================================================================================
+//  button actions
+
+
+bool editItemAtIndex( QListView * view, int index )
+{
+	QModelIndex modelIndex = view->model()->index( index, 0 );
+	view->setCurrentIndex( modelIndex );
+	view->edit( modelIndex );
+	// this returns true even when the editor was not opened using openPersistentEditor()
+	return view->isPersistentEditorOpen( modelIndex );
+}

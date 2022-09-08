@@ -1119,7 +1119,7 @@ void MainWindow::presetClone()
 	if (origIdx >= 0)
 	{
 		// open edit mode so that user can name the preset
-		ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );
+		editItemAtIndex( ui->presetListView, presetModel.size() - 1 );
 	}
 }
 
@@ -1140,16 +1140,12 @@ void MainWindow::presetInsertSeparator()
 	separator.name = "New Separator";
 
 	int selectedIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedIdx >= 0)
-	{
-		insertItem( ui->presetListView, presetModel, separator, selectedIdx );
-	}
-	else
-	{
-		appendItem( ui->presetListView, presetModel, separator );
-	}
+	int insertIdx = selectedIdx < 0 ? presetModel.size() : selectedIdx;  // append if none
 
-	updateLaunchCommand();
+	insertItem( ui->presetListView, presetModel, separator, insertIdx );
+
+	// open edit mode so that user can name the preset
+	editItemAtIndex( ui->presetListView, insertIdx );
 }
 
 
@@ -1279,30 +1275,19 @@ void MainWindow::modInsertSeparator()
 	separator.fileName = "New Separator";
 
 	QVector<int> selectedIndexes = getSelectedItemIndexes( ui->modListView );
-	if (selectedIndexes.size() > 0)
-	{
-		insertItem( ui->modListView, modModel, separator, selectedIndexes[0] );
+	int insertIdx = selectedIndexes.empty() ? modModel.size() : selectedIndexes[0];  // append if none
 
-		// insert it also to the current preset
-		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-		if (selectedPresetIdx >= 0)
-		{
-			presetModel[ selectedPresetIdx ].mods.insert( selectedIndexes[0], separator );
-		}
-	}
-	else
-	{
-		appendItem( ui->modListView, modModel, separator );
+	insertItem( ui->modListView, modModel, separator, insertIdx );
 
-		// append it also to the current preset
-		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-		if (selectedPresetIdx >= 0)
-		{
-			presetModel[ selectedPresetIdx ].mods.append( separator );
-		}
+	// insert it also to the current preset
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+	if (selectedPresetIdx >= 0)
+	{
+		presetModel[ selectedPresetIdx ].mods.insert( insertIdx, separator );
 	}
 
-	updateLaunchCommand();
+	// open edit mode so that user can name the preset
+	editItemAtIndex( ui->modListView, insertIdx );
 }
 
 void MainWindow::modsDropped( int dropRow, int count )

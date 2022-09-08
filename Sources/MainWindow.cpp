@@ -2560,7 +2560,11 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 
 	{
 		throwIfInvalid( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
-		cmdStream << "\"" << base.rebasePath( selectedEngine.path ) << "\"";
+		
+		if (selectedEngine.path.contains("/snap/"))  // Linux speciality - for snap version use direct name otherwise libraries won't be found
+			cmdStream << "\"" << getFileNameFromPath( selectedEngine.path ) << "\"";
+		else
+			cmdStream << "\"" << base.rebasePath( selectedEngine.path ) << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config

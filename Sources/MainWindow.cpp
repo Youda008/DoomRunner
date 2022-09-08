@@ -988,10 +988,13 @@ void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex 
 	int topModIdx = topLeft.row();
 	int bottomModIdx = bottomRight.row();
 
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+
+	bool launchCommandNeedsUpdate = false;
+
 	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
 	{
 		// update the current preset
-		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 		if (selectedPresetIdx >= 0)
 		{
 			for (int idx = topModIdx; idx <= bottomModIdx; idx++)
@@ -1000,8 +1003,22 @@ void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex 
 			}
 		}
 
-		updateLaunchCommand();
+		launchCommandNeedsUpdate = true;
 	}
+	if (roles.contains( Qt::EditRole ))  // name of some separators changed
+	{
+		// update the current preset
+		if (selectedPresetIdx >= 0)
+		{
+			for (int idx = topModIdx; idx <= bottomModIdx; idx++)
+			{
+				presetModel[ selectedPresetIdx ].mods[ idx ].fileName = modModel[ idx ].fileName;
+			}
+		}
+	}
+
+	if (launchCommandNeedsUpdate)
+		updateLaunchCommand();
 }
 
 void MainWindow::showMapPackDesc( const QModelIndex & index )

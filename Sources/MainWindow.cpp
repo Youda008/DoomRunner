@@ -614,16 +614,29 @@ void MainWindow::cloneConfig()
 	int code = dialog.exec();
 
 	// perform the action only if user clicked Ok
-	if (code == QDialog::Accepted)
+	if (code != QDialog::Accepted)
 	{
-		QString oldConfigPath = oldConfig.filePath();
-		QString newConfigPath = configDir.filePath( dialog.newConfigName + '.' + oldConfig.suffix() );
-		bool copied = QFile::copy( oldConfigPath, newConfigPath );
-		if (!copied)
-		{
-			QMessageBox::warning( this, "Error copying file",
-				"Couldn't create file "%newConfigPath%". Check permissions." );
-		}
+		return;
+	}
+
+	QString oldConfigPath = oldConfig.filePath();
+	QString newConfigPath = configDir.filePath( dialog.newConfigName + '.' + oldConfig.suffix() );
+	bool copied = QFile::copy( oldConfigPath, newConfigPath );
+	if (!copied)
+	{
+		QMessageBox::warning( this, "Error copying file", "Couldn't create file "%newConfigPath%". Check permissions." );
+		return;
+	}
+
+	// regenerate config list so that we can select it
+	updateConfigFilesFromDir();
+
+	// select the new file automatically for convenience
+	QString newConfigName = getFileNameFromPath( newConfigPath );
+	int newConfigIdx = findSuch( configModel, [&]( const ConfigFile & cfg ) { return cfg.fileName == newConfigName; } );
+	if (newConfigIdx >= 0)
+	{
+		ui->configCmbBox->setCurrentIndex( newConfigIdx );
 	}
 }
 

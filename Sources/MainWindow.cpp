@@ -1038,7 +1038,8 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 
 	if (!QFileInfo::exists( mapDescFilePath ))
 	{
-		qWarning() << "Map description file ("%mapDescFileName%") does not exist";
+		QMessageBox::warning( this, "Cannot open map description",
+			"Map description file \""%mapDescFileName%"\" does not exist" );
 		return;
 	}
 

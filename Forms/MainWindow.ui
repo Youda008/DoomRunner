@@ -240,6 +240,13 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_7">
                <item>
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string>hold CTRL to select multiple</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QTreeView" name="mapDirView">
                  <property name="enabled">
                   <bool>false</bool>

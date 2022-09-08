@@ -38,8 +38,11 @@
 // the reordering, and then set the current item to the new one, after the reordering is done.
 
 
+
+
 //======================================================================================================================
 //  selection manipulation
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  list view helpers
@@ -64,6 +67,7 @@ void deselectAllAndUnsetCurrent( QListView * view );
 /// Deselects currently selected items, selects new one and makes it the current item.
 /** Basically equivalent to left-clicking on an item. */
 void chooseItemByIndex( QListView * view, int index );
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  tree view helpers
@@ -91,11 +95,11 @@ void deselectAllAndUnsetCurrent( QTreeView * view );
 void chooseItemByIndex( QTreeView * view, const QModelIndex & index );
 
 
-//======================================================================================================================
-//  1D list view helpers - all of these function assume a 1-dimensional non-recursive list view/widget
 
-//----------------------------------------------------------------------------------------------------------------------
-//  button actions
+
+//======================================================================================================================
+//  button actions - all of these function assume a 1-dimensional non-recursive list view/widget
+
 
 /// Adds an item to the end of the list and selects it.
 template< typename Item >
@@ -441,8 +445,11 @@ QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model
 }
 
 
-//----------------------------------------------------------------------------------------------------------------------
-//  complete list update helpers
+
+
+//======================================================================================================================
+//  complete update helpers for list-view
+
 
 /// Gets a persistent item ID of the current item that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
@@ -586,11 +593,11 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 }
 
 
-//======================================================================================================================
-//  combo-box helpers
 
-//----------------------------------------------------------------------------------------------------------------------
-//  complete box update helpers
+
+//======================================================================================================================
+//  complete update helpers for combo-box
+
 
 /// Gets a persistent item ID that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier

@@ -8,10 +8,16 @@
 #include "WidgetUtils.hpp"
 
 
+
+
 //======================================================================================================================
-//  1D list view helpers
+//  selection manipulation
+
 
 //----------------------------------------------------------------------------------------------------------------------
+//  1D list view helpers
+
+
 //  current item
 
 int getCurrentItemIndex( QListView * view )
@@ -31,7 +37,7 @@ void unsetCurrentItem( QListView * view )
 	view->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+
 //  selected items
 
 bool isSelectedIndex( QListView * view, int index )
@@ -85,7 +91,7 @@ void deselectSelectedItems( QListView * view )
 	view->selectionModel()->clearSelection();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+
 //  high-level control
 
 void selectAndSetCurrentByIndex( QListView * view, int index )
@@ -108,10 +114,10 @@ void chooseItemByIndex( QListView * view, int index )
 }
 
 
-//======================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------
 //  tree view helpers
 
-//----------------------------------------------------------------------------------------------------------------------
+
 //  current item
 
 QModelIndex getCurrentItemIndex( QTreeView * view )
@@ -129,7 +135,7 @@ void unsetCurrentItem( QTreeView * view )
 	view->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+
 //  selected items
 
 bool isSelectedIndex( QTreeView * view, const QModelIndex & index )
@@ -192,7 +198,7 @@ void deselectSelectedItems( QTreeView * view )
 	view->selectionModel()->clearSelection();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+
 //  high-level control
 
 void selectAndSetCurrentByIndex( QTreeView * view, const QModelIndex & index )

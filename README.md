@@ -50,12 +50,15 @@ On Linux, i wasn't able to make a static build yet. Therefore you need to instal
 * libqt5core
 * libqt5gui
 * libqt5widgets
+* libqt5network
 
 On Ubuntu use
 ```
 sudo apt install libname
 ```
 or some graphical package manager like Muon.
+
+The binaries were built on Kubuntu 22.04 LTS so it is possible that they will not find the libraries on other distributions. In that case you will need to build it yourself.
 
 #### Arch Linux
 
@@ -142,7 +145,7 @@ sudo apt install g++
 	
 ##### 2. Install Qt
 ```
-sudo apt install qt5-default
+sudo apt install qtbase5-dev qt5-qmake
 ```
 	
 ##### 3. Build the project

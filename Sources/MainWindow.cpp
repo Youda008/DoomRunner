@@ -421,8 +421,8 @@ void MainWindow::onWindowShown()
 			prependItem( ui->presetListView, presetModel, { "Default" } );
 			defaultPresetIdx = 0;
 		}
-		selectItemByIndex( ui->presetListView, defaultPresetIdx );  // this invokes the callback, which enables the dependent widgets
-		                                                          // and calls restorePreset(...);
+		// This invokes the callback, which enables the dependent widgets and calls restorePreset(...)
+		selectAndSetCurrentByIndex( ui->presetListView, defaultPresetIdx );
 	}
 
 	if (checkForUpdates)
@@ -524,12 +524,13 @@ void MainWindow::runSetupDialog()
 	if (code == QDialog::Accepted)
 	{
 		// write down the previously selected items
-		auto selectedEngine = getSelectedItemID( ui->engineCmbBox, engineModel );
+		auto selectedEngine = getCurrentItemID( ui->engineCmbBox, engineModel );
+		auto currentIWAD = getCurrentItemID( ui->iwadListView, iwadModel );
 		auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwadModel );
 
 		// deselect the items
 		ui->engineCmbBox->setCurrentIndex( -1 );
-		deselectSelectedItems( ui->iwadListView );
+		deselectAllAndUnsetCurrent( ui->iwadListView );
 
 		// make sure all data and indexes are invalidated and no longer used
 		engineModel.startCompleteUpdate();
@@ -555,8 +556,9 @@ void MainWindow::runSetupDialog()
 		refreshMapPacks();
 
 		// select back the previously selected items
-		selectItemByID( ui->engineCmbBox, engineModel, selectedEngine );
+		setCurrentItemByID( ui->engineCmbBox, engineModel, selectedEngine );
 		selectItemByID( ui->iwadListView, iwadModel, selectedIWAD );
+		setCurrentItemByID( ui->iwadListView, iwadModel, currentIWAD );
 
 		updateLaunchCommand();
 	}
@@ -707,8 +709,7 @@ void MainWindow::restorePreset( int presetIdx )
 		deselectSelectedItems( ui->iwadListView );
 		if (!presetCopy.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
 		{
-			int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad )
-											   { return iwad.path == presetCopy.selectedIWAD; } );
+			int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == presetCopy.selectedIWAD; } );
 			if (iwadIdx >= 0)
 			{
 				if (QFileInfo::exists( presetCopy.selectedIWAD ))
@@ -823,9 +824,9 @@ void MainWindow::clearPresetSubWidgets()
 	ui->engineCmbBox->setCurrentIndex( -1 );
 	// map names, saves and demos will be cleared and deselected automatically
 
-	deselectSelectedItems( ui->iwadListView );
-	deselectSelectedItems( ui->mapDirView );
-	deselectSelectedItems( ui->modListView );
+	deselectAllAndUnsetCurrent( ui->iwadListView );
+	deselectAllAndUnsetCurrent( ui->mapDirView );
+	deselectAllAndUnsetCurrent( ui->modListView );
 
 	modModel.startCompleteUpdate();
 	modModel.clear();
@@ -1847,7 +1848,7 @@ void MainWindow::updateIWADsFromDir()
 	disableSelectionCallbacks = false;
 
 	auto newSelection = getSelectedItemIDs( ui->iwadListView, iwadModel );
-	if (newSelection != origSelection)
+	if (!areSelectionsEqual( newSelection, origSelection ))
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
 		toggleIWAD( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
@@ -2134,7 +2135,7 @@ void MainWindow::loadOptions( const QString & filePath )
 	}
 
 	// preset must be deselected first, so that the cleared selections doesn't save in the selected preset
-	deselectSelectedItems( ui->presetListView );
+	deselectAllAndUnsetCurrent( ui->presetListView );
 
 	checkForUpdates = jsRoot.getBool( "check_for_updates", true );
 
@@ -2183,7 +2184,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	if (JsonObjectCtx jsIWADs = jsRoot.getObject( "IWADs" ))
 	{
-		deselectSelectedItems( ui->iwadListView );  // if something is selected, this invokes the callback, which updates the dependent widgets
+		deselectAllAndUnsetCurrent( ui->iwadListView );  // if something is selected, this invokes the callback, which updates the dependent widgets
 
 		iwadModel.startCompleteUpdate();
 
@@ -2224,7 +2225,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	if (JsonObjectCtx jsMaps = jsRoot.getObject( "maps" ))
 	{
-		deselectSelectedItems( ui->mapDirView );
+		deselectAllAndUnsetCurrent( ui->mapDirView );
 
 		deserialize( jsMaps, mapSettings );
 
@@ -2233,7 +2234,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	if (JsonObjectCtx jsMods = jsRoot.getObject( "mods" ))
 	{
-		deselectSelectedItems( ui->modListView );
+		deselectAllAndUnsetCurrent( ui->modListView );
 
 		deserialize( jsMods, modSettings );
 
@@ -2242,7 +2243,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	if (JsonArrayCtx jsPresetArray = jsRoot.getArray( "presets" ))
 	{
-		deselectSelectedItems( ui->presetListView );  // this invokes the callback, which disables the dependent widgets
+		deselectAllAndUnsetCurrent( ui->presetListView );  // this invokes the callback, which disables the dependent widgets
 
 		presetModel.startCompleteUpdate();
 
@@ -2300,8 +2301,8 @@ void MainWindow::loadOptions( const QString & filePath )
 		                                               { return preset.name == selectedPreset; } );
 		if (selectedPresetIdx >= 0)
 		{
-			changeSelectionTo( ui->presetListView, selectedPresetIdx );  // this invokes the callback, which enables the dependent widgets
-			                                                             // and calls restorePreset(...);
+			// This invokes the callback, which enables the dependent widgets and calls restorePreset(...)
+			selectAndSetCurrentByIndex( ui->presetListView, selectedPresetIdx );
 		}
 		else
 		{

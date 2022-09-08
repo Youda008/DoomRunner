@@ -7,15 +7,41 @@
 
 #include "WidgetUtils.hpp"
 
-#include <QTreeView>
-
 
 //======================================================================================================================
 //  1D list view helpers
 
+//----------------------------------------------------------------------------------------------------------------------
+//  current item
+
 int getCurrentItemIndex( QListView * view )
 {
-	return view->selectionModel()->currentIndex().row();
+	QModelIndex currentIndex = view->selectionModel()->currentIndex();
+	return currentIndex.isValid() ? currentIndex.row() : -1;
+}
+
+void setCurrentItemByIndex( QListView * view, int index )
+{
+	QModelIndex modelIndex = view->model()->index( index, 0 );
+	view->selectionModel()->setCurrentIndex( modelIndex, QItemSelectionModel::NoUpdate );
+}
+
+void unsetCurrentItem( QListView * view )
+{
+	view->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//  selected items
+
+bool isSelectedIndex( QListView * view, int index )
+{
+	return view->selectionModel()->isSelected( view->model()->index( index, 0 ) );
+}
+
+bool isSomethingSelected( QListView * view )
+{
+	return !view->selectionModel()->selectedIndexes().isEmpty();
 }
 
 int getSelectedItemIndex( QListView * view )   // this function is for single selection lists
@@ -42,21 +68,10 @@ QVector< int > getSelectedItemIndexes( QListView * view )
 	return selected;
 }
 
-bool isSelectedIndex( QListView * view, int index )
-{
-	return view->selectionModel()->isSelected( view->model()->index( index, 0 ) );
-}
-
-bool isSomethingSelected( QListView * view )
-{
-	return !view->selectionModel()->selectedIndexes().isEmpty();
-}
-
 void selectItemByIndex( QListView * view, int index )
 {
 	QModelIndex modelIndex = view->model()->index( index, 0 );
 	view->selectionModel()->select( modelIndex, QItemSelectionModel::Select );
-	view->selectionModel()->setCurrentIndex( modelIndex, QItemSelectionModel::NoUpdate );
 }
 
 void deselectItemByIndex( QListView * view, int index )
@@ -70,15 +85,62 @@ void deselectSelectedItems( QListView * view )
 	view->selectionModel()->clearSelection();
 }
 
-void changeSelectionTo( QListView * view, int index )
+//----------------------------------------------------------------------------------------------------------------------
+//  high-level control
+
+void selectAndSetCurrentByIndex( QListView * view, int index )
+{
+	selectItemByIndex( view, index );
+	setCurrentItemByIndex( view, index );
+}
+
+void deselectAllAndUnsetCurrent( QListView * view )
+{
+	deselectSelectedItems( view );
+	unsetCurrentItem( view );
+}
+
+void chooseItemByIndex( QListView * view, int index )
 {
 	deselectSelectedItems( view );
 	selectItemByIndex( view, index );
+	setCurrentItemByIndex( view, index );
 }
 
 
 //======================================================================================================================
 //  tree view helpers
+
+//----------------------------------------------------------------------------------------------------------------------
+//  current item
+
+QModelIndex getCurrentItemIndex( QTreeView * view )
+{
+	return view->selectionModel()->currentIndex();
+}
+
+void setCurrentItemByIndex( QTreeView * view, const QModelIndex & index )
+{
+	view->selectionModel()->setCurrentIndex( index, QItemSelectionModel::NoUpdate );
+}
+
+void unsetCurrentItem( QTreeView * view )
+{
+	view->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//  selected items
+
+bool isSelectedIndex( QTreeView * view, const QModelIndex & index )
+{
+	return view->selectionModel()->isSelected( index );
+}
+
+bool isSomethingSelected( QTreeView * view )
+{
+	return !view->selectionModel()->selectedIndexes().isEmpty();
+}
 
 QModelIndex getSelectedItemIndex( QTreeView * view )   // this function is for single selection lists
 {
@@ -94,11 +156,6 @@ QModelIndex getSelectedItemIndex( QTreeView * view )   // this function is for s
 		return {};
 	}
 	return selectedIndexes[0];
-}
-
-bool isSelectedIndex( QTreeView * view, const QModelIndex & index )
-{
-	return view->selectionModel()->isSelected( index );
 }
 
 QModelIndexList getSelectedItemIndexes( QTreeView * view )
@@ -120,15 +177,9 @@ QModelIndexList getSelectedRows( QTreeView * view )
 	return selectedRows;
 }
 
-bool isSomethingSelected( QTreeView * view )
-{
-	return !view->selectionModel()->selectedIndexes().isEmpty();
-}
-
 void selectItemByIndex( QTreeView * view, const QModelIndex & index )
 {
 	view->selectionModel()->select( index, QItemSelectionModel::Select );
-	view->selectionModel()->setCurrentIndex( index, QItemSelectionModel::NoUpdate );
 }
 
 void deselectItemByIndex( QTreeView * view, const QModelIndex & index )
@@ -141,8 +192,24 @@ void deselectSelectedItems( QTreeView * view )
 	view->selectionModel()->clearSelection();
 }
 
-void changeSelectionTo( QTreeView * view, const QModelIndex & index )
+//----------------------------------------------------------------------------------------------------------------------
+//  high-level control
+
+void selectAndSetCurrentByIndex( QTreeView * view, const QModelIndex & index )
+{
+	selectItemByIndex( view, index );
+	setCurrentItemByIndex( view, index );
+}
+
+void deselectAllAndUnsetCurrent( QTreeView * view )
+{
+	deselectSelectedItems( view );
+	unsetCurrentItem( view );
+}
+
+void chooseItemByIndex( QTreeView * view, const QModelIndex & index )
 {
 	deselectSelectedItems( view );
 	selectItemByIndex( view, index );
+	setCurrentItemByIndex( view, index );
 }

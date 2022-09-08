@@ -34,7 +34,8 @@ class EditableListView : public QListView {
 	EditableListView( QWidget * parent );
 	virtual ~EditableListView() override;
 
-	// We support 3 kinds of drag&drop operations, that can be separately enabled/disabled
+	// drag&drop
+	// We support 3 kinds of drag&drop operations, that can be separately enabled/disabled:
 	// 1. intra-widget d&d - drag&drop from inside this widget for manual reordering of items on the list
 	// 2. inter-widget d&d - drag&drop from another widget for moving items between different widgets
 	// 3. external file d&d - drag&drop from directory window for inserting file paths into the list
@@ -48,8 +49,21 @@ class EditableListView : public QListView {
 	/// external drag&drop for moving files from directory window, disabled by default
 	void toggleExternalFileDragAndDrop( bool enabled );
 
+	// editing
+
 	/// Enables/disables editing the item names by double-clicking on them.
 	void toggleNameEditing( bool enabled );
+
+	/// Returns whether any of the items is in edit mode (after double-click, F2, etc...).
+	bool isEditModeOpen() const;
+
+	/// Opens edit mode for the current item.
+	bool startEditingCurrentItem();
+
+	/// Closes edit mode for the currently edited and commits the edit data into the model.
+	void stopEditingAndCommit();
+
+	// right-click menu
 
 	/// Setting this to false will grey-out the context menu items so that they can't be clicked.
 	void toggleContextMenu( bool enabled );

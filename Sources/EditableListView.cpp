@@ -21,11 +21,11 @@
 
 
 //======================================================================================================================
-/* When attempting to make a drag&drop from a new source work properly, there are 3 things to remember:
- *  1. View must support the drop action type the source emits. Some use MoveAction, some CopyAction, ...
- *  2. Model::mimeTypes() must return the MIME type, that is used by the source widget.
- *  3. Model::canDropMimeData(...) must be correctly implemented to support both the MIME type and the drop action
- */
+// When attempting to make a drag&drop from a new source work properly, there are 3 things to remember:
+//  1. View must support the drop action type the source emits. Some use MoveAction, some CopyAction, ...
+//  2. Model::mimeTypes() must return the MIME type, that is used by the source widget.
+//  3. Model::canDropMimeData(...) must be correctly implemented to support both the MIME type and the drop action
+
 
 //======================================================================================================================
 // idiotic workaround because Qt is fucking retarded
@@ -52,11 +52,11 @@ EditableListView::EditableListView( QWidget * parent ) : QListView( parent )
 	allowInterWidgetDnD = false;
 	allowExternFileDnD = false;
 	updateDragDropMode();
-	setDefaultDropAction( Qt::MoveAction );
-	setDropIndicatorShown( true );
+	this->setDefaultDropAction( Qt::MoveAction );
+	this->setDropIndicatorShown( true );
 
 	allowEditNames = false;
-	setEditTriggers( QAbstractItemView::NoEditTriggers );
+	this->setEditTriggers( QAbstractItemView::NoEditTriggers );
 
 	contextMenu = new QMenu( this );  // will be deleted when this QListView (their parent) is deleted
 
@@ -91,11 +91,11 @@ void EditableListView::updateDragDropMode()
 	const bool externalDrops = allowInterWidgetDnD || allowExternFileDnD;
 
 	if (!allowIntraWidgetDnD && !externalDrops)
-		setDragDropMode( NoDragDrop );
+		this->setDragDropMode( NoDragDrop );
 	else if (allowIntraWidgetDnD && !externalDrops)
-		setDragDropMode( InternalMove );
+		this->setDragDropMode( InternalMove );
 	else
-		setDragDropMode( DragDrop );
+		this->setDragDropMode( DragDrop );
 }
 
 void EditableListView::toggleIntraWidgetDragAndDrop( bool enabled )
@@ -216,9 +216,14 @@ void EditableListView::itemsDropped()
 			int row = model->droppedRow();
 			int count = model->droppedCount();
 
+			// When an item is in edit mode and current index changes, the content of the line editor is dumped
+			// into old current item and the edit mode closed. Therefore we must change the current index in advance,
+			// otherwise the edit content gets saved into a wrong item.
+			unsetCurrentItem( this );
 			deselectSelectedItems( this );
 			for (int i = 0; i < count; i++)
 				selectItemByIndex( this, row + i );
+			setCurrentItemByIndex( this, row + count - 1 );
 
 			emit itemsDropped( row, count );
 
@@ -240,10 +245,35 @@ void EditableListView::toggleNameEditing( bool enabled )
 	allowEditNames = enabled;
 
 	if (enabled)
-		setEditTriggers( QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed );
+		this->setEditTriggers( QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed );
 	else
-		setEditTriggers( QAbstractItemView::NoEditTriggers );
+		this->setEditTriggers( QAbstractItemView::NoEditTriggers );
 }
+
+bool EditableListView::isEditModeOpen() const
+{
+	return this->state() == QAbstractItemView::EditingState;
+}
+
+bool EditableListView::startEditingCurrentItem()
+{
+	this->edit( this->currentIndex() );
+	return isEditModeOpen();
+}
+
+void EditableListView::stopEditingAndCommit()
+{
+	// yet another idiotic workaround because Qt is fucking dumb
+	//
+	// Qt does not give us access to the editor and does not allow us to manually close it or commit the data of it.
+	// But when the current index is changed, it is done automatically. So we change the current index to some nonsense
+	// and then restore it back, and Qt will do it for us for a bit of extra overhead.
+
+	QModelIndex currentIndex = this->currentIndex();
+	this->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
+	this->selectionModel()->setCurrentIndex( currentIndex, QItemSelectionModel::NoUpdate );
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  keyboard control

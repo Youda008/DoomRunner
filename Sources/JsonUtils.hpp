@@ -32,29 +32,29 @@ uint enumSize() { return 0; }
 
 
 //======================================================================================================================
-//  wrappers around JsonObject and JsonArray containing a parsing context that enables us to show useful error messages
+// wrappers around JsonObject and JsonArray containing a parsing context that enables us to show useful error messages
 //
-//  implementation notes:
+// implementation notes:
 //
-//  1. JSON path reconstruction - getPath()
-//     Each JsonObject/JsonArray wrapper knows its parent and its key, and is therefore able to reconstruct its path
-//     in the JSON document by traversing the JSON tree from leaf to root, so that we can tell the user exactly which
-//     element is broken.
+// 1. JSON path reconstruction - getPath()
+//    Each JsonObject/JsonArray wrapper knows its parent and its key, and is therefore able to reconstruct its path
+//    in the JSON document by traversing the JSON tree from leaf to root, so that we can tell the user exactly which
+//    element is broken.
 //
-//  2. common parsing context
-//     Each wrapper has access to a context that is shared between all elements of a particular JSON Document and that
-//     contains data related to the parsing process of this document. The context struct is stored in JsonDocumentCtx
-//     and all its elements get a pointer.
+// 2. common parsing context
+//    Each wrapper has access to a context that is shared between all elements of a particular JSON Document and that
+//    contains data related to the parsing process of this document. The context struct is stored in JsonDocumentCtx
+//    and all its elements get a pointer.
 //
-//  3. JsonObjectCtxProxy/JsonArrayCtxProxy
-//     These proxy classes exist only because there is a cyclic dependancy between JsonObjectCtx and JsonArrayCtx
-//     (JsonObjectCtx::getArray returns JsonArrayCtx and JsonArrayCtx::getObject returns JsonObjectCtx) and we can't
-//     declare one before the other. Therefore getObject/getArray return a proxy class that is declared before both and
-//     that is then automatically converted (by a constructor) to the final JsonObjectCtx/JsonArrayCtx.
+// 3. JsonObjectCtxProxy/JsonArrayCtxProxy
+//    These proxy classes exist only because there is a cyclic dependancy between JsonObjectCtx and JsonArrayCtx
+//    (JsonObjectCtx::getArray returns JsonArrayCtx and JsonArrayCtx::getObject returns JsonObjectCtx) and we can't
+//    declare one before the other. Therefore getObject/getArray return a proxy class that is declared before both and
+//    that is then automatically converted (by a constructor) to the final JsonObjectCtx/JsonArrayCtx.
 
 
-constexpr bool showError = true;
-constexpr bool dontShowError = false;
+constexpr bool ShowError = true;
+constexpr bool DontShowError = false;
 
 /// data related to an ongoing parsing process
 struct _ParsingContext

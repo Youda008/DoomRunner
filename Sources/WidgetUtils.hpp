@@ -446,7 +446,7 @@ QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model
 
 /// Gets a persistent item ID of the current item that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getCurrentItemID( QListView * view, const AListModel< Item > & model ) -> decltype( model[0].getID() )
+auto getCurrentItemID( QListView * view, const AListModel< Item > & model ) -> decltype( Item{}.getID() )
 {
 	int selectedItemIdx = getCurrentItemIndex( view );
 	if (selectedItemIdx >= 0)
@@ -457,7 +457,7 @@ auto getCurrentItemID( QListView * view, const AListModel< Item > & model ) -> d
 
 /// Gets a persistent item ID of a selected item that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> decltype( model[0].getID() )
+auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> decltype( Item{}.getID() )
 {
 	int selectedItemIdx = getSelectedItemIndex( view );
 	if (selectedItemIdx >= 0)
@@ -468,11 +468,11 @@ auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> 
 
 /// Attempts to set a previous current item defined by its persistant itemID.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool setCurrentItemByID( QListView * view, const AListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
+bool setCurrentItemByID( QListView * view, const AListModel< Item > & model, const decltype( Item{}.getID() ) & itemID )
 {
 	if (!itemID.isEmpty())
 	{
-		int newItemIdx = findSuch( model.list(), [&]( const Item & item ) { return item.getID() == itemID; } );
+		int newItemIdx = findSuch( model, [&]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0)
 		{
 			setCurrentItemByIndex( view, newItemIdx );
@@ -484,11 +484,11 @@ bool setCurrentItemByID( QListView * view, const AListModel< Item > & model, con
 
 /// Attempts to select a previously selected item defined by its persistant itemID.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool selectItemByID( QListView * view, const AListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
+bool selectItemByID( QListView * view, const AListModel< Item > & model, const decltype( Item{}.getID() ) & itemID )
 {
 	if (!itemID.isEmpty())
 	{
-		int newItemIdx = findSuch( model.list(), [&]( const Item & item ) { return item.getID() == itemID; } );
+		int newItemIdx = findSuch( model, [&]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0)
 		{
 			selectItemByIndex( view, newItemIdx );
@@ -500,9 +500,9 @@ bool selectItemByID( QListView * view, const AListModel< Item > & model, const d
 
 /// Gets persistent item IDs that survive node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemIDs( QListView * view, const AListModel< Item > & model ) -> QVector< decltype( model[0].getID() ) >
+auto getSelectedItemIDs( QListView * view, const AListModel< Item > & model ) -> QVector< decltype( Item{}.getID() ) >
 {
-	QVector< decltype( model[0].getID() ) > itemIDs;
+	QVector< decltype( Item{}.getID() ) > itemIDs;
 	for (int selectedItemIdx : getSelectedItemIndexes( view ))
 		itemIDs.append( model[ selectedItemIdx ].getID() );
 	return itemIDs;
@@ -510,11 +510,11 @@ auto getSelectedItemIDs( QListView * view, const AListModel< Item > & model ) ->
 
 /// Attempts to select previously selected items defined by their persistant itemIDs.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-void selectItemsByIDs( QListView * view, const AListModel< Item > & model, const QVector< decltype( model[0].getID() ) > & itemIDs )
+void selectItemsByIDs( QListView * view, const AListModel< Item > & model, const QVector< decltype( Item{}.getID() ) > & itemIDs )
 {
 	for (const auto & itemID : itemIDs)
 	{
-		int newItemIdx = findSuch( model.list(), [&]( const Item & item ) { return item.getID() == itemID; } );
+		int newItemIdx = findSuch( model, [&]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0)
 			selectItemByIndex( view, newItemIdx );
 	}
@@ -569,7 +569,7 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 	{
 		if (isDesiredFile( file ))
 		{
-			model.list().append( Item( file ) );
+			model.append( Item( file ) );
 		}
 	});
 
@@ -594,7 +594,7 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 
 /// Gets a persistent item ID that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getCurrentItemID( QComboBox * view, const AListModel< Item > & model ) -> decltype( model[0].getID() )
+auto getCurrentItemID( QComboBox * view, const AListModel< Item > & model ) -> decltype( Item{}.getID() )
 {
 	int selectedItemIdx = view->currentIndex();
 	if (selectedItemIdx >= 0)
@@ -605,11 +605,11 @@ auto getCurrentItemID( QComboBox * view, const AListModel< Item > & model ) -> d
 
 /// Attempts to select a previously selected item defined by persistant itemID.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool setCurrentItemByID( QComboBox * view, const AListModel< Item > & model, const decltype( model[0].getID() ) & itemID )
+bool setCurrentItemByID( QComboBox * view, const AListModel< Item > & model, const decltype( Item{}.getID() ) & itemID )
 {
 	if (!itemID.isEmpty())
 	{
-		int newItemIdx = findSuch( model.list(), [&]( const Item & item ) { return item.getID() == itemID; } );
+		int newItemIdx = findSuch( model, [&]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0)
 		{
 			view->setCurrentIndex( newItemIdx );
@@ -642,7 +642,7 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 	{
 		if (isDesiredFile( file ))
 		{
-			model.list().append( Item( file ) );
+			model.append( Item( file ) );
 		}
 	});
 

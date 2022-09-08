@@ -524,7 +524,7 @@ void MainWindow::runSetupDialog()
 	if (code == QDialog::Accepted)
 	{
 		// write down the previously selected items
-		auto selectedEngine = getCurrentItemID( ui->engineCmbBox, engineModel );
+		auto currentEngine = getCurrentItemID( ui->engineCmbBox, engineModel );
 		auto currentIWAD = getCurrentItemID( ui->iwadListView, iwadModel );
 		auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwadModel );
 
@@ -547,7 +547,8 @@ void MainWindow::runSetupDialog()
 		closeOnLaunch = dialog.closeOnLaunch;
 		// update all stored paths
 		toggleAbsolutePaths( pathContext.useAbsolutePaths() );
-		selectedEngine = pathContext.convertPath( selectedEngine );
+		currentEngine = pathContext.convertPath( currentEngine );
+		currentIWAD = pathContext.convertPath( currentIWAD );
 		selectedIWAD = pathContext.convertPath( selectedIWAD );
 
 		// notify the widgets to re-draw their content
@@ -556,9 +557,9 @@ void MainWindow::runSetupDialog()
 		refreshMapPacks();
 
 		// select back the previously selected items
-		setCurrentItemByID( ui->engineCmbBox, engineModel, selectedEngine );
-		selectItemByID( ui->iwadListView, iwadModel, selectedIWAD );
+		setCurrentItemByID( ui->engineCmbBox, engineModel, currentEngine );
 		setCurrentItemByID( ui->iwadListView, iwadModel, currentIWAD );
+		selectItemByID( ui->iwadListView, iwadModel, selectedIWAD );
 
 		updateLaunchCommand();
 	}
@@ -1833,6 +1834,9 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 		preset.selectedIWAD = pathContext.convertPath( preset.selectedIWAD );
 	}
 
+	ui->saveDirLine->setText( pathContext.convertPath( ui->saveDirLine->text() ) );
+	ui->screenshotDirLine->setText( pathContext.convertPath( ui->screenshotDirLine->text() ) );
+
 	updateLaunchCommand();
 }
 
@@ -2560,7 +2564,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 
 	{
 		throwIfInvalid( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
-		
+
 		if (selectedEngine.path.contains("/snap/"))  // Linux speciality - for snap version use direct name otherwise libraries won't be found
 			cmdStream << "\"" << getFileNameFromPath( selectedEngine.path ) << "\"";
 		else
@@ -2648,9 +2652,9 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 		cmdStream << " -nomusic";
 
 	if (!ui->saveDirLine->text().isEmpty())
-		cmdStream << " " << engineProperties.saveDirParam << " \"" << ui->saveDirLine->text() << "\"";
+		cmdStream << " " << engineProperties.saveDirParam << " \"" << base.rebasePath( ui->saveDirLine->text() ) << "\"";
 	if (!ui->screenshotDirLine->text().isEmpty())
-		cmdStream << " +screenshot_dir \"" << ui->screenshotDirLine->text() << "\"";
+		cmdStream << " +screenshot_dir \"" << base.rebasePath( ui->screenshotDirLine->text() ) << "\"";
 
 	if (ui->launchMode_map->isChecked())
 	{

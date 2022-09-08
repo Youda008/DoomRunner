@@ -570,17 +570,23 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		// the fact that QList is essentially an array of pointers to objects (official API documentation says so).
 		// So we can just save the pointers to the items and when the rows are inserted and shifted, those pointers
 		// will still point to the correct items and we can use them copy or move the data from them to the target pos.
-
+		//
 		// We could probably avoid even the copy/move constructors and the allocation when inserting an item into QList,
 		// but we would need a direct access to the pointers inside QList which it doesn't provide.
 		// Alternativelly the QList<Item> could be replaced with QVector<Item*> or QVector<unique_ptr<Item>>
 		// but that would just complicate a lot of other things.
 
-		QVector< Item * > origItemRefs;
+		QVector< int > origItemIndexes;
 		for (int i = 0; i < count; i++)
+			origItemIndexes.append( rawData[i] );
+
+		// The indexes of selected items can come in arbitrary order, but we need to drop them in ascending order.
+		std::sort( origItemIndexes.begin(), origItemIndexes.end() );
+
+		QVector< Item * > origItemRefs;
+		for (int origItemIdx : origItemIndexes)
 		{
-			int origRowIdx = rawData[i];
-			origItemRefs.append( &superClass::itemList[ origRowIdx ] );
+			origItemRefs.append( &superClass::itemList[ origItemIdx ] );
 		}
 
 		// allocate space for the items to move to

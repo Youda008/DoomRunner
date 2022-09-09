@@ -45,6 +45,7 @@ SOURCES += \
     Sources/MainWindow.cpp \
     Sources/NewConfigDialog.cpp \
     Sources/OSUtils.cpp \
+    Sources/ProcessOutputWindow.cpp \
     Sources/SetupDialog.cpp \
     Sources/UpdateChecker.cpp \
     Sources/UserData.cpp \
@@ -68,6 +69,7 @@ HEADERS += \
     Sources/MainWindow.hpp \
     Sources/NewConfigDialog.hpp \
     Sources/OSUtils.hpp \
+    Sources/ProcessOutputWindow.hpp \
     Sources/SetupDialog.hpp \
     Sources/UpdateChecker.hpp \
     Sources/UserData.hpp \
@@ -81,6 +83,7 @@ FORMS += \
     Forms/GameOptsDialog.ui \
     Forms/MainWindow.ui \
     Forms/NewConfigDialog.ui \
+    Forms/ProcessOutputWindow.ui \
     Forms/SetupDialog.ui
 
 RESOURCES += \

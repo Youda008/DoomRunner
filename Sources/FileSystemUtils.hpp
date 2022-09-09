@@ -106,6 +106,11 @@ inline QString getDirOfFile( const QString & filePath )
 	return QFileInfo( filePath ).path();
 }
 
+inline QString getAbsoluteDirOfFile( const QString & filePath )
+{
+	return QFileInfo( filePath ).absolutePath();
+}
+
 inline QString getDirnameOfFile( const QString & filePath )
 {
 	return QFileInfo( filePath ).dir().dirName();

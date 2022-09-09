@@ -24,6 +24,7 @@
 
 class QItemSelection;
 class QComboBox;
+class QProcess;
 
 namespace Ui {
 	class MainWindow;
@@ -164,7 +165,7 @@ class MainWindow : public QMainWindow {
 	void loadOptions( const QString & fileName );
 
 	void updateLaunchCommand( bool verifyPaths = false );
-	QString generateLaunchCommand( const QString & baseDir, bool verifyPaths );
+	QStringList generateLaunchCommand( const QString & baseDir, bool verifyPaths );
 
  private: // internal members
 
@@ -177,11 +178,13 @@ class MainWindow : public QMainWindow {
 	bool disableSelectionCallbacks;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD() \
 	                                      used to prevent unnecessary or unwanted operations when updating the lists
 
-	QString compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
+	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 	KeyPressFilter modKeyFilter;  ///< event filter that captures the presses of spacebar to correct the unsuitable default behaviour
 
 	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
+
+	QProcess * engineProcess;  ///< process of the asynchronously started Doom engine, used to pipe its output into a window
 
 	UpdateChecker updateChecker;
 

@@ -11,6 +11,7 @@
 #include "AboutDialog.hpp"
 #include "SetupDialog.hpp"
 #include "NewConfigDialog.hpp"
+#include "ProcessOutputWindow.hpp"
 #include "GameOptsDialog.hpp"
 #include "CompatOptsDialog.hpp"
 
@@ -65,6 +66,12 @@ static constexpr char defaultOptionsFile [] = "options.json";
 static QString getOptionsFilePath()
 {
 	return QDir( getAppDataDir() ).filePath( defaultOptionsFile );
+}
+
+static QString quoted( const QString & str )
+{
+	return '"' % str % '"';
+	//return str;
 }
 
 static bool verifyDir( const QString & dir, const QString & errorMessage )
@@ -2475,7 +2482,7 @@ void MainWindow::exportPreset()
 
 	QTextStream stream( &file );
 
-	stream << generateLaunchCommand( fileInfo.path(), false ) << endl;  // keep endl to maintain compatibility with older Qt
+	stream << generateLaunchCommand( fileInfo.path(), false ).join(' ') << endl;  // keep endl to maintain compatibility with older Qt
 
 	file.close();
 }
@@ -2538,7 +2545,7 @@ void MainWindow::updateLaunchCommand( bool verifyPaths )
 	// because it will be executed with the current directory set to engine's directory.
 	QString baseDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
 
-	QString newCommand = generateLaunchCommand( baseDir, verifyPaths );
+	QString newCommand = generateLaunchCommand( baseDir, verifyPaths ).join(' ');
 
 	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
 	// and copy part of the line, by constantly reseting his selection.
@@ -2550,13 +2557,12 @@ void MainWindow::updateLaunchCommand( bool verifyPaths )
 	}
 }
 
-QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths )
+QStringList MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths )
 {
 	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir.
 	PathContext base( pathContext.usingAbsolutePaths(), baseDir, pathContext.baseDir() );
 
-	QString newCommand;
-	QTextStream cmdStream( &newCommand, QIODevice::WriteOnly );
+	QStringList command;
 
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx < 0)
@@ -2573,11 +2579,17 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 		// Either the executable is in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
 		// in which case it should be (and sometimes must be) started directly by using only its name,
 		if (isInSearchPath( selectedEngine.path ))
-			cmdStream << "\"" << getFileNameFromPath( selectedEngine.path ) << "\"";
+			command << getFileNameFromPath( selectedEngine.path );
 		// or it is in the current working directory (because we switched the working dir to the engine's dir),
 		// in which case we ignore the absolute paths and add a relative path to the local file (with ./ on Linux).
 		else
-			cmdStream << "\"" << fixExePath( base.rebasePathToRelative( selectedEngine.path ) ) << "\"";
+			command << fixExePath( base.rebasePathToRelative( selectedEngine.path ) );
+
+		// On Windows ZDoom doesn't log its output to stdout by default.
+		// Force it to do so, so that our ProcessOutputWindow displays something.
+	#ifdef _WIN32
+		command << "-stdout";
+	#endif
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
@@ -2585,16 +2597,15 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
 			throwIfInvalid( verifyPaths, configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
-			cmdStream << " -config \"" << base.rebasePath( configPath ) << "\"";
+			command << "-config" << quoted( base.rebasePath( configPath ) );
 		}
 	}
-
 
 	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
 	{
 		throwIfInvalid( verifyPaths, iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please select another one." );
-		cmdStream << " -iwad \"" << base.rebasePath( iwadModel[ selectedIwadIdx ].path ) << "\"";
+		command << "-iwad" << quoted( base.rebasePath( iwadModel[ selectedIwadIdx ].path ) );
 	}
 
 	QVector<QString> selectedFiles;
@@ -2608,9 +2619,9 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
 		if (suffix == "deh")
-			cmdStream << " -deh \"" << base.rebasePath( mapFilePath ) << "\"";
+			command << "-deh" << quoted( base.rebasePath( mapFilePath ) );
 		else if (suffix == "bex")
-			cmdStream << " -bex \"" << base.rebasePath( mapFilePath ) << "\"";
+			command << "-bex" << quoted( base.rebasePath( mapFilePath ) );
 		else
 			// combine all files under a single -file parameter
 			selectedFiles.append( base.rebasePath( mapFilePath ) );
@@ -2624,9 +2635,9 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 
 			QString suffix = QFileInfo( mod.path ).suffix().toLower();
 			if (suffix == "deh")
-				cmdStream << " -deh \"" << base.rebasePath( mod.path ) << "\"";
+				command << "-deh" << quoted( base.rebasePath( mod.path ) );
 			else if (suffix == "bex")
-				cmdStream << " -bex \"" << base.rebasePath( mod.path ) << "\"";
+				command << "-bex" << quoted( base.rebasePath( mod.path ) );
 			else
 				// combine all files under a single -file parameter
 				selectedFiles.append( base.rebasePath( mod.path ) );
@@ -2635,73 +2646,73 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 
 	// Older engines only accept single file parameter, we must list them here all together.
 	if (!selectedFiles.empty())
-		cmdStream << " -file";
+		command << "-file";
 	for (const QString & filePath : selectedFiles)
-		cmdStream << " \"" << filePath << "\"";
+		command << quoted( filePath );
 
 	if (ui->allowCheatsChkBox->isChecked())
-		cmdStream << " +sv_cheats 1";
+		command << "+sv_cheats" << "1";
 
 	if (ui->monitorCmbBox->currentIndex() > 0)
 	{
 		int monitorIndex = ui->monitorCmbBox->currentIndex() - 1;  // the first item is a placeholder for leaving it default
 		int engineMonitorIndex = engineProperties.firstMonitorIndex + monitorIndex;  // some engines index monitors from 1 and others from 0
-		cmdStream << " +vid_adapter " << engineMonitorIndex;
+		command << "+vid_adapter" << QString::number( engineMonitorIndex );
 	}
 	if (!ui->resolutionXLine->text().isEmpty())
-		cmdStream << " -width " << ui->resolutionXLine->text();
+		command << "-width" << ui->resolutionXLine->text();
 	if (!ui->resolutionYLine->text().isEmpty())
-		cmdStream << " -height " << ui->resolutionYLine->text();
+		command << "-height" << ui->resolutionYLine->text();
 
 	if (ui->noSoundChkBox->isChecked())
-		cmdStream << " -nosound";
+		command << "-nosound";
 	if (ui->noSfxChkBox->isChecked())
-		cmdStream << " -nosfx";
+		command << "-nosfx";
 	if (ui->noMusicChkBox->isChecked())
-		cmdStream << " -nomusic";
+		command << "-nomusic";
 
 	if (!ui->saveDirLine->text().isEmpty())
-		cmdStream << " " << engineProperties.saveDirParam << " \"" << base.rebasePath( ui->saveDirLine->text() ) << "\"";
+		command << engineProperties.saveDirParam << quoted( base.rebasePath( ui->saveDirLine->text() ) );
 	if (!ui->screenshotDirLine->text().isEmpty())
-		cmdStream << " +screenshot_dir \"" << base.rebasePath( ui->screenshotDirLine->text() ) << "\"";
+		command << "+screenshot_dir" << quoted( base.rebasePath( ui->screenshotDirLine->text() ) );
 
 	if (ui->launchMode_map->isChecked())
 	{
-		cmdStream << " +map " << ui->mapCmbBox->currentText();
+		command << "+map" << ui->mapCmbBox->currentText();
 	}
 	else if (ui->launchMode_savefile->isChecked() && ui->saveFileCmbBox->currentIndex() >= 0)
 	{
 		QString savePath = getPathFromFileName( selectedEngine.configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );
 		throwIfInvalid( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
-		cmdStream << " -loadgame \"" << base.rebasePath( savePath ) << "\"";
+		command << "-loadgame" << quoted( base.rebasePath( savePath ) );
 	}
 	else if (ui->launchMode_recordDemo->isChecked() && !ui->demoFileLine_record->text().isEmpty())
 	{
-		cmdStream << " -record \"" << ui->demoFileLine_record->text() << "\"";
-		cmdStream << " +map " << ui->mapCmbBox_demo->currentText();
+		command << "-record" << quoted( ui->demoFileLine_record->text() );
+		command << "+map" << ui->mapCmbBox_demo->currentText();
 	}
 	else if (ui->launchMode_replayDemo->isChecked() && ui->demoFileCmbBox_replay->currentIndex() >= 0)
 	{
 		QString demoPath = getPathFromFileName( selectedEngine.configDir, demoModel[ ui->demoFileCmbBox_replay->currentIndex() ].fileName );
 		throwIfInvalid( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
-		cmdStream << " -playdemo \"" << base.rebasePath( demoPath ) << "\"";
+		command << "-playdemo" << quoted( base.rebasePath( demoPath ) );
 	}
 
 	if (ui->launchMode_map->isChecked() || ui->launchMode_recordDemo->isChecked())
 	{
-		cmdStream << " -skill " << ui->skillSpinBox->text();
+		command << "-skill" << ui->skillSpinBox->text();
 		if (ui->noMonstersChkBox->isChecked())
-			cmdStream << " -nomonsters";
+			command << "-nomonsters";
 		if (ui->fastMonstersChkBox->isChecked())
-			cmdStream << " -fast";
+			command << "-fast";
 		if (ui->monstersRespawnChkBox->isChecked())
-			cmdStream << " -respawn";
+			command << "-respawn";
 		if (opts.gameOpts.flags1 != 0)
-			cmdStream << " +dmflags " << QString::number( opts.gameOpts.flags1 );
+			command << "+dmflags" << QString::number( opts.gameOpts.flags1 );
 		if (opts.gameOpts.flags2 != 0)
-			cmdStream << " +dmflags2 " << QString::number( opts.gameOpts.flags2 );
+			command << "+dmflags2" << QString::number( opts.gameOpts.flags2 );
 		if (!compatOptsCmdArgs.isEmpty())
-			cmdStream << " " << compatOptsCmdArgs;
+			command << compatOptsCmdArgs;
 	}
 
 	if (ui->multiplayerChkBox->isChecked())
@@ -2709,22 +2720,22 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 		switch (ui->multRoleCmbBox->currentIndex())
 		{
 		 case MultRole::SERVER:
-			cmdStream << " -host " << ui->playerCountSpinBox->text();
+			command << "-host" << ui->playerCountSpinBox->text();
 			if (ui->portSpinBox->value() != 5029)
-				cmdStream << " -port " << ui->portSpinBox->text();
+				command << "-port" << ui->portSpinBox->text();
 			switch (ui->gameModeCmbBox->currentIndex())
 			{
 			 case DEATHMATCH:
-				cmdStream << " -deathmatch";
+				command << "-deathmatch";
 				break;
 			 case TEAM_DEATHMATCH:
-				cmdStream << " -deathmatch +teamplay";
+				command << "-deathmatch" << "+teamplay";
 				break;
 			 case ALT_DEATHMATCH:
-				cmdStream << " -altdeath";
+				command << "-altdeath";
 				break;
 			 case ALT_TEAM_DEATHMATCH:
-				cmdStream << " -altdeath +teamplay";
+				command << "-altdeath" << "+teamplay";
 				break;
 			 case COOPERATIVE: // default mode, which is started without any param
 				break;
@@ -2733,15 +2744,15 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 					"The game mode index is out of range. This is a bug, please create an issue on Github page." );
 			}
 			if (ui->teamDmgSpinBox->value() != 0.0)
-				cmdStream << " +teamdamage " << QString::number( ui->teamDmgSpinBox->value(), 'f', 2 );
+				command << "+teamdamage" << QString::number( ui->teamDmgSpinBox->value(), 'f', 2 );
 			if (ui->timeLimitSpinBox->value() != 0)
-				cmdStream << " -timer " << ui->timeLimitSpinBox->text();
+				command << "-timer" << ui->timeLimitSpinBox->text();
 			if (ui->fragLimitSpinBox->value() != 0)
-				cmdStream << " +fraglimit " << ui->fragLimitSpinBox->text();
-			cmdStream << " -netmode " << QString::number( ui->netModeCmbBox->currentIndex() );
+				command << "+fraglimit" << ui->fragLimitSpinBox->text();
+			command << "-netmode" << QString::number( ui->netModeCmbBox->currentIndex() );
 			break;
 		 case MultRole::CLIENT:
-			cmdStream << " -join " << ui->hostnameLine->text() << ":" << ui->portSpinBox->text();
+			command << "-join" << ui->hostnameLine->text() % ":" % ui->portSpinBox->text();
 			break;
 		 default:
 			QMessageBox::critical( this, "Invalid multiplayer role index",
@@ -2750,14 +2761,12 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 	}
 
 	if (!ui->presetCmdArgsLine->text().isEmpty())
-		cmdStream << " " << ui->presetCmdArgsLine->text();
+		command << ui->presetCmdArgsLine->text().split( ' ', Qt::SkipEmptyParts );
 
 	if (!ui->globalCmdArgsLine->text().isEmpty())
-		cmdStream << " " << ui->globalCmdArgsLine->text();
+		command << ui->globalCmdArgsLine->text().split( ' ', Qt::SkipEmptyParts );
 
-	cmdStream.flush();
-
-	return newCommand;
+	return command;
 }
 
 void MainWindow::launch()
@@ -2769,34 +2778,43 @@ void MainWindow::launch()
 		return;
 	}
 
+	QString engineDir = getAbsoluteDirOfFile( engineModel[ selectedEngineIdx ].path );
+
 	// re-run the command construction, but display error message and abort when there is invalid path
-	try {
-		updateLaunchCommand( true );
-	} catch (const FileNotFound &) {
+	QString executable; QStringList arguments;
+	try
+	{
+		arguments = generateLaunchCommand( engineDir, true );
+		executable = arguments.takeFirst();
+	}
+	catch (const FileNotFound &)
+	{
 		return;
 	}
-
-	QString currentDir = QDir::currentPath();
-	QString engineDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
 
 	// Before we execute the command, we need to switch the current dir to the engine's dir,
 	// because some engines search for their own files in the current dir and would fail if started from elsewhere.
+	// The command paths are always generated relative to the engine's dir.
+	QString currentDir = QDir::currentPath();
 	QDir::setCurrent( engineDir );
 
-	// the command paths are always generated relative to the engine's dir
-	bool success = QProcess::startDetached( ui->commandLine->text() );
-
-	// restore the previous current dir
-	QDir::setCurrent( currentDir );
-
-	if (!success)
-	{
-		QMessageBox::warning( this, tr("Launch error"), tr("Failed to execute launch command.") );
-		return;
-	}
+	// at the end of function restore the previous current dir
+	auto guard = atScopeEndDo( [&](){ QDir::setCurrent( currentDir ); } );
 
 	if (closeOnLaunch)
 	{
+		bool success = QProcess::startDetached( executable, arguments );
+		if (!success)
+		{
+			QMessageBox::warning( this, "Launch error", "Failed to execute launch command." );
+			return;
+		}
 		QApplication::quit();
+	}
+	else
+	{
+		ProcessOutputWindow processWindow( this );
+		processWindow.runProcess( executable, arguments );
+		//int resultCode = processWindow.result();
 	}
 }

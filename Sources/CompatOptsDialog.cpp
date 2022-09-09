@@ -391,60 +391,58 @@ void CompatOptsDialog::updateCheckboxes()
 
 //----------------------------------------------------------------------------------------------------------------------
 
-static void addCmdLineOptionIfSet( QTextStream & stream, const CompatibilityOptions & compatOpts, const CompatFlag & flag )
+static void addCmdLineOptionIfSet( QStringList & list, const CompatibilityOptions & compatOpts, const CompatFlag & flag )
 {
 	if (isEnabled( compatOpts, flag ))
-		stream << " +" << flag.cvarName << " 1";
+		list << "+" + flag.cvarName << "1";
 }
 
-QString CompatOptsDialog::getCmdArgsFromOptions( const CompatibilityOptions & compatOpts )
+QStringList CompatOptsDialog::getCmdArgsFromOptions( const CompatibilityOptions & compatOpts )
 {
-	QString compatOptsCmdArgs;
-	QTextStream cmdStream( &compatOptsCmdArgs );
+	QStringList cmdArgs;
 
-	addCmdLineOptionIfSet( cmdStream, compatOpts, CRUSHED_MONSTERS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, FRIENDLY_MONSTERS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, LIMIT_PAIN_ELEM );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, MONSTER_MOVEMENT );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, MONSTERS_CANNOT_CROSS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, MONSTERS_GET_STUCK );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, MONSTERS_SEE_INVISIBLE );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, NO_MINOTAUR_FLOOR );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, SPAWN_ITEMS_DROPS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, CRUSHED_MONSTERS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, FRIENDLY_MONSTERS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, LIMIT_PAIN_ELEM );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, MONSTER_MOVEMENT );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, MONSTERS_CANNOT_CROSS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, MONSTERS_GET_STUCK );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, MONSTERS_SEE_INVISIBLE );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, NO_MINOTAUR_FLOOR );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, SPAWN_ITEMS_DROPS );
 
-	addCmdLineOptionIfSet( cmdStream, compatOpts, DEH_HEALTH_SETTINGS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, ORIGINAL_A_MUSHROOM );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, DEH_HEALTH_SETTINGS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, ORIGINAL_A_MUSHROOM );
 
-	addCmdLineOptionIfSet( cmdStream, compatOpts, ALL_SPECIAL_LINES );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, ALLOW_ANY_BOSSDEATH );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, DISABLE_BOOM_DOOR );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, FIND_NEIGHBORING_LIGHT );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, FIND_SHORTEST_TEXTURES );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, USE_BUGGIER_STAIR );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, USE_DOOMS_FLOOR );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, USE_DOOMS_POINT_ON_LINE );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, LEVEL_EXIT );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, ALL_SPECIAL_LINES );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, ALLOW_ANY_BOSSDEATH );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, DISABLE_BOOM_DOOR );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, FIND_NEIGHBORING_LIGHT );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, FIND_SHORTEST_TEXTURES );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_BUGGIER_STAIR );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_DOOMS_FLOOR );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_DOOMS_POINT_ON_LINE );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, LEVEL_EXIT );
 
-	addCmdLineOptionIfSet( cmdStream, compatOpts, ACTORS_ARE_INFINITE );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, BOOM_SCROLLERS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, CANNOT_TRAVEL_STRAIGHT );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, ENABLE_WALL_RUNNING );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, RAVEN_SCROLLERS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, SELF_REF_SECTORS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, USE_DOOM_HITSCAN );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, USE_DOOM_HEIGHTS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, ACTORS_ARE_INFINITE );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, BOOM_SCROLLERS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, CANNOT_TRAVEL_STRAIGHT );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, ENABLE_WALL_RUNNING );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, RAVEN_SCROLLERS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, SELF_REF_SECTORS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_DOOM_HITSCAN );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_DOOM_HEIGHTS );
 
-	addCmdLineOptionIfSet( cmdStream, compatOpts, DRAW_POLYOBJECTS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, IGNORE_Y_OFFSETS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, INVERT_SPRITE_SORTING );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, DRAW_POLYOBJECTS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, IGNORE_Y_OFFSETS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, INVERT_SPRITE_SORTING );
 
-	addCmdLineOptionIfSet( cmdStream, compatOpts, CRIPPLE_SOUND );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, DONT_LET_OTHERS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, INSTANT_MOVING_FLOORS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, SECTOR_SOUNDS );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, SOUNDS_STOP );
-	addCmdLineOptionIfSet( cmdStream, compatOpts, USE_ORIGINAL_SOUND );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, CRIPPLE_SOUND );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, DONT_LET_OTHERS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, INSTANT_MOVING_FLOORS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, SECTOR_SOUNDS );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, SOUNDS_STOP );
+	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_ORIGINAL_SOUND );
 
-	cmdStream.flush();
-	return compatOptsCmdArgs;
+	return cmdArgs;
 }

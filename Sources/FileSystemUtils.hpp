@@ -67,10 +67,7 @@ class PathContext {
 
 		QString absPath = QDir::isAbsolutePath( path ) ? path : _prevBaseDir.filePath( path );
 
-		if (_useAbsolutePaths)
-			return absPath;
-		else
-			return _baseDir.relativeFilePath( absPath );
+		return _useAbsolutePaths ? absPath : _baseDir.relativeFilePath( absPath );
 	}
 
 	QString rebasePathToRelative( const QString & path ) const
@@ -120,6 +117,11 @@ inline bool isInsideDir( const QString & entryPath, const QDir & dir )
 	return entry.absoluteFilePath().startsWith( dir.absolutePath() );
 }
 
+/// On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
+QString fixExePath( const QString & exePath );
+
+/// Safely updates a file in a way that prevents content loss in the event of unexpected OS shutdown.
+/** First saves the new content under a new name, then deletes the old file and then renames the new file to the old name. */
 QString updateFile( const QString & filePath, const QByteArray & newContent );
 
 /// Opens a directory of a file in a new File Explorer window.

@@ -2577,7 +2577,7 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 		// or it is in the current working directory (because we switched the working dir to the engine's dir),
 		// in which case we ignore the absolute paths and add a relative path to the local file (with ./ on Linux).
 		else
-			cmdStream << "\"" << base.rebasePathToRelative( selectedEngine.path ) << "\"";
+			cmdStream << "\"" << fixExePath( base.rebasePathToRelative( selectedEngine.path ) ) << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config

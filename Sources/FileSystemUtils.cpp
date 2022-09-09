@@ -18,40 +18,15 @@
 
 //======================================================================================================================
 
-void traverseDirectory(
-	const QString & dir, bool recursively, EntryTypes typesToVisit,
-	const PathContext & pathContext, const std::function< void ( const QFileInfo & entry ) > & visitEntry
-)
+QString fixExePath( const QString & exePath )
 {
-	if (dir.isEmpty())
-		return;
-
-	QDir dir_( dir );
-	if (!dir_.exists())
-		return;
-
-	QDirIterator dirIt( dir_ );
-	while (dirIt.hasNext())
+ #ifndef _WIN32
+	if (!exePath.contains("/"))  // the file is in the current working directory
 	{
-		QString entryPath = pathContext.convertPath( dirIt.next() );
-		QFileInfo entry( entryPath );
-		if (entry.isDir())
-		{
-			QString dirName = dirIt.fileName();  // we need the original entry name including "." and "..", entry is already converted
-			if (dirName != "." && dirName != "..")
-			{
-				if (typesToVisit.isSet( EntryType::DIR ))
-					visitEntry( entry );
-				if (recursively)
-					traverseDirectory( entry.filePath(), recursively, typesToVisit, pathContext, visitEntry );
-			}
-		}
-		else
-		{
-			if (typesToVisit.isSet( EntryType::FILE ))
-				visitEntry( entry );
-		}
+		return "./" + exePath;
 	}
+ #endif
+	return exePath;
 }
 
 QString updateFile( const QString & filePath, const QByteArray & newContent )
@@ -143,4 +118,40 @@ QString makeFileFilter( const char * filterName, const QVector<QString> & suffix
 
 	filterStream.flush();
 	return filter;
+}
+
+void traverseDirectory(
+	const QString & dir, bool recursively, EntryTypes typesToVisit,
+	const PathContext & pathContext, const std::function< void ( const QFileInfo & entry ) > & visitEntry
+)
+{
+	if (dir.isEmpty())
+		return;
+
+	QDir dir_( dir );
+	if (!dir_.exists())
+		return;
+
+	QDirIterator dirIt( dir_ );
+	while (dirIt.hasNext())
+	{
+		QString entryPath = pathContext.convertPath( dirIt.next() );
+		QFileInfo entry( entryPath );
+		if (entry.isDir())
+		{
+			QString dirName = dirIt.fileName();  // we need the original entry name including "." and "..", entry is already converted
+			if (dirName != "." && dirName != "..")
+			{
+				if (typesToVisit.isSet( EntryType::DIR ))
+					visitEntry( entry );
+				if (recursively)
+					traverseDirectory( entry.filePath(), recursively, typesToVisit, pathContext, visitEntry );
+			}
+		}
+		else
+		{
+			if (typesToVisit.isSet( EntryType::FILE ))
+				visitEntry( entry );
+		}
+	}
 }

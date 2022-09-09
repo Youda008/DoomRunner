@@ -41,8 +41,8 @@ class PathContext {
 		{ _baseDir = other._baseDir; _prevBaseDir = other._prevBaseDir; _useAbsolutePaths = other._useAbsolutePaths; }
 
 	const QDir & baseDir() const                       { return _baseDir; }
-	bool useAbsolutePaths() const                      { return _useAbsolutePaths; }
-	bool useRelativePaths() const                      { return !_useAbsolutePaths; }
+	bool usingAbsolutePaths() const                      { return _useAbsolutePaths; }
+	bool usingRelativePaths() const                      { return !_useAbsolutePaths; }
 
 	void toggleAbsolutePaths( bool useAbsolutePaths )  { _useAbsolutePaths = useAbsolutePaths; }
 	void setBaseDir( const QDir & baseDir )            { _baseDir = baseDir; }
@@ -64,9 +64,22 @@ class PathContext {
 	{
 		if (path.isEmpty())
 			return {};
-		if (QDir::isAbsolutePath( path ))
-			return path;
-		QString absPath = _prevBaseDir.filePath( path );
+
+		QString absPath = QDir::isAbsolutePath( path ) ? path : _prevBaseDir.filePath( path );
+
+		if (_useAbsolutePaths)
+			return absPath;
+		else
+			return _baseDir.relativeFilePath( absPath );
+	}
+
+	QString rebasePathToRelative( const QString & path ) const
+	{
+		if (path.isEmpty())
+			return {};
+
+		QString absPath = QDir::isAbsolutePath( path ) ? path : _prevBaseDir.filePath( path );
+
 		return _baseDir.relativeFilePath( absPath );
 	}
 

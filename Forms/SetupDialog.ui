@@ -212,7 +212,7 @@
        <item>
         <widget class="QCheckBox" name="absolutePathsChkBox">
          <property name="text">
-          <string>Use absolute paths</string>
+          <string>Use absolute paths (recommended on Linux)</string>
          </property>
         </widget>
        </item>

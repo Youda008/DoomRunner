@@ -7,6 +7,8 @@
 
 #include "OSUtils.hpp"
 
+#include "FileSystemUtils.hpp"
+
 #include <QStandardPaths>
 #include <QApplication>
 #include <QGuiApplication>
@@ -44,4 +46,10 @@ QString getAppDataDir()
  #else
 	return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
  #endif
+}
+
+bool isInSearchPath( const QString & filePath )
+{
+	// this should also handle the snap installations, since directory of snap executables is inside PATH
+	return !QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ).isEmpty();
 }

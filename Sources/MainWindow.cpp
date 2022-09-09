@@ -52,6 +52,12 @@
 
 static constexpr char defaultOptionsFile [] = "options.json";
 
+#ifdef _WIN32
+	static const bool useAbsolutePathsByDefault = false;
+#else
+	static const bool useAbsolutePathsByDefault = true;
+#endif
+
 
 //======================================================================================================================
 //  local helpers
@@ -113,7 +119,7 @@ MainWindow::MainWindow()
 	optionsCorrupted( false ),
 	disableSelectionCallbacks( false ),
 	compatOptsCmdArgs(),
-	pathContext( false, QApplication::applicationDirPath() ), // all paths will internally be stored relative to the application's dir
+	pathContext( useAbsolutePathsByDefault, QApplication::applicationDirPath() ), // all relative paths will internally be stored relative to the application's dir
 	checkForUpdates( true ),
 	optsStorage( STORE_GLOBALLY ),
 	closeOnLaunch( false ),
@@ -507,7 +513,7 @@ void MainWindow::runSetupDialog()
 
 	SetupDialog dialog(
 		this,
-		pathContext.useAbsolutePaths(),
+		pathContext.usingAbsolutePaths(),
 		pathContext.baseDir(),
 		engineModel.list(),
 		iwadModel.list(),
@@ -537,7 +543,7 @@ void MainWindow::runSetupDialog()
 		iwadModel.startCompleteUpdate();
 
 		// update our data from the dialog
-		pathContext.toggleAbsolutePaths( dialog.pathContext.useAbsolutePaths() );
+		pathContext.toggleAbsolutePaths( dialog.pathContext.usingAbsolutePaths() );
 		engineModel.updateList( dialog.engineModel.list() );
 		iwadModel.updateList( dialog.iwadModel.list() );
 		iwadSettings = dialog.iwadSettings;
@@ -546,7 +552,7 @@ void MainWindow::runSetupDialog()
 		optsStorage = dialog.optsStorage;
 		closeOnLaunch = dialog.closeOnLaunch;
 		// update all stored paths
-		toggleAbsolutePaths( pathContext.useAbsolutePaths() );
+		toggleAbsolutePaths( pathContext.usingAbsolutePaths() );
 		currentEngine = pathContext.convertPath( currentEngine );
 		currentIWAD = pathContext.convertPath( currentIWAD );
 		selectedIWAD = pathContext.convertPath( selectedIWAD );
@@ -1182,7 +1188,7 @@ void MainWindow::modAdd()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.useRelativePaths())
+	if (pathContext.usingRelativePaths())
 		for (QString & path : paths)
 			path = pathContext.getRelativePath( path );
 
@@ -1211,7 +1217,7 @@ void MainWindow::modAddDir()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.useRelativePaths())
+	if (pathContext.usingRelativePaths())
 		path = pathContext.getRelativePath( path );
 
 	Mod mod( QFileInfo( path ), true );
@@ -1579,7 +1585,7 @@ void MainWindow::browseSaveDir()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.useRelativePaths())
+	if (pathContext.usingRelativePaths())
 		path = pathContext.getRelativePath( path );
 
 	ui->saveDirLine->setText( path );
@@ -1593,7 +1599,7 @@ void MainWindow::browseScreenshotDir()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.useRelativePaths())
+	if (pathContext.usingRelativePaths())
 		path = pathContext.getRelativePath( path );
 
 	ui->screenshotDirLine->setText( path );
@@ -2053,7 +2059,7 @@ void MainWindow::saveOptions( const QString & filePath )
 
 	jsRoot["check_for_updates"] = checkForUpdates;
 
-	jsRoot["use_absolute_paths"] = pathContext.useAbsolutePaths();
+	jsRoot["use_absolute_paths"] = pathContext.usingAbsolutePaths();
 
 	jsRoot["options_storage"] = int( optsStorage );
 
@@ -2301,7 +2307,7 @@ void MainWindow::loadOptions( const QString & filePath )
 	}
 
 	// make sure all paths loaded from JSON are stored in correct format
-	toggleAbsolutePaths( pathContext.useAbsolutePaths() );
+	toggleAbsolutePaths( pathContext.usingAbsolutePaths() );
 
 	optionsCorrupted = false;
 
@@ -2528,8 +2534,8 @@ void MainWindow::updateLaunchCommand( bool verifyPaths )
 
 	QString curCommand = ui->commandLine->text();
 
-	// the command needs to be relative to the engine's directory,
-	// because it will be executed with the current directory set to engine's directory
+	// The command needs to be relative to the engine's directory,
+	// because it will be executed with the current directory set to engine's directory.
 	QString baseDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
 
 	QString newCommand = generateLaunchCommand( baseDir, verifyPaths );
@@ -2546,10 +2552,8 @@ void MainWindow::updateLaunchCommand( bool verifyPaths )
 
 QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths )
 {
-	// baseDir - which base directory to derive the relative paths from
-
 	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir.
-	PathContext base( pathContext.useAbsolutePaths(), baseDir, pathContext.baseDir() );
+	PathContext base( pathContext.usingAbsolutePaths(), baseDir, pathContext.baseDir() );
 
 	QString newCommand;
 	QTextStream cmdStream( &newCommand, QIODevice::WriteOnly );
@@ -2566,10 +2570,14 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 	{
 		throwIfInvalid( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
 
-		if (selectedEngine.path.contains("/snap/"))  // Linux speciality - for snap version use direct name otherwise libraries won't be found
+		// Either the executable is in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
+		// in which case it should be (and sometimes must be) started directly by using only its name,
+		if (isInSearchPath( selectedEngine.path ))
 			cmdStream << "\"" << getFileNameFromPath( selectedEngine.path ) << "\"";
+		// or it is in the current working directory (because we switched the working dir to the engine's dir),
+		// in which case we ignore the absolute paths and add a relative path to the local file (with ./ on Linux).
 		else
-			cmdStream << "\"" << base.rebasePath( selectedEngine.path ) << "\"";
+			cmdStream << "\"" << base.rebasePathToRelative( selectedEngine.path ) << "\"";
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
@@ -2771,8 +2779,8 @@ void MainWindow::launch()
 	QString currentDir = QDir::currentPath();
 	QString engineDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
 
-	// before we execute the command, we need to switch the current dir to the engine's dir
-	// because some engines search for their own files in the current dir and would fail if started from elsewhere
+	// Before we execute the command, we need to switch the current dir to the engine's dir,
+	// because some engines search for their own files in the current dir and would fail if started from elsewhere.
 	QDir::setCurrent( engineDir );
 
 	// the command paths are always generated relative to the engine's dir

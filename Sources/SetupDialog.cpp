@@ -69,7 +69,7 @@ SetupDialog::SetupDialog(
 	ui->iwadSubdirs->setChecked( iwadSettings.searchSubdirs );
 	ui->mapDirLine->setText( mapSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
-	ui->absolutePathsChkBox->setChecked( pathContext.useAbsolutePaths() );
+	ui->absolutePathsChkBox->setChecked( pathContext.usingAbsolutePaths() );
 	if (optsStorage == DONT_STORE)
 		ui->optsStorage_none->click();
 	else if (optsStorage == STORE_GLOBALLY)
@@ -266,7 +266,7 @@ void SetupDialog::browseDir( const QString & dirPurpose, QLineEdit * targetLine 
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.useRelativePaths())
+	if (pathContext.usingRelativePaths())
 		path = pathContext.getRelativePath( path );
 
 	targetLine->setText( path );
@@ -303,7 +303,7 @@ void SetupDialog::iwadAdd()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.useRelativePaths())
+	if (pathContext.usingRelativePaths())
 		path = pathContext.getRelativePath( path );
 
 	appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );

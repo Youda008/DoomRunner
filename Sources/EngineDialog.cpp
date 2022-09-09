@@ -96,7 +96,7 @@ void EngineDialog::browseEngine()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.useRelativePaths())
+	if (pathContext.usingRelativePaths())
 		enginePath = pathContext.getRelativePath( enginePath );
 
 	ui->pathLine->setText( enginePath );
@@ -115,7 +115,7 @@ void EngineDialog::browseConfigDir()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.useRelativePaths())
+	if (pathContext.usingRelativePaths())
 		dirPath = pathContext.getRelativePath( dirPath );
 
 	ui->configDirLine->setText( dirPath );

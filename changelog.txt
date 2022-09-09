@@ -1,3 +1,6 @@
+1.6
+- moved the Audio and Video options to a new tab to allow shrinking the launcher window even more
+
 1.5.2
 - ability to insert visual separators into mod list and preset list
 - improved support for more Doom engines and file types

@@ -949,77 +949,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="pathsGrpBox">
-            <property name="title">
-             <string>Alternative paths</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_19">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_25">
-               <item>
-                <widget class="QLabel" name="saveDirLabel">
-                 <property name="text">
-                  <string>Save dir</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="saveDirLine"/>
-               </item>
-               <item>
-                <widget class="QPushButton" name="saveDirBtn">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>24</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Browse</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="../Resources/Resources.qrc">
-                   <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_26">
-               <item>
-                <widget class="QLabel" name="screenshotDirLabel">
-                 <property name="text">
-                  <string>Screenshot dir</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="screenshotDirLine"/>
-               </item>
-               <item>
-                <widget class="QPushButton" name="screenshotDirBtn">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>24</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Browse</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="../Resources/Resources.qrc">
-                   <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
            <spacer name="verticalSpacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -1513,6 +1442,101 @@
            </widget>
           </item>
           <item>
+           <widget class="QGroupBox" name="pathsGrpBox">
+            <property name="title">
+             <string>Alternative paths</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_19">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_25">
+               <item>
+                <widget class="QLabel" name="saveDirLabel">
+                 <property name="text">
+                  <string>Save dir</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="saveDirLine"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="saveDirBtn">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>24</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Browse</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../Resources/Resources.qrc">
+                   <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_26">
+               <item>
+                <widget class="QLabel" name="screenshotDirLabel">
+                 <property name="text">
+                  <string>Screenshot dir</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="screenshotDirLine"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="screenshotDirBtn">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>24</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Browse</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../Resources/Resources.qrc">
+                   <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="outputTab">
+       <attribute name="title">
+        <string>Output options</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_31">
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_13">
+          <item>
            <widget class="QGroupBox" name="videoGrpBox">
             <property name="title">
              <string>Video</string>
@@ -1675,7 +1699,37 @@
            </widget>
           </item>
           <item>
-           <spacer name="verticalSpacer_2">
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_20">
+          <item>
+           <spacer name="horizontalSpacer_16">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_4">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
             </property>

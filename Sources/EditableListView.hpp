@@ -51,7 +51,7 @@ class EditableListView : public QListView {
 
 	// editing
 
-	/// Enables/disables editing the item names by double-clicking on them.
+	/// Enables/disables editing the item names by double-clicking on them, default is disabled.
 	void toggleNameEditing( bool enabled );
 
 	/// Returns whether any of the items is in edit mode (after double-click, F2, etc...).
@@ -65,7 +65,7 @@ class EditableListView : public QListView {
 
 	// right-click menu
 
-	/// Setting this to false will grey-out the context menu items so that they can't be clicked.
+	/// Setting this to false will grey-out the context menu items so that they can't be clicked, false is default.
 	void toggleContextMenu( bool enabled );
 
 	/// Enables clone action in a right-click context menu and CTRL+C shortcut.

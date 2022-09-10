@@ -136,10 +136,10 @@ class MainWindow : public QMainWindow {
 
  private: // methods
 
-	void setupPresetView();
-	void setupIWADView();
-	void setupMapPackView();
-	void setupModView();
+	void setupPresetList();
+	void setupIWADList();
+	void setupMapPackList();
+	void setupModList();
 
 	void loadMonitorInfo( QComboBox * box );
 

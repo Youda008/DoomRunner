@@ -92,8 +92,8 @@ class SetupDialog : public QDialog {
 
  private: // methods
 
-	void setupEngineView();
-	void setupIWADView();
+	void setupEngineList();
+	void setupIWADList();
 
 	void toggleAutoIWADUpdate( bool enabled );
 	void browseDir( const QString & dirPurpose, QLineEdit * targetLine );

@@ -181,10 +181,10 @@ MainWindow::MainWindow()
 
 	// setup main list views
 
-	setupPresetView();
-	setupIWADView();
-	setupMapPackView();
-	setupModView();
+	setupPresetList();
+	setupIWADList();
+	setupMapPackList();
+	setupModList();
 
 	// setup combo-boxes
 
@@ -282,15 +282,18 @@ MainWindow::MainWindow()
 	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
 }
 
-void MainWindow::setupPresetView()
+void MainWindow::setupPresetList()
 {
+	// connect the view with model
+	ui->presetListView->setModel( &presetModel );
+
+	// set selection rules
+	ui->presetListView->setSelectionMode( QAbstractItemView::SingleSelection );
+
 	// setup editing and separators
 	presetModel.toggleEditing( true );
 	presetModel.toggleSeparators( true );
 	ui->presetListView->toggleNameEditing( true );
-
-	// set data source for the view
-	ui->presetListView->setModel( &presetModel );
 
 	// set drag&drop behaviour
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
@@ -312,24 +315,33 @@ void MainWindow::setupPresetView()
 	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::presetInsertSeparator );
 }
 
-void MainWindow::setupIWADView()
+void MainWindow::setupIWADList()
 {
-	// set data source for the view
+	// connect the view with model
 	ui->iwadListView->setModel( &iwadModel );
+
+	// set selection rules
+	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
 	// set reaction when an item is selected
 	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::toggleIWAD );
 }
 
-void MainWindow::setupMapPackView()
+void MainWindow::setupMapPackList()
 {
-	// set data source for the view
+	// connect the view with model
 	ui->mapDirView->setModel( &mapModel );
+
+	// set selection rules
+	ui->mapDirView->setSelectionMode( QAbstractItemView::ExtendedSelection );
 
 	// set item filters
 	mapModel.setFilter( QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot | QDir::NoSymLinks );
 	mapModel.setNameFilters( getModFileSuffixes() );
 	mapModel.setNameFilterDisables( false );
+
+	// remove the column names at the top
+	ui->mapDirView->setHeaderHidden( true );
 
 	// remove all other columns except the first one with name
 	for (int i = 1; i < mapModel.columnCount(); ++i)
@@ -353,8 +365,14 @@ void MainWindow::setupMapPackView()
 	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
 }
 
-void MainWindow::setupModView()
+void MainWindow::setupModList()
 {
+	// connect the view with model
+	ui->modListView->setModel( &modModel );
+
+	// set selection rules
+	ui->modListView->setSelectionMode( QAbstractItemView::ExtendedSelection );
+
 	// setup item checkboxes
 	modModel.toggleCheckableItems( true );
 
@@ -364,9 +382,6 @@ void MainWindow::setupModView()
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
 	modModel.setPathContext( &pathContext );
-
-	// set data source for the view
-	ui->modListView->setModel( &modModel );
 
 	// set drag&drop behaviour
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
@@ -396,7 +411,7 @@ void MainWindow::loadMonitorInfo( QComboBox * box )
 		QString monitorDesc;
 		QTextStream descStream( &monitorDesc, QIODevice::WriteOnly );
 
-		descStream << monitor.name << " - " << QString::number( monitor.width ) << 'x' << QString::number( monitor.height );
+		descStream << monitor.name << " - " << monitor.width << 'x' << monitor.height;
 		if (monitor.isPrimary)
 			descStream << " (primary)";
 
@@ -461,6 +476,8 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 	QMainWindow::timerEvent( event );
 
 	tickCount++;
+
+	ui->mapDirView->resizeColumnToContents(0);
 
  #ifdef QT_DEBUG
 	constexpr uint dirUpdateDelay = 8;

@@ -55,8 +55,8 @@ SetupDialog::SetupDialog(
 
 	// setup list views
 
-	setupEngineView();
-	setupIWADView();
+	setupEngineList();
+	setupIWADList();
 
 	// initialize widget data
 
@@ -117,13 +117,16 @@ SetupDialog::SetupDialog(
 	startTimer( 1000 );
 }
 
-void SetupDialog::setupEngineView()
+void SetupDialog::setupEngineList()
 {
+	// connect the view with model
+	ui->engineListView->setModel( &engineModel );
+
+	// set selection rules
+	ui->engineListView->setSelectionMode( QAbstractItemView::SingleSelection );
+
 	// give the model our path convertor, it will need it for converting paths dropped from directory
 	engineModel.setPathContext( &pathContext );
-
-	// set data source for the view
-	ui->engineListView->setModel( &engineModel );
 
 	// set drag&drop behaviour
 	ui->engineListView->toggleNameEditing( false );
@@ -147,17 +150,20 @@ void SetupDialog::setupEngineView()
 	connect( ui->engineListView->moveDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
 }
 
-void SetupDialog::setupIWADView()
+void SetupDialog::setupIWADList()
 {
+	// connect the view with model
+	ui->iwadListView->setModel( &iwadModel );
+
+	// set selection rules
+	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
+
 	// give the model our path convertor, it will need it for converting paths dropped from directory
 	iwadModel.setPathContext( &pathContext );
 
 	// setup editing
 	iwadModel.toggleEditing( !iwadSettings.updateFromDir );
 	ui->iwadListView->toggleNameEditing( !iwadSettings.updateFromDir );
-
-	// set data source for the view
-	ui->iwadListView->setModel( &iwadModel );
 
 	// set drag&drop behaviour
 	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadSettings.updateFromDir );

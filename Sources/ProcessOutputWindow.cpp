@@ -33,7 +33,7 @@ static const char * const statusNames [] =
 	"Crashed",
 	"Quitting",
 	"Terminated",
-	"Unknown error",
+	"Unknown error"
 };
 static_assert( size_t(ProcessStatus::UnknownError) + 1 == std::size(statusNames), "Please update this table" );
 

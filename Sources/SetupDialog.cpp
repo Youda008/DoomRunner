@@ -68,11 +68,11 @@ SetupDialog::SetupDialog(
 	ui->mapDirLine->setText( mapSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
 	ui->absolutePathsChkBox->setChecked( pathContext.usingAbsolutePaths() );
-	if (opts.launchOptsStorage == DONT_STORE)
+	if (opts.launchOptsStorage == DontStore)
 		ui->optsStorage_none->click();
-	else if (opts.launchOptsStorage == STORE_GLOBALLY)
+	else if (opts.launchOptsStorage == StoreGlobally)
 		ui->optsStorage_global->click();
-	else if (opts.launchOptsStorage == STORE_TO_PRESET)
+	else if (opts.launchOptsStorage == StoreToPreset)
 		ui->optsStorage_preset->click();
 	ui->closeOnLaunchChkBox->setChecked( opts.closeOnLaunch );
 	ui->showEngineOutputChkBox->setChecked( opts.showEngineOutput );
@@ -413,17 +413,17 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 
 void SetupDialog::optsStorage_none()
 {
-	opts.launchOptsStorage = DONT_STORE;
+	opts.launchOptsStorage = DontStore;
 }
 
 void SetupDialog::optsStorage_global()
 {
-	opts.launchOptsStorage = STORE_GLOBALLY;
+	opts.launchOptsStorage = StoreGlobally;
 }
 
 void SetupDialog::optsStorage_preset()
 {
-	opts.launchOptsStorage = STORE_TO_PRESET;
+	opts.launchOptsStorage = StoreToPreset;
 }
 
 void SetupDialog::toggleCloseOnLaunch( bool checked )

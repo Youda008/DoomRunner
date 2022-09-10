@@ -156,7 +156,7 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 	else if (strncmp( header.wadType, "PWAD", sizeof(header.wadType) ) == 0)
 		wadInfo.type = WadType::PWAD;
 	else
-		wadInfo.type = WadType::NEITHER;
+		wadInfo.type = WadType::Neither;
 
 	if (!file.seek( header.lumpDirOffset ))
 	{

@@ -34,10 +34,10 @@ class UpdateChecker : public QObject {
 
 	enum Result
 	{
-		CONNECTION_FAILED,
-		INVALID_FORMAT,
-		UPDATE_AVAILABLE,
-		UPDATE_NOT_AVAILABLE
+		ConnectionFailed,
+		InvalidFormat,
+		UpdateAvailable,
+		UpdateNotAvailable
 	};
 
 	using ResultCallback = std::function< void ( Result result, QString errorDetail, QStringList versionInfo ) >;
@@ -52,8 +52,8 @@ class UpdateChecker : public QObject {
 	// one update check consists of 2 phases - request to version file and request to changelog
 	enum class Phase
 	{
-		VERSION_REQUEST,
-		CHANGELOG_REQUEST,
+		VersionRequest,
+		ChangelogRequest,
 	};
 	struct RequestData
 	{

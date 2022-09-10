@@ -96,62 +96,62 @@ struct ModSettings
 
 enum OptionsStorage
 {
-	DONT_STORE,       ///< Everytime the launcher is closed and re-opened, the launch options are reset to defaults.
-	STORE_GLOBALLY,   ///< When the launcher is closed, current state of launch options is saved. When it's re-opened, launch options are loaded from the last saved state.
-	STORE_TO_PRESET   ///< Launch options are stored to the currently selected preset. When a preset is selected, launch options are loaded from the preset.
+	DontStore,       ///< Everytime the launcher is closed and re-opened, the launch options are reset to defaults.
+	StoreGlobally,   ///< When the launcher is closed, current state of launch options is saved. When it's re-opened, launch options are loaded from the last saved state.
+	StoreToPreset,   ///< Launch options are stored to the currently selected preset. When a preset is selected, launch options are loaded from the preset.
 };
 template<> inline const char * enumName< OptionsStorage >() { return "OptionsStorage"; }
-template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorage::STORE_TO_PRESET ) + 1; }
+template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorage::StoreToPreset ) + 1; }
 
 enum LaunchMode
 {
-	STANDARD,
-	LAUNCH_MAP,
-	LOAD_SAVE,
-	RECORD_DEMO,
-	REPLAY_DEMO
+	Standard,
+	LaunchMap,
+	LoadSave,
+	RecordDemo,
+	ReplayDemo,
 };
 template<> inline const char * enumName< LaunchMode >() { return "LaunchMode"; }
-template<> inline uint enumSize< LaunchMode >() { return uint( LaunchMode::REPLAY_DEMO ) + 1; }
+template<> inline uint enumSize< LaunchMode >() { return uint( LaunchMode::ReplayDemo ) + 1; }
 
 enum Skill
 {
-	TOO_YOUNG_TO_DIE,
-	NOT_TOO_ROUGH,
-	HURT_ME_PLENTY,
-	ULTRA_VIOLENCE,
-	NIGHTMARE,
-	CUSTOM
+	TooYoungToDie,
+	NotTooRough,
+	HurtMePlenty,
+	UltraViolence,
+	Nightmare,
+	Custom
 };
 template<> inline const char * enumName< Skill >() { return "Skill"; }
-template<> inline uint enumSize< Skill >() { return uint( Skill::CUSTOM ) + 1; }
+template<> inline uint enumSize< Skill >() { return uint( Skill::Custom ) + 1; }
 
 enum MultRole
 {
-	SERVER,
-	CLIENT
+	Server,
+	Client
 };
 template<> inline const char * enumName< MultRole >() { return "MultRole"; }
-template<> inline uint enumSize< MultRole >() { return uint( MultRole::CLIENT ) + 1; }
+template<> inline uint enumSize< MultRole >() { return uint( MultRole::Client ) + 1; }
 
 enum NetMode
 {
-	PEER_TO_PEER,
-	PACKET_SERVER
+	PeerToPeer,
+	PacketServer
 };
 template<> inline const char * enumName< NetMode >() { return "NetMode"; }
-template<> inline uint enumSize< NetMode >() { return uint( NetMode::PACKET_SERVER ) + 1; }
+template<> inline uint enumSize< NetMode >() { return uint( NetMode::PacketServer ) + 1; }
 
 enum GameMode
 {
-	DEATHMATCH,
-	TEAM_DEATHMATCH,
-	ALT_DEATHMATCH,
-	ALT_TEAM_DEATHMATCH,
-	COOPERATIVE
+	Deathmatch,
+	TeamDeathmatch,
+	AltDeathmatch,
+	AltTeamDeathmatch,
+	Cooperative
 };
 template<> inline const char * enumName< GameMode >() { return "GameMode"; }
-template<> inline uint enumSize< GameMode >() { return uint( GameMode::COOPERATIVE ) + 1; }
+template<> inline uint enumSize< GameMode >() { return uint( GameMode::Cooperative ) + 1; }
 
 struct GameplayOptions
 {
@@ -169,7 +169,7 @@ struct CompatibilityOptions
 struct LaunchOptions
 {
 	// launch mode
-	LaunchMode mode = STANDARD;
+	LaunchMode mode = Standard;
 	QString mapName;
 	QString saveFile;
 	QString mapName_demo;
@@ -177,7 +177,7 @@ struct LaunchOptions
 	QString demoFile_replay;
 
 	// gameplay
-	uint skillNum = uint( TOO_YOUNG_TO_DIE );
+	uint skillNum = uint( TooYoungToDie );
 	bool noMonsters = false;
 	bool fastMonsters = false;
 	bool monstersRespawn = false;
@@ -191,11 +191,11 @@ struct LaunchOptions
 
 	// multiplayer
 	bool isMultiplayer = false;
-	MultRole multRole = SERVER;
+	MultRole multRole = Server;
 	QString hostName;
 	uint16_t port = 5029;
-	NetMode netMode = PEER_TO_PEER;
-	GameMode gameMode = DEATHMATCH;
+	NetMode netMode = PeerToPeer;
+	GameMode gameMode = Deathmatch;
 	uint playerCount = 2;
 	double teamDamage = 0.0;
 	uint timeLimit = 0;
@@ -246,7 +246,7 @@ struct LauncherOptions
 {
 	bool checkForUpdates = true;
 	bool useAbsolutePaths = useAbsolutePathsByDefault;
-	OptionsStorage launchOptsStorage = STORE_GLOBALLY;
+	OptionsStorage launchOptsStorage = StoreGlobally;
 	bool closeOnLaunch = false;
 	bool showEngineOutput = false;
 };

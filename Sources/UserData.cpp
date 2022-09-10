@@ -379,7 +379,7 @@ void deserialize( const JsonObjectCtx & jsOptions, LauncherOptions & opts )
 {
 	opts.checkForUpdates = jsOptions.getBool( "check_for_updates", true, DontShowError );
 	opts.useAbsolutePaths = jsOptions.getBool( "use_absolute_paths", useAbsolutePathsByDefault );
-	opts.launchOptsStorage = jsOptions.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
+	opts.launchOptsStorage = jsOptions.getEnum< OptionsStorage >( "options_storage", StoreGlobally );
 	opts.closeOnLaunch = jsOptions.getBool( "close_on_launch", false, DontShowError );
 	opts.showEngineOutput = jsOptions.getBool( "show_engine_output", false, DontShowError );
 }

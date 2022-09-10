@@ -19,15 +19,15 @@
 
 enum class KeyState
 {
-	PRESSED,
-	RELEASED
+	Pressed,
+	Released
 };
 
 enum Modifier : uint8_t
 {
-	CTRL  = 1 << 0,
-	ALT   = 1 << 1,
-	SHIFT = 1 << 2
+	Ctrl  = 1 << 0,
+	Alt   = 1 << 1,
+	Shift = 1 << 2
 };
 
 

@@ -72,17 +72,17 @@ class JsonValueCtx {
 	{
 		enum Type
 		{
-			OTHER = 0,
-			OBJECT_KEY,
-			ARRAY_INDEX
+			Other = 0,
+			ObjectKey,
+			ArrayIndex
 		};
 		Type type;
 		QString key; // TODO: std::variant
 		int idx;
 
-		Key() : type( OTHER ), key(), idx( -1 ) {}
-		Key( const QString & key ) : type( OBJECT_KEY ), key( key ), idx( -1 ) {}
-		Key( int idx ) : type( ARRAY_INDEX ), key(), idx( idx ) {}
+		Key() : type( Other ), key(), idx( -1 ) {}
+		Key( const QString & key ) : type( ObjectKey ), key( key ), idx( -1 ) {}
+		Key( int idx ) : type( ArrayIndex ), key(), idx( idx ) {}
 	};
 
 	_ParsingContext * _context;  ///< document-wide context shared among all elements of that document, the struct is stored in JsonDocumentCtx

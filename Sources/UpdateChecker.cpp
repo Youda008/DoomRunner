@@ -49,7 +49,7 @@ void UpdateChecker::checkForUpdates_async( ResultCallback && callback )
 	request.setUrl( availableVersionUrl );
 	QNetworkReply * reply = manager.get( request );
 
-	pendingRequests[ reply ] = { Phase::VERSION_REQUEST, {}, std::move(callback) };
+	pendingRequests[ reply ] = { Phase::VersionRequest, {}, std::move(callback) };
 }
 
 void UpdateChecker::requestFinished( QNetworkReply * reply )
@@ -67,11 +67,11 @@ void UpdateChecker::requestFinished( QNetworkReply * reply )
 	if (reply->error())
 	{
 		qWarning() << "HTTP request failed: " << reply->errorString();
-		requestData.callback( CONNECTION_FAILED, reply->errorString(), {} );
+		requestData.callback( ConnectionFailed, reply->errorString(), {} );
 		return;
 	}
 
-	if (requestData.phase == Phase::VERSION_REQUEST)
+	if (requestData.phase == Phase::VersionRequest)
 	{
 		versionReceived( reply, requestData );
 	}
@@ -89,7 +89,7 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 	if (!match.hasMatch())
 	{
 		qWarning() << "Version number from github is in invalid format ("%version%"). Fix it!";
-		requestData.callback( INVALID_FORMAT, version, {} );
+		requestData.callback( InvalidFormat, version, {} );
 		return;
 	}
 	QString availableVersion = match.captured(1);
@@ -97,7 +97,7 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 	bool updateAvailable = compareVersions( availableVersion, appVersion ) > 0;
 	if (!updateAvailable)
 	{
-		requestData.callback( UPDATE_NOT_AVAILABLE, {}, { availableVersion } );
+		requestData.callback( UpdateNotAvailable, {}, { availableVersion } );
 		return;
 	}
 
@@ -105,7 +105,7 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 	request.setUrl( changelogUrl );
 	QNetworkReply * reply2 = manager.get( request );
 
-	pendingRequests[ reply2 ] = { Phase::CHANGELOG_REQUEST, availableVersion, std::move(requestData.callback) };
+	pendingRequests[ reply2 ] = { Phase::ChangelogRequest, availableVersion, std::move(requestData.callback) };
 }
 
 // fucking Qt, are you fucking kidding me?
@@ -145,7 +145,7 @@ void UpdateChecker::changelogReceived( QNetworkReply * reply, RequestData & requ
 		versionInfo.append( line );
 
 	// finally, call the user callback with all the data
-	requestData.callback( UPDATE_AVAILABLE, {}, versionInfo );
+	requestData.callback( UpdateAvailable, {}, versionInfo );
 }
 
 

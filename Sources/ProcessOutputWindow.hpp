@@ -34,7 +34,7 @@ enum class ProcessStatus
 	Crashed,
 	Quitting,
 	Terminated,
-	UnknownError,
+	UnknownError
 };
 
 const char * toString( ProcessStatus status );

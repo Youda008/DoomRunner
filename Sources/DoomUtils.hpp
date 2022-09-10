@@ -58,7 +58,7 @@ enum class WadType
 {
 	IWAD,
 	PWAD,
-	NEITHER
+	Neither
 };
 
 struct WadInfo

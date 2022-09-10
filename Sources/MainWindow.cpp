@@ -98,11 +98,11 @@ static void throwIfInvalid( bool doVerify, const QString & path, const QString &
 }
 
 #define STORE_OPTION( structElem, value ) \
-	if (opts.launchOptsStorage == STORE_GLOBALLY) \
+	if (opts.launchOptsStorage == StoreGlobally) \
 	{\
 		launchOpts.structElem = value; \
 	}\
-	else if (opts.launchOptsStorage == STORE_TO_PRESET) \
+	else if (opts.launchOptsStorage == StoreToPreset) \
 	{\
 		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView ); \
 		if (selectedPresetIdx >= 0) \
@@ -450,7 +450,7 @@ void MainWindow::onWindowShown()
 		updateChecker.checkForUpdates_async(
 			/* result callback */[ this ]( UpdateChecker::Result result, QString /*errorDetail*/, QStringList versionInfo )
 			{
-				if (result == UpdateChecker::UPDATE_AVAILABLE)
+				if (result == UpdateChecker::UpdateAvailable)
 				{
 					opts.checkForUpdates = showUpdateNotification( this, versionInfo, /*checkbox*/true );
 				}
@@ -585,7 +585,7 @@ void MainWindow::runSetupDialog()
 void MainWindow::runGameOptsDialog()
 {
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	GameplayOptions * gameOpts = (opts.launchOptsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
+	GameplayOptions * gameOpts = (opts.launchOptsStorage == StoreToPreset && selectedPresetIdx >= 0)
 	                               ? &presetModel[ selectedPresetIdx ].launchOpts.gameOpts
 	                               : &launchOpts.gameOpts;
 
@@ -604,7 +604,7 @@ void MainWindow::runGameOptsDialog()
 void MainWindow::runCompatOptsDialog()
 {
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	CompatibilityOptions * compatOpts = (opts.launchOptsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
+	CompatibilityOptions * compatOpts = (opts.launchOptsStorage == StoreToPreset && selectedPresetIdx >= 0)
 	                                      ? &presetModel[ selectedPresetIdx ].launchOpts.compatOpts
 	                                      : &launchOpts.compatOpts;
 
@@ -823,7 +823,7 @@ void MainWindow::restorePreset( int presetIdx )
 	}
 
 	// restore launch options
-	if (opts.launchOptsStorage == STORE_TO_PRESET)
+	if (opts.launchOptsStorage == StoreToPreset)
 	{
 		restoreLaunchOptions( presetRef.launchOpts );
 	}
@@ -1380,7 +1380,7 @@ void MainWindow::modsDropped( int dropRow, int count )
 
 void MainWindow::modeStandard()
 {
-	STORE_OPTION( mode, STANDARD )
+	STORE_OPTION( mode, Standard )
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1390,9 +1390,9 @@ void MainWindow::modeStandard()
 
 	toggleOptionsSubwidgets( false );
 
-	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == SERVER)
+	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Server)
 	{
-		ui->multRoleCmbBox->setCurrentIndex( CLIENT );   // only client can use standard launch mode
+		ui->multRoleCmbBox->setCurrentIndex( Client );   // only client can use standard launch mode
 	}
 
 	updateLaunchCommand();
@@ -1400,7 +1400,7 @@ void MainWindow::modeStandard()
 
 void MainWindow::modeLaunchMap()
 {
-	STORE_OPTION( mode, LAUNCH_MAP )
+	STORE_OPTION( mode, LaunchMap )
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1410,9 +1410,9 @@ void MainWindow::modeLaunchMap()
 
 	toggleOptionsSubwidgets( true );
 
-	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == CLIENT)
+	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Client)
 	{
-		ui->multRoleCmbBox->setCurrentIndex( SERVER );   // only server can select a map
+		ui->multRoleCmbBox->setCurrentIndex( Server );   // only server can select a map
 	}
 
 	updateLaunchCommand();
@@ -1420,7 +1420,7 @@ void MainWindow::modeLaunchMap()
 
 void MainWindow::modeSavedGame()
 {
-	STORE_OPTION( mode, LOAD_SAVE )
+	STORE_OPTION( mode, LoadSave )
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
@@ -1435,7 +1435,7 @@ void MainWindow::modeSavedGame()
 
 void MainWindow::modeRecordDemo()
 {
-	STORE_OPTION( mode, RECORD_DEMO )
+	STORE_OPTION( mode, RecordDemo )
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1450,7 +1450,7 @@ void MainWindow::modeRecordDemo()
 
 void MainWindow::modeReplayDemo()
 {
-	STORE_OPTION( mode, REPLAY_DEMO )
+	STORE_OPTION( mode, ReplayDemo )
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1468,7 +1468,7 @@ void MainWindow::modeReplayDemo()
 void MainWindow::toggleOptionsSubwidgets( bool enabled )
 {
 	ui->skillCmbBox->setEnabled( enabled );
-	ui->skillSpinBox->setEnabled( enabled && ui->skillCmbBox->currentIndex() == Skill::CUSTOM );
+	ui->skillSpinBox->setEnabled( enabled && ui->skillCmbBox->currentIndex() == Skill::Custom );
 	ui->noMonstersChkBox->setEnabled( enabled );
 	ui->fastMonstersChkBox->setEnabled( enabled );
 	ui->monstersRespawnChkBox->setEnabled( enabled );
@@ -1535,7 +1535,7 @@ void MainWindow::changeDemoFile_record( const QString & fileName )
 void MainWindow::selectSkill( int skill )
 {
 	ui->skillSpinBox->setValue( skill );
-	ui->skillSpinBox->setEnabled( skill == Skill::CUSTOM );
+	ui->skillSpinBox->setEnabled( skill == Skill::Custom );
 
 	updateLaunchCommand();
 }
@@ -1544,7 +1544,7 @@ void MainWindow::changeSkillNum( int skill )
 {
 	STORE_OPTION( skillNum, uint( skill ) )
 
-	if (skill < Skill::CUSTOM)
+	if (skill < Skill::Custom)
 		ui->skillCmbBox->setCurrentIndex( skill );
 
 	updateLaunchCommand();
@@ -1629,26 +1629,26 @@ void MainWindow::toggleMultiplayer( bool checked )
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
-	bool isDeathMatch = gameMode >= DEATHMATCH && gameMode <= ALT_TEAM_DEATHMATCH;
-	bool isTeamPlay = gameMode == TEAM_DEATHMATCH || gameMode == ALT_TEAM_DEATHMATCH || gameMode == COOPERATIVE;
+	bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
+	bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
 
 	ui->multRoleCmbBox->setEnabled( checked );
-	ui->hostnameLine->setEnabled( checked && multRole == CLIENT );
+	ui->hostnameLine->setEnabled( checked && multRole == Client );
 	ui->portSpinBox->setEnabled( checked );
 	ui->netModeCmbBox->setEnabled( checked );
-	ui->gameModeCmbBox->setEnabled( checked && multRole == SERVER );
-	ui->playerCountSpinBox->setEnabled( checked && multRole == SERVER );
-	ui->teamDmgSpinBox->setEnabled( checked && multRole == SERVER && isTeamPlay );
-	ui->timeLimitSpinBox->setEnabled( checked && multRole == SERVER && isDeathMatch );
-	ui->fragLimitSpinBox->setEnabled( checked && multRole == SERVER && isDeathMatch );
+	ui->gameModeCmbBox->setEnabled( checked && multRole == Server );
+	ui->playerCountSpinBox->setEnabled( checked && multRole == Server );
+	ui->teamDmgSpinBox->setEnabled( checked && multRole == Server && isTeamPlay );
+	ui->timeLimitSpinBox->setEnabled( checked && multRole == Server && isDeathMatch );
+	ui->fragLimitSpinBox->setEnabled( checked && multRole == Server && isDeathMatch );
 
 	if (checked)
 	{
-		if (ui->launchMode_map->isChecked() && multRole == CLIENT)  // client doesn't select map, server does
+		if (ui->launchMode_map->isChecked() && multRole == Client)  // client doesn't select map, server does
 		{
 			ui->launchMode_standard->click();
 		}
-		if (ui->launchMode_standard->isChecked() && multRole == SERVER)  // server MUST choose a map
+		if (ui->launchMode_standard->isChecked() && multRole == Server)  // server MUST choose a map
 		{
 			ui->launchMode_map->click();
 		}
@@ -1667,23 +1667,23 @@ void MainWindow::selectMultRole( int role )
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
-	bool isDeathMatch = gameMode >= DEATHMATCH && gameMode <= ALT_TEAM_DEATHMATCH;
-	bool isTeamPlay = gameMode == TEAM_DEATHMATCH || gameMode == ALT_TEAM_DEATHMATCH || gameMode == COOPERATIVE;
+	bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
+	bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
 
-	ui->hostnameLine->setEnabled( multEnabled && role == CLIENT );
-	ui->gameModeCmbBox->setEnabled( multEnabled && role == SERVER );
-	ui->playerCountSpinBox->setEnabled( multEnabled && role == SERVER );
-	ui->teamDmgSpinBox->setEnabled( multEnabled && role == SERVER && isTeamPlay );
-	ui->timeLimitSpinBox->setEnabled( multEnabled && role == SERVER && isDeathMatch );
-	ui->fragLimitSpinBox->setEnabled( multEnabled && role == SERVER && isDeathMatch );
+	ui->hostnameLine->setEnabled( multEnabled && role == Client );
+	ui->gameModeCmbBox->setEnabled( multEnabled && role == Server );
+	ui->playerCountSpinBox->setEnabled( multEnabled && role == Server );
+	ui->teamDmgSpinBox->setEnabled( multEnabled && role == Server && isTeamPlay );
+	ui->timeLimitSpinBox->setEnabled( multEnabled && role == Server && isDeathMatch );
+	ui->fragLimitSpinBox->setEnabled( multEnabled && role == Server && isDeathMatch );
 
 	if (multEnabled)
 	{
-		if (ui->launchMode_map->isChecked() && role == CLIENT)  // client doesn't select map, server does
+		if (ui->launchMode_map->isChecked() && role == Client)  // client doesn't select map, server does
 		{
 			ui->launchMode_standard->click();
 		}
-		if (ui->launchMode_standard->isChecked() && role == SERVER)  // server MUST choose a map
+		if (ui->launchMode_standard->isChecked() && role == Server)  // server MUST choose a map
 		{
 			ui->launchMode_map->click();
 		}
@@ -1719,12 +1719,12 @@ void MainWindow::selectGameMode( int gameMode )
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
-	bool isDeathMatch = gameMode >= DEATHMATCH && gameMode <= ALT_TEAM_DEATHMATCH;
-	bool isTeamPlay = gameMode == TEAM_DEATHMATCH || gameMode == ALT_TEAM_DEATHMATCH || gameMode == COOPERATIVE;
+	bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
+	bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
 
-	ui->teamDmgSpinBox->setEnabled( multEnabled && multRole == SERVER && isTeamPlay );
-	ui->timeLimitSpinBox->setEnabled( multEnabled && multRole == SERVER && isDeathMatch );
-	ui->fragLimitSpinBox->setEnabled( multEnabled && multRole == SERVER && isDeathMatch );
+	ui->teamDmgSpinBox->setEnabled( multEnabled && multRole == Server && isTeamPlay );
+	ui->timeLimitSpinBox->setEnabled( multEnabled && multRole == Server && isDeathMatch );
+	ui->fragLimitSpinBox->setEnabled( multEnabled && multRole == Server && isDeathMatch );
 
 	updateLaunchCommand();
 }
@@ -2101,7 +2101,7 @@ void MainWindow::saveOptions( const QString & filePath )
 		QJsonArray jsPresetArray;
 		for (const Preset & preset : presetModel)
 		{
-			QJsonObject jsPreset = serialize( preset, opts.launchOptsStorage == STORE_TO_PRESET );
+			QJsonObject jsPreset = serialize( preset, opts.launchOptsStorage == StoreToPreset );
 			jsPresetArray.append( jsPreset );
 		}
 		jsRoot["presets"] = jsPresetArray;
@@ -2109,7 +2109,7 @@ void MainWindow::saveOptions( const QString & filePath )
 
 	jsRoot["additional_args"] = ui->globalCmdArgsLine->text();
 
-	if (opts.launchOptsStorage == STORE_GLOBALLY)
+	if (opts.launchOptsStorage == StoreGlobally)
 	{
 		jsRoot["launch_options"] = serialize( launchOpts );
 	}
@@ -2288,7 +2288,7 @@ void MainWindow::loadOptions( const QString & filePath )
 				continue;
 
 			Preset preset;
-			deserialize( jsPreset, preset, opts.launchOptsStorage == STORE_TO_PRESET );
+			deserialize( jsPreset, preset, opts.launchOptsStorage == StoreToPreset );
 
 			presetModel.append( std::move( preset ) );
 		}
@@ -2299,7 +2299,7 @@ void MainWindow::loadOptions( const QString & filePath )
 	ui->globalCmdArgsLine->setText( jsRoot.getString( "additional_args" ) );
 
 	// launch options
-	if (opts.launchOptsStorage == STORE_GLOBALLY)
+	if (opts.launchOptsStorage == StoreGlobally)
 	{
 		if (JsonObjectCtx jsOptions = jsRoot.getObject( "launch_options" ))
 		{
@@ -2345,7 +2345,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	// this must be done after the lists are already updated because we want to select existing items in combo boxes,
 	//               and after preset loading because the preset will select IWAD which will fill the map combo box
-	if (opts.launchOptsStorage == STORE_GLOBALLY)
+	if (opts.launchOptsStorage == StoreGlobally)
 	{
 		restoreLaunchOptions( launchOpts );
 	}
@@ -2360,16 +2360,16 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 	// launch mode
 	switch (opts.mode)
 	{
-	 case LaunchMode::LAUNCH_MAP:
+	 case LaunchMode::LaunchMap:
 		ui->launchMode_map->click();
 		break;
-	 case LaunchMode::LOAD_SAVE:
+	 case LaunchMode::LoadSave:
 		ui->launchMode_savefile->click();
 		break;
-	 case LaunchMode::RECORD_DEMO:
+	 case LaunchMode::RecordDemo:
 		ui->launchMode_recordDemo->click();
 		break;
-	 case LaunchMode::REPLAY_DEMO:
+	 case LaunchMode::ReplayDemo:
 		ui->launchMode_replayDemo->click();
 		break;
 	 default:
@@ -2719,25 +2719,25 @@ QStringList MainWindow::generateLaunchCommand( const QString & baseDir, bool ver
 	{
 		switch (ui->multRoleCmbBox->currentIndex())
 		{
-		 case MultRole::SERVER:
+		 case MultRole::Server:
 			command << "-host" << ui->playerCountSpinBox->text();
 			if (ui->portSpinBox->value() != 5029)
 				command << "-port" << ui->portSpinBox->text();
 			switch (ui->gameModeCmbBox->currentIndex())
 			{
-			 case DEATHMATCH:
+			 case Deathmatch:
 				command << "-deathmatch";
 				break;
-			 case TEAM_DEATHMATCH:
+			 case TeamDeathmatch:
 				command << "-deathmatch" << "+teamplay";
 				break;
-			 case ALT_DEATHMATCH:
+			 case AltDeathmatch:
 				command << "-altdeath";
 				break;
-			 case ALT_TEAM_DEATHMATCH:
+			 case AltTeamDeathmatch:
 				command << "-altdeath" << "+teamplay";
 				break;
-			 case COOPERATIVE: // default mode, which is started without any param
+			 case Cooperative: // default mode, which is started without any param
 				break;
 			 default:
 				QMessageBox::critical( this, "Invalid game mode index",
@@ -2751,7 +2751,7 @@ QStringList MainWindow::generateLaunchCommand( const QString & baseDir, bool ver
 				command << "+fraglimit" << ui->fragLimitSpinBox->text();
 			command << "-netmode" << QString::number( ui->netModeCmbBox->currentIndex() );
 			break;
-		 case MultRole::CLIENT:
+		 case MultRole::Client:
 			command << "-join" << ui->hostnameLine->text() % ":" % ui->portSpinBox->text();
 			break;
 		 default:

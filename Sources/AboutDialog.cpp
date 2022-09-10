@@ -59,23 +59,23 @@ void AboutDialog::checkForUpdate()
 			ui->checkUpdateBtn->setEnabled( true );
 
 			switch (result) {
-			 case UpdateChecker::CONNECTION_FAILED:
+			 case UpdateChecker::ConnectionFailed:
 				QMessageBox::warning( this, "Update check failed",
 					"Failed to connect to the project web page. Is your internet down?"
 					"Details: "%errorDetail
 				);
 				break;
-			 case UpdateChecker::INVALID_FORMAT:
+			 case UpdateChecker::InvalidFormat:
 				QMessageBox::warning( this, "Update check failed",
 					"Version number from github is in invalid format: "%errorDetail
 				);
 				break;
-			 case UpdateChecker::UPDATE_NOT_AVAILABLE:
+			 case UpdateChecker::UpdateNotAvailable:
 				QMessageBox::information( this, "No update available",
 					"No update is available, you have the newest version."
 				);
 				break;
-			 case UpdateChecker::UPDATE_AVAILABLE:
+			 case UpdateChecker::UpdateAvailable:
 				showUpdateNotification( this, versionInfo, /*checkbox*/false );
 				break;
 			}

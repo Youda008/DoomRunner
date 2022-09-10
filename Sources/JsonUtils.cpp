@@ -23,9 +23,9 @@ void JsonValueCtx::prependPath( std::list< QString > & pathList ) const
 {
 	if (_parent)
 	{
-		if (_key.type == Key::OBJECT_KEY)
+		if (_key.type == Key::ObjectKey)
 			pathList.push_front( '/' + _key.key );
-		else if (_key.type == Key::ARRAY_INDEX)
+		else if (_key.type == Key::ArrayIndex)
 			pathList.push_front( "/[" + QString::number( _key.idx ) + ']' );
 		else
 			pathList.push_front( "/<error>" );

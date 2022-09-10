@@ -17,7 +17,7 @@
 template< KeyState state >
 static inline uint8_t toggleModifiers( uint8_t currentModifiers, uint8_t newModifiers )
 {
-	if constexpr (state == KeyState::PRESSED)
+	if constexpr (state == KeyState::Pressed)
 		return currentModifiers | newModifiers;
 	else
 		return currentModifiers & ~newModifiers;
@@ -29,16 +29,16 @@ inline bool ModifierHandler::updateModifiers( int key )
 	switch (key)
 	{
 	 case Qt::Key_Control:
-		_pressedModifiers = toggleModifiers< state >( _pressedModifiers, Modifier::CTRL );
+		_pressedModifiers = toggleModifiers< state >( _pressedModifiers, Modifier::Ctrl );
 		return true;
 	 case Qt::Key_Alt:
-		_pressedModifiers = toggleModifiers< state >( _pressedModifiers, Modifier::ALT );
+		_pressedModifiers = toggleModifiers< state >( _pressedModifiers, Modifier::Alt );
 		return true;
 	 case Qt::Key_AltGr:
-		_pressedModifiers = toggleModifiers< state >( _pressedModifiers, Modifier::ALT | Modifier::CTRL );
+		_pressedModifiers = toggleModifiers< state >( _pressedModifiers, Modifier::Alt | Modifier::Ctrl );
 		return true;
 	 case Qt::Key_Shift:
-		_pressedModifiers = toggleModifiers< state >( _pressedModifiers, Modifier::SHIFT );
+		_pressedModifiers = toggleModifiers< state >( _pressedModifiers, Modifier::Shift );
 		return true;
 	 default:
 		return false;
@@ -47,20 +47,20 @@ inline bool ModifierHandler::updateModifiers( int key )
 
 bool ModifierHandler::updateModifiers_pressed( int key )
 {
-	return updateModifiers< KeyState::PRESSED >( key );
+	return updateModifiers< KeyState::Pressed >( key );
 }
 
 bool ModifierHandler::updateModifiers_released( int key )
 {
-	return updateModifiers< KeyState::RELEASED >( key );
+	return updateModifiers< KeyState::Released >( key );
 }
 
 bool ModifierHandler::updateModifiers( int key, KeyState state )
 {
-	if (state == KeyState::PRESSED)
-		return updateModifiers< KeyState::PRESSED >( key );
+	if (state == KeyState::Pressed)
+		return updateModifiers< KeyState::Pressed >( key );
 	else
-		return updateModifiers< KeyState::RELEASED >( key );
+		return updateModifiers< KeyState::Released >( key );
 }
 
 
@@ -73,13 +73,13 @@ bool KeyPressFilter::eventFilter( QObject * obj, QEvent * event )
 	{
 		QKeyEvent * keyEvent = static_cast< QKeyEvent * >( event );
 		int key = keyEvent->key();
-		KeyState state = event->type() == QEvent::KeyPress ? KeyState::PRESSED : KeyState::RELEASED;
+		KeyState state = event->type() == QEvent::KeyPress ? KeyState::Pressed : KeyState::Released;
 
 		emit keyStateChanged( key, state );
 
 		bool isModifier = modifierHandler.updateModifiers( key, state );
 
-		if (!isModifier && state == KeyState::PRESSED)
+		if (!isModifier && state == KeyState::Pressed)
 			emit keyPressed( key, modifierHandler.pressedModifiers() );
 	}
 

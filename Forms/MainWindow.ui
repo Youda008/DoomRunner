@@ -247,7 +247,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QTreeView" name="mapDirView">
+                <widget class="ExtendedTreeView" name="mapDirView">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
@@ -1865,6 +1865,11 @@
    <class>EditableListView</class>
    <extends>QListView</extends>
    <header location="global">Sources/EditableListView.hpp</header>
+  </customwidget>
+  <customwidget>
+   <class>ExtendedTreeView</class>
+   <extends>QTreeView</extends>
+   <header location="global">Sources/ExtendedTreeView.hpp</header>
   </customwidget>
  </customwidgets>
  <resources>

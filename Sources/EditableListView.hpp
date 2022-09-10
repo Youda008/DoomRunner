@@ -6,8 +6,8 @@
 //              drag&drop operations
 //======================================================================================================================
 
-#ifndef DRAG_AND_DROP_LIST_VIEW_INCLUDED
-#define DRAG_AND_DROP_LIST_VIEW_INCLUDED
+#ifndef EDITABLE_LIST_VIEW_INCLUDED
+#define EDITABLE_LIST_VIEW_INCLUDED
 
 
 #include "Common.hpp"
@@ -148,4 +148,4 @@ class EditableListView : public QListView {
 };
 
 
-#endif // DRAG_AND_DROP_LIST_VIEW_INCLUDED
+#endif // EDITABLE_LIST_VIEW_INCLUDED

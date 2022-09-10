@@ -336,6 +336,9 @@ void MainWindow::setupMapPackList()
 	for (int i = 1; i < mapModel.columnCount(); ++i)
 		ui->mapDirView->hideColumn(i);
 
+	// make the view display a horizontal scrollbar rather than clipping the items
+	ui->mapDirView->toggleAutomaticColumnResizing( true );
+
 	// remove icons
 	class EmptyIconProvider : public QFileIconProvider
 	{

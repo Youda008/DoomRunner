@@ -37,6 +37,7 @@ SOURCES += \
     Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
     Sources/EventFilters.cpp \
+    Sources/ExtendedTreeView.cpp \
     Sources/FileSystemUtils.cpp \
     Sources/GameOptsDialog.cpp \
     Sources/JsonUtils.cpp \
@@ -61,6 +62,7 @@ HEADERS += \
     Sources/EditableListView.hpp \
     Sources/EngineDialog.hpp \
     Sources/EventFilters.hpp \
+    Sources/ExtendedTreeView.hpp \
     Sources/FileSystemUtils.hpp \
     Sources/GameOptsDialog.hpp \
     Sources/JsonUtils.hpp \

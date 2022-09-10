@@ -41,8 +41,8 @@ class PathContext {
 		{ _baseDir = other._baseDir; _prevBaseDir = other._prevBaseDir; _useAbsolutePaths = other._useAbsolutePaths; }
 
 	const QDir & baseDir() const                       { return _baseDir; }
-	bool usingAbsolutePaths() const                      { return _useAbsolutePaths; }
-	bool usingRelativePaths() const                      { return !_useAbsolutePaths; }
+	bool usingAbsolutePaths() const                    { return _useAbsolutePaths; }
+	bool usingRelativePaths() const                    { return !_useAbsolutePaths; }
 
 	void toggleAbsolutePaths( bool useAbsolutePaths )  { _useAbsolutePaths = useAbsolutePaths; }
 	void setBaseDir( const QDir & baseDir )            { _baseDir = baseDir; }

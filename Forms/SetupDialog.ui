@@ -455,6 +455,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="showEngineOutputChkBox">
+     <property name="text">
+      <string>Show engine's standard output in a window</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <spacer name="horizontalSpacer">

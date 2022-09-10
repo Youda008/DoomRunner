@@ -28,16 +28,15 @@
 
 SetupDialog::SetupDialog(
 	QWidget * parent,
-	bool useAbsolutePaths, const QDir & baseDir,
+	const QDir & baseDir,
 	const QList< Engine > & engineList,
 	const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
 	const MapSettings & mapSettings, const ModSettings & modSettings,
-	OptionsStorage optsStorage,
-	bool closeOnLaunch
+	const LauncherOptions & opts
 )
 :
 	QDialog( parent ),
-	pathContext( useAbsolutePaths, baseDir ),
+	pathContext( opts.useAbsolutePaths, baseDir ),
 	engineModel( engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
 	),
@@ -47,8 +46,7 @@ SetupDialog::SetupDialog(
 	iwadSettings( iwadSettings ),
 	mapSettings( mapSettings ),
 	modSettings( modSettings ),
-	optsStorage( optsStorage ),
-	closeOnLaunch( closeOnLaunch )
+	opts( opts )
 {
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
@@ -70,13 +68,14 @@ SetupDialog::SetupDialog(
 	ui->mapDirLine->setText( mapSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
 	ui->absolutePathsChkBox->setChecked( pathContext.usingAbsolutePaths() );
-	if (optsStorage == DONT_STORE)
+	if (opts.launchOptsStorage == DONT_STORE)
 		ui->optsStorage_none->click();
-	else if (optsStorage == STORE_GLOBALLY)
+	else if (opts.launchOptsStorage == STORE_GLOBALLY)
 		ui->optsStorage_global->click();
-	else if (optsStorage == STORE_TO_PRESET)
+	else if (opts.launchOptsStorage == STORE_TO_PRESET)
 		ui->optsStorage_preset->click();
-	ui->closeOnLaunchChkBox->setChecked( closeOnLaunch );
+	ui->closeOnLaunchChkBox->setChecked( opts.closeOnLaunch );
+	ui->showEngineOutputChkBox->setChecked( opts.showEngineOutput );
 
 	// setup buttons
 
@@ -110,6 +109,7 @@ SetupDialog::SetupDialog(
 	connect( ui->optsStorage_preset, &QRadioButton::clicked, this, &thisClass::optsStorage_preset );
 
 	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::toggleCloseOnLaunch );
+	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &thisClass::toggleShowEngineOutput );
 
 	connect( ui->doneBtn, &QPushButton::clicked, this, &thisClass::accept );
 
@@ -385,7 +385,9 @@ void SetupDialog::updateIWADsFromDir()
 
 void SetupDialog::toggleAbsolutePaths( bool checked )
 {
-	pathContext.toggleAbsolutePaths( checked );
+	opts.useAbsolutePaths = checked;
+
+	pathContext.toggleAbsolutePaths( opts.useAbsolutePaths );
 
 	for (Engine & engine : engineModel)
 	{
@@ -411,25 +413,37 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 
 void SetupDialog::optsStorage_none()
 {
-	optsStorage = DONT_STORE;
+	opts.launchOptsStorage = DONT_STORE;
 }
 
 void SetupDialog::optsStorage_global()
 {
-	optsStorage = STORE_GLOBALLY;
+	opts.launchOptsStorage = STORE_GLOBALLY;
 }
 
 void SetupDialog::optsStorage_preset()
 {
-	optsStorage = STORE_TO_PRESET;
+	opts.launchOptsStorage = STORE_TO_PRESET;
 }
 
 void SetupDialog::toggleCloseOnLaunch( bool checked )
 {
-	closeOnLaunch = checked;
+	opts.closeOnLaunch = checked;
+
+	if (checked && opts.showEngineOutput)
+	{
+		// both options cannot be enabled, that would make no sense
+		ui->showEngineOutputChkBox->setChecked( false );
+	}
 }
 
-void SetupDialog::closeDialog()
+void SetupDialog::toggleShowEngineOutput( bool checked )
 {
-	reject();
+	opts.showEngineOutput = checked;
+
+	if (checked && opts.closeOnLaunch)
+	{
+		// both options cannot be enabled, that would make no sense
+		ui->closeOnLaunchChkBox->setChecked( false );
+	}
 }

@@ -22,6 +22,26 @@ namespace Ui {
 
 //======================================================================================================================
 
+/// Possible results of the attempt to run a process after the dialog exits.
+enum class ProcessStatus
+{
+	NotStarted,
+	Starting,
+	Running,
+	FinishedSuccessfully,
+	ExitedWithError,
+	FailedToStart,
+	Crashed,
+	Quitting,
+	Terminated,
+	UnknownError,
+};
+
+const char * toString( ProcessStatus status );
+
+
+//======================================================================================================================
+
 class ProcessOutputWindow : public QDialog {
 
 	Q_OBJECT
@@ -36,47 +56,39 @@ class ProcessOutputWindow : public QDialog {
 	/// Starts a process and shows a window displaying its console output until the process finishes.
 	/** The process is started asynchronously, but this dialog will keep running until it quits and this function
 	  * will return when the dialog quits. Any errors with starting the process are handled by this function. */
-	void runProcess( const QString & executable, const QStringList & arguments );
-
-	static constexpr int TODO = 0;
+	ProcessStatus runProcess( const QString & executable, const QStringList & arguments );
 
  private slots:
 
+	void processStarted();
 	void readProcessOutput();
-	void onErrorOccurred( QProcess::ProcessError error );
-	void onProcessFinished( int exitCode, QProcess::ExitStatus exitStatus );
-	void onDialogClose( int result );
+	void processFinished( int exitCode, QProcess::ExitStatus exitStatus );
+	void errorOccurred( QProcess::ProcessError error );
 
 	void terminateClicked( bool checked );
+
+	// closeEvent() is not called when the dialog is closed, we have to connect this to the finished() signal
+	void dialogClosed( int result );
 
  private: // methods
 
 	void closeDialog( int resultCode );
 
+	void setStatus( ProcessStatus status, const QString & detail = "" );
+
  private: // members
 
 	Ui::ProcessOutputWindow * ui;
-	QPushButton * terminateBtn;  ///< shortcut to the list of ui->buttonBox
+	QPushButton * terminateBtn;  ///< shortcut to the Terminate button in the list of ui->buttonBox
+	QPushButton * closeBtn;      ///< shortcut to the Close button in the list of ui->buttonBox
 
 	QProcess process;
 
 	QString executableName;
 
+	ProcessStatus status;
 	bool windowIsClosing;
-	bool errorOccured;
-	bool terminated;
 
-};
-
-/// Possible return values of the QDialog::result() after the dialog finishes.
-struct ProcessStatus
-{
-	static constexpr int Success = 0;
-	static constexpr int FailedToStart = 0;
-	static constexpr int Crashed = 0;
-	static constexpr int ExitedWithError = 0;
-	static constexpr int Terminated = 0;
-	static constexpr int UnknownError = 0;
 };
 
 

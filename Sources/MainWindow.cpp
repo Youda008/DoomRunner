@@ -53,12 +53,6 @@
 
 static constexpr char defaultOptionsFile [] = "options.json";
 
-#ifdef _WIN32
-	static const bool useAbsolutePathsByDefault = false;
-#else
-	static const bool useAbsolutePathsByDefault = true;
-#endif
-
 
 //======================================================================================================================
 //  local helpers
@@ -104,15 +98,15 @@ static void throwIfInvalid( bool doVerify, const QString & path, const QString &
 }
 
 #define STORE_OPTION( structElem, value ) \
-	if (optsStorage == STORE_GLOBALLY) \
+	if (opts.launchOptsStorage == STORE_GLOBALLY) \
 	{\
-		opts.structElem = value; \
+		launchOpts.structElem = value; \
 	}\
-	else if (optsStorage == STORE_TO_PRESET) \
+	else if (opts.launchOptsStorage == STORE_TO_PRESET) \
 	{\
 		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView ); \
 		if (selectedPresetIdx >= 0) \
-			presetModel[ selectedPresetIdx ].opts.structElem = value; \
+			presetModel[ selectedPresetIdx ].launchOpts.structElem = value; \
 	}
 
 
@@ -127,9 +121,6 @@ MainWindow::MainWindow()
 	disableSelectionCallbacks( false ),
 	compatOptsCmdArgs(),
 	pathContext( useAbsolutePathsByDefault, QApplication::applicationDirPath() ), // all relative paths will internally be stored relative to the application's dir
-	checkForUpdates( true ),
-	optsStorage( STORE_GLOBALLY ),
-	closeOnLaunch( false ),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
@@ -162,9 +153,7 @@ MainWindow::MainWindow()
 	},
 	presetModel(
 		/*makeDisplayString*/ []( const Preset & preset ) { return preset.name; }
-	),
-	opts {},
-	opts2 {}
+	)
 {
 	ui = new Ui::MainWindow;
 	ui->setupUi( this );
@@ -453,14 +442,14 @@ void MainWindow::onWindowShown()
 		selectAndSetCurrentByIndex( ui->presetListView, defaultPresetIdx );
 	}
 
-	if (checkForUpdates)
+	if (opts.checkForUpdates)
 	{
 		updateChecker.checkForUpdates_async(
 			/* result callback */[ this ]( UpdateChecker::Result result, QString /*errorDetail*/, QStringList versionInfo )
 			{
 				if (result == UpdateChecker::UPDATE_AVAILABLE)
 				{
-					checkForUpdates = showUpdateNotification( this, versionInfo, /*checkbox*/true );
+					opts.checkForUpdates = showUpdateNotification( this, versionInfo, /*checkbox*/true );
 				}
 				// silently ignore the rest of the results, since nobody asked for anything
 			}
@@ -476,8 +465,6 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 	QMainWindow::timerEvent( event );
 
 	tickCount++;
-
-	ui->mapDirView->resizeColumnToContents(0);
 
  #ifdef QT_DEBUG
 	constexpr uint dirUpdateDelay = 8;
@@ -520,11 +507,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::runAboutDialog()
 {
-	AboutDialog dialog( this, checkForUpdates );
+	AboutDialog dialog( this, opts.checkForUpdates );
 
 	dialog.exec();
 
-	checkForUpdates = dialog.checkForUpdates;
+	opts.checkForUpdates = dialog.checkForUpdates;
 }
 
 void MainWindow::runSetupDialog()
@@ -537,15 +524,13 @@ void MainWindow::runSetupDialog()
 
 	SetupDialog dialog(
 		this,
-		pathContext.usingAbsolutePaths(),
 		pathContext.baseDir(),
 		engineModel.list(),
 		iwadModel.list(),
 		iwadSettings,
 		mapSettings,
 		modSettings,
-		optsStorage,
-		closeOnLaunch
+		opts
 	);
 
 	int code = dialog.exec();
@@ -567,16 +552,15 @@ void MainWindow::runSetupDialog()
 		iwadModel.startCompleteUpdate();
 
 		// update our data from the dialog
-		pathContext.toggleAbsolutePaths( dialog.pathContext.usingAbsolutePaths() );
 		engineModel.updateList( dialog.engineModel.list() );
 		iwadModel.updateList( dialog.iwadModel.list() );
 		iwadSettings = dialog.iwadSettings;
 		mapSettings = dialog.mapSettings;
 		modSettings = dialog.modSettings;
-		optsStorage = dialog.optsStorage;
-		closeOnLaunch = dialog.closeOnLaunch;
+		opts = dialog.opts;
 		// update all stored paths
-		toggleAbsolutePaths( pathContext.usingAbsolutePaths() );
+		pathContext.toggleAbsolutePaths( opts.useAbsolutePaths );
+		toggleAbsolutePaths( opts.useAbsolutePaths );
 		currentEngine = pathContext.convertPath( currentEngine );
 		currentIWAD = pathContext.convertPath( currentIWAD );
 		selectedIWAD = pathContext.convertPath( selectedIWAD );
@@ -598,9 +582,9 @@ void MainWindow::runSetupDialog()
 void MainWindow::runGameOptsDialog()
 {
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	GameplayOptions * gameOpts = (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
-	                               ? &presetModel[ selectedPresetIdx ].opts.gameOpts
-	                               : &opts.gameOpts;
+	GameplayOptions * gameOpts = (opts.launchOptsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
+	                               ? &presetModel[ selectedPresetIdx ].launchOpts.gameOpts
+	                               : &launchOpts.gameOpts;
 
 	GameOptsDialog dialog( this, *gameOpts );
 
@@ -617,9 +601,9 @@ void MainWindow::runGameOptsDialog()
 void MainWindow::runCompatOptsDialog()
 {
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	CompatibilityOptions * compatOpts = (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
-	                                      ? &presetModel[ selectedPresetIdx ].opts.compatOpts
-	                                      : &opts.compatOpts;
+	CompatibilityOptions * compatOpts = (opts.launchOptsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
+	                                      ? &presetModel[ selectedPresetIdx ].launchOpts.compatOpts
+	                                      : &launchOpts.compatOpts;
 
 	CompatOptsDialog dialog( this, *compatOpts );
 
@@ -630,7 +614,7 @@ void MainWindow::runCompatOptsDialog()
 	{
 		STORE_OPTION( compatOpts, dialog.compatOpts )
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
-		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
+		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( launchOpts.compatOpts );
 		updateLaunchCommand();
 	}
 }
@@ -836,9 +820,9 @@ void MainWindow::restorePreset( int presetIdx )
 	}
 
 	// restore launch options
-	if (optsStorage == STORE_TO_PRESET)
+	if (opts.launchOptsStorage == STORE_TO_PRESET)
 	{
-		restoreLaunchOptions( presetRef.opts );
+		restoreLaunchOptions( presetRef.launchOpts );
 	}
 
 	// restore additional command line arguments
@@ -1766,42 +1750,42 @@ void MainWindow::changeFragLimit( int fragLimit )
 
 void MainWindow::selectMonitor( int index )
 {
-	opts2.monitorIdx = index;
+	outputOpts.monitorIdx = index;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionX( const QString & xStr )
 {
-	opts2.resolutionX = xStr.toUInt();
+	outputOpts.resolutionX = xStr.toUInt();
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionY( const QString & yStr )
 {
-	opts2.resolutionY = yStr.toUInt();
+	outputOpts.resolutionY = yStr.toUInt();
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoSound( bool checked )
 {
-	opts2.noSound = checked;
+	outputOpts.noSound = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoSFX( bool checked )
 {
-	opts2.noSFX = checked;
+	outputOpts.noSFX = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoMusic( bool checked )
 {
-	opts2.noMusic = checked;
+	outputOpts.noMusic = checked;
 
 	updateLaunchCommand();
 }
@@ -2081,13 +2065,7 @@ void MainWindow::saveOptions( const QString & filePath )
 		jsRoot["geometry"] = jsGeometry;
 	}
 
-	jsRoot["check_for_updates"] = checkForUpdates;
-
-	jsRoot["use_absolute_paths"] = pathContext.usingAbsolutePaths();
-
-	jsRoot["options_storage"] = int( optsStorage );
-
-	jsRoot["close_on_launch"] = closeOnLaunch;
+	serialize( jsRoot, opts );
 
 	{
 		QJsonObject jsEngines;
@@ -2114,7 +2092,7 @@ void MainWindow::saveOptions( const QString & filePath )
 		QJsonArray jsPresetArray;
 		for (const Preset & preset : presetModel)
 		{
-			QJsonObject jsPreset = serialize( preset, optsStorage == STORE_TO_PRESET );
+			QJsonObject jsPreset = serialize( preset, opts.launchOptsStorage == STORE_TO_PRESET );
 			jsPresetArray.append( jsPreset );
 		}
 		jsRoot["presets"] = jsPresetArray;
@@ -2122,12 +2100,12 @@ void MainWindow::saveOptions( const QString & filePath )
 
 	jsRoot["additional_args"] = ui->globalCmdArgsLine->text();
 
-	if (optsStorage == STORE_GLOBALLY)
+	if (opts.launchOptsStorage == STORE_GLOBALLY)
 	{
-		jsRoot["launch_options"] = serialize( opts );
+		jsRoot["launch_options"] = serialize( launchOpts );
 	}
 
-	jsRoot["output_options"] = serialize( opts2 );
+	jsRoot["output_options"] = serialize( outputOpts );
 
 	int presetIdx = getSelectedItemIndex( ui->presetListView );
 	jsRoot["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
@@ -2187,14 +2165,9 @@ void MainWindow::loadOptions( const QString & filePath )
 	// preset must be deselected first, so that the cleared selections doesn't save in the selected preset
 	deselectAllAndUnsetCurrent( ui->presetListView );
 
-	checkForUpdates = jsRoot.getBool( "check_for_updates", true );
-
-	pathContext.toggleAbsolutePaths( jsRoot.getBool( "use_absolute_paths", false ) );
-
 	// this must be loaded early, because we need to know whether to attempt loading the opts from the presets
-	optsStorage = jsRoot.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
-
-	closeOnLaunch = jsRoot.getBool( "close_on_launch", false );
+	deserialize( jsRoot, opts );
+	pathContext.toggleAbsolutePaths( opts.useAbsolutePaths );
 
 	if (JsonObjectCtx jsEngines = jsRoot.getObject( "engines" ))
 	{
@@ -2306,7 +2279,7 @@ void MainWindow::loadOptions( const QString & filePath )
 				continue;
 
 			Preset preset;
-			deserialize( jsPreset, preset, optsStorage == STORE_TO_PRESET );
+			deserialize( jsPreset, preset, opts.launchOptsStorage == STORE_TO_PRESET );
 
 			presetModel.append( std::move( preset ) );
 		}
@@ -2317,21 +2290,21 @@ void MainWindow::loadOptions( const QString & filePath )
 	ui->globalCmdArgsLine->setText( jsRoot.getString( "additional_args" ) );
 
 	// launch options
-	if (optsStorage == STORE_GLOBALLY)
+	if (opts.launchOptsStorage == STORE_GLOBALLY)
 	{
 		if (JsonObjectCtx jsOptions = jsRoot.getObject( "launch_options" ))
 		{
-			deserialize( jsOptions, opts );
+			deserialize( jsOptions, launchOpts );
 		}
 	}
 
 	if (JsonObjectCtx jsOptions = jsRoot.getObject( "output_options" ))
 	{
-		deserialize( jsOptions, opts2 );
+		deserialize( jsOptions, outputOpts );
 	}
 
 	// make sure all paths loaded from JSON are stored in correct format
-	toggleAbsolutePaths( pathContext.usingAbsolutePaths() );
+	toggleAbsolutePaths( opts.useAbsolutePaths );
 
 	optionsCorrupted = false;
 
@@ -2363,12 +2336,12 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	// this must be done after the lists are already updated because we want to select existing items in combo boxes,
 	//               and after preset loading because the preset will select IWAD which will fill the map combo box
-	if (optsStorage == STORE_GLOBALLY)
+	if (opts.launchOptsStorage == STORE_GLOBALLY)
 	{
-		restoreLaunchOptions( opts );
+		restoreLaunchOptions( launchOpts );
 	}
 
-	restoreOutputOptions( opts2 );
+	restoreOutputOptions( outputOpts );
 
 	updateLaunchCommand();
 }
@@ -2605,7 +2578,8 @@ QStringList MainWindow::generateLaunchCommand( const QString & baseDir, bool ver
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.
 	#ifdef _WIN32
-		command << "-stdout";
+		if (opts.showEngineOutput)
+			command << "-stdout";
 	#endif
 
 		const int configIdx = ui->configCmbBox->currentIndex();
@@ -2724,10 +2698,10 @@ QStringList MainWindow::generateLaunchCommand( const QString & baseDir, bool ver
 			command << "-fast";
 		if (ui->monstersRespawnChkBox->isChecked())
 			command << "-respawn";
-		if (opts.gameOpts.flags1 != 0)
-			command << "+dmflags" << QString::number( opts.gameOpts.flags1 );
-		if (opts.gameOpts.flags2 != 0)
-			command << "+dmflags2" << QString::number( opts.gameOpts.flags2 );
+		if (launchOpts.gameOpts.flags1 != 0)
+			command << "+dmflags" << QString::number( launchOpts.gameOpts.flags1 );
+		if (launchOpts.gameOpts.flags2 != 0)
+			command << "+dmflags2" << QString::number( launchOpts.gameOpts.flags2 );
 		if (!compatOptsCmdArgs.isEmpty())
 			command << compatOptsCmdArgs;
 	}
@@ -2818,20 +2792,27 @@ void MainWindow::launch()
 	// at the end of function restore the previous current dir
 	auto guard = atScopeEndDo( [&](){ QDir::setCurrent( currentDir ); } );
 
-	if (closeOnLaunch)
+	if (opts.showEngineOutput)
 	{
-		bool success = QProcess::startDetached( executable, arguments );
+		ProcessOutputWindow processWindow( this );
+		processWindow.runProcess( executable, arguments );
+		//int resultCode = processWindow.result();
+	}
+	else
+	{
+		// We must use this deprecated method with manually constructed command because
+		// retarded Windows implementation of Qt surrounds all arguments with additional quotes, which is unwanted
+		// because we already have them quoted, but it can't be turned off.
+		bool success = QProcess::startDetached( executable % ' ' % arguments.join(' ') );
 		if (!success)
 		{
 			QMessageBox::warning( this, "Launch error", "Failed to execute launch command." );
 			return;
 		}
-		QApplication::quit();
-	}
-	else
-	{
-		ProcessOutputWindow processWindow( this );
-		processWindow.runProcess( executable, arguments );
-		//int resultCode = processWindow.result();
+
+		if (opts.closeOnLaunch)
+		{
+			QApplication::quit();
+		}
 	}
 }

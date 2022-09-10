@@ -224,7 +224,7 @@ struct Preset : public EditableListModelItem
 	QList< QString > selectedMapPacks;
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 	QString cmdArgs;
-	LaunchOptions opts;
+	LaunchOptions launchOpts;
 
 	// requirements of EditableListModel
 	const QString & getEditString() const { return name; }
@@ -233,6 +233,22 @@ struct Preset : public EditableListModelItem
 	Preset() {}
 	Preset( const QString & name ) : name( name ) {}
 	Preset( const QFileInfo & ) {}  // dummy, it's required by the EditableListModel template, but isn't actually used
+};
+
+#ifdef _WIN32
+	static const bool useAbsolutePathsByDefault = false;
+#else
+	static const bool useAbsolutePathsByDefault = true;
+#endif
+
+/// Additional launcher settings
+struct LauncherOptions
+{
+	bool checkForUpdates = true;
+	bool useAbsolutePaths = useAbsolutePathsByDefault;
+	OptionsStorage launchOptsStorage = STORE_GLOBALLY;
+	bool closeOnLaunch = false;
+	bool showEngineOutput = false;
 };
 
 
@@ -248,6 +264,7 @@ QJsonObject serialize( const ModSettings & modSettings );
 QJsonObject serialize( const LaunchOptions & options );
 QJsonObject serialize( const OutputOptions & options );
 QJsonObject serialize( const Preset & preset, bool storeOpts );
+void serialize( QJsonObject & jsOptions, const LauncherOptions & options );
 
 template< typename Elem >
 QJsonArray serializeList( const QList< Elem > & list )
@@ -260,15 +277,16 @@ QJsonArray serializeList( const QList< Elem > & list )
 	return jsArray;
 }
 
-void deserialize( JsonObjectCtx & jsEngine, Engine & engine );
-void deserialize( JsonObjectCtx & jsIWAD, IWAD & iwad );
-void deserialize( JsonObjectCtx & jsMod, Mod & mod );
-void deserialize( JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings );
-void deserialize( JsonObjectCtx & jsMaps, MapSettings & mapSettings );
-void deserialize( JsonObjectCtx & jsMods, ModSettings & modSettings );
-void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & options );
-void deserialize( JsonObjectCtx & jsOptions, OutputOptions & options );
-void deserialize( JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts );
+void deserialize( const JsonObjectCtx & jsEngine, Engine & engine );
+void deserialize( const JsonObjectCtx & jsIWAD, IWAD & iwad );
+void deserialize( const JsonObjectCtx & jsMod, Mod & mod );
+void deserialize( const JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings );
+void deserialize( const JsonObjectCtx & jsMaps, MapSettings & mapSettings );
+void deserialize( const JsonObjectCtx & jsMods, ModSettings & modSettings );
+void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & options );
+void deserialize( const JsonObjectCtx & jsOptions, OutputOptions & options );
+void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts );
+void deserialize( const JsonObjectCtx & jsOptions, LauncherOptions & options );
 
 
 #endif // USER_DATA_INCLUDED

@@ -38,12 +38,11 @@ class SetupDialog : public QDialog {
 
 	explicit SetupDialog(
 		QWidget * parent,
-		bool useAbsolutePaths, const QDir & baseDir,
+		const QDir & baseDir,
 		const QList< Engine > & engineList,
 		const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
 		const MapSettings & mapSettings, const ModSettings & modSettings,
-		OptionsStorage optsStorage,
-		bool closeOnLaunch
+		const LauncherOptions & opts
 	);
 	virtual ~SetupDialog() override;
 
@@ -87,8 +86,7 @@ class SetupDialog : public QDialog {
 	void optsStorage_preset();
 
 	void toggleCloseOnLaunch( bool checked );
-
-	void closeDialog();
+	void toggleShowEngineOutput( bool checked );
 
  private: // methods
 
@@ -119,9 +117,7 @@ class SetupDialog : public QDialog {
 
 	ModSettings modSettings;
 
-	OptionsStorage optsStorage;
-
-	bool closeOnLaunch;
+	LauncherOptions opts;
 
 };
 

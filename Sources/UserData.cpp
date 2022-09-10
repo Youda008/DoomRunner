@@ -35,7 +35,7 @@ QJsonObject serialize( const Engine & engine )
 	return jsEngine;
 }
 
-void deserialize( JsonObjectCtx & jsEngine, Engine & engine )
+void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 {
 	engine.isSeparator = jsEngine.getBool( "separator", false, false );
 	if (engine.isSeparator)
@@ -68,7 +68,7 @@ QJsonObject serialize( const IWAD & iwad )
 	return jsIWAD;
 }
 
-void deserialize( JsonObjectCtx & jsEngine, IWAD & iwad )
+void deserialize( const JsonObjectCtx & jsEngine, IWAD & iwad )
 {
 	iwad.isSeparator = jsEngine.getBool( "separator", false, false );
 	if (iwad.isSeparator)
@@ -100,7 +100,7 @@ QJsonObject serialize( const Mod & mod )
 	return jsMod;
 }
 
-void deserialize( JsonObjectCtx & jsMod, Mod & mod )
+void deserialize( const JsonObjectCtx & jsMod, Mod & mod )
 {
 	mod.isSeparator = jsMod.getBool( "separator", false, false );
 	if (mod.isSeparator)
@@ -126,7 +126,7 @@ QJsonObject serialize( const IwadSettings & iwadSettings )
 	return jsIWADs;
 }
 
-void deserialize( JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings )
+void deserialize( const JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings )
 {
 	iwadSettings.updateFromDir = jsIWADs.getBool( "auto_update", false );
 	iwadSettings.dir = jsIWADs.getString( "directory" );
@@ -142,7 +142,7 @@ QJsonObject serialize( const MapSettings & mapSettings )
 	return jsMaps;
 }
 
-void deserialize( JsonObjectCtx & jsMaps, MapSettings & mapSettings )
+void deserialize( const JsonObjectCtx & jsMaps, MapSettings & mapSettings )
 {
 	mapSettings.dir = jsMaps.getString( "directory" );
 }
@@ -156,7 +156,7 @@ QJsonObject serialize( const ModSettings & modSettings )
 	return jsMods;
 }
 
-void deserialize( JsonObjectCtx & jsMods, ModSettings & modSettings )
+void deserialize( const JsonObjectCtx & jsMods, ModSettings & modSettings )
 {
 	modSettings.dir = jsMods.getString( "directory" );
 }
@@ -203,7 +203,7 @@ QJsonObject serialize( const LaunchOptions & opts )
 	return jsOptions;
 }
 
-void deserialize( JsonObjectCtx & jsOptions, LaunchOptions & opts )
+void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & opts )
 {
 	// launch mode
 	opts.mode = jsOptions.getEnum< LaunchMode >( "launch_mode", opts.mode );
@@ -258,7 +258,7 @@ QJsonObject serialize( const OutputOptions & opts )
 	return jsOptions;
 }
 
-void deserialize( JsonObjectCtx & jsOptions, OutputOptions & opts )
+void deserialize( const JsonObjectCtx & jsOptions, OutputOptions & opts )
 {
 	// video
 	opts.monitorIdx = jsOptions.getInt( "monitor_idx", opts.monitorIdx );
@@ -298,7 +298,7 @@ QJsonObject serialize( const Preset & preset, bool storeOpts )
 
 		if (storeOpts)
 		{
-			jsPreset["launch_options"] = serialize( preset.opts );
+			jsPreset["launch_options"] = serialize( preset.launchOpts );
 		}
 
 		jsPreset["additional_args"] = preset.cmdArgs;
@@ -307,7 +307,7 @@ QJsonObject serialize( const Preset & preset, bool storeOpts )
 	return jsPreset;
 }
 
-void deserialize( JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts )
+void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts )
 {
 	preset.isSeparator = jsPreset.getBool( "separator", false, false );
 	if (preset.isSeparator)
@@ -357,10 +357,29 @@ void deserialize( JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts )
 		{
 			if (JsonObjectCtx jsOptions = jsPreset.getObject( "launch_options" ))
 			{
-				deserialize( jsOptions, preset.opts );
+				deserialize( jsOptions, preset.launchOpts );
 			}
 		}
 
 		preset.cmdArgs = jsPreset.getString( "additional_args" );
 	}
+}
+
+// We want to serialize this into an existing JSON object instead of its own one, for compatibility reasons.
+void serialize( QJsonObject & jsOptions, const LauncherOptions & opts )
+{
+	jsOptions["check_for_updates"] = opts.checkForUpdates;
+	jsOptions["use_absolute_paths"] = opts.useAbsolutePaths;
+	jsOptions["options_storage"] = int( opts.launchOptsStorage );
+	jsOptions["close_on_launch"] = opts.closeOnLaunch;
+	jsOptions["show_engine_output"] = opts.showEngineOutput;
+}
+
+void deserialize( const JsonObjectCtx & jsOptions, LauncherOptions & opts )
+{
+	opts.checkForUpdates = jsOptions.getBool( "check_for_updates", true, DontShowError );
+	opts.useAbsolutePaths = jsOptions.getBool( "use_absolute_paths", useAbsolutePathsByDefault );
+	opts.launchOptsStorage = jsOptions.getEnum< OptionsStorage >( "options_storage", STORE_GLOBALLY );
+	opts.closeOnLaunch = jsOptions.getBool( "close_on_launch", false, DontShowError );
+	opts.showEngineOutput = jsOptions.getBool( "show_engine_output", false, DontShowError );
 }

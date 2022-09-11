@@ -137,6 +137,8 @@ class MainWindow : public QMainWindow {
 
  private: // methods
 
+	LaunchOptions & activeLaunchOptions();
+
 	void setupPresetList();
 	void setupIWADList();
 	void setupMapPackList();

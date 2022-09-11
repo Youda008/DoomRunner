@@ -12,7 +12,7 @@
 #include "Common.hpp"
 
 #include "LangUtils.hpp"
-#include "FileSystemUtils.hpp"
+#include "FileSystemUtils.hpp"  // PathContext
 
 #include <QAbstractListModel>
 #include <QList>

@@ -8,10 +8,10 @@
 #include "DoomUtils.hpp"
 
 #include "LangUtils.hpp"
+#include "FileSystemUtils.hpp"
 
 #include <QVector>
 #include <QHash>
-#include <QString>
 #include <QFileInfo>
 #include <QFile>
 #include <QTextStream>
@@ -53,40 +53,6 @@ QStringList getModFileSuffixes()
 	for (const QString & suffix : dukeSuffixes)
 		suffixes.append( "*."+suffix );
 	return suffixes;
-}
-
-
-//======================================================================================================================
-//  properties and capabilities of different engines
-
-static const EngineProperties defaultEngineProperties =
-	{ "-savedir", 0 };
-
-static const QHash< QString, EngineProperties > engineProperties =
-{
-	{ "zdoom",          { "-savedir", 1 } },
-	{ "lzdoom",         { "-savedir", 0 } },
-	{ "gzdoom",         { "-savedir", 0 } },
-	{ "qzdoom",         { "-savedir", 0 } },
-	{ "zandronum",      { "-savedir", 0 } },
-	{ "boom",           { "-save", 0 } },
-	{ "prboom",         { "-save", 0 } },
-	{ "prboom-plus",    { "-save", 0 } },
-	{ "glboom",         { "-save", 0 } },
-	{ "dsda-doom",      { "-save", 0 } },
-	{ "doomretro",      { "-save", 0 } },
-	{ "eternity",       { "-save", 0 } },
-};
-
-const EngineProperties & getEngineProperties( const QString & enginePath )
-{
-	QString executableName = QFileInfo( enginePath ).baseName();
-
-	auto iter = engineProperties.find( executableName );
-	if (iter != engineProperties.end())
-		return *iter;
-	else
-		return defaultEngineProperties;
 }
 
 
@@ -215,8 +181,6 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 	wadInfo.successfullyRead = true;
 	return wadInfo;
 }
-
-
 
 const WadInfo & getCachedWadInfo( const QString & filePath )
 {

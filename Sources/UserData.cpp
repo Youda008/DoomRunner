@@ -30,6 +30,7 @@ QJsonObject serialize( const Engine & engine )
 		jsEngine["name"] = engine.name;
 		jsEngine["path"] = engine.path;
 		jsEngine["config_dir"] = engine.configDir;
+		jsEngine["family"] = familyToStr( engine.family );
 	}
 
 	return jsEngine;
@@ -46,7 +47,10 @@ void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 	{
 		engine.name = jsEngine.getString( "name", "<missing name>" );
 		engine.path = jsEngine.getString( "path" );
-		engine.configDir = jsEngine.getString( "config_dir", QFileInfo( engine.path ).dir().path() );
+		engine.configDir = jsEngine.getString( "config_dir", getDirOfFile( engine.path ) );
+		engine.family = familyFromStr( jsEngine.getString( "family", "", DontShowError ) );
+		if (engine.family == EngineFamily::_EnumEnd)
+			engine.family = guessEngineFamily( getFileBasenameFromPath( engine.path ) );
 	}
 }
 

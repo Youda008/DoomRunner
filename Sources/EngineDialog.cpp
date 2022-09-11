@@ -12,6 +12,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QTimer>
+#include <QMessageBox>
 
 
 //======================================================================================================================
@@ -25,9 +26,18 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	ui = new Ui::EngineDialog;
 	ui->setupUi(this);
 
+	// automatically initialize family combox fox from existing engine families
+	for (size_t familyIdx = 0; familyIdx < size_t(EngineFamily::_EnumEnd); ++familyIdx)
+	{
+		ui->familyCmbBox->addItem( familyToStr( EngineFamily(familyIdx) ) );
+	}
+	ui->familyCmbBox->setCurrentIndex( 0 );  // set this right at the start so that index is never -1
+
+	// fill existing engine properties
 	ui->nameLine->setText( engine.name );
 	ui->pathLine->setText( engine.path );
 	ui->configDirLine->setText( engine.configDir );
+	ui->familyCmbBox->setCurrentIndex( int(engine.family) );
 
 	connect( ui->browseEngineBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
 	connect( ui->browseConfigsBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
@@ -35,6 +45,8 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	connect( ui->nameLine, &QLineEdit::textChanged, this, &thisClass::updateName );
 	connect( ui->pathLine, &QLineEdit::textChanged, this, &thisClass::updatePath );
 	connect( ui->configDirLine, &QLineEdit::textChanged, this, &thisClass::updateConfigDir );
+
+	connect( ui->familyCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectFamily );
 
 	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::accept );
 	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::reject );
@@ -106,6 +118,11 @@ void EngineDialog::browseEngine()
 
 	if (ui->configDirLine->text().isEmpty())  // don't overwrite existing config dir
 		ui->configDirLine->setText( getConfigDirOfEngine( enginePath ) );
+
+	// guess the engine family based on executable's name
+	QString executableName = getFileBasenameFromPath( enginePath );
+	EngineFamily guessedFamily = guessEngineFamily( executableName );
+	ui->familyCmbBox->setCurrentIndex( int(guessedFamily) );
 }
 
 void EngineDialog::browseConfigDir()
@@ -134,4 +151,15 @@ void EngineDialog::updatePath( const QString & text )
 void EngineDialog::updateConfigDir( const QString & text )
 {
 	engine.configDir = text;
+}
+
+void EngineDialog::selectFamily( int familyIdx )
+{
+	if (familyIdx < 0 || familyIdx >= int(EngineFamily::_EnumEnd))
+	{
+		QMessageBox::critical( this, "Invalid engine family index",
+			"Family combo-box index is out of bounds. This shouldn't be possible, please create an issue on Github page." );
+	}
+
+	engine.family = EngineFamily( familyIdx );
 }

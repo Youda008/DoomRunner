@@ -22,6 +22,7 @@
 #include "FileSystemUtils.hpp"
 #include "OSUtils.hpp"
 #include "DoomUtils.hpp"
+#include "EngineProperties.hpp"
 #include "UpdateChecker.hpp"
 #include "Version.hpp"
 
@@ -2629,7 +2630,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	}
 
 	const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
-	const EngineProperties & engineProperties = getEngineProperties( selectedEngine.path );
+	const QString executableName = getFileBasenameFromPath( selectedEngine.path );
+	const EngineProperties & engineProperties = getEngineProperties( selectedEngine.family );
 
 	{
 		throwIfInvalid( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
@@ -2715,7 +2717,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	if (ui->monitorCmbBox->currentIndex() > 0)
 	{
 		int monitorIndex = ui->monitorCmbBox->currentIndex() - 1;  // the first item is a placeholder for leaving it default
-		int engineMonitorIndex = engineProperties.firstMonitorIndex + monitorIndex;  // some engines index monitors from 1 and others from 0
+		int engineMonitorIndex = getFirstMonitorIndex( executableName ) + monitorIndex;  // some engines index monitors from 1 and others from 0
 		cmd.arguments << "+vid_adapter" << QString::number( engineMonitorIndex );
 	}
 	if (!ui->resolutionXLine->text().isEmpty())

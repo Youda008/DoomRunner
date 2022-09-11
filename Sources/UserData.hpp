@@ -13,6 +13,7 @@
 
 #include "ListModel.hpp"  // ReadOnlyListModelItem, EditableListModelItem
 #include "JsonUtils.hpp"
+#include "EngineProperties.hpp"  // EngineFamily
 
 #include <QString>
 #include <QVector>
@@ -32,6 +33,7 @@ struct Engine : public EditableListModelItem
 	QString name;        ///< user defined engine name
 	QString path;        ///< path to the engine's executable
 	QString configDir;   ///< directory with engine's .ini files
+	EngineFamily family = EngineFamily::ZDoom;  ///< automatically detected, but user-selectable engine family
 
 	Engine() {}
 	Engine( const QFileInfo & file )
@@ -79,9 +81,9 @@ struct Mod : public EditableListModelItem
 
 struct IwadSettings
 {
-	QString dir;          ///< directory to update IWAD list from (value returned by SetupDialog)
-	bool updateFromDir;   ///< whether the IWAD list should be periodically updated from a directory
-	bool searchSubdirs;   ///< whether to search for IWADs recursivelly in subdirectories
+	QString dir;                  ///< directory to update IWAD list from (value returned by SetupDialog)
+	bool updateFromDir = false;   ///< whether the IWAD list should be periodically updated from a directory
+	bool searchSubdirs = false;   ///< whether to search for IWADs recursivelly in subdirectories
 };
 
 struct MapSettings
@@ -205,9 +207,9 @@ struct LaunchOptions
 struct OutputOptions
 {
 	// video
-	int monitorIdx;
-	uint resolutionX;
-	uint resolutionY;
+	int monitorIdx = 0;
+	uint resolutionX = 0;
+	uint resolutionY = 0;
 
 	// audio
 	bool noSound = false;

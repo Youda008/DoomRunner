@@ -12,9 +12,9 @@
 #include "Common.hpp"
 
 #include <QVector>
+#include <QString>
 #include <QStringList>
 
-class QString;
 class QFileInfo;
 
 
@@ -35,20 +35,6 @@ bool isMapPack( const QFileInfo & file );
 
 // used to setup file filter in QFileSystemModel
 QStringList getModFileSuffixes();
-
-
-//======================================================================================================================
-//  properties and capabilities of different engines
-
-/// Properties of a different engine types such as GZDoom, Zandronum, PrBoom, ...
-struct EngineProperties
-{
-	const char * saveDirParam;
-	int firstMonitorIndex;  // some engines index monitors from 1 and others from 0
-};
-
-/// Returns properties of an engine based on its executable name, or default properties if it's not recognized.
-const EngineProperties & getEngineProperties( const QString & enginePath );
 
 
 //======================================================================================================================

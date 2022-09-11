@@ -106,6 +106,11 @@ inline QString getFileNameFromPath( const QString & filePath )
 	return QFileInfo( filePath ).fileName();
 }
 
+inline QString getFileBasenameFromPath( const QString & filePath )
+{
+	return QFileInfo( filePath ).baseName();
+}
+
 inline QString getDirOfFile( const QString & filePath )
 {
 	return QFileInfo( filePath ).path();

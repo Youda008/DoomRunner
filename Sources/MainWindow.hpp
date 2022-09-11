@@ -200,7 +200,7 @@ class MainWindow : public QMainWindow {
 
 	ReadOnlyListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
 
-	struct ConfigFile
+	struct ConfigFile : public ReadOnlyListModelItem
 	{
 		QString fileName;
 		ConfigFile( const QString & fileName ) : fileName( fileName ) {}
@@ -208,7 +208,7 @@ class MainWindow : public QMainWindow {
 	};
 	ReadOnlyListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
 
-	struct SaveFile
+	struct SaveFile : public ReadOnlyListModelItem
 	{
 		QString fileName;
 		SaveFile( const QString & fileName ) : fileName( fileName ) {}
@@ -216,7 +216,7 @@ class MainWindow : public QMainWindow {
 	};
 	ReadOnlyListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
 
-	struct DemoFile
+	struct DemoFile : public ReadOnlyListModelItem
 	{
 		QString fileName;
 		DemoFile( const QString & fileName ) : fileName( fileName ) {}

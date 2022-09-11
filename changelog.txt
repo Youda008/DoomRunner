@@ -1,5 +1,6 @@
 1.5.3
 - automatically expand parent directories of a selected map pack when preset is restored
+- fixed accidentally broken "Open File Location" feature
 
 1.5.2
 - ability to insert visual separators into mod list and preset list

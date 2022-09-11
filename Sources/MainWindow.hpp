@@ -184,6 +184,8 @@ class MainWindow : public QMainWindow {
 	bool disableSelectionCallbacks;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD() \
 	                                      used to prevent unnecessary or unwanted operations when updating the lists
 
+	CompatLevelStyle lastCompLvlStyle;  ///< compat level style of the engine that was selected the last time
+
 	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 	KeyPressFilter modKeyFilter;  ///< event filter that captures the presses of spacebar to correct the unsuitable default behaviour

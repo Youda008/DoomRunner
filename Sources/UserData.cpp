@@ -184,6 +184,7 @@ QJsonObject serialize( const LaunchOptions & opts )
 	jsOptions["monsters_respawn"] = opts.monstersRespawn;
 	jsOptions["dmflags1"] = qint64( opts.gameOpts.flags1 );
 	jsOptions["dmflags2"] = qint64( opts.gameOpts.flags2 );
+	jsOptions["compat_level"] = opts.compatOpts.compatLevel;
 	jsOptions["compatflags1"] = qint64( opts.compatOpts.flags1 );
 	jsOptions["compatflags2"] = qint64( opts.compatOpts.flags2 );
 	jsOptions["allow_cheats"] = opts.allowCheats;
@@ -224,6 +225,7 @@ void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & opts )
 	opts.monstersRespawn = jsOptions.getBool( "monsters_respawn", opts.monstersRespawn );
 	opts.gameOpts.flags1 = jsOptions.getInt( "dmflags1", opts.gameOpts.flags1 );
 	opts.gameOpts.flags2 = jsOptions.getInt( "dmflags2", opts.gameOpts.flags2 );
+	opts.compatOpts.compatLevel = jsOptions.getInt( "compat_level", opts.compatOpts.compatLevel, DontShowError );
 	opts.compatOpts.flags1 = jsOptions.getInt( "compatflags1", opts.compatOpts.flags1 );
 	opts.compatOpts.flags2 = jsOptions.getInt( "compatflags2", opts.compatOpts.flags2 );
 	opts.allowCheats = jsOptions.getBool( "allow_cheats", opts.allowCheats );

@@ -163,6 +163,7 @@ struct GameplayOptions
 
 struct CompatibilityOptions
 {
+	int compatLevel = -1;
 	int32_t flags1 = 0;
 	int32_t flags2 = 0;
 };

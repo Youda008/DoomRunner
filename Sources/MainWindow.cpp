@@ -121,6 +121,7 @@ MainWindow::MainWindow()
 	tickCount( 0 ),
 	optionsCorrupted( false ),
 	disableSelectionCallbacks( false ),
+	lastCompLvlStyle( CompatLevelStyle::None ),
 	compatOptsCmdArgs(),
 	pathContext( useAbsolutePathsByDefault, QApplication::applicationDirPath() ), // all relative paths will internally be stored relative to the application's dir
 	engineModel(
@@ -615,7 +616,12 @@ void MainWindow::runCompatOptsDialog()
 	                                      ? &presetModel[ selectedPresetIdx ].launchOpts.compatOpts
 	                                      : &launchOpts.compatOpts;
 
-	CompatOptsDialog dialog( this, *compatOpts );
+	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	CompatLevelStyle compLvlStyle = (selectedEngineIdx >= 0)
+	                                  ? getEngineProperties( engineModel[ selectedEngineIdx ].family ).compLvlStyle
+	                                  : CompatLevelStyle::None;
+
+	CompatOptsDialog dialog( this, *compatOpts, compLvlStyle );
 
 	int code = dialog.exec();
 
@@ -624,7 +630,7 @@ void MainWindow::runCompatOptsDialog()
 	{
 		STORE_OPTION( compatOpts, dialog.compatOpts )
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
-		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( launchOpts.compatOpts );
+		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( launchOpts.compatOpts );  // TODO: fix
 		updateLaunchCommand();
 	}
 }
@@ -908,10 +914,22 @@ void MainWindow::selectEngine( int index )
 			presetModel[ selectedPresetIdx ].selectedEnginePath = engineModel[ index ].path;
 	}
 
+	CompatLevelStyle currentCompLvlStyle = CompatLevelStyle::None;
+
 	if (index >= 0)
 	{
+		currentCompLvlStyle = getEngineProperties( engineModel[ index ].family ).compLvlStyle;
+
 		verifyFile( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
 	}
+
+	// if the compat level style of the new engine is different from the previous one,
+	// reset the compat level index, because it's no longer valid
+	if (currentCompLvlStyle != lastCompLvlStyle)
+	{
+		launchOpts.compatOpts.compatLevel = -1;
+	}
+	lastCompLvlStyle = currentCompLvlStyle;
 
 	updateConfigFilesFromDir();
 	updateSaveFilesFromDir();
@@ -2769,9 +2787,18 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		if (ui->monstersRespawnChkBox->isChecked())
 			cmd.arguments << "-respawn";
 		if (launchOpts.gameOpts.flags1 != 0)
-			cmd.arguments << "+dmflags" << QString::number( launchOpts.gameOpts.flags1 );
+			cmd.arguments << "+dmflags" << QString::number( launchOpts.gameOpts.flags1 );  // TODO: fix
 		if (launchOpts.gameOpts.flags2 != 0)
 			cmd.arguments << "+dmflags2" << QString::number( launchOpts.gameOpts.flags2 );
+
+		if (launchOpts.compatOpts.compatLevel >= 0)
+		{
+			if (engineProperties.compLvlStyle == CompatLevelStyle::ZDoom)
+				cmd.arguments << "+compatmode" << QString::number( launchOpts.compatOpts.compatLevel );
+			else if (engineProperties.compLvlStyle == CompatLevelStyle::Boom)
+				cmd.arguments << "-complevel" << QString::number( launchOpts.compatOpts.compatLevel );
+		}
+
 		if (!compatOptsCmdArgs.isEmpty())
 			cmd.arguments << compatOptsCmdArgs;
 	}

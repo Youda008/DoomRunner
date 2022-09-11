@@ -3,6 +3,7 @@
 - added optional window displaying engine's standard output
 - added "Export to shortcut" feature for Windows
 - added options to select an engine family
+- added an option to select a compatibility level for ZDoom and PrBoom based engines
 - made the map pack tree view display a horizontal scrollbar when the items are too wide to display instead of clipping
 - automatically expand parent directories of a selected map pack when preset is restored
 - fixed accidentally broken "Open File Location" feature

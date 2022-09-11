@@ -12,6 +12,7 @@
 #include "Common.hpp"
 
 #include "UserData.hpp"  // CompatibilityOptions
+#include "EngineProperties.hpp"  // CompatLevelStyle
 
 #include <QDialog>
 
@@ -33,12 +34,14 @@ class CompatOptsDialog : public QDialog {
 
  public:
 
-	explicit CompatOptsDialog( QWidget * parent, const CompatibilityOptions & compatOpts );
+	explicit CompatOptsDialog( QWidget * parent, const CompatibilityOptions & compatOpts, CompatLevelStyle compLvlStyle );
 	virtual ~CompatOptsDialog() override;
 
 	static QStringList getCmdArgsFromOptions( const CompatibilityOptions & compatOpts );
 
  private slots:
+
+	void selectCompatLevel( int compatLevel );
 
 	// slots named like this don't need to be connected, they are connected automatically
 	void on_crushedMonsters_toggled( bool checked );

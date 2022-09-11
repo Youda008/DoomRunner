@@ -8,6 +8,8 @@
 #include "CompatOptsDialog.hpp"
 #include "ui_CompatOptsDialog.h"
 
+#include "EngineProperties.hpp"  // compat levels
+
 #include <QString>
 #include <QTextStream>
 #include <QLineEdit>
@@ -20,7 +22,8 @@ typedef uint flagsIdx;
 const flagsIdx COMPAT_FLAGS_1 = 0;
 const flagsIdx COMPAT_FLAGS_2 = 1;
 
-struct CompatFlag {
+struct CompatFlag
+{
 	QString cvarName;
 	flagsIdx flags;
 	int32_t bit;
@@ -72,13 +75,34 @@ static const CompatFlag USE_ORIGINAL_SOUND      = { "compat_soundtarget",       
 
 //======================================================================================================================
 
-CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityOptions & compatOpts )
+CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityOptions & compatOpts, CompatLevelStyle compLvlStyle )
 :
 	QDialog( parent ),
 	compatOpts( compatOpts )
 {
 	ui = new Ui::CompatOptsDialog;
     ui->setupUi( this );
+
+    // automatically initialize compat level combox fox according to the selected engine (its compat level options)
+    if (compLvlStyle == CompatLevelStyle::ZDoom)
+    {
+		ui->compatLevelCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
+		for (const QString & compatLvlStr : zdoomCompatLevels)
+			ui->compatLevelCmbBox->addItem( compatLvlStr );
+    }
+    else if (compLvlStyle == CompatLevelStyle::Boom)
+    {
+		ui->compatLevelCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
+		for (const QString & compatLvlStr : boomCompatLevels)
+			ui->compatLevelCmbBox->addItem( compatLvlStr );
+    }
+    else
+    {
+		ui->compatLevelCmbBox->setEnabled( false );
+    }
+
+    if (compatOpts.compatLevel >= 0 && compatOpts.compatLevel < ui->compatLevelCmbBox->count())
+		ui->compatLevelCmbBox->setCurrentIndex( compatOpts.compatLevel + 1 );
 
 	ui->compatflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->compatflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
@@ -87,6 +111,8 @@ CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityOptions
 	ui->compatflags2_line->setText( QString::number( compatOpts.flags2 ) );
 
 	updateCheckboxes();
+
+	connect( ui->compatLevelCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectCompatLevel );
 
 	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::accept );
 	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::reject );
@@ -328,6 +354,11 @@ void CompatOptsDialog::on_useOriginalSound_toggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
+
+void CompatOptsDialog::selectCompatLevel( int compatLevel )
+{
+	compatOpts.compatLevel = compatLevel - 1;  // first item is reserved for indicating no selection
+}
 
 void CompatOptsDialog::on_compatflags1_line_textEdited( const QString & )
 {

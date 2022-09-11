@@ -12,6 +12,7 @@
 #include "Common.hpp"
 
 #include <QString>
+#include <QHash>
 
 
 //======================================================================================================================
@@ -29,9 +30,20 @@ enum class EngineFamily
 const char * familyToStr( EngineFamily family );
 EngineFamily familyFromStr( const QString & familyStr );
 
+enum class CompatLevelStyle
+{
+	None,
+	ZDoom,  ///< https://zdoom.org/wiki/CVARs:Configuration#compatmode
+	Boom,   ///< https://doom.fandom.com/wiki/PrBoom#Compatibility_modes_and_settings
+};
+
+extern const QVector<QString> zdoomCompatLevels;
+extern const QVector<QString> boomCompatLevels;
+
 struct EngineProperties
 {
 	const char * saveDirParam;
+	CompatLevelStyle compLvlStyle;
 };
 
 EngineFamily guessEngineFamily( QString executableName );

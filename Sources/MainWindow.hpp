@@ -126,8 +126,9 @@ class MainWindow : public QMainWindow {
 	void changeTimeLimit( int limit );
 	void changeFragLimit( int limit );
 
-	void exportPreset();
-	void importPreset();
+	void exportPresetToScript();
+	void exportPresetToShortcut();
+	void importPresetFromScript();
 
 	void updatePresetCmdArgs( const QString & text );
 	void updateGlobalCmdArgs( const QString & text );
@@ -164,8 +165,13 @@ class MainWindow : public QMainWindow {
 	void saveOptions( const QString & fileName );
 	void loadOptions( const QString & fileName );
 
+	struct ShellCommand
+	{
+		QString executable;
+		QStringList arguments;
+	};
+	ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths );
 	void updateLaunchCommand( bool verifyPaths = false );
-	QStringList generateLaunchCommand( const QString & baseDir, bool verifyPaths );
 
  private: // internal members
 

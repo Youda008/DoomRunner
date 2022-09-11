@@ -1827,7 +1827,8 @@
      <string>Menu</string>
     </property>
     <addaction name="setupPathsAction"/>
-    <addaction name="exportPresetAction"/>
+    <addaction name="exportPresetToScriptAction"/>
+    <addaction name="exportPresetToShortcutAction"/>
     <addaction name="aboutAction"/>
     <addaction name="exitAction"/>
    </widget>
@@ -1838,7 +1839,7 @@
     <string>Initial setup</string>
    </property>
   </action>
-  <action name="exportPresetAction">
+  <action name="exportPresetToScriptAction">
    <property name="text">
     <string>Export to shell script</string>
    </property>
@@ -1856,6 +1857,11 @@
   <action name="aboutAction">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="exportPresetToShortcutAction">
+   <property name="text">
+    <string>Export to shortcut (Windows only)</string>
    </property>
   </action>
  </widget>

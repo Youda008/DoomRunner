@@ -91,6 +91,11 @@ inline bool isValidDir( const QString & dirPath )
 	return !dirPath.isEmpty() && QDir( dirPath ).exists();
 }
 
+inline QString getAbsolutePath( const QString & path )
+{
+	return QFileInfo( path ).absoluteFilePath();
+}
+
 inline QString getPathFromFileName( const QString & dirPath, const QString & fileName )
 {
 	return QDir( dirPath ).filePath( fileName );

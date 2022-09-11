@@ -33,5 +33,11 @@ QString getAppDataDir();
 /** If true it means the executable can be started directly by using only its name without its path. */
 bool isInSearchPath( const QString & filePath );
 
+#ifdef _WIN32
+bool createWindowsShortcut(
+	QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir = "", QString description = ""
+);
+#endif // _WIN32
+
 
 #endif // OS_UTILS_INCLUDED

@@ -278,14 +278,26 @@ class ReadOnlyListModel : public AListModel< Item > {
 
 		const Item & item = superClass::itemList[ index.row() ];
 
-		if (role == Qt::DisplayRole)
+		try
 		{
-			// Some UI elements may want to display only the Item name, some others a string constructed from multiple
-			// Item elements. This way we generalize from the way the display string is constructed from the Item.
-			return makeDisplayString( item );
+			if (role == Qt::DisplayRole)
+			{
+				// Some UI elements may want to display only the Item name, some others a string constructed from multiple
+				// Item elements. This way we generalize from the way the display string is constructed from the Item.
+				return makeDisplayString( item );
+			}
+			else if (role == Qt::UserRole)  // required for "Open File Location" action
+			{
+				return item.getFilePath();
+			}
+			else
+			{
+				return QVariant();
+			}
 		}
-		else
+		catch (const std::runtime_error & e)
 		{
+			qWarning() << e.what();
 			return QVariant();
 		}
 	}

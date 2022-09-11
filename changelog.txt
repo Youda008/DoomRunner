@@ -3,6 +3,7 @@
 - added optional window displaying engine's standard output
 - made the map pack tree view display a horizontal scrollbar when the items are too wide to display instead of clipping
 - automatically expand parent directories of a selected map pack when preset is restored
+- fixed accidentally broken "Open File Location" feature
 
 1.5.2
 - ability to insert visual separators into mod list and preset list

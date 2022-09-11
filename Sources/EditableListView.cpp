@@ -382,7 +382,7 @@ void EditableListView::openFileLocation()
 		return;
 	}
 
-	QString filePath = model()->data( currentIdx, Qt::CheckStateRole ).toString();
+	QString filePath = model()->data( currentIdx, Qt::UserRole ).toString();
 
 	if (!::openFileLocation( filePath ))
 	{

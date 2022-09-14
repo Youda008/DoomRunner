@@ -90,17 +90,29 @@ static void throwIfInvalid( bool doVerify, const QString & path, const QString &
 			throw FileNotFound();
 }
 
-#define STORE_OPTION( structElem, value ) \
-	if (optsStorage == STORE_GLOBALLY) \
-	{\
-		opts.structElem = value; \
-	}\
-	else if (optsStorage == STORE_TO_PRESET) \
-	{\
-		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView ); \
-		if (selectedPresetIdx >= 0) \
-			presetModel[ selectedPresetIdx ].opts.structElem = value; \
+LaunchOptions & MainWindow::activeLaunchOptions()
+{
+	if (optsStorage == STORE_GLOBALLY)
+	{
+		return opts;
 	}
+	else if (optsStorage == STORE_TO_PRESET)
+	{
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+		{
+			return presetModel[ selectedPresetIdx ].opts;
+		}
+		else
+		{
+			QMessageBox::critical( this, "No preset selected",
+				"Requested to store launch options to preset, but no preset is selected."
+				"This shouldn't be possible, please create an issue on Github page."
+			);
+		}
+	}
+	return opts;  // fallback
+}
 
 
 //======================================================================================================================
@@ -567,40 +579,30 @@ void MainWindow::runSetupDialog()
 
 void MainWindow::runGameOptsDialog()
 {
-	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	GameplayOptions * gameOpts = (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
-	                               ? &presetModel[ selectedPresetIdx ].opts.gameOpts
-	                               : &opts.gameOpts;
-
-	GameOptsDialog dialog( this, *gameOpts );
+	GameOptsDialog dialog( this, activeLaunchOptions().gameOpts );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		STORE_OPTION( gameOpts, dialog.gameOpts )
+		activeLaunchOptions().gameOpts = dialog.gameOpts;
 		updateLaunchCommand();
 	}
 }
 
 void MainWindow::runCompatOptsDialog()
 {
-	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	CompatibilityOptions * compatOpts = (optsStorage == STORE_TO_PRESET && selectedPresetIdx >= 0)
-	                                      ? &presetModel[ selectedPresetIdx ].opts.compatOpts
-	                                      : &opts.compatOpts;
-
-	CompatOptsDialog dialog( this, *compatOpts );
+	CompatOptsDialog dialog( this, activeLaunchOptions().compatOpts );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		STORE_OPTION( compatOpts, dialog.compatOpts )
+		activeLaunchOptions().compatOpts = dialog.compatOpts;
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
-		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
+		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( dialog.compatOpts );
 		updateLaunchCommand();
 	}
 }
@@ -1363,7 +1365,7 @@ void MainWindow::modsDropped( int dropRow, int count )
 
 void MainWindow::modeStandard()
 {
-	STORE_OPTION( mode, STANDARD )
+	activeLaunchOptions().mode = STANDARD;
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1383,7 +1385,7 @@ void MainWindow::modeStandard()
 
 void MainWindow::modeLaunchMap()
 {
-	STORE_OPTION( mode, LAUNCH_MAP )
+	activeLaunchOptions().mode = LAUNCH_MAP;
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1403,7 +1405,7 @@ void MainWindow::modeLaunchMap()
 
 void MainWindow::modeSavedGame()
 {
-	STORE_OPTION( mode, LOAD_SAVE )
+	activeLaunchOptions().mode = LOAD_SAVE;
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
@@ -1418,7 +1420,7 @@ void MainWindow::modeSavedGame()
 
 void MainWindow::modeRecordDemo()
 {
-	STORE_OPTION( mode, RECORD_DEMO )
+	activeLaunchOptions().mode = RECORD_DEMO;
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1433,7 +1435,7 @@ void MainWindow::modeRecordDemo()
 
 void MainWindow::modeReplayDemo()
 {
-	STORE_OPTION( mode, REPLAY_DEMO )
+	activeLaunchOptions().mode = REPLAY_DEMO;
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1467,7 +1469,7 @@ void MainWindow::selectSavedGame( int saveIdx )
 
 	QString saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : "";
 
-	STORE_OPTION( saveFile, saveFileName )
+	activeLaunchOptions().saveFile = saveFileName;
 
 	updateLaunchCommand();
 }
@@ -1480,7 +1482,7 @@ void MainWindow::selectDemoFile_replay( int demoIdx )
 
 	QString demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : "";
 
-	STORE_OPTION( demoFile_replay, demoFileName )
+	activeLaunchOptions().demoFile_replay = demoFileName;
 
 	updateLaunchCommand();
 }
@@ -1491,7 +1493,7 @@ void MainWindow::changeMap( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	STORE_OPTION( mapName, mapName )
+	activeLaunchOptions().mapName = mapName;
 
 	updateLaunchCommand();
 }
@@ -1502,14 +1504,14 @@ void MainWindow::changeMap_demo( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	STORE_OPTION( mapName_demo, mapName )
+	activeLaunchOptions().mapName_demo = mapName;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeDemoFile_record( const QString & fileName )
 {
-	STORE_OPTION( demoFile_record, fileName )
+	activeLaunchOptions().demoFile_record = fileName;
 
 	updateLaunchCommand();
 }
@@ -1525,7 +1527,7 @@ void MainWindow::selectSkill( int skill )
 
 void MainWindow::changeSkillNum( int skill )
 {
-	STORE_OPTION( skillNum, uint( skill ) )
+	activeLaunchOptions().skillNum = uint( skill );
 
 	if (skill < Skill::CUSTOM)
 		ui->skillCmbBox->setCurrentIndex( skill );
@@ -1535,35 +1537,35 @@ void MainWindow::changeSkillNum( int skill )
 
 void MainWindow::toggleNoMonsters( bool checked )
 {
-	STORE_OPTION( noMonsters, checked )
+	activeLaunchOptions().noMonsters = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleFastMonsters( bool checked )
 {
-	STORE_OPTION( fastMonsters, checked )
+	activeLaunchOptions().fastMonsters = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleMonstersRespawn( bool checked )
 {
-	STORE_OPTION( monstersRespawn, checked )
+	activeLaunchOptions().monstersRespawn = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleAllowCheats( bool checked )
 {
-	STORE_OPTION( allowCheats, checked )
+	activeLaunchOptions().allowCheats = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeSaveDir( const QString & dir )
 {
-	STORE_OPTION( saveDir, dir )
+	activeLaunchOptions().saveDir = dir;
 
 	if (isValidDir( dir ))
 		updateSaveFilesFromDir();
@@ -1573,7 +1575,7 @@ void MainWindow::changeSaveDir( const QString & dir )
 
 void MainWindow::changeScreenshotDir( const QString & dir )
 {
-	STORE_OPTION( screenshotDir, dir )
+	activeLaunchOptions().screenshotDir = dir;
 
 	updateLaunchCommand();
 }
@@ -1608,7 +1610,7 @@ void MainWindow::browseScreenshotDir()
 
 void MainWindow::toggleMultiplayer( bool checked )
 {
-	STORE_OPTION( isMultiplayer, checked )
+	activeLaunchOptions().isMultiplayer = checked;
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -1646,7 +1648,7 @@ void MainWindow::toggleMultiplayer( bool checked )
 
 void MainWindow::selectMultRole( int role )
 {
-	STORE_OPTION( multRole, MultRole( role ) )
+	activeLaunchOptions().multRole = MultRole( role );
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -1677,28 +1679,28 @@ void MainWindow::selectMultRole( int role )
 
 void MainWindow::changeHost( const QString & hostName )
 {
-	STORE_OPTION( hostName, hostName )
+	activeLaunchOptions().hostName = hostName;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changePort( int port )
 {
-	STORE_OPTION( port, uint16_t( port ) )
+	activeLaunchOptions().port = uint16_t( port );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectNetMode( int netMode )
 {
-	STORE_OPTION( netMode, NetMode( netMode ) )
+	activeLaunchOptions().netMode = NetMode( netMode );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectGameMode( int gameMode )
 {
-	STORE_OPTION( gameMode, GameMode( gameMode ) )
+	activeLaunchOptions().gameMode = GameMode( gameMode );
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
@@ -1714,28 +1716,28 @@ void MainWindow::selectGameMode( int gameMode )
 
 void MainWindow::changePlayerCount( int count )
 {
-	STORE_OPTION( playerCount, uint( count ) )
+	activeLaunchOptions().playerCount = uint( count );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTeamDamage( double damage )
 {
-	STORE_OPTION( teamDamage, damage )
+	activeLaunchOptions().teamDamage = damage;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTimeLimit( int timeLimit )
 {
-	STORE_OPTION( timeLimit, uint( timeLimit ) )
+	activeLaunchOptions().timeLimit = uint( timeLimit );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeFragLimit( int fragLimit )
 {
-	STORE_OPTION( fragLimit, uint( fragLimit ) )
+	activeLaunchOptions().fragLimit = uint( fragLimit );
 
 	updateLaunchCommand();
 }
@@ -2694,10 +2696,10 @@ QString MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyP
 			cmdStream << " -fast";
 		if (ui->monstersRespawnChkBox->isChecked())
 			cmdStream << " -respawn";
-		if (opts.gameOpts.flags1 != 0)
-			cmdStream << " +dmflags " << QString::number( opts.gameOpts.flags1 );
-		if (opts.gameOpts.flags2 != 0)
-			cmdStream << " +dmflags2 " << QString::number( opts.gameOpts.flags2 );
+		if (activeLaunchOptions().gameOpts.flags1 != 0)
+			cmdStream << " +dmflags " << QString::number( activeLaunchOptions().gameOpts.flags1 );
+		if (activeLaunchOptions().gameOpts.flags2 != 0)
+			cmdStream << " +dmflags2 " << QString::number( activeLaunchOptions().gameOpts.flags2 );
 		if (!compatOptsCmdArgs.isEmpty())
 			cmdStream << " " << compatOptsCmdArgs;
 	}

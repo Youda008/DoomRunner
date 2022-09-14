@@ -604,33 +604,37 @@ void MainWindow::runSetupDialog()
 
 void MainWindow::runGameOptsDialog()
 {
-	GameOptsDialog dialog( this, activeLaunchOptions().gameOpts );
+	LaunchOptions & activeLaunchOpts = activeLaunchOptions();
+
+	GameOptsDialog dialog( this, activeLaunchOpts.gameOpts );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		activeLaunchOptions().gameOpts = dialog.gameOpts;
+		activeLaunchOpts.gameOpts = dialog.gameOpts;
 		updateLaunchCommand();
 	}
 }
 
 void MainWindow::runCompatOptsDialog()
 {
+	LaunchOptions & activeLaunchOpts = activeLaunchOptions();
+
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	CompatLevelStyle compLvlStyle = (selectedEngineIdx >= 0)
 	                                  ? getEngineProperties( engineModel[ selectedEngineIdx ].family ).compLvlStyle
 	                                  : CompatLevelStyle::None;
 
-	CompatOptsDialog dialog( this, activeLaunchOptions().compatOpts, compLvlStyle );
+	CompatOptsDialog dialog( this, activeLaunchOpts.compatOpts, compLvlStyle );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		activeLaunchOptions().compatOpts = dialog.compatOpts;
+		activeLaunchOpts.compatOpts = dialog.compatOpts;
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
 		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( dialog.compatOpts );
 		updateLaunchCommand();
@@ -2781,6 +2785,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 
 	if (ui->launchMode_map->isChecked() || ui->launchMode_recordDemo->isChecked())
 	{
+		LaunchOptions & activeLaunchOpts = activeLaunchOptions();
+
 		cmd.arguments << "-skill" << ui->skillSpinBox->text();
 		if (ui->noMonstersChkBox->isChecked())
 			cmd.arguments << "-nomonsters";
@@ -2788,17 +2794,17 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 			cmd.arguments << "-fast";
 		if (ui->monstersRespawnChkBox->isChecked())
 			cmd.arguments << "-respawn";
-		if (activeLaunchOptions().gameOpts.flags1 != 0)
-			cmd.arguments << "+dmflags" << QString::number( activeLaunchOptions().gameOpts.flags1 );
-		if (activeLaunchOptions().gameOpts.flags2 != 0)
-			cmd.arguments << "+dmflags2" << QString::number( activeLaunchOptions().gameOpts.flags2 );
+		if (activeLaunchOpts.gameOpts.flags1 != 0)
+			cmd.arguments << "+dmflags" << QString::number( activeLaunchOpts.gameOpts.flags1 );
+		if (activeLaunchOpts.gameOpts.flags2 != 0)
+			cmd.arguments << "+dmflags2" << QString::number( activeLaunchOpts.gameOpts.flags2 );
 
-		if (activeLaunchOptions().compatOpts.compatLevel >= 0)
+		if (activeLaunchOpts.compatOpts.compatLevel >= 0)
 		{
 			if (engineProperties.compLvlStyle == CompatLevelStyle::ZDoom)
-				cmd.arguments << "+compatmode" << QString::number( activeLaunchOptions().compatOpts.compatLevel );
+				cmd.arguments << "+compatmode" << QString::number( activeLaunchOpts.compatOpts.compatLevel );
 			else if (engineProperties.compLvlStyle == CompatLevelStyle::Boom)
-				cmd.arguments << "-complevel" << QString::number( activeLaunchOptions().compatOpts.compatLevel );
+				cmd.arguments << "-complevel" << QString::number( activeLaunchOpts.compatOpts.compatLevel );
 		}
 
 		if (!compatOptsCmdArgs.isEmpty())

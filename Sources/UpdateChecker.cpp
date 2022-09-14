@@ -136,12 +136,12 @@ void UpdateChecker::changelogReceived( QNetworkReply * reply, RequestData & requ
 	QString line;
 	QStringList versionInfo;
 
-	// find the line with our version
+	// find the line with the new version
 	while ((line = getLine( reply )) != requestData.newVersion && !reply->atEnd()) {}
 	versionInfo.append( line );
 
-	// get all lines related to our version
-	while ((line = getLine( reply )).startsWith("- "))
+	// get all changes until our current version
+	while ((line = getLine( reply )) != appVersion && !reply->atEnd())
 		versionInfo.append( line );
 
 	// finally, call the user callback with all the data
@@ -246,7 +246,7 @@ static NewElements reworkLayout( QMessageBox & msgBox )
 
 bool showUpdateNotification( QWidget * parent, QStringList versionInfo, bool includeCheckbox )
 {
-	QString newVersion = versionInfo.takeFirst();
+	QString newVersion = versionInfo.first();
 
 	QMessageBox msgBox( QMessageBox::Information, "Update available", "", QMessageBox::Ok, parent );
 

@@ -1036,6 +1036,11 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 
 void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles )
 {
+	// When the data is not changed by the user clicking, but by our code (moveUp, moveDown, ...),
+	// we don't want the presets to update here, because it would update back and forth.
+	if (disableSelectionCallbacks)
+		return;
+
 	int topModIdx = topLeft.row();
 	int bottomModIdx = bottomRight.row();
 
@@ -1257,6 +1262,7 @@ void MainWindow::modAdd()
 void MainWindow::modAddDir()
 {
 	QString path = QFileDialog::getExistingDirectory( this, "Locate the mod directory", modSettings.dir );
+
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -1281,6 +1287,7 @@ void MainWindow::modAddDir()
 void MainWindow::modDelete()
 {
 	QVector<int> deletedIndexes = deleteSelectedItems( ui->modListView, modModel );
+
 	if (deletedIndexes.isEmpty())  // no item was selected
 		return;
 
@@ -1301,7 +1308,12 @@ void MainWindow::modDelete()
 
 void MainWindow::modMoveUp()
 {
+	disableSelectionCallbacks = true;  // prevent modDataChanged() from updating our preset too early and incorrectly
+
 	QVector<int> movedIndexes = moveUpSelectedItems( ui->modListView, modModel );
+
+	disableSelectionCallbacks = false;
+
 	if (movedIndexes.isEmpty())  // no item was selected or they were already at the top
 		return;
 
@@ -1320,7 +1332,12 @@ void MainWindow::modMoveUp()
 
 void MainWindow::modMoveDown()
 {
+	disableSelectionCallbacks = true;  // prevent modDataChanged() from updating our preset too early and incorrectly
+
 	QVector<int> movedIndexes = moveDownSelectedItems( ui->modListView, modModel );
+
+	disableSelectionCallbacks = false;
+
 	if (movedIndexes.isEmpty())  // no item was selected or they were already at the bottom
 		return;
 

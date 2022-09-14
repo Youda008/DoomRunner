@@ -447,22 +447,24 @@ void MainWindow::onWindowShown()
 	// try to load last saved state
 	QString optionsFilePath = appDataDir.filePath( defaultOptionsFile );
 	if (QFileInfo::exists( optionsFilePath ))
-		loadOptions( optionsFilePath );
-	else  // this is a first run, perform an initial setup
-		runSetupDialog();
-
-	// if the presets are empty or none is selected, add a default one so that users don't complain that they can't enter anything
-	if (!isSomethingSelected( ui->presetListView ))
 	{
-		int defaultPresetIdx = findSuch( presetModel, []( const Preset & preset )
-		                                              { return preset.name == "Default"; } );
-		if (defaultPresetIdx < 0)
-		{
-			prependItem( ui->presetListView, presetModel, { "Default" } );
-			defaultPresetIdx = 0;
-		}
-		// This invokes the callback, which enables the dependent widgets and calls restorePreset(...)
-		selectAndSetCurrentByIndex( ui->presetListView, defaultPresetIdx );
+		loadOptions( optionsFilePath );
+	}
+	else  // this is a first run, perform an initial setup
+	{
+		runSetupDialog();
+	}
+
+	// if the presets are empty, add a default one so that users don't complain that they can't enter anything
+	if (presetModel.isEmpty())
+	{
+		// This selects the new item, which invokes the callback, which enables the dependent widgets and calls restorePreset(...)
+		appendItem( ui->presetListView, presetModel, { "Default" } );
+
+		// automatically select those essential items (engine, IWAD, ...) that are alone in their list
+		// This is done to make it as easy as possible for beginners who just downloaded GZDoom and Brutal Doom
+		// and want to start it as easily as possible with no care about all the other features.
+		autoselectLoneItems();
 	}
 
 	if (opts.checkForUpdates)
@@ -889,6 +891,15 @@ void MainWindow::clearPresetSubWidgets()
 //----------------------------------------------------------------------------------------------------------------------
 //  item selection
 
+/// Automatically selects those essential items (like engine of IWAD) that are alone in their list.
+void MainWindow::autoselectLoneItems()
+{
+	if (engineModel.size() == 1 && ui->engineCmbBox->currentIndex() < 0)
+		ui->engineCmbBox->setCurrentIndex( 0 );
+	if (iwadModel.size() == 1 && !isSomethingSelected( ui->iwadListView ))
+		selectAndSetCurrentByIndex( ui->iwadListView, 0 );
+}
+
 void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
@@ -1139,6 +1150,11 @@ void MainWindow::presetAdd()
 	// clear the widgets to represent an empty preset
 	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will clear the prev preset
 	clearPresetSubWidgets();
+
+	// automatically select those essential items (engine, IWAD, ...) that are alone in their list
+	// This is done to make it as easy as possible for beginners who just downloaded GZDoom and Brutal Doom
+	// and want to start it as easily as possible with no care about all the other features.
+	autoselectLoneItems();
 
 	// open edit mode so that user can name the preset
 	ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );

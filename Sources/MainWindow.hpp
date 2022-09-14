@@ -58,6 +58,8 @@ class MainWindow : public QMainWindow {
 	void runGameOptsDialog();
 	void runCompatOptsDialog();
 
+	void autoselectLoneItems();
+
 	void selectEngine( int index );
 	void selectConfig( int index );
 	void togglePreset( const QItemSelection & selected, const QItemSelection & deselected );

@@ -967,6 +967,12 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 	// but we only care about the first one
 	const auto selectedRows = getSelectedRows( ui->mapDirView );
 
+	// expand the parent directory nodes that are collapsed
+	for (const QModelIndex & index : selectedRows)
+		for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
+			if (!ui->mapDirView->isExpanded( currentIndex ))
+				ui->mapDirView->expand( currentIndex );
+
 	QList< QString > selectedMapPacks;
 	for (const QModelIndex & index : selectedRows)
 	{

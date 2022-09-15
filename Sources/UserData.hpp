@@ -118,11 +118,11 @@ template<> inline uint enumSize< LaunchMode >() { return uint( LaunchMode::Repla
 
 enum Skill
 {
-	TooYoungToDie,
-	NotTooRough,
-	HurtMePlenty,
-	UltraViolence,
-	Nightmare,
+	TooYoungToDie = 1,
+	NotTooRough = 2,
+	HurtMePlenty = 3,
+	UltraViolence = 4,
+	Nightmare = 5,
 	Custom
 };
 template<> inline const char * enumName< Skill >() { return "Skill"; }

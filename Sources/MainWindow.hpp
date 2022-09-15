@@ -97,7 +97,7 @@ class MainWindow : public QMainWindow {
 	void changeDemoFile_record( const QString & fileName );
 	void selectDemoFile_replay( int index );
 
-	void selectSkill( int skill );
+	void selectSkill( int skillIdx );
 	void changeSkillNum( int skillNum );
 	void toggleNoMonsters( bool checked );
 	void toggleFastMonsters( bool checked );

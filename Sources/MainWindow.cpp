@@ -1519,8 +1519,11 @@ void MainWindow::modeReplayDemo()
 
 void MainWindow::toggleSkillSubwidgets( bool enabled )
 {
+	// skillIdx is an index in the combo-box, which starts from 0, but Doom skill numbers actually start from 1
+	int skillNum = ui->skillCmbBox->currentIndex() + 1;
+
 	ui->skillCmbBox->setEnabled( enabled );
-	ui->skillSpinBox->setEnabled( enabled && ui->skillCmbBox->currentIndex() == Skill::Custom );
+	ui->skillSpinBox->setEnabled( enabled && skillNum == Skill::Custom );
 }
 
 void MainWindow::toggleOptionsSubwidgets( bool enabled )
@@ -1587,20 +1590,38 @@ void MainWindow::changeDemoFile_record( const QString & fileName )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectSkill( int skill )
+void MainWindow::selectSkill( int skillIdx )
 {
-	ui->skillSpinBox->setValue( skill );
-	ui->skillSpinBox->setEnabled( skill == Skill::Custom );
+	// skillIdx is an index in the combo-box which starts from 0, but Doom skill number actually starts from 1
+	int skillNum = skillIdx + 1;
+
+	ui->skillSpinBox->setEnabled( skillNum == Skill::Custom );
+
+	// changeSkillNum() and selectSkill() indirectly invoke each other,
+	// this prevents unnecessary updates and potential infinite recursion
+	if (disableSelectionCallbacks)
+		return;
+
+	ui->skillSpinBox->setValue( skillNum );
 
 	updateLaunchCommand();
 }
 
-void MainWindow::changeSkillNum( int skill )
+void MainWindow::changeSkillNum( int skillNum )
 {
-	activeLaunchOptions().skillNum = uint( skill );
+	activeLaunchOptions().skillNum = uint( skillNum );
 
-	if (skill < Skill::Custom)
-		ui->skillCmbBox->setCurrentIndex( skill );
+	// changeSkillNum() and selectSkill() indirectly invoke each other,
+	// this prevents unnecessary updates and potential infinite recursion
+	disableSelectionCallbacks = true;
+
+	// the combo-box starts from 0, but Doom skill number actually starts from 1
+	if (skillNum > 0 && skillNum < Skill::Custom)
+		ui->skillCmbBox->setCurrentIndex( skillNum - 1 );
+	else
+		ui->skillCmbBox->setCurrentIndex( Skill::Custom - 1 );
+
+	disableSelectionCallbacks = false;
 
 	updateLaunchCommand();
 }

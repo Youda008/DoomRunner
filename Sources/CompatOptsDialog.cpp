@@ -84,16 +84,10 @@ CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityOptions
     ui->setupUi( this );
 
     // automatically initialize compat level combox fox according to the selected engine (its compat level options)
-    if (compLvlStyle == CompatLevelStyle::ZDoom)
+    if (compLvlStyle != CompatLevelStyle::None)
     {
 		ui->compatLevelCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
-		for (const QString & compatLvlStr : zdoomCompatLevels)
-			ui->compatLevelCmbBox->addItem( compatLvlStr );
-    }
-    else if (compLvlStyle == CompatLevelStyle::Boom)
-    {
-		ui->compatLevelCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
-		for (const QString & compatLvlStr : boomCompatLevels)
+		for (const QString & compatLvlStr : getCompatLevels( compLvlStyle ))
 			ui->compatLevelCmbBox->addItem( compatLvlStr );
     }
     else

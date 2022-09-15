@@ -2,7 +2,7 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: doom-specific utilities
+// Description: properties and capabilities of different engines
 //======================================================================================================================
 
 #include "EngineProperties.hpp"
@@ -13,7 +13,7 @@
 
 
 //======================================================================================================================
-//  properties and capabilities of different engines
+//  engine definitions - add support for new engines here
 
 static const char * const engineFamilyStrings [] =
 {
@@ -22,14 +22,6 @@ static const char * const engineFamilyStrings [] =
 	"ChocolateDoom",
 };
 static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd), "Please update this table too" );
-
-static const EngineProperties engineFamilyProperties [] =
-{
-	/*ZDoom*/         { "-savedir", CompatLevelStyle::ZDoom },
-	/*Boom*/          { "-save",    CompatLevelStyle::Boom },
-	/*ChocolateDoom*/ { "-savedir", CompatLevelStyle::None },
-};
-static_assert( std::size(engineFamilyProperties) == std::size(engineFamilyStrings), "Please update this table too" );
 
 static const QHash< QString, EngineFamily > knownEngineFamilies =
 {
@@ -50,12 +42,15 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 	{ "doomretro",       EngineFamily::ChocolateDoom },
 };
 
-static const QHash< QString, int > startingMonitorIndexes =
+static const EngineProperties engineFamilyProperties [] =
 {
-	{ "zdoom", 1 },
+	/*ZDoom*/         { "-savedir", CompatLevelStyle::ZDoom },
+	/*Boom*/          { "-save",    CompatLevelStyle::Boom },
+	/*ChocolateDoom*/ { "-savedir", CompatLevelStyle::None },
 };
+static_assert( std::size(engineFamilyProperties) == std::size(engineFamilyStrings), "Please update this table too" );
 
-const QVector<QString> zdoomCompatLevels =
+static const QVector<QString> zdoomCompatLevels =
 {
 	"0 - Default",        // All compatibility options are turned off.
 	"1 - Doom",           // Enables a set of options that should allow nearly all maps made for vanilla Doom to work in ZDoom:
@@ -72,7 +67,7 @@ const QVector<QString> zdoomCompatLevels =
 	                      //   corpsegibs, hitscan, invisibility, nopassover, notossdrop, wallrun, maskedmidtex
 };
 
-const QVector<QString> boomCompatLevels =
+static const QVector<QString> boomCompatLevels =
 {
 	"0  - Doom v1.2",     // (note: flawed; use PrBoom+ 2.5.0.8 or higher instead if this complevel is desired)
 	"1  - Doom v1.666",
@@ -98,8 +93,43 @@ const QVector<QString> boomCompatLevels =
 	"21 - MBF21",
 };
 
+static const QVector<QString> noCompatLevels = {};
+
+static const QHash< QString, int > startingMonitorIndexes =
+{
+	{ "zdoom", 1 },
+};
+
+
+//======================================================================================================================
+//  code
 
 //----------------------------------------------------------------------------------------------------------------------
+//  CompatLevelStyle
+
+const QVector<QString> & getCompatLevels( CompatLevelStyle style )
+{
+	if (style == CompatLevelStyle::ZDoom)
+		return zdoomCompatLevels;
+	else if (style == CompatLevelStyle::Boom)
+		return boomCompatLevels;
+	else
+		return noCompatLevels;
+}
+
+QStringList getCompatLevelArgs( CompatLevelStyle style, int compatLevel )
+{
+	if (style == CompatLevelStyle::ZDoom)
+		return { "+compatmode", QString::number( compatLevel ) };
+	else if (style == CompatLevelStyle::Boom)
+		return { "-complevel", QString::number( compatLevel ) };
+	else
+		return {};
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  EngineFamily
 
 const char * familyToStr( EngineFamily family )
 {
@@ -128,6 +158,9 @@ EngineFamily guessEngineFamily( QString executableName )
 		return EngineFamily::ZDoom;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+//  EngineProperties
+
 const EngineProperties & getEngineProperties( EngineFamily family )
 {
 	if (size_t(family) < std::size(engineFamilyProperties))
@@ -135,6 +168,9 @@ const EngineProperties & getEngineProperties( EngineFamily family )
 	else
 		return engineFamilyProperties[ 0 ];
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//  miscellaneous
 
 int getFirstMonitorIndex( QString executableName )
 {

@@ -2,7 +2,7 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: doom-specific utilities
+// Description: properties and capabilities of different engines
 //======================================================================================================================
 
 #ifndef ENGINE_PROPERTIES_INCLUDED
@@ -11,12 +11,24 @@
 
 #include "Common.hpp"
 
+#include <QVector>
 #include <QString>
-#include <QHash>
+#include <QStringList>
 
 
-//======================================================================================================================
-//  properties and capabilities of different engines
+//----------------------------------------------------------------------------------------------------------------------
+
+enum class CompatLevelStyle
+{
+	None,
+	ZDoom,  // https://zdoom.org/wiki/CVARs:Configuration#compatmode
+	Boom,   // https://doom.fandom.com/wiki/PrBoom#Compatibility_modes_and_settings
+};
+
+const QVector<QString> & getCompatLevels( CompatLevelStyle style );
+QStringList getCompatLevelArgs( CompatLevelStyle style, int compatLevel );
+
+//----------------------------------------------------------------------------------------------------------------------
 
 // https://upload.wikimedia.org/wikipedia/commons/a/a8/Doom-ports.svg
 enum class EngineFamily
@@ -30,15 +42,9 @@ enum class EngineFamily
 const char * familyToStr( EngineFamily family );
 EngineFamily familyFromStr( const QString & familyStr );
 
-enum class CompatLevelStyle
-{
-	None,
-	ZDoom,  ///< https://zdoom.org/wiki/CVARs:Configuration#compatmode
-	Boom,   ///< https://doom.fandom.com/wiki/PrBoom#Compatibility_modes_and_settings
-};
+EngineFamily guessEngineFamily( QString executableName );
 
-extern const QVector<QString> zdoomCompatLevels;
-extern const QVector<QString> boomCompatLevels;
+//----------------------------------------------------------------------------------------------------------------------
 
 struct EngineProperties
 {
@@ -46,9 +52,9 @@ struct EngineProperties
 	CompatLevelStyle compLvlStyle;
 };
 
-EngineFamily guessEngineFamily( QString executableName );
-
 const EngineProperties & getEngineProperties( EngineFamily family );
+
+//----------------------------------------------------------------------------------------------------------------------
 
 // some engines index monitors from 1 and others from 0
 int getFirstMonitorIndex( QString executableName );

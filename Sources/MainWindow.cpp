@@ -2843,15 +2843,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 			cmd.arguments << "+dmflags" << QString::number( activeLaunchOpts.gameOpts.flags1 );
 		if (activeLaunchOpts.gameOpts.flags2 != 0)
 			cmd.arguments << "+dmflags2" << QString::number( activeLaunchOpts.gameOpts.flags2 );
-
 		if (activeLaunchOpts.compatOpts.compatLevel >= 0)
-		{
-			if (engineProperties.compLvlStyle == CompatLevelStyle::ZDoom)
-				cmd.arguments << "+compatmode" << QString::number( activeLaunchOpts.compatOpts.compatLevel );
-			else if (engineProperties.compLvlStyle == CompatLevelStyle::Boom)
-				cmd.arguments << "-complevel" << QString::number( activeLaunchOpts.compatOpts.compatLevel );
-		}
-
+			cmd.arguments << getCompatLevelArgs( engineProperties.compLvlStyle, activeLaunchOpts.compatOpts.compatLevel );
 		if (!compatOptsCmdArgs.isEmpty())
 			cmd.arguments << compatOptsCmdArgs;
 	}

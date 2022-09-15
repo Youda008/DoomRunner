@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="filesTab">
        <attribute name="title">
@@ -862,9 +862,6 @@
              </item>
              <item>
               <widget class="QCheckBox" name="noMonstersChkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
                <property name="toolTip">
                 <string>Sets the dmflags CVAR so that monsters are not spawned on levels.</string>
                </property>
@@ -875,9 +872,6 @@
              </item>
              <item>
               <widget class="QCheckBox" name="fastMonstersChkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
                <property name="toolTip">
                 <string>Sets the dmflags CVAR to make the monsters as fast as in Nightmare mode even if you are not playing Nightmare.</string>
                </property>
@@ -888,9 +882,6 @@
              </item>
              <item>
               <widget class="QCheckBox" name="monstersRespawnChkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
                <property name="toolTip">
                 <string>Sets the dmflags CVAR so that monsters respawn even if you are not playing at Nightmare difficulty.</string>
                </property>
@@ -903,9 +894,6 @@
               <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
                 <widget class="QPushButton" name="gameOptsBtn">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
                  <property name="text">
                   <string>Gameplay options</string>
                  </property>
@@ -913,9 +901,6 @@
                </item>
                <item>
                 <widget class="QPushButton" name="compatOptsBtn">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
                  <property name="text">
                   <string>Compatibility options</string>
                  </property>

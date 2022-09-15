@@ -164,6 +164,7 @@ class MainWindow : public QMainWindow {
 	void updateConfigFilesFromDir();
 	void updateMapsFromIWAD();
 
+	void toggleSkillSubwidgets( bool enabled );
 	void toggleOptionsSubwidgets( bool enabled );
 
 	void saveOptions( const QString & fileName );

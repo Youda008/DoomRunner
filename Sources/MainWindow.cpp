@@ -1435,7 +1435,8 @@ void MainWindow::modeStandard()
 	ui->demoFileLine_record->setEnabled( false );
 	ui->demoFileCmbBox_replay->setEnabled( false );
 
-	toggleOptionsSubwidgets( false );
+	toggleSkillSubwidgets( false );
+	toggleOptionsSubwidgets( true );
 
 	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Server)
 	{
@@ -1455,6 +1456,7 @@ void MainWindow::modeLaunchMap()
 	ui->demoFileLine_record->setEnabled( false );
 	ui->demoFileCmbBox_replay->setEnabled( false );
 
+	toggleSkillSubwidgets( true );
 	toggleOptionsSubwidgets( true );
 
 	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Client)
@@ -1475,6 +1477,7 @@ void MainWindow::modeSavedGame()
 	ui->demoFileLine_record->setEnabled( false );
 	ui->demoFileCmbBox_replay->setEnabled( false );
 
+	toggleSkillSubwidgets( false );
 	toggleOptionsSubwidgets( false );
 
 	updateLaunchCommand();
@@ -1490,6 +1493,7 @@ void MainWindow::modeRecordDemo()
 	ui->demoFileLine_record->setEnabled( true );
 	ui->demoFileCmbBox_replay->setEnabled( false );
 
+	toggleSkillSubwidgets( true );
 	toggleOptionsSubwidgets( true );
 
 	updateLaunchCommand();
@@ -1505,6 +1509,7 @@ void MainWindow::modeReplayDemo()
 	ui->demoFileLine_record->setEnabled( false );
 	ui->demoFileCmbBox_replay->setEnabled( true );
 
+	toggleSkillSubwidgets( false );
 	toggleOptionsSubwidgets( false );
 
 	ui->multiplayerChkBox->setChecked( false );   // no multiplayer when replaying demo
@@ -1512,10 +1517,14 @@ void MainWindow::modeReplayDemo()
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleOptionsSubwidgets( bool enabled )
+void MainWindow::toggleSkillSubwidgets( bool enabled )
 {
 	ui->skillCmbBox->setEnabled( enabled );
 	ui->skillSpinBox->setEnabled( enabled && ui->skillCmbBox->currentIndex() == Skill::Custom );
+}
+
+void MainWindow::toggleOptionsSubwidgets( bool enabled )
+{
 	ui->noMonstersChkBox->setEnabled( enabled );
 	ui->fastMonstersChkBox->setEnabled( enabled );
 	ui->monstersRespawnChkBox->setEnabled( enabled );
@@ -1577,7 +1586,6 @@ void MainWindow::changeDemoFile_record( const QString & fileName )
 
 	updateLaunchCommand();
 }
-
 
 void MainWindow::selectSkill( int skill )
 {

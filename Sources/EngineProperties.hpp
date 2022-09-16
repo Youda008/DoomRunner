@@ -18,6 +18,16 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 
+enum class MapParamStyle
+{
+	Warp,  // -warp 1 8
+	Map,   // +map E1M8
+};
+
+QStringList getMapArgs( MapParamStyle style, int mapIdx, const QString & mapName );
+
+//----------------------------------------------------------------------------------------------------------------------
+
 enum class CompatLevelStyle
 {
 	None,
@@ -48,8 +58,9 @@ EngineFamily guessEngineFamily( QString executableName );
 
 struct EngineProperties
 {
-	const char * saveDirParam;
+	MapParamStyle mapParamStyle;
 	CompatLevelStyle compLvlStyle;
+	const char * saveDirParam;
 };
 
 const EngineProperties & getEngineProperties( EngineFamily family );

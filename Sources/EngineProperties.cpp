@@ -10,6 +10,7 @@
 #include "LangUtils.hpp"  // find
 
 #include <QHash>
+#include <QRegularExpression>
 
 
 //======================================================================================================================
@@ -44,9 +45,9 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 
 static const EngineProperties engineFamilyProperties [] =
 {
-	/*ZDoom*/         { "-savedir", CompatLevelStyle::ZDoom },
-	/*Boom*/          { "-save",    CompatLevelStyle::Boom },
-	/*ChocolateDoom*/ { "-savedir", CompatLevelStyle::None },
+	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom, "-savedir" },
+	/*Boom*/      { MapParamStyle::Warp, CompatLevelStyle::Boom,  "-save" },
+	/*Chocolate*/ { MapParamStyle::Warp, CompatLevelStyle::None,  "-savedir" },
 };
 static_assert( std::size(engineFamilyProperties) == std::size(engineFamilyStrings), "Please update this table too" );
 
@@ -103,6 +104,40 @@ static const QHash< QString, int > startingMonitorIndexes =
 
 //======================================================================================================================
 //  code
+
+//----------------------------------------------------------------------------------------------------------------------
+//  MapParamStyle
+
+QStringList getMapArgs( MapParamStyle style, int mapIdx, const QString & mapName )
+{
+	if (mapName.isEmpty())
+	{
+		return {};
+	}
+
+	if (style == MapParamStyle::Map)  // this engine supports +map, we can use the map name directly
+	{
+		return { "+map", mapName };
+	}
+	else  // this engine only supports the old -warp, we must deduce map number
+	{
+		static QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
+		static QRegularExpression doom2MapNameRegex("MAP(\\d+)");
+		QRegularExpressionMatch match;
+		if ((match = doom1MapNameRegex.match( mapName )).hasMatch())
+		{
+			return { "-warp", match.captured(1), match.captured(2) };
+		}
+		else if ((match = doom2MapNameRegex.match( mapName )).hasMatch())
+		{
+			return { "-warp", match.captured(1) };
+		}
+		else  // in case the WAD defines it's own map names, we have to resort to guessing the number by using its combo-box index
+		{
+			return { "-warp", QString::number( mapIdx + 1 ) };
+		}
+	}
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 //  CompatLevelStyle

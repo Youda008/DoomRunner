@@ -931,11 +931,14 @@ void MainWindow::selectEngine( int index )
 			presetModel[ selectedPresetIdx ].selectedEnginePath = engineModel[ index ].path;
 	}
 
+	MapParamStyle mapParamStyle = MapParamStyle::Warp;
 	CompatLevelStyle currentCompLvlStyle = CompatLevelStyle::None;
 
 	if (index >= 0)
 	{
-		currentCompLvlStyle = getEngineProperties( engineModel[ index ].family ).compLvlStyle;
+		const EngineProperties & properties = getEngineProperties( engineModel[ index ].family );
+		mapParamStyle = properties.mapParamStyle;
+		currentCompLvlStyle = properties.compLvlStyle;
 
 		verifyFile( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
 	}
@@ -947,6 +950,9 @@ void MainWindow::selectEngine( int index )
 		activeLaunchOptions().compatOpts.compatLevel = -1;
 	}
 	lastCompLvlStyle = currentCompLvlStyle;
+
+	ui->mapCmbBox->setEditable( mapParamStyle == MapParamStyle::Map );
+	ui->mapCmbBox_demo->setEditable( mapParamStyle == MapParamStyle::Map );
 
 	updateConfigFilesFromDir();
 	updateSaveFilesFromDir();
@@ -2454,7 +2460,7 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 	}
 
 	// details of launch mode
-	ui->mapCmbBox->setCurrentText( opts.mapName );
+	ui->mapCmbBox->setCurrentIndex( ui->mapCmbBox->findText( opts.mapName ) );
 	if (!opts.saveFile.isEmpty())
 	{
 		int saveFileIdx = findSuch( saveModel, [&]( const SaveFile & save )
@@ -2471,7 +2477,7 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 			opts.saveFile.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
 		}
 	}
-	ui->mapCmbBox_demo->setCurrentText( opts.mapName_demo );
+	ui->mapCmbBox_demo->setCurrentIndex( ui->mapCmbBox_demo->findText( opts.mapName_demo ) );
 	ui->demoFileLine_record->setText( opts.demoFile_record );
 	if (!opts.demoFile_replay.isEmpty())
 	{
@@ -2808,7 +2814,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 
 	if (ui->launchMode_map->isChecked())
 	{
-		cmd.arguments << "+map" << ui->mapCmbBox->currentText();
+		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );
 	}
 	else if (ui->launchMode_savefile->isChecked() && ui->saveFileCmbBox->currentIndex() >= 0)
 	{
@@ -2819,7 +2825,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	else if (ui->launchMode_recordDemo->isChecked() && !ui->demoFileLine_record->text().isEmpty())
 	{
 		cmd.arguments << "-record" << quoted( ui->demoFileLine_record->text() );
-		cmd.arguments << "+map" << ui->mapCmbBox_demo->currentText();
+		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (ui->launchMode_replayDemo->isChecked() && ui->demoFileCmbBox_replay->currentIndex() >= 0)
 	{

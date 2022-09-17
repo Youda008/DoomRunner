@@ -77,7 +77,7 @@ static const QVector<QString> boomCompatLevels =
 	"4  - Final Doom & Doom95",
 	"5  - DOSDoom",
 	"6  - TASDOOM",
-	"7  - Boom's inaccurate vanilla compatibility mode",
+	"7  - Boom's inaccurate vanilla",
 	"8  - Boom v2.01",
 	"9  - Boom v2.02",
 	"10 - LxDoom",

@@ -163,7 +163,6 @@ struct GameplayOptions
 
 struct CompatibilityOptions
 {
-	int compatLevel = -1;
 	int32_t flags1 = 0;
 	int32_t flags2 = 0;
 };
@@ -186,6 +185,7 @@ struct LaunchOptions
 	bool monstersRespawn = false;
 	GameplayOptions gameOpts = { 0, 0 };
 	CompatibilityOptions compatOpts = { 0, 0 };
+	int compatLevel = -1;
 	bool allowCheats = false;
 
 	// alternative paths

@@ -248,6 +248,7 @@ MainWindow::MainWindow()
 	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::toggleMonstersRespawn );
 	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runGameOptsDialog );
 	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatOptsDialog );
+	connect( ui->compatLevelCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectCompatLevel );
 	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAllowCheats );
 
 	// video
@@ -624,12 +625,7 @@ void MainWindow::runCompatOptsDialog()
 {
 	LaunchOptions & activeLaunchOpts = activeLaunchOptions();
 
-	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
-	CompatLevelStyle compLvlStyle = (selectedEngineIdx >= 0)
-	                                  ? getEngineProperties( engineModel[ selectedEngineIdx ].family ).compLvlStyle
-	                                  : CompatLevelStyle::None;
-
-	CompatOptsDialog dialog( this, activeLaunchOpts.compatOpts, compLvlStyle );
+	CompatOptsDialog dialog( this, activeLaunchOpts.compatOpts );
 
 	int code = dialog.exec();
 
@@ -722,6 +718,7 @@ void MainWindow::restorePreset( int presetIdx )
 		}
 
 		disableSelectionCallbacks = false;
+
 		// manually notify our class about the change, so that the preset and dependent widgets get updated
 		// This is needed before configs, saves and demos are restored, so that the entries are ready to be selected from.
 		selectEngine( ui->engineCmbBox->currentIndex() );
@@ -750,6 +747,7 @@ void MainWindow::restorePreset( int presetIdx )
 		}
 
 		disableSelectionCallbacks = false;
+
 		// manually notify our class about the change, so that the preset and dependent widgets get updated
 		selectConfig( ui->configCmbBox->currentIndex() );
 	}
@@ -782,6 +780,7 @@ void MainWindow::restorePreset( int presetIdx )
 		}
 
 		disableSelectionCallbacks = false;
+
 		// manually notify our class about the change, so that the preset and dependent widgets get updated
 		// This is needed before launch options are restored, so that the map names are ready to be selected.
 		toggleIWAD( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
@@ -793,7 +792,7 @@ void MainWindow::restorePreset( int presetIdx )
 
 		deselectSelectedItems( ui->mapDirView );
 		QDir mapRootDir = mapModel.rootDirectory();
-		for (const QString & path : presetCopy.selectedMapPacks)
+		for (const QString & path : as_const( presetCopy.selectedMapPacks ))
 		{
 			QModelIndex mapIdx = mapModel.index( path );
 			if (mapIdx.isValid() && isInsideDir( path, mapRootDir ))
@@ -816,6 +815,7 @@ void MainWindow::restorePreset( int presetIdx )
 		}
 
 		disableSelectionCallbacks = false;
+
 		// manually notify our class about the change, so that the preset and dependent widgets get updated
 		// Because this updates the preset with selected items, only the valid ones will be stored and invalid removed.
 		toggleMapPack( ui->mapDirView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
@@ -827,7 +827,7 @@ void MainWindow::restorePreset( int presetIdx )
 		presetRef.mods.clear();  // clear the list in the preset and let it repopulate only with valid items
 		modModel.startCompleteUpdate();
 		modModel.clear();
-		for (const Mod & mod : presetCopy.mods)
+		for (const Mod & mod : as_const( presetCopy.mods ))
 		{
 			if (mod.isSeparator || QFileInfo::exists( mod.path ))
 			{
@@ -846,7 +846,7 @@ void MainWindow::restorePreset( int presetIdx )
 	// restore launch options
 	if (opts.launchOptsStorage == StoreToPreset)
 	{
-		restoreLaunchOptions( presetRef.launchOpts );
+		restoreLaunchOptions( presetRef.launchOpts );  // we need a ref to the orig because it clears invalid items
 	}
 
 	// restore additional command line arguments
@@ -932,24 +932,14 @@ void MainWindow::selectEngine( int index )
 	}
 
 	MapParamStyle mapParamStyle = MapParamStyle::Warp;
-	CompatLevelStyle currentCompLvlStyle = CompatLevelStyle::None;
 
 	if (index >= 0)
 	{
 		const EngineProperties & properties = getEngineProperties( engineModel[ index ].family );
 		mapParamStyle = properties.mapParamStyle;
-		currentCompLvlStyle = properties.compLvlStyle;
 
 		verifyFile( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
 	}
-
-	// if the compat level style of the new engine is different from the previous one,
-	// reset the compat level index, because it's no longer valid
-	if (currentCompLvlStyle != lastCompLvlStyle)
-	{
-		activeLaunchOptions().compatOpts.compatLevel = -1;
-	}
-	lastCompLvlStyle = currentCompLvlStyle;
 
 	ui->mapCmbBox->setEditable( mapParamStyle == MapParamStyle::Map );
 	ui->mapCmbBox_demo->setEditable( mapParamStyle == MapParamStyle::Map );
@@ -957,6 +947,7 @@ void MainWindow::selectEngine( int index )
 	updateConfigFilesFromDir();
 	updateSaveFilesFromDir();
 	updateDemoFilesFromDir();
+	updateCompatLevels();
 
 	updateLaunchCommand();
 }
@@ -1539,6 +1530,7 @@ void MainWindow::toggleOptionsSubwidgets( bool enabled )
 	ui->monstersRespawnChkBox->setEnabled( enabled );
 	ui->gameOptsBtn->setEnabled( enabled );
 	ui->compatOptsBtn->setEnabled( enabled );
+	ui->compatLevelCmbBox->setEnabled( enabled );
 }
 
 void MainWindow::selectSavedGame( int saveIdx )
@@ -1649,6 +1641,17 @@ void MainWindow::toggleFastMonsters( bool checked )
 void MainWindow::toggleMonstersRespawn( bool checked )
 {
 	activeLaunchOptions().monstersRespawn = checked;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectCompatLevel( int compatLevel )
+{
+	// sometimes, when doing list updates, we don't want this to happen
+	if (disableSelectionCallbacks)
+		return;
+
+	activeLaunchOptions().compatLevel = compatLevel - 1;  // first item is reserved for indicating no selection
 
 	updateLaunchCommand();
 }
@@ -2065,6 +2068,40 @@ void MainWindow::updateDemoFilesFromDir()
 	}
 }
 
+/// Updates the compat level combo-box according to the currently selected engine.
+void MainWindow::updateCompatLevels()
+{
+	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	CompatLevelStyle currentCompLvlStyle = (selectedEngineIdx >= 0)
+	                                         ? getEngineProperties( engineModel[ selectedEngineIdx ].family ).compLvlStyle
+	                                         : CompatLevelStyle::None;
+
+	if (currentCompLvlStyle != lastCompLvlStyle)
+	{
+		disableSelectionCallbacks = true;  // workaround (read the big comment above)
+
+		ui->compatLevelCmbBox->setCurrentIndex( -1 );
+
+		// automatically initialize compat level combox fox according to the selected engine (its compat level options)
+		ui->compatLevelCmbBox->clear();
+		ui->compatLevelCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
+		if (currentCompLvlStyle != CompatLevelStyle::None)
+		{
+			for (const QString & compatLvlStr : getCompatLevels( currentCompLvlStyle ))
+				ui->compatLevelCmbBox->addItem( compatLvlStr );
+		}
+
+		disableSelectionCallbacks = false;
+
+		// available compat levels changed -> reset the compat level index, because it's no longer valid
+		ui->compatLevelCmbBox->setCurrentIndex( 0 );
+
+		ui->compatLevelCmbBox->setEnabled( currentCompLvlStyle != CompatLevelStyle::None );
+
+		lastCompLvlStyle = currentCompLvlStyle;
+	}
+}
+
 // this is not called regularly, but only when an IWAD is selected or deselected
 void MainWindow::updateMapsFromIWAD()
 {
@@ -2429,7 +2466,7 @@ void MainWindow::loadOptions( const QString & filePath )
 	//               and after preset loading because the preset will select IWAD which will fill the map combo box
 	if (opts.launchOptsStorage == StoreGlobally)
 	{
-		restoreLaunchOptions( launchOpts );
+		restoreLaunchOptions( launchOpts );  // TODO
 	}
 
 	restoreOutputOptions( outputOpts );
@@ -2496,12 +2533,15 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 		}
 	}
 
+	// TODO: check combo-box boundaries
+
 	// gameplay
 	ui->skillSpinBox->setValue( int( opts.skillNum ) );
 	ui->noMonstersChkBox->setChecked( opts.noMonsters );
 	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
 	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
 	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
+	ui->compatLevelCmbBox->setCurrentIndex( opts.compatLevel + 1 );
 	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
 
 	// alternative paths
@@ -2849,8 +2889,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 			cmd.arguments << "+dmflags" << QString::number( activeLaunchOpts.gameOpts.flags1 );
 		if (activeLaunchOpts.gameOpts.flags2 != 0)
 			cmd.arguments << "+dmflags2" << QString::number( activeLaunchOpts.gameOpts.flags2 );
-		if (activeLaunchOpts.compatOpts.compatLevel >= 0)
-			cmd.arguments << getCompatLevelArgs( engineProperties.compLvlStyle, activeLaunchOpts.compatOpts.compatLevel );
+		if (activeLaunchOpts.compatLevel >= 0)
+			cmd.arguments << getCompatLevelArgs( engineProperties.compLvlStyle, activeLaunchOpts.compatLevel );
 		if (!compatOptsCmdArgs.isEmpty())
 			cmd.arguments << compatOptsCmdArgs;
 	}

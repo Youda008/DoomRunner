@@ -102,6 +102,7 @@ class MainWindow : public QMainWindow {
 	void toggleNoMonsters( bool checked );
 	void toggleFastMonsters( bool checked );
 	void toggleMonstersRespawn( bool checked );
+	void selectCompatLevel( int compatLevel );
 	void toggleAllowCheats( bool checked );
 
 	void selectMonitor( int index );
@@ -159,9 +160,10 @@ class MainWindow : public QMainWindow {
 
 	void updateIWADsFromDir();
 	void refreshMapPacks();
+	void updateConfigFilesFromDir();
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
-	void updateConfigFilesFromDir();
+	void updateCompatLevels();
 	void updateMapsFromIWAD();
 
 	void toggleSkillSubwidgets( bool enabled );

@@ -158,6 +158,8 @@ class MainWindow : public QMainWindow {
 	void restoreLaunchOptions( LaunchOptions & opts );
 	void restoreOutputOptions( OutputOptions & opts );
 
+	LaunchMode getActiveLaunchMode() const;
+
 	void updateIWADsFromDir();
 	void refreshMapPacks();
 	void updateConfigFilesFromDir();
@@ -188,8 +190,8 @@ class MainWindow : public QMainWindow {
 
 	bool optionsCorrupted;  ///< true when was a critical error during parsing of options file, such content should not be saved
 
-	bool disableSelectionCallbacks;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD() \
-	                                      used to prevent unnecessary or unwanted operations when updating the lists
+	bool restoringInProgress;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
+	bool disableSelectionCallbacks;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
 
 	CompatLevelStyle lastCompLvlStyle;  ///< compat level style of the engine that was selected the last time
 
@@ -247,6 +249,7 @@ class MainWindow : public QMainWindow {
 
 	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 
+	GlobalOptions globalOpts;
 	LaunchOptions launchOpts;
 	OutputOptions outputOpts;
 

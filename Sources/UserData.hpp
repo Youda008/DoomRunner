@@ -218,6 +218,12 @@ struct OutputOptions
 	bool noMusic = false;
 };
 
+/// misc data that never go to a preset
+struct GlobalOptions
+{
+	QString cmdArgs;
+};
+
 struct Preset : public EditableListModelItem
 {
 	QString name;
@@ -267,6 +273,7 @@ QJsonObject serialize( const ModSettings & modSettings );
 QJsonObject serialize( const LaunchOptions & options );
 QJsonObject serialize( const OutputOptions & options );
 QJsonObject serialize( const Preset & preset, bool storeOpts );
+void serialize( QJsonObject & jsOptions, const GlobalOptions & options );
 void serialize( QJsonObject & jsOptions, const LauncherOptions & options );
 
 template< typename Elem >
@@ -289,6 +296,7 @@ void deserialize( const JsonObjectCtx & jsMods, ModSettings & modSettings );
 void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & options );
 void deserialize( const JsonObjectCtx & jsOptions, OutputOptions & options );
 void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts );
+void deserialize( const JsonObjectCtx & jsOptions, GlobalOptions & options );
 void deserialize( const JsonObjectCtx & jsOptions, LauncherOptions & options );
 
 

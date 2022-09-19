@@ -372,6 +372,17 @@ void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts
 }
 
 // We want to serialize this into an existing JSON object instead of its own one, for compatibility reasons.
+
+void serialize( QJsonObject & jsOptions, const GlobalOptions & opts )
+{
+	jsOptions["additional_args"] = opts.cmdArgs;
+}
+
+void deserialize( const JsonObjectCtx & jsOptions, GlobalOptions & opts )
+{
+	opts.cmdArgs = jsOptions.getString( "additional_args" );
+}
+
 void serialize( QJsonObject & jsOptions, const LauncherOptions & opts )
 {
 	jsOptions["check_for_updates"] = opts.checkForUpdates;

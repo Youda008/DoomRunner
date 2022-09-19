@@ -112,15 +112,11 @@ LaunchOptions & MainWindow::activeLaunchOptions()
 		{
 			return presetModel[ selectedPresetIdx ].launchOpts;
 		}
-		else
-		{
-			QMessageBox::critical( this, "No preset selected",
-				"Requested to store launch options to preset, but no preset is selected."
-				"This shouldn't be possible, please create an issue on Github page."
-			);
-		}
 	}
-	return launchOpts;  // fallback
+
+	// We always have to save somewhere, because generateLaunchCommand() is reading gameplay options from it.
+	// In case the launchOptsStorage == DontStore, we will just skip serializing it to JSON.
+	return launchOpts;
 }
 
 
@@ -132,6 +128,7 @@ MainWindow::MainWindow()
 	QMainWindow( nullptr ),
 	tickCount( 0 ),
 	optionsCorrupted( false ),
+	restoringInProgress( false ),
 	disableSelectionCallbacks( false ),
 	lastCompLvlStyle( CompatLevelStyle::None ),
 	compatOptsCmdArgs(),
@@ -679,41 +676,46 @@ void MainWindow::cloneConfig()
 //----------------------------------------------------------------------------------------------------------------------
 //  preset loading
 
-// loads the content of a preset into the other widgets
+/// Loads the content of a preset into the other widgets.
 void MainWindow::restorePreset( int presetIdx )
 {
-	// Every change of a selection, like cmbBox->setCurrentIndex( idx ) or selectItemByIdx( idx )
-	// causes the corresponding callbacks to be called which in turn changes the value stored in the preset.
-	// The easiest and safest way to get around this is to just create a local copy of the preset that can't be modified
-	// and use it throughout this function, except for cases where the original preset actually needs to be modified.
-	Preset & presetRef = presetModel[ presetIdx ];
-	const Preset presetCopy = presetRef;
+	// Restoring any stored options is tricky.
+	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
+	// causes the corresponding callbacks to be called which in turn might cause some other stored value to be changed.
+	// For example  ui->engineCmbBox->setCurrentIndex( idx )  calls  selectEngine( idx )  which might indirectly call
+	// selectConfig( idx )  which will overwrite the stored selected config and we will then restore a wrong one.
+	// The least complicated workaround seems to be simply setting a flag indicating that we are in the middle of
+	// restoring saved options, and then prevent storing values when this flag is set.
+
+	restoringInProgress = true;
+
+	Preset & preset = presetModel[ presetIdx ];
 
 	// restore selected engine
 	{
-		disableSelectionCallbacks = true;  // prevent unnecessary launch command regeneration and modifying our preset in the middle of our work
+		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
 
 		ui->engineCmbBox->setCurrentIndex( -1 );
-		if (!presetCopy.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
+		if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
 		{
 			int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
-												   { return engine.path == presetCopy.selectedEnginePath; } );
+												   { return engine.path == preset.selectedEnginePath; } );
 			if (engineIdx >= 0)
 			{
-				if (QFileInfo::exists( presetCopy.selectedEnginePath ))
+				if (QFileInfo::exists( preset.selectedEnginePath ))
 				{
 					ui->engineCmbBox->setCurrentIndex( engineIdx );
 				}
 				else
 				{
 					QMessageBox::warning( this, "Engine no longer exists",
-						"Engine selected for this preset ("%presetCopy.selectedEnginePath%") no longer exists, please update the engines at Menu -> Initial Setup." );
+						"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please update the engines at Menu -> Initial Setup." );
 				}
 			}
 			else
 			{
 				QMessageBox::warning( this, "Engine no longer exists",
-					"Engine selected for this preset ("%presetCopy.selectedEnginePath%") was removed from engine list, please select another one." );
+					"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list, please select another one." );
 			}
 		}
 
@@ -726,13 +728,13 @@ void MainWindow::restorePreset( int presetIdx )
 
 	// restore selected config
 	{
-		disableSelectionCallbacks = true;  // prevent unnecessary launch command regeneration and modifying our preset in the middle of our work
+		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
 
 		ui->configCmbBox->setCurrentIndex( -1 );
 		if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
 		{
 			int configIdx = findSuch( configModel, [&]( const ConfigFile & config )
-												   { return config.fileName == presetCopy.selectedConfig; } );
+												   { return config.fileName == preset.selectedConfig; } );
 			if (configIdx >= 0)
 			{
 				// No sense to verify if this config file exists, the configModel has just been updated during
@@ -742,7 +744,7 @@ void MainWindow::restorePreset( int presetIdx )
 			else
 			{
 				QMessageBox::warning( this, "Config no longer exists",
-					"Config file selected for this preset ("%presetCopy.selectedConfig%") no longer exists, please select another one." );
+					"Config file selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
 			}
 		}
 
@@ -754,28 +756,28 @@ void MainWindow::restorePreset( int presetIdx )
 
 	// restore selected IWAD
 	{
-		disableSelectionCallbacks = true;  // prevent unnecessary launch command regeneration and modifying our preset in the middle of our work
+		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
 
 		deselectSelectedItems( ui->iwadListView );
-		if (!presetCopy.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
+		if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
 		{
-			int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == presetCopy.selectedIWAD; } );
+			int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
 			if (iwadIdx >= 0)
 			{
-				if (QFileInfo::exists( presetCopy.selectedIWAD ))
+				if (QFileInfo::exists( preset.selectedIWAD ))
 				{
 					selectItemByIndex( ui->iwadListView, iwadIdx );
 				}
 				else
 				{
 					QMessageBox::warning( this, "IWAD no longer exists",
-						"IWAD selected for this preset ("%presetCopy.selectedIWAD%") no longer exists, please select another one." );
+						"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
 				}
 			}
 			else
 			{
 				QMessageBox::warning( this, "IWAD no longer exists",
-					"IWAD selected for this preset ("%presetCopy.selectedIWAD%") no longer exists, please select another one." );
+					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
 			}
 		}
 
@@ -788,11 +790,11 @@ void MainWindow::restorePreset( int presetIdx )
 
 	// restore selected MapPack
 	{
-		disableSelectionCallbacks = true;  // prevent unnecessary launch command regeneration and modifying our preset in the middle of our work
+		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
 
 		deselectSelectedItems( ui->mapDirView );
 		QDir mapRootDir = mapModel.rootDirectory();
-		for (const QString & path : as_const( presetCopy.selectedMapPacks ))
+		for (const QString & path : as_const( preset.selectedMapPacks ))
 		{
 			QModelIndex mapIdx = mapModel.index( path );
 			if (mapIdx.isValid() && isInsideDir( path, mapRootDir ))
@@ -824,14 +826,15 @@ void MainWindow::restorePreset( int presetIdx )
 	// restore list of mods
 	{
 		deselectSelectedItems( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
-		presetRef.mods.clear();  // clear the list in the preset and let it repopulate only with valid items
+		const QList<Mod> modsCopy = preset.mods;
+		preset.mods.clear();  // clear the list in the preset and let it repopulate only with valid items
 		modModel.startCompleteUpdate();
 		modModel.clear();
-		for (const Mod & mod : as_const( presetCopy.mods ))
+		for (const Mod & mod : modsCopy)
 		{
 			if (mod.isSeparator || QFileInfo::exists( mod.path ))
 			{
-				presetRef.mods.append( mod );  // put back only items that are valid
+				preset.mods.append( mod );  // put back only items that are valid
 				modModel.append( mod );
 			}
 			else
@@ -846,11 +849,13 @@ void MainWindow::restorePreset( int presetIdx )
 	// restore launch options
 	if (opts.launchOptsStorage == StoreToPreset)
 	{
-		restoreLaunchOptions( presetRef.launchOpts );  // we need a ref to the orig because it clears invalid items
+		restoreLaunchOptions( preset.launchOpts );  // this clears items that are invalid
 	}
 
 	// restore additional command line arguments
-	ui->presetCmdArgsLine->setText( presetCopy.cmdArgs );
+	ui->presetCmdArgsLine->setText( preset.cmdArgs );
+
+	restoringInProgress = false;
 
 	updateLaunchCommand();
 }
@@ -910,20 +915,19 @@ void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemS
 	}
 	else  // the preset was deselected using CTRL
 	{
-		clearPresetSubWidgets();  // clear the other widgets that display the content of the preset
 		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
+		clearPresetSubWidgets();  // clear the other widgets that display the content of the preset
 	}
 }
 
 void MainWindow::selectEngine( int index )
 {
-	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	if (selectedPresetIdx >= 0 && !restoringInProgress)
 	{
 		if (index < 0)  // engine combo box was reset to "no engine selected" state
 			presetModel[ selectedPresetIdx ].selectedEnginePath.clear();
@@ -954,13 +958,12 @@ void MainWindow::selectEngine( int index )
 
 void MainWindow::selectConfig( int index )
 {
-	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	if (selectedPresetIdx >= 0 && !restoringInProgress)
 	{
 		if (index < 0)  // config combo box was reset to "no config selected" state
 			presetModel[ selectedPresetIdx ].selectedConfig.clear();
@@ -987,7 +990,6 @@ void MainWindow::selectConfig( int index )
 
 void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
-	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
@@ -995,7 +997,7 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	if (selectedPresetIdx >= 0 && !restoringInProgress)
 	{
 		if (selectedIWADIdx < 0)
 			presetModel[ selectedPresetIdx ].selectedIWAD.clear();
@@ -1015,19 +1017,12 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 
 void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
-	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
 	// clicking on an item in QTreeView with QFileSystemModel selects all elements (columns) of a row,
 	// but we only care about the first one
 	const auto selectedRows = getSelectedRows( ui->mapDirView );
-
-	// expand the parent directory nodes that are collapsed
-	for (const QModelIndex & index : selectedRows)
-		for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
-			if (!ui->mapDirView->isExpanded( currentIndex ))
-				ui->mapDirView->expand( currentIndex );
 
 	QList< QString > selectedMapPacks;
 	for (const QModelIndex & index : selectedRows)
@@ -1038,27 +1033,28 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	if (selectedPresetIdx >= 0 && !restoringInProgress)
 	{
 		presetModel[ selectedPresetIdx ].selectedMapPacks = selectedMapPacks;
 	}
+
+	// expand the parent directory nodes that are collapsed
+	for (const QModelIndex & index : selectedRows)
+		for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
+			if (!ui->mapDirView->isExpanded( currentIndex ))
+				ui->mapDirView->expand( currentIndex );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles )
 {
-	// When the data is not changed by the user clicking, but by our code (moveUp, moveDown, ...),
-	// we don't want the presets to update here, because it would update back and forth.
-	if (disableSelectionCallbacks)
-		return;
-
 	int topModIdx = topLeft.row();
 	int bottomModIdx = bottomRight.row();
 
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	if (selectedPresetIdx >= 0 && !restoringInProgress)
 	{
 		for (int idx = topModIdx; idx <= bottomModIdx; idx++)
 		{
@@ -1181,8 +1177,8 @@ void MainWindow::presetDelete()
 	}
 	else
 	{
-		clearPresetSubWidgets();
 		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
+		clearPresetSubWidgets();
 	}
 }
 
@@ -1308,11 +1304,11 @@ void MainWindow::modDelete()
 
 void MainWindow::modMoveUp()
 {
-	disableSelectionCallbacks = true;  // prevent modDataChanged() from updating our preset too early and incorrectly
+	restoringInProgress = true;  // prevent modDataChanged() from updating our preset too early and incorrectly
 
 	QVector<int> movedIndexes = moveUpSelectedItems( ui->modListView, modModel );
 
-	disableSelectionCallbacks = false;
+	restoringInProgress = false;
 
 	if (movedIndexes.isEmpty())  // no item was selected or they were already at the top
 		return;
@@ -1332,11 +1328,11 @@ void MainWindow::modMoveUp()
 
 void MainWindow::modMoveDown()
 {
-	disableSelectionCallbacks = true;  // prevent modDataChanged() from updating our preset too early and incorrectly
+	restoringInProgress = true;  // prevent modDataChanged() from updating our preset too early and incorrectly
 
 	QVector<int> movedIndexes = moveDownSelectedItems( ui->modListView, modModel );
 
-	disableSelectionCallbacks = false;
+	restoringInProgress = false;
 
 	if (movedIndexes.isEmpty())  // no item was selected or they were already at the bottom
 		return;
@@ -1424,7 +1420,8 @@ void MainWindow::modsDropped( int dropRow, int count )
 
 void MainWindow::modeStandard()
 {
-	activeLaunchOptions().mode = Standard;
+	if (!restoringInProgress)
+		activeLaunchOptions().mode = Standard;
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1445,7 +1442,8 @@ void MainWindow::modeStandard()
 
 void MainWindow::modeLaunchMap()
 {
-	activeLaunchOptions().mode = LaunchMap;
+	if (!restoringInProgress)
+		activeLaunchOptions().mode = LaunchMap;
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1466,7 +1464,8 @@ void MainWindow::modeLaunchMap()
 
 void MainWindow::modeSavedGame()
 {
-	activeLaunchOptions().mode = LoadSave;
+	if (!restoringInProgress)
+		activeLaunchOptions().mode = LoadSave;
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
@@ -1482,7 +1481,8 @@ void MainWindow::modeSavedGame()
 
 void MainWindow::modeRecordDemo()
 {
-	activeLaunchOptions().mode = RecordDemo;
+	if (!restoringInProgress)
+		activeLaunchOptions().mode = RecordDemo;
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1498,7 +1498,8 @@ void MainWindow::modeRecordDemo()
 
 void MainWindow::modeReplayDemo()
 {
-	activeLaunchOptions().mode = ReplayDemo;
+	if (!restoringInProgress)
+		activeLaunchOptions().mode = ReplayDemo;
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1530,60 +1531,66 @@ void MainWindow::toggleOptionsSubwidgets( bool enabled )
 	ui->monstersRespawnChkBox->setEnabled( enabled );
 	ui->gameOptsBtn->setEnabled( enabled );
 	ui->compatOptsBtn->setEnabled( enabled );
-	ui->compatLevelCmbBox->setEnabled( enabled );
-}
-
-void MainWindow::selectSavedGame( int saveIdx )
-{
-	// sometimes, when doing list updates, we don't want this to happen
-	if (disableSelectionCallbacks)
-		return;
-
-	QString saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : "";
-
-	activeLaunchOptions().saveFile = saveFileName;
-
-	updateLaunchCommand();
-}
-
-void MainWindow::selectDemoFile_replay( int demoIdx )
-{
-	// sometimes, when doing list updates, we don't want this to happen
-	if (disableSelectionCallbacks)
-		return;
-
-	QString demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : "";
-
-	activeLaunchOptions().demoFile_replay = demoFileName;
-
-	updateLaunchCommand();
+	ui->compatLevelCmbBox->setEnabled( enabled && lastCompLvlStyle != CompatLevelStyle::None );
 }
 
 void MainWindow::changeMap( const QString & mapName )
 {
-	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
-	activeLaunchOptions().mapName = mapName;
+	if (!restoringInProgress)
+		activeLaunchOptions().mapName = mapName;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeMap_demo( const QString & mapName )
 {
-	// sometimes, when doing list updates, we don't want this to happen
 	if (disableSelectionCallbacks)
 		return;
 
-	activeLaunchOptions().mapName_demo = mapName;
+	if (!restoringInProgress)
+		activeLaunchOptions().mapName_demo = mapName;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectSavedGame( int saveIdx )
+{
+	if (disableSelectionCallbacks)
+		return;
+
+	if (!restoringInProgress)
+	{
+		QString saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : "";
+		activeLaunchOptions().saveFile = saveFileName;
+	}
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeDemoFile_record( const QString & fileName )
 {
-	activeLaunchOptions().demoFile_record = fileName;
+	if (disableSelectionCallbacks)
+		return;
+
+	if (!restoringInProgress)
+		activeLaunchOptions().demoFile_record = fileName;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::selectDemoFile_replay( int demoIdx )
+{
+	if (disableSelectionCallbacks)
+		return;
+
+	if (!restoringInProgress)
+	{
+		QString demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : "";
+		activeLaunchOptions().demoFile_replay = demoFileName;
+	}
 
 	updateLaunchCommand();
 }
@@ -1607,7 +1614,8 @@ void MainWindow::selectSkill( int skillIdx )
 
 void MainWindow::changeSkillNum( int skillNum )
 {
-	activeLaunchOptions().skillNum = uint( skillNum );
+	if (!restoringInProgress)
+		activeLaunchOptions().skillNum = uint( skillNum );
 
 	// changeSkillNum() and selectSkill() indirectly invoke each other,
 	// this prevents unnecessary updates and potential infinite recursion
@@ -1626,46 +1634,48 @@ void MainWindow::changeSkillNum( int skillNum )
 
 void MainWindow::toggleNoMonsters( bool checked )
 {
-	activeLaunchOptions().noMonsters = checked;
+	if (!restoringInProgress)
+		activeLaunchOptions().noMonsters = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleFastMonsters( bool checked )
 {
-	activeLaunchOptions().fastMonsters = checked;
+	if (!restoringInProgress)
+		activeLaunchOptions().fastMonsters = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleMonstersRespawn( bool checked )
 {
-	activeLaunchOptions().monstersRespawn = checked;
+	if (!restoringInProgress)
+		activeLaunchOptions().monstersRespawn = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectCompatLevel( int compatLevel )
 {
-	// sometimes, when doing list updates, we don't want this to happen
-	if (disableSelectionCallbacks)
-		return;
-
-	activeLaunchOptions().compatLevel = compatLevel - 1;  // first item is reserved for indicating no selection
+	if (!restoringInProgress)
+		activeLaunchOptions().compatLevel = compatLevel - 1;  // first item is reserved for indicating no selection
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleAllowCheats( bool checked )
 {
-	activeLaunchOptions().allowCheats = checked;
+	if (!restoringInProgress)
+		activeLaunchOptions().allowCheats = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeSaveDir( const QString & dir )
 {
-	activeLaunchOptions().saveDir = dir;
+	if (!restoringInProgress)
+		activeLaunchOptions().saveDir = dir;
 
 	if (isValidDir( dir ))
 		updateSaveFilesFromDir();
@@ -1675,7 +1685,8 @@ void MainWindow::changeSaveDir( const QString & dir )
 
 void MainWindow::changeScreenshotDir( const QString & dir )
 {
-	activeLaunchOptions().screenshotDir = dir;
+	if (!restoringInProgress)
+		activeLaunchOptions().screenshotDir = dir;
 
 	updateLaunchCommand();
 }
@@ -1710,7 +1721,8 @@ void MainWindow::browseScreenshotDir()
 
 void MainWindow::toggleMultiplayer( bool checked )
 {
-	activeLaunchOptions().isMultiplayer = checked;
+	if (!restoringInProgress)
+		activeLaunchOptions().isMultiplayer = checked;
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -1748,7 +1760,8 @@ void MainWindow::toggleMultiplayer( bool checked )
 
 void MainWindow::selectMultRole( int role )
 {
-	activeLaunchOptions().multRole = MultRole( role );
+	if (!restoringInProgress)
+		activeLaunchOptions().multRole = MultRole( role );
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -1779,28 +1792,32 @@ void MainWindow::selectMultRole( int role )
 
 void MainWindow::changeHost( const QString & hostName )
 {
-	activeLaunchOptions().hostName = hostName;
+	if (!restoringInProgress)
+		activeLaunchOptions().hostName = hostName;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changePort( int port )
 {
-	activeLaunchOptions().port = uint16_t( port );
+	if (!restoringInProgress)
+		activeLaunchOptions().port = uint16_t( port );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectNetMode( int netMode )
 {
-	activeLaunchOptions().netMode = NetMode( netMode );
+	if (!restoringInProgress)
+		activeLaunchOptions().netMode = NetMode( netMode );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectGameMode( int gameMode )
 {
-	activeLaunchOptions().gameMode = GameMode( gameMode );
+	if (!restoringInProgress)
+		activeLaunchOptions().gameMode = GameMode( gameMode );
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
@@ -1816,70 +1833,80 @@ void MainWindow::selectGameMode( int gameMode )
 
 void MainWindow::changePlayerCount( int count )
 {
-	activeLaunchOptions().playerCount = uint( count );
+	if (!restoringInProgress)
+		activeLaunchOptions().playerCount = uint( count );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTeamDamage( double damage )
 {
-	activeLaunchOptions().teamDamage = damage;
+	if (!restoringInProgress)
+		activeLaunchOptions().teamDamage = damage;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTimeLimit( int timeLimit )
 {
-	activeLaunchOptions().timeLimit = uint( timeLimit );
+	if (!restoringInProgress)
+		activeLaunchOptions().timeLimit = uint( timeLimit );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeFragLimit( int fragLimit )
 {
-	activeLaunchOptions().fragLimit = uint( fragLimit );
+	if (!restoringInProgress)
+		activeLaunchOptions().fragLimit = uint( fragLimit );
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectMonitor( int index )
 {
-	outputOpts.monitorIdx = index;
+	if (!restoringInProgress)
+		outputOpts.monitorIdx = index;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionX( const QString & xStr )
 {
-	outputOpts.resolutionX = xStr.toUInt();
+	if (!restoringInProgress)
+		outputOpts.resolutionX = xStr.toUInt();
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionY( const QString & yStr )
 {
-	outputOpts.resolutionY = yStr.toUInt();
+	if (!restoringInProgress)
+		outputOpts.resolutionY = yStr.toUInt();
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoSound( bool checked )
 {
-	outputOpts.noSound = checked;
+	if (!restoringInProgress)
+		outputOpts.noSound = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoSFX( bool checked )
 {
-	outputOpts.noSFX = checked;
+	if (!restoringInProgress)
+		outputOpts.noSFX = checked;
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoMusic( bool checked )
 {
-	outputOpts.noMusic = checked;
+	if (!restoringInProgress)
+		outputOpts.noMusic = checked;
 
 	updateLaunchCommand();
 }
@@ -1891,7 +1918,7 @@ void MainWindow::updatePresetCmdArgs( const QString & text )
 {
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	if (selectedPresetIdx >= 0 && !restoringInProgress)
 	{
 		presetModel[ selectedPresetIdx ].cmdArgs = text;
 	}
@@ -1899,8 +1926,11 @@ void MainWindow::updatePresetCmdArgs( const QString & text )
 	updateLaunchCommand();
 }
 
-void MainWindow::updateGlobalCmdArgs( const QString & )
+void MainWindow::updateGlobalCmdArgs( const QString & text )
 {
+	if (!restoringInProgress)
+		globalOpts.cmdArgs = text;
+
 	updateLaunchCommand();
 }
 
@@ -2091,12 +2121,18 @@ void MainWindow::updateCompatLevels()
 				ui->compatLevelCmbBox->addItem( compatLvlStr );
 		}
 
-		disableSelectionCallbacks = false;
-
-		// available compat levels changed -> reset the compat level index, because it's no longer valid
 		ui->compatLevelCmbBox->setCurrentIndex( 0 );
 
-		ui->compatLevelCmbBox->setEnabled( currentCompLvlStyle != CompatLevelStyle::None );
+		disableSelectionCallbacks = false;
+
+		// available compat levels changed -> reset the compat level index, because the previous one is no longer valid
+		selectCompatLevel( 0 );
+
+		// keep the widget enabled only if the engine supports compatibility levels
+		LaunchMode launchMode = getActiveLaunchMode();
+		ui->compatLevelCmbBox->setEnabled(
+			currentCompLvlStyle != CompatLevelStyle::None && launchMode != LoadSave && launchMode != ReplayDemo
+		);
 
 		lastCompLvlStyle = currentCompLvlStyle;
 	}
@@ -2112,7 +2148,7 @@ void MainWindow::updateMapsFromIWAD()
 	QString origText = ui->mapCmbBox->currentText();
 	QString origText_demo = ui->mapCmbBox_demo->currentText();
 
-	disableSelectionCallbacks = true;  // prevent unnecessary launch command regeneration
+	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
 	do
 	{
@@ -2226,14 +2262,14 @@ void MainWindow::saveOptions( const QString & filePath )
 		jsRoot["presets"] = jsPresetArray;
 	}
 
-	jsRoot["additional_args"] = ui->globalCmdArgsLine->text();
-
 	if (opts.launchOptsStorage == StoreGlobally)
 	{
 		jsRoot["launch_options"] = serialize( launchOpts );
 	}
 
 	jsRoot["output_options"] = serialize( outputOpts );
+
+	serialize( jsRoot, globalOpts );
 
 	int presetIdx = getSelectedItemIndex( ui->presetListView );
 	jsRoot["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
@@ -2290,7 +2326,16 @@ void MainWindow::loadOptions( const QString & filePath )
 			this->resize( width, height );
 	}
 
-	// preset must be deselected first, so that the cleared selections doesn't save in the selected preset
+	// Restoring any stored options is tricky.
+	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
+	// causes the corresponding callbacks to be called which in turn might cause some other stored value to be changed.
+	// For example  ui->engineCmbBox->setCurrentIndex( idx )  calls  selectEngine( idx )  which might indirectly call
+	// selectConfig( idx )  which will overwrite the stored selected config and we will then restore a wrong one.
+	// The least complicated workaround seems to be simply setting a flag indicating that we are in the middle of
+	// restoring saved options, and then prevent storing values when this flag is set.
+	restoringInProgress = true;
+
+	// preset must be deselected first, so that the cleared selections don't save in the selected preset
 	deselectAllAndUnsetCurrent( ui->presetListView );
 
 	// this must be loaded early, because we need to know whether to attempt loading the opts from the presets
@@ -2299,9 +2344,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	if (JsonObjectCtx jsEngines = jsRoot.getObject( "engines" ))
 	{
-		disableSelectionCallbacks = true;  // prevent unnecessary reloading of config/save/demo lists
-
-		ui->engineCmbBox->setCurrentIndex( -1 );
+		ui->engineCmbBox->setCurrentIndex( -1 );  // if something is selected, this invokes the callback, which updates the dependent widgets
 
 		engineModel.startCompleteUpdate();
 
@@ -2329,8 +2372,6 @@ void MainWindow::loadOptions( const QString & filePath )
 		}
 
 		engineModel.finishCompleteUpdate();
-
-		disableSelectionCallbacks = false;
 	}
 
 	if (JsonObjectCtx jsIWADs = jsRoot.getObject( "IWADs" ))
@@ -2415,8 +2456,6 @@ void MainWindow::loadOptions( const QString & filePath )
 		presetModel.finishCompleteUpdate();
 	}
 
-	ui->globalCmdArgsLine->setText( jsRoot.getString( "additional_args" ) );
-
 	// launch options
 	if (opts.launchOptsStorage == StoreGlobally)
 	{
@@ -2430,6 +2469,8 @@ void MainWindow::loadOptions( const QString & filePath )
 	{
 		deserialize( jsOptions, outputOpts );
 	}
+
+	deserialize( jsRoot, globalOpts );
 
 	// make sure all paths loaded from JSON are stored in correct format
 	toggleAbsolutePaths( opts.useAbsolutePaths );
@@ -2466,10 +2507,14 @@ void MainWindow::loadOptions( const QString & filePath )
 	//               and after preset loading because the preset will select IWAD which will fill the map combo box
 	if (opts.launchOptsStorage == StoreGlobally)
 	{
-		restoreLaunchOptions( launchOpts );  // TODO
+		restoreLaunchOptions( launchOpts );  // this clears items that are invalid
 	}
 
 	restoreOutputOptions( outputOpts );
+
+	ui->globalCmdArgsLine->setText( globalOpts.cmdArgs );
+
+	restoringInProgress = false;
 
 	updateLaunchCommand();
 }
@@ -2575,6 +2620,20 @@ void MainWindow::restoreOutputOptions( OutputOptions & opts )
 	ui->noSoundChkBox->setChecked( opts.noSound );
 	ui->noSfxChkBox->setChecked( opts.noSFX );
 	ui->noMusicChkBox->setChecked( opts.noMusic );
+}
+
+LaunchMode MainWindow::getActiveLaunchMode() const
+{
+	if (ui->launchMode_map->isChecked())
+		return LaunchMode::LaunchMap;
+	else if (ui->launchMode_savefile->isChecked())
+		return LaunchMode::LoadSave;
+	else if (ui->launchMode_recordDemo->isChecked())
+		return LaunchMode::RecordDemo;
+	else if (ui->launchMode_replayDemo->isChecked())
+		return LaunchMode::ReplayDemo;
+	else
+		return LaunchMode::Standard;
 }
 
 void MainWindow::exportPresetToScript()
@@ -2704,6 +2763,13 @@ void MainWindow::importPresetFromScript()
 
 void MainWindow::updateLaunchCommand( bool verifyPaths )
 {
+	// optimization - don't regenerate the command when we're about to make more changes right away
+	if (restoringInProgress)
+		return;
+
+	//static uint count = 1;
+	//qDebug() << "updateLaunchCommand()" << count++;
+
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx < 0)
 	{

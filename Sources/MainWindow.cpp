@@ -1416,7 +1416,7 @@ void MainWindow::modsDropped( int dropRow, int count )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  launch options
+//  launch mode
 
 void MainWindow::modeStandard()
 {
@@ -1595,6 +1595,10 @@ void MainWindow::selectDemoFile_replay( int demoIdx )
 	updateLaunchCommand();
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
+//  gameplay options
+
 void MainWindow::selectSkill( int skillIdx )
 {
 	// skillIdx is an index in the combo-box which starts from 0, but Doom skill number actually starts from 1
@@ -1672,52 +1676,9 @@ void MainWindow::toggleAllowCheats( bool checked )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeSaveDir( const QString & dir )
-{
-	if (!restoringInProgress)
-		activeLaunchOptions().saveDir = dir;
 
-	if (isValidDir( dir ))
-		updateSaveFilesFromDir();
-
-	updateLaunchCommand();
-}
-
-void MainWindow::changeScreenshotDir( const QString & dir )
-{
-	if (!restoringInProgress)
-		activeLaunchOptions().screenshotDir = dir;
-
-	updateLaunchCommand();
-}
-
-void MainWindow::browseSaveDir()
-{
-	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory with saves", pathContext.baseDir().path() );
-	if (path.isEmpty())  // user probably clicked cancel
-		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
-
-	ui->saveDirLine->setText( path );
-	// the rest is done in saveDirLine callback
-}
-
-void MainWindow::browseScreenshotDir()
-{
-	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory for screenshots", pathContext.baseDir().path() );
-	if (path.isEmpty())  // user probably clicked cancel
-		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
-
-	ui->screenshotDirLine->setText( path );
-	// the rest is done in screenshotDirLine callback
-}
+//----------------------------------------------------------------------------------------------------------------------
+//  multiplayer
 
 void MainWindow::toggleMultiplayer( bool checked )
 {
@@ -1863,6 +1824,61 @@ void MainWindow::changeFragLimit( int fragLimit )
 	updateLaunchCommand();
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
+//  alternative paths
+
+void MainWindow::changeSaveDir( const QString & dir )
+{
+	if (!restoringInProgress)
+		activeLaunchOptions().saveDir = dir;
+
+	if (isValidDir( dir ))
+		updateSaveFilesFromDir();
+
+	updateLaunchCommand();
+}
+
+void MainWindow::changeScreenshotDir( const QString & dir )
+{
+	if (!restoringInProgress)
+		activeLaunchOptions().screenshotDir = dir;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::browseSaveDir()
+{
+	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory with saves", pathContext.baseDir().path() );
+	if (path.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path comming out of the file dialog is always absolute
+	if (pathContext.usingRelativePaths())
+		path = pathContext.getRelativePath( path );
+
+	ui->saveDirLine->setText( path );
+	// the rest is done in saveDirLine callback
+}
+
+void MainWindow::browseScreenshotDir()
+{
+	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory for screenshots", pathContext.baseDir().path() );
+	if (path.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path comming out of the file dialog is always absolute
+	if (pathContext.usingRelativePaths())
+		path = pathContext.getRelativePath( path );
+
+	ui->screenshotDirLine->setText( path );
+	// the rest is done in screenshotDirLine callback
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  output options
+
 void MainWindow::selectMonitor( int index )
 {
 	if (!restoringInProgress)
@@ -1910,6 +1926,7 @@ void MainWindow::toggleNoMusic( bool checked )
 
 	updateLaunchCommand();
 }
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  additional command line arguments
@@ -2129,7 +2146,7 @@ void MainWindow::updateCompatLevels()
 		selectCompatLevel( 0 );
 
 		// keep the widget enabled only if the engine supports compatibility levels
-		LaunchMode launchMode = getActiveLaunchMode();
+		LaunchMode launchMode = getLaunchModeFromUI();
 		ui->compatLevelCmbBox->setEnabled(
 			currentCompLvlStyle != CompatLevelStyle::None && launchMode != LoadSave && launchMode != ReplayDemo
 		);
@@ -2622,7 +2639,7 @@ void MainWindow::restoreOutputOptions( OutputOptions & opts )
 	ui->noMusicChkBox->setChecked( opts.noMusic );
 }
 
-LaunchMode MainWindow::getActiveLaunchMode() const
+LaunchMode MainWindow::getLaunchModeFromUI() const
 {
 	if (ui->launchMode_map->isChecked())
 		return LaunchMode::LaunchMap;
@@ -2892,12 +2909,9 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	for (const QString & filePath : selectedFiles)
 		cmd.arguments << quoted( filePath );
 
-	if (ui->allowCheatsChkBox->isChecked())
-		cmd.arguments << "+sv_cheats" << "1";
-
 	const LaunchOptions & activeLaunchOpts = activeLaunchOptions();
 
-	LaunchMode launchMode = getActiveLaunchMode();
+	LaunchMode launchMode = getLaunchModeFromUI();
 	if (launchMode == LaunchMap)
 	{
 		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );
@@ -2936,6 +2950,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		cmd.arguments << getCompatLevelArgs( engineProperties.compLvlStyle, activeLaunchOpts.compatLevel );
 	if (ui->compatLevelCmbBox->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
+	if (ui->allowCheatsChkBox->isChecked())
+		cmd.arguments << "+sv_cheats" << "1";
 
 	if (ui->multiplayerChkBox->isChecked())
 	{

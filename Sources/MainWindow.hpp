@@ -105,19 +105,6 @@ class MainWindow : public QMainWindow {
 	void selectCompatLevel( int compatLevel );
 	void toggleAllowCheats( bool checked );
 
-	void selectMonitor( int index );
-	void changeResolutionX( const QString & xStr );
-	void changeResolutionY( const QString & yStr );
-
-	void toggleNoSound( bool checked );
-	void toggleNoSFX( bool checked );
-	void toggleNoMusic( bool checked );
-
-	void changeSaveDir( const QString & dir );
-	void changeScreenshotDir( const QString & dir );
-	void browseSaveDir();
-	void browseScreenshotDir();
-
 	void toggleMultiplayer( bool checked );
 	void selectMultRole( int role );
 	void changeHost( const QString & host );
@@ -128,6 +115,19 @@ class MainWindow : public QMainWindow {
 	void changeTeamDamage( double damage );
 	void changeTimeLimit( int limit );
 	void changeFragLimit( int limit );
+
+	void changeSaveDir( const QString & dir );
+	void changeScreenshotDir( const QString & dir );
+	void browseSaveDir();
+	void browseScreenshotDir();
+
+	void selectMonitor( int index );
+	void changeResolutionX( const QString & xStr );
+	void changeResolutionY( const QString & yStr );
+
+	void toggleNoSound( bool checked );
+	void toggleNoSFX( bool checked );
+	void toggleNoMusic( bool checked );
 
 	void exportPresetToScript();
 	void exportPresetToShortcut();
@@ -158,7 +158,7 @@ class MainWindow : public QMainWindow {
 	void restoreLaunchOptions( LaunchOptions & opts );
 	void restoreOutputOptions( OutputOptions & opts );
 
-	LaunchMode getActiveLaunchMode() const;
+	LaunchMode getLaunchModeFromUI() const;
 
 	void updateIWADsFromDir();
 	void refreshMapPacks();

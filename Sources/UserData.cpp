@@ -189,10 +189,6 @@ QJsonObject serialize( const LaunchOptions & opts )
 	jsOptions["compat_level"] = opts.compatLevel;
 	jsOptions["allow_cheats"] = opts.allowCheats;
 
-	// alternative paths
-	jsOptions["save_dir"] = opts.saveDir;
-	jsOptions["screenshot_dir"] = opts.screenshotDir;
-
 	// multiplayer
 	jsOptions["is_multiplayer"] = opts.isMultiplayer;
 	jsOptions["mult_role"] = int( opts.multRole );
@@ -204,6 +200,10 @@ QJsonObject serialize( const LaunchOptions & opts )
 	jsOptions["team_damage"] = opts.teamDamage;
 	jsOptions["time_limit"] = int( opts.timeLimit );
 	jsOptions["frag_limit"] = int( opts.fragLimit );
+
+	// alternative paths
+	jsOptions["save_dir"] = opts.saveDir;
+	jsOptions["screenshot_dir"] = opts.screenshotDir;
 
 	return jsOptions;
 }
@@ -230,10 +230,6 @@ void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & opts )
 	opts.compatLevel = jsOptions.getInt( "compat_level", opts.compatLevel, DontShowError );
 	opts.allowCheats = jsOptions.getBool( "allow_cheats", opts.allowCheats );
 
-	// alternative paths
-	opts.saveDir = jsOptions.getString( "save_dir", opts.saveDir );
-	opts.screenshotDir = jsOptions.getString( "screenshot_dir", opts.screenshotDir );
-
 	// multiplayer
 	opts.isMultiplayer = jsOptions.getBool( "is_multiplayer", opts.isMultiplayer );
 	opts.multRole = jsOptions.getEnum< MultRole >( "mult_role", opts.multRole );
@@ -245,6 +241,10 @@ void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & opts )
 	opts.teamDamage = jsOptions.getDouble( "team_damage", opts.teamDamage );
 	opts.timeLimit = jsOptions.getUInt( "time_limit", opts.timeLimit );
 	opts.fragLimit = jsOptions.getUInt( "frag_limit", opts.fragLimit );
+
+	// alternative paths
+	opts.saveDir = jsOptions.getString( "save_dir", opts.saveDir );
+	opts.screenshotDir = jsOptions.getString( "screenshot_dir", opts.screenshotDir );
 }
 
 QJsonObject serialize( const OutputOptions & opts )

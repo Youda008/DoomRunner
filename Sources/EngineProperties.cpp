@@ -26,6 +26,7 @@ static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd),
 
 static const QHash< QString, EngineFamily > knownEngineFamilies =
 {
+	// the key is an executable name without the .exe suffix
 	{ "zdoom",           EngineFamily::ZDoom },
 	{ "lzdoom",          EngineFamily::ZDoom },
 	{ "gzdoom",          EngineFamily::ZDoom },
@@ -38,6 +39,7 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 	{ "glboom",          EngineFamily::Boom },
 	{ "eternity",        EngineFamily::Boom },
 	{ "dsda-doom",       EngineFamily::Boom },
+	{ "woof",            EngineFamily::Boom },
 	{ "chocolate-doom",  EngineFamily::ChocolateDoom },
 	{ "crispy-doom",     EngineFamily::ChocolateDoom },
 	{ "doomretro",       EngineFamily::ChocolateDoom },

@@ -2895,71 +2895,47 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	if (ui->allowCheatsChkBox->isChecked())
 		cmd.arguments << "+sv_cheats" << "1";
 
-	if (ui->monitorCmbBox->currentIndex() > 0)
-	{
-		int monitorIndex = ui->monitorCmbBox->currentIndex() - 1;  // the first item is a placeholder for leaving it default
-		int engineMonitorIndex = getFirstMonitorIndex( executableName ) + monitorIndex;  // some engines index monitors from 1 and others from 0
-		cmd.arguments << "+vid_adapter" << QString::number( engineMonitorIndex );
-	}
-	if (!ui->resolutionXLine->text().isEmpty())
-		cmd.arguments << "-width" << ui->resolutionXLine->text();
-	if (!ui->resolutionYLine->text().isEmpty())
-		cmd.arguments << "-height" << ui->resolutionYLine->text();
+	const LaunchOptions & activeLaunchOpts = activeLaunchOptions();
 
-	if (ui->noSoundChkBox->isChecked())
-		cmd.arguments << "-nosound";
-	if (ui->noSfxChkBox->isChecked())
-		cmd.arguments << "-nosfx";
-	if (ui->noMusicChkBox->isChecked())
-		cmd.arguments << "-nomusic";
-
-	if (!ui->saveDirLine->text().isEmpty())
-		cmd.arguments << engineProperties.saveDirParam << quoted( base.rebasePath( ui->saveDirLine->text() ) );
-	if (!ui->screenshotDirLine->text().isEmpty())
-		cmd.arguments << "+screenshot_dir" << quoted( base.rebasePath( ui->screenshotDirLine->text() ) );
-
-	if (ui->launchMode_map->isChecked())
+	LaunchMode launchMode = getActiveLaunchMode();
+	if (launchMode == LaunchMap)
 	{
 		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );
 	}
-	else if (ui->launchMode_savefile->isChecked() && ui->saveFileCmbBox->currentIndex() >= 0)
+	else if (launchMode == LoadSave && ui->saveFileCmbBox->currentIndex() >= 0)
 	{
 		QString savePath = getPathFromFileName( selectedEngine.configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );
 		throwIfInvalid( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-loadgame" << quoted( base.rebasePath( savePath ) );
 	}
-	else if (ui->launchMode_recordDemo->isChecked() && !ui->demoFileLine_record->text().isEmpty())
+	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
 		cmd.arguments << "-record" << quoted( ui->demoFileLine_record->text() );
 		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
-	else if (ui->launchMode_replayDemo->isChecked() && ui->demoFileCmbBox_replay->currentIndex() >= 0)
+	else if (launchMode == ReplayDemo && ui->demoFileCmbBox_replay->currentIndex() >= 0)
 	{
 		QString demoPath = getPathFromFileName( selectedEngine.configDir, demoModel[ ui->demoFileCmbBox_replay->currentIndex() ].fileName );
 		throwIfInvalid( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-playdemo" << quoted( base.rebasePath( demoPath ) );
 	}
 
-	if (ui->launchMode_map->isChecked() || ui->launchMode_recordDemo->isChecked())
-	{
-		LaunchOptions & activeLaunchOpts = activeLaunchOptions();
-
+	if (ui->skillSpinBox->isEnabled())
 		cmd.arguments << "-skill" << ui->skillSpinBox->text();
-		if (ui->noMonstersChkBox->isChecked())
-			cmd.arguments << "-nomonsters";
-		if (ui->fastMonstersChkBox->isChecked())
-			cmd.arguments << "-fast";
-		if (ui->monstersRespawnChkBox->isChecked())
-			cmd.arguments << "-respawn";
-		if (activeLaunchOpts.gameOpts.flags1 != 0)
-			cmd.arguments << "+dmflags" << QString::number( activeLaunchOpts.gameOpts.flags1 );
-		if (activeLaunchOpts.gameOpts.flags2 != 0)
-			cmd.arguments << "+dmflags2" << QString::number( activeLaunchOpts.gameOpts.flags2 );
-		if (activeLaunchOpts.compatLevel >= 0)
-			cmd.arguments << getCompatLevelArgs( engineProperties.compLvlStyle, activeLaunchOpts.compatLevel );
-		if (!compatOptsCmdArgs.isEmpty())
-			cmd.arguments << compatOptsCmdArgs;
-	}
+	if (ui->noMonstersChkBox->isEnabled() && ui->noMonstersChkBox->isChecked())
+		cmd.arguments << "-nomonsters";
+	if (ui->fastMonstersChkBox->isEnabled() && ui->fastMonstersChkBox->isChecked())
+		cmd.arguments << "-fast";
+	if (ui->monstersRespawnChkBox->isEnabled() && ui->monstersRespawnChkBox->isChecked())
+		cmd.arguments << "-respawn";
+	if (ui->gameOptsBtn->isEnabled() && activeLaunchOpts.gameOpts.flags1 != 0)
+		cmd.arguments << "+dmflags" << QString::number( activeLaunchOpts.gameOpts.flags1 );
+	if (ui->gameOptsBtn->isEnabled() && activeLaunchOpts.gameOpts.flags2 != 0)
+		cmd.arguments << "+dmflags2" << QString::number( activeLaunchOpts.gameOpts.flags2 );
+	if (ui->compatLevelCmbBox->isEnabled() && activeLaunchOpts.compatLevel >= 0)
+		cmd.arguments << getCompatLevelArgs( engineProperties.compLvlStyle, activeLaunchOpts.compatLevel );
+	if (ui->compatLevelCmbBox->isEnabled() && !compatOptsCmdArgs.isEmpty())
+		cmd.arguments << compatOptsCmdArgs;
 
 	if (ui->multiplayerChkBox->isChecked())
 	{
@@ -3005,6 +2981,29 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 				"The multiplayer role index is out of range. This is a bug, please create an issue on Github page." );
 		}
 	}
+
+	if (!ui->saveDirLine->text().isEmpty())
+		cmd.arguments << engineProperties.saveDirParam << quoted( base.rebasePath( ui->saveDirLine->text() ) );
+	if (!ui->screenshotDirLine->text().isEmpty())
+		cmd.arguments << "+screenshot_dir" << quoted( base.rebasePath( ui->screenshotDirLine->text() ) );
+
+	if (ui->monitorCmbBox->currentIndex() > 0)
+	{
+		int monitorIndex = ui->monitorCmbBox->currentIndex() - 1;  // the first item is a placeholder for leaving it default
+		int engineMonitorIndex = getFirstMonitorIndex( executableName ) + monitorIndex;  // some engines index monitors from 1 and others from 0
+		cmd.arguments << "+vid_adapter" << QString::number( engineMonitorIndex );
+	}
+	if (!ui->resolutionXLine->text().isEmpty())
+		cmd.arguments << "-width" << ui->resolutionXLine->text();
+	if (!ui->resolutionYLine->text().isEmpty())
+		cmd.arguments << "-height" << ui->resolutionYLine->text();
+
+	if (ui->noSoundChkBox->isChecked())
+		cmd.arguments << "-nosound";
+	if (ui->noSfxChkBox->isChecked())
+		cmd.arguments << "-nosfx";
+	if (ui->noMusicChkBox->isChecked())
+		cmd.arguments << "-nomusic";
 
 	if (!ui->presetCmdArgsLine->text().isEmpty())
 		cmd.arguments << ui->presetCmdArgsLine->text().split( ' ', Qt::SkipEmptyParts );

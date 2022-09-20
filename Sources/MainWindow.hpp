@@ -124,6 +124,7 @@ class MainWindow : public QMainWindow {
 	void selectMonitor( int index );
 	void changeResolutionX( const QString & xStr );
 	void changeResolutionY( const QString & yStr );
+	void toggleShowFps( bool checked );
 
 	void toggleNoSound( bool checked );
 	void toggleNoSFX( bool checked );

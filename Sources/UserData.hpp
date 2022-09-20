@@ -211,6 +211,7 @@ struct OutputOptions
 	int monitorIdx = 0;
 	uint resolutionX = 0;
 	uint resolutionY = 0;
+	bool showFPS = false;
 
 	// audio
 	bool noSound = false;

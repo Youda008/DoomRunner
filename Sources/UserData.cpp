@@ -255,6 +255,7 @@ QJsonObject serialize( const OutputOptions & opts )
 	jsOptions["monitor_idx"] = opts.monitorIdx;
 	jsOptions["resolution_x"] = qint64( opts.resolutionX );
 	jsOptions["resolution_y"] = qint64( opts.resolutionY );
+	jsOptions["show_fps"] = opts.showFPS;
 
 	// audio
 	jsOptions["no_sound"] = opts.noSound;
@@ -270,6 +271,7 @@ void deserialize( const JsonObjectCtx & jsOptions, OutputOptions & opts )
 	opts.monitorIdx = jsOptions.getInt( "monitor_idx", opts.monitorIdx );
 	opts.resolutionX = jsOptions.getUInt( "resolution_x", opts.resolutionX );
 	opts.resolutionY = jsOptions.getUInt( "resolution_y", opts.resolutionY );
+	opts.showFPS = jsOptions.getBool( "show_fps", opts.showFPS, DontShowError );
 
 	// audio
 	opts.noSound = jsOptions.getBool( "no_sound", opts.noSound );

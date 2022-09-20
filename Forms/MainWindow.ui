@@ -1659,6 +1659,13 @@
                </item>
               </layout>
              </item>
+             <item>
+              <widget class="QCheckBox" name="showFpsChkBox">
+               <property name="text">
+                <string>Show FPS</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>

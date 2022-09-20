@@ -253,6 +253,7 @@ MainWindow::MainWindow()
 	connect( ui->monitorCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMonitor );
 	connect( ui->resolutionXLine, &QLineEdit::textChanged, this, &thisClass::changeResolutionX );
 	connect( ui->resolutionYLine, &QLineEdit::textChanged, this, &thisClass::changeResolutionY );
+	connect( ui->showFpsChkBox, &QCheckBox::toggled, this, &thisClass::toggleShowFps );
 
 	// audio
 	connect( ui->noSoundChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoSound );
@@ -1903,6 +1904,14 @@ void MainWindow::changeResolutionY( const QString & yStr )
 	updateLaunchCommand();
 }
 
+void MainWindow::toggleShowFps( bool checked )
+{
+	if (!restoringInProgress)
+		outputOpts.showFPS = checked;
+
+	updateLaunchCommand();
+}
+
 void MainWindow::toggleNoSound( bool checked )
 {
 	if (!restoringInProgress)
@@ -3013,6 +3022,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		cmd.arguments << "-width" << ui->resolutionXLine->text();
 	if (!ui->resolutionYLine->text().isEmpty())
 		cmd.arguments << "-height" << ui->resolutionYLine->text();
+	if (ui->showFpsChkBox->isChecked())
+		cmd.arguments << "+vid_fps" << "1";
 
 	if (ui->noSoundChkBox->isChecked())
 		cmd.arguments << "-nosound";

@@ -854,17 +854,17 @@ void MainWindow::restorePreset( int presetIdx )
 		restoreLaunchOptions( preset.launchOpts );  // this clears items that are invalid
 	}
 
-	// if "Use preset name as directory" is enabled, overwrite the preset custom directories with its name
-	if (globalOpts.usePresetNameAsDir)
-	{
-		ui->saveDirLine->setText( preset.name );
-		ui->screenshotDirLine->setText( preset.name );
-	}
-
 	// restore additional command line arguments
 	ui->presetCmdArgsLine->setText( preset.cmdArgs );
 
 	restoringInProgress = false;
+
+	// if "Use preset name as directory" is enabled, overwrite the preset custom directories with its name
+	// do it with restoringInProgress == false to update the current preset with the new overwriten dirs.
+	if (globalOpts.usePresetNameAsDir)
+	{
+		setAltDirsRelativeToEngine( preset.name );
+	}
 
 	updateLaunchCommand();
 }
@@ -1837,6 +1837,19 @@ void MainWindow::changeFragLimit( int fragLimit )
 //----------------------------------------------------------------------------------------------------------------------
 //  alternative paths
 
+void MainWindow::setAltDirsRelativeToEngine( const QString & dirName )
+{
+	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	if (selectedEngineIdx >= 0)
+	{
+		QString engineDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
+		QString dirPath = getPathFromFileName( engineDir, dirName );
+
+		ui->saveDirLine->setText( dirPath );
+		ui->screenshotDirLine->setText( dirPath );
+	}
+}
+
 void MainWindow::toggleUsePresetName( bool checked )
 {
 	if (!restoringInProgress)
@@ -1852,8 +1865,7 @@ void MainWindow::toggleUsePresetName( bool checked )
 		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 		QString presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : "";
 
-		ui->saveDirLine->setText( presetName );
-		ui->screenshotDirLine->setText( presetName );
+		setAltDirsRelativeToEngine( presetName );
 	}
 }
 

@@ -153,6 +153,8 @@ class MainWindow : public QMainWindow {
 
 	void toggleAbsolutePaths( bool absolute );
 
+	void setAltDirsRelativeToEngine( const QString & dirName );
+
 	void restorePreset( int index );
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();

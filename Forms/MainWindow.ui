@@ -971,7 +971,7 @@
           <item>
            <widget class="QCheckBox" name="multiplayerChkBox">
             <property name="text">
-             <string>Enable multiplayer</string>
+             <string>Multiplayer game</string>
             </property>
            </widget>
           </item>

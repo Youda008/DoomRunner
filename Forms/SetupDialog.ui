@@ -448,18 +448,22 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="closeOnLaunchChkBox">
-     <property name="text">
-      <string>Close the launcher when the game is started</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="showEngineOutputChkBox">
-     <property name="text">
-      <string>Show engine's standard output in a window</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QCheckBox" name="showEngineOutputChkBox">
+       <property name="text">
+        <string>Show engine's standard output in a window</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="closeOnLaunchChkBox">
+       <property name="text">
+        <string>Close the launcher when the game is started</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">

@@ -2,9 +2,16 @@
 - moved the Audio and Video options to a new tab to allow shrinking the launcher window even more
 - added optional window displaying engine's standard output
 - added "Export to shortcut" feature for Windows
-- added options to select an engine family
+- added an option to select an engine family
 - added an option to select a compatibility level for ZDoom and PrBoom based engines
+- added "Show FPS" checkbox to video options
+- added ability to use preset name as a directory for saves and screenshots
 - made the map pack tree view display a horizontal scrollbar when the items are too wide to display instead of clipping
+- enabled gameplay options and compatibility options for the Standard launch mode
+- added auto-recognition of more Doom engines
+- select map using -warp where +map is not supported
+- fixed incorrect skill number being used
+- minor bug-fixes and UI improvements
 
 1.5.3
 - automatically expand parent directories of a selected map pack when preset is restored

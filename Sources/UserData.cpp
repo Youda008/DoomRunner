@@ -377,11 +377,13 @@ void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts
 
 void serialize( QJsonObject & jsOptions, const GlobalOptions & opts )
 {
+	jsOptions["use_preset_name_as_dir"] = opts.usePresetNameAsDir;
 	jsOptions["additional_args"] = opts.cmdArgs;
 }
 
 void deserialize( const JsonObjectCtx & jsOptions, GlobalOptions & opts )
 {
+	opts.usePresetNameAsDir = jsOptions.getBool( "use_preset_name_as_dir", opts.usePresetNameAsDir, DontShowError );
 	opts.cmdArgs = jsOptions.getString( "additional_args" );
 }
 

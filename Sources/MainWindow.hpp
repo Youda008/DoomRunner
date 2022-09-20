@@ -116,6 +116,7 @@ class MainWindow : public QMainWindow {
 	void changeTimeLimit( int limit );
 	void changeFragLimit( int limit );
 
+	void toggleUsePresetName( bool checked );
 	void changeSaveDir( const QString & dir );
 	void changeScreenshotDir( const QString & dir );
 	void browseSaveDir();

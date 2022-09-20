@@ -261,6 +261,7 @@ MainWindow::MainWindow()
 	connect( ui->noMusicChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoMusic );
 
 	// alternative paths
+	connect( ui->usePresetNameChkBox, &QCheckBox::toggled, this, &thisClass::toggleUsePresetName );
 	connect( ui->saveDirLine, &QLineEdit::textChanged, this, &thisClass::changeSaveDir );
 	connect( ui->screenshotDirLine, &QLineEdit::textChanged, this, &thisClass::changeScreenshotDir );
 	connect( ui->saveDirBtn, &QPushButton::clicked, this, &thisClass::browseSaveDir );
@@ -851,6 +852,13 @@ void MainWindow::restorePreset( int presetIdx )
 	if (opts.launchOptsStorage == StoreToPreset)
 	{
 		restoreLaunchOptions( preset.launchOpts );  // this clears items that are invalid
+	}
+
+	// if "Use preset name as directory" is enabled, overwrite the preset custom directories with its name
+	if (globalOpts.usePresetNameAsDir)
+	{
+		ui->saveDirLine->setText( preset.name );
+		ui->screenshotDirLine->setText( preset.name );
 	}
 
 	// restore additional command line arguments
@@ -1829,6 +1837,26 @@ void MainWindow::changeFragLimit( int fragLimit )
 //----------------------------------------------------------------------------------------------------------------------
 //  alternative paths
 
+void MainWindow::toggleUsePresetName( bool checked )
+{
+	if (!restoringInProgress)
+		globalOpts.usePresetNameAsDir = checked;
+
+	ui->saveDirLine->setEnabled( !checked );
+	ui->saveDirBtn->setEnabled( !checked );
+	ui->screenshotDirLine->setEnabled( !checked );
+	ui->screenshotDirBtn->setEnabled( !checked );
+
+	if (checked)
+	{
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+		QString presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : "";
+
+		ui->saveDirLine->setText( presetName );
+		ui->screenshotDirLine->setText( presetName );
+	}
+}
+
 void MainWindow::changeSaveDir( const QString & dir )
 {
 	if (!restoringInProgress)
@@ -2538,6 +2566,8 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	restoreOutputOptions( outputOpts );
 
+	ui->usePresetNameChkBox->setChecked( globalOpts.usePresetNameAsDir );
+
 	ui->globalCmdArgsLine->setText( globalOpts.cmdArgs );
 
 	restoringInProgress = false;
@@ -2615,10 +2645,6 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 	ui->compatLevelCmbBox->setCurrentIndex( opts.compatLevel + 1 );
 	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
 
-	// alternative paths
-	ui->saveDirLine->setText( opts.saveDir );
-	ui->screenshotDirLine->setText( opts.screenshotDir );
-
 	// multiplayer
 	ui->multiplayerChkBox->setChecked( opts.isMultiplayer );
 	ui->multRoleCmbBox->setCurrentIndex( int( opts.multRole ) );
@@ -2630,6 +2656,10 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 	ui->teamDmgSpinBox->setValue( opts.teamDamage );
 	ui->timeLimitSpinBox->setValue( int( opts.timeLimit ) );
 	ui->fragLimitSpinBox->setValue( int( opts.fragLimit ) );
+
+	// alternative paths
+	ui->saveDirLine->setText( opts.saveDir );
+	ui->screenshotDirLine->setText( opts.screenshotDir );
 }
 
 void MainWindow::restoreOutputOptions( OutputOptions & opts )

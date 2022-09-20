@@ -222,6 +222,7 @@ struct OutputOptions
 /// misc data that never go to a preset
 struct GlobalOptions
 {
+	bool usePresetNameAsDir = false;
 	QString cmdArgs;
 };
 

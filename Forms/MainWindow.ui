@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="filesTab">
        <attribute name="title">
@@ -1451,6 +1451,13 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_19">
              <item>
+              <widget class="QCheckBox" name="usePresetNameChkBox">
+               <property name="text">
+                <string>Use preset name as target directory</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <layout class="QHBoxLayout" name="horizontalLayout_25">
                <item>
                 <widget class="QLabel" name="saveDirLabel">
@@ -1841,7 +1848,7 @@
      <x>0</x>
      <y>0</y>
      <width>720</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuItemMenu">

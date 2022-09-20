@@ -32,35 +32,38 @@ QString fixExePath( const QString & exePath )
 QString updateFile( const QString & filePath, const QByteArray & newContent )
 {
 	// Write to a different file than the original and after it's done and closed, replace the original with the new.
-	// This is done to prevent data loss, when the program (or OS) crashes during writing to disc.
+	// This is done to prevent data loss, when the program (or OS) crashes during writing to drive.
 
-	QString newFilePath = filePath+".new";
-	QFile newFile( newFilePath );
+	QFile oldFile( filePath );
+	if (oldFile.exists())
+	{
+		QString tempOldFilePath = filePath+".old";
+		if (!oldFile.rename( tempOldFilePath ))
+		{
+			return "Could not rename previous file "%filePath%" to "%tempOldFilePath%": "%oldFile.errorString();
+		}
+	}
+
+	QFile newFile( filePath );
 	if (!newFile.open( QIODevice::WriteOnly ))
 	{
-		return "Could not open file "%newFilePath%" for writing: "%newFile.errorString();
+		return "Could not open file "%filePath%" for writing: "%newFile.errorString();
 	}
 
 	newFile.write( newContent );
 	if (newFile.error() != QFile::NoError)
 	{
-		return "Could not write to file "%newFilePath%": "%newFile.errorString();
+		return "Could not write to file "%filePath%": "%newFile.errorString();
 	}
 
 	newFile.close();
 
-	QFile oldFile( filePath );
 	if (oldFile.exists())
 	{
 		if (!oldFile.remove())
 		{
-			return "Could not delete the previous options file "%filePath%": "%newFile.errorString();
+			return "Could not delete the previous file "%filePath%": "%oldFile.errorString();
 		}
-	}
-
-	if (!newFile.rename( filePath ))
-	{
-		return "Could not rename new file "%newFilePath%" back to "%filePath%": "%newFile.errorString();
 	}
 
 	return {};

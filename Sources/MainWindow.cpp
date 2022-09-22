@@ -2985,7 +2985,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		cmd.arguments << "-playdemo" << quoted( base.rebasePath( demoPath ) );
 	}
 
-	if (ui->skillSpinBox->isEnabled())
+	if (ui->skillCmbBox->isEnabled())
 		cmd.arguments << "-skill" << ui->skillSpinBox->text();
 	if (ui->noMonstersChkBox->isEnabled() && ui->noMonstersChkBox->isChecked())
 		cmd.arguments << "-nomonsters";

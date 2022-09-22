@@ -423,7 +423,7 @@
       <item>
        <widget class="QRadioButton" name="optsStorage_none">
         <property name="text">
-         <string>Don't save at all (Everytime you open the launcher, launch mode will be set to standard)</string>
+         <string>Don't save at all (Everytime you open the launcher, launch mode will be reset to defaults)</string>
         </property>
        </widget>
       </item>

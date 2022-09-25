@@ -164,6 +164,9 @@ class MainWindow : public QMainWindow {
 
 	LaunchMode getLaunchModeFromUI() const;
 
+	QString getConfigDir() const;
+	QString getSaveDir() const;
+
 	void updateIWADsFromDir();
 	void refreshMapPacks();
 	void updateConfigFilesFromDir();

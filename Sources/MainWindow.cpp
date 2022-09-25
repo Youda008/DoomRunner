@@ -2083,11 +2083,23 @@ void MainWindow::refreshMapPacks()
 	ui->mapDirView->setRootIndex( newRootIdx );
 }
 
-void MainWindow::updateConfigFilesFromDir()
+QString MainWindow::getConfigDir() const
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
+	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
+}
 
-	QString configDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
+QString MainWindow::getSaveDir() const
+{
+	if (!ui->saveDirLine->text().isEmpty())  // if custom save dir is specified
+		return ui->saveDirLine->text();      // then use it
+	else                                     // otherwise
+		return getConfigDir();               // use config dir
+}
+
+void MainWindow::updateConfigFilesFromDir()
+{
+	QString configDir = getConfigDir();
 
 	// workaround (read the big comment above)
 	int origConfigIdx = ui->configCmbBox->currentIndex();
@@ -2110,12 +2122,7 @@ void MainWindow::updateConfigFilesFromDir()
 
 void MainWindow::updateSaveFilesFromDir()
 {
-	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-
-	QString saveDir =
-		!ui->saveDirLine->text().isEmpty()  // if custom save dir is specified
-			? ui->saveDirLine->text()       // then use it
-			: currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";  // otherwise use config dir
+	QString saveDir = getSaveDir();
 
 	// workaround (read the big comment above)
 	int origSaveIdx = ui->saveFileCmbBox->currentIndex();
@@ -2138,8 +2145,7 @@ void MainWindow::updateSaveFilesFromDir()
 
 void MainWindow::updateDemoFilesFromDir()
 {
-	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-	QString demoDir = currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
+	QString demoDir = getConfigDir();
 
 	// workaround (read the big comment above)
 	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
@@ -2605,6 +2611,12 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 		break;
 	}
 
+	// alternative paths
+	// This must be restored before the save combo-box, so that the combo-box is filled from the right directory
+	// and the selected save file is present there.
+	ui->saveDirLine->setText( opts.saveDir );
+	ui->screenshotDirLine->setText( opts.screenshotDir );
+
 	// details of launch mode
 	ui->mapCmbBox->setCurrentIndex( ui->mapCmbBox->findText( opts.mapName ) );
 	if (!opts.saveFile.isEmpty())
@@ -2664,10 +2676,6 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 	ui->teamDmgSpinBox->setValue( opts.teamDamage );
 	ui->timeLimitSpinBox->setValue( int( opts.timeLimit ) );
 	ui->fragLimitSpinBox->setValue( int( opts.fragLimit ) );
-
-	// alternative paths
-	ui->saveDirLine->setText( opts.saveDir );
-	ui->screenshotDirLine->setText( opts.screenshotDir );
 }
 
 void MainWindow::restoreOutputOptions( OutputOptions & opts )
@@ -2963,18 +2971,19 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );
 	}
-	else if (launchMode == LoadSave && ui->saveFileCmbBox->currentText().isEmpty())
+	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
-		QString savePath = getPathFromFileName( selectedEngine.configDir, ui->saveFileCmbBox->currentText() );
+		QString savePath = getPathFromFileName( getSaveDir(), ui->saveFileCmbBox->currentText() );
 		throwIfInvalid( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
-		cmd.arguments << "-record" << base.rebaseAndQuotePath( ui->demoFileLine_record->text() );
+		QString demoPath = getPathFromFileName( selectedEngine.configDir, ui->demoFileLine_record->text() );
+		cmd.arguments << "-record" << base.rebaseAndQuotePath( demoPath );
 		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
-	else if (launchMode == ReplayDemo && ui->demoFileCmbBox_replay->currentText().isEmpty())
+	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
 		QString demoPath = getPathFromFileName( selectedEngine.configDir, ui->demoFileCmbBox_replay->currentText() );
 		throwIfInvalid( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );

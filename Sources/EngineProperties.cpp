@@ -159,7 +159,7 @@ const QVector<QString> & getCompatLevels( CompatLevelStyle style )
 QStringList getCompatLevelArgs( CompatLevelStyle style, int compatLevel )
 {
 	if (style == CompatLevelStyle::ZDoom)
-		return { "+compatmode", QString::number( compatLevel ) };
+		return { "-compatmode", QString::number( compatLevel ) };
 	else if (style == CompatLevelStyle::Boom)
 		return { "-complevel", QString::number( compatLevel ) };
 	else

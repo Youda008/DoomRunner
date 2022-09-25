@@ -132,7 +132,7 @@ MainWindow::MainWindow()
 	disableSelectionCallbacks( false ),
 	lastCompLvlStyle( CompatLevelStyle::None ),
 	compatOptsCmdArgs(),
-	pathContext( useAbsolutePathsByDefault, QApplication::applicationDirPath() ), // all relative paths will internally be stored relative to the application's dir
+	pathContext( QApplication::applicationDirPath(), useAbsolutePathsByDefault ), // all relative paths will internally be stored relative to the application's dir
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
@@ -2868,7 +2868,7 @@ void MainWindow::updateLaunchCommand( bool verifyPaths )
 MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths )
 {
 	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir.
-	PathContext base( pathContext.usingAbsolutePaths(), baseDir, pathContext.baseDir() );
+	PathContext base( baseDir, pathContext.baseDir(), pathContext.pathStyle() );
 
 	ShellCommand cmd;
 
@@ -2998,7 +2998,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	if (ui->gameOptsBtn->isEnabled() && activeLaunchOpts.gameOpts.flags2 != 0)
 		cmd.arguments << "+dmflags2" << QString::number( activeLaunchOpts.gameOpts.flags2 );
 	if (ui->compatLevelCmbBox->isEnabled() && activeLaunchOpts.compatLevel >= 0)
-		cmd.arguments << getCompatLevelArgs( engineProperties.compLvlStyle, activeLaunchOpts.compatLevel );
+		cmd.arguments << getCompatLevelArgs( executableName, engineProperties.compLvlStyle, activeLaunchOpts.compatLevel );
 	if (ui->compatLevelCmbBox->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
 	if (ui->allowCheatsChkBox->isChecked())

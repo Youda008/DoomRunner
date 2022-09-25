@@ -36,7 +36,7 @@ SetupDialog::SetupDialog(
 )
 :
 	QDialog( parent ),
-	pathContext( opts.useAbsolutePaths, baseDir ),
+	pathContext( baseDir, opts.useAbsolutePaths ),
 	engineModel( engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
 	),

@@ -21,31 +21,45 @@ class QModelIndex;
 
 
 //======================================================================================================================
+//  general
+
+enum class PathStyle
+{
+	Relative,
+	Absolute
+};
+
+//======================================================================================================================
 /** Helper for calculating relative and absolute paths according to current directory and settings. */
 
 class PathContext {
 
 	QDir _baseDir;  ///< directory which relative paths are relative to
 	QDir _prevBaseDir;  ///< original base dir for rebasing paths to another base
-	bool _useAbsolutePaths;  ///< whether to store paths to engines, IWADs, maps and mods in absolute or relative form
+	PathStyle _pathStyle;  ///< whether to store paths to engines, IWADs, maps and mods in absolute or relative form
 
  public:
 
-	PathContext( bool useAbsolutePaths, const QDir & baseDir, const QDir & prevBaseDir = QDir() )
-		: _baseDir( baseDir ), _prevBaseDir( prevBaseDir ), _useAbsolutePaths( useAbsolutePaths ) {}
+	PathContext( const QDir & baseDir, bool useAbsolutePaths )
+		: PathContext( baseDir, useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative ) {}
 
-	PathContext( const PathContext & other )
-		: _baseDir( other._baseDir ), _prevBaseDir( other._prevBaseDir ), _useAbsolutePaths( other._useAbsolutePaths ) {}
+	PathContext( const QDir & baseDir, PathStyle pathStyle )
+		: _baseDir( baseDir ), _prevBaseDir(), _pathStyle( pathStyle ) {}
 
-	void operator=( const PathContext & other )
-		{ _baseDir = other._baseDir; _prevBaseDir = other._prevBaseDir; _useAbsolutePaths = other._useAbsolutePaths; }
+	PathContext( const QDir & baseDir, const QDir & prevBaseDir, PathStyle pathStyle )
+		: _baseDir( baseDir ), _prevBaseDir( prevBaseDir ), _pathStyle( pathStyle ) {}
+
+	PathContext( const PathContext & other ) = default;
+	PathContext & operator=( const PathContext & other ) = default;
 
 	const QDir & baseDir() const                       { return _baseDir; }
-	bool usingAbsolutePaths() const                    { return _useAbsolutePaths; }
-	bool usingRelativePaths() const                    { return !_useAbsolutePaths; }
+	PathStyle pathStyle() const                        { return _pathStyle; }
+	bool usingAbsolutePaths() const                    { return _pathStyle == PathStyle::Absolute; }
+	bool usingRelativePaths() const                    { return _pathStyle == PathStyle::Relative; }
 
-	void toggleAbsolutePaths( bool useAbsolutePaths )  { _useAbsolutePaths = useAbsolutePaths; }
 	void setBaseDir( const QDir & baseDir )            { _baseDir = baseDir; }
+	void setPathStyle( PathStyle pathStyle )           { _pathStyle = pathStyle; }
+	void toggleAbsolutePaths( bool useAbsolutePaths )  { _pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative; }
 
 	QString getAbsolutePath( const QString & path ) const
 	{
@@ -57,7 +71,7 @@ class PathContext {
 	}
 	QString convertPath( const QString & path ) const
 	{
-		return _useAbsolutePaths ? getAbsolutePath( path ) : getRelativePath( path );
+		return usingAbsolutePaths() ? getAbsolutePath( path ) : getRelativePath( path );
 	}
 
 	QString rebasePath( const QString & path ) const
@@ -67,7 +81,7 @@ class PathContext {
 
 		QString absPath = QDir::isAbsolutePath( path ) ? path : _prevBaseDir.filePath( path );
 
-		return _useAbsolutePaths ? absPath : _baseDir.relativeFilePath( absPath );
+		return usingAbsolutePaths() ? absPath : _baseDir.relativeFilePath( absPath );
 	}
 
 	QString rebasePathToRelative( const QString & path ) const

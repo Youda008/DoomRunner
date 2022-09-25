@@ -145,18 +145,6 @@ void ProcessOutputWindow::setStatus( ProcessStatus status, const QString & detai
 	}
 }
 
-static void setArguments( QProcess & process, const QStringList & arguments )
-{
-	// Retarded Windows implementation of Qt surrounds all arguments with additional quotes, which is unwanted
-	// because we already have them quoted, but it can't be turned off. So we must work around this
-	// by setting the command line manually.
- #ifdef _WIN32
-	process.setNativeArguments( arguments.join(' ') );
- #else
-	process.setArguments( arguments );
- #endif
-}
-
 ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const QStringList & arguments )
 {
 	qDebug() << "runProcess:" << executable;
@@ -165,7 +153,7 @@ ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const
 	this->setWindowTitle( executableName % " output" );
 
 	process.setProgram( executable );
-	setArguments( process, arguments );
+	process.setArguments( arguments );
 	process.setProcessChannelMode( QProcess::MergedChannels );  // merge stdout and stderr
 
 	connect( &process, &QProcess::started, this, &thisClass::processStarted );
@@ -246,6 +234,7 @@ void ProcessOutputWindow::processFinished( int exitCode, QProcess::ExitStatus ex
 	}
 	else
 	{
+		setStatus( ProcessStatus::FinishedSuccessfully );
 		closeDialog( QDialog::Accepted );
 	}
 }

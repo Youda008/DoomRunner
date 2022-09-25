@@ -55,6 +55,9 @@
 
 static constexpr char defaultOptionsFile [] = "options.json";
 
+static constexpr bool VerifyPaths = true;
+static constexpr bool DontVerifyPaths = false;
+
 
 //======================================================================================================================
 //  local helpers
@@ -62,12 +65,6 @@ static constexpr char defaultOptionsFile [] = "options.json";
 static QString getOptionsFilePath()
 {
 	return QDir( getAppDataDir() ).filePath( defaultOptionsFile );
-}
-
-static QString quoted( const QString & str )
-{
-	return '"' % str % '"';
-	//return str;
 }
 
 static bool verifyDir( const QString & dir, const QString & errorMessage )
@@ -2720,7 +2717,7 @@ void MainWindow::exportPresetToScript()
 	}
 	QFileInfo fileInfo( filePath );
 
-	auto cmd = generateLaunchCommand( fileInfo.path(), false );
+	auto cmd = generateLaunchCommand( fileInfo.path(), DontVerifyPaths, QuotePaths );
 
 	QFile file( filePath );
 	if (!file.open( QIODevice::WriteOnly | QIODevice::Text ))
@@ -2769,7 +2766,7 @@ void MainWindow::exportPresetToShortcut()
 		return;
 	}
 
-	auto cmd = generateLaunchCommand( workingDir, false );
+	auto cmd = generateLaunchCommand( workingDir, DontVerifyPaths, QuotePaths );
 
 	bool success = createWindowsShortcut( filePath, enginePath, cmd.arguments, workingDir, selectedPreset.name );
 	if (!success)
@@ -2851,7 +2848,7 @@ void MainWindow::updateLaunchCommand( bool verifyPaths )
 	// because it will be executed with the current directory set to engine's directory.
 	QString baseDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
 
-	auto cmd = generateLaunchCommand( baseDir, verifyPaths );
+	auto cmd = generateLaunchCommand( baseDir, verifyPaths, QuotePaths );
 
 	QString newCommand = cmd.executable % ' ' % cmd.arguments.join(' ');
 
@@ -2865,10 +2862,10 @@ void MainWindow::updateLaunchCommand( bool verifyPaths )
 	}
 }
 
-MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths )
+MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths )
 {
 	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir.
-	PathContext base( baseDir, pathContext.baseDir(), pathContext.pathStyle() );
+	PathContext base( baseDir, pathContext.baseDir(), pathContext.pathStyle(), quotePaths );
 
 	ShellCommand cmd;
 
@@ -2907,7 +2904,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
 			throwIfInvalid( verifyPaths, configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
-			cmd.arguments << "-config" << quoted( base.rebasePath( configPath ) );
+			cmd.arguments << "-config" << base.rebaseAndQuotePath( configPath );
 		}
 	}
 
@@ -2915,7 +2912,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	if (selectedIwadIdx >= 0)
 	{
 		throwIfInvalid( verifyPaths, iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please select another one." );
-		cmd.arguments << "-iwad" << quoted( base.rebasePath( iwadModel[ selectedIwadIdx ].path ) );
+		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
 	QVector<QString> selectedFiles;
@@ -2929,12 +2926,12 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
 		if (suffix == "deh")
-			cmd.arguments << "-deh" << quoted( base.rebasePath( mapFilePath ) );
+			cmd.arguments << "-deh" << base.rebaseAndQuotePath( mapFilePath );
 		else if (suffix == "bex")
-			cmd.arguments << "-bex" << quoted( base.rebasePath( mapFilePath ) );
+			cmd.arguments << "-bex" << base.rebaseAndQuotePath( mapFilePath );
 		else
 			// combine all files under a single -file parameter
-			selectedFiles.append( base.rebasePath( mapFilePath ) );
+			selectedFiles.append( mapFilePath );
 	}
 
 	for (const Mod & mod : modModel)
@@ -2945,12 +2942,12 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 
 			QString suffix = QFileInfo( mod.path ).suffix().toLower();
 			if (suffix == "deh")
-				cmd.arguments << "-deh" << quoted( base.rebasePath( mod.path ) );
+				cmd.arguments << "-deh" << base.rebaseAndQuotePath( mod.path );
 			else if (suffix == "bex")
-				cmd.arguments << "-bex" << quoted( base.rebasePath( mod.path ) );
+				cmd.arguments << "-bex" << base.rebaseAndQuotePath( mod.path );
 			else
 				// combine all files under a single -file parameter
-				selectedFiles.append( base.rebasePath( mod.path ) );
+				selectedFiles.append( mod.path );
 		}
 	}
 
@@ -2958,31 +2955,31 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	if (!selectedFiles.empty())
 		cmd.arguments << "-file";
 	for (const QString & filePath : selectedFiles)
-		cmd.arguments << quoted( filePath );
+		cmd.arguments << base.rebaseAndQuotePath( filePath );
 
 	const LaunchOptions & activeLaunchOpts = activeLaunchOptions();
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 	if (launchMode == LaunchMap)
 	{
-		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );
+		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );  // TODO
 	}
 	else if (launchMode == LoadSave && ui->saveFileCmbBox->currentIndex() >= 0)
 	{
-		QString savePath = getPathFromFileName( selectedEngine.configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );
+		QString savePath = getPathFromFileName( selectedEngine.configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );  // TODO
 		throwIfInvalid( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
-		cmd.arguments << "-loadgame" << quoted( base.rebasePath( savePath ) );
+		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
-		cmd.arguments << "-record" << quoted( ui->demoFileLine_record->text() );
+		cmd.arguments << "-record" << base.rebaseAndQuotePath( ui->demoFileLine_record->text() );
 		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && ui->demoFileCmbBox_replay->currentIndex() >= 0)
 	{
 		QString demoPath = getPathFromFileName( selectedEngine.configDir, demoModel[ ui->demoFileCmbBox_replay->currentIndex() ].fileName );
 		throwIfInvalid( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
-		cmd.arguments << "-playdemo" << quoted( base.rebasePath( demoPath ) );
+		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}
 
 	if (ui->skillCmbBox->isEnabled())
@@ -3050,9 +3047,9 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	}
 
 	if (!ui->saveDirLine->text().isEmpty())
-		cmd.arguments << engineProperties.saveDirParam << quoted( base.rebasePath( ui->saveDirLine->text() ) );
+		cmd.arguments << engineProperties.saveDirParam << base.rebaseAndQuotePath( ui->saveDirLine->text() );
 	if (!ui->screenshotDirLine->text().isEmpty())
-		cmd.arguments << "+screenshot_dir" << quoted( base.rebasePath( ui->screenshotDirLine->text() ) );
+		cmd.arguments << "+screenshot_dir" << base.rebaseAndQuotePath( ui->screenshotDirLine->text() );
 
 	if (ui->monitorCmbBox->currentIndex() > 0)
 	{
@@ -3098,7 +3095,8 @@ void MainWindow::launch()
 	ShellCommand cmd;
 	try
 	{
-		cmd = generateLaunchCommand( engineDir, true );
+		// When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
+		cmd = generateLaunchCommand( engineDir, VerifyPaths, DontQuotePaths );
 	}
 	catch (const FileNotFound &)
 	{
@@ -3122,10 +3120,7 @@ void MainWindow::launch()
 	}
 	else
 	{
-		// We must use this deprecated method with manually constructed command because
-		// retarded Windows implementation of Qt surrounds all arguments with additional quotes, which is unwanted
-		// because we already have them quoted, but it can't be turned off.
-		bool success = QProcess::startDetached( cmd.executable % ' ' % cmd.arguments.join(' ') );
+		bool success = QProcess::startDetached( cmd.executable, cmd.arguments );
 		if (!success)
 		{
 			QMessageBox::warning( this, "Launch error", "Failed to execute launch command." );

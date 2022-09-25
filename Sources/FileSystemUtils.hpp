@@ -14,6 +14,7 @@
 class QModelIndex;
 
 #include <QString>
+#include <QStringBuilder>
 #include <QDir>
 #include <QFileInfo>
 
@@ -29,6 +30,10 @@ enum class PathStyle
 	Absolute
 };
 
+constexpr bool QuotePaths = true;
+constexpr bool DontQuotePaths = false;
+
+
 //======================================================================================================================
 /** Helper for calculating relative and absolute paths according to current directory and settings. */
 
@@ -37,17 +42,18 @@ class PathContext {
 	QDir _baseDir;  ///< directory which relative paths are relative to
 	QDir _prevBaseDir;  ///< original base dir for rebasing paths to another base
 	PathStyle _pathStyle;  ///< whether to store paths to engines, IWADs, maps and mods in absolute or relative form
-
+	bool _quotePaths;  ///< whether to surround all paths with quotes (needed when generating a batch)
+	                   // !!IMPORTANT!! Never store the quoted paths and pass them back to PathContext, they are output-only.
  public:
 
-	PathContext( const QDir & baseDir, bool useAbsolutePaths )
-		: PathContext( baseDir, useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative ) {}
+	PathContext( const QDir & baseDir, bool useAbsolutePaths, bool quotePaths = false )
+		: PathContext( baseDir, useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative, quotePaths ) {}
 
-	PathContext( const QDir & baseDir, PathStyle pathStyle )
-		: _baseDir( baseDir ), _prevBaseDir(), _pathStyle( pathStyle ) {}
+	PathContext( const QDir & baseDir, PathStyle pathStyle, bool quotePaths = false )
+		: _baseDir( baseDir ), _prevBaseDir(), _pathStyle( pathStyle ), _quotePaths( quotePaths ) {}
 
-	PathContext( const QDir & baseDir, const QDir & prevBaseDir, PathStyle pathStyle )
-		: _baseDir( baseDir ), _prevBaseDir( prevBaseDir ), _pathStyle( pathStyle ) {}
+	PathContext( const QDir & baseDir, const QDir & prevBaseDir, PathStyle pathStyle, bool quotePaths = false )
+		: _baseDir( baseDir ), _prevBaseDir( prevBaseDir ), _pathStyle( pathStyle ), _quotePaths( quotePaths ) {}
 
 	PathContext( const PathContext & other ) = default;
 	PathContext & operator=( const PathContext & other ) = default;
@@ -92,6 +98,21 @@ class PathContext {
 		QString absPath = QDir::isAbsolutePath( path ) ? path : _prevBaseDir.filePath( path );
 
 		return _baseDir.relativeFilePath( absPath );
+	}
+
+	QString rebaseAndQuotePath( const QString & path ) const
+	{
+		return maybeQuoted( rebasePath( path ) );
+	}
+
+ private:
+
+	QString maybeQuoted( const QString & path ) const
+	{
+		if (_quotePaths)
+			return '"' % path % '"';
+		else
+			return path;
 	}
 
 };

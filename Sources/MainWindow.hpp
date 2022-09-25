@@ -183,7 +183,7 @@ class MainWindow : public QMainWindow {
 		QString executable;
 		QStringList arguments;
 	};
-	ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths );
+	ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand( bool verifyPaths = false );
 
  private: // internal members

@@ -860,7 +860,7 @@ void MainWindow::restorePreset( int presetIdx )
 	// do it with restoringInProgress == false to update the current preset with the new overwriten dirs.
 	if (globalOpts.usePresetNameAsDir)
 	{
-		setAltDirsRelativeToEngine( preset.name );
+		setAltDirsRelativeToConfigs( preset.name );
 	}
 
 	updateLaunchCommand();
@@ -1834,13 +1834,12 @@ void MainWindow::changeFragLimit( int fragLimit )
 //----------------------------------------------------------------------------------------------------------------------
 //  alternative paths
 
-void MainWindow::setAltDirsRelativeToEngine( const QString & dirName )
+void MainWindow::setAltDirsRelativeToConfigs( const QString & dirName )
 {
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx >= 0)
 	{
-		QString engineDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
-		QString dirPath = getPathFromFileName( engineDir, dirName );
+		QString dirPath = getPathFromFileName( engineModel[ selectedEngineIdx ].configDir, dirName );
 
 		ui->saveDirLine->setText( dirPath );
 		ui->screenshotDirLine->setText( dirPath );
@@ -1862,7 +1861,7 @@ void MainWindow::toggleUsePresetName( bool checked )
 		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 		QString presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : "";
 
-		setAltDirsRelativeToEngine( presetName );
+		setAltDirsRelativeToConfigs( presetName );
 	}
 }
 

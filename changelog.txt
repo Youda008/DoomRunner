@@ -1,5 +1,6 @@
 1.6.1
 - reworked path quoting to fix launching the engine via process output window on Linux
+- make automatic save dir and screenshot dir relative to config dir instead of engine dir (on Windows they are the same)
 
 1.6
 - moved the Audio and Video options to a new tab to allow shrinking the launcher window even more

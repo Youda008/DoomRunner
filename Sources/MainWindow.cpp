@@ -2962,11 +2962,11 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	LaunchMode launchMode = getLaunchModeFromUI();
 	if (launchMode == LaunchMap)
 	{
-		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );  // TODO
+		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );
 	}
-	else if (launchMode == LoadSave && ui->saveFileCmbBox->currentIndex() >= 0)
+	else if (launchMode == LoadSave && ui->saveFileCmbBox->currentText().isEmpty())
 	{
-		QString savePath = getPathFromFileName( selectedEngine.configDir, saveModel[ ui->saveFileCmbBox->currentIndex() ].fileName );  // TODO
+		QString savePath = getPathFromFileName( selectedEngine.configDir, ui->saveFileCmbBox->currentText() );
 		throwIfInvalid( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
 	}
@@ -2975,9 +2975,9 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		cmd.arguments << "-record" << base.rebaseAndQuotePath( ui->demoFileLine_record->text() );
 		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
-	else if (launchMode == ReplayDemo && ui->demoFileCmbBox_replay->currentIndex() >= 0)
+	else if (launchMode == ReplayDemo && ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
-		QString demoPath = getPathFromFileName( selectedEngine.configDir, demoModel[ ui->demoFileCmbBox_replay->currentIndex() ].fileName );
+		QString demoPath = getPathFromFileName( selectedEngine.configDir, ui->demoFileCmbBox_replay->currentText() );
 		throwIfInvalid( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}

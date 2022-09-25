@@ -156,10 +156,14 @@ const QVector<QString> & getCompatLevels( CompatLevelStyle style )
 		return noCompatLevels;
 }
 
-QStringList getCompatLevelArgs( CompatLevelStyle style, int compatLevel )
+QStringList getCompatLevelArgs( const QString & executableName, CompatLevelStyle style, int compatLevel )
 {
-	if (style == CompatLevelStyle::ZDoom)
+	// Properly working -compatmode is present only in GZDoom,
+	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
+	if (executableName.toLower() == "gzdoom")
 		return { "-compatmode", QString::number( compatLevel ) };
+	if (style == CompatLevelStyle::ZDoom)
+		return { "+compatmode", QString::number( compatLevel ) };
 	else if (style == CompatLevelStyle::Boom)
 		return { "-complevel", QString::number( compatLevel ) };
 	else
@@ -187,10 +191,9 @@ EngineFamily familyFromStr( const QString & familyStr )
 		return EngineFamily::_EnumEnd;
 }
 
-EngineFamily guessEngineFamily( QString executableName )
+EngineFamily guessEngineFamily( const QString & executableName )
 {
-	executableName = executableName.toLower();
-	auto iter = knownEngineFamilies.find( executableName );
+	auto iter = knownEngineFamilies.find( executableName.toLower() );
 	if (iter != knownEngineFamilies.end())
 		return iter.value();
 	else
@@ -211,10 +214,9 @@ const EngineProperties & getEngineProperties( EngineFamily family )
 //----------------------------------------------------------------------------------------------------------------------
 //  miscellaneous
 
-int getFirstMonitorIndex( QString executableName )
+int getFirstMonitorIndex( const QString & executableName )
 {
-	executableName = executableName.toLower();
-	auto iter = startingMonitorIndexes.find( executableName );
+	auto iter = startingMonitorIndexes.find( executableName.toLower() );
 	if (iter != startingMonitorIndexes.end())
 		return iter.value();
 	else

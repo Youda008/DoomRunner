@@ -36,7 +36,7 @@ enum class CompatLevelStyle
 };
 
 const QVector<QString> & getCompatLevels( CompatLevelStyle style );
-QStringList getCompatLevelArgs( CompatLevelStyle style, int compatLevel );
+QStringList getCompatLevelArgs( const QString & executableName, CompatLevelStyle style, int compatLevel );
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ enum class EngineFamily
 const char * familyToStr( EngineFamily family );
 EngineFamily familyFromStr( const QString & familyStr );
 
-EngineFamily guessEngineFamily( QString executableName );
+EngineFamily guessEngineFamily( const QString & executableName );
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -68,7 +68,7 @@ const EngineProperties & getEngineProperties( EngineFamily family );
 //----------------------------------------------------------------------------------------------------------------------
 
 // some engines index monitors from 1 and others from 0
-int getFirstMonitorIndex( QString executableName );
+int getFirstMonitorIndex( const QString & executableName );
 
 
 #endif // ENGINE_PROPERTIES_INCLUDED

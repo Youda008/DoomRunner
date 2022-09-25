@@ -402,5 +402,5 @@ void deserialize( const JsonObjectCtx & jsOptions, LauncherOptions & opts )
 	opts.useAbsolutePaths = jsOptions.getBool( "use_absolute_paths", useAbsolutePathsByDefault );
 	opts.launchOptsStorage = jsOptions.getEnum< OptionsStorage >( "options_storage", StoreGlobally );
 	opts.closeOnLaunch = jsOptions.getBool( "close_on_launch", false, DontShowError );
-	opts.showEngineOutput = jsOptions.getBool( "show_engine_output", false, DontShowError );
+	opts.showEngineOutput = jsOptions.getBool( "show_engine_output", showEngineOutputByDefault, DontShowError );
 }

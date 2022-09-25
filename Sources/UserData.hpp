@@ -247,9 +247,11 @@ struct Preset : public EditableListModelItem
 };
 
 #ifdef _WIN32
-	static const bool useAbsolutePathsByDefault = false;
+	constexpr bool useAbsolutePathsByDefault = false;
+	constexpr bool showEngineOutputByDefault = false;
 #else
-	static const bool useAbsolutePathsByDefault = true;
+	constexpr bool useAbsolutePathsByDefault = true;
+	constexpr bool showEngineOutputByDefault = true;
 #endif
 
 /// Additional launcher settings
@@ -259,7 +261,7 @@ struct LauncherOptions
 	bool useAbsolutePaths = useAbsolutePathsByDefault;
 	OptionsStorage launchOptsStorage = StoreGlobally;
 	bool closeOnLaunch = false;
-	bool showEngineOutput = false;
+	bool showEngineOutput = showEngineOutputByDefault;
 };
 
 

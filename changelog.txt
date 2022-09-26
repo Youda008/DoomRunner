@@ -1,6 +1,13 @@
 1.6.1
+- use -compatmode instead of +compatmode for GZDoom
+- make automatic save dir and screenshot dir relative to config dir instead of engine dir (no change on Windows)
 - reworked path quoting to fix launching the engine via process output window on Linux
-- make automatic save dir and screenshot dir relative to config dir instead of engine dir (on Windows they are the same)
+- improvemed the engine's output window
+- use the engine's output window by default on Linux
+- fixed relative paths of the save directory and demo directory
+- record and search demo files in the save directory
+- disable gameplay options when joining multiplayer server as a client
+- minor bug-fixes and adjustments
 
 1.6
 - moved the Audio and Video options to a new tab to allow shrinking the launcher window even more

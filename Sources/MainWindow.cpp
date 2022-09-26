@@ -3004,7 +3004,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		cmd.arguments << "+dmflags2" << QString::number( activeLaunchOpts.gameOpts.flags2 );
 	if (ui->compatLevelCmbBox->isEnabled() && activeLaunchOpts.compatLevel >= 0)
 		cmd.arguments << getCompatLevelArgs( executableName, engineProperties.compLvlStyle, activeLaunchOpts.compatLevel );
-	if (ui->compatLevelCmbBox->isEnabled() && !compatOptsCmdArgs.isEmpty())  // TODO
+	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())  // TODO
 		cmd.arguments << compatOptsCmdArgs;
 	if (ui->allowCheatsChkBox->isChecked())
 		cmd.arguments << "+sv_cheats" << "1";

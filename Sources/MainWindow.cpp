@@ -1436,7 +1436,7 @@ void MainWindow::modeStandard()
 	ui->demoFileCmbBox_replay->setEnabled( false );
 
 	toggleSkillSubwidgets( false );
-	toggleOptionsSubwidgets( true );
+	toggleOptionsSubwidgets( true && !ui->multiplayerChkBox->isChecked() );
 
 	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Server)
 	{
@@ -1706,21 +1706,30 @@ void MainWindow::toggleMultiplayer( bool checked )
 	ui->timeLimitSpinBox->setEnabled( checked && multRole == Server && isDeathMatch );
 	ui->fragLimitSpinBox->setEnabled( checked && multRole == Server && isDeathMatch );
 
+	LaunchMode launchMode = getLaunchModeFromUI();
+
 	if (checked)
 	{
-		if (ui->launchMode_map->isChecked() && multRole == Client)  // client doesn't select map, server does
+		if (launchMode == LaunchMap && multRole == Client)  // client doesn't select map, server does
 		{
 			ui->launchMode_standard->click();
+			launchMode = Standard;
 		}
-		if (ui->launchMode_standard->isChecked() && multRole == Server)  // server MUST choose a map
+		if (launchMode == Standard && multRole == Server)  // server MUST choose a map
 		{
 			ui->launchMode_map->click();
+			launchMode = LaunchMap;
 		}
-		if (ui->launchMode_replayDemo->isChecked())  // can't replay demo in multiplayer
+		if (launchMode == ReplayDemo)  // can't replay demo in multiplayer
 		{
 			ui->launchMode_standard->click();
+			launchMode = Standard;
 		}
 	}
+
+	toggleOptionsSubwidgets(
+		(launchMode == Standard && !checked) || launchMode == LaunchMap || launchMode == RecordDemo
+	);
 
 	updateLaunchCommand();
 }

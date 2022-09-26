@@ -208,8 +208,6 @@ class MainWindow : public QMainWindow {
 
 	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
 
-	QProcess * engineProcess;  ///< process of the asynchronously started Doom engine, used to pipe its output into a window
-
 	UpdateChecker updateChecker;
 
  private: // user data

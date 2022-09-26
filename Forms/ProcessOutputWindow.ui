@@ -145,13 +145,13 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>200</width>
+         <width>220</width>
          <height>0</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>200</width>
+         <width>220</width>
          <height>16777215</height>
         </size>
        </property>
@@ -282,7 +282,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Finished successfully</string>
+        <string>Exited with error (255)</string>
        </property>
        <property name="readOnly">
         <bool>true</bool>

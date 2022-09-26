@@ -2,7 +2,7 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: window that shows a piped standard output from a started process
+// Description: window that shows a status and output of a started process
 //======================================================================================================================
 
 #ifndef ENGINE_OUTPUT_WINDOW_INCLUDED
@@ -11,6 +11,8 @@
 
 #include <QDialog>
 #include <QProcess>
+
+#include "EventFilters.hpp"
 
 class QPushButton;
 class QCloseEvent;
@@ -21,26 +23,31 @@ namespace Ui {
 
 
 //======================================================================================================================
+// we have to use our own process state because the Qt one isn't detailed enough
 
-/// Possible results of the attempt to run a process after the dialog exits.
+/// All the possible states the process can go through while this dialog is running.
 enum class ProcessStatus
 {
-	NotStarted,
-	Starting,
-	Running,
-	FinishedSuccessfully,
-	ExitedWithError,
-	FailedToStart,
-	Crashed,
-	Quitting,
-	Terminated,
-	UnknownError
+	NotStarted,        ///< process has not been even started, only true before calling runProcess
+	Starting,          ///< OS is loading the process and preparing it to run
+	Running,           ///< process is loaded and running
+	Finished,          ///< process has successfully finished and exited with exit code 0
+	ExitedWithError,   ///< process has exited regularly but returned non-zero exit code
+	FailedToStart,     ///< OS has failed to start the proccess (most likely due to wrong executable path or permissions)
+	Crashed,           ///< process has crashed
+	ShuttingDown,      ///< terminate signal has been sent to the process and we're waiting for it to react
+	Dying,             ///< kill signal has been sent to the process and we're waiting for the OS to shut it down
+	Terminated,        ///< the process was terminated and has finally shut down
+	Killed,            ///< the process was killed and has finally died
+	UnknownErrorShtDn, ///< unknown error has occured during the process handling and the process is being terminated
+	UnknownError       ///< unknown error has occured during the process handling and the process has been terminated
 };
 
 const char * toString( ProcessStatus status );
 
 
 //======================================================================================================================
+/** Dialog that displays process state and its standard output and error output as if it was a terminal. */
 
 class ProcessOutputWindow : public QDialog {
 
@@ -65,7 +72,9 @@ class ProcessOutputWindow : public QDialog {
 	void processFinished( int exitCode, QProcess::ExitStatus exitStatus );
 	void errorOccurred( QProcess::ProcessError error );
 
-	void terminateClicked( bool checked );
+	void keyPressed( int key, uint8_t modifiers );
+
+	void abortClicked( bool checked );
 
 	// closeEvent() is not called when the dialog is closed, we have to connect this to the finished() signal
 	void dialogClosed( int result );
@@ -74,21 +83,21 @@ class ProcessOutputWindow : public QDialog {
 
 	void closeDialog( int resultCode );
 
-	void setStatus( ProcessStatus status, const QString & detail = "" );
+	void setOwnStatus( ProcessStatus status, const QString & detail = "" );
 
  private: // members
 
 	Ui::ProcessOutputWindow * ui;
-	QPushButton * terminateBtn;  ///< shortcut to the Terminate button in the list of ui->buttonBox
-	QPushButton * closeBtn;      ///< shortcut to the Close button in the list of ui->buttonBox
+	QPushButton * abortBtn;  ///< shortcut to the Terminate button in the list of ui->buttonBox
+	QPushButton * closeBtn;  ///< shortcut to the Close button in the list of ui->buttonBox
 
 	QProcess process;
 
 	QString executableName;
 
-	ProcessStatus status;
-	bool windowIsClosing;
+	ProcessStatus ownStatus;
 
+	KeyPressFilter keyPressFilter;
 };
 
 

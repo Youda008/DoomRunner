@@ -55,7 +55,8 @@ class ModifierHandler {
 
 
 //======================================================================================================================
-/** Event filter that captures key presses and emits them as signals. */
+/** Event filter that captures key presses and emits them as signals.
+  * Can also stop the events from propagating to the parent window. */
 
 class KeyPressFilter : public QObject {
 
@@ -65,6 +66,11 @@ class KeyPressFilter : public QObject {
 
 	KeyPressFilter() {}
 	virtual ~KeyPressFilter() override {}
+
+	/// Toggles suppression of key events - stop them from propagating to the parent window.
+	void toggleKeyPressSupression( bool enabled )  { suppressKeyEvents = enabled; }
+
+ protected:
 
 	virtual bool eventFilter( QObject * obj, QEvent * event ) override;
 
@@ -79,6 +85,7 @@ class KeyPressFilter : public QObject {
  private:
 
 	ModifierHandler modifierHandler;
+	bool suppressKeyEvents = false;
 
 };
 
@@ -94,6 +101,8 @@ class ConfirmationFilter : public QObject {
 
 	ConfirmationFilter() {}
 	virtual ~ConfirmationFilter() override {}
+
+ protected:
 
 	virtual bool eventFilter( QObject * obj, QEvent * event ) override;
 

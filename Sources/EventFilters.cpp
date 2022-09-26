@@ -81,6 +81,9 @@ bool KeyPressFilter::eventFilter( QObject * obj, QEvent * event )
 
 		if (!isModifier && state == KeyState::Pressed)
 			emit keyPressed( key, modifierHandler.pressedModifiers() );
+
+		if (suppressKeyEvents)
+			return true;
 	}
 
 	return QObject::eventFilter( obj, event );

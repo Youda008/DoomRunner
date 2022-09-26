@@ -107,7 +107,7 @@ template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorag
 
 enum LaunchMode
 {
-	Standard,
+	Default,
 	LaunchMap,
 	LoadSave,
 	RecordDemo,
@@ -171,7 +171,7 @@ struct CompatibilityOptions
 struct LaunchOptions
 {
 	// launch mode
-	LaunchMode mode = Standard;
+	LaunchMode mode = Default;
 	QString mapName;
 	QString saveFile;
 	QString mapName_demo;

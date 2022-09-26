@@ -86,7 +86,7 @@ class MainWindow : public QMainWindow {
 	void modInsertSeparator();
 	void modsDropped( int row, int count );
 
-	void modeStandard();
+	void modeDefault();
 	void modeLaunchMap();
 	void modeSavedGame();
 	void modeRecordDemo();

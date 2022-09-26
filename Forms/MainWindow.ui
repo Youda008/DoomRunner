@@ -519,7 +519,7 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_12">
                <item>
-                <widget class="QRadioButton" name="launchMode_standard">
+                <widget class="QRadioButton" name="launchMode_default">
                  <property name="text">
                   <string>Default (open game menu or join a server)</string>
                  </property>

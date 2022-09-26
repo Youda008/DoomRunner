@@ -226,7 +226,7 @@ MainWindow::MainWindow()
 	// setup launch options callbacks
 
 	// launch mode
-	connect( ui->launchMode_standard, &QRadioButton::clicked, this, &thisClass::modeStandard );
+	connect( ui->launchMode_default, &QRadioButton::clicked, this, &thisClass::modeDefault );
 	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeLaunchMap );
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
 	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &thisClass::modeRecordDemo );
@@ -1424,10 +1424,10 @@ void MainWindow::modsDropped( int dropRow, int count )
 //----------------------------------------------------------------------------------------------------------------------
 //  launch mode
 
-void MainWindow::modeStandard()
+void MainWindow::modeDefault()
 {
 	if (!restoringInProgress)
-		activeLaunchOptions().mode = Standard;
+		activeLaunchOptions().mode = Default;
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1440,7 +1440,7 @@ void MainWindow::modeStandard()
 
 	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Server)
 	{
-		ui->multRoleCmbBox->setCurrentIndex( Client );   // only client can use standard launch mode
+		ui->multRoleCmbBox->setCurrentIndex( Client );   // only client can use default launch mode
 	}
 
 	updateLaunchCommand();
@@ -1712,23 +1712,23 @@ void MainWindow::toggleMultiplayer( bool checked )
 	{
 		if (launchMode == LaunchMap && multRole == Client)  // client doesn't select map, server does
 		{
-			ui->launchMode_standard->click();
-			launchMode = Standard;
+			ui->launchMode_default->click();
+			launchMode = Default;
 		}
-		if (launchMode == Standard && multRole == Server)  // server MUST choose a map
+		if (launchMode == Default && multRole == Server)  // server MUST choose a map
 		{
 			ui->launchMode_map->click();
 			launchMode = LaunchMap;
 		}
 		if (launchMode == ReplayDemo)  // can't replay demo in multiplayer
 		{
-			ui->launchMode_standard->click();
-			launchMode = Standard;
+			ui->launchMode_default->click();
+			launchMode = Default;
 		}
 	}
 
 	toggleOptionsSubwidgets(
-		(launchMode == Standard && !checked) || launchMode == LaunchMap || launchMode == RecordDemo
+		(launchMode == Default && !checked) || launchMode == LaunchMap || launchMode == RecordDemo
 	);
 
 	updateLaunchCommand();
@@ -1755,9 +1755,9 @@ void MainWindow::selectMultRole( int role )
 	{
 		if (ui->launchMode_map->isChecked() && role == Client)  // client doesn't select map, server does
 		{
-			ui->launchMode_standard->click();
+			ui->launchMode_default->click();
 		}
-		if (ui->launchMode_standard->isChecked() && role == Server)  // server MUST choose a map
+		if (ui->launchMode_default->isChecked() && role == Server)  // server MUST choose a map
 		{
 			ui->launchMode_map->click();
 		}
@@ -2616,7 +2616,7 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 		ui->launchMode_replayDemo->click();
 		break;
 	 default:
-		ui->launchMode_standard->click();
+		ui->launchMode_default->click();
 		break;
 	}
 
@@ -2714,7 +2714,7 @@ LaunchMode MainWindow::getLaunchModeFromUI() const
 	else if (ui->launchMode_replayDemo->isChecked())
 		return LaunchMode::ReplayDemo;
 	else
-		return LaunchMode::Standard;
+		return LaunchMode::Default;
 }
 
 void MainWindow::exportPresetToScript()

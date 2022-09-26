@@ -1041,6 +1041,7 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 	// but we only care about the first one
 	const auto selectedRows = getSelectedRows( ui->mapDirView );
 
+	// extract the file paths
 	QList< QString > selectedMapPacks;
 	for (const QModelIndex & index : selectedRows)
 	{
@@ -1060,6 +1061,27 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 		for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
 			if (!ui->mapDirView->isExpanded( currentIndex ))
 				ui->mapDirView->expand( currentIndex );
+
+	// if this is a known map pack, that starts at different level than the first one, automatically select it
+	if (selectedMapPacks.size() >= 1)
+	{
+		// if there is multiple of them, there isn't really any better solution than to just take the first one
+		QString wadName = getFileNameFromPath( selectedMapPacks[0] );
+		QString startingMap = getStartingMap( wadName );
+		if (!startingMap.isEmpty())
+		{
+			if (ui->mapCmbBox->findText( startingMap ) >= 0)
+			{
+				ui->mapCmbBox->setCurrentText( startingMap );
+				ui->mapCmbBox_demo->setCurrentText( startingMap );
+			}
+			else
+			{
+				QMessageBox::warning( this, "Cannot set starting map",
+					"Map pack "%wadName%" is not compatible with the current IWAD." );
+			}
+		}
+	}
 
 	updateLaunchCommand();
 }

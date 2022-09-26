@@ -200,3 +200,29 @@ const WadInfo & getCachedWadInfo( const QString & filePath )
 	}
 	return pos.value();
 }
+
+
+//======================================================================================================================
+//  miscellaneous
+
+static const QHash< QString, QString > startingMaps =
+{
+	{ "virgil.wad", "MAP03" },
+	{ "minos.wad", "MAP05" },
+	{ "bloodsea.wad", "MAP07" },
+	{ "mephisto.wad", "MAP07" },
+	{ "nessus.wad", "MAP07" },
+	{ "geryon.wad", "MAP08" },
+	{ "vesperas.wad", "MAP09" },
+	{ "blacktwr.wad", "MAP25" },
+	{ "teeth.wad", "MAP31" },
+};
+
+QString getStartingMap( const QString & wadName )
+{
+	auto iter = startingMaps.find( wadName.toLower() );
+	if (iter != startingMaps.end())
+		return iter.value();
+	else
+		return {};
+}

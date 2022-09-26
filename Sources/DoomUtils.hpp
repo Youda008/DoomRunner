@@ -59,4 +59,12 @@ struct WadInfo
 const WadInfo & getCachedWadInfo( const QString & filePath );
 
 
+//======================================================================================================================
+//  miscellaneous
+
+// Some WADs (map packs) don't start at the first map of the list defined by IWADs (MAP01, E1M1, ...).
+/// If it's a known WAD and it's known to start from a non-first map, returns that map, otherwise returns empty string.
+QString getStartingMap( const QString & wadName );
+
+
 #endif // DOOM_UTILS_INCLUDED

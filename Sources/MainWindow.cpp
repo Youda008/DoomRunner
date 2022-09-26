@@ -695,6 +695,7 @@ void MainWindow::restorePreset( int presetIdx )
 		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
 
 		ui->engineCmbBox->setCurrentIndex( -1 );
+
 		if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
 		{
 			int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
@@ -715,6 +716,7 @@ void MainWindow::restorePreset( int presetIdx )
 			{
 				QMessageBox::warning( this, "Engine no longer exists",
 					"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list, please select another one." );
+				preset.selectedEnginePath.clear();
 			}
 		}
 
@@ -730,6 +732,7 @@ void MainWindow::restorePreset( int presetIdx )
 		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
 
 		ui->configCmbBox->setCurrentIndex( -1 );
+
 		if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
 		{
 			int configIdx = findSuch( configModel, [&]( const ConfigFile & config )
@@ -744,6 +747,7 @@ void MainWindow::restorePreset( int presetIdx )
 			{
 				QMessageBox::warning( this, "Config no longer exists",
 					"Config file selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
+				preset.selectedConfig.clear();
 			}
 		}
 
@@ -758,6 +762,7 @@ void MainWindow::restorePreset( int presetIdx )
 		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
 
 		deselectSelectedItems( ui->iwadListView );
+
 		if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
 		{
 			int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
@@ -777,6 +782,7 @@ void MainWindow::restorePreset( int presetIdx )
 			{
 				QMessageBox::warning( this, "IWAD no longer exists",
 					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
+				preset.selectedIWAD.clear();
 			}
 		}
 
@@ -791,15 +797,20 @@ void MainWindow::restorePreset( int presetIdx )
 	{
 		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
 
-		deselectSelectedItems( ui->mapDirView );
 		QDir mapRootDir = mapModel.rootDirectory();
-		for (const QString & path : as_const( preset.selectedMapPacks ))
+
+		deselectSelectedItems( ui->mapDirView );
+
+		const QList<QString> mapPacksCopy = preset.selectedMapPacks;
+		preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
+		for (const QString & path : mapPacksCopy)
 		{
 			QModelIndex mapIdx = mapModel.index( path );
 			if (mapIdx.isValid() && isInsideDir( path, mapRootDir ))
 			{
 				if (QFileInfo::exists( path ))
 				{
+					preset.selectedMapPacks.append( path );  // put back only items that are valid
 					selectItemByIndex( ui->mapDirView, mapIdx );
 				}
 				else
@@ -825,9 +836,10 @@ void MainWindow::restorePreset( int presetIdx )
 	// restore list of mods
 	{
 		deselectSelectedItems( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
+
+		modModel.startCompleteUpdate();
 		const QList<Mod> modsCopy = preset.mods;
 		preset.mods.clear();  // clear the list in the preset and let it repopulate only with valid items
-		modModel.startCompleteUpdate();
 		modModel.clear();
 		for (const Mod & mod : modsCopy)
 		{

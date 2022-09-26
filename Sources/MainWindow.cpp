@@ -70,7 +70,7 @@ static bool verifyDir( const QString & dir, const QString & errorMessage )
 {
 	if (!QDir( dir ).exists())
 	{
-		QMessageBox::warning( nullptr, "Directory no longer exists.", errorMessage.arg( dir ) );
+		QMessageBox::warning( nullptr, "Directory no longer exists", errorMessage.arg( dir ) );
 		return false;
 	}
 	return true;
@@ -80,7 +80,7 @@ static bool verifyFile( const QString & path, const QString & errorMessage )
 {
 	if (!QFileInfo::exists( path ))
 	{
-		QMessageBox::warning( nullptr, "File no longer exists.", errorMessage.arg( path ) );
+		QMessageBox::warning( nullptr, "File no longer exists", errorMessage.arg( path ) );
 		return false;
 	}
 	return true;
@@ -1101,7 +1101,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 
 	if (!QFileInfo::exists( mapDescFilePath ))
 	{
-		QMessageBox::warning( this, "Cannot open map description.",
+		QMessageBox::warning( this, "Cannot open map description",
 			"Map description file \""%mapDescFileName%"\" does not exist" );
 		return;
 	}
@@ -1109,7 +1109,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	QFile descFile( mapDescFilePath );
 	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
 	{
-		QMessageBox::warning( this, "Cannot open map description.",
+		QMessageBox::warning( this, "Cannot open map description",
 			"Failed to open description file "%mapDescFileName%": "%descFile.errorString() );
 		return;
 	}
@@ -2111,10 +2111,11 @@ QString MainWindow::getConfigDir() const
 
 QString MainWindow::getSaveDir() const
 {
-	if (!ui->saveDirLine->text().isEmpty())  // if custom save dir is specified
-		return ui->saveDirLine->text();      // then use it
-	else                                     // otherwise
-		return getConfigDir();               // use config dir
+	QString alternativeSaveDir = ui->saveDirLine->text();
+	if (!alternativeSaveDir.isEmpty())  // if custom save dir is specified
+		return alternativeSaveDir;      // then use it
+	else                                // otherwise
+		return getConfigDir();          // use config dir
 }
 
 void MainWindow::updateConfigFilesFromDir()
@@ -2165,7 +2166,7 @@ void MainWindow::updateSaveFilesFromDir()
 
 void MainWindow::updateDemoFilesFromDir()
 {
-	QString demoDir = getConfigDir();
+	QString demoDir = getSaveDir();
 
 	// workaround (read the big comment above)
 	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
@@ -2999,13 +3000,13 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
-		QString demoPath = getPathFromFileName( selectedEngine.configDir, ui->demoFileLine_record->text() );
+		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileLine_record->text() );
 		cmd.arguments << "-record" << base.rebaseAndQuotePath( demoPath );
 		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
-		QString demoPath = getPathFromFileName( selectedEngine.configDir, ui->demoFileCmbBox_replay->currentText() );
+		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileCmbBox_replay->currentText() );
 		throwIfInvalid( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}
@@ -3128,7 +3129,19 @@ void MainWindow::launch()
 	}
 	catch (const FileNotFound &)
 	{
-		return;
+		return;  // errors are already shown during the generation
+	}
+
+	// make sure the alternative save dir exists, because engine will not create it if demo file path points there
+	QString alternativeSaveDir = ui->saveDirLine->text();
+	if (!alternativeSaveDir.isEmpty())
+	{
+		bool saveDirExists = createDirIfDoesntExist( alternativeSaveDir );
+		if (!saveDirExists)
+		{
+			QMessageBox::warning( this, "Error creating directory", "Failed to create directory "%alternativeSaveDir );
+			// we can continue without this directory, it will just not save demos
+		}
 	}
 
 	// Before we execute the command, we need to switch the current dir to the engine's dir,

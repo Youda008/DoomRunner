@@ -14,7 +14,6 @@
 #include "UserData.hpp"
 #include "ListModel.hpp"
 #include "FileSystemUtils.hpp"  // PathContext
-#include "EventFilters.hpp"  // ConfirmationFilter
 #include "UpdateChecker.hpp"
 
 #include <QMainWindow>
@@ -203,8 +202,6 @@ class MainWindow : public QMainWindow {
 	CompatLevelStyle lastCompLvlStyle;  ///< compat level style of the engine that was selected the last time
 
 	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
-
-	KeyPressFilter modKeyFilter;  ///< event filter that captures the presses of spacebar to correct the unsuitable default behaviour
 
 	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
 

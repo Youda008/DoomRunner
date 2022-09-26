@@ -15,7 +15,6 @@
 #include "GameOptsDialog.hpp"
 #include "CompatOptsDialog.hpp"
 
-#include "EventFilters.hpp"  // ConfirmationFilter
 #include "LangUtils.hpp"
 #include "JsonUtils.hpp"
 #include "WidgetUtils.hpp"

@@ -1,4 +1,5 @@
 1.6.1
+- added automatic starting map selection for MasterLevels
 - use -compatmode instead of +compatmode for GZDoom
 - make automatic save dir and screenshot dir relative to config dir instead of engine dir (no change on Windows)
 - reworked path quoting to fix launching the engine via process output window on Linux

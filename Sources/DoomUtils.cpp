@@ -207,6 +207,7 @@ const WadInfo & getCachedWadInfo( const QString & filePath )
 
 static const QHash< QString, QString > startingMaps =
 {
+	// MasterLevels
 	{ "virgil.wad", "MAP03" },
 	{ "minos.wad", "MAP05" },
 	{ "bloodsea.wad", "MAP07" },
@@ -216,6 +217,20 @@ static const QHash< QString, QString > startingMaps =
 	{ "vesperas.wad", "MAP09" },
 	{ "blacktwr.wad", "MAP25" },
 	{ "teeth.wad", "MAP31" },
+
+	// Also include the MasterLevels that start from MAP01, because otherwise when user switches from non-MAP01 level
+	// to MAP01 level, the launcher will retain its previous values, which will be incorrect.
+	{ "attack.wad", "MAP01" },
+	{ "canyon.wad", "MAP01" },
+	{ "catwalk.wad", "MAP01" },
+	{ "combine.wad", "MAP01" },
+	{ "fistula.wad", "MAP01" },
+	{ "garrison.wad", "MAP01" },
+	{ "manor.wad", "MAP01" },
+	{ "paradox.wad", "MAP01" },
+	{ "subspace.wad", "MAP01" },
+	{ "subterra.wad", "MAP01" },
+	{ "ttrap.wad", "MAP01" },
 };
 
 QString getStartingMap( const QString & wadName )

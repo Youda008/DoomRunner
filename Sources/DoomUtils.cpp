@@ -208,29 +208,53 @@ const WadInfo & getCachedWadInfo( const QString & filePath )
 static const QHash< QString, QString > startingMaps =
 {
 	// MasterLevels
-	{ "virgil.wad", "MAP03" },
-	{ "minos.wad", "MAP05" },
-	{ "bloodsea.wad", "MAP07" },
-	{ "mephisto.wad", "MAP07" },
-	{ "nessus.wad", "MAP07" },
-	{ "geryon.wad", "MAP08" },
-	{ "vesperas.wad", "MAP09" },
-	{ "blacktwr.wad", "MAP25" },
-	{ "teeth.wad", "MAP31" },
+	{ "virgil.wad",    "MAP03" },
+	{ "minos.wad",     "MAP05" },
+	{ "bloodsea.wad",  "MAP07" },
+	{ "mephisto.wad",  "MAP07" },
+	{ "nessus.wad",    "MAP07" },
+	{ "geryon.wad",    "MAP08" },
+	{ "vesperas.wad",  "MAP09" },
+	{ "blacktwr.wad",  "MAP25" },
+	{ "teeth.wad",     "MAP31" },
+
+	// unofficial MasterLevels
+	{ "dante25.wad",   "MAP02" },
+	{ "derelict.wad",  "MAP02" },
+	{ "achron22.wad",  "MAP03" },
+	{ "flood.wad",     "MAP03" },
+	{ "twm01.wad",     "MAP03" },
+	{ "watchtwr.wad",  "MAP04" },
+	{ "todeath.wad",   "MAP05" },
+	{ "arena.wad",     "MAP06" },
+	{ "storm.wad",     "MAP09" },
+	{ "the_evil.wad",  "MAP30" },
 
 	// Also include the MasterLevels that start from MAP01, because otherwise when user switches from non-MAP01 level
 	// to MAP01 level, the launcher will retain its previous values, which will be incorrect.
-	{ "attack.wad", "MAP01" },
-	{ "canyon.wad", "MAP01" },
-	{ "catwalk.wad", "MAP01" },
-	{ "combine.wad", "MAP01" },
-	{ "fistula.wad", "MAP01" },
-	{ "garrison.wad", "MAP01" },
-	{ "manor.wad", "MAP01" },
-	{ "paradox.wad", "MAP01" },
-	{ "subspace.wad", "MAP01" },
-	{ "subterra.wad", "MAP01" },
-	{ "ttrap.wad", "MAP01" },
+	{ "attack.wad",    "MAP01" },
+	{ "canyon.wad",    "MAP01" },
+	{ "catwalk.wad",   "MAP01" },
+	{ "combine.wad",   "MAP01" },
+	{ "fistula.wad",   "MAP01" },
+	{ "garrison.wad",  "MAP01" },
+	{ "manor.wad",     "MAP01" },
+	{ "paradox.wad",   "MAP01" },
+	{ "subspace.wad",  "MAP01" },
+	{ "subterra.wad",  "MAP01" },
+	{ "ttrap.wad",     "MAP01" },
+
+	// unofficial MasterLevels starting from MAP01
+	{ "anomaly.wad",   "MAP01" },
+	{ "cdk_fury.wad",  "MAP01" },
+	{ "cpu.wad",       "MAP01" },
+	{ "device_1.wad",  "MAP01" },
+	{ "dmz.wad",       "MAP01" },
+	{ "e_inside.wad",  "MAP01" },
+	{ "farside.wad",   "MAP01" },
+	{ "hive.wad",      "MAP01" },
+	{ "mines.wad",     "MAP01" },
+	{ "trouble.wad",   "MAP01" },
 };
 
 QString getStartingMap( const QString & wadName )

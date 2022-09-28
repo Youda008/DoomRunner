@@ -58,8 +58,12 @@ QString updateFile( const QString & filePath, const QByteArray & newContent )
 
 	newFile.close();
 
-	if (oldFile.exists())
+	if (oldFile.fileName() != newFile.fileName())  // there was a previous version of the file that was renamed
 	{
+		if (!oldFile.exists())
+		{
+			return "Old file was renamed to "%oldFile.fileName()%" but now it doesn't exist? WTF?";
+		}
 		if (!oldFile.remove())
 		{
 			return "Could not delete the previous file "%filePath%": "%oldFile.errorString();

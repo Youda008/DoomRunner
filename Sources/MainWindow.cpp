@@ -70,21 +70,11 @@ static QString getOptionsFilePath()
 	return QDir( getAppDataDir() ).filePath( defaultOptionsFile );
 }
 
-static bool verifyDir( const QString & dir, const QString & errorMessage )
-{
-	if (!QDir( dir ).exists())
-	{
-		QMessageBox::warning( nullptr, "Directory no longer exists", errorMessage.arg( dir ) );
-		return false;
-	}
-	return true;
-}
-
-static bool verifyFile( const QString & path, const QString & errorMessage )
+static bool verifyPath( const QString & path, const QString & errorMessage )
 {
 	if (!QFileInfo::exists( path ))
 	{
-		QMessageBox::warning( nullptr, "File no longer exists", errorMessage.arg( path ) );
+		QMessageBox::warning( nullptr, "File or directory no longer exists", errorMessage.arg( path ) );
 		return false;
 	}
 	return true;
@@ -95,7 +85,7 @@ class FileNotFound {};
 static void throwIfInvalid( bool doVerify, const QString & path, const QString & errorMessage )
 {
 	if (doVerify)
-		if (!verifyFile( path, errorMessage ))
+		if (!verifyPath( path, errorMessage ))
 			throw FileNotFound();
 }
 
@@ -963,7 +953,7 @@ void MainWindow::selectEngine( int index )
 		const EngineProperties & properties = getEngineProperties( engineModel[ index ].family );
 		mapParamStyle = properties.mapParamStyle;
 
-		verifyFile( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
+		verifyPath( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
 	}
 
 	ui->mapCmbBox->setEditable( mapParamStyle == MapParamStyle::Map );
@@ -1000,7 +990,7 @@ void MainWindow::selectConfig( int index )
 			engineModel[ ui->engineCmbBox->currentIndex() ].configDir,  // if config was selected, engine selection must be valid too
 			configModel[ index ].fileName
 		);
-		validConfigSelected = verifyFile( configPath, "The selected config (%1) no longer exists, please select another one." );
+		validConfigSelected = verifyPath( configPath, "The selected config (%1) no longer exists, please select another one." );
 	}
 
 	// update related UI elements
@@ -1028,7 +1018,7 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 
 	if (selectedIWADIdx >= 0)
 	{
-		verifyFile( iwadModel[ selectedIWADIdx ].path, "The selected IWAD (%1) no longer exists, please select another one." );
+		verifyPath( iwadModel[ selectedIWADIdx ].path, "The selected IWAD (%1) no longer exists, please select another one." );
 	}
 
 	updateMapsFromSelectedWADs();
@@ -1075,10 +1065,10 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 			if (!ui->mapDirView->isExpanded( currentIndex ))
 				ui->mapDirView->expand( currentIndex );
 
-	updateMapsFromSelectedWADs();
+	updateMapsFromSelectedWADs( selectedMapPacks );
 
 	// if this is a known map pack, that starts at different level than the first one, automatically select it
-	if (selectedMapPacks.size() >= 1)
+	if (selectedMapPacks.size() >= 1 && !isDirectory( selectedMapPacks[0] ))
 	{
 		// if there is multiple of them, there isn't really any better solution than to just take the first one
 		QString wadFileName = getFileNameFromPath( selectedMapPacks[0] );
@@ -2265,12 +2255,13 @@ void MainWindow::updateCompatLevels()
 }
 
 // this is not called regularly, but only when an IWAD or map WAD is selected or deselected
-void MainWindow::updateMapsFromSelectedWADs()
+void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringList > selectedMapPacks )
 {
 	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	QString selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : "";
 
-	QStringList selectedMapPacks = getSelectedMapPacks();
+	if (!selectedMapPacks)  // optimization, it the caller already has them, use his ones instead of getting them again
+		selectedMapPacks = getSelectedMapPacks();
 
 	// note down the currently selected items
 	QString origText = ui->mapCmbBox->currentText();
@@ -2294,16 +2285,19 @@ void MainWindow::updateMapsFromSelectedWADs()
 			break;  // if no IWAD is selected, let's leave this empty, it cannot be launched anyway
 		}
 
-		QStringList selectedWADs = QStringList( selectedIwadPath ) + selectedMapPacks;
+		QStringList selectedWADs = QStringList( selectedIwadPath ) + *selectedMapPacks;
 
 		// read the map names from the selected files and merge them so that entries are not duplicated
 		QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
 		for (const QString & selectedWAD : selectedWADs)
 		{
-			const WadInfo & wadInfo = getCachedWadInfo( selectedWAD );
-			if (wadInfo.successfullyRead)
-				for (const QString & mapName : wadInfo.mapNames)
-					uniqueMapNames.insert( mapName.toUpper(), 0 );  // the int doesn't matter
+			if (!isDirectory( selectedWAD ))
+			{
+				const WadInfo & wadInfo = getCachedWadInfo( selectedWAD );
+				if (wadInfo.successfullyRead)
+					for (const QString & mapName : wadInfo.mapNames)
+						uniqueMapNames.insert( mapName.toUpper(), 0 );  // the int doesn't matter
+			}
 		}
 
 		// fill the combox-box
@@ -2496,7 +2490,7 @@ void MainWindow::loadOptions( const QString & filePath )
 				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				if (!verifyFile( engine.path, "An engine from the saved options (%1) no longer exists. It will be removed from the list." ))
+				if (!verifyPath( engine.path, "An engine from the saved options (%1) no longer exists. It will be removed from the list." ))
 					continue;
 
 				engineModel.append( std::move( engine ) );
@@ -2518,7 +2512,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 		if (iwadSettings.updateFromDir)
 		{
-			verifyDir( iwadSettings.dir, "IWAD directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+			verifyPath( iwadSettings.dir, "IWAD directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 		}
 		else
 		{
@@ -2536,7 +2530,7 @@ void MainWindow::loadOptions( const QString & filePath )
 					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
 						continue;
 
-					if (!verifyFile( iwad.path, "An IWAD from the saved options (%1) no longer exists. It will be removed from the list." ))
+					if (!verifyPath( iwad.path, "An IWAD from the saved options (%1) no longer exists. It will be removed from the list." ))
 						continue;
 
 					iwadModel.append( std::move( iwad ) );
@@ -2553,7 +2547,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 		deserialize( jsMaps, mapSettings );
 
-		verifyDir( mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+		verifyPath( mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 	}
 
 	if (JsonObjectCtx jsMods = jsRoot.getObject( "mods" ))
@@ -2562,7 +2556,7 @@ void MainWindow::loadOptions( const QString & filePath )
 
 		deserialize( jsMods, modSettings );
 
-		verifyDir( modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+		verifyPath( modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 	}
 
 	if (JsonArrayCtx jsPresetArray = jsRoot.getArray( "presets" ))

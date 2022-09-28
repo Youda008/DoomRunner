@@ -21,6 +21,8 @@
 #include <QFileInfo>
 #include <QFileSystemModel>
 
+#include <optional>
+
 class QItemSelection;
 class QComboBox;
 class QProcess;
@@ -174,7 +176,7 @@ class MainWindow : public QMainWindow {
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
 	void updateCompatLevels();
-	void updateMapsFromSelectedWADs();
+	void updateMapsFromSelectedWADs( std::optional< QStringList > selectedMapPacks = std::nullopt );
 
 	void toggleSkillSubwidgets( bool enabled );
 	void toggleOptionsSubwidgets( bool enabled );

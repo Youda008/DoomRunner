@@ -121,6 +121,11 @@ class PathContext {
 //======================================================================================================================
 //  misc helper functions
 
+inline bool isDirectory( const QString & path )
+{
+	return QFileInfo( path ).isDir();
+}
+
 inline bool isValidDir( const QString & dirPath )
 {
 	return !dirPath.isEmpty() && QDir( dirPath ).exists();

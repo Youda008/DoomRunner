@@ -2745,6 +2745,7 @@ void MainWindow::restoreOutputOptions( OutputOptions & opts )
 		ui->resolutionXLine->setText( QString::number( opts.resolutionX ) );
 	if (opts.resolutionY > 0)
 		ui->resolutionYLine->setText( QString::number( opts.resolutionY ) );
+	ui->showFpsChkBox->setChecked( opts.showFPS );
 
 	// audio
 	ui->noSoundChkBox->setChecked( opts.noSound );

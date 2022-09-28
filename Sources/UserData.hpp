@@ -16,7 +16,6 @@
 #include "EngineProperties.hpp"  // EngineFamily
 
 #include <QString>
-#include <QVector>
 #include <QFileInfo>
 #include <QDir>
 

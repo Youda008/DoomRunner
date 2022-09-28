@@ -1,3 +1,7 @@
+1.6.2
+- fixed the bug from 1.6 where options.json was not created on first run
+- support for launching SIGIL maps (E5MX)
+
 1.6.1
 - added automatic starting map selection for MasterLevels
 - use -compatmode instead of +compatmode for GZDoom

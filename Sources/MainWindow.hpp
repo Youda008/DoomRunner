@@ -163,6 +163,8 @@ class MainWindow : public QMainWindow {
 
 	LaunchMode getLaunchModeFromUI() const;
 
+	QStringList getSelectedMapPacks() const;
+
 	QString getConfigDir() const;
 	QString getSaveDir() const;
 
@@ -172,7 +174,7 @@ class MainWindow : public QMainWindow {
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
 	void updateCompatLevels();
-	void updateMapsFromIWAD();
+	void updateMapsFromSelectedWADs();
 
 	void toggleSkillSubwidgets( bool enabled );
 	void toggleOptionsSubwidgets( bool enabled );

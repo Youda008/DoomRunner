@@ -84,7 +84,7 @@ static bool isMapMarker( const LumpEntry & lump, const QString & lumpName )
 		&& !lumpName.contains("_S") && !lumpName.contains("_E");
 }
 
-static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QVector< QString > & mapNames )
+static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QStringList & mapNames )
 {
 	QTextStream lumpText( lumpData, QIODevice::ReadOnly );
 
@@ -205,7 +205,32 @@ const WadInfo & getCachedWadInfo( const QString & filePath )
 //======================================================================================================================
 //  miscellaneous
 
-static const QHash< QString, QString > startingMaps =
+QStringList getStandardMapNames( const QString & iwadFileName )
+{
+	QStringList mapNames;
+
+	QString iwadFileNameLower = iwadFileName.toLower();
+
+	if (iwadFileNameLower == "doom.wad" || iwadFileNameLower == "doom1.wad")
+	{
+		for (int e = 1; e <= 4; e++)
+			for (int m = 1; m <= 9; m++)
+				mapNames.push_back( QStringLiteral("E%1M%2").arg(e).arg(m) );
+	}
+	else
+	{
+		for (int i = 1; i <= 32; i++)
+			mapNames.push_back( QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') ) );
+	}
+
+	return mapNames;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//  starting maps
+
+// fast lookup table that can be used for WADs whose name can be matched exactly
+static const QHash< QString, QString > startingMapsLookup =
 {
 	// MasterLevels
 	{ "virgil.wad",    "MAP03" },
@@ -257,11 +282,25 @@ static const QHash< QString, QString > startingMaps =
 	{ "trouble.wad",   "MAP01" },
 };
 
-QString getStartingMap( const QString & wadName )
+// slow regex search for WADs whose name follows specfic format, for example those with postfixed version number
+static const QPair< QRegularExpression, QString > startingMapsRegexes [] =
 {
-	auto iter = startingMaps.find( wadName.toLower() );
-	if (iter != startingMaps.end())
+	{ QRegularExpression("sigil[^.]*\\.wad"), "E5M1" },  // SIGIL_v1_21.wad
+};
+
+QString getStartingMap( const QString & wadFileName )
+{
+	QString wadFileNameLower = wadFileName.toLower();
+
+	// first do a fast search if the file name can be matched directly
+	auto iter = startingMapsLookup.find( wadFileNameLower );
+	if (iter != startingMapsLookup.end())
 		return iter.value();
-	else
-		return {};
+
+	// if not found, do a slow search if it's in one of known formats
+	for (const auto & regexPair : startingMapsRegexes)
+		if (regexPair.first.match( wadFileNameLower ).hasMatch())
+			return regexPair.second;
+
+	return {};
 }

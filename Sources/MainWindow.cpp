@@ -25,7 +25,11 @@
 #include "UpdateChecker.hpp"
 #include "Version.hpp"
 
+#include <QVector>
+#include <QList>
+#include <QMap>
 #include <QString>
+#include <QStringList>
 #include <QStringBuilder>
 #include <QTextStream>
 #include <QFile>
@@ -1027,9 +1031,27 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 		verifyFile( iwadModel[ selectedIWADIdx ].path, "The selected IWAD (%1) no longer exists, please select another one." );
 	}
 
-	updateMapsFromIWAD();
+	updateMapsFromSelectedWADs();
 
 	updateLaunchCommand();
+}
+
+QStringList MainWindow::getSelectedMapPacks() const
+{
+	QStringList selectedMapPacks;
+
+	// clicking on an item in QTreeView with QFileSystemModel selects all elements (columns) of a row,
+	// but we only care about the first one
+	const auto selectedRows = getSelectedRows( ui->mapDirView );
+
+	// extract the file paths
+	for (const QModelIndex & index : selectedRows)
+	{
+		QString modelPath = mapModel.filePath( index );
+		selectedMapPacks.append( pathContext.convertPath( modelPath ) );
+	}
+
+	return selectedMapPacks;
 }
 
 void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
@@ -1037,17 +1059,7 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 	if (disableSelectionCallbacks)
 		return;
 
-	// clicking on an item in QTreeView with QFileSystemModel selects all elements (columns) of a row,
-	// but we only care about the first one
-	const auto selectedRows = getSelectedRows( ui->mapDirView );
-
-	// extract the file paths
-	QList< QString > selectedMapPacks;
-	for (const QModelIndex & index : selectedRows)
-	{
-		QString modelPath = mapModel.filePath( index );
-		selectedMapPacks.append( pathContext.convertPath( modelPath ) );
-	}
+	QStringList selectedMapPacks = getSelectedMapPacks();
 
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
@@ -1057,17 +1069,20 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 	}
 
 	// expand the parent directory nodes that are collapsed
+	const auto selectedRows = getSelectedRows( ui->mapDirView );
 	for (const QModelIndex & index : selectedRows)
 		for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
 			if (!ui->mapDirView->isExpanded( currentIndex ))
 				ui->mapDirView->expand( currentIndex );
 
+	updateMapsFromSelectedWADs();
+
 	// if this is a known map pack, that starts at different level than the first one, automatically select it
 	if (selectedMapPacks.size() >= 1)
 	{
 		// if there is multiple of them, there isn't really any better solution than to just take the first one
-		QString wadName = getFileNameFromPath( selectedMapPacks[0] );
-		QString startingMap = getStartingMap( wadName );
+		QString wadFileName = getFileNameFromPath( selectedMapPacks[0] );
+		QString startingMap = getStartingMap( wadFileName );
 		if (!startingMap.isEmpty())
 		{
 			if (ui->mapCmbBox->findText( startingMap ) >= 0)
@@ -1078,7 +1093,7 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 			else
 			{
 				QMessageBox::warning( this, "Cannot set starting map",
-					"Map pack "%wadName%" is not compatible with the current IWAD." );
+					"Starting map "%startingMap%" was not found in the "%wadFileName%". Bug or corrupted file?" );
 			}
 		}
 	}
@@ -2249,11 +2264,13 @@ void MainWindow::updateCompatLevels()
 	}
 }
 
-// this is not called regularly, but only when an IWAD is selected or deselected
-void MainWindow::updateMapsFromIWAD()
+// this is not called regularly, but only when an IWAD or map WAD is selected or deselected
+void MainWindow::updateMapsFromSelectedWADs()
 {
 	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	QString selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : "";
+
+	QStringList selectedMapPacks = getSelectedMapPacks();
 
 	// note down the currently selected items
 	QString origText = ui->mapCmbBox->currentText();
@@ -2274,29 +2291,33 @@ void MainWindow::updateMapsFromIWAD()
 
 		if (selectedIwadIdx < 0)
 		{
-			break;
+			break;  // if no IWAD is selected, let's leave this empty, it cannot be launched anyway
 		}
 
-		// read the map names from file
-		const WadInfo & wadInfo = getCachedWadInfo( selectedIwadPath );
+		QStringList selectedWADs = QStringList( selectedIwadPath ) + selectedMapPacks;
+
+		// read the map names from the selected files and merge them so that entries are not duplicated
+		QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
+		for (const QString & selectedWAD : selectedWADs)
+		{
+			const WadInfo & wadInfo = getCachedWadInfo( selectedWAD );
+			if (wadInfo.successfullyRead)
+				for (const QString & mapName : wadInfo.mapNames)
+					uniqueMapNames.insert( mapName.toUpper(), 0 );  // the int doesn't matter
+		}
 
 		// fill the combox-box
-		if (wadInfo.successfullyRead && !wadInfo.mapNames.isEmpty())
+		if (!uniqueMapNames.isEmpty())
 		{
-			for (const QString & mapName : wadInfo.mapNames)
-			{
-				ui->mapCmbBox->addItem( mapName );
-				ui->mapCmbBox_demo->addItem( mapName );
-			}
+			auto mapNames = uniqueMapNames.keys();
+			ui->mapCmbBox->addItems( mapNames );
+			ui->mapCmbBox_demo->addItems( mapNames );
 		}
-		else  // if we haven't found any map names in the IWAD, fallback to the standard DOOM 2 names
+		else  // if we haven't found any map names in the WADs, fallback to the standard names based on IWAD name
 		{
-			for (int i = 1; i <= 32; i++)
-			{
-				QString mapName = QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') );
-				ui->mapCmbBox->addItem( mapName );
-				ui->mapCmbBox_demo->addItem( mapName );
-			}
+			auto mapNames = getStandardMapNames( getFileNameFromPath( selectedIwadPath ) );
+			ui->mapCmbBox->addItems( mapNames );
+			ui->mapCmbBox_demo->addItems( mapNames );
 		}
 
 		// restore the originally selected item
@@ -2967,11 +2988,9 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 
 	QVector<QString> selectedFiles;
 
-	const auto selectedMapPacks = getSelectedRows( ui->mapDirView );
-	for (const QModelIndex & selectedMapIdx : selectedMapPacks)
+	const QStringList selectedMapPacks = getSelectedMapPacks();
+	for (const QString & mapFilePath : selectedMapPacks)
 	{
-		QString modelPath = mapModel.filePath( selectedMapIdx );
-		QString mapFilePath = pathContext.convertPath( modelPath );
 		throwIfInvalid( verifyPaths, mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();

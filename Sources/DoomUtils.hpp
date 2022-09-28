@@ -51,7 +51,7 @@ struct WadInfo
 {
 	bool successfullyRead;
 	WadType type;
-	QVector< QString > mapNames;
+	QStringList mapNames;
 };
 
 /// Reads required data from a wad file and stores it into a cache.
@@ -62,9 +62,11 @@ const WadInfo & getCachedWadInfo( const QString & filePath );
 //======================================================================================================================
 //  miscellaneous
 
+QStringList getStandardMapNames( const QString & iwadFileName );
+
 // Some WADs (map packs) don't start at the first map of the list defined by IWADs (MAP01, E1M1, ...).
 /// If it's a known WAD and it's known to start from a non-first map, returns that map, otherwise returns empty string.
-QString getStartingMap( const QString & wadName );
+QString getStartingMap( const QString & wadFileName );
 
 
 #endif // DOOM_UTILS_INCLUDED

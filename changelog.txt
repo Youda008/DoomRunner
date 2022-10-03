@@ -1,3 +1,7 @@
+1.6.3
+- fixed the "Show FPS" checkbox not restoring previous value after restarting the launcher
+- fixed the compatibility level not reseting correctly when the "Save globally" setting is used
+
 1.6.2
 - fixed the bug from 1.6 where options.json was not created on first run
 - support for launching SIGIL maps (E5MX)

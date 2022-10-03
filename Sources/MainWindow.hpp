@@ -200,8 +200,9 @@ class MainWindow : public QMainWindow {
 
 	bool optionsCorrupted;  ///< true when was a critical error during parsing of options file, such content should not be saved
 
-	bool restoringInProgress;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 	bool disableSelectionCallbacks;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
+	bool restoringOptionsInProgress;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
+	bool restoringPresetInProgress;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 
 	CompatLevelStyle lastCompLvlStyle;  ///< compat level style of the engine that was selected the last time
 

@@ -83,10 +83,10 @@ static const DMFlag SPAWN_WHERE_DIED             = { DM_FLAGS_2, 4096, false };
 
 //======================================================================================================================
 
-GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayOptions & gameOpts )
+GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayDetails & gameplayDetails )
 :
 	QDialog( parent ),
-	gameOpts( gameOpts )
+	gameplayDetails( gameplayDetails )
 {
 	ui = new Ui::GameOptsDialog;
 	ui->setupUi( this );
@@ -94,8 +94,8 @@ GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayOptions & gameOp
 	ui->dmflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->dmflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 
-	ui->dmflags1_line->setText( QString::number( gameOpts.flags1 ) );
-	ui->dmflags2_line->setText( QString::number( gameOpts.flags2 ) );
+	ui->dmflags1_line->setText( QString::number( gameplayDetails.flags1 ) );
+	ui->dmflags2_line->setText( QString::number( gameplayDetails.flags2 ) );
 
 	updateCheckboxes();
 
@@ -115,12 +115,12 @@ void GameOptsDialog::setFlag( const DMFlag & flag, bool enabled )
 
 	if (flag.flags == DM_FLAGS_1)
 	{
-		flags = &gameOpts.flags1;
+		flags = &gameplayDetails.flags1;
 		line = ui->dmflags1_line;
 	}
 	else
 	{
-		flags = &gameOpts.flags2;
+		flags = &gameplayDetails.flags2;
 		line = ui->dmflags2_line;
 	}
 
@@ -137,9 +137,9 @@ bool GameOptsDialog::isEnabled( const DMFlag & flag ) const
 	const int32_t * flags;
 
 	if (flag.flags == DM_FLAGS_1)
-		flags = &gameOpts.flags1;
+		flags = &gameplayDetails.flags1;
 	else
-		flags = &gameOpts.flags2;
+		flags = &gameplayDetails.flags2;
 
 	if (flag.defaultVal == 0)
 		return (*flags & flag.bit) != 0;
@@ -442,13 +442,13 @@ void GameOptsDialog::on_spawnWhereDied_toggled( bool checked )
 
 void GameOptsDialog::on_dmflags1_line_textEdited( const QString & )
 {
-	gameOpts.flags1 = ui->dmflags1_line->text().toInt();
+	gameplayDetails.flags1 = ui->dmflags1_line->text().toInt();
 	updateCheckboxes();
 }
 
 void GameOptsDialog::on_dmflags2_line_textEdited( const QString & )
 {
-	gameOpts.flags2 = ui->dmflags2_line->text().toInt();
+	gameplayDetails.flags2 = ui->dmflags2_line->text().toInt();
 	updateCheckboxes();
 }
 

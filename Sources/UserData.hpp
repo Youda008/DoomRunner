@@ -21,6 +21,18 @@
 
 
 //======================================================================================================================
+//  OS-specific defaults
+
+#ifdef _WIN32
+	constexpr bool useAbsolutePathsByDefault = false;
+	constexpr bool showEngineOutputByDefault = false;
+#else
+	constexpr bool useAbsolutePathsByDefault = true;
+	constexpr bool showEngineOutputByDefault = true;
+#endif
+
+
+//======================================================================================================================
 //  data definition
 
 // Constructors from QFileInfo are used in automatic list updates for initializing an element from a file-system entry.
@@ -97,9 +109,9 @@ struct ModSettings
 
 enum OptionsStorage
 {
-	DontStore,       ///< Everytime the launcher is closed and re-opened, the launch options are reset to defaults.
-	StoreGlobally,   ///< When the launcher is closed, current state of launch options is saved. When it's re-opened, launch options are loaded from the last saved state.
-	StoreToPreset,   ///< Launch options are stored to the currently selected preset. When a preset is selected, launch options are loaded from the preset.
+	DontStore,       ///< Everytime the launcher is closed and re-opened, the options are reset to defaults.
+	StoreGlobally,   ///< When the launcher is closed, current state of the options is saved. When it's re-opened, the options are loaded from the last saved state.
+	StoreToPreset,   ///< Options are stored to the currently selected preset. When a preset is selected, the options are loaded from the preset.
 };
 template<> inline const char * enumName< OptionsStorage >() { return "OptionsStorage"; }
 template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorage::StoreToPreset ) + 1; }
@@ -154,19 +166,6 @@ enum GameMode
 template<> inline const char * enumName< GameMode >() { return "GameMode"; }
 template<> inline uint enumSize< GameMode >() { return uint( GameMode::Cooperative ) + 1; }
 
-struct GameplayOptions
-{
-	int32_t flags1 = 0;
-	int32_t flags2 = 0;
-};
-
-struct CompatibilityOptions
-{
-	int32_t flags1 = 0;
-	int32_t flags2 = 0;
-};
-
-/// data of the second tab
 struct LaunchOptions
 {
 	// launch mode
@@ -176,16 +175,6 @@ struct LaunchOptions
 	QString mapName_demo;
 	QString demoFile_record;
 	QString demoFile_replay;
-
-	// gameplay
-	uint skillNum = uint( TooYoungToDie );
-	bool noMonsters = false;
-	bool fastMonsters = false;
-	bool monstersRespawn = false;
-	GameplayOptions gameOpts = { 0, 0 };
-	CompatibilityOptions compatOpts = { 0, 0 };
-	int compatLevel = -1;
-	bool allowCheats = false;
 
 	// multiplayer
 	bool isMultiplayer = false;
@@ -198,27 +187,57 @@ struct LaunchOptions
 	double teamDamage = 0.0;
 	uint timeLimit = 0;
 	uint fragLimit = 0;
+};
 
-	// alternative paths
+struct GameplayDetails
+{
+	int32_t flags1 = 0;
+	int32_t flags2 = 0;
+};
+
+struct GameplayOptions
+{
+	int skillNum = TooYoungToDie;
+	bool noMonsters = false;
+	bool fastMonsters = false;
+	bool monstersRespawn = false;
+	bool allowCheats = false;
+	GameplayDetails details;
+};
+
+struct CompatibilityDetails
+{
+	int32_t flags1 = 0;
+	int32_t flags2 = 0;
+};
+
+struct CompatibilityOptions
+{
+	int level = -1;
+	CompatibilityDetails details;
+};
+
+struct AlternativePaths
+{
 	QString saveDir;
 	QString screenshotDir;
 };
 
-struct OutputOptions
+struct VideoOptions
 {
-	// video
 	int monitorIdx = 0;
 	uint resolutionX = 0;
 	uint resolutionY = 0;
 	bool showFPS = false;
+};
 
-	// audio
+struct AudioOptions
+{
 	bool noSound = false;
 	bool noSFX = false;
 	bool noMusic = false;
 };
 
-/// misc data that never go to a preset
 struct GlobalOptions
 {
 	bool usePresetNameAsDir = false;
@@ -234,7 +253,11 @@ struct Preset : public EditableListModelItem
 	QList< QString > selectedMapPacks;
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 	QString cmdArgs;
+
 	LaunchOptions launchOpts;
+	GameplayOptions gameOpts;
+	CompatibilityOptions compatOpts;
+	AlternativePaths altPaths;
 
 	// requirements of EditableListModel
 	const QString & getEditString() const { return name; }
@@ -245,20 +268,18 @@ struct Preset : public EditableListModelItem
 	Preset( const QFileInfo & ) {}  // dummy, it's required by the EditableListModel template, but isn't actually used
 };
 
-#ifdef _WIN32
-	constexpr bool useAbsolutePathsByDefault = false;
-	constexpr bool showEngineOutputByDefault = false;
-#else
-	constexpr bool useAbsolutePathsByDefault = true;
-	constexpr bool showEngineOutputByDefault = true;
-#endif
+struct StorageSettings
+{
+	OptionsStorage launchOptsStorage = StoreGlobally;
+	OptionsStorage gameOptsStorage = StoreGlobally;
+	OptionsStorage compatOptsStorage = StoreToPreset;
+};
 
 /// Additional launcher settings
-struct LauncherOptions
+struct LauncherSettings : public StorageSettings  // inherited instead of included to avoid long identifiers
 {
 	bool checkForUpdates = true;
 	bool useAbsolutePaths = useAbsolutePathsByDefault;
-	OptionsStorage launchOptsStorage = StoreGlobally;
 	bool closeOnLaunch = false;
 	bool showEngineOutput = showEngineOutputByDefault;
 };
@@ -274,10 +295,14 @@ QJsonObject serialize( const IwadSettings & iwadSettings );
 QJsonObject serialize( const MapSettings & mapSettings );
 QJsonObject serialize( const ModSettings & modSettings );
 QJsonObject serialize( const LaunchOptions & options );
-QJsonObject serialize( const OutputOptions & options );
-QJsonObject serialize( const Preset & preset, bool storeOpts );
-void serialize( QJsonObject & jsOptions, const GlobalOptions & options );
-void serialize( QJsonObject & jsOptions, const LauncherOptions & options );
+QJsonObject serialize( const GameplayOptions & options );
+QJsonObject serialize( const CompatibilityOptions & options );
+QJsonObject serialize( const AlternativePaths & options );
+QJsonObject serialize( const VideoOptions & options );
+QJsonObject serialize( const AudioOptions & options );
+QJsonObject serialize( const GlobalOptions & options );
+QJsonObject serialize( const Preset & preset, const StorageSettings & settings );
+void serialize( QJsonObject & jsSettings, const LauncherSettings & settings );
 
 template< typename Elem >
 QJsonArray serializeList( const QList< Elem > & list )
@@ -297,10 +322,14 @@ void deserialize( const JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings );
 void deserialize( const JsonObjectCtx & jsMaps, MapSettings & mapSettings );
 void deserialize( const JsonObjectCtx & jsMods, ModSettings & modSettings );
 void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & options );
-void deserialize( const JsonObjectCtx & jsOptions, OutputOptions & options );
-void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, bool loadOpts );
+void deserialize( const JsonObjectCtx & jsOptions, GameplayOptions & options );
+void deserialize( const JsonObjectCtx & jsOptions, CompatibilityOptions & options );
+void deserialize( const JsonObjectCtx & jsOptions, AlternativePaths & options );
+void deserialize( const JsonObjectCtx & jsOptions, VideoOptions & options );
+void deserialize( const JsonObjectCtx & jsOptions, AudioOptions & options );
 void deserialize( const JsonObjectCtx & jsOptions, GlobalOptions & options );
-void deserialize( const JsonObjectCtx & jsOptions, LauncherOptions & options );
+void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const StorageSettings & settings );
+void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings );
 
 
 #endif // USER_DATA_INCLUDED

@@ -73,10 +73,10 @@ static const CompatFlag USE_ORIGINAL_SOUND      = { "compat_soundtarget",       
 
 //======================================================================================================================
 
-CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityOptions & compatOpts )
+CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityDetails & compatDetails )
 :
 	QDialog( parent ),
-	compatOpts( compatOpts )
+	compatDetails( compatDetails )
 {
 	ui = new Ui::CompatOptsDialog;
     ui->setupUi( this );
@@ -84,8 +84,8 @@ CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityOptions
 	ui->compatflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->compatflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 
-	ui->compatflags1_line->setText( QString::number( compatOpts.flags1 ) );
-	ui->compatflags2_line->setText( QString::number( compatOpts.flags2 ) );
+	ui->compatflags1_line->setText( QString::number( compatDetails.flags1 ) );
+	ui->compatflags2_line->setText( QString::number( compatDetails.flags2 ) );
 
 	updateCheckboxes();
 
@@ -106,12 +106,12 @@ void CompatOptsDialog::setFlag( const CompatFlag & flag, bool enabled )
 
 	if (flag.flags == COMPAT_FLAGS_1)
 	{
-		flags = &compatOpts.flags1;
+		flags = &compatDetails.flags1;
 		line = ui->compatflags1_line;
 	}
 	else
 	{
-		flags = &compatOpts.flags2;
+		flags = &compatDetails.flags2;
 		line = ui->compatflags2_line;
 	}
 
@@ -123,21 +123,21 @@ void CompatOptsDialog::setFlag( const CompatFlag & flag, bool enabled )
 	line->setText( QString::number( *flags ) );
 }
 
-static bool isEnabled( const CompatibilityOptions & compatOpts, const CompatFlag & flag )
+static bool isEnabled( const CompatibilityDetails & compatDetails, const CompatFlag & flag )
 {
 	const int32_t * flags;
 
 	if (flag.flags == COMPAT_FLAGS_1)
-		flags = &compatOpts.flags1;
+		flags = &compatDetails.flags1;
 	else
-		flags = &compatOpts.flags2;
+		flags = &compatDetails.flags2;
 
 	return (*flags & flag.bit) != 0;
 }
 
 bool CompatOptsDialog::isEnabled( const CompatFlag & flag ) const
 {
-	return ::isEnabled( compatOpts, flag );
+	return ::isEnabled( compatDetails, flag );
 }
 
 
@@ -333,13 +333,13 @@ void CompatOptsDialog::on_useOriginalSound_toggled( bool checked )
 
 void CompatOptsDialog::on_compatflags1_line_textEdited( const QString & )
 {
-	compatOpts.flags1 = ui->compatflags1_line->text().toInt();
+	compatDetails.flags1 = ui->compatflags1_line->text().toInt();
 	updateCheckboxes();
 }
 
 void CompatOptsDialog::on_compatflags2_line_textEdited( const QString & )
 {
-	compatOpts.flags2 = ui->compatflags2_line->text().toInt();
+	compatDetails.flags2 = ui->compatflags2_line->text().toInt();
 	updateCheckboxes();
 }
 
@@ -393,58 +393,58 @@ void CompatOptsDialog::updateCheckboxes()
 
 //----------------------------------------------------------------------------------------------------------------------
 
-static void addCmdLineOptionIfSet( QStringList & list, const CompatibilityOptions & compatOpts, const CompatFlag & flag )
+static void addCmdLineOptionIfSet( QStringList & list, const CompatibilityDetails & compatDetails, const CompatFlag & flag )
 {
-	if (isEnabled( compatOpts, flag ))
+	if (isEnabled( compatDetails, flag ))
 		list << "+" + flag.cvarName << "1";
 }
 
-QStringList CompatOptsDialog::getCmdArgsFromOptions( const CompatibilityOptions & compatOpts )
+QStringList CompatOptsDialog::getCmdArgsFromOptions( const CompatibilityDetails & compatDetails )
 {
 	QStringList cmdArgs;
 
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, CRUSHED_MONSTERS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, FRIENDLY_MONSTERS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, LIMIT_PAIN_ELEM );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, MONSTER_MOVEMENT );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, MONSTERS_CANNOT_CROSS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, MONSTERS_GET_STUCK );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, MONSTERS_SEE_INVISIBLE );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, NO_MINOTAUR_FLOOR );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, SPAWN_ITEMS_DROPS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, CRUSHED_MONSTERS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, FRIENDLY_MONSTERS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, LIMIT_PAIN_ELEM );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, MONSTER_MOVEMENT );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, MONSTERS_CANNOT_CROSS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, MONSTERS_GET_STUCK );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, MONSTERS_SEE_INVISIBLE );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, NO_MINOTAUR_FLOOR );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, SPAWN_ITEMS_DROPS );
 
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, DEH_HEALTH_SETTINGS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, ORIGINAL_A_MUSHROOM );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, DEH_HEALTH_SETTINGS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, ORIGINAL_A_MUSHROOM );
 
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, ALL_SPECIAL_LINES );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, ALLOW_ANY_BOSSDEATH );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, DISABLE_BOOM_DOOR );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, FIND_NEIGHBORING_LIGHT );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, FIND_SHORTEST_TEXTURES );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_BUGGIER_STAIR );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_DOOMS_FLOOR );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_DOOMS_POINT_ON_LINE );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, LEVEL_EXIT );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, ALL_SPECIAL_LINES );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, ALLOW_ANY_BOSSDEATH );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, DISABLE_BOOM_DOOR );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, FIND_NEIGHBORING_LIGHT );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, FIND_SHORTEST_TEXTURES );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, USE_BUGGIER_STAIR );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, USE_DOOMS_FLOOR );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, USE_DOOMS_POINT_ON_LINE );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, LEVEL_EXIT );
 
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, ACTORS_ARE_INFINITE );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, BOOM_SCROLLERS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, CANNOT_TRAVEL_STRAIGHT );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, ENABLE_WALL_RUNNING );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, RAVEN_SCROLLERS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, SELF_REF_SECTORS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_DOOM_HITSCAN );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_DOOM_HEIGHTS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, ACTORS_ARE_INFINITE );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, BOOM_SCROLLERS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, CANNOT_TRAVEL_STRAIGHT );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, ENABLE_WALL_RUNNING );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, RAVEN_SCROLLERS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, SELF_REF_SECTORS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, USE_DOOM_HITSCAN );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, USE_DOOM_HEIGHTS );
 
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, DRAW_POLYOBJECTS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, IGNORE_Y_OFFSETS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, INVERT_SPRITE_SORTING );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, DRAW_POLYOBJECTS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, IGNORE_Y_OFFSETS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, INVERT_SPRITE_SORTING );
 
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, CRIPPLE_SOUND );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, DONT_LET_OTHERS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, INSTANT_MOVING_FLOORS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, SECTOR_SOUNDS );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, SOUNDS_STOP );
-	addCmdLineOptionIfSet( cmdArgs, compatOpts, USE_ORIGINAL_SOUND );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, CRIPPLE_SOUND );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, DONT_LET_OTHERS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, INSTANT_MOVING_FLOORS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, SECTOR_SOUNDS );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, SOUNDS_STOP );
+	addCmdLineOptionIfSet( cmdArgs, compatDetails, USE_ORIGINAL_SOUND );
 
 	return cmdArgs;
 }

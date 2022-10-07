@@ -91,11 +91,7 @@ static void throwIfInvalid( bool doVerify, const QString & path, const QString &
 
 LaunchOptions & MainWindow::activeLaunchOptions()
 {
-	if (opts.launchOptsStorage == StoreGlobally)
-	{
-		return launchOpts;
-	}
-	else if (opts.launchOptsStorage == StoreToPreset)
+	if (settings.launchOptsStorage == StoreToPreset)
 	{
 		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 		if (selectedPresetIdx >= 0)
@@ -104,27 +100,121 @@ LaunchOptions & MainWindow::activeLaunchOptions()
 		}
 	}
 
-	// We always have to save somewhere, because generateLaunchCommand() reads gameplay options from it.
-	// In case the launchOptsStorage == DontStore, we will just skip serializing it to JSON.
+	// We always have to save somewhere, because generateLaunchCommand() might read stored values from it.
+	// In case the optsStorage == DontStore, we will just skip serializing it to JSON.
 	return launchOpts;
 }
 
-#define STORE_LAUNCH_OPTION( structMember, value ) \
-{\
-	/* Only store the value to the global options or preset if we are not restoring from the same location, */ \
-	/* otherwise we would overwrite a stored value we want to restore later. */ \
-	bool preventSaving = (opts.launchOptsStorage == StoreGlobally && restoringOptionsInProgress) \
-	                  || (opts.launchOptsStorage == StoreToPreset && restoringPresetInProgress); \
-	if (!preventSaving) \
-		activeLaunchOptions().structMember = (value); \
+GameplayOptions & MainWindow::activeGameplayOptions()
+{
+	if (settings.gameOptsStorage == StoreToPreset)
+	{
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+		{
+			return presetModel[ selectedPresetIdx ].gameOpts;
+		}
+	}
+
+	// We always have to save somewhere, because generateLaunchCommand() might read stored values from it.
+	// In case the optsStorage == DontStore, we will just skip serializing it to JSON.
+	return gameOpts;
 }
 
-#define STORE_GLOBAL_OPTION( memberRef, value ) \
+CompatibilityOptions & MainWindow::activeCompatOptions()
+{
+	if (settings.launchOptsStorage == StoreToPreset)
+	{
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+		{
+			return presetModel[ selectedPresetIdx ].compatOpts;
+		}
+	}
+
+	// We always have to save somewhere, because generateLaunchCommand() might read stored values from it.
+	// In case the optsStorage == DontStore, we will just skip serializing it to JSON.
+	return compatOpts;
+}
+
+/// Stores value to a preset if it's selected.
+#define STORE_TO_PRESET_IF_SELECTED( presetMember, value ) \
+{\
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView ); \
+	if (selectedPresetIdx >= 0) \
+	{\
+		presetModel[ selectedPresetIdx ].presetMember = (value); \
+	}\
+}
+
+/// Stores value to a preset if it's selected and if it's safe to do.
+#define STORE_TO_PRESET_IF_SAFE( presetMember, value ) \
+{\
+	/* Only store the value to the preset if we are not restoring from it, */ \
+	/* otherwise we would overwrite a stored value we want to restore later. */ \
+	if (!restoringPresetInProgress) \
+	{\
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView ); \
+		if (selectedPresetIdx >= 0) \
+		{\
+			presetModel[ selectedPresetIdx ].presetMember = (value); \
+		}\
+	}\
+}
+
+/// Stores value to a global storage if it's safe to do.
+#define STORE_TO_GLOBAL_STORAGE_IF_SAFE( globalMember, value ) \
 {\
 	/* Only store the value to the global options if we are not restoring from it, */ \
 	/* otherwise we would overwrite a stored value we want to restore later. */ \
 	if (!restoringOptionsInProgress) \
-		memberRef = (value); \
+		globalMember = (value); \
+}
+
+/// Stores value to a dynamically selected storage if it's possible and if it's safe to do.
+#define STORE_TO_DYNAMIC_STORAGE_IF_SAFE( storageSetting, activeStorage, structMember, value ) \
+{\
+	/* Only store the value to the global options or preset if we are not restoring from the same location, */ \
+	/* otherwise we would overwrite a stored value we want to restore later. */ \
+	bool preventSaving = (storageSetting == StoreGlobally && restoringOptionsInProgress) \
+	                  || (storageSetting == StoreToPreset && restoringPresetInProgress); \
+	if (!preventSaving) \
+		activeStorage.structMember = (value); \
+}
+
+#define STORE_LAUNCH_OPTION( structMember, value ) \
+{\
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.launchOptsStorage, activeLaunchOptions(), structMember, value ) \
+}
+
+#define STORE_GAMEPLAY_OPTION( structMember, value ) \
+{\
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.gameOptsStorage, activeGameplayOptions(), structMember, value ) \
+}
+
+#define STORE_COMPAT_OPTION( structMember, value ) \
+{\
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.compatOptsStorage, activeCompatOptions(), structMember, value ) \
+}
+
+#define STORE_ALT_PATH( structMember, value ) \
+{\
+	STORE_TO_PRESET_IF_SAFE( altPaths.structMember, value ) \
+}
+
+#define STORE_VIDEO_OPTION( structMember, value ) \
+{\
+	STORE_TO_GLOBAL_STORAGE_IF_SAFE( videoOpts.structMember, value ) \
+}
+
+#define STORE_AUDIO_OPTION( structMember, value ) \
+{\
+	STORE_TO_GLOBAL_STORAGE_IF_SAFE( audioOpts.structMember, value ) \
+}
+
+#define STORE_GLOBAL_OPTION( structMember, value ) \
+{\
+	STORE_TO_GLOBAL_STORAGE_IF_SAFE( globalOpts.structMember, value ) \
 }
 
 
@@ -476,14 +566,14 @@ void MainWindow::onWindowShown()
 		autoselectLoneItems();
 	}
 
-	if (opts.checkForUpdates)
+	if (settings.checkForUpdates)
 	{
 		updateChecker.checkForUpdates_async(
 			/* result callback */[ this ]( UpdateChecker::Result result, QString /*errorDetail*/, QStringList versionInfo )
 			{
 				if (result == UpdateChecker::UpdateAvailable)
 				{
-					opts.checkForUpdates = showUpdateNotification( this, versionInfo, /*checkbox*/true );
+					settings.checkForUpdates = showUpdateNotification( this, versionInfo, /*checkbox*/true );
 				}
 				// silently ignore the rest of the results, since nobody asked for anything
 			}
@@ -541,11 +631,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::runAboutDialog()
 {
-	AboutDialog dialog( this, opts.checkForUpdates );
+	AboutDialog dialog( this, settings.checkForUpdates );
 
 	dialog.exec();
 
-	opts.checkForUpdates = dialog.checkForUpdates;
+	settings.checkForUpdates = dialog.checkForUpdates;
 }
 
 void MainWindow::runSetupDialog()
@@ -564,7 +654,7 @@ void MainWindow::runSetupDialog()
 		iwadSettings,
 		mapSettings,
 		modSettings,
-		opts
+		settings
 	);
 
 	int code = dialog.exec();
@@ -591,10 +681,10 @@ void MainWindow::runSetupDialog()
 		iwadSettings = dialog.iwadSettings;
 		mapSettings = dialog.mapSettings;
 		modSettings = dialog.modSettings;
-		opts = dialog.opts;
+		settings = dialog.settings;
 		// update all stored paths
-		pathContext.toggleAbsolutePaths( opts.useAbsolutePaths );
-		toggleAbsolutePaths( opts.useAbsolutePaths );
+		pathContext.toggleAbsolutePaths( settings.useAbsolutePaths );
+		toggleAbsolutePaths( settings.useAbsolutePaths );
 		currentEngine = pathContext.convertPath( currentEngine );
 		currentIWAD = pathContext.convertPath( currentIWAD );
 		selectedIWAD = pathContext.convertPath( selectedIWAD );
@@ -615,34 +705,34 @@ void MainWindow::runSetupDialog()
 
 void MainWindow::runGameOptsDialog()
 {
-	LaunchOptions & activeLaunchOpts = activeLaunchOptions();
+	GameplayOptions & activeGameOpts = activeGameplayOptions();
 
-	GameOptsDialog dialog( this, activeLaunchOpts.gameOpts );
+	GameOptsDialog dialog( this, activeGameOpts.details );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		activeLaunchOpts.gameOpts = dialog.gameOpts;
+		activeGameOpts.details = dialog.gameplayDetails;
 		updateLaunchCommand();
 	}
 }
 
 void MainWindow::runCompatOptsDialog()
 {
-	LaunchOptions & activeLaunchOpts = activeLaunchOptions();
+	CompatibilityOptions & activeCompatOpts = activeCompatOptions();
 
-	CompatOptsDialog dialog( this, activeLaunchOpts.compatOpts );
+	CompatOptsDialog dialog( this, activeCompatOpts.details );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		activeLaunchOpts.compatOpts = dialog.compatOpts;
+		activeCompatOpts.details = dialog.compatDetails;
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
-		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( dialog.compatOpts );
+		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( dialog.compatDetails );
 		updateLaunchCommand();
 	}
 }
@@ -687,6 +777,7 @@ void MainWindow::cloneConfig()
 //----------------------------------------------------------------------------------------------------------------------
 //  preset loading
 
+// TODO: move
 /// Loads the content of a preset into the other widgets.
 void MainWindow::restorePreset( int presetIdx )
 {
@@ -869,11 +960,16 @@ void MainWindow::restorePreset( int presetIdx )
 		modModel.finishCompleteUpdate();
 	}
 
-	// restore launch options
-	if (opts.launchOptsStorage == StoreToPreset)
-	{
+	if (settings.launchOptsStorage == StoreToPreset)
 		restoreLaunchOptions( preset.launchOpts );  // this clears items that are invalid
-	}
+
+	if (settings.gameOptsStorage == StoreToPreset)
+		restoreGameplayOptions( preset.gameOpts );  // this clears items that are invalid
+
+	if (settings.compatOptsStorage == StoreToPreset)
+		restoreCompatibilityOptions( preset.compatOpts );  // this clears items that are invalid
+
+	restoreAlternativePaths( preset.altPaths );
 
 	// restore additional command line arguments
 	ui->presetCmdArgsLine->setText( preset.cmdArgs );
@@ -1669,7 +1765,7 @@ void MainWindow::selectSkill( int skillIdx )
 
 void MainWindow::changeSkillNum( int skillNum )
 {
-	STORE_LAUNCH_OPTION( skillNum, uint( skillNum ) )
+	STORE_GAMEPLAY_OPTION( skillNum, skillNum )
 
 	// changeSkillNum() and selectSkill() indirectly invoke each other,
 	// this prevents unnecessary updates and potential infinite recursion
@@ -1688,38 +1784,42 @@ void MainWindow::changeSkillNum( int skillNum )
 
 void MainWindow::toggleNoMonsters( bool checked )
 {
-	STORE_LAUNCH_OPTION( noMonsters, checked )
+	STORE_GAMEPLAY_OPTION( noMonsters, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleFastMonsters( bool checked )
 {
-	STORE_LAUNCH_OPTION( fastMonsters, checked )
+	STORE_GAMEPLAY_OPTION( fastMonsters, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleMonstersRespawn( bool checked )
 {
-	STORE_LAUNCH_OPTION( monstersRespawn, checked )
-
-	updateLaunchCommand();
-}
-
-void MainWindow::selectCompatLevel( int compatLevel )
-{
-	if (disableSelectionCallbacks)
-		return;
-
-	STORE_LAUNCH_OPTION( compatLevel, compatLevel - 1 )  // first item is reserved for indicating no selection
+	STORE_GAMEPLAY_OPTION( monstersRespawn, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleAllowCheats( bool checked )
 {
-	STORE_LAUNCH_OPTION( allowCheats, checked )
+	STORE_GAMEPLAY_OPTION( allowCheats, checked )
+
+	updateLaunchCommand();
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  compatibility
+
+void MainWindow::selectCompatLevel( int compatLevel )
+{
+	if (disableSelectionCallbacks)
+		return;
+
+	STORE_COMPAT_OPTION( level, compatLevel - 1 )  // first item is reserved for indicating no selection
 
 	updateLaunchCommand();
 }
@@ -1889,7 +1989,7 @@ void MainWindow::setAltDirsRelativeToConfigs( const QString & dirName )
 
 void MainWindow::toggleUsePresetName( bool checked )
 {
-	STORE_GLOBAL_OPTION( globalOpts.usePresetNameAsDir, checked )
+	STORE_GLOBAL_OPTION( usePresetNameAsDir, checked )
 
 	ui->saveDirLine->setEnabled( !checked );
 	ui->saveDirBtn->setEnabled( !checked );
@@ -1910,7 +2010,7 @@ void MainWindow::changeSaveDir( const QString & dir )
 {
 	// Unlike the other launch options, here we in fact want to overwrite the stored value even during restoring,
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
-	activeLaunchOptions().saveDir = dir;
+	STORE_TO_PRESET_IF_SELECTED( altPaths.saveDir, dir )
 
 	if (isValidDir( dir ))
 		updateSaveFilesFromDir();
@@ -1922,7 +2022,7 @@ void MainWindow::changeScreenshotDir( const QString & dir )
 {
 	// Unlike the other launch options, here we in fact want to overwrite the stored value even during restoring,
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
-	activeLaunchOptions().screenshotDir = dir;
+	STORE_TO_PRESET_IF_SELECTED( altPaths.screenshotDir, dir )
 
 	updateLaunchCommand();
 }
@@ -1957,53 +2057,57 @@ void MainWindow::browseScreenshotDir()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  output options
+//  video options
 
 void MainWindow::selectMonitor( int index )
 {
-	STORE_GLOBAL_OPTION( outputOpts.monitorIdx, index )
+	STORE_VIDEO_OPTION( monitorIdx, index )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionX( const QString & xStr )
 {
-	STORE_GLOBAL_OPTION( outputOpts.resolutionX, xStr.toUInt() )
+	STORE_VIDEO_OPTION( resolutionX, xStr.toUInt() )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionY( const QString & yStr )
 {
-	STORE_GLOBAL_OPTION( outputOpts.resolutionY, yStr.toUInt() )
+	STORE_VIDEO_OPTION( resolutionY, yStr.toUInt() )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleShowFps( bool checked )
 {
-	STORE_GLOBAL_OPTION( outputOpts.showFPS, checked )
+	STORE_VIDEO_OPTION( showFPS, checked )
 
 	updateLaunchCommand();
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
+//  audio options
+
 void MainWindow::toggleNoSound( bool checked )
 {
-	STORE_GLOBAL_OPTION( outputOpts.noSound, checked )
+	STORE_AUDIO_OPTION( noSound, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoSFX( bool checked )
 {
-	STORE_GLOBAL_OPTION( outputOpts.noSFX, checked )
+	STORE_AUDIO_OPTION( noSFX, checked )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoMusic( bool checked )
 {
-	STORE_GLOBAL_OPTION( outputOpts.noMusic, checked )
+	STORE_AUDIO_OPTION( noMusic, checked )
 
 	updateLaunchCommand();
 }
@@ -2026,7 +2130,7 @@ void MainWindow::updatePresetCmdArgs( const QString & text )
 
 void MainWindow::updateGlobalCmdArgs( const QString & text )
 {
-	STORE_GLOBAL_OPTION( globalOpts.cmdArgs, text )
+	STORE_GLOBAL_OPTION( cmdArgs, text )
 
 	updateLaunchCommand();
 }
@@ -2326,7 +2430,7 @@ void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringList > select
 //----------------------------------------------------------------------------------------------------------------------
 //  saving and loading user data entered into the launcher
 
-void MainWindow::saveOptions( const QString & filePath )
+bool MainWindow::saveOptions( const QString & filePath )
 {
 	QJsonObject jsRoot;
 
@@ -2343,7 +2447,7 @@ void MainWindow::saveOptions( const QString & filePath )
 		jsRoot["geometry"] = jsGeometry;
 	}
 
-	serialize( jsRoot, opts );
+	serialize( jsRoot, settings );
 
 	{
 		QJsonObject jsEngines;
@@ -2370,20 +2474,26 @@ void MainWindow::saveOptions( const QString & filePath )
 		QJsonArray jsPresetArray;
 		for (const Preset & preset : presetModel)
 		{
-			QJsonObject jsPreset = serialize( preset, opts.launchOptsStorage == StoreToPreset );
+			QJsonObject jsPreset = serialize( preset, settings );
 			jsPresetArray.append( jsPreset );
 		}
 		jsRoot["presets"] = jsPresetArray;
 	}
 
-	if (opts.launchOptsStorage == StoreGlobally)
-	{
+	if (settings.launchOptsStorage == StoreGlobally)
 		jsRoot["launch_options"] = serialize( launchOpts );
-	}
 
-	jsRoot["output_options"] = serialize( outputOpts );
+	if (settings.gameOptsStorage == StoreGlobally)
+		jsRoot["gameplay_options"] = serialize( gameOpts );
 
-	serialize( jsRoot, globalOpts );
+	if (settings.compatOptsStorage == StoreGlobally)
+		jsRoot["compatibility_options"] = serialize( compatOpts );
+
+	jsRoot["video_options"] = serialize( videoOpts );
+
+	jsRoot["audio_options"] = serialize( audioOpts );
+
+	jsRoot["global_options"] = serialize( globalOpts );
 
 	int presetIdx = getSelectedItemIndex( ui->presetListView );
 	jsRoot["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
@@ -2396,10 +2506,10 @@ void MainWindow::saveOptions( const QString & filePath )
 	{
 		QMessageBox::warning( this, "Error saving options", error );
 	}
-	// return error.isEmpty();
+	return error.isEmpty();
 }
 
-void MainWindow::loadOptions( const QString & filePath )
+bool MainWindow::loadOptions( const QString & filePath )
 {
 	QFile file( filePath );
 	if (!file.open( QIODevice::ReadOnly ))
@@ -2407,7 +2517,7 @@ void MainWindow::loadOptions( const QString & filePath )
 		QMessageBox::warning( this, "Error loading options",
 			"Could not open file "%filePath%" for reading: "%file.errorString() );
 		optionsCorrupted = true;
-		return;
+		return false;
 	}
 
 	QByteArray data = file.readAll();
@@ -2418,7 +2528,7 @@ void MainWindow::loadOptions( const QString & filePath )
 	{
 		QMessageBox::warning( this, "Error loading options", "Loading options failed: "%error.errorString() );
 		optionsCorrupted = true;
-		return;
+		return false;
 	}
 
 	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
@@ -2453,8 +2563,8 @@ void MainWindow::loadOptions( const QString & filePath )
 	deselectAllAndUnsetCurrent( ui->presetListView );
 
 	// this must be loaded early, because we need to know whether to attempt loading the opts from the presets
-	deserialize( jsRoot, opts );
-	pathContext.toggleAbsolutePaths( opts.useAbsolutePaths );
+	deserialize( jsRoot, settings );
+	pathContext.toggleAbsolutePaths( settings.useAbsolutePaths );
 
 	if (JsonObjectCtx jsEngines = jsRoot.getObject( "engines" ))
 	{
@@ -2562,7 +2672,7 @@ void MainWindow::loadOptions( const QString & filePath )
 				continue;
 
 			Preset preset;
-			deserialize( jsPreset, preset, opts.launchOptsStorage == StoreToPreset );
+			deserialize( jsPreset, preset, settings );
 
 			presetModel.append( std::move( preset ) );
 		}
@@ -2571,23 +2681,29 @@ void MainWindow::loadOptions( const QString & filePath )
 	}
 
 	// launch options
-	if (opts.launchOptsStorage == StoreGlobally)
-	{
+	if (settings.launchOptsStorage == StoreToPreset)
 		if (JsonObjectCtx jsOptions = jsRoot.getObject( "launch_options" ))
-		{
 			deserialize( jsOptions, launchOpts );
-		}
-	}
 
-	if (JsonObjectCtx jsOptions = jsRoot.getObject( "output_options" ))
-	{
-		deserialize( jsOptions, outputOpts );
-	}
+	if (settings.gameOptsStorage == StoreToPreset)
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "gameplay_options" ))
+			deserialize( jsOptions, gameOpts );
 
-	deserialize( jsRoot, globalOpts );
+	if (settings.compatOptsStorage == StoreToPreset)
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "compatibility_options" ))
+			deserialize( jsOptions, compatOpts );
+
+	if (JsonObjectCtx jsOptions = jsRoot.getObject( "video_options" ))
+		deserialize( jsOptions, videoOpts );
+
+	if (JsonObjectCtx jsOptions = jsRoot.getObject( "audio_options" ))
+		deserialize( jsOptions, audioOpts );
+
+	if (JsonObjectCtx jsOptions = jsRoot.getObject( "global_options" ))
+		deserialize( jsOptions, globalOpts );
 
 	// make sure all paths loaded from JSON are stored in correct format
-	toggleAbsolutePaths( opts.useAbsolutePaths );
+	toggleAbsolutePaths( settings.useAbsolutePaths );
 
 	optionsCorrupted = false;
 
@@ -2619,20 +2735,26 @@ void MainWindow::loadOptions( const QString & filePath )
 
 	// this must be done after the lists are already updated because we want to select existing items in combo boxes,
 	//               and after preset loading because the preset will select IWAD which will fill the map combo box
-	if (opts.launchOptsStorage == StoreGlobally)
-	{
+	if (settings.launchOptsStorage == StoreGlobally)
 		restoreLaunchOptions( launchOpts );  // this clears items that are invalid
-	}
 
-	restoreOutputOptions( outputOpts );
+	if (settings.gameOptsStorage == StoreGlobally)
+		restoreGameplayOptions( gameOpts );  // this clears items that are invalid
 
-	ui->usePresetNameChkBox->setChecked( globalOpts.usePresetNameAsDir );
+	if (settings.compatOptsStorage == StoreGlobally)
+		restoreCompatibilityOptions( compatOpts );  // this clears items that are invalid
 
-	ui->globalCmdArgsLine->setText( globalOpts.cmdArgs );
+	restoreVideoOptions( videoOpts );
+
+	restoreAudioOptions( audioOpts );
+
+	restoreGlobalOptions( globalOpts );
 
 	restoringOptionsInProgress = false;
 
 	updateLaunchCommand();
+
+	return true;
 }
 
 void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
@@ -2656,12 +2778,6 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 		ui->launchMode_default->click();
 		break;
 	}
-
-	// alternative paths
-	// This must be restored before the save combo-box, so that the combo-box is filled from the right directory
-	// and the selected save file is present there.
-	ui->saveDirLine->setText( opts.saveDir );
-	ui->screenshotDirLine->setText( opts.screenshotDir );
 
 	// details of launch mode
 	ui->mapCmbBox->setCurrentIndex( ui->mapCmbBox->findText( opts.mapName ) );
@@ -2700,17 +2816,6 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 		}
 	}
 
-	// TODO: check combo-box boundaries
-
-	// gameplay
-	ui->skillSpinBox->setValue( int( opts.skillNum ) );
-	ui->noMonstersChkBox->setChecked( opts.noMonsters );
-	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
-	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
-	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.compatOpts );
-	ui->compatLevelCmbBox->setCurrentIndex( opts.compatLevel + 1 );
-	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
-
 	// multiplayer
 	ui->multiplayerChkBox->setChecked( opts.isMultiplayer );
 	ui->multRoleCmbBox->setCurrentIndex( int( opts.multRole ) );
@@ -2724,9 +2829,30 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 	ui->fragLimitSpinBox->setValue( int( opts.fragLimit ) );
 }
 
-void MainWindow::restoreOutputOptions( OutputOptions & opts )
+void MainWindow::restoreGameplayOptions( GameplayOptions & opts )
 {
-	// video
+	// TODO: check combo-box boundaries
+	ui->skillSpinBox->setValue( int( opts.skillNum ) );
+	ui->noMonstersChkBox->setChecked( opts.noMonsters );
+	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
+	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
+	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
+}
+
+void MainWindow::restoreCompatibilityOptions( CompatibilityOptions & opts )
+{
+	ui->compatLevelCmbBox->setCurrentIndex( opts.level + 1 );
+	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.details );
+}
+
+void MainWindow::restoreAlternativePaths( AlternativePaths & opts )
+{
+	ui->saveDirLine->setText( opts.saveDir );
+	ui->screenshotDirLine->setText( opts.screenshotDir );
+}
+
+void MainWindow::restoreVideoOptions( VideoOptions & opts )
+{
 	if (opts.monitorIdx < ui->monitorCmbBox->count())
 		ui->monitorCmbBox->setCurrentIndex( opts.monitorIdx );
 	if (opts.resolutionX > 0)
@@ -2734,11 +2860,20 @@ void MainWindow::restoreOutputOptions( OutputOptions & opts )
 	if (opts.resolutionY > 0)
 		ui->resolutionYLine->setText( QString::number( opts.resolutionY ) );
 	ui->showFpsChkBox->setChecked( opts.showFPS );
+}
 
-	// audio
+void MainWindow::restoreAudioOptions( AudioOptions & opts )
+{
 	ui->noSoundChkBox->setChecked( opts.noSound );
 	ui->noSfxChkBox->setChecked( opts.noSFX );
 	ui->noMusicChkBox->setChecked( opts.noMusic );
+}
+
+void MainWindow::restoreGlobalOptions( GlobalOptions & opts )
+{
+	ui->usePresetNameChkBox->setChecked( opts.usePresetNameAsDir );
+
+	ui->globalCmdArgsLine->setText( opts.cmdArgs );
 }
 
 LaunchMode MainWindow::getLaunchModeFromUI() const
@@ -2948,7 +3083,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.
 	#ifdef _WIN32
-		if (opts.showEngineOutput)
+		if (settings.showEngineOutput)
 			cmd.arguments << "-stdout";
 	#endif
 
@@ -3009,7 +3144,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	for (const QString & filePath : selectedFiles)
 		cmd.arguments << base.rebaseAndQuotePath( filePath );
 
-	const LaunchOptions & activeLaunchOpts = activeLaunchOptions();
+	const GameplayOptions & activeGameOpts = activeGameplayOptions();
+	const CompatibilityOptions & activeCompatOpts = activeCompatOptions();
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 	if (launchMode == LaunchMap)
@@ -3043,13 +3179,13 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		cmd.arguments << "-fast";
 	if (ui->monstersRespawnChkBox->isEnabled() && ui->monstersRespawnChkBox->isChecked())
 		cmd.arguments << "-respawn";
-	if (ui->gameOptsBtn->isEnabled() && activeLaunchOpts.gameOpts.flags1 != 0)
-		cmd.arguments << "+dmflags" << QString::number( activeLaunchOpts.gameOpts.flags1 );
-	if (ui->gameOptsBtn->isEnabled() && activeLaunchOpts.gameOpts.flags2 != 0)
-		cmd.arguments << "+dmflags2" << QString::number( activeLaunchOpts.gameOpts.flags2 );
-	if (ui->compatLevelCmbBox->isEnabled() && activeLaunchOpts.compatLevel >= 0)
-		cmd.arguments << getCompatLevelArgs( executableName, engineProperties.compLvlStyle, activeLaunchOpts.compatLevel );
-	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())  // TODO
+	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.details.flags1 != 0)
+		cmd.arguments << "+dmflags" << QString::number( activeGameOpts.details.flags1 );
+	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.details.flags2 != 0)
+		cmd.arguments << "+dmflags2" << QString::number( activeGameOpts.details.flags2 );
+	if (ui->compatLevelCmbBox->isEnabled() && activeCompatOpts.level >= 0)
+		cmd.arguments << getCompatLevelArgs( executableName, engineProperties.compLvlStyle, activeCompatOpts.level );
+	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
 	if (ui->allowCheatsChkBox->isChecked())
 		cmd.arguments << "+sv_cheats" << "1";
@@ -3177,7 +3313,7 @@ void MainWindow::launch()
 	// at the end of function restore the previous current dir
 	auto guard = atScopeEndDo( [&](){ QDir::setCurrent( currentDir ); } );
 
-	if (opts.showEngineOutput)
+	if (settings.showEngineOutput)
 	{
 		ProcessOutputWindow processWindow( this );
 		processWindow.runProcess( cmd.executable, cmd.arguments );
@@ -3192,7 +3328,7 @@ void MainWindow::launch()
 			return;
 		}
 
-		if (opts.closeOnLaunch)
+		if (settings.closeOnLaunch)
 		{
 			QApplication::quit();
 		}

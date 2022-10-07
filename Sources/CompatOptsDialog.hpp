@@ -34,10 +34,10 @@ class CompatOptsDialog : public QDialog {
 
  public:
 
-	explicit CompatOptsDialog( QWidget * parent, const CompatibilityOptions & compatOpts );
+	explicit CompatOptsDialog( QWidget * parent, const CompatibilityDetails & compatDetails );
 	virtual ~CompatOptsDialog() override;
 
-	static QStringList getCmdArgsFromOptions( const CompatibilityOptions & compatOpts );
+	static QStringList getCmdArgsFromOptions( const CompatibilityDetails & compatDetails );
 
  private slots:
 
@@ -100,7 +100,7 @@ class CompatOptsDialog : public QDialog {
 
  public: // return value from this dialog
 
-	CompatibilityOptions compatOpts;
+	CompatibilityDetails compatDetails;
 
 };
 

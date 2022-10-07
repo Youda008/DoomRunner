@@ -103,8 +103,8 @@ class MainWindow : public QMainWindow {
 	void toggleNoMonsters( bool checked );
 	void toggleFastMonsters( bool checked );
 	void toggleMonstersRespawn( bool checked );
-	void selectCompatLevel( int compatLevel );
 	void toggleAllowCheats( bool checked );
+	void selectCompatLevel( int compatLevel );
 
 	void toggleMultiplayer( bool checked );
 	void selectMultRole( int role );
@@ -144,6 +144,8 @@ class MainWindow : public QMainWindow {
  private: // methods
 
 	LaunchOptions & activeLaunchOptions();
+	GameplayOptions & activeGameplayOptions();
+	CompatibilityOptions & activeCompatOptions();
 
 	void setupPresetList();
 	void setupIWADList();
@@ -161,7 +163,12 @@ class MainWindow : public QMainWindow {
 	void clearPresetSubWidgets();
 
 	void restoreLaunchOptions( LaunchOptions & opts );
-	void restoreOutputOptions( OutputOptions & opts );
+	void restoreGameplayOptions( GameplayOptions & opts );
+	void restoreCompatibilityOptions( CompatibilityOptions & opts );
+	void restoreAlternativePaths( AlternativePaths & opts );
+	void restoreVideoOptions( VideoOptions & opts );
+	void restoreAudioOptions( AudioOptions & opts );
+	void restoreGlobalOptions( GlobalOptions & opts );
 
 	LaunchMode getLaunchModeFromUI() const;
 
@@ -181,8 +188,8 @@ class MainWindow : public QMainWindow {
 	void toggleSkillSubwidgets( bool enabled );
 	void toggleOptionsSubwidgets( bool enabled );
 
-	void saveOptions( const QString & fileName );
-	void loadOptions( const QString & fileName );
+	bool saveOptions( const QString & fileName );
+	bool loadOptions( const QString & fileName );
 
 	struct ShellCommand
 	{
@@ -256,11 +263,14 @@ class MainWindow : public QMainWindow {
 
 	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 
-	GlobalOptions globalOpts;
 	LaunchOptions launchOpts;
-	OutputOptions outputOpts;
+	GameplayOptions gameOpts;
+	CompatibilityOptions compatOpts;
+	VideoOptions videoOpts;
+	AudioOptions audioOpts;
+	GlobalOptions globalOpts;
 
-	LauncherOptions opts;
+	LauncherSettings settings;
 
 };
 

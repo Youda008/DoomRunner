@@ -32,11 +32,11 @@ SetupDialog::SetupDialog(
 	const QList< Engine > & engineList,
 	const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
 	const MapSettings & mapSettings, const ModSettings & modSettings,
-	const LauncherOptions & opts
+	const LauncherSettings & settings
 )
 :
 	QDialog( parent ),
-	pathContext( baseDir, opts.useAbsolutePaths ),
+	pathContext( baseDir, settings.useAbsolutePaths ),
 	engineModel( engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
 	),
@@ -46,7 +46,7 @@ SetupDialog::SetupDialog(
 	iwadSettings( iwadSettings ),
 	mapSettings( mapSettings ),
 	modSettings( modSettings ),
-	opts( opts )
+	settings( settings )
 {
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
@@ -68,14 +68,14 @@ SetupDialog::SetupDialog(
 	ui->mapDirLine->setText( mapSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
 	ui->absolutePathsChkBox->setChecked( pathContext.usingAbsolutePaths() );
-	if (opts.launchOptsStorage == DontStore)
+	if (settings.launchOptsStorage == DontStore)
 		ui->optsStorage_none->click();
-	else if (opts.launchOptsStorage == StoreGlobally)
+	else if (settings.launchOptsStorage == StoreGlobally)
 		ui->optsStorage_global->click();
-	else if (opts.launchOptsStorage == StoreToPreset)
+	else if (settings.launchOptsStorage == StoreToPreset)
 		ui->optsStorage_preset->click();
-	ui->closeOnLaunchChkBox->setChecked( opts.closeOnLaunch );
-	ui->showEngineOutputChkBox->setChecked( opts.showEngineOutput );
+	ui->closeOnLaunchChkBox->setChecked( settings.closeOnLaunch );
+	ui->showEngineOutputChkBox->setChecked( settings.showEngineOutput );
 
 	// setup buttons
 
@@ -385,9 +385,9 @@ void SetupDialog::updateIWADsFromDir()
 
 void SetupDialog::toggleAbsolutePaths( bool checked )
 {
-	opts.useAbsolutePaths = checked;
+	settings.useAbsolutePaths = checked;
 
-	pathContext.toggleAbsolutePaths( opts.useAbsolutePaths );
+	pathContext.toggleAbsolutePaths( settings.useAbsolutePaths );
 
 	for (Engine & engine : engineModel)
 	{
@@ -413,24 +413,31 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 
 void SetupDialog::optsStorage_none()
 {
-	opts.launchOptsStorage = DontStore;
+	// TODO
+	settings.launchOptsStorage = DontStore;
+	settings.gameOptsStorage = DontStore;
+	settings.compatOptsStorage = DontStore;
 }
 
 void SetupDialog::optsStorage_global()
 {
-	opts.launchOptsStorage = StoreGlobally;
+	settings.launchOptsStorage = StoreGlobally;
+	settings.gameOptsStorage = StoreGlobally;
+	settings.compatOptsStorage = StoreGlobally;
 }
 
 void SetupDialog::optsStorage_preset()
 {
-	opts.launchOptsStorage = StoreToPreset;
+	settings.launchOptsStorage = StoreToPreset;
+	settings.gameOptsStorage = StoreToPreset;
+	settings.compatOptsStorage = StoreToPreset;
 }
 
 void SetupDialog::toggleCloseOnLaunch( bool checked )
 {
-	opts.closeOnLaunch = checked;
+	settings.closeOnLaunch = checked;
 
-	if (checked && opts.showEngineOutput)
+	if (checked && settings.showEngineOutput)
 	{
 		// both options cannot be enabled, that would make no sense
 		ui->showEngineOutputChkBox->setChecked( false );
@@ -439,9 +446,9 @@ void SetupDialog::toggleCloseOnLaunch( bool checked )
 
 void SetupDialog::toggleShowEngineOutput( bool checked )
 {
-	opts.showEngineOutput = checked;
+	settings.showEngineOutput = checked;
 
-	if (checked && opts.closeOnLaunch)
+	if (checked && settings.closeOnLaunch)
 	{
 		// both options cannot be enabled, that would make no sense
 		ui->closeOnLaunchChkBox->setChecked( false );

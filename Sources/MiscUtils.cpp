@@ -8,10 +8,12 @@
 #include "MiscUtils.hpp"
 
 #include <QFileInfo>
+#include <QTextStream>
 #include <QMessageBox>
 
 
-//======================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------
+//  path verification
 
 bool checkPath_MsgBox( const QString & path, const QString & errorMessage )
 {
@@ -28,4 +30,25 @@ void checkPath_exception( bool doVerify, const QString & path, const QString & e
 	if (doVerify)
 		if (checkPath_MsgBox( path, errorMessage ))
 			throw FileOrDirNotFound{ path };
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  other
+
+QString makeFileFilter( const char * filterName, const QVector< QString > & suffixes )
+{
+	QString filter;
+	QTextStream filterStream( &filter, QIODevice::WriteOnly );
+
+	filterStream << filterName << " (";
+	for (const QString & suffix : suffixes)
+		if (&suffix == &suffixes[0])
+			filterStream <<  "*." << suffix << " *." << suffix.toUpper();
+		else
+			filterStream << " *." << suffix << " *." << suffix.toUpper();
+	filterStream << ");;";
+
+	filterStream.flush();
+	return filter;
 }

@@ -25,7 +25,6 @@
 
 class QItemSelection;
 class QComboBox;
-class QProcess;  // TODO
 class OptionsToLoad;
 
 namespace Ui {
@@ -206,17 +205,17 @@ class MainWindow : public QMainWindow {
 
  private: // internal members
 
-	Ui::MainWindow * ui;
+	Ui::MainWindow * ui = nullptr;
 
-	uint tickCount;
+	uint tickCount = 0;
 
-	bool optionsCorrupted;  ///< true when was a critical error during parsing of options file, such content should not be saved
+	bool optionsCorrupted = false;  ///< true when was a critical error during parsing of options file, such content should not be saved
 
-	bool disableSelectionCallbacks;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
-	bool restoringOptionsInProgress;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
-	bool restoringPresetInProgress;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
+	bool disableSelectionCallbacks = false;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
+	bool restoringOptionsInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
+	bool restoringPresetInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 
-	CompatLevelStyle lastCompLvlStyle;  ///< compat level style of the engine that was selected the last time
+	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
 
 	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 

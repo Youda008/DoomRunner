@@ -190,12 +190,6 @@ QString readWholeFile( const QString & filePath, QByteArray & dest );
   * Returns description of an error that might potentially happen, or empty string on success. */
 QString updateFileSafely( const QString & filePath, const QByteArray & newContent );
 
-/// Opens a directory of a file in a new File Explorer window.  TODO: move
-bool openFileLocation( const QString & filePath );
-
-/// Creates a file filter for the QFileDialog::getOpenFileNames.
-QString makeFileFilter( const char * filterName, const QVector<QString> & suffixes );
-
 
 //======================================================================================================================
 //  traversing directory content

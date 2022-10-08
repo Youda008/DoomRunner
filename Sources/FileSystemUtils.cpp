@@ -91,60 +91,6 @@ QString updateFileSafely( const QString & filePath, const QByteArray & newConten
 	return {};
 }
 
-bool openFileLocation( const QString & filePath )
-{
-	// based on answers at https://stackoverflow.com/questions/3490336/how-to-reveal-in-finder-or-show-in-explorer-with-qt
-
-	const QFileInfo fileInfo( filePath );
-
-#if defined(Q_OS_WIN)
-
-	QStringList args;
-	if (!fileInfo.isDir())
-		args += "/select,";
-	args += QDir::toNativeSeparators( fileInfo.canonicalFilePath() );
-	return QProcess::startDetached( "explorer.exe", args );
-
-#elif defined(Q_OS_MAC)
-
-	QStringList args;
-	args << "-e";
-	args << "tell application \"Finder\"";
-	args << "-e";
-	args << "activate";
-	args << "-e";
-	args << "select POSIX file \"" + fileInfo.canonicalFilePath() + "\"";
-	args << "-e";
-	args << "end tell";
-	args << "-e";
-	args << "return";
-	return QProcess::execute( "/usr/bin/osascript", args );
-
-#else
-
-	// We cannot select a file here, because no file browser really supports it.
-	return QDesktopServices::openUrl( QUrl::fromLocalFile( fileInfo.isDir()? fileInfo.filePath() : fileInfo.path() ) );
-
-#endif
-}
-
-QString makeFileFilter( const char * filterName, const QVector<QString> & suffixes )
-{
-	QString filter;
-	QTextStream filterStream( &filter, QIODevice::WriteOnly );
-
-	filterStream << filterName << " (";
-	for (const QString & suffix : suffixes)
-		if (&suffix == &suffixes[0])
-			filterStream <<  "*." << suffix << " *." << suffix.toUpper();
-		else
-			filterStream << " *." << suffix << " *." << suffix.toUpper();
-	filterStream << ");;";
-
-	filterStream.flush();
-	return filter;
-}
-
 void traverseDirectory(
 	const QString & dir, bool recursively, EntryTypes typesToVisit,
 	const PathContext & pathContext, const std::function< void ( const QFileInfo & entry ) > & visitEntry

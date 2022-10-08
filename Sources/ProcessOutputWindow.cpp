@@ -237,7 +237,7 @@ void ProcessOutputWindow::readProcessOutput()
 
 	// If there are still CRs, the process probably wants to return the cursor to the start of the line to overwrite it.
 	// In that case everytime we encounter CR, we need to move the cursor to the beginning of the current line manually.
-	const QList<QByteArray> parts = output.split('\r');
+	const QList< QByteArray > parts = output.split('\r');
 
 	QTextCursor cursor = ui->textEdit->textCursor();
 

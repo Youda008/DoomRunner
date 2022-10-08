@@ -301,7 +301,7 @@ bool showUpdateNotification( QWidget * parent, QStringList versionInfo, bool inc
 		msgBox.setDetailedText( versionInfo.join('\n') );
 
 		// automatically expand the details section
-		const QList<QAbstractButton *> buttons = msgBox.buttons();
+		const QList< QAbstractButton * > buttons = msgBox.buttons();
 		for (QAbstractButton * button : buttons)
 		{
 			if (button->text().startsWith("Show Details"))

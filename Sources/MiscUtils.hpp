@@ -14,7 +14,7 @@
 #include <QString>
 
 
-//======================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------
 //  path verification
 
 bool checkPath_MsgBox( const QString & path, const QString & errorMessage );
@@ -24,6 +24,13 @@ class FileOrDirNotFound
 	public: QString path;
 };
 void checkPath_exception( bool doVerify, const QString & path, const QString & errorMessage );
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  other
+
+/// Creates a file filter for the QFileDialog::getOpenFileNames.
+QString makeFileFilter( const char * filterName, const QVector< QString > & suffixes );
 
 
 #endif // MISC_UTILS_INCLUDED

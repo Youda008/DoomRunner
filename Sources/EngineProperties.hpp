@@ -35,7 +35,7 @@ enum class CompatLevelStyle
 	Boom,   // https://doom.fandom.com/wiki/PrBoom#Compatibility_modes_and_settings
 };
 
-const QVector<QString> & getCompatLevels( CompatLevelStyle style );
+const QVector< QString > & getCompatLevels( CompatLevelStyle style );
 QStringList getCompatLevelArgs( const QString & executableName, CompatLevelStyle style, int compatLevel );
 
 //----------------------------------------------------------------------------------------------------------------------

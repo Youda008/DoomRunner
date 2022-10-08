@@ -235,6 +235,11 @@ CompatibilityOptions & MainWindow::activeCompatOptions()
 	STORE_TO_GLOBAL_STORAGE_IF_SAFE( audioOpts.structMember, value ) \
 }
 
+#define STORE_PRESET_OPTION( structMember, value ) \
+{\
+	STORE_TO_PRESET_IF_SAFE( structMember, value ) \
+}
+
 #define STORE_GLOBAL_OPTION( structMember, value ) \
 {\
 	STORE_TO_GLOBAL_STORAGE_IF_SAFE( globalOpts.structMember, value ) \
@@ -247,15 +252,7 @@ CompatibilityOptions & MainWindow::activeCompatOptions()
 MainWindow::MainWindow()
 :
 	QMainWindow( nullptr ),
-	tickCount( 0 ),
-	optionsCorrupted( false ),
-	disableSelectionCallbacks( false ),  // TODO
-	restoringOptionsInProgress( false ),
-	restoringPresetInProgress( false ),
-	lastCompLvlStyle( CompatLevelStyle::None ),
-	compatOptsCmdArgs(),
 	pathContext( QApplication::applicationDirPath(), useAbsolutePathsByDefault ), // all relative paths will internally be stored relative to the application's dir
-	optionsFilePath( QDir( getAppDataDir() ).filePath( defaultOptionsFileName ) ),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
@@ -268,21 +265,10 @@ MainWindow::MainWindow()
 	demoModel(
 		/*makeDisplayString*/ []( const DemoFile & demo ) { return demo.fileName; }
 	),
-	iwadSettings {
-		/*dir*/ "",
-		/*loadFromDir*/ false,
-		/*searchSubdirs*/ false
-	},
 	iwadModel(
 		/*makeDisplayString*/ []( const IWAD & iwad ) { return iwad.name; }
 	),
-	mapSettings {
-
-	},
 	mapModel(),
-	modSettings {
-
-	},
 	modModel(
 		/*makeDisplayString*/ []( const Mod & mod ) { return mod.fileName; }
 	),
@@ -295,9 +281,7 @@ MainWindow::MainWindow()
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
 
-	// TODO: remove
-	qDebug() << "isWritable: " << QFileInfo("C:/Program Files/ProcessExplorer/haha.txt").isWritable();
-	qDebug() << "isWritable: " << QFileInfo("E:/Youda/haha.txt").isWritable();
+	optionsFilePath = QDir( getAppDataDir() ).filePath( defaultOptionsFileName );
 
 	// setup main menu actions
 
@@ -971,10 +955,8 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 
 	// expand the parent directory nodes that are collapsed
 	const auto selectedRows = getSelectedRows( ui->mapDirView );
-	for (const QModelIndex & index : selectedRows)  // TODO: to utils
-		for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
-			if (!ui->mapDirView->isExpanded( currentIndex ))
-				ui->mapDirView->expand( currentIndex );
+	for (const QModelIndex & index : selectedRows)
+		expandParentsOfNode( ui->mapDirView, index );
 
 	updateMapsFromSelectedWADs( selectedMapPacks );
 
@@ -1353,21 +1335,6 @@ void MainWindow::modsDropped( int dropRow, int count )
 
 	updateLaunchCommand();
 }
-
-
-//----------------------------------------------------------------------------------------------------------------------
-//  keyboard control
-
-/*void MainWindow::modConfirm()
-{
-	int selectedModIdx = getSelectedItemIdx( ui->modListView );
-	if (selectedModIdx >= 0)
-	{
-		modModel[ selectedModIdx ].checked = !modModel[ selectedModIdx ].checked;
-		modModel.contentChanged( selectedModIdx, selectedModIdx + 1 );
-		toggleMod( modModel.makeIndex( selectedModIdx ) );
-	}
-}*/
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1914,14 +1881,7 @@ void MainWindow::toggleNoMusic( bool checked )
 
 void MainWindow::updatePresetCmdArgs( const QString & text )
 {
-	// TODO: macro
-
-	// update the current preset
-	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0 && !restoringPresetInProgress)
-	{
-		presetModel[ selectedPresetIdx ].cmdArgs = text;
-	}
+	STORE_PRESET_OPTION( cmdArgs, text )
 
 	updateLaunchCommand();
 }
@@ -2534,7 +2494,7 @@ void MainWindow::restorePreset( int presetIdx )
 
 		deselectSelectedItems( ui->mapDirView );
 
-		const QList<QString> mapPacksCopy = preset.selectedMapPacks;  // TODO: format
+		const QList< QString > mapPacksCopy = preset.selectedMapPacks;
 		preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
 		for (const QString & path : mapPacksCopy)
 		{
@@ -2571,7 +2531,7 @@ void MainWindow::restorePreset( int presetIdx )
 		deselectSelectedItems( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
 
 		modModel.startCompleteUpdate();
-		const QList<Mod> modsCopy = preset.mods;
+		const QList< Mod > modsCopy = preset.mods;
 		preset.mods.clear();  // clear the list in the preset and let it repopulate only with valid items
 		modModel.clear();
 		for (const Mod & mod : modsCopy)
@@ -2824,40 +2784,6 @@ void MainWindow::exportPresetToShortcut()
 void MainWindow::importPresetFromScript()
 {
 	QMessageBox::warning( this, "Not implemented", "Sorry, this feature is not implemented yet." );
-/*
-	QString filePath = QFileDialog::getOpenFileName( this, "Import preset", QString(), scriptFileExt );
-	if (filePath.isEmpty()) {  // user probably clicked cancel
-		return;
-	}
-
-	QFileInfo fileInfo( filePath );
-	QString fileDir = fileInfo.path();
-
-	QFile file( filePath );
-	if (!file.open( QIODevice::ReadOnly | QIODevice::Text )) {
-		QMessageBox::warning( this, "Cannot open file", "Cannot open file for reading. Check file permissions." );
-		return;
-	}
-
-	QTextStream stream( &file );
-	QString command = stream.readLine( 10 * 1024 );
-	if (stream.status() == QTextStream::ReadCorruptData) {
-		QMessageBox::warning( this, "Error reading file", "An error occured while reading the file. Check if the disk isn't disconnected." );
-		return;
-	}
-
-	if (!stream.atEnd() && !stream.readLine( 1 ).isEmpty()) {
-		QMessageBox::warning( this, "Problem with parsing file", "Only single line shorter than 10kB is supported, the rest will be ignored." );
-	}
-
-	QStringList tokens = command.split( ' ', QString::SkipEmptyParts );
-
-	// verify that first token is existing path and that it's added in DoomRunner
-
-	// while not at end
-	//    read option
-	//    read argument
-*/
 }
 
 
@@ -2953,7 +2879,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
-	QVector<QString> selectedFiles;
+	QVector< QString > selectedFiles;
 
 	const QStringList selectedMapPacks = getSelectedMapPacks();
 	for (const QString & mapFilePath : selectedMapPacks)

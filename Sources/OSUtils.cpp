@@ -13,6 +13,7 @@
 #include <QApplication>
 #include <QGuiApplication>
 #include <QScreen>
+#include <QProcess>
 
 #ifdef _WIN32
 	#include <windows.h>
@@ -32,7 +33,7 @@ QVector< MonitorInfo > listMonitors()
 	QVector< MonitorInfo > monitors;
 
 	// in the end this work well for both platforms, just ZDoom indexes the monitors from 1 while GZDoom from 0
-	QList<QScreen *> screens = QGuiApplication::screens();
+	QList< QScreen * > screens = QGuiApplication::screens();
 	for (int monitorIdx = 0; monitorIdx < screens.count(); monitorIdx++)
 	{
 		MonitorInfo myInfo;
@@ -61,6 +62,43 @@ bool isInSearchPath( const QString & filePath )
 {
 	// this should also handle the snap installations, since directory of snap executables is inside PATH
 	return !QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ).isEmpty();
+}
+
+bool openFileLocation( const QString & filePath )
+{
+	// based on answers at https://stackoverflow.com/questions/3490336/how-to-reveal-in-finder-or-show-in-explorer-with-qt
+
+	const QFileInfo fileInfo( filePath );
+
+#if defined(Q_OS_WIN)
+
+	QStringList args;
+	if (!fileInfo.isDir())
+		args += "/select,";
+	args += QDir::toNativeSeparators( fileInfo.canonicalFilePath() );
+	return QProcess::startDetached( "explorer.exe", args );
+
+#elif defined(Q_OS_MAC)
+
+	QStringList args;
+	args << "-e";
+	args << "tell application \"Finder\"";
+	args << "-e";
+	args << "activate";
+	args << "-e";
+	args << "select POSIX file \"" + fileInfo.canonicalFilePath() + "\"";
+	args << "-e";
+	args << "end tell";
+	args << "-e";
+	args << "return";
+	return QProcess::execute( "/usr/bin/osascript", args );
+
+#else
+
+	// We cannot select a file here, because no file browser really supports it.
+	return QDesktopServices::openUrl( QUrl::fromLocalFile( fileInfo.isDir()? fileInfo.filePath() : fileInfo.path() ) );
+
+#endif
 }
 
 #ifdef _WIN32

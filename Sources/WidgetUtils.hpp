@@ -536,12 +536,12 @@ bool areSelectionsEqual( const QVector< ItemID > & selection1, const QVector< It
 	// The selected indexes are normally ordered in the order in which the user selected them.
 	// So to be able to compare them we need to normalize the order first.
 
-	QVector<ItemID> orderedSelection1;
+	QVector< ItemID > orderedSelection1;
 	for (const ItemID & id : selection1)
 		orderedSelection1.push_back( id );
 	std::sort( orderedSelection1.begin(), orderedSelection1.end() );
 
-	QVector<ItemID> orderedSelection2;
+	QVector< ItemID > orderedSelection2;
 	for (const ItemID & id : selection2)
 		orderedSelection2.push_back( id );
 	std::sort( orderedSelection2.begin(), orderedSelection2.end() );
@@ -661,6 +661,16 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 	// because findText returns -1 which is valid value for setCurrentIndex
 	view->setCurrentIndex( view->findText( lastText ) );
 }
+
+
+
+
+//======================================================================================================================
+//  miscellaneous
+
+
+/// Expands all parent nodes from the selected node up to the root node, so that the selected node is immediately visible.
+void expandParentsOfNode( QTreeView * view, const QModelIndex & index );
 
 
 #endif // WIDGET_UTILS_INCLUDED

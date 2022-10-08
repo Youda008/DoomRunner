@@ -9,8 +9,9 @@
 #include "EditableListView.hpp"
 
 #include "ListModel.hpp"
-#include "WidgetUtils.hpp"
 #include "EventFilters.hpp"
+#include "WidgetUtils.hpp"
+#include "OSUtils.hpp"  // openFileLocation
 
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>

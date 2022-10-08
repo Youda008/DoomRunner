@@ -77,7 +77,7 @@ class JsonValueCtx {
 			ArrayIndex
 		};
 		Type type;
-		QString key; // TODO: std::variant
+		QString key;
 		int idx;
 
 		Key() : type( Other ), key(), idx( -1 ) {}

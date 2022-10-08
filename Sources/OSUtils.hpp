@@ -33,6 +33,9 @@ QString getAppDataDir();
 /** If true it means the executable can be started directly by using only its name without its path. */
 bool isInSearchPath( const QString & filePath );
 
+/// Opens a directory of a file in a new File Explorer window.
+bool openFileLocation( const QString & filePath );
+
 #ifdef _WIN32
 bool createWindowsShortcut(
 	QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir = "", QString description = ""

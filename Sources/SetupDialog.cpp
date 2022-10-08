@@ -14,6 +14,7 @@
 #include "WidgetUtils.hpp"
 #include "FileSystemUtils.hpp"  // PathContext
 #include "DoomUtils.hpp"
+#include "MiscUtils.hpp"  // makeFileFilter
 
 #include <QString>
 #include <QStringBuilder>

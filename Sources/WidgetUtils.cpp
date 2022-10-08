@@ -235,3 +235,17 @@ bool editItemAtIndex( QListView * view, int index )
 	// this returns true even when the editor was not opened using openPersistentEditor()
 	return view->isPersistentEditorOpen( modelIndex );
 }
+
+
+
+
+//======================================================================================================================
+//  miscellaneous
+
+
+void expandParentsOfNode( QTreeView * view, const QModelIndex & index )
+{
+	for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
+		if (!view->isExpanded( currentIndex ))
+			view->expand( currentIndex );
+}

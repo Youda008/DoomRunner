@@ -167,7 +167,7 @@ static QJsonObject serialize( const IwadSettings & iwadSettings )
 
 	jsIWADs["auto_update"] = iwadSettings.updateFromDir;
 	jsIWADs["directory"] = iwadSettings.dir;
-	jsIWADs["subdirs"] = iwadSettings.searchSubdirs;
+	jsIWADs["search_subdirs"] = iwadSettings.searchSubdirs;
 
 	return jsIWADs;
 }
@@ -504,7 +504,7 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 	jsSettings["close_on_launch"] = settings.closeOnLaunch;
 	jsSettings["show_engine_output"] = settings.showEngineOutput;
 
-	jsSettings["options_storage"] = int( settings.launchOptsStorage );
+	jsSettings["launch_opts_storage"] = int( settings.launchOptsStorage );
 	jsSettings["gameplay_opts_storage"] = int( settings.gameOptsStorage );
 	jsSettings["compat_opts_storage"] = int( settings.compatOptsStorage );
 }
@@ -516,7 +516,7 @@ static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & se
 	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 
-	settings.launchOptsStorage = jsSettings.getEnum< OptionsStorage >( "options_storage", settings.launchOptsStorage );
+	settings.launchOptsStorage = jsSettings.getEnum< OptionsStorage >( "launch_opts_storage", settings.launchOptsStorage );
 	settings.gameOptsStorage = jsSettings.getEnum< OptionsStorage >( "gameplay_opts_storage", settings.gameOptsStorage );
 	settings.compatOptsStorage = jsSettings.getEnum< OptionsStorage >( "compat_opts_storage", settings.compatOptsStorage );
 }
@@ -533,7 +533,7 @@ static void serializeOptionsToJson( const OptionsToSave & opts, QJsonObject & js
 		// better keep room for adding some engine settings later, so that we don't have to break compatibility again
 		QJsonObject jsEngines;
 
-		jsEngines["engine_list"] = serializeList( opts.engines );  // TODO: compatibility (_list)
+		jsEngines["engine_list"] = serializeList( opts.engines );
 
 		jsOpts["engines"] = jsEngines;
 	}
@@ -542,7 +542,7 @@ static void serializeOptionsToJson( const OptionsToSave & opts, QJsonObject & js
 		QJsonObject jsIWADs = serialize( opts.iwadSettings );
 
 		if (!opts.iwadSettings.updateFromDir)
-			jsIWADs["IWAD_list"] = serializeList( opts.iwads );  // TODO: compatibility (_list)
+			jsIWADs["IWAD_list"] = serializeList( opts.iwads );
 
 		jsOpts["IWADs"] = jsIWADs;
 	}
@@ -607,7 +607,7 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 
 	if (JsonObjectCtx jsEngines = jsOpts.getObject( "engines" ))
 	{
-		if (JsonArrayCtx jsEngineArray = jsEngines.getArray( "engines" ))
+		if (JsonArrayCtx jsEngineArray = jsEngines.getArray( "engine_list" ))
 		{
 			// iterate manually, so that we can filter-out invalid items
 			for (int i = 0; i < jsEngineArray.size(); i++)
@@ -639,7 +639,7 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 		}
 		else
 		{
-			if (JsonArrayCtx jsIWADArray = jsIWADs.getArray( "IWADs" ))
+			if (JsonArrayCtx jsIWADArray = jsIWADs.getArray( "IWAD_list" ))
 			{
 				// iterate manually, so that we can filter-out invalid items
 				for (int i = 0; i < jsIWADArray.size(); i++)
@@ -678,15 +678,15 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 
 	// options
 
-	if (opts.settings.launchOptsStorage == StoreToPreset)
+	if (opts.settings.launchOptsStorage == StoreGlobally)
 		if (JsonObjectCtx jsOptions = jsOpts.getObject( "launch_options" ))
 			deserialize( jsOptions, opts.launchOpts );
 
-	if (opts.settings.gameOptsStorage == StoreToPreset)
+	if (opts.settings.gameOptsStorage == StoreGlobally)
 		if (JsonObjectCtx jsOptions = jsOpts.getObject( "gameplay_options" ))
 			deserialize( jsOptions, opts.gameOpts );
 
-	if (opts.settings.compatOptsStorage == StoreToPreset)
+	if (opts.settings.compatOptsStorage == StoreGlobally)
 		if (JsonObjectCtx jsOptions = jsOpts.getObject( "compatibility_options" ))
 			deserialize( jsOptions, opts.compatOpts );
 
@@ -719,6 +719,16 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 	opts.selectedPreset = jsOpts.getString( "selected_preset" );
 }
 
+
+//======================================================================================================================
+//  backward compatibility - loading user data from older options format
+
+#include "OptionsSerializer_compat.cpp"  // hack, but it's ok in this case
+
+
+//======================================================================================================================
+//  JSON and version handling
+
 static QByteArray serializeOptions( const OptionsToSave & opts )
 {
 	QJsonObject jsRoot;
@@ -747,13 +757,22 @@ static QString deserializeOptions( OptionsToLoad & opts, const QByteArray & byte
 	JsonDocumentCtx jsonDocCtx( jsonDoc );
 	const JsonObjectCtx & jsRoot = jsonDocCtx.rootObject();
 
-	// detect that we are loading options from older versions so that we can supress "missing element" warnings
-	// TODO: backward compatibility
-	QString version = jsRoot.getString( "version", "", DontShowError );
-	bool suppressWarnings = version.isEmpty() || compareVersions( version, appVersion ) < 0;  // missing "version" means old version
-	jsonDocCtx.toggleWarnings( !suppressWarnings );
+	// backward compatibility with older options format
+	QString optsVersion = jsRoot.getString( "version", "", DontShowError );
+	if (optsVersion.isEmpty() || compareVersions( optsVersion, "1.7" ) < 0)
+	{
+		jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version
 
-	deserializeOptionsFromJson( opts, jsRoot );
+		// try to load as the 1.6.3 format, older versions will have to accept resetting some values to defaults
+		deserializeOptionsFromJson_pre17( opts, jsRoot );
+	}
+	else
+	{
+		if (compareVersions( optsVersion, appVersion ) < 0)
+			jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version
+
+		deserializeOptionsFromJson( opts, jsRoot );
+	}
 
 	return {};
 }

@@ -44,6 +44,7 @@ QString readWholeFile( const QString & filePath, QByteArray & dest )
 	}
 
 	file.close();
+	return {};
 }
 
 QString updateFileSafely( const QString & filePath, const QByteArray & newContent )

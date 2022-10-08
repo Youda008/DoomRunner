@@ -19,9 +19,8 @@ int main( int argc, char * argv [] )
 {
 	QApplication a( argc, argv );
 
-	// current dir needs to be set to the application's dir so that the app finds its files
-	// TODO: test if this can be deleted
-	//QDir::setCurrent( QApplication::applicationDirPath() );
+	// current dir needs to be set to the application's dir so that the app finds the user files with relative paths
+	QDir::setCurrent( QApplication::applicationDirPath() );
 
 	MainWindow w;
 	w.show();

@@ -45,8 +45,10 @@ SOURCES += \
     Sources/LangUtils.cpp \
     Sources/ListModel.cpp \
     Sources/MainWindow.cpp \
+    Sources/MiscUtils.cpp \
     Sources/NewConfigDialog.cpp \
     Sources/OSUtils.cpp \
+    Sources/OptionsSerializer.cpp \
     Sources/ProcessOutputWindow.cpp \
     Sources/SetupDialog.cpp \
     Sources/UpdateChecker.cpp \
@@ -71,8 +73,10 @@ HEADERS += \
     Sources/LangUtils.hpp \
     Sources/ListModel.hpp \
     Sources/MainWindow.hpp \
+    Sources/MiscUtils.hpp \
     Sources/NewConfigDialog.hpp \
     Sources/OSUtils.hpp \
+    Sources/OptionsSerializer.hpp \
     Sources/ProcessOutputWindow.hpp \
     Sources/SetupDialog.hpp \
     Sources/UpdateChecker.hpp \

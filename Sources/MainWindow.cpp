@@ -11,19 +11,21 @@
 #include "AboutDialog.hpp"
 #include "SetupDialog.hpp"
 #include "NewConfigDialog.hpp"
-#include "ProcessOutputWindow.hpp"
 #include "GameOptsDialog.hpp"
 #include "CompatOptsDialog.hpp"
+#include "ProcessOutputWindow.hpp"
+
+#include "OptionsSerializer.hpp"
+#include "Version.hpp"
+#include "UpdateChecker.hpp"
+#include "EngineProperties.hpp"
 
 #include "LangUtils.hpp"
-#include "JsonUtils.hpp"
-#include "WidgetUtils.hpp"
 #include "FileSystemUtils.hpp"
 #include "OSUtils.hpp"
+#include "WidgetUtils.hpp"
 #include "DoomUtils.hpp"
-#include "EngineProperties.hpp"
-#include "UpdateChecker.hpp"
-#include "Version.hpp"
+#include "MiscUtils.hpp"  // checkPath
 
 #include <QVector>
 #include <QList>
@@ -39,12 +41,12 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QProcess>
-#include <QJsonDocument>
-#include <QDebug>
 
 #include <QVBoxLayout>
 #include <QPlainTextEdit>
 #include <QFontDatabase>
+
+#include <QDebug>
 
 
 //======================================================================================================================
@@ -56,37 +58,58 @@
 	static const QString scriptFileSuffix = "*.sh";
 #endif
 
-static constexpr char defaultOptionsFile [] = "options.json";
-
 static constexpr bool VerifyPaths = true;
 static constexpr bool DontVerifyPaths = false;
 
 
 //======================================================================================================================
-//  local helpers
+//  MainWindow-specific utils
 
-static QString getOptionsFilePath()
+QStringList MainWindow::getSelectedMapPacks() const
 {
-	return QDir( getAppDataDir() ).filePath( defaultOptionsFile );
-}
+	QStringList selectedMapPacks;
 
-static bool verifyPath( const QString & path, const QString & errorMessage )
-{
-	if (!QFileInfo::exists( path ))
+	// clicking on an item in QTreeView with QFileSystemModel selects all elements (columns) of a row,
+	// but we only care about the first one
+	const auto selectedRows = getSelectedRows( ui->mapDirView );
+
+	// extract the file paths
+	for (const QModelIndex & index : selectedRows)
 	{
-		QMessageBox::warning( nullptr, "File or directory no longer exists", errorMessage.arg( path ) );
-		return false;
+		QString modelPath = mapModel.filePath( index );
+		selectedMapPacks.append( pathContext.convertPath( modelPath ) );
 	}
-	return true;
+
+	return selectedMapPacks;
 }
 
-class FileNotFound {};
-
-static void throwIfInvalid( bool doVerify, const QString & path, const QString & errorMessage )
+QString MainWindow::getConfigDir() const
 {
-	if (doVerify)
-		if (!verifyPath( path, errorMessage ))
-			throw FileNotFound();
+	int currentEngineIdx = ui->engineCmbBox->currentIndex();
+	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
+}
+
+QString MainWindow::getSaveDir() const
+{
+	QString alternativeSaveDir = ui->saveDirLine->text();
+	if (!alternativeSaveDir.isEmpty())  // if custom save dir is specified
+		return alternativeSaveDir;      // then use it
+	else                                // otherwise
+		return getConfigDir();          // use config dir
+}
+
+LaunchMode MainWindow::getLaunchModeFromUI() const
+{
+	if (ui->launchMode_map->isChecked())
+		return LaunchMode::LaunchMap;
+	else if (ui->launchMode_savefile->isChecked())
+		return LaunchMode::LoadSave;
+	else if (ui->launchMode_recordDemo->isChecked())
+		return LaunchMode::RecordDemo;
+	else if (ui->launchMode_replayDemo->isChecked())
+		return LaunchMode::ReplayDemo;
+	else
+		return LaunchMode::Default;
 }
 
 LaunchOptions & MainWindow::activeLaunchOptions()
@@ -226,12 +249,13 @@ MainWindow::MainWindow()
 	QMainWindow( nullptr ),
 	tickCount( 0 ),
 	optionsCorrupted( false ),
-	disableSelectionCallbacks( false ),
+	disableSelectionCallbacks( false ),  // TODO
 	restoringOptionsInProgress( false ),
 	restoringPresetInProgress( false ),
 	lastCompLvlStyle( CompatLevelStyle::None ),
 	compatOptsCmdArgs(),
 	pathContext( QApplication::applicationDirPath(), useAbsolutePathsByDefault ), // all relative paths will internally be stored relative to the application's dir
+	optionsFilePath( QDir( getAppDataDir() ).filePath( defaultOptionsFileName ) ),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
@@ -244,24 +268,24 @@ MainWindow::MainWindow()
 	demoModel(
 		/*makeDisplayString*/ []( const DemoFile & demo ) { return demo.fileName; }
 	),
-	iwadModel(
-		/*makeDisplayString*/ []( const IWAD & iwad ) { return iwad.name; }
-	),
 	iwadSettings {
 		/*dir*/ "",
 		/*loadFromDir*/ false,
 		/*searchSubdirs*/ false
 	},
-	mapModel(),
+	iwadModel(
+		/*makeDisplayString*/ []( const IWAD & iwad ) { return iwad.name; }
+	),
 	mapSettings {
-		""
+
+	},
+	mapModel(),
+	modSettings {
+
 	},
 	modModel(
 		/*makeDisplayString*/ []( const Mod & mod ) { return mod.fileName; }
 	),
-	modSettings {
-
-	},
 	presetModel(
 		/*makeDisplayString*/ []( const Preset & preset ) { return preset.name; }
 	)
@@ -270,6 +294,10 @@ MainWindow::MainWindow()
 	ui->setupUi( this );
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
+
+	// TODO: remove
+	qDebug() << "isWritable: " << QFileInfo("C:/Program Files/ProcessExplorer/haha.txt").isWritable();
+	qDebug() << "isWritable: " << QFileInfo("E:/Youda/haha.txt").isWritable();
 
 	// setup main menu actions
 
@@ -544,7 +572,6 @@ void MainWindow::onWindowShown()
 	}
 
 	// try to load last saved state
-	QString optionsFilePath = appDataDir.filePath( defaultOptionsFile );
 	if (QFileInfo::exists( optionsFilePath ))
 	{
 		loadOptions( optionsFilePath );
@@ -608,14 +635,14 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 	if (tickCount % 60 == 0)
 	{
 		if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
-			saveOptions( getOptionsFilePath() );
+			saveOptions( optionsFilePath );
 	}
 }
 
 void MainWindow::closeEvent( QCloseEvent * event )
 {
 	if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
-		saveOptions( getOptionsFilePath() );
+		saveOptions( optionsFilePath );
 
 	QMainWindow::closeEvent( event );
 }
@@ -676,8 +703,8 @@ void MainWindow::runSetupDialog()
 		iwadModel.startCompleteUpdate();
 
 		// update our data from the dialog
-		engineModel.updateList( dialog.engineModel.list() );
-		iwadModel.updateList( dialog.iwadModel.list() );
+		engineModel.assignList( std::move( dialog.engineModel.list() ) );
+		iwadModel.assignList( std::move( dialog.iwadModel.list() ) );
 		iwadSettings = dialog.iwadSettings;
 		mapSettings = dialog.mapSettings;
 		modSettings = dialog.modSettings;
@@ -775,215 +802,30 @@ void MainWindow::cloneConfig()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  preset loading
+//  item selection
 
-// TODO: move
-/// Loads the content of a preset into the other widgets.
-void MainWindow::restorePreset( int presetIdx )
+/// Automatically selects those essential items (like engine of IWAD) that are alone in their list.
+void MainWindow::autoselectLoneItems()
 {
-	// Restoring any stored options is tricky.
-	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
-	// causes the corresponding callbacks to be called which in turn might cause some other stored value to be changed.
-	// For example  ui->engineCmbBox->setCurrentIndex( idx )  calls  selectEngine( idx )  which might indirectly call
-	// selectConfig( idx )  which will overwrite the stored selected config and we will then restore a wrong one.
-	// The least complicated workaround seems to be simply setting a flag indicating that we are in the middle of
-	// restoring saved options, and then prevent storing values when this flag is set.
+	if (engineModel.size() == 1 && ui->engineCmbBox->currentIndex() < 0)
+		ui->engineCmbBox->setCurrentIndex( 0 );
+	if (iwadModel.size() == 1 && !isSomethingSelected( ui->iwadListView ))
+		selectAndSetCurrentByIndex( ui->iwadListView, 0 );
+}
 
-	restoringPresetInProgress = true;
-
-	Preset & preset = presetModel[ presetIdx ];
-
-	// restore selected engine
+void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
+{
+	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+	if (selectedPresetIdx >= 0 && !presetModel[ selectedPresetIdx ].isSeparator)
 	{
-		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
-
-		ui->engineCmbBox->setCurrentIndex( -1 );
-
-		if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
-		{
-			int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
-												   { return engine.path == preset.selectedEnginePath; } );
-			if (engineIdx >= 0)
-			{
-				if (QFileInfo::exists( preset.selectedEnginePath ))
-				{
-					ui->engineCmbBox->setCurrentIndex( engineIdx );
-				}
-				else
-				{
-					QMessageBox::warning( this, "Engine no longer exists",
-						"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please update the engines at Menu -> Initial Setup." );
-				}
-			}
-			else
-			{
-				QMessageBox::warning( this, "Engine no longer exists",
-					"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list, please select another one." );
-				preset.selectedEnginePath.clear();
-			}
-		}
-
-		disableSelectionCallbacks = false;
-
-		// manually notify our class about the change, so that the preset and dependent widgets get updated
-		// This is needed before configs, saves and demos are restored, so that the entries are ready to be selected from.
-		selectEngine( ui->engineCmbBox->currentIndex() );
+		togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
+		restorePreset( selectedPresetIdx );  // load the content of the selected preset into the other widgets
 	}
-
-	// restore selected config
+	else  // the preset was deselected using CTRL
 	{
-		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
-
-		ui->configCmbBox->setCurrentIndex( -1 );
-
-		if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
-		{
-			int configIdx = findSuch( configModel, [&]( const ConfigFile & config )
-												   { return config.fileName == preset.selectedConfig; } );
-			if (configIdx >= 0)
-			{
-				// No sense to verify if this config file exists, the configModel has just been updated during
-				// selectEngine( ui->engineCmbBox->currentIndex() ), so there are only existing entries.
-				ui->configCmbBox->setCurrentIndex( configIdx );
-			}
-			else
-			{
-				QMessageBox::warning( this, "Config no longer exists",
-					"Config file selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
-				preset.selectedConfig.clear();
-			}
-		}
-
-		disableSelectionCallbacks = false;
-
-		// manually notify our class about the change, so that the preset and dependent widgets get updated
-		selectConfig( ui->configCmbBox->currentIndex() );
+		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
+		clearPresetSubWidgets();  // clear the other widgets that display the content of the preset
 	}
-
-	// restore selected IWAD
-	{
-		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
-
-		deselectSelectedItems( ui->iwadListView );
-
-		if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
-		{
-			int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
-			if (iwadIdx >= 0)
-			{
-				if (QFileInfo::exists( preset.selectedIWAD ))
-				{
-					selectItemByIndex( ui->iwadListView, iwadIdx );
-				}
-				else
-				{
-					QMessageBox::warning( this, "IWAD no longer exists",
-						"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
-				}
-			}
-			else
-			{
-				QMessageBox::warning( this, "IWAD no longer exists",
-					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
-				preset.selectedIWAD.clear();
-			}
-		}
-
-		disableSelectionCallbacks = false;
-
-		// manually notify our class about the change, so that the preset and dependent widgets get updated
-		// This is needed before launch options are restored, so that the map names are ready to be selected.
-		toggleIWAD( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
-	}
-
-	// restore selected MapPack
-	{
-		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
-
-		QDir mapRootDir = mapModel.rootDirectory();
-
-		deselectSelectedItems( ui->mapDirView );
-
-		const QList<QString> mapPacksCopy = preset.selectedMapPacks;
-		preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
-		for (const QString & path : mapPacksCopy)
-		{
-			QModelIndex mapIdx = mapModel.index( path );
-			if (mapIdx.isValid() && isInsideDir( path, mapRootDir ))
-			{
-				if (QFileInfo::exists( path ))
-				{
-					preset.selectedMapPacks.append( path );  // put back only items that are valid
-					selectItemByIndex( ui->mapDirView, mapIdx );
-				}
-				else
-				{
-					QMessageBox::warning( this, "Map file no longer exists",
-						"Map file selected for this preset ("%path%") no longer exists." );
-				}
-			}
-			else
-			{
-				QMessageBox::warning( this, "Map file no longer exists",
-					"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")." );
-			}
-		}
-
-		disableSelectionCallbacks = false;
-
-		// manually notify our class about the change, so that the preset and dependent widgets get updated
-		// Because this updates the preset with selected items, only the valid ones will be stored and invalid removed.
-		toggleMapPack( ui->mapDirView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
-	}
-
-	// restore list of mods
-	{
-		deselectSelectedItems( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
-
-		modModel.startCompleteUpdate();
-		const QList<Mod> modsCopy = preset.mods;
-		preset.mods.clear();  // clear the list in the preset and let it repopulate only with valid items
-		modModel.clear();
-		for (const Mod & mod : modsCopy)
-		{
-			if (mod.isSeparator || QFileInfo::exists( mod.path ))
-			{
-				preset.mods.append( mod );  // put back only items that are valid
-				modModel.append( mod );
-			}
-			else
-			{
-				QMessageBox::warning( this, "Mod no longer exists",
-					"A mod from the preset ("%mod.path%") no longer exists. It will be removed from the list." );
-			}
-		}
-		modModel.finishCompleteUpdate();
-	}
-
-	if (settings.launchOptsStorage == StoreToPreset)
-		restoreLaunchOptions( preset.launchOpts );  // this clears items that are invalid
-
-	if (settings.gameOptsStorage == StoreToPreset)
-		restoreGameplayOptions( preset.gameOpts );  // this clears items that are invalid
-
-	if (settings.compatOptsStorage == StoreToPreset)
-		restoreCompatibilityOptions( preset.compatOpts );  // this clears items that are invalid
-
-	restoreAlternativePaths( preset.altPaths );
-
-	// restore additional command line arguments
-	ui->presetCmdArgsLine->setText( preset.cmdArgs );
-
-	restoringPresetInProgress = false;
-
-	// if "Use preset name as directory" is enabled, overwrite the preset custom directories with its name
-	// do it with restoringInProgress == false to update the current preset with the new overwriten dirs.
-	if (globalOpts.usePresetNameAsDir)
-	{
-		setAltDirsRelativeToConfigs( preset.name );
-	}
-
-	updateLaunchCommand();
 }
 
 void MainWindow::togglePresetSubWidgets( bool enabled )
@@ -1018,34 +860,6 @@ void MainWindow::clearPresetSubWidgets()
 	ui->presetCmdArgsLine->clear();
 }
 
-
-//----------------------------------------------------------------------------------------------------------------------
-//  item selection
-
-/// Automatically selects those essential items (like engine of IWAD) that are alone in their list.
-void MainWindow::autoselectLoneItems()
-{
-	if (engineModel.size() == 1 && ui->engineCmbBox->currentIndex() < 0)
-		ui->engineCmbBox->setCurrentIndex( 0 );
-	if (iwadModel.size() == 1 && !isSomethingSelected( ui->iwadListView ))
-		selectAndSetCurrentByIndex( ui->iwadListView, 0 );
-}
-
-void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
-{
-	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0 && !presetModel[ selectedPresetIdx ].isSeparator)
-	{
-		togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
-		restorePreset( selectedPresetIdx );  // load the content of the selected preset into the other widgets
-	}
-	else  // the preset was deselected using CTRL
-	{
-		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
-		clearPresetSubWidgets();  // clear the other widgets that display the content of the preset
-	}
-}
-
 void MainWindow::selectEngine( int index )
 {
 	if (disableSelectionCallbacks)
@@ -1068,7 +882,7 @@ void MainWindow::selectEngine( int index )
 		const EngineProperties & properties = getEngineProperties( engineModel[ index ].family );
 		mapParamStyle = properties.mapParamStyle;
 
-		verifyPath( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
+		checkPath_MsgBox( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
 	}
 
 	ui->mapCmbBox->setEditable( mapParamStyle == MapParamStyle::Map );
@@ -1105,7 +919,7 @@ void MainWindow::selectConfig( int index )
 			engineModel[ ui->engineCmbBox->currentIndex() ].configDir,  // if config was selected, engine selection must be valid too
 			configModel[ index ].fileName
 		);
-		validConfigSelected = verifyPath( configPath, "The selected config (%1) no longer exists, please select another one." );
+		validConfigSelected = checkPath_MsgBox( configPath, "The selected config (%1) no longer exists, please select another one." );
 	}
 
 	// update related UI elements
@@ -1133,30 +947,12 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 
 	if (selectedIWADIdx >= 0)
 	{
-		verifyPath( iwadModel[ selectedIWADIdx ].path, "The selected IWAD (%1) no longer exists, please select another one." );
+		checkPath_MsgBox( iwadModel[ selectedIWADIdx ].path, "The selected IWAD (%1) no longer exists, please select another one." );
 	}
 
 	updateMapsFromSelectedWADs();
 
 	updateLaunchCommand();
-}
-
-QStringList MainWindow::getSelectedMapPacks() const
-{
-	QStringList selectedMapPacks;
-
-	// clicking on an item in QTreeView with QFileSystemModel selects all elements (columns) of a row,
-	// but we only care about the first one
-	const auto selectedRows = getSelectedRows( ui->mapDirView );
-
-	// extract the file paths
-	for (const QModelIndex & index : selectedRows)
-	{
-		QString modelPath = mapModel.filePath( index );
-		selectedMapPacks.append( pathContext.convertPath( modelPath ) );
-	}
-
-	return selectedMapPacks;
 }
 
 void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
@@ -1175,7 +971,7 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 
 	// expand the parent directory nodes that are collapsed
 	const auto selectedRows = getSelectedRows( ui->mapDirView );
-	for (const QModelIndex & index : selectedRows)
+	for (const QModelIndex & index : selectedRows)  // TODO: to utils
 		for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
 			if (!ui->mapDirView->isExpanded( currentIndex ))
 				ui->mapDirView->expand( currentIndex );
@@ -2118,6 +1914,8 @@ void MainWindow::toggleNoMusic( bool checked )
 
 void MainWindow::updatePresetCmdArgs( const QString & text )
 {
+	// TODO: macro
+
 	// update the current preset
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0 && !restoringPresetInProgress)
@@ -2220,21 +2018,6 @@ void MainWindow::refreshMapPacks()
 	// But when the directory is changed, the model and view needs to be reset.
 	QModelIndex newRootIdx = mapModel.setRootPath( mapSettings.dir );
 	ui->mapDirView->setRootIndex( newRootIdx );
-}
-
-QString MainWindow::getConfigDir() const
-{
-	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
-}
-
-QString MainWindow::getSaveDir() const
-{
-	QString alternativeSaveDir = ui->saveDirLine->text();
-	if (!alternativeSaveDir.isEmpty())  // if custom save dir is specified
-		return alternativeSaveDir;      // then use it
-	else                                // otherwise
-		return getConfigDir();          // use config dir
 }
 
 void MainWindow::updateConfigFilesFromDir()
@@ -2428,80 +2211,38 @@ void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringList > select
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  saving and loading user data entered into the launcher
+//  saving and loading user data
 
 bool MainWindow::saveOptions( const QString & filePath )
 {
-	QJsonObject jsRoot;
-
-	// this will be used to detect options created by older versions and supress "missing element" warnings
-	jsRoot["version"] = appVersion;
-
+	OptionsToSave opts =
 	{
-		QJsonObject jsGeometry;
+		// files
+		engineModel.list(),
+		iwadModel.list(),
 
-		const QRect & geometry = this->geometry();
-		jsGeometry["width"] = geometry.width();
-		jsGeometry["height"] = geometry.height();
+		// options
+		launchOpts,
+		gameOpts,
+		compatOpts,
+		videoOpts,
+		audioOpts,
+		globalOpts,
 
-		jsRoot["geometry"] = jsGeometry;
-	}
+		// presets
+		presetModel.list(),
+		getSelectedItemIndex( ui->presetListView ),
 
-	serialize( jsRoot, settings );
+		// global settings
+		iwadSettings,
+		mapSettings,
+		modSettings,
+		settings,
+		this->geometry()
+	};
 
-	{
-		QJsonObject jsEngines;
+	QString error = writeOptionsToFile( opts, filePath );
 
-		jsEngines["engines"] = serializeList( engineModel.list() );
-
-		jsRoot["engines"] = jsEngines;
-	}
-
-	{
-		QJsonObject jsIWADs = serialize( iwadSettings );
-
-		if (!iwadSettings.updateFromDir)
-			jsIWADs["IWADs"] = serializeList( iwadModel.list() );
-
-		jsRoot["IWADs"] = jsIWADs;
-	}
-
-	jsRoot["maps"] = serialize( mapSettings );
-
-	jsRoot["mods"] = serialize( modSettings );
-
-	{
-		QJsonArray jsPresetArray;
-		for (const Preset & preset : presetModel)
-		{
-			QJsonObject jsPreset = serialize( preset, settings );
-			jsPresetArray.append( jsPreset );
-		}
-		jsRoot["presets"] = jsPresetArray;
-	}
-
-	if (settings.launchOptsStorage == StoreGlobally)
-		jsRoot["launch_options"] = serialize( launchOpts );
-
-	if (settings.gameOptsStorage == StoreGlobally)
-		jsRoot["gameplay_options"] = serialize( gameOpts );
-
-	if (settings.compatOptsStorage == StoreGlobally)
-		jsRoot["compatibility_options"] = serialize( compatOpts );
-
-	jsRoot["video_options"] = serialize( videoOpts );
-
-	jsRoot["audio_options"] = serialize( audioOpts );
-
-	jsRoot["global_options"] = serialize( globalOpts );
-
-	int presetIdx = getSelectedItemIndex( ui->presetListView );
-	jsRoot["selected_preset"] = presetIdx >= 0 ? presetModel[ presetIdx ].name : "";
-
-	QJsonDocument jsonDoc( jsRoot );
-	QByteArray rawData = jsonDoc.toJson();
-
-	QString error = updateFile( filePath, rawData );
 	if (!error.isEmpty())
 	{
 		QMessageBox::warning( this, "Error saving options", error );
@@ -2511,44 +2252,57 @@ bool MainWindow::saveOptions( const QString & filePath )
 
 bool MainWindow::loadOptions( const QString & filePath )
 {
-	QFile file( filePath );
-	if (!file.open( QIODevice::ReadOnly ))
+	// Some options can be read directly into the class members using references,
+	// but the models can't, because the UI must be prepared for reseting its models first.
+	OptionsToLoad opts
 	{
-		QMessageBox::warning( this, "Error loading options",
-			"Could not open file "%filePath%" for reading: "%file.errorString() );
-		optionsCorrupted = true;
+		// files - load into intermediate storage
+		{},  // engines
+		{},  // IWADs
+
+		// options - load directly into this class members
+		launchOpts,
+		gameOpts,
+		compatOpts,
+		videoOpts,
+		audioOpts,
+		globalOpts,
+
+		// presets - read into intermediate storage
+		{},  // presets
+		{},  // selected preset
+
+		// global settings - load directly into this class members
+		iwadSettings,
+		mapSettings,
+		modSettings,
+		settings,
+		{}  // window geometry
+	};
+
+	QString error = readOptionsFromFile( opts, filePath );
+	if (!error.isEmpty())
+	{
+		QMessageBox::warning( this, "Error loading options", error );
+		if (QFileInfo::exists( filePath ))
+			optionsCorrupted = true;  // file exists but cannot be read, don't overwrite it, give user chance to fix it
 		return false;
 	}
 
-	QByteArray data = file.readAll();
+	restoreLoadedOptions( std::move(opts) );
 
-	QJsonParseError error;
-	QJsonDocument jsonDoc = QJsonDocument::fromJson( data, &error );
-	if (jsonDoc.isNull())
-	{
-		QMessageBox::warning( this, "Error loading options", "Loading options failed: "%error.errorString() );
-		optionsCorrupted = true;
-		return false;
-	}
+	optionsCorrupted = false;
+	return true;
+}
 
-	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
-	// we want to print a useful error message with information exactly which JSON element is broken.
-	JsonDocumentCtx jsonDocCtx( jsonDoc );
-	const JsonObjectCtx & jsRoot = jsonDocCtx.rootObject();
 
-	// detect that we are loading options from older versions so that we can supress "missing element" warnings
-	jsonDocCtx.toggleWarnings( false );  // read version with warnings disabled
-	QString version = jsRoot.getString( "version" );
-	if (!version.isEmpty() && compareVersions( version, appVersion ) >= 0)  // missing "version" means old version
-		jsonDocCtx.toggleWarnings( true );  // only re-enable warnings if the options are up to date
+//----------------------------------------------------------------------------------------------------------------------
+//  restoring stored options into the UI
 
-	if (JsonObjectCtx jsGeometry = jsRoot.getObject( "geometry" ))
-	{
-		int width = jsGeometry.getInt( "width", -1 );
-		int height = jsGeometry.getInt( "height", -1 );
-		if (width > 0 && height > 0)
-			this->resize( width, height );
-	}
+void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
+{
+	if (opts.geometry.width > 0 && opts.geometry.height > 0)
+		this->resize( opts.geometry.width, opts.geometry.height );
 
 	// Restoring any stored options is tricky.
 	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
@@ -2562,165 +2316,65 @@ bool MainWindow::loadOptions( const QString & filePath )
 	// preset must be deselected first, so that the cleared selections don't save in the selected preset
 	deselectAllAndUnsetCurrent( ui->presetListView );
 
-	// this must be loaded early, because we need to know whether to attempt loading the opts from the presets
-	deserialize( jsRoot, settings );
-	pathContext.toggleAbsolutePaths( settings.useAbsolutePaths );
-
-	if (JsonObjectCtx jsEngines = jsRoot.getObject( "engines" ))
+	// engines
 	{
 		ui->engineCmbBox->setCurrentIndex( -1 );  // if something is selected, this invokes the callback, which updates the dependent widgets
 
 		engineModel.startCompleteUpdate();
-
-		engineModel.clear();
-
-		if (JsonArrayCtx jsEngineArray = jsEngines.getArray( "engines" ))
-		{
-			for (int i = 0; i < jsEngineArray.size(); i++)
-			{
-				JsonObjectCtx jsEngine = jsEngineArray.getObject( i );
-				if (!jsEngine)  // wrong type on position i -> skip this entry
-					continue;
-
-				Engine engine;
-				deserialize( jsEngine, engine );
-
-				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
-					continue;
-
-				if (!verifyPath( engine.path, "An engine from the saved options (%1) no longer exists. It will be removed from the list." ))
-					continue;
-
-				engineModel.append( std::move( engine ) );
-			}
-		}
-
+		engineModel.assignList( std::move(opts.engines) );
 		engineModel.finishCompleteUpdate();
 	}
 
-	if (JsonObjectCtx jsIWADs = jsRoot.getObject( "IWADs" ))
+	// IWADs
 	{
 		deselectAllAndUnsetCurrent( ui->iwadListView );  // if something is selected, this invokes the callback, which updates the dependent widgets
 
-		iwadModel.startCompleteUpdate();
-
-		iwadModel.clear();
-
-		deserialize( jsIWADs, iwadSettings );
-
 		if (iwadSettings.updateFromDir)
 		{
-			verifyPath( iwadSettings.dir, "IWAD directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+			updateIWADsFromDir();  // populates the list from iwadSettings.dir
 		}
 		else
 		{
-			if (JsonArrayCtx jsIWADArray = jsIWADs.getArray( "IWADs" ))
-			{
-				for (int i = 0; i < jsIWADArray.size(); i++)
-				{
-					JsonObjectCtx jsIWAD = jsIWADArray.getObject( i );
-					if (!jsIWAD)  // wrong type on position i - skip this entry
-						continue;
-
-					IWAD iwad;
-					deserialize( jsIWAD, iwad );
-
-					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
-						continue;
-
-					if (!verifyPath( iwad.path, "An IWAD from the saved options (%1) no longer exists. It will be removed from the list." ))
-						continue;
-
-					iwadModel.append( std::move( iwad ) );
-				}
-			}
+			iwadModel.startCompleteUpdate();
+			iwadModel.assignList( std::move(opts.iwads) );
+			iwadModel.finishCompleteUpdate();
 		}
-
-		iwadModel.finishCompleteUpdate();
 	}
 
-	if (JsonObjectCtx jsMaps = jsRoot.getObject( "maps" ))
+	// maps
 	{
 		deselectAllAndUnsetCurrent( ui->mapDirView );
 
-		deserialize( jsMaps, mapSettings );
-
-		verifyPath( mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+		refreshMapPacks();  // populates the list from mapSettings.dir
 	}
 
-	if (JsonObjectCtx jsMods = jsRoot.getObject( "mods" ))
+	// mods
 	{
 		deselectAllAndUnsetCurrent( ui->modListView );
 
-		deserialize( jsMods, modSettings );
-
-		verifyPath( modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+		modModel.startCompleteUpdate();
+		modModel.clear();
+		// mods will be restored to the UI, when a preset is selected
+		modModel.finishCompleteUpdate();
 	}
 
-	if (JsonArrayCtx jsPresetArray = jsRoot.getArray( "presets" ))
+	// presets
 	{
 		deselectAllAndUnsetCurrent( ui->presetListView );  // this invokes the callback, which disables the dependent widgets
 
 		presetModel.startCompleteUpdate();
-
-		presetModel.clear();
-
-		for (int i = 0; i < jsPresetArray.size(); i++)
-		{
-			JsonObjectCtx jsPreset = jsPresetArray.getObject( i );
-			if (!jsPreset)  // wrong type on position i - skip this entry
-				continue;
-
-			Preset preset;
-			deserialize( jsPreset, preset, settings );
-
-			presetModel.append( std::move( preset ) );
-		}
-
+		presetModel.assignList( std::move(opts.presets) );
 		presetModel.finishCompleteUpdate();
 	}
-
-	// launch options
-	if (settings.launchOptsStorage == StoreToPreset)
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "launch_options" ))
-			deserialize( jsOptions, launchOpts );
-
-	if (settings.gameOptsStorage == StoreToPreset)
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "gameplay_options" ))
-			deserialize( jsOptions, gameOpts );
-
-	if (settings.compatOptsStorage == StoreToPreset)
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "compatibility_options" ))
-			deserialize( jsOptions, compatOpts );
-
-	if (JsonObjectCtx jsOptions = jsRoot.getObject( "video_options" ))
-		deserialize( jsOptions, videoOpts );
-
-	if (JsonObjectCtx jsOptions = jsRoot.getObject( "audio_options" ))
-		deserialize( jsOptions, audioOpts );
-
-	if (JsonObjectCtx jsOptions = jsRoot.getObject( "global_options" ))
-		deserialize( jsOptions, globalOpts );
 
 	// make sure all paths loaded from JSON are stored in correct format
 	toggleAbsolutePaths( settings.useAbsolutePaths );
 
-	optionsCorrupted = false;
-
-	file.close();
-
-	// update the lists from which the restored preset will select items
-	if (iwadSettings.updateFromDir)
-		updateIWADsFromDir();
-	refreshMapPacks();
-	// the rest of the lists will get updated when an engine is restored from a preset
-
 	// load the last selected preset
-	QString selectedPreset = jsRoot.getString( "selected_preset" );
-	if (!selectedPreset.isEmpty())
+	if (!opts.selectedPreset.isEmpty())
 	{
 		int selectedPresetIdx = findSuch( presetModel, [&]( const Preset & preset )
-		                                               { return preset.name == selectedPreset; } );
+		                                               { return preset.name == opts.selectedPreset; } );
 		if (selectedPresetIdx >= 0)
 		{
 			// This invokes the callback, which enables the dependent widgets and calls restorePreset(...)
@@ -2729,12 +2383,12 @@ bool MainWindow::loadOptions( const QString & filePath )
 		else
 		{
 			QMessageBox::warning( nullptr, "Preset no longer exists",
-				"Preset that was selected last time ("%selectedPreset%") no longer exists. Did you mess up with the options.json?" );
+				"Preset that was selected last time ("%opts.selectedPreset%") no longer exists. Did you mess up with the options.json?" );
 		}
 	}
 
 	// this must be done after the lists are already updated because we want to select existing items in combo boxes,
-	//               and after preset loading because the preset will select IWAD which will fill the map combo box
+	//               and after preset loading because the preset will select engine and IWAD which will fill some combo boxes
 	if (settings.launchOptsStorage == StoreGlobally)
 		restoreLaunchOptions( launchOpts );  // this clears items that are invalid
 
@@ -2753,8 +2407,213 @@ bool MainWindow::loadOptions( const QString & filePath )
 	restoringOptionsInProgress = false;
 
 	updateLaunchCommand();
+}
 
-	return true;
+void MainWindow::restorePreset( int presetIdx )
+{
+	// Restoring any stored options is tricky.
+	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
+	// causes the corresponding callbacks to be called which in turn might cause some other stored value to be changed.
+	// For example  ui->engineCmbBox->setCurrentIndex( idx )  calls  selectEngine( idx )  which might indirectly call
+	// selectConfig( idx )  which will overwrite the stored selected config and we will then restore a wrong one.
+	// The least complicated workaround seems to be simply setting a flag indicating that we are in the middle of
+	// restoring saved options, and then prevent storing values when this flag is set.
+
+	restoringPresetInProgress = true;
+
+	Preset & preset = presetModel[ presetIdx ];
+
+	// restore selected engine
+	{
+		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
+
+		ui->engineCmbBox->setCurrentIndex( -1 );
+
+		if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
+		{
+			int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
+												   { return engine.path == preset.selectedEnginePath; } );
+			if (engineIdx >= 0)
+			{
+				if (QFileInfo::exists( preset.selectedEnginePath ))
+				{
+					ui->engineCmbBox->setCurrentIndex( engineIdx );
+				}
+				else
+				{
+					QMessageBox::warning( this, "Engine no longer exists",
+						"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please update the engines at Menu -> Initial Setup." );
+				}
+			}
+			else
+			{
+				QMessageBox::warning( this, "Engine no longer exists",
+					"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list, please select another one." );
+				preset.selectedEnginePath.clear();
+			}
+		}
+
+		disableSelectionCallbacks = false;
+
+		// manually notify our class about the change, so that the preset and dependent widgets get updated
+		// This is needed before configs, saves and demos are restored, so that the entries are ready to be selected from.
+		selectEngine( ui->engineCmbBox->currentIndex() );
+	}
+
+	// restore selected config
+	{
+		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
+
+		ui->configCmbBox->setCurrentIndex( -1 );
+
+		if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
+		{
+			int configIdx = findSuch( configModel, [&]( const ConfigFile & config )
+												   { return config.fileName == preset.selectedConfig; } );
+			if (configIdx >= 0)
+			{
+				// No sense to verify if this config file exists, the configModel has just been updated during
+				// selectEngine( ui->engineCmbBox->currentIndex() ), so there are only existing entries.
+				ui->configCmbBox->setCurrentIndex( configIdx );
+			}
+			else
+			{
+				QMessageBox::warning( this, "Config no longer exists",
+					"Config file selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
+				preset.selectedConfig.clear();
+			}
+		}
+
+		disableSelectionCallbacks = false;
+
+		// manually notify our class about the change, so that the preset and dependent widgets get updated
+		selectConfig( ui->configCmbBox->currentIndex() );
+	}
+
+	// restore selected IWAD
+	{
+		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
+
+		deselectSelectedItems( ui->iwadListView );
+
+		if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
+		{
+			int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
+			if (iwadIdx >= 0)
+			{
+				if (QFileInfo::exists( preset.selectedIWAD ))
+				{
+					selectItemByIndex( ui->iwadListView, iwadIdx );
+				}
+				else
+				{
+					QMessageBox::warning( this, "IWAD no longer exists",
+						"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
+				}
+			}
+			else
+			{
+				QMessageBox::warning( this, "IWAD no longer exists",
+					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
+				preset.selectedIWAD.clear();
+			}
+		}
+
+		disableSelectionCallbacks = false;
+
+		// manually notify our class about the change, so that the preset and dependent widgets get updated
+		// This is needed before launch options are restored, so that the map names are ready to be selected.
+		toggleIWAD( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+	}
+
+	// restore selected MapPack
+	{
+		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
+
+		QDir mapRootDir = mapModel.rootDirectory();
+
+		deselectSelectedItems( ui->mapDirView );
+
+		const QList<QString> mapPacksCopy = preset.selectedMapPacks;  // TODO: format
+		preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
+		for (const QString & path : mapPacksCopy)
+		{
+			QModelIndex mapIdx = mapModel.index( path );
+			if (mapIdx.isValid() && isInsideDir( path, mapRootDir ))
+			{
+				if (QFileInfo::exists( path ))
+				{
+					preset.selectedMapPacks.append( path );  // put back only items that are valid
+					selectItemByIndex( ui->mapDirView, mapIdx );
+				}
+				else
+				{
+					QMessageBox::warning( this, "Map file no longer exists",
+						"Map file selected for this preset ("%path%") no longer exists." );
+				}
+			}
+			else
+			{
+				QMessageBox::warning( this, "Map file no longer exists",
+					"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")." );
+			}
+		}
+
+		disableSelectionCallbacks = false;
+
+		// manually notify our class about the change, so that the preset and dependent widgets get updated
+		// Because this updates the preset with selected items, only the valid ones will be stored and invalid removed.
+		toggleMapPack( ui->mapDirView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+	}
+
+	// restore list of mods
+	{
+		deselectSelectedItems( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
+
+		modModel.startCompleteUpdate();
+		const QList<Mod> modsCopy = preset.mods;
+		preset.mods.clear();  // clear the list in the preset and let it repopulate only with valid items
+		modModel.clear();
+		for (const Mod & mod : modsCopy)
+		{
+			if (mod.isSeparator || QFileInfo::exists( mod.path ))
+			{
+				preset.mods.append( mod );  // put back only items that are valid
+				modModel.append( mod );
+			}
+			else
+			{
+				QMessageBox::warning( this, "Mod no longer exists",
+					"A mod from the preset ("%mod.path%") no longer exists. It will be removed from the list." );
+			}
+		}
+		modModel.finishCompleteUpdate();
+	}
+
+	if (settings.launchOptsStorage == StoreToPreset)
+		restoreLaunchOptions( preset.launchOpts );  // this clears items that are invalid
+
+	if (settings.gameOptsStorage == StoreToPreset)
+		restoreGameplayOptions( preset.gameOpts );  // this clears items that are invalid
+
+	if (settings.compatOptsStorage == StoreToPreset)
+		restoreCompatibilityOptions( preset.compatOpts );  // this clears items that are invalid
+
+	restoreAlternativePaths( preset.altPaths );
+
+	// restore additional command line arguments
+	ui->presetCmdArgsLine->setText( preset.cmdArgs );
+
+	restoringPresetInProgress = false;
+
+	// if "Use preset name as directory" is enabled, overwrite the preset custom directories with its name
+	// do it with restoringInProgress == false to update the current preset with the new overwriten dirs.
+	if (globalOpts.usePresetNameAsDir)
+	{
+		setAltDirsRelativeToConfigs( preset.name );
+	}
+
+	updateLaunchCommand();
 }
 
 void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
@@ -2876,19 +2735,9 @@ void MainWindow::restoreGlobalOptions( GlobalOptions & opts )
 	ui->globalCmdArgsLine->setText( opts.cmdArgs );
 }
 
-LaunchMode MainWindow::getLaunchModeFromUI() const
-{
-	if (ui->launchMode_map->isChecked())
-		return LaunchMode::LaunchMap;
-	else if (ui->launchMode_savefile->isChecked())
-		return LaunchMode::LoadSave;
-	else if (ui->launchMode_recordDemo->isChecked())
-		return LaunchMode::RecordDemo;
-	else if (ui->launchMode_replayDemo->isChecked())
-		return LaunchMode::ReplayDemo;
-	else
-		return LaunchMode::Default;
-}
+
+//----------------------------------------------------------------------------------------------------------------------
+//  command export
 
 void MainWindow::exportPresetToScript()
 {
@@ -3069,7 +2918,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	const EngineProperties & engineProperties = getEngineProperties( selectedEngine.family );
 
 	{
-		throwIfInvalid( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
+		checkPath_exception( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
 
 		// Either the executable is in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
 		// in which case it should be (and sometimes must be) started directly by using only its name,
@@ -3092,7 +2941,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		{
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
-			throwIfInvalid( verifyPaths, configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
+			checkPath_exception( verifyPaths, configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
 			cmd.arguments << "-config" << base.rebaseAndQuotePath( configPath );
 		}
 	}
@@ -3100,7 +2949,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
 	{
-		throwIfInvalid( verifyPaths, iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please select another one." );
+		checkPath_exception( verifyPaths, iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
@@ -3109,7 +2958,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	const QStringList selectedMapPacks = getSelectedMapPacks();
 	for (const QString & mapFilePath : selectedMapPacks)
 	{
-		throwIfInvalid( verifyPaths, mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
+		checkPath_exception( verifyPaths, mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
 		if (suffix == "deh")
@@ -3125,7 +2974,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		if (mod.checked)
 		{
-			throwIfInvalid( verifyPaths, mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
+			checkPath_exception( verifyPaths, mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
 
 			QString suffix = QFileInfo( mod.path ).suffix().toLower();
 			if (suffix == "deh")
@@ -3155,7 +3004,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
 		QString savePath = getPathFromFileName( getSaveDir(), ui->saveFileCmbBox->currentText() );
-		throwIfInvalid( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
+		checkPath_exception( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
@@ -3167,7 +3016,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
 		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileCmbBox_replay->currentText() );
-		throwIfInvalid( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
+		checkPath_exception( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}
 
@@ -3287,7 +3136,7 @@ void MainWindow::launch()
 		// When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
 		cmd = generateLaunchCommand( engineDir, VerifyPaths, DontQuotePaths );
 	}
-	catch (const FileNotFound &)
+	catch (const FileOrDirNotFound &)
 	{
 		return;  // errors are already shown during the generation
 	}

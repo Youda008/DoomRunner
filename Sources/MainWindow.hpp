@@ -25,7 +25,8 @@
 
 class QItemSelection;
 class QComboBox;
-class QProcess;
+class QProcess;  // TODO
+class OptionsToLoad;
 
 namespace Ui {
 	class MainWindow;
@@ -143,10 +144,6 @@ class MainWindow : public QMainWindow {
 
  private: // methods
 
-	LaunchOptions & activeLaunchOptions();
-	GameplayOptions & activeGameplayOptions();
-	CompatibilityOptions & activeCompatOptions();
-
 	void setupPresetList();
 	void setupIWADList();
 	void setupMapPackList();
@@ -158,9 +155,25 @@ class MainWindow : public QMainWindow {
 
 	void setAltDirsRelativeToConfigs( const QString & dirName );
 
-	void restorePreset( int index );
+	void updateIWADsFromDir();
+	void refreshMapPacks();
+	void updateConfigFilesFromDir();
+	void updateSaveFilesFromDir();
+	void updateDemoFilesFromDir();
+	void updateCompatLevels();
+	void updateMapsFromSelectedWADs( std::optional< QStringList > selectedMapPacks = std::nullopt );
+
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();
+
+	void toggleSkillSubwidgets( bool enabled );
+	void toggleOptionsSubwidgets( bool enabled );
+
+	bool saveOptions( const QString & fileName );
+	bool loadOptions( const QString & fileName );
+
+	void restoreLoadedOptions( OptionsToLoad && opts );
+	void restorePreset( int index );
 
 	void restoreLaunchOptions( LaunchOptions & opts );
 	void restoreGameplayOptions( GameplayOptions & opts );
@@ -170,27 +183,6 @@ class MainWindow : public QMainWindow {
 	void restoreAudioOptions( AudioOptions & opts );
 	void restoreGlobalOptions( GlobalOptions & opts );
 
-	LaunchMode getLaunchModeFromUI() const;
-
-	QStringList getSelectedMapPacks() const;
-
-	QString getConfigDir() const;
-	QString getSaveDir() const;
-
-	void updateIWADsFromDir();
-	void refreshMapPacks();
-	void updateConfigFilesFromDir();
-	void updateSaveFilesFromDir();
-	void updateDemoFilesFromDir();
-	void updateCompatLevels();
-	void updateMapsFromSelectedWADs( std::optional< QStringList > selectedMapPacks = std::nullopt );
-
-	void toggleSkillSubwidgets( bool enabled );
-	void toggleOptionsSubwidgets( bool enabled );
-
-	bool saveOptions( const QString & fileName );
-	bool loadOptions( const QString & fileName );
-
 	struct ShellCommand
 	{
 		QString executable;
@@ -198,6 +190,19 @@ class MainWindow : public QMainWindow {
 	};
 	ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand( bool verifyPaths = false );
+
+ private: // MainWindow-specific utils
+
+	QStringList getSelectedMapPacks() const;
+
+	QString getConfigDir() const;
+	QString getSaveDir() const;
+
+	LaunchMode getLaunchModeFromUI() const;
+
+	LaunchOptions & activeLaunchOptions();
+	GameplayOptions & activeGameplayOptions();
+	CompatibilityOptions & activeCompatOptions();
 
  private: // internal members
 
@@ -216,6 +221,8 @@ class MainWindow : public QMainWindow {
 	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
+
+	QString optionsFilePath;
 
 	UpdateChecker updateChecker;
 
@@ -252,14 +259,14 @@ class MainWindow : public QMainWindow {
 	};
 	ReadOnlyListModel< DemoFile > demoModel;    ///< list of demo files found in pre-defined directory
 
-	ReadOnlyListModel< IWAD > iwadModel;    ///< user-ordered list of iwads (managed by SetupDialog)
 	IwadSettings iwadSettings;    ///< IWAD-related preferences (value returned by SetupDialog)
+	ReadOnlyListModel< IWAD > iwadModel;    ///< user-ordered list of iwads (managed by SetupDialog)
 
-	QFileSystemModel mapModel;  ///< model representing a directory with map files
 	MapSettings mapSettings;    ///< map-related preferences (value returned by SetupDialog)
+	QFileSystemModel mapModel;  ///< model representing a directory with map files
 
-	EditableListModel< Mod > modModel;
 	ModSettings modSettings;    ///< mod-related preferences (value returned by SetupDialog)
+	EditableListModel< Mod > modModel;
 
 	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 

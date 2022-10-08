@@ -17,7 +17,7 @@
 
 #include <QString>
 #include <QFileInfo>
-#include <QDir>
+#include <QRect>
 
 
 //======================================================================================================================
@@ -37,6 +37,9 @@
 
 // Constructors from QFileInfo are used in automatic list updates for initializing an element from a file-system entry.
 // getID methods are used in automatic list updates for ensuring the same items remain selected.
+
+//----------------------------------------------------------------------------------------------------------------------
+//  files
 
 /// a ported Doom engine (source port) located somewhere on the disc
 struct Engine : public EditableListModelItem
@@ -90,31 +93,8 @@ struct Mod : public EditableListModelItem
 		: path( file.filePath() ), fileName( file.fileName() ), checked( checked ) {}
 };
 
-struct IwadSettings
-{
-	QString dir;                  ///< directory to update IWAD list from (value returned by SetupDialog)
-	bool updateFromDir = false;   ///< whether the IWAD list should be periodically updated from a directory
-	bool searchSubdirs = false;   ///< whether to search for IWADs recursivelly in subdirectories
-};
-
-struct MapSettings
-{
-	QString dir;   ///< directory with map packs to automatically load the list from
-};
-
-struct ModSettings
-{
-	QString dir;   ///< directory with mods, starting dir for "Add mod" dialog
-};
-
-enum OptionsStorage
-{
-	DontStore,       ///< Everytime the launcher is closed and re-opened, the options are reset to defaults.
-	StoreGlobally,   ///< When the launcher is closed, current state of the options is saved. When it's re-opened, the options are loaded from the last saved state.
-	StoreToPreset,   ///< Options are stored to the currently selected preset. When a preset is selected, the options are loaded from the preset.
-};
-template<> inline const char * enumName< OptionsStorage >() { return "OptionsStorage"; }
-template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorage::StoreToPreset ) + 1; }
+//----------------------------------------------------------------------------------------------------------------------
+//  gameplay/compatibility options
 
 enum LaunchMode
 {
@@ -217,6 +197,9 @@ struct CompatibilityOptions
 	CompatibilityDetails details;
 };
 
+//----------------------------------------------------------------------------------------------------------------------
+//  other options
+
 struct AlternativePaths
 {
 	QString saveDir;
@@ -244,20 +227,25 @@ struct GlobalOptions
 	QString cmdArgs;
 };
 
+//----------------------------------------------------------------------------------------------------------------------
+//  preset
+
 struct Preset : public EditableListModelItem
 {
 	QString name;
+
 	QString selectedEnginePath;   // we store the engine by path, so that it does't break when user renames them or reorders them
 	QString selectedConfig;   // we store the config by name instead of index, so that it does't break when user reorders them
 	QString selectedIWAD;   // we store the IWAD by path instead of index, so that it doesn't break when user reorders them
 	QList< QString > selectedMapPacks;
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
-	QString cmdArgs;
 
 	LaunchOptions launchOpts;
 	GameplayOptions gameOpts;
 	CompatibilityOptions compatOpts;
 	AlternativePaths altPaths;
+
+	QString cmdArgs;
 
 	// requirements of EditableListModel
 	const QString & getEditString() const { return name; }
@@ -267,6 +255,35 @@ struct Preset : public EditableListModelItem
 	Preset( const QString & name ) : name( name ) {}
 	Preset( const QFileInfo & ) {}  // dummy, it's required by the EditableListModel template, but isn't actually used
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+//  global settings
+
+struct IwadSettings
+{
+	QString dir;                  ///< directory to update IWAD list from (value returned by SetupDialog)
+	bool updateFromDir = false;   ///< whether the IWAD list should be periodically updated from a directory
+	bool searchSubdirs = false;   ///< whether to search for IWADs recursivelly in subdirectories
+};
+
+struct MapSettings
+{
+	QString dir;   ///< directory with map packs to automatically load the list from
+};
+
+struct ModSettings
+{
+	QString dir;   ///< directory with mods, starting dir for "Add mod" dialog
+};
+
+enum OptionsStorage
+{
+	DontStore,       ///< Everytime the launcher is closed and re-opened, the options are reset to defaults.
+	StoreGlobally,   ///< When the launcher is closed, current state of the options is saved. When it's re-opened, the options are loaded from the last saved state.
+	StoreToPreset,   ///< Options are stored to the currently selected preset. When a preset is selected, the options are loaded from the preset.
+};
+template<> inline const char * enumName< OptionsStorage >() { return "OptionsStorage"; }
+template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorage::StoreToPreset ) + 1; }
 
 struct StorageSettings
 {
@@ -284,52 +301,14 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	bool showEngineOutput = showEngineOutputByDefault;
 };
 
-
-//======================================================================================================================
-//  data serialization
-
-QJsonObject serialize( const Engine & engine );
-QJsonObject serialize( const IWAD & iwad );
-QJsonObject serialize( const Mod & mod );
-QJsonObject serialize( const IwadSettings & iwadSettings );
-QJsonObject serialize( const MapSettings & mapSettings );
-QJsonObject serialize( const ModSettings & modSettings );
-QJsonObject serialize( const LaunchOptions & options );
-QJsonObject serialize( const GameplayOptions & options );
-QJsonObject serialize( const CompatibilityOptions & options );
-QJsonObject serialize( const AlternativePaths & options );
-QJsonObject serialize( const VideoOptions & options );
-QJsonObject serialize( const AudioOptions & options );
-QJsonObject serialize( const GlobalOptions & options );
-QJsonObject serialize( const Preset & preset, const StorageSettings & settings );
-void serialize( QJsonObject & jsSettings, const LauncherSettings & settings );
-
-template< typename Elem >
-QJsonArray serializeList( const QList< Elem > & list )
+struct WindowGeometry
 {
-	QJsonArray jsArray;
-	for (const Elem & elem : list)
-	{
-		jsArray.append( serialize( elem ) );
-	}
-	return jsArray;
-}
+	int width;
+	int height;
 
-void deserialize( const JsonObjectCtx & jsEngine, Engine & engine );
-void deserialize( const JsonObjectCtx & jsIWAD, IWAD & iwad );
-void deserialize( const JsonObjectCtx & jsMod, Mod & mod );
-void deserialize( const JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings );
-void deserialize( const JsonObjectCtx & jsMaps, MapSettings & mapSettings );
-void deserialize( const JsonObjectCtx & jsMods, ModSettings & modSettings );
-void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & options );
-void deserialize( const JsonObjectCtx & jsOptions, GameplayOptions & options );
-void deserialize( const JsonObjectCtx & jsOptions, CompatibilityOptions & options );
-void deserialize( const JsonObjectCtx & jsOptions, AlternativePaths & options );
-void deserialize( const JsonObjectCtx & jsOptions, VideoOptions & options );
-void deserialize( const JsonObjectCtx & jsOptions, AudioOptions & options );
-void deserialize( const JsonObjectCtx & jsOptions, GlobalOptions & options );
-void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const StorageSettings & settings );
-void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings );
+	WindowGeometry() {}
+	WindowGeometry( const QRect & rect ) : width( rect.width() ), height( rect.height() ) {}
+};
 
 
 #endif // USER_DATA_INCLUDED

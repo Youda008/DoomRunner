@@ -2,28 +2,28 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description:
+// Description: miscellaneous utilities that are needed in multiple places but don't belong anywhere else
 //======================================================================================================================
+
+#ifndef MISC_UTILS_INCLUDED
+#define MISC_UTILS_INCLUDED
+
 
 #include "Common.hpp"
 
-#include "MainWindow.hpp"
-
-#include <QApplication>
-#include <QDir>
+#include <QString>
 
 
 //======================================================================================================================
+//  path verification
 
-int main( int argc, char * argv [] )
+bool checkPath_MsgBox( const QString & path, const QString & errorMessage );
+
+class FileOrDirNotFound
 {
-	QApplication a( argc, argv );
+	public: QString path;
+};
+void checkPath_exception( bool doVerify, const QString & path, const QString & errorMessage );
 
-	// current dir needs to be set to the application's dir so that the app finds its files
-	// TODO: test if this can be deleted
-	//QDir::setCurrent( QApplication::applicationDirPath() );
 
-	MainWindow w;
-	w.show();
-	return a.exec();
-}
+#endif // MISC_UTILS_INCLUDED

@@ -15,6 +15,7 @@ class QModelIndex;
 
 #include <QString>
 #include <QStringBuilder>
+#include <QByteArray>
 #include <QDir>
 #include <QFileInfo>
 
@@ -180,11 +181,16 @@ inline bool createDirIfDoesntExist( const QString & dirPath )
 /// On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
 QString fixExePath( const QString & exePath );
 
-/// Safely updates a file in a way that prevents content loss in the event of unexpected OS shutdown.
-/** First saves the new content under a new name, then deletes the old file and then renames the new file to the old name. */
-QString updateFile( const QString & filePath, const QByteArray & newContent );
+/// Reads the whole content of a file into a byte array.
+/** Returns description of an error that might potentially happen, or empty string on success. */
+QString readWholeFile( const QString & filePath, QByteArray & dest );
 
-/// Opens a directory of a file in a new File Explorer window.
+/// Safely updates a file in a way that prevents content loss in the event of unexpected OS shutdown.
+/** First saves the new content under a new name, then deletes the old file and then renames the new file to the old name.
+  * Returns description of an error that might potentially happen, or empty string on success. */
+QString updateFileSafely( const QString & filePath, const QByteArray & newContent );
+
+/// Opens a directory of a file in a new File Explorer window.  TODO: move
 bool openFileLocation( const QString & filePath );
 
 /// Creates a file filter for the QFileDialog::getOpenFileNames.

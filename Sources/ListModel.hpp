@@ -157,6 +157,7 @@ class AListModel : public QAbstractListModel {
 	QList< Item > & list()                        { return itemList; }
 	const QList< Item > & list() const            { return itemList; }
 	void updateList( const QList< Item > & list ) { itemList = list; }
+	void assignList( QList< Item > && list )      { itemList = std::move(list); }
 
 	int count() const                             { return itemList.count(); }
 	int size() const                              { return itemList.size(); }

@@ -50,6 +50,7 @@ QString getAppDataDir()
 {
 	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
  #ifdef _WIN32
+	// TODO: check if writable
 	return QApplication::applicationDirPath();
  #else
 	return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );

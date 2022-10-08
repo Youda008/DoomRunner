@@ -55,7 +55,7 @@ static const EngineProperties engineFamilyProperties [] =
 };
 static_assert( std::size(engineFamilyProperties) == std::size(engineFamilyStrings), "Please update this table too" );
 
-static const QVector<QString> zdoomCompatLevels =
+static const QVector<QString> zdoomCompatLevels =  // TODO: format
 {
 	"0 - Default",        // All compatibility options are turned off.
 	"1 - Doom",           // Enables a set of options that should allow nearly all maps made for vanilla Doom to work in ZDoom:

@@ -29,7 +29,24 @@ QString fixExePath( const QString & exePath )
 	return exePath;
 }
 
-QString updateFile( const QString & filePath, const QByteArray & newContent )
+QString readWholeFile( const QString & filePath, QByteArray & dest )
+{
+	QFile file( filePath );
+	if (!file.open( QIODevice::ReadOnly ))
+	{
+		return "Could not open file "%filePath%" for reading: "%file.errorString();
+	}
+
+	dest = file.readAll();
+	if (file.error() != QFile::NoError)
+	{
+		return "Error occured while reading a file "%filePath%": "%file.errorString();
+	}
+
+	file.close();
+}
+
+QString updateFileSafely( const QString & filePath, const QByteArray & newContent )
 {
 	// Write to a different file than the original and after it's done and closed, replace the original with the new.
 	// This is done to prevent data loss, when the program (or OS) crashes during writing to drive.

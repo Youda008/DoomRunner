@@ -18,6 +18,25 @@
 
 //======================================================================================================================
 
+static bool tryToWriteFile( const QString & filePath )
+{
+	QFile file( filePath );
+	if (!file.open( QIODevice::WriteOnly ))
+	{
+		return false;
+	}
+	file.close();
+	file.remove();
+	return true;
+}
+
+bool isDirectoryWritable( const QString & dirPath )
+{
+	// Qt does not offer any reliable way to determine if we can write a file into a directory.
+	// This is the only working workaround.
+	return tryToWriteFile( getPathFromFileName( dirPath, "write_test.txt" ) );
+}
+
 QString fixExePath( const QString & exePath )
 {
  #ifndef _WIN32

@@ -56,7 +56,7 @@
 	static const QString scriptFileSuffix = "*.sh";
 #endif
 
-static constexpr char defaultOptionsFile [] = "options.json";
+static constexpr char defaultOptionsFileName [] = "options.json";
 
 static constexpr bool VerifyPaths = true;
 static constexpr bool DontVerifyPaths = false;
@@ -64,11 +64,6 @@ static constexpr bool DontVerifyPaths = false;
 
 //======================================================================================================================
 //  local helpers
-
-static QString getOptionsFilePath()
-{
-	return QDir( getAppDataDir() ).filePath( defaultOptionsFile );
-}
 
 static bool verifyPath( const QString & path, const QString & errorMessage )
 {
@@ -180,6 +175,8 @@ MainWindow::MainWindow()
 	ui->setupUi( this );
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
+
+	optionsFilePath = getPathFromFileName( getAppDataDir(), defaultOptionsFileName );
 
 	// setup main menu actions
 
@@ -454,7 +451,7 @@ void MainWindow::onWindowShown()
 	}
 
 	// try to load last saved state
-	QString optionsFilePath = appDataDir.filePath( defaultOptionsFile );
+	QString optionsFilePath = appDataDir.filePath( defaultOptionsFileName );
 	if (QFileInfo::exists( optionsFilePath ))
 	{
 		loadOptions( optionsFilePath );
@@ -518,14 +515,14 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 	if (tickCount % 60 == 0)
 	{
 		if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
-			saveOptions( getOptionsFilePath() );
+			saveOptions( optionsFilePath );
 	}
 }
 
 void MainWindow::closeEvent( QCloseEvent * event )
 {
 	if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
-		saveOptions( getOptionsFilePath() );
+		saveOptions( optionsFilePath );
 
 	QMainWindow::closeEvent( event );
 }

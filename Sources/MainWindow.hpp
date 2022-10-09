@@ -198,6 +198,8 @@ class MainWindow : public QMainWindow {
 
 	uint tickCount;
 
+	QString optionsFilePath;
+
 	bool optionsCorrupted;  ///< true when was a critical error during parsing of options file, such content should not be saved
 
 	bool disableSelectionCallbacks;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()

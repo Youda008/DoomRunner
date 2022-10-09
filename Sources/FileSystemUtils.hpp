@@ -177,6 +177,9 @@ inline bool createDirIfDoesntExist( const QString & dirPath )
 	return QDir( dirPath ).mkpath(".");
 }
 
+/// Returns if it's possible to write files into a directory.
+bool isDirectoryWritable( const QString & dirPath );
+
 /// On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
 QString fixExePath( const QString & exePath );
 

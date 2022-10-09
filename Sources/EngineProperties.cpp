@@ -19,7 +19,7 @@
 static const char * const engineFamilyStrings [] =
 {
 	"ZDoom",
-	"Boom",
+	"PrBoom",
 	"ChocolateDoom",
 };
 static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd), "Please update this table too" );
@@ -33,15 +33,13 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 	{ "qzdoom",          EngineFamily::ZDoom },
 	{ "skulltag",        EngineFamily::ZDoom },
 	{ "zandronum",       EngineFamily::ZDoom },
-	{ "boom",            EngineFamily::Boom },
-	{ "prboom",          EngineFamily::Boom },
-	{ "prboom-plus",     EngineFamily::Boom },
-	{ "glboom",          EngineFamily::Boom },
-	{ "mbf",             EngineFamily::Boom },
-	{ "smmu",            EngineFamily::Boom },
-	{ "eternity",        EngineFamily::Boom },
-	{ "dsda-doom",       EngineFamily::Boom },
-	{ "woof",            EngineFamily::Boom },
+	{ "prboom",          EngineFamily::PrBoom },
+	{ "prboom-plus",     EngineFamily::PrBoom },
+	{ "glboom",          EngineFamily::PrBoom },
+	{ "smmu",            EngineFamily::PrBoom },
+	{ "eternity",        EngineFamily::PrBoom },
+	{ "dsda-doom",       EngineFamily::PrBoom },
+	{ "woof",            EngineFamily::PrBoom },
 	{ "chocolate-doom",  EngineFamily::ChocolateDoom },
 	{ "crispy-doom",     EngineFamily::ChocolateDoom },
 	{ "doomretro",       EngineFamily::ChocolateDoom },
@@ -50,7 +48,7 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 static const EngineProperties engineFamilyProperties [] =
 {
 	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom, "-savedir" },
-	/*Boom*/      { MapParamStyle::Warp, CompatLevelStyle::Boom,  "-save" },
+	/*PrBoom*/    { MapParamStyle::Warp, CompatLevelStyle::Boom,  "-save" },
 	/*Chocolate*/ { MapParamStyle::Warp, CompatLevelStyle::None,  "-savedir" },
 };
 static_assert( std::size(engineFamilyProperties) == std::size(engineFamilyStrings), "Please update this table too" );

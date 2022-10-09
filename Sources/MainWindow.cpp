@@ -934,10 +934,10 @@ void MainWindow::selectEngine( int index )
 
 	if (index >= 0)
 	{
+		checkPath_MsgBox( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
+
 		const EngineProperties & properties = getEngineProperties( engineModel[ index ].family );
 		mapParamStyle = properties.mapParamStyle;
-
-		checkPath_MsgBox( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
 	}
 
 	ui->mapCmbBox->setEditable( mapParamStyle == MapParamStyle::Map );
@@ -1824,7 +1824,12 @@ void MainWindow::setAltDirsRelativeToConfigs( const QString & dirName )
 		QString dirPath = getPathFromFileName( engineModel[ selectedEngineIdx ].configDir, dirName );
 
 		ui->saveDirLine->setText( dirPath );
-		ui->screenshotDirLine->setText( dirPath );
+		// Do not set screenshot_dir for engines that don't support it,
+		// some of them are bitchy and won't start if you supply them with unknown command line parameter.
+		if (getEngineProperties( engineModel[ selectedEngineIdx ].family ).hasScreenshotDirParam)
+			ui->screenshotDirLine->setText( dirPath );
+		else
+			ui->screenshotDirLine->clear();
 	}
 }
 
@@ -2939,7 +2944,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.
 	#ifdef _WIN32
-		if (settings.showEngineOutput)
+		if (settings.showEngineOutput && engineProperties.hasStdoutParam)
 			cmd.arguments << "-stdout";
 	#endif
 

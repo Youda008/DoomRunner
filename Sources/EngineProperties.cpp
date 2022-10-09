@@ -47,9 +47,9 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 
 static const EngineProperties engineFamilyProperties [] =
 {
-	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom, "-savedir" },
-	/*PrBoom*/    { MapParamStyle::Warp, CompatLevelStyle::Boom,  "-save" },
-	/*Chocolate*/ { MapParamStyle::Warp, CompatLevelStyle::None,  "-savedir" },
+	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom, "-savedir", true,  true },
+	/*PrBoom*/    { MapParamStyle::Warp, CompatLevelStyle::Boom,  "-save",    false, false },
+	/*Chocolate*/ { MapParamStyle::Warp, CompatLevelStyle::None,  "-savedir", false, false },
 };
 static_assert( std::size(engineFamilyProperties) == std::size(engineFamilyStrings), "Please update this table too" );
 

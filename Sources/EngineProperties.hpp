@@ -44,7 +44,7 @@ QStringList getCompatLevelArgs( const QString & executableName, CompatLevelStyle
 enum class EngineFamily
 {
 	ZDoom,
-	Boom,
+	PrBoom,
 	ChocolateDoom,
 
 	_EnumEnd  ///< indicates an error

@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="filesTab">
        <attribute name="title">
@@ -858,7 +858,7 @@
                   </sizepolicy>
                  </property>
                  <property name="toolTip">
-                  <string>Sets the dmflags CVAR so that monsters are not spawned on levels.</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-nomonsters&lt;br/&gt;&lt;/span&gt;Sets the dmflags CVAR so that monsters are not spawned on levels.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>No monsters</string>
@@ -874,7 +874,7 @@
                   </sizepolicy>
                  </property>
                  <property name="toolTip">
-                  <string>Sets the dmflags CVAR to make the monsters as fast as in Nightmare mode even if you are not playing Nightmare.</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-fast&lt;/span&gt;&lt;br/&gt;Sets the dmflags CVAR to make the monsters as fast as in Nightmare mode even if you are not playing Nightmare.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Fast monsters</string>
@@ -890,7 +890,7 @@
                   </sizepolicy>
                  </property>
                  <property name="toolTip">
-                  <string>Sets the dmflags CVAR so that monsters respawn even if you are not playing at Nightmare difficulty.</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-respawn&lt;/span&gt;&lt;br/&gt;Sets the dmflags CVAR so that monsters respawn even if you are not playing at Nightmare difficulty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Monsters respawn</string>
@@ -911,7 +911,7 @@
                <item>
                 <widget class="QCheckBox" name="allowCheatsChkBox">
                  <property name="toolTip">
-                  <string>When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &quot;disablecheats&quot; property, as well as network games; however, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+sv_cheats&lt;br/&gt;&lt;/span&gt;When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &amp;quot;disablecheats&amp;quot; property, as well as network games; however, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Force allow cheats</string>
@@ -933,6 +933,9 @@
               <layout class="QHBoxLayout" name="horizontalLayout_32">
                <item>
                 <widget class="QLabel" name="compatLevelLabel">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;either &lt;span style=&quot; font-weight:600;&quot;&gt;-complevel&lt;/span&gt; or &lt;span style=&quot; font-weight:600;&quot;&gt;+compatmode&lt;/span&gt; depending on the engine&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Compatibility level</string>
                  </property>
@@ -1057,6 +1060,9 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
                    <property name="text">
                     <string>Game mode</string>
                    </property>
@@ -1109,6 +1115,9 @@
                  </item>
                  <item>
                   <widget class="QLabel" name="fragLimitLabel">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the fraglimit is non-zero, the game will automatically advance to the next level once anyone gets this many frags. (Deathmatch only)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
                    <property name="text">
                     <string>Frag limit</string>
                    </property>
@@ -1358,9 +1367,6 @@
                      <property name="enabled">
                       <bool>false</bool>
                      </property>
-                     <property name="toolTip">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Controls how much damage players can do to their teammates. This is multiplied to the normal damage done, so a value of 0 means that players cannot hurt their teammates. A value of 1 means that players deal full damage to their teammates. You can also set this to values greater than 1 to deal extra punishment to your teammates.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
@@ -1393,9 +1399,6 @@
                     <widget class="QSpinBox" name="timeLimitSpinBox">
                      <property name="enabled">
                       <bool>false</bool>
-                     </property>
-                     <property name="toolTip">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When the time limit is non-zero, the game will automatically advance to the next level after this many minutes have elapsed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1474,6 +1477,9 @@
               <layout class="QHBoxLayout" name="horizontalLayout_25">
                <item>
                 <widget class="QLabel" name="saveDirLabel">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-savedir &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;path&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;&lt;br/&gt;&lt;/span&gt;Specifies an alternate directory to use for saved files. If this is not specified, ZDoom stores them in the directory indicated by the save_dir CVAR.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Save dir</string>
                  </property>
@@ -1505,6 +1511,9 @@
               <layout class="QHBoxLayout" name="horizontalLayout_26">
                <item>
                 <widget class="QLabel" name="screenshotDirLabel">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+screenshot_dir &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;path&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;&lt;br/&gt;&lt;/span&gt;This is the directory where screenshots will be saved if you do not provide a filename to the screenshot command. If this is unspecified (i.e. you leave it at its default), screenshots will be saved to the current working directory. Either an absolute path or a path relative to the current working directory can be used. The -shotdir parameter overrides it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Screenshot dir</string>
                  </property>
@@ -1570,7 +1579,7 @@
                <item>
                 <widget class="QLabel" name="monitorLabel">
                  <property name="toolTip">
-                  <string>Defines which screen is used if multiple monitors are available.</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+vid_adapter&lt;br/&gt;&lt;/span&gt;Defines which screen is used if multiple monitors are available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Monitor</string>
@@ -1601,6 +1610,9 @@
               <layout class="QHBoxLayout" name="horizontalLayout_21">
                <item>
                 <widget class="QLabel" name="resolutionLabel">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-width &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;x&lt;br/&gt;&lt;/span&gt;&lt;a name=&quot;height&quot;/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;height &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;y&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;&lt;br/&gt;&lt;/span&gt;Specifies the desired resolution of the screen. If only one of -width or -height is specified, ZDoom will try to guess the other one based on a standard aspect ratio. If the specified resolution is not supported by your SDL/DirectDraw drivers, ZDoom will try various resolutions until it either finds one that works, or it will finally give up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Resolution</string>
                  </property>
@@ -1681,6 +1693,9 @@
              </item>
              <item>
               <widget class="QCheckBox" name="showFpsChkBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+vid_fps&lt;br/&gt;&lt;/span&gt;When true, displays the average framerate over the past second in the upper-right corner of the screen. Because the Doom engine's internal game rate and frame rate are linked, the framerate will never be (much) above 35 fps if cl_capfps is true.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
                 <string>Show FPS</string>
                </property>
@@ -1698,7 +1713,7 @@
              <item>
               <widget class="QCheckBox" name="noSoundChkBox">
                <property name="toolTip">
-                <string>Disables both music and sound effects.</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-nosound&lt;/span&gt;&lt;br/&gt;Disables both music and sound effects.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>No sound (SFX + music)</string>
@@ -1708,7 +1723,7 @@
              <item>
               <widget class="QCheckBox" name="noSfxChkBox">
                <property name="toolTip">
-                <string>Prevents the playback of sound effects.</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-nosfx&lt;/span&gt;&lt;br/&gt;Prevents the playback of sound effects.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>No SFX</string>
@@ -1718,7 +1733,7 @@
              <item>
               <widget class="QCheckBox" name="noMusicChkBox">
                <property name="toolTip">
-                <string>Prevents the playback of music.</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-nomusic&lt;/span&gt;&lt;br/&gt;Prevents the playback of music.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>No music</string>

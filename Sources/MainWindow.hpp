@@ -177,7 +177,7 @@ class MainWindow : public QMainWindow {
 	void restoreLoadedOptions( OptionsToLoad && opts );
 	void restorePreset( int index );
 
-	void restoreLaunchOptions( LaunchOptions & opts );
+	void restoreLaunchAndMultOptions( LaunchOptions & launchOpts, MultiplayerOptions & multOpts );
 	void restoreGameplayOptions( GameplayOptions & opts );
 	void restoreCompatibilityOptions( CompatibilityOptions & opts );
 	void restoreAlternativePaths( AlternativePaths & opts );
@@ -203,6 +203,7 @@ class MainWindow : public QMainWindow {
 	LaunchMode getLaunchModeFromUI() const;
 
 	LaunchOptions & activeLaunchOptions();
+	MultiplayerOptions & activeMultiplayerOptions();
 	GameplayOptions & activeGameplayOptions();
 	CompatibilityOptions & activeCompatOptions();
 
@@ -273,6 +274,7 @@ class MainWindow : public QMainWindow {
 	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 
 	LaunchOptions launchOpts;
+	MultiplayerOptions multOpts;
 	GameplayOptions gameOpts;
 	CompatibilityOptions compatOpts;
 	VideoOptions videoOpts;

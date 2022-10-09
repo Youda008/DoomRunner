@@ -148,15 +148,16 @@ template<> inline uint enumSize< GameMode >() { return uint( GameMode::Cooperati
 
 struct LaunchOptions
 {
-	// launch mode
 	LaunchMode mode = Default;
 	QString mapName;
 	QString saveFile;
 	QString mapName_demo;
 	QString demoFile_record;
 	QString demoFile_replay;
+};
 
-	// multiplayer  TODO: split
+struct MultiplayerOptions
+{
 	bool isMultiplayer = false;
 	MultRole multRole = Server;
 	QString hostName;
@@ -241,6 +242,7 @@ struct Preset : public EditableListModelItem
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 
 	LaunchOptions launchOpts;
+	MultiplayerOptions multOpts;
 	GameplayOptions gameOpts;
 	CompatibilityOptions compatOpts;
 	AlternativePaths altPaths;
@@ -287,7 +289,7 @@ template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorag
 
 struct StorageSettings
 {
-	OptionsStorage launchOptsStorage = StoreGlobally;
+	OptionsStorage launchOptsStorage = StoreGlobally;  ///< controls both LaunchOptions and MultiplayerOptions, since they are heavily tied together
 	OptionsStorage gameOptsStorage = StoreGlobally;
 	OptionsStorage compatOptsStorage = StoreToPreset;
 };

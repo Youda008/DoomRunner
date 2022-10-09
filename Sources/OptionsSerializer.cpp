@@ -211,7 +211,6 @@ static QJsonObject serialize( const LaunchOptions & opts )
 {
 	QJsonObject jsOptions;
 
-	// launch mode
 	jsOptions["launch_mode"] = int( opts.mode );
 	jsOptions["map_name"] = opts.mapName;
 	jsOptions["save_file"] = opts.saveFile;
@@ -219,7 +218,23 @@ static QJsonObject serialize( const LaunchOptions & opts )
 	jsOptions["demo_file_record"] = opts.demoFile_record;
 	jsOptions["demo_file_replay"] = opts.demoFile_replay;
 
-	// multiplayer
+	return jsOptions;
+}
+
+static void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & opts )
+{
+	opts.mode = jsOptions.getEnum< LaunchMode >( "launch_mode", opts.mode );
+	opts.mapName = jsOptions.getString( "map_name", opts.mapName );
+	opts.saveFile = jsOptions.getString( "save_file", opts.saveFile );
+	opts.mapName_demo = jsOptions.getString( "map_name_demo", opts.mapName_demo );
+	opts.demoFile_record = jsOptions.getString( "demo_file_record", opts.demoFile_record );
+	opts.demoFile_replay = jsOptions.getString( "demo_file_replay", opts.demoFile_replay );
+}
+
+static QJsonObject serialize( const MultiplayerOptions & opts )
+{
+	QJsonObject jsOptions;
+
 	jsOptions["is_multiplayer"] = opts.isMultiplayer;
 	jsOptions["mult_role"] = int( opts.multRole );
 	jsOptions["host_name"] = opts.hostName;
@@ -234,17 +249,8 @@ static QJsonObject serialize( const LaunchOptions & opts )
 	return jsOptions;
 }
 
-static void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & opts )
+static void deserialize( const JsonObjectCtx & jsOptions, MultiplayerOptions & opts )
 {
-	// launch mode
-	opts.mode = jsOptions.getEnum< LaunchMode >( "launch_mode", opts.mode );
-	opts.mapName = jsOptions.getString( "map_name", opts.mapName );
-	opts.saveFile = jsOptions.getString( "save_file", opts.saveFile );
-	opts.mapName_demo = jsOptions.getString( "map_name_demo", opts.mapName_demo );
-	opts.demoFile_record = jsOptions.getString( "demo_file_record", opts.demoFile_record );
-	opts.demoFile_replay = jsOptions.getString( "demo_file_replay", opts.demoFile_replay );
-
-	// multiplayer
 	opts.isMultiplayer = jsOptions.getBool( "is_multiplayer", opts.isMultiplayer );
 	opts.multRole = jsOptions.getEnum< MultRole >( "mult_role", opts.multRole );
 	opts.hostName = jsOptions.getString( "host_name", opts.hostName );
@@ -398,6 +404,9 @@ static QJsonObject serialize( const Preset & preset, const StorageSettings & set
 	if (settings.launchOptsStorage == StoreToPreset)
 		jsPreset["launch_options"] = serialize( preset.launchOpts );
 
+	if (settings.launchOptsStorage == StoreToPreset)
+		jsPreset["multiplayer_options"] = serialize( preset.multOpts );
+
 	if (settings.gameOptsStorage == StoreToPreset)
 		jsPreset["gameplay_options"] = serialize( preset.gameOpts );
 
@@ -462,6 +471,10 @@ static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const 
 	if (settings.launchOptsStorage == StoreToPreset)
 		if (JsonObjectCtx jsOptions = jsPreset.getObject( "launch_options" ))
 			deserialize( jsOptions, preset.launchOpts );
+
+	if (settings.launchOptsStorage == StoreToPreset)
+		if (JsonObjectCtx jsOptions = jsPreset.getObject( "multiplayer_options" ))
+			deserialize( jsOptions, preset.multOpts );
 
 	if (settings.gameOptsStorage == StoreToPreset)
 		if (JsonObjectCtx jsOptions = jsPreset.getObject( "gameplay_options" ))
@@ -562,6 +575,9 @@ static void serializeOptionsToJson( const OptionsToSave & opts, QJsonObject & js
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
 		jsOpts["launch_options"] = serialize( opts.launchOpts );
+
+	if (opts.settings.launchOptsStorage == StoreGlobally)
+		jsOpts["multiplayer_options"] = serialize( opts.multOpts );
 
 	if (opts.settings.gameOptsStorage == StoreGlobally)
 		jsOpts["gameplay_options"] = serialize( opts.gameOpts );
@@ -688,6 +704,10 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 	if (opts.settings.launchOptsStorage == StoreGlobally)
 		if (JsonObjectCtx jsOptions = jsOpts.getObject( "launch_options" ))
 			deserialize( jsOptions, opts.launchOpts );
+
+	if (opts.settings.launchOptsStorage == StoreGlobally)
+		if (JsonObjectCtx jsOptions = jsOpts.getObject( "multiplayer_options" ))
+			deserialize( jsOptions, opts.multOpts );
 
 	if (opts.settings.gameOptsStorage == StoreGlobally)
 		if (JsonObjectCtx jsOptions = jsOpts.getObject( "gameplay_options" ))

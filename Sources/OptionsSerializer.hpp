@@ -29,6 +29,7 @@ struct OptionsToSave
 
 	// options
 	const LaunchOptions & launchOpts;
+	const MultiplayerOptions & multOpts;
 	const GameplayOptions & gameOpts;
 	const CompatibilityOptions & compatOpts;
 	const VideoOptions & videoOpts;
@@ -55,6 +56,7 @@ struct OptionsToLoad
 
 	// options
 	LaunchOptions & launchOpts;
+	MultiplayerOptions & multOpts;
 	GameplayOptions & gameOpts;
 	CompatibilityOptions & compatOpts;
 	VideoOptions & videoOpts;

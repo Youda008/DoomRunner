@@ -129,6 +129,22 @@ LaunchOptions & MainWindow::activeLaunchOptions()
 	return launchOpts;
 }
 
+MultiplayerOptions & MainWindow::activeMultiplayerOptions()
+{
+	if (settings.launchOptsStorage == StoreToPreset)
+	{
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+		{
+			return presetModel[ selectedPresetIdx ].multOpts;
+		}
+	}
+
+	// We always have to save somewhere, because generateLaunchCommand() might read stored values from it.
+	// In case the optsStorage == DontStore, we will just skip serializing it to JSON.
+	return multOpts;
+}
+
 GameplayOptions & MainWindow::activeGameplayOptions()
 {
 	if (settings.gameOptsStorage == StoreToPreset)
@@ -209,6 +225,11 @@ CompatibilityOptions & MainWindow::activeCompatOptions()
 #define STORE_LAUNCH_OPTION( structMember, value ) \
 {\
 	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.launchOptsStorage, activeLaunchOptions(), structMember, value ) \
+}
+
+#define STORE_MULT_OPTION( structMember, value ) \
+{\
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.launchOptsStorage, activeMultiplayerOptions(), structMember, value ) \
 }
 
 #define STORE_GAMEPLAY_OPTION( structMember, value ) \
@@ -1639,7 +1660,7 @@ void MainWindow::selectCompatLevel( int compatLevel )
 
 void MainWindow::toggleMultiplayer( bool checked )
 {
-	STORE_LAUNCH_OPTION( isMultiplayer, checked )
+	STORE_MULT_OPTION( isMultiplayer, checked )
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -1686,7 +1707,7 @@ void MainWindow::toggleMultiplayer( bool checked )
 
 void MainWindow::selectMultRole( int role )
 {
-	STORE_LAUNCH_OPTION( multRole, MultRole( role ) )
+	STORE_MULT_OPTION( multRole, MultRole( role ) )
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -1717,28 +1738,28 @@ void MainWindow::selectMultRole( int role )
 
 void MainWindow::changeHost( const QString & hostName )
 {
-	STORE_LAUNCH_OPTION( hostName, hostName )
+	STORE_MULT_OPTION( hostName, hostName )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changePort( int port )
 {
-	STORE_LAUNCH_OPTION( port, uint16_t( port ) )
+	STORE_MULT_OPTION( port, uint16_t( port ) )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectNetMode( int netMode )
 {
-	STORE_LAUNCH_OPTION( netMode, NetMode( netMode ) )
+	STORE_MULT_OPTION( netMode, NetMode( netMode ) )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::selectGameMode( int gameMode )
 {
-	STORE_LAUNCH_OPTION( gameMode, GameMode( gameMode ) )
+	STORE_MULT_OPTION( gameMode, GameMode( gameMode ) )
 
 	bool multEnabled = ui->multiplayerChkBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
@@ -1754,28 +1775,28 @@ void MainWindow::selectGameMode( int gameMode )
 
 void MainWindow::changePlayerCount( int count )
 {
-	STORE_LAUNCH_OPTION( playerCount, uint( count ) )
+	STORE_MULT_OPTION( playerCount, uint( count ) )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTeamDamage( double damage )
 {
-	STORE_LAUNCH_OPTION( teamDamage, damage )
+	STORE_MULT_OPTION( teamDamage, damage )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTimeLimit( int timeLimit )
 {
-	STORE_LAUNCH_OPTION( timeLimit, uint( timeLimit ) )
+	STORE_MULT_OPTION( timeLimit, uint( timeLimit ) )
 
 	updateLaunchCommand();
 }
 
 void MainWindow::changeFragLimit( int fragLimit )
 {
-	STORE_LAUNCH_OPTION( fragLimit, uint( fragLimit ) )
+	STORE_MULT_OPTION( fragLimit, uint( fragLimit ) )
 
 	updateLaunchCommand();
 }
@@ -2229,6 +2250,7 @@ bool MainWindow::saveOptions( const QString & filePath )
 
 		// options
 		launchOpts,
+		multOpts,
 		gameOpts,
 		compatOpts,
 		videoOpts,
@@ -2268,6 +2290,7 @@ bool MainWindow::loadOptions( const QString & filePath )
 
 		// options - load directly into this class members
 		launchOpts,
+		multOpts,
 		gameOpts,
 		compatOpts,
 		videoOpts,
@@ -2396,7 +2419,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	// this must be done after the lists are already updated because we want to select existing items in combo boxes,
 	//               and after preset loading because the preset will select engine and IWAD which will fill some combo boxes
 	if (settings.launchOptsStorage == StoreGlobally)
-		restoreLaunchOptions( launchOpts );  // this clears items that are invalid
+		restoreLaunchAndMultOptions( launchOpts, multOpts );  // this clears items that are invalid
 
 	if (settings.gameOptsStorage == StoreGlobally)
 		restoreGameplayOptions( gameOpts );  // this clears items that are invalid
@@ -2597,7 +2620,7 @@ void MainWindow::restorePreset( int presetIdx )
 	}
 
 	if (settings.launchOptsStorage == StoreToPreset)
-		restoreLaunchOptions( preset.launchOpts );  // this clears items that are invalid
+		restoreLaunchAndMultOptions( preset.launchOpts, preset.multOpts );  // this clears items that are invalid
 
 	if (settings.gameOptsStorage == StoreToPreset)
 		restoreGameplayOptions( preset.gameOpts );  // this clears items that are invalid
@@ -2622,10 +2645,10 @@ void MainWindow::restorePreset( int presetIdx )
 	updateLaunchCommand();
 }
 
-void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
+void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, MultiplayerOptions & multOpts )
 {
 	// launch mode
-	switch (opts.mode)
+	switch (launchOpts.mode)
 	{
 	 case LaunchMode::LaunchMap:
 		ui->launchMode_map->click();
@@ -2645,11 +2668,11 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 	}
 
 	// details of launch mode
-	ui->mapCmbBox->setCurrentIndex( ui->mapCmbBox->findText( opts.mapName ) );
-	if (!opts.saveFile.isEmpty())
+	ui->mapCmbBox->setCurrentIndex( ui->mapCmbBox->findText( launchOpts.mapName ) );
+	if (!launchOpts.saveFile.isEmpty())
 	{
 		int saveFileIdx = findSuch( saveModel, [&]( const SaveFile & save )
-		                                       { return save.fileName == opts.saveFile; } );
+		                                       { return save.fileName == launchOpts.saveFile; } );
 		if (saveFileIdx >= 0)
 		{
 			ui->saveFileCmbBox->setCurrentIndex( saveFileIdx );
@@ -2657,17 +2680,17 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 		else
 		{
 			QMessageBox::warning( this, "Save file no longer exists",
-				"Save file \""%opts.saveFile%"\" no longer exists, please select another one." );
+				"Save file \""%launchOpts.saveFile%"\" no longer exists, please select another one." );
 			ui->saveFileCmbBox->setCurrentIndex( -1 );
-			opts.saveFile.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
+			launchOpts.saveFile.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
 		}
 	}
-	ui->mapCmbBox_demo->setCurrentIndex( ui->mapCmbBox_demo->findText( opts.mapName_demo ) );
-	ui->demoFileLine_record->setText( opts.demoFile_record );
-	if (!opts.demoFile_replay.isEmpty())
+	ui->mapCmbBox_demo->setCurrentIndex( ui->mapCmbBox_demo->findText( launchOpts.mapName_demo ) );
+	ui->demoFileLine_record->setText( launchOpts.demoFile_record );
+	if (!launchOpts.demoFile_replay.isEmpty())
 	{
 		int demoFileIdx = findSuch( demoModel, [&]( const DemoFile & demo )
-		                                       { return demo.fileName == opts.demoFile_replay; } );
+		                                       { return demo.fileName == launchOpts.demoFile_replay; } );
 		if (demoFileIdx >= 0)
 		{
 			ui->demoFileCmbBox_replay->setCurrentIndex( demoFileIdx );
@@ -2675,23 +2698,23 @@ void MainWindow::restoreLaunchOptions( LaunchOptions & opts )
 		else
 		{
 			QMessageBox::warning( this, "Demo file no longer exists",
-				"Demo file \""%opts.demoFile_replay%"\" no longer exists, please select another one." );
+				"Demo file \""%launchOpts.demoFile_replay%"\" no longer exists, please select another one." );
 			ui->demoFileCmbBox_replay->setCurrentIndex( -1 );
-			opts.demoFile_replay.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
+			launchOpts.demoFile_replay.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
 		}
 	}
 
 	// multiplayer
-	ui->multiplayerChkBox->setChecked( opts.isMultiplayer );
-	ui->multRoleCmbBox->setCurrentIndex( int( opts.multRole ) );
-	ui->hostnameLine->setText( opts.hostName );
-	ui->portSpinBox->setValue( opts.port );
-	ui->netModeCmbBox->setCurrentIndex( int( opts.netMode ) );
-	ui->gameModeCmbBox->setCurrentIndex( int( opts.gameMode ) );
-	ui->playerCountSpinBox->setValue( int( opts.playerCount ) );
-	ui->teamDmgSpinBox->setValue( opts.teamDamage );
-	ui->timeLimitSpinBox->setValue( int( opts.timeLimit ) );
-	ui->fragLimitSpinBox->setValue( int( opts.fragLimit ) );
+	ui->multiplayerChkBox->setChecked( multOpts.isMultiplayer );
+	ui->multRoleCmbBox->setCurrentIndex( int( multOpts.multRole ) );
+	ui->hostnameLine->setText( multOpts.hostName );
+	ui->portSpinBox->setValue( multOpts.port );
+	ui->netModeCmbBox->setCurrentIndex( int( multOpts.netMode ) );
+	ui->gameModeCmbBox->setCurrentIndex( int( multOpts.gameMode ) );
+	ui->playerCountSpinBox->setValue( int( multOpts.playerCount ) );
+	ui->teamDmgSpinBox->setValue( multOpts.teamDamage );
+	ui->timeLimitSpinBox->setValue( int( multOpts.timeLimit ) );
+	ui->fragLimitSpinBox->setValue( int( multOpts.fragLimit ) );
 }
 
 void MainWindow::restoreGameplayOptions( GameplayOptions & opts )

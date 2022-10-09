@@ -76,6 +76,8 @@ static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, 
 		{
 			deserialize( jsOptions, preset.launchOpts );
 
+			deserialize( jsOptions, preset.multOpts );
+
 			deserialize( jsOptions, preset.gameOpts );
 
 			deserialize( jsOptions, preset.compatOpts );
@@ -198,6 +200,8 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 		if (JsonObjectCtx jsOptions = jsOpts.getObject( "launch_options" ))
 		{
 			deserialize( jsOptions, opts.launchOpts );
+
+			deserialize( jsOptions, opts.multOpts );
 
 			deserialize( jsOptions, opts.gameOpts );
 

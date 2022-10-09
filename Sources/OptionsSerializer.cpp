@@ -17,9 +17,6 @@
 #include <QFileInfo>
 
 
-const QString defaultOptionsFileName = "options.json";
-
-
 //======================================================================================================================
 //  serialization utils
 
@@ -271,8 +268,8 @@ static QJsonObject serialize( const GameplayOptions & opts )
 	jsOptions["no_monsters"] = opts.noMonsters;
 	jsOptions["fast_monsters"] = opts.fastMonsters;
 	jsOptions["monsters_respawn"] = opts.monstersRespawn;
-	jsOptions["dmflags1"] = qint64( opts.details.flags1 );
-	jsOptions["dmflags2"] = qint64( opts.details.flags2 );
+	jsOptions["dmflags1"] = qint64( opts.dmflags1 );
+	jsOptions["dmflags2"] = qint64( opts.dmflags2 );
 	jsOptions["allow_cheats"] = opts.allowCheats;
 
 	return jsOptions;
@@ -284,8 +281,8 @@ static void deserialize( const JsonObjectCtx & jsOptions, GameplayOptions & opts
 	opts.noMonsters = jsOptions.getBool( "no_monsters", opts.noMonsters );
 	opts.fastMonsters = jsOptions.getBool( "fast_monsters", opts.fastMonsters );
 	opts.monstersRespawn = jsOptions.getBool( "monsters_respawn", opts.monstersRespawn );
-	opts.details.flags1 = jsOptions.getInt( "dmflags1", opts.details.flags1 );
-	opts.details.flags2 = jsOptions.getInt( "dmflags2", opts.details.flags2 );
+	opts.dmflags1 = jsOptions.getInt( "dmflags1", opts.dmflags1 );
+	opts.dmflags2 = jsOptions.getInt( "dmflags2", opts.dmflags2 );
 	opts.allowCheats = jsOptions.getBool( "allow_cheats", opts.allowCheats );
 }
 
@@ -293,18 +290,18 @@ static QJsonObject serialize( const CompatibilityOptions & opts )
 {
 	QJsonObject jsOptions;
 
-	jsOptions["compat_level"] = opts.level;
-	jsOptions["compatflags1"] = qint64( opts.details.flags1 );
-	jsOptions["compatflags2"] = qint64( opts.details.flags2 );
+	jsOptions["compat_level"] = opts.compatLevel;
+	jsOptions["compatflags1"] = qint64( opts.compatflags1 );
+	jsOptions["compatflags2"] = qint64( opts.compatflags2 );
 
 	return jsOptions;
 }
 
 static void deserialize( const JsonObjectCtx & jsOptions, CompatibilityOptions & opts )
 {
-	opts.details.flags1 = jsOptions.getInt( "compatflags1", opts.details.flags1 );
-	opts.details.flags2 = jsOptions.getInt( "compatflags2", opts.details.flags2 );
-	opts.level = jsOptions.getInt( "compat_level", opts.level, DontShowError );
+	opts.compatflags1 = jsOptions.getInt( "compatflags1", opts.compatflags1 );
+	opts.compatflags2 = jsOptions.getInt( "compatflags2", opts.compatflags2 );
+	opts.compatLevel = jsOptions.getInt( "compat_level", opts.compatLevel, DontShowError );
 }
 
 static QJsonObject serialize( const AlternativePaths & opts )

@@ -94,8 +94,8 @@ GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayDetails & gamepl
 	ui->dmflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->dmflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 
-	ui->dmflags1_line->setText( QString::number( gameplayDetails.flags1 ) );
-	ui->dmflags2_line->setText( QString::number( gameplayDetails.flags2 ) );
+	ui->dmflags1_line->setText( QString::number( gameplayDetails.dmflags1 ) );
+	ui->dmflags2_line->setText( QString::number( gameplayDetails.dmflags2 ) );
 
 	updateCheckboxes();
 
@@ -115,12 +115,12 @@ void GameOptsDialog::setFlag( const DMFlag & flag, bool enabled )
 
 	if (flag.flags == DM_FLAGS_1)
 	{
-		flags = &gameplayDetails.flags1;
+		flags = &gameplayDetails.dmflags1;
 		line = ui->dmflags1_line;
 	}
 	else
 	{
-		flags = &gameplayDetails.flags2;
+		flags = &gameplayDetails.dmflags2;
 		line = ui->dmflags2_line;
 	}
 
@@ -137,9 +137,9 @@ bool GameOptsDialog::isEnabled( const DMFlag & flag ) const
 	const int32_t * flags;
 
 	if (flag.flags == DM_FLAGS_1)
-		flags = &gameplayDetails.flags1;
+		flags = &gameplayDetails.dmflags1;
 	else
-		flags = &gameplayDetails.flags2;
+		flags = &gameplayDetails.dmflags2;
 
 	if (flag.defaultVal == 0)
 		return (*flags & flag.bit) != 0;
@@ -442,13 +442,13 @@ void GameOptsDialog::on_spawnWhereDied_toggled( bool checked )
 
 void GameOptsDialog::on_dmflags1_line_textEdited( const QString & )
 {
-	gameplayDetails.flags1 = ui->dmflags1_line->text().toInt();
+	gameplayDetails.dmflags1 = ui->dmflags1_line->text().toInt();
 	updateCheckboxes();
 }
 
 void GameOptsDialog::on_dmflags2_line_textEdited( const QString & )
 {
-	gameplayDetails.flags2 = ui->dmflags2_line->text().toInt();
+	gameplayDetails.dmflags2 = ui->dmflags2_line->text().toInt();
 	updateCheckboxes();
 }
 

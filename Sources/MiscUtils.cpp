@@ -25,10 +25,18 @@ bool checkPath_MsgBox( const QString & path, const QString & errorMessage )
 	return true;
 }
 
-void checkPath_exception( bool doVerify, const QString & path, const QString & errorMessage )
+void checkPath_exception( const QString & path )
 {
-	if (doVerify)
-		if (checkPath_MsgBox( path, errorMessage ))
+	if (!QFileInfo::exists( path ))
+	{
+		throw FileOrDirNotFound{ path };
+	}
+}
+
+void assertValidPath( bool verificationRequired, const QString & path, const QString & errorMessage )
+{
+	if (verificationRequired)
+		if (!checkPath_MsgBox( path, errorMessage ))
 			throw FileOrDirNotFound{ path };
 }
 

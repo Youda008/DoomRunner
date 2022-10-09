@@ -84,8 +84,8 @@ CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityDetails
 	ui->compatflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->compatflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 
-	ui->compatflags1_line->setText( QString::number( compatDetails.flags1 ) );
-	ui->compatflags2_line->setText( QString::number( compatDetails.flags2 ) );
+	ui->compatflags1_line->setText( QString::number( compatDetails.compatflags1 ) );
+	ui->compatflags2_line->setText( QString::number( compatDetails.compatflags2 ) );
 
 	updateCheckboxes();
 
@@ -106,12 +106,12 @@ void CompatOptsDialog::setFlag( const CompatFlag & flag, bool enabled )
 
 	if (flag.flags == COMPAT_FLAGS_1)
 	{
-		flags = &compatDetails.flags1;
+		flags = &compatDetails.compatflags1;
 		line = ui->compatflags1_line;
 	}
 	else
 	{
-		flags = &compatDetails.flags2;
+		flags = &compatDetails.compatflags2;
 		line = ui->compatflags2_line;
 	}
 
@@ -128,9 +128,9 @@ static bool isEnabled( const CompatibilityDetails & compatDetails, const CompatF
 	const int32_t * flags;
 
 	if (flag.flags == COMPAT_FLAGS_1)
-		flags = &compatDetails.flags1;
+		flags = &compatDetails.compatflags1;
 	else
-		flags = &compatDetails.flags2;
+		flags = &compatDetails.compatflags2;
 
 	return (*flags & flag.bit) != 0;
 }
@@ -333,13 +333,13 @@ void CompatOptsDialog::on_useOriginalSound_toggled( bool checked )
 
 void CompatOptsDialog::on_compatflags1_line_textEdited( const QString & )
 {
-	compatDetails.flags1 = ui->compatflags1_line->text().toInt();
+	compatDetails.compatflags1 = ui->compatflags1_line->text().toInt();
 	updateCheckboxes();
 }
 
 void CompatOptsDialog::on_compatflags2_line_textEdited( const QString & )
 {
-	compatDetails.flags2 = ui->compatflags2_line->text().toInt();
+	compatDetails.compatflags2 = ui->compatflags2_line->text().toInt();
 	updateCheckboxes();
 }
 

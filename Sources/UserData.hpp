@@ -170,32 +170,34 @@ struct MultiplayerOptions
 	uint fragLimit = 0;
 };
 
-struct GameplayDetails  // TODO: inherit
+struct GameplayDetails
 {
-	int32_t flags1 = 0;
-	int32_t flags2 = 0;
+	int32_t dmflags1 = 0;
+	int32_t dmflags2 = 0;
 };
 
-struct GameplayOptions
+struct GameplayOptions : public GameplayDetails  // inherited instead of included to avoid long identifiers
 {
 	int skillNum = TooYoungToDie;
 	bool noMonsters = false;
 	bool fastMonsters = false;
 	bool monstersRespawn = false;
 	bool allowCheats = false;
-	GameplayDetails details;
+
+	void assign( const GameplayDetails & other ) { static_cast< GameplayDetails & >( *this ) = other; }
 };
 
 struct CompatibilityDetails
 {
-	int32_t flags1 = 0;
-	int32_t flags2 = 0;
+	int32_t compatflags1 = 0;
+	int32_t compatflags2 = 0;
 };
 
-struct CompatibilityOptions
+struct CompatibilityOptions : public CompatibilityDetails  // inherited instead of included to avoid long identifiers
 {
-	int level = -1;
-	CompatibilityDetails details;
+	int compatLevel = -1;
+
+	void assign( const CompatibilityDetails & other ) { static_cast< CompatibilityDetails & >( *this ) = other; }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -302,7 +304,7 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	bool closeOnLaunch = false;
 	bool showEngineOutput = showEngineOutputByDefault;
 
-	void operator=( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
+	void assign( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
 };
 
 struct WindowGeometry

@@ -52,6 +52,8 @@
 
 //======================================================================================================================
 
+static const char defaultOptionsFileName [] = "options.json";
+
 #ifdef _WIN32
 	static const QString scriptFileSuffix = "*.bat";
 	static const QString shortcutFileSuffix = "*.lnk";
@@ -303,7 +305,9 @@ MainWindow::MainWindow()
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
 
-	optionsFilePath = QDir( getAppDataDir() ).filePath( defaultOptionsFileName );  // TODO: at one place
+	QString appDataDir = getAppDataDir();
+	createDirIfDoesntExist( appDataDir );
+	optionsFilePath = QDir( appDataDir ).filePath( defaultOptionsFileName );
 
 	// setup main menu actions
 
@@ -371,6 +375,18 @@ MainWindow::MainWindow()
 	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &thisClass::modeRecordDemo );
 	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &thisClass::modeReplayDemo );
 
+	// mutiplayer
+	connect( ui->multiplayerChkBox, &QCheckBox::toggled, this, &thisClass::toggleMultiplayer );
+	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMultRole );
+	connect( ui->hostnameLine, &QLineEdit::textChanged, this, &thisClass::changeHost );
+	connect( ui->portSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changePort );
+	connect( ui->netModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectNetMode );
+	connect( ui->gameModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectGameMode );
+	connect( ui->playerCountSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changePlayerCount );
+	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::changeTeamDamage );
+	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeTimeLimit );
+	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeFragLimit );
+
 	// gameplay
 	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSkill );
 	connect( ui->skillSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeSkillNum );
@@ -381,6 +397,13 @@ MainWindow::MainWindow()
 	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatOptsDialog );
 	connect( ui->compatLevelCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectCompatLevel );
 	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAllowCheats );
+
+	// alternative paths
+	connect( ui->usePresetNameChkBox, &QCheckBox::toggled, this, &thisClass::toggleUsePresetName );
+	connect( ui->saveDirLine, &QLineEdit::textChanged, this, &thisClass::changeSaveDir );
+	connect( ui->screenshotDirLine, &QLineEdit::textChanged, this, &thisClass::changeScreenshotDir );
+	connect( ui->saveDirBtn, &QPushButton::clicked, this, &thisClass::browseSaveDir );
+	connect( ui->screenshotDirBtn, &QPushButton::clicked, this, &thisClass::browseScreenshotDir );
 
 	// video
 	loadMonitorInfo( ui->monitorCmbBox );
@@ -393,25 +416,6 @@ MainWindow::MainWindow()
 	connect( ui->noSoundChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoSound );
 	connect( ui->noSfxChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoSFX);
 	connect( ui->noMusicChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoMusic );
-
-	// alternative paths
-	connect( ui->usePresetNameChkBox, &QCheckBox::toggled, this, &thisClass::toggleUsePresetName );
-	connect( ui->saveDirLine, &QLineEdit::textChanged, this, &thisClass::changeSaveDir );
-	connect( ui->screenshotDirLine, &QLineEdit::textChanged, this, &thisClass::changeScreenshotDir );
-	connect( ui->saveDirBtn, &QPushButton::clicked, this, &thisClass::browseSaveDir );
-	connect( ui->screenshotDirBtn, &QPushButton::clicked, this, &thisClass::browseScreenshotDir );
-
-	// mutiplayer  TODO: move
-	connect( ui->multiplayerChkBox, &QCheckBox::toggled, this, &thisClass::toggleMultiplayer );
-	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMultRole );
-	connect( ui->hostnameLine, &QLineEdit::textChanged, this, &thisClass::changeHost );
-	connect( ui->portSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changePort );
-	connect( ui->netModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectNetMode );
-	connect( ui->gameModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectGameMode );
-	connect( ui->playerCountSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changePlayerCount );
-	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::changeTeamDamage );
-	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeTimeLimit );
-	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeFragLimit );
 
 	// setup the rest of widgets
 
@@ -632,7 +636,7 @@ void MainWindow::updateOptionsGrpBoxTitles( const StorageSettings & storageSetti
 
 	static const auto updateGroupBoxTitle = []( QGroupBox * grpBox, OptionsStorage storage )
 	{
-		QString newStorageDesc = optsStorageStrings[ storage ] + QStringLiteral(" - configurable (?)");
+		QString newStorageDesc = optsStorageStrings[ storage ] + QStringLiteral(" - configurable");
 		grpBox->setTitle( replaceStringBetween( grpBox->title(), '[', ']', newStorageDesc ) );
 	};
 
@@ -773,7 +777,7 @@ void MainWindow::runOptsStorageDialog()
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		settings = dialog.storageSettings;
+		settings.assign( dialog.storageSettings );
 
 		updateOptionsGrpBoxTitles( settings );
 
@@ -785,14 +789,14 @@ void MainWindow::runGameOptsDialog()
 {
 	GameplayOptions & activeGameOpts = activeGameplayOptions();
 
-	GameOptsDialog dialog( this, activeGameOpts.details );
+	GameOptsDialog dialog( this, activeGameOpts );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		activeGameOpts.details = dialog.gameplayDetails;
+		activeGameOpts.assign( dialog.gameplayDetails );
 		updateLaunchCommand();
 	}
 }
@@ -801,14 +805,14 @@ void MainWindow::runCompatOptsDialog()
 {
 	CompatibilityOptions & activeCompatOpts = activeCompatOptions();
 
-	CompatOptsDialog dialog( this, activeCompatOpts.details );
+	CompatOptsDialog dialog( this, activeCompatOpts );
 
 	int code = dialog.exec();
 
 	// update the data only if user clicked Ok
 	if (code == QDialog::Accepted)
 	{
-		activeCompatOpts.details = dialog.compatDetails;
+		activeCompatOpts.assign( dialog.compatDetails );
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
 		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( dialog.compatDetails );
 		updateLaunchCommand();
@@ -1649,7 +1653,7 @@ void MainWindow::selectCompatLevel( int compatLevel )
 	if (disableSelectionCallbacks)
 		return;
 
-	STORE_COMPAT_OPTION( level, compatLevel - 1 )  // first item is reserved for indicating no selection
+	STORE_COMPAT_OPTION( compatLevel, compatLevel - 1 )  // first item is reserved for indicating no selection
 
 	updateLaunchCommand();
 }
@@ -2673,15 +2677,12 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, Multip
 	{
 		int saveFileIdx = findSuch( saveModel, [&]( const SaveFile & save )
 		                                       { return save.fileName == launchOpts.saveFile; } );
-		if (saveFileIdx >= 0)
-		{
-			ui->saveFileCmbBox->setCurrentIndex( saveFileIdx );
-		}
-		else
+		ui->saveFileCmbBox->setCurrentIndex( saveFileIdx );
+
+		if (saveFileIdx < 0)
 		{
 			QMessageBox::warning( this, "Save file no longer exists",
 				"Save file \""%launchOpts.saveFile%"\" no longer exists, please select another one." );
-			ui->saveFileCmbBox->setCurrentIndex( -1 );
 			launchOpts.saveFile.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
 		}
 	}
@@ -2691,15 +2692,12 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, Multip
 	{
 		int demoFileIdx = findSuch( demoModel, [&]( const DemoFile & demo )
 		                                       { return demo.fileName == launchOpts.demoFile_replay; } );
-		if (demoFileIdx >= 0)
-		{
-			ui->demoFileCmbBox_replay->setCurrentIndex( demoFileIdx );
-		}
-		else
+		ui->demoFileCmbBox_replay->setCurrentIndex( demoFileIdx );
+
+		if (demoFileIdx < 0)
 		{
 			QMessageBox::warning( this, "Demo file no longer exists",
 				"Demo file \""%launchOpts.demoFile_replay%"\" no longer exists, please select another one." );
-			ui->demoFileCmbBox_replay->setCurrentIndex( -1 );
 			launchOpts.demoFile_replay.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
 		}
 	}
@@ -2719,7 +2717,6 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, Multip
 
 void MainWindow::restoreGameplayOptions( GameplayOptions & opts )
 {
-	// TODO: check combo-box boundaries
 	ui->skillSpinBox->setValue( int( opts.skillNum ) );
 	ui->noMonstersChkBox->setChecked( opts.noMonsters );
 	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
@@ -2729,8 +2726,16 @@ void MainWindow::restoreGameplayOptions( GameplayOptions & opts )
 
 void MainWindow::restoreCompatibilityOptions( CompatibilityOptions & opts )
 {
-	ui->compatLevelCmbBox->setCurrentIndex( opts.level + 1 );
-	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts.details );
+	int compatLevelIdx = opts.compatLevel + 1;  // first item is reserved for indicating no selection
+	if (compatLevelIdx >= ui->compatLevelCmbBox->count())
+	{
+		QMessageBox::critical( this, "Cannot restore compat level",
+			"Stored compat level is out of bounds of the current combo-box content. Bug?" );
+		return;
+	}
+	ui->compatLevelCmbBox->setCurrentIndex( compatLevelIdx );
+
+	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts );
 }
 
 void MainWindow::restoreAlternativePaths( AlternativePaths & opts )
@@ -2913,7 +2918,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	const EngineProperties & engineProperties = getEngineProperties( selectedEngine.family );
 
 	{
-		checkPath_exception( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
+		assertValidPath( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
 
 		// Either the executable is in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
 		// in which case it should be (and sometimes must be) started directly by using only its name,
@@ -2936,7 +2941,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		{
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
-			checkPath_exception( verifyPaths, configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
+			assertValidPath( verifyPaths, configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
 			cmd.arguments << "-config" << base.rebaseAndQuotePath( configPath );
 		}
 	}
@@ -2944,7 +2949,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
 	{
-		checkPath_exception( verifyPaths, iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please select another one." );
+		assertValidPath( verifyPaths, iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
@@ -2953,7 +2958,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	const QStringList selectedMapPacks = getSelectedMapPacks();
 	for (const QString & mapFilePath : selectedMapPacks)
 	{
-		checkPath_exception( verifyPaths, mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
+		assertValidPath( verifyPaths, mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
 		if (suffix == "deh")
@@ -2969,7 +2974,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		if (mod.checked)
 		{
-			checkPath_exception( verifyPaths, mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
+			assertValidPath( verifyPaths, mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
 
 			QString suffix = QFileInfo( mod.path ).suffix().toLower();
 			if (suffix == "deh")
@@ -2999,7 +3004,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
 		QString savePath = getPathFromFileName( getSaveDir(), ui->saveFileCmbBox->currentText() );
-		checkPath_exception( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
+		assertValidPath( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
@@ -3011,7 +3016,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
 		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileCmbBox_replay->currentText() );
-		checkPath_exception( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
+		assertValidPath( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}
 
@@ -3023,12 +3028,12 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		cmd.arguments << "-fast";
 	if (ui->monstersRespawnChkBox->isEnabled() && ui->monstersRespawnChkBox->isChecked())
 		cmd.arguments << "-respawn";
-	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.details.flags1 != 0)
-		cmd.arguments << "+dmflags" << QString::number( activeGameOpts.details.flags1 );
-	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.details.flags2 != 0)
-		cmd.arguments << "+dmflags2" << QString::number( activeGameOpts.details.flags2 );
-	if (ui->compatLevelCmbBox->isEnabled() && activeCompatOpts.level >= 0)
-		cmd.arguments << getCompatLevelArgs( executableName, engineProperties.compLvlStyle, activeCompatOpts.level );
+	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags1 != 0)
+		cmd.arguments << "+dmflags" << QString::number( activeGameOpts.dmflags1 );
+	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags2 != 0)
+		cmd.arguments << "+dmflags2" << QString::number( activeGameOpts.dmflags2 );
+	if (ui->compatLevelCmbBox->isEnabled() && activeCompatOpts.compatLevel >= 0)
+		cmd.arguments << getCompatLevelArgs( executableName, engineProperties.compLvlStyle, activeCompatOpts.compatLevel );
 	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
 	if (ui->allowCheatsChkBox->isChecked())

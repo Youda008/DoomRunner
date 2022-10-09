@@ -19,8 +19,6 @@
 
 //======================================================================================================================
 
-extern const QString defaultOptionsFileName;
-
 struct OptionsToSave
 {
 	// files

@@ -23,7 +23,9 @@ class FileOrDirNotFound
 {
 	public: QString path;
 };
-void checkPath_exception( bool doVerify, const QString & path, const QString & errorMessage );  // TODO
+void checkPath_exception( const QString & path );
+
+void assertValidPath( bool verificationRequired, const QString & path, const QString & errorMessage );
 
 
 //----------------------------------------------------------------------------------------------------------------------

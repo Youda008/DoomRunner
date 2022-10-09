@@ -11,9 +11,8 @@
 #include <QFile>
 #include <QStringBuilder>
 #include <QTextStream>
-#include <QDesktopServices>
+#include <QRegularExpression>
 #include <QProcess>
-#include <QUrl>
 
 
 //======================================================================================================================
@@ -46,6 +45,17 @@ QString fixExePath( const QString & exePath )
 	}
  #endif
 	return exePath;
+}
+
+QString sanitizePath( const QString & path )
+{
+	QString sanitizedPath = path;
+	// Newer engines such as GZDoom 4.x can handle advanced Unicode characters such as emojis,
+	// but the old ones are pretty much limited to ASCII, so it's easier to just stick to aS "safe" white-list.
+	static const QRegularExpression invalidChars("[^a-zA-Z0-9_ !#$&'\\(\\)+,\\-.;=@\\[\\]\\^~]");
+	//sanitizedPath.replace( invalidChars, "#" );
+	sanitizedPath.remove( invalidChars );
+	return sanitizedPath;
 }
 
 QString updateFile( const QString & filePath, const QByteArray & newContent )

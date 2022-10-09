@@ -943,6 +943,13 @@ void MainWindow::selectEngine( int index )
 	ui->mapCmbBox->setEditable( mapParamStyle == MapParamStyle::Map );
 	ui->mapCmbBox_demo->setEditable( mapParamStyle == MapParamStyle::Map );
 
+	// automatic alt dirs are derived from engine's config directory, which has now changed, so this need to be refreshed
+	if (globalOpts.usePresetNameAsDir)
+	{
+		QString presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : "";
+		setAltDirsRelativeToConfigs( sanitizePath( presetName ) );
+	}
+
 	updateConfigFilesFromDir();
 	updateSaveFilesFromDir();
 	updateDemoFilesFromDir();
@@ -1836,7 +1843,7 @@ void MainWindow::toggleUsePresetName( bool checked )
 		QString presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : "";
 
 		// overwrite whatever is currently in the preset or global launch options
-		setAltDirsRelativeToConfigs( presetName );
+		setAltDirsRelativeToConfigs( sanitizePath( presetName ) );
 	}
 }
 
@@ -2643,7 +2650,7 @@ void MainWindow::restorePreset( int presetIdx )
 	// do it with restoringInProgress == false to update the current preset with the new overwriten dirs.
 	if (globalOpts.usePresetNameAsDir)
 	{
-		setAltDirsRelativeToConfigs( preset.name );
+		setAltDirsRelativeToConfigs( sanitizePath( preset.name ) );
 	}
 
 	updateLaunchCommand();

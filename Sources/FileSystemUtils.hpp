@@ -184,6 +184,9 @@ bool isDirectoryWritable( const QString & dirPath );
 /// On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
 QString fixExePath( const QString & exePath );
 
+/// Replaces any disallowed path characters from a string.
+QString sanitizePath( const QString & path );
+
 /// Reads the whole content of a file into a byte array.
 /** Returns description of an error that might potentially happen, or empty string on success. */
 QString readWholeFile( const QString & filePath, QByteArray & dest );

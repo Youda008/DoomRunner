@@ -495,8 +495,6 @@ static void deserialize( const JsonObjectCtx & jsGeometry, WindowGeometry & geom
 	geometry.height = jsGeometry.getInt( "height", -1 );
 }
 
-// We want to serialize this into an existing JSON object instead of its own one, for compatibility reasons.
-
 static void serialize( QJsonObject & jsSettings, const LauncherSettings & settings )
 {
 	jsSettings["check_for_updates"] = settings.checkForUpdates;
@@ -504,9 +502,15 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 	jsSettings["close_on_launch"] = settings.closeOnLaunch;
 	jsSettings["show_engine_output"] = settings.showEngineOutput;
 
-	jsSettings["launch_opts_storage"] = int( settings.launchOptsStorage );
-	jsSettings["gameplay_opts_storage"] = int( settings.gameOptsStorage );
-	jsSettings["compat_opts_storage"] = int( settings.compatOptsStorage );
+	{
+		QJsonObject jsOptsStorage;
+
+		jsOptsStorage["launch_opts"] = int( settings.launchOptsStorage );
+		jsOptsStorage["gameplay_opts"] = int( settings.gameOptsStorage );
+		jsOptsStorage["compat_opts"] = int( settings.compatOptsStorage );
+
+		jsSettings["options_storage"] = jsOptsStorage;
+	}
 }
 
 static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
@@ -516,9 +520,12 @@ static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & se
 	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 
-	settings.launchOptsStorage = jsSettings.getEnum< OptionsStorage >( "launch_opts_storage", settings.launchOptsStorage );
-	settings.gameOptsStorage = jsSettings.getEnum< OptionsStorage >( "gameplay_opts_storage", settings.gameOptsStorage );
-	settings.compatOptsStorage = jsSettings.getEnum< OptionsStorage >( "compat_opts_storage", settings.compatOptsStorage );
+	if (JsonObjectCtx jsOptsStorage = jsSettings.getObject( "options_storage" ))
+	{
+		settings.launchOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "launch_opts", settings.launchOptsStorage );
+		settings.gameOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "gameplay_opts", settings.gameOptsStorage );
+		settings.compatOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "compat_opts", settings.compatOptsStorage );
+	}
 }
 
 
@@ -749,7 +756,8 @@ static QString deserializeOptions( OptionsToLoad & opts, const QByteArray & byte
 	QJsonDocument jsonDoc = QJsonDocument::fromJson( bytes, &error );
 	if (jsonDoc.isNull())
 	{
-		return "Loading options failed: "%error.errorString();
+		return "Failed to parse options.json: "%error.errorString()%"\n"
+		       "You can either open it in notepad and try to repair it, or delete it and start from scratch.";
 	}
 
 	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load

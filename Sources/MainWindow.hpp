@@ -56,6 +56,7 @@ class MainWindow : public QMainWindow {
 
 	void runAboutDialog();
 	void runSetupDialog();
+	void runOptsStorageDialog();
 	void runGameOptsDialog();
 	void runCompatOptsDialog();
 
@@ -147,6 +148,8 @@ class MainWindow : public QMainWindow {
 	void setupIWADList();
 	void setupMapPackList();
 	void setupModList();
+
+	void updateOptionsGrpBoxTitles( const StorageSettings & storageSettings );
 
 	void loadMonitorInfo( QComboBox * box );
 

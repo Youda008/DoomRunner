@@ -251,12 +251,6 @@
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
                  <property name="editTriggers">
                   <set>QAbstractItemView::NoEditTriggers</set>
                  </property>
@@ -488,7 +482,7 @@
              </size>
             </property>
             <property name="text">
-             <string>Additional command line arguments (preset)</string>
+             <string>Additional command line arguments [preset]</string>
             </property>
            </widget>
           </item>
@@ -505,7 +499,7 @@
       </widget>
       <widget class="QWidget" name="optionsTab">
        <attribute name="title">
-        <string>Launch options</string>
+        <string>More options</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
@@ -513,7 +507,7 @@
           <item>
            <widget class="QGroupBox" name="launchModeGrpBox">
             <property name="title">
-             <string>Launch mode</string>
+             <string>Launch mode [configurable]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_11">
              <item>
@@ -550,7 +544,7 @@
                  <property name="sizeHint" stdset="0">
                   <size>
                    <width>0</width>
-                   <height>0</height>
+                   <height>20</height>
                   </size>
                  </property>
                 </spacer>
@@ -560,51 +554,33 @@
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="minimumSize">
                   <size>
-                   <width>70</width>
+                   <width>75</width>
                    <height>0</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>70</width>
-                   <height>16777215</height>
                   </size>
                  </property>
                  <property name="editable">
                   <bool>true</bool>
                  </property>
-                 <item>
-                  <property name="text">
-                   <string>MAP32</string>
-                  </property>
-                 </item>
                 </widget>
                </item>
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,4,0,10">
+              <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,0,4,10">
                <item>
                 <widget class="QRadioButton" name="launchMode_savefile">
                  <property name="text">
                   <string>Load saved game</string>
                  </property>
                 </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_12">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                </spacer>
                </item>
                <item>
                 <spacer name="horizontalSpacer_6">
@@ -616,8 +592,21 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>44</width>
-                   <height>0</height>
+                   <width>54</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_12">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>0</width>
+                   <height>20</height>
                   </size>
                  </property>
                 </spacer>
@@ -635,7 +624,7 @@
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>70</width>
+                   <width>90</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -663,7 +652,7 @@
                  <property name="sizeHint" stdset="0">
                   <size>
                    <width>0</width>
-                   <height>0</height>
+                   <height>20</height>
                   </size>
                  </property>
                 </spacer>
@@ -673,26 +662,21 @@
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="minimumSize">
                   <size>
-                   <width>70</width>
+                   <width>75</width>
                    <height>0</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>70</width>
-                   <height>16777215</height>
                   </size>
                  </property>
                  <property name="editable">
                   <bool>true</bool>
                  </property>
-                 <item>
-                  <property name="text">
-                   <string>MAP32</string>
-                  </property>
-                 </item>
                 </widget>
                </item>
                <item>
@@ -708,7 +692,7 @@
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>70</width>
+                   <width>90</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -717,26 +701,13 @@
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0,4,0,10">
+              <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0,0,4,10">
                <item>
                 <widget class="QRadioButton" name="launchMode_replayDemo">
                  <property name="text">
                   <string>Play demo</string>
                  </property>
                 </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_15">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                </spacer>
                </item>
                <item>
                 <spacer name="horizontalSpacer_13">
@@ -748,8 +719,21 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>79</width>
-                   <height>0</height>
+                   <width>89</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_15">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>0</width>
+                   <height>20</height>
                   </size>
                  </property>
                 </spacer>
@@ -767,7 +751,7 @@
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>70</width>
+                   <width>90</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -781,7 +765,7 @@
           <item>
            <widget class="QGroupBox" name="gameplayGrpBox">
             <property name="title">
-             <string>Gameplay</string>
+             <string>Gameplay [configurable]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_16">
              <item>
@@ -802,7 +786,7 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -864,53 +848,87 @@
               </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="noMonstersChkBox">
-               <property name="toolTip">
-                <string>Sets the dmflags CVAR so that monsters are not spawned on levels.</string>
-               </property>
-               <property name="text">
-                <string>No monsters</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="fastMonstersChkBox">
-               <property name="toolTip">
-                <string>Sets the dmflags CVAR to make the monsters as fast as in Nightmare mode even if you are not playing Nightmare.</string>
-               </property>
-               <property name="text">
-                <string>Fast monsters</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="monstersRespawnChkBox">
-               <property name="toolTip">
-                <string>Sets the dmflags CVAR so that monsters respawn even if you are not playing at Nightmare difficulty.</string>
-               </property>
-               <property name="text">
-                <string>Monsters respawn</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="83,91,111">
                <item>
-                <widget class="QPushButton" name="gameOptsBtn">
+                <widget class="QCheckBox" name="noMonstersChkBox">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Sets the dmflags CVAR so that monsters are not spawned on levels.</string>
+                 </property>
                  <property name="text">
-                  <string>Gameplay options</string>
+                  <string>No monsters</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="compatOptsBtn">
+                <widget class="QCheckBox" name="fastMonstersChkBox">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Sets the dmflags CVAR to make the monsters as fast as in Nightmare mode even if you are not playing Nightmare.</string>
+                 </property>
                  <property name="text">
-                  <string>Compatibility options</string>
+                  <string>Fast monsters</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="monstersRespawnChkBox">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Sets the dmflags CVAR so that monsters respawn even if you are not playing at Nightmare difficulty.</string>
+                 </property>
+                 <property name="text">
+                  <string>Monsters respawn</string>
                  </property>
                 </widget>
                </item>
               </layout>
              </item>
+             <item>
+              <widget class="QPushButton" name="gameOptsBtn">
+               <property name="text">
+                <string>Detailed gameplay options</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_22">
+               <item>
+                <widget class="QCheckBox" name="allowCheatsChkBox">
+                 <property name="toolTip">
+                  <string>When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &quot;disablecheats&quot; property, as well as network games; however, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.</string>
+                 </property>
+                 <property name="text">
+                  <string>Force allow cheats</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="compatGrpBox">
+            <property name="title">
+             <string>Compatibility [configurable]</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_22">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_32">
                <item>
@@ -928,23 +946,14 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>150</width>
-                   <height>0</height>
-                  </size>
-                 </property>
                 </widget>
                </item>
               </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="allowCheatsChkBox">
-               <property name="toolTip">
-                <string>When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &quot;disablecheats&quot; property, as well as network games; however, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.</string>
-               </property>
+              <widget class="QPushButton" name="compatOptsBtn">
                <property name="text">
-                <string>Force allow cheats</string>
+                <string>Detailed compatibility options</string>
                </property>
               </widget>
              </item>
@@ -959,7 +968,7 @@
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
-              <height>40</height>
+              <height>0</height>
              </size>
             </property>
            </spacer>
@@ -969,243 +978,65 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_9">
           <item>
-           <widget class="QCheckBox" name="multiplayerChkBox">
-            <property name="text">
-             <string>Multiplayer game</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QGroupBox" name="multiplayerGrpBox">
             <property name="title">
-             <string>Multiplayer options</string>
+             <string>Multiplayer [configurable]</string>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_22">
+            <layout class="QVBoxLayout" name="verticalLayout_21">
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_14">
-               <item>
-                <widget class="QLabel" name="multRoleLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Role</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="hostnameLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>IP address / hostname</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="portLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Port</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="netModeLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>Network mode</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="gameModeLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Game mode</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="playerCountLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Player count</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="teamDmgLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Controls how much damage players can do to their teammates. This is multiplied to the normal damage done, so a value of 0 means that players cannot hurt their teammates. A value of 1 means that players deal full damage to their teammates. You can also set this to values greater than 1 to deal extra punishment to your teammates.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>Team damage</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="timeLimitLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When the time limit is non-zero, the game will automatically advance to the next level after this many minutes have elapsed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>Time limit</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="fragLimitLabel">
-                 <property name="text">
-                  <string>Frag limit</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <widget class="QCheckBox" name="multiplayerChkBox">
+               <property name="text">
+                <string>Multiplayer game</string>
+               </property>
+              </widget>
              </item>
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_15">
+              <layout class="QHBoxLayout" name="horizontalLayout_33">
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_15">
+                <layout class="QVBoxLayout" name="verticalLayout_14">
                  <item>
-                  <widget class="QComboBox" name="multRoleCmbBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
+                  <widget class="QLabel" name="multRoleLabel">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
-                   <item>
-                    <property name="text">
-                     <string>Server (start a game)</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Client (join a game)</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_16">
-                 <item>
-                  <widget class="QLineEdit" name="hostnameLine">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_17">
-                 <item>
-                  <widget class="QSpinBox" name="portSpinBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                   <property name="minimum">
-                    <number>1</number>
-                   </property>
-                   <property name="maximum">
-                    <number>65535</number>
-                   </property>
-                   <property name="singleStep">
-                    <number>0</number>
-                   </property>
-                   <property name="value">
-                    <number>5029</number>
+                   <property name="text">
+                    <string>Role</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_2">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_18">
-                 <item>
-                  <widget class="QComboBox" name="netModeCmbBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
+                  <widget class="QLabel" name="hostnameLabel">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string>IP address / hostname</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="portLabel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string>Port</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="netModeLabel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -1213,229 +1044,411 @@
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
-                   <item>
-                    <property name="text">
-                     <string>Peer-to-Peer</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Packet Server</string>
-                    </property>
-                   </item>
+                   <property name="text">
+                    <string>Network mode</string>
+                   </property>
                   </widget>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_3">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_19">
-                 <item>
-                  <widget class="QComboBox" name="gameModeCmbBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
+                  <widget class="QLabel" name="gameModeLabel">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>1</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>Deathmatch</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Team Deathmatch</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Alt. Deathmatch</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Alt. Team Deathmatch</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Cooperative</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_4">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_20">
-                 <item>
-                  <widget class="QSpinBox" name="playerCountSpinBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                   <property name="minimum">
-                    <number>1</number>
-                   </property>
-                   <property name="maximum">
-                    <number>64</number>
-                   </property>
-                   <property name="value">
-                    <number>2</number>
+                   <property name="text">
+                    <string>Game mode</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_7">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
+                  <widget class="QLabel" name="playerCountLabel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
                    </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
+                   <property name="text">
+                    <string>Player count</string>
                    </property>
-                  </spacer>
+                  </widget>
                  </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_23">
                  <item>
-                  <widget class="QDoubleSpinBox" name="teamDmgSpinBox">
-                   <property name="enabled">
-                    <bool>false</bool>
+                  <widget class="QLabel" name="teamDmgLabel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
                    </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Controls how much damage players can do to their teammates. This is multiplied to the normal damage done, so a value of 0 means that players cannot hurt their teammates. A value of 1 means that players deal full damage to their teammates. You can also set this to values greater than 1 to deal extra punishment to your teammates.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                   <property name="maximum">
-                    <double>9.990000000000000</double>
-                   </property>
-                   <property name="singleStep">
-                    <double>0.100000000000000</double>
+                   <property name="text">
+                    <string>Team damage</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_8">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_24">
-                 <item>
-                  <widget class="QSpinBox" name="timeLimitSpinBox">
-                   <property name="enabled">
-                    <bool>false</bool>
+                  <widget class="QLabel" name="timeLimitLabel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
                    </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When the time limit is non-zero, the game will automatically advance to the next level after this many minutes have elapsed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                   <property name="maximum">
-                    <number>999</number>
+                   <property name="text">
+                    <string>Time limit</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_9">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
+                  <widget class="QLabel" name="fragLimitLabel">
+                   <property name="text">
+                    <string>Frag limit</string>
                    </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
+                  </widget>
                  </item>
                 </layout>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_27">
+                <layout class="QVBoxLayout" name="verticalLayout_15">
                  <item>
-                  <widget class="QSpinBox" name="fragLimitSpinBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                   <property name="maximum">
-                    <number>999</number>
-                   </property>
-                  </widget>
+                  <layout class="QHBoxLayout" name="horizontalLayout_15">
+                   <item>
+                    <widget class="QComboBox" name="multRoleCmbBox">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>Server (start a game)</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Client (join a game)</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_11">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
+                  <layout class="QHBoxLayout" name="horizontalLayout_16">
+                   <item>
+                    <widget class="QLineEdit" name="hostnameLine">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_17">
+                   <item>
+                    <widget class="QSpinBox" name="portSpinBox">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                     <property name="minimum">
+                      <number>1</number>
+                     </property>
+                     <property name="maximum">
+                      <number>65535</number>
+                     </property>
+                     <property name="singleStep">
+                      <number>0</number>
+                     </property>
+                     <property name="value">
+                      <number>5029</number>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_2">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_18">
+                   <item>
+                    <widget class="QComboBox" name="netModeCmbBox">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="toolTip">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>Peer-to-Peer</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Packet Server</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_3">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_19">
+                   <item>
+                    <widget class="QComboBox" name="gameModeCmbBox">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>1</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="toolTip">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>Deathmatch</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Team Deathmatch</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Alt. Deathmatch</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Alt. Team Deathmatch</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Cooperative</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_4">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_20">
+                   <item>
+                    <widget class="QSpinBox" name="playerCountSpinBox">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                     <property name="minimum">
+                      <number>1</number>
+                     </property>
+                     <property name="maximum">
+                      <number>64</number>
+                     </property>
+                     <property name="value">
+                      <number>2</number>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_7">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_23">
+                   <item>
+                    <widget class="QDoubleSpinBox" name="teamDmgSpinBox">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="toolTip">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Controls how much damage players can do to their teammates. This is multiplied to the normal damage done, so a value of 0 means that players cannot hurt their teammates. A value of 1 means that players deal full damage to their teammates. You can also set this to values greater than 1 to deal extra punishment to your teammates.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                     <property name="maximum">
+                      <double>9.990000000000000</double>
+                     </property>
+                     <property name="singleStep">
+                      <double>0.100000000000000</double>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_8">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_24">
+                   <item>
+                    <widget class="QSpinBox" name="timeLimitSpinBox">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="toolTip">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When the time limit is non-zero, the game will automatically advance to the next level after this many minutes have elapsed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                     <property name="maximum">
+                      <number>999</number>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_9">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_27">
+                   <item>
+                    <widget class="QSpinBox" name="fragLimitSpinBox">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                     <property name="maximum">
+                      <number>999</number>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_11">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>0</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
                  </item>
                 </layout>
                </item>
@@ -1447,13 +1460,13 @@
           <item>
            <widget class="QGroupBox" name="pathsGrpBox">
             <property name="title">
-             <string>Alternative paths</string>
+             <string>Alternative paths [stored in preset]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_19">
              <item>
               <widget class="QCheckBox" name="usePresetNameChkBox">
                <property name="text">
-                <string>Use preset name as target directory</string>
+                <string>Use preset name as target directory [global option]</string>
                </property>
               </widget>
              </item>
@@ -1530,7 +1543,7 @@
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
-              <height>40</height>
+              <height>0</height>
              </size>
             </property>
            </spacer>
@@ -1549,7 +1562,7 @@
           <item>
            <widget class="QGroupBox" name="videoGrpBox">
             <property name="title">
-             <string>Video</string>
+             <string>Video [stored globally]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_17">
              <item>
@@ -1557,7 +1570,7 @@
                <item>
                 <widget class="QLabel" name="monitorLabel">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Defines which screen is used if multiple monitors are available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>Defines which screen is used if multiple monitors are available.</string>
                  </property>
                  <property name="text">
                   <string>Monitor</string>
@@ -1600,7 +1613,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>40</width>
+                   <width>0</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -1616,7 +1629,7 @@
                <item>
                 <widget class="QLineEdit" name="resolutionXLine">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -1645,7 +1658,7 @@
                <item>
                 <widget class="QLineEdit" name="resolutionYLine">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -1679,7 +1692,7 @@
           <item>
            <widget class="QGroupBox" name="audioGrpBox">
             <property name="title">
-             <string>Audio</string>
+             <string>Audio [stored globally]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_18">
              <item>
@@ -1723,7 +1736,7 @@
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
-              <height>40</height>
+              <height>0</height>
              </size>
             </property>
            </spacer>
@@ -1739,7 +1752,7 @@
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>40</width>
+              <width>0</width>
               <height>20</height>
              </size>
             </property>
@@ -1753,7 +1766,7 @@
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
-              <height>40</height>
+              <height>0</height>
              </size>
             </property>
            </spacer>
@@ -1781,7 +1794,7 @@
          </size>
         </property>
         <property name="text">
-         <string>Additional command line arguments (global)</string>
+         <string>Additional command line arguments [global]</string>
         </property>
        </widget>
       </item>
@@ -1855,7 +1868,8 @@
     <property name="title">
      <string>Menu</string>
     </property>
-    <addaction name="setupPathsAction"/>
+    <addaction name="initialSetupAction"/>
+    <addaction name="optionsStorageAction"/>
     <addaction name="exportPresetToScriptAction"/>
     <addaction name="exportPresetToShortcutAction"/>
     <addaction name="aboutAction"/>
@@ -1863,7 +1877,7 @@
    </widget>
    <addaction name="menuItemMenu"/>
   </widget>
-  <action name="setupPathsAction">
+  <action name="initialSetupAction">
    <property name="text">
     <string>Initial setup</string>
    </property>
@@ -1891,6 +1905,11 @@
   <action name="exportPresetToShortcutAction">
    <property name="text">
     <string>Export to shortcut (Windows only)</string>
+   </property>
+  </action>
+  <action name="optionsStorageAction">
+   <property name="text">
+    <string>Configure options storage</string>
    </property>
   </action>
  </widget>

@@ -69,12 +69,6 @@ SetupDialog::SetupDialog(
 	ui->mapDirLine->setText( mapSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
 	ui->absolutePathsChkBox->setChecked( pathContext.usingAbsolutePaths() );
-	if (settings.launchOptsStorage == DontStore)
-		ui->optsStorage_none->click();
-	else if (settings.launchOptsStorage == StoreGlobally)
-		ui->optsStorage_global->click();
-	else if (settings.launchOptsStorage == StoreToPreset)
-		ui->optsStorage_preset->click();
 	ui->closeOnLaunchChkBox->setChecked( settings.closeOnLaunch );
 	ui->showEngineOutputChkBox->setChecked( settings.showEngineOutput );
 
@@ -104,10 +98,6 @@ SetupDialog::SetupDialog(
 	connect( ui->engineBtnDown, &QPushButton::clicked, this, &thisClass::engineMoveDown );
 
 	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAbsolutePaths );
-
-	connect( ui->optsStorage_none, &QRadioButton::clicked, this, &thisClass::optsStorage_none );
-	connect( ui->optsStorage_global, &QRadioButton::clicked, this, &thisClass::optsStorage_global );
-	connect( ui->optsStorage_preset, &QRadioButton::clicked, this, &thisClass::optsStorage_preset );
 
 	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::toggleCloseOnLaunch );
 	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &thisClass::toggleShowEngineOutput );
@@ -410,28 +400,6 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 
 	modSettings.dir = pathContext.convertPath( modSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
-}
-
-void SetupDialog::optsStorage_none()
-{
-	// TODO
-	settings.launchOptsStorage = DontStore;
-	settings.gameOptsStorage = DontStore;
-	settings.compatOptsStorage = DontStore;
-}
-
-void SetupDialog::optsStorage_global()
-{
-	settings.launchOptsStorage = StoreGlobally;
-	settings.gameOptsStorage = StoreGlobally;
-	settings.compatOptsStorage = StoreGlobally;
-}
-
-void SetupDialog::optsStorage_preset()
-{
-	settings.launchOptsStorage = StoreToPreset;
-	settings.gameOptsStorage = StoreToPreset;
-	settings.compatOptsStorage = StoreToPreset;
 }
 
 void SetupDialog::toggleCloseOnLaunch( bool checked )

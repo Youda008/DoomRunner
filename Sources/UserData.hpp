@@ -156,7 +156,7 @@ struct LaunchOptions
 	QString demoFile_record;
 	QString demoFile_replay;
 
-	// multiplayer
+	// multiplayer  TODO: split
 	bool isMultiplayer = false;
 	MultRole multRole = Server;
 	QString hostName;
@@ -169,7 +169,7 @@ struct LaunchOptions
 	uint fragLimit = 0;
 };
 
-struct GameplayDetails
+struct GameplayDetails  // TODO: inherit
 {
 	int32_t flags1 = 0;
 	int32_t flags2 = 0;
@@ -299,6 +299,8 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	bool useAbsolutePaths = useAbsolutePathsByDefault;
 	bool closeOnLaunch = false;
 	bool showEngineOutput = showEngineOutputByDefault;
+
+	void operator=( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
 };
 
 struct WindowGeometry

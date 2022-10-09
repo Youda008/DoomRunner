@@ -49,6 +49,7 @@ SOURCES += \
     Sources/NewConfigDialog.cpp \
     Sources/OSUtils.cpp \
     Sources/OptionsSerializer.cpp \
+    Sources/OptionsStorageDialog.cpp \
     Sources/ProcessOutputWindow.cpp \
     Sources/SetupDialog.cpp \
     Sources/UpdateChecker.cpp \
@@ -77,6 +78,7 @@ HEADERS += \
     Sources/NewConfigDialog.hpp \
     Sources/OSUtils.hpp \
     Sources/OptionsSerializer.hpp \
+    Sources/OptionsStorageDialog.hpp \
     Sources/ProcessOutputWindow.hpp \
     Sources/SetupDialog.hpp \
     Sources/UpdateChecker.hpp \
@@ -91,6 +93,7 @@ FORMS += \
     Forms/GameOptsDialog.ui \
     Forms/MainWindow.ui \
     Forms/NewConfigDialog.ui \
+    Forms/OptionsStorageDialog.ui \
     Forms/ProcessOutputWindow.ui \
     Forms/SetupDialog.ui
 

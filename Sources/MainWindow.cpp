@@ -10,6 +10,7 @@
 
 #include "AboutDialog.hpp"
 #include "SetupDialog.hpp"
+#include "OptionsStorageDialog.hpp"
 #include "NewConfigDialog.hpp"
 #include "GameOptsDialog.hpp"
 #include "CompatOptsDialog.hpp"
@@ -146,7 +147,7 @@ GameplayOptions & MainWindow::activeGameplayOptions()
 
 CompatibilityOptions & MainWindow::activeCompatOptions()
 {
-	if (settings.launchOptsStorage == StoreToPreset)
+	if (settings.compatOptsStorage == StoreToPreset)
 	{
 		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 		if (selectedPresetIdx >= 0)
@@ -281,11 +282,12 @@ MainWindow::MainWindow()
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
 
-	optionsFilePath = QDir( getAppDataDir() ).filePath( defaultOptionsFileName );
+	optionsFilePath = QDir( getAppDataDir() ).filePath( defaultOptionsFileName );  // TODO: at one place
 
 	// setup main menu actions
 
-	connect( ui->setupPathsAction, &QAction::triggered, this, &thisClass::runSetupDialog );
+	connect( ui->initialSetupAction, &QAction::triggered, this, &thisClass::runSetupDialog );
+	connect( ui->optionsStorageAction, &QAction::triggered, this, &thisClass::runOptsStorageDialog );
 	connect( ui->exportPresetToScriptAction, &QAction::triggered, this, &thisClass::exportPresetToScript );
 	connect( ui->exportPresetToShortcutAction, &QAction::triggered, this, &thisClass::exportPresetToShortcut );
 	//connect( ui->importPresetAction, &QAction::triggered, this, &thisClass::importPreset );
@@ -321,6 +323,8 @@ MainWindow::MainWindow()
 	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::changeMap );
 	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &thisClass::changeMap_demo );
 
+	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::changeDemoFile_record );
+
 	// setup buttons
 
 	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::cloneConfig );
@@ -345,8 +349,6 @@ MainWindow::MainWindow()
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
 	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &thisClass::modeRecordDemo );
 	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &thisClass::modeReplayDemo );
-
-	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::changeDemoFile_record );
 
 	// gameplay
 	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSkill );
@@ -378,7 +380,7 @@ MainWindow::MainWindow()
 	connect( ui->saveDirBtn, &QPushButton::clicked, this, &thisClass::browseSaveDir );
 	connect( ui->screenshotDirBtn, &QPushButton::clicked, this, &thisClass::browseScreenshotDir );
 
-	// mutiplayer
+	// mutiplayer  TODO: move
 	connect( ui->multiplayerChkBox, &QCheckBox::toggled, this, &thisClass::toggleMultiplayer );
 	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMultRole );
 	connect( ui->hostnameLine, &QLineEdit::textChanged, this, &thisClass::changeHost );
@@ -565,6 +567,9 @@ void MainWindow::onWindowShown()
 		runSetupDialog();
 	}
 
+	// integrate the loaded storage settings into the titles of options group-boxes
+	updateOptionsGrpBoxTitles( settings );
+
 	// if the presets are empty, add a default one so that users don't complain that they can't enter anything
 	if (presetModel.isEmpty())
 	{
@@ -593,6 +598,27 @@ void MainWindow::onWindowShown()
 
 	// setup an update timer
 	startTimer( 1000 );
+}
+
+void MainWindow::updateOptionsGrpBoxTitles( const StorageSettings & storageSettings )
+{
+	static const char * const optsStorageStrings [] =
+	{
+		"not stored",
+		"stored globally",
+		"stored in preset"
+	};
+
+	static const auto updateGroupBoxTitle = []( QGroupBox * grpBox, OptionsStorage storage )
+	{
+		QString newStorageDesc = optsStorageStrings[ storage ] + QStringLiteral(" - configurable (?)");
+		grpBox->setTitle( replaceStringBetween( grpBox->title(), '[', ']', newStorageDesc ) );
+	};
+
+	updateGroupBoxTitle( ui->launchModeGrpBox, storageSettings.launchOptsStorage );
+	updateGroupBoxTitle( ui->multiplayerGrpBox, storageSettings.launchOptsStorage );
+	updateGroupBoxTitle( ui->gameplayGrpBox, storageSettings.gameOptsStorage );
+	updateGroupBoxTitle( ui->compatGrpBox, storageSettings.compatOptsStorage );
 }
 
 void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
@@ -709,6 +735,26 @@ void MainWindow::runSetupDialog()
 		setCurrentItemByID( ui->engineCmbBox, engineModel, currentEngine );
 		setCurrentItemByID( ui->iwadListView, iwadModel, currentIWAD );
 		selectItemByID( ui->iwadListView, iwadModel, selectedIWAD );
+
+		updateLaunchCommand();
+	}
+}
+
+void MainWindow::runOptsStorageDialog()
+{
+	// The dialog gets a copy of all the required data and when it's confirmed, we copy them back.
+	// This allows the user to cancel all the changes he made without having to manually revert them.
+
+	OptionsStorageDialog dialog( this, settings );
+
+	int code = dialog.exec();
+
+	// update the data only if user clicked Ok
+	if (code == QDialog::Accepted)
+	{
+		settings = dialog.storageSettings;
+
+		updateOptionsGrpBoxTitles( settings );
 
 		updateLaunchCommand();
 	}

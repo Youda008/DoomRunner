@@ -81,10 +81,6 @@ class SetupDialog : public QDialog {
 
 	void toggleAbsolutePaths( bool checked );
 
-	void optsStorage_none();
-	void optsStorage_global();
-	void optsStorage_preset();
-
 	void toggleCloseOnLaunch( bool checked );
 	void toggleShowEngineOutput( bool checked );
 

@@ -307,7 +307,7 @@ MainWindow::MainWindow()
 
 	QString appDataDir = getAppDataDir();
 	createDirIfDoesntExist( appDataDir );
-	optionsFilePath = QDir( appDataDir ).filePath( defaultOptionsFileName );
+	optionsFilePath = getPathFromFileName( appDataDir, defaultOptionsFileName );
 
 	// setup main menu actions
 

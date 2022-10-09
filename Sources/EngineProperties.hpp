@@ -61,6 +61,8 @@ struct EngineProperties
 	MapParamStyle mapParamStyle;
 	CompatLevelStyle compLvlStyle;
 	const char * saveDirParam;
+	bool hasStdoutParam;
+	bool hasScreenshotDirParam;
 };
 
 const EngineProperties & getEngineProperties( EngineFamily family );

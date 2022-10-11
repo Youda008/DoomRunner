@@ -305,10 +305,6 @@ MainWindow::MainWindow()
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
 
-	QString appDataDir = getAppDataDir();
-	createDirIfDoesntExist( appDataDir );
-	optionsFilePath = getPathFromFileName( appDataDir, defaultOptionsFileName );
-
 	// setup main menu actions
 
 	connect( ui->initialSetupAction, &QAction::triggered, this, &thisClass::runSetupDialog );
@@ -576,11 +572,13 @@ void MainWindow::onWindowShown()
 	// so we have to do this here, when the window is already fully loaded.
 
 	// create a directory for application data, if it doesn't exist already
-	QDir appDataDir( getAppDataDir() );
+	appDataDir.setPath( getAppDataDir() );
 	if (!appDataDir.exists())
 	{
 		appDataDir.mkpath(".");
 	}
+
+	optionsFilePath = appDataDir.filePath( defaultOptionsFileName );
 
 	// try to load last saved state
 	if (QFileInfo::exists( optionsFilePath ))
@@ -603,7 +601,7 @@ void MainWindow::onWindowShown()
 
 		// automatically select those essential items (engine, IWAD, ...) that are alone in their list
 		// This is done to make it as easy as possible for beginners who just downloaded GZDoom and Brutal Doom
-		// and want to start it as easily as possible with no care about all the other features.
+		// and want to start it as easily as possible with no interest about all the other possibilities.
 		autoselectLoneItems();
 	}
 
@@ -1162,7 +1160,7 @@ void MainWindow::presetAdd()
 
 	// automatically select those essential items (engine, IWAD, ...) that are alone in their list
 	// This is done to make it as easy as possible for beginners who just downloaded GZDoom and Brutal Doom
-	// and want to start it as easily as possible with no care about all the other features.
+	// and want to start it as easily as possible with no interest about all the other possibilities.
 	autoselectLoneItems();
 
 	// open edit mode so that user can name the preset

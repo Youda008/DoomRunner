@@ -215,6 +215,9 @@ class MainWindow : public QMainWindow {
 
 	uint tickCount = 0;
 
+	QDir appDataDir;   ///< directory where this application can store its data
+	QString optionsFilePath;
+
 	bool optionsCorrupted = false;  ///< true when was a critical error during parsing of options file, such content should not be saved
 
 	bool disableSelectionCallbacks = false;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
@@ -226,8 +229,6 @@ class MainWindow : public QMainWindow {
 	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
-
-	QString optionsFilePath;
 
 	UpdateChecker updateChecker;
 

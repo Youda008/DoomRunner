@@ -2071,12 +2071,16 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 
 	for (Preset & preset : presetModel)
 	{
+		preset.selectedEnginePath = pathContext.convertPath( preset.selectedEnginePath );
+		preset.selectedIWAD = pathContext.convertPath( preset.selectedIWAD );
+		for (QString & selectedMapPack : preset.selectedMapPacks)
+		{
+			selectedMapPack = pathContext.convertPath( selectedMapPack );
+		}
 		for (Mod & mod : preset.mods)
 		{
 			mod.path = pathContext.convertPath( mod.path );
 		}
-		preset.selectedEnginePath = pathContext.convertPath( preset.selectedEnginePath );
-		preset.selectedIWAD = pathContext.convertPath( preset.selectedIWAD );
 	}
 
 	ui->saveDirLine->setText( pathContext.convertPath( ui->saveDirLine->text() ) );

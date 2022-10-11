@@ -19,7 +19,7 @@
 #include "OptionsSerializer.hpp"
 #include "Version.hpp"
 #include "UpdateChecker.hpp"
-#include "EngineProperties.hpp"
+#include "EngineTraits.hpp"
 
 #include "LangUtils.hpp"
 #include "FileSystemUtils.hpp"
@@ -739,6 +739,7 @@ void MainWindow::runSetupDialog()
 
 		// update our data from the dialog
 		engineModel.assignList( std::move( dialog.engineModel.list() ) );
+		updateEngineTraits();  // sync engineTraits with engineModel
 		iwadModel.assignList( std::move( dialog.iwadModel.list() ) );
 		iwadSettings = dialog.iwadSettings;
 		mapSettings = dialog.mapSettings;
@@ -930,18 +931,18 @@ void MainWindow::selectEngine( int index )
 			presetModel[ selectedPresetIdx ].selectedEnginePath = engineModel[ index ].path;
 	}
 
-	MapParamStyle mapParamStyle = MapParamStyle::Warp;
+	bool supportsCustomMapNames = false;
 
 	if (index >= 0)
 	{
 		checkPath_MsgBox( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
 
-		const EngineProperties & properties = getEngineProperties( engineModel[ index ].family );
-		mapParamStyle = properties.mapParamStyle;
+		supportsCustomMapNames = engineTraits[ index ].supportsCustomMapNames();
 	}
 
-	ui->mapCmbBox->setEditable( mapParamStyle == MapParamStyle::Map );
-	ui->mapCmbBox_demo->setEditable( mapParamStyle == MapParamStyle::Map );
+	// only allow editing, if the engine supports specifying map by its name
+	ui->mapCmbBox->setEditable( supportsCustomMapNames );
+	ui->mapCmbBox_demo->setEditable( supportsCustomMapNames );
 
 	// automatic alt dirs are derived from engine's config directory, which has now changed, so this need to be refreshed
 	if (globalOpts.usePresetNameAsDir)
@@ -1826,7 +1827,7 @@ void MainWindow::setAltDirsRelativeToConfigs( const QString & dirName )
 		ui->saveDirLine->setText( dirPath );
 		// Do not set screenshot_dir for engines that don't support it,
 		// some of them are bitchy and won't start if you supply them with unknown command line parameter.
-		if (getEngineProperties( engineModel[ selectedEngineIdx ].family ).hasScreenshotDirParam)
+		if (engineTraits[ selectedEngineIdx ].hasScreenshotDirParam())
 			ui->screenshotDirLine->setText( dirPath );
 		else
 			ui->screenshotDirLine->clear();
@@ -2021,6 +2022,16 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 	updateLaunchCommand();
 }
 
+/// initializes engineTraits to be in sync with current engineModel
+void MainWindow::updateEngineTraits()
+{
+	engineTraits.clear();
+	for (const Engine & engine : engineModel)
+	{
+		engineTraits.append( getEngineTraits( engine ) );
+	}
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  automatic list updates according to directory content
@@ -2137,7 +2148,7 @@ void MainWindow::updateCompatLevels()
 {
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	CompatLevelStyle currentCompLvlStyle = (selectedEngineIdx >= 0)
-	                                         ? getEngineProperties( engineModel[ selectedEngineIdx ].family ).compLvlStyle
+	                                         ? engineTraits[ selectedEngineIdx ].compatLevelStyle()
 	                                         : CompatLevelStyle::None;
 
 	if (currentCompLvlStyle != lastCompLvlStyle)
@@ -2367,6 +2378,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 
 		engineModel.startCompleteUpdate();
 		engineModel.assignList( std::move(opts.engines) );
+		updateEngineTraits();  // sync engineTraits with engineModel
 		engineModel.finishCompleteUpdate();
 	}
 
@@ -2926,8 +2938,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	}
 
 	const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
-	const QString executableName = getFileBasenameFromPath( selectedEngine.path );
-	const EngineProperties & engineProperties = getEngineProperties( selectedEngine.family );
+	const EngineTraits & engineTraits = this->engineTraits[ selectedEngineIdx ];
 
 	{
 		assertValidPath( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
@@ -2944,7 +2955,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.
 	#ifdef _WIN32
-		if (settings.showEngineOutput && engineProperties.hasStdoutParam)
+		if (settings.showEngineOutput && engineTraits.hasStdoutParam())
 			cmd.arguments << "-stdout";
 	#endif
 
@@ -3011,7 +3022,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	LaunchMode launchMode = getLaunchModeFromUI();
 	if (launchMode == LaunchMap)
 	{
-		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );
+		cmd.arguments << engineTraits.getMapArgs( ui->mapCmbBox->currentIndex(), ui->mapCmbBox->currentText() );
 	}
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
@@ -3023,7 +3034,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileLine_record->text() );
 		cmd.arguments << "-record" << base.rebaseAndQuotePath( demoPath );
-		cmd.arguments << getMapArgs( engineProperties.mapParamStyle, ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
+		cmd.arguments << engineTraits.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
@@ -3045,7 +3056,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags2 != 0)
 		cmd.arguments << "+dmflags2" << QString::number( activeGameOpts.dmflags2 );
 	if (ui->compatLevelCmbBox->isEnabled() && activeCompatOpts.compatLevel >= 0)
-		cmd.arguments << getCompatLevelArgs( executableName, engineProperties.compLvlStyle, activeCompatOpts.compatLevel );
+		cmd.arguments << engineTraits.getCompatLevelArgs( activeCompatOpts.compatLevel );
 	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
 	if (ui->allowCheatsChkBox->isChecked())
@@ -3097,15 +3108,14 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	}
 
 	if (!ui->saveDirLine->text().isEmpty())
-		cmd.arguments << engineProperties.saveDirParam << base.rebaseAndQuotePath( ui->saveDirLine->text() );
+		cmd.arguments << engineTraits.saveDirParam() << base.rebaseAndQuotePath( ui->saveDirLine->text() );
 	if (!ui->screenshotDirLine->text().isEmpty())
 		cmd.arguments << "+screenshot_dir" << base.rebaseAndQuotePath( ui->screenshotDirLine->text() );
 
 	if (ui->monitorCmbBox->currentIndex() > 0)
 	{
 		int monitorIndex = ui->monitorCmbBox->currentIndex() - 1;  // the first item is a placeholder for leaving it default
-		int engineMonitorIndex = getFirstMonitorIndex( executableName ) + monitorIndex;  // some engines index monitors from 1 and others from 0
-		cmd.arguments << "+vid_adapter" << QString::number( engineMonitorIndex );
+		cmd.arguments << "+vid_adapter" << engineTraits.getCmdMonitorIndex( monitorIndex );  // some engines index monitors from 1 and others from 0
 	}
 	if (!ui->resolutionXLine->text().isEmpty())
 		cmd.arguments << "-width" << ui->resolutionXLine->text();

@@ -155,6 +155,8 @@ class MainWindow : public QMainWindow {
 
 	void toggleAbsolutePaths( bool absolute );
 
+	void updateEngineTraits();
+
 	void setAltDirsRelativeToConfigs( const QString & dirName );
 
 	void updateIWADsFromDir();
@@ -237,6 +239,15 @@ class MainWindow : public QMainWindow {
 	// You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
 
 	ReadOnlyListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
+
+	// We need to store extra information for each engine, but making it a part of Engine struct is not a good idea,
+	// because this extra info is not user-defined and should not be serialized.
+	// Locally extending the Engine struct would mean we would have to strip this info away everytime we would need to
+	// pass it to the SetupDialog or OptionsDeserializer.
+	// Only because the content of the engine list is constant during the loop of this window and only changed in
+	// SetupDialog or OptionsDeserializer, we can afford to do this, otherwise painful manual sychronization between
+	// engineModel and engineTraits would be needed.
+	QList< EngineTraits > engineTraits;   ///< traits of each loaded engine, has same indexes as engineModel
 
 	struct ConfigFile : public ReadOnlyListModelItem
 	{

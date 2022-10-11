@@ -13,7 +13,7 @@
 
 #include "ListModel.hpp"  // ReadOnlyListModelItem, EditableListModelItem
 #include "JsonUtils.hpp"
-#include "EngineProperties.hpp"  // EngineFamily
+#include "EngineTraits.hpp"  // EngineFamily
 
 #include <QString>
 #include <QFileInfo>

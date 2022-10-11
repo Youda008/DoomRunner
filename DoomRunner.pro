@@ -36,7 +36,7 @@ SOURCES += \
     Sources/DoomUtils.cpp \
     Sources/EditableListView.cpp \
     Sources/EngineDialog.cpp \
-    Sources/EngineProperties.cpp \
+    Sources/EngineTraits.cpp \
     Sources/EventFilters.cpp \
     Sources/ExtendedTreeView.cpp \
     Sources/FileSystemUtils.cpp \
@@ -65,7 +65,7 @@ HEADERS += \
     Sources/DoomUtils.hpp \
     Sources/EditableListView.hpp \
     Sources/EngineDialog.hpp \
-    Sources/EngineProperties.hpp \
+    Sources/EngineTraits.hpp \
     Sources/EventFilters.hpp \
     Sources/ExtendedTreeView.hpp \
     Sources/FileSystemUtils.hpp \

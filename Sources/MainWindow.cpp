@@ -2300,13 +2300,7 @@ bool MainWindow::saveOptions( const QString & filePath )
 		this->geometry()
 	};
 
-	QString error = writeOptionsToFile( opts, filePath );
-
-	if (!error.isEmpty())
-	{
-		QMessageBox::warning( this, "Error saving options", error );
-	}
-	return error.isEmpty();
+	return writeOptionsToFile( opts, filePath );
 }
 
 bool MainWindow::loadOptions( const QString & filePath )
@@ -2340,10 +2334,9 @@ bool MainWindow::loadOptions( const QString & filePath )
 		{}  // window geometry
 	};
 
-	QString error = readOptionsFromFile( opts, filePath );
-	if (!error.isEmpty())
+	bool optionsRead = readOptionsFromFile( opts, filePath );
+	if (!optionsRead)
 	{
-		QMessageBox::warning( this, "Error loading options", error );
 		if (QFileInfo::exists( filePath ))
 			optionsCorrupted = true;  // file exists but cannot be read, don't overwrite it, give user chance to fix it
 		return false;

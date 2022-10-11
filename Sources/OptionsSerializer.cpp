@@ -768,14 +768,17 @@ static QByteArray serializeOptions( const OptionsToSave & opts )
 	return jsonDoc.toJson();
 }
 
-static QString deserializeOptions( OptionsToLoad & opts, const QByteArray & bytes )
+static bool deserializeOptions( OptionsToLoad & opts, const QByteArray & bytes )
 {
 	QJsonParseError error;
 	QJsonDocument jsonDoc = QJsonDocument::fromJson( bytes, &error );
 	if (jsonDoc.isNull())
 	{
-		return "Failed to parse options.json: "%error.errorString()%"\n"
-		       "You can either open it in notepad and try to repair it, or delete it and start from scratch.";
+		QMessageBox::warning( nullptr, "Error loading options",
+			"Failed to parse options.json: "%error.errorString()%"\n"
+			"You can either open it in notepad and try to repair it, or delete it and start from scratch."
+		);
+		return false;
 	}
 
 	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
@@ -809,40 +812,36 @@ static QString deserializeOptions( OptionsToLoad & opts, const QByteArray & byte
 		deserializeOptionsFromJson( opts, jsRoot );
 	}
 
-	return {};
+	return true;
 }
 
 
 //======================================================================================================================
 //  top-level API
 
-QString writeOptionsToFile( const OptionsToSave & opts, const QString & filePath )
+bool writeOptionsToFile( const OptionsToSave & opts, const QString & filePath )
 {
 	QByteArray bytes = serializeOptions( opts );
 
 	QString error = updateFileSafely( filePath, bytes );
 	if (!error.isEmpty())
 	{
-		return error;
+		QMessageBox::warning( nullptr, "Error saving options", error );
+		return false;
 	}
 
-	return {};
+	return true;
 }
 
-QString readOptionsFromFile( OptionsToLoad & opts, const QString & filePath )
+bool readOptionsFromFile( OptionsToLoad & opts, const QString & filePath )
 {
 	QByteArray bytes;
 	QString error = readWholeFile( filePath, bytes );
 	if (!error.isEmpty())
 	{
-		return error;
+		QMessageBox::warning( nullptr, "Error loading options", error );
+		return false;
 	}
 
-	error = deserializeOptions( opts, bytes );
-	if (!error.isEmpty())
-	{
-		return error;
-	}
-
-	return {};
+	return deserializeOptions( opts, bytes );
 }

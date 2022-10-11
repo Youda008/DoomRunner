@@ -73,8 +73,8 @@ struct OptionsToLoad
 	WindowGeometry geometry;
 };
 
-QString writeOptionsToFile( const OptionsToSave & opts, const QString & filePath );
-QString readOptionsFromFile( OptionsToLoad & opts, const QString & filePath );
+bool writeOptionsToFile( const OptionsToSave & opts, const QString & filePath );
+bool readOptionsFromFile( OptionsToLoad & opts, const QString & filePath );
 
 
 #endif // OPTIONS_INCLUDED

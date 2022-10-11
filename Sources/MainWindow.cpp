@@ -634,7 +634,7 @@ void MainWindow::updateOptionsGrpBoxTitles( const StorageSettings & storageSetti
 
 	static const auto updateGroupBoxTitle = []( QGroupBox * grpBox, OptionsStorage storage )
 	{
-		QString newStorageDesc = optsStorageStrings[ storage ] + QStringLiteral(" - configurable");
+		QString newStorageDesc = optsStorageStrings[ storage ] + QStringLiteral(" (configurable)");
 		grpBox->setTitle( replaceStringBetween( grpBox->title(), '[', ']', newStorageDesc ) );
 	};
 

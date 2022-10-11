@@ -134,7 +134,10 @@ void deserialize( const JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings )
 {
 	iwadSettings.updateFromDir = jsIWADs.getBool( "auto_update", false );
 	iwadSettings.dir = jsIWADs.getString( "directory" );
-	iwadSettings.searchSubdirs = jsIWADs.getBool( "subdirs", false );
+	if (jsIWADs.hasBool( "search_subdirs" ))
+		iwadSettings.searchSubdirs = jsIWADs.getBool( "search_subdirs", false );
+	else
+		iwadSettings.searchSubdirs = jsIWADs.getBool( "subdirs", false );
 }
 
 QJsonObject serialize( const MapSettings & mapSettings )

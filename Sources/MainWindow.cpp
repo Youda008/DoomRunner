@@ -2473,7 +2473,8 @@ void MainWindow::loadOptions( const QString & filePath )
 
 		engineModel.clear();
 
-		if (JsonArrayCtx jsEngineArray = jsEngines.getArray( "engines" ))
+		const char * arrayName = jsEngines.hasArray("engine_list") ? "engine_list" : "engines";
+		if (JsonArrayCtx jsEngineArray = jsEngines.getArray( arrayName ))
 		{
 			for (int i = 0; i < jsEngineArray.size(); i++)
 			{
@@ -2513,7 +2514,8 @@ void MainWindow::loadOptions( const QString & filePath )
 		}
 		else
 		{
-			if (JsonArrayCtx jsIWADArray = jsIWADs.getArray( "IWADs" ))
+			const char * arrayName = jsIWADs.hasArray("IWAD_list") ? "IWAD_list" : "IWADs";
+			if (JsonArrayCtx jsIWADArray = jsIWADs.getArray( arrayName ))
 			{
 				for (int i = 0; i < jsIWADArray.size(); i++)
 				{

@@ -55,6 +55,24 @@ QString JsonValueCtx::getPath() const
 //======================================================================================================================
 //  JsonObjectCtx
 
+bool JsonObjectCtx::hasArray( const QString & key ) const
+{
+	if (!_wrappedObject->contains( key ))
+	{
+		return false;
+	}
+	return (*_wrappedObject)[ key ].isArray();
+}
+
+bool JsonObjectCtx::hasBool( const QString & key ) const
+{
+	if (!_wrappedObject->contains( key ))
+	{
+		return false;
+	}
+	return (*_wrappedObject)[ key ].isBool();
+}
+
 JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))

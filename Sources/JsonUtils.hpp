@@ -185,6 +185,10 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 	JsonObjectCtx( const JsonObjectCtxProxy & proxy )
 		: JsonObjectCtxProxy( proxy ) {}
 
+	bool hasArray( const QString & key ) const;
+
+	bool hasBool( const QString & key ) const;
+
 	/// Returns a sub-object at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
 	JsonObjectCtxProxy getObject( const QString & key, bool showError = true ) const;

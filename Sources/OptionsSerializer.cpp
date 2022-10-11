@@ -15,6 +15,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFileInfo>
+#include <QMessageBox>
 
 
 //======================================================================================================================
@@ -782,8 +783,17 @@ static QString deserializeOptions( OptionsToLoad & opts, const QByteArray & byte
 	JsonDocumentCtx jsonDocCtx( jsonDoc );
 	const JsonObjectCtx & jsRoot = jsonDocCtx.rootObject();
 
-	// backward compatibility with older options format
 	QString optsVersion = jsRoot.getString( "version", "", DontShowError );
+
+	if (!optsVersion.isEmpty() && compareVersions( optsVersion, appVersion ) > 0)  // empty version means pre-1.4 version
+	{
+		QMessageBox::warning( nullptr, "Loading options from newer version",
+			"Detected saved options from newer version of DoomRunner. "
+			"Some settings might not be compatible. Expect errors."
+		);
+	}
+
+	// backward compatibility with older options format
 	if (optsVersion.isEmpty() || compareVersions( optsVersion, "1.7" ) < 0)
 	{
 		jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version

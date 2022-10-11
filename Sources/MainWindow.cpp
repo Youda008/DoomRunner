@@ -2444,6 +2444,13 @@ void MainWindow::loadOptions( const QString & filePath )
 	QString version = jsRoot.getString( "version" );
 	if (!version.isEmpty() && compareVersions( version, appVersion ) >= 0)  // missing "version" means old version
 		jsonDocCtx.toggleWarnings( true );  // only re-enable warnings if the options are up to date
+	if (!version.isEmpty() && compareVersions( version, appVersion ) > 0)
+	{
+		QMessageBox::warning( this, "Options from newer version detected",
+			"Detected "%QString(defaultOptionsFileName)%" from newer version of DoomRunner. "
+			"Some settings might not be compatible. Expect errors." );
+	}
+
 
 	if (JsonObjectCtx jsGeometry = jsRoot.getObject( "geometry" ))
 	{
@@ -2628,7 +2635,7 @@ void MainWindow::loadOptions( const QString & filePath )
 		else
 		{
 			QMessageBox::warning( nullptr, "Preset no longer exists",
-				"Preset that was selected last time ("%selectedPreset%") no longer exists. Did you mess up with the options.json?" );
+				"Preset that was selected last time ("%selectedPreset%") no longer exists. Did you mess up with the "%defaultOptionsFileName%"?" );
 		}
 	}
 

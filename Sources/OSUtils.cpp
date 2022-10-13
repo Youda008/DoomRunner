@@ -12,6 +12,8 @@
 #include <QStandardPaths>
 #include <QApplication>
 #include <QGuiApplication>
+#include <QDesktopServices>  // fallback for openFileLocation
+#include <QUrl>
 #include <QScreen>
 #include <QProcess>
 

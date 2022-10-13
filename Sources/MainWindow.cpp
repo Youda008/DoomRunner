@@ -216,6 +216,8 @@ MainWindow::MainWindow()
 	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::changeMap );
 	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &thisClass::changeMap_demo );
 
+	ui->compatLevelCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
+
 	// setup buttons
 
 	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::cloneConfig );

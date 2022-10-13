@@ -346,6 +346,8 @@ MainWindow::MainWindow()
 
 	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::changeDemoFile_record );
 
+	ui->compatLevelCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
+
 	// setup buttons
 
 	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::cloneConfig );

@@ -1938,9 +1938,15 @@ void MainWindow::changeScreenshotDir( const QString & dir )
 	updateLaunchCommand();
 }
 
-void MainWindow::browseSaveDir()
+QString MainWindow::lineEditOrLastDir( QLineEdit * line )
 {
-	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the directory with saves", pathContext.baseDir().path() );
+	QString lineText = line->text();
+	return !lineText.isEmpty() ? lineText : lastUsedDirectory;
+}
+
+void MainWindow::browseDir( const QString & dirPurpose, QLineEdit * targetLine )
+{
+	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the directory for "+dirPurpose, lineEditOrLastDir( targetLine ) );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -1948,22 +1954,22 @@ void MainWindow::browseSaveDir()
 	if (pathContext.usingRelativePaths())
 		path = pathContext.getRelativePath( path );
 
-	ui->saveDirLine->setText( path );
-	// the rest is done in saveDirLine callback
+	// next time use this dir as the starting dir of the file dialog for convenience
+	lastUsedDirectory = path;
+
+	targetLine->setText( path );
+	// the rest of the actions will be performed in the line edit callback,
+	// because we want to do the same things when user edits the path manually
+}
+
+void MainWindow::browseSaveDir()
+{
+	browseDir( "saves", ui->saveDirLine );
 }
 
 void MainWindow::browseScreenshotDir()
 {
-	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the directory for screenshots", pathContext.baseDir().path() );
-	if (path.isEmpty())  // user probably clicked cancel
-		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
-
-	ui->screenshotDirLine->setText( path );
-	// the rest is done in screenshotDirLine callback
+	browseDir( "screenshots", ui->screenshotDirLine );
 }
 
 
@@ -2839,7 +2845,7 @@ void MainWindow::exportPresetToShortcut()
 	QString enginePath = engineModel[ selectedEngineIdx ].path;
 	QString workingDir = getAbsoluteDirOfFile( enginePath );
 
-	QString filePath = OwnFileDialog::getSaveFileName( this, "Export preset", shortcutFileSuffix );
+	QString filePath = OwnFileDialog::getSaveFileName( this, "Export preset", shortcutFileSuffix );  // TODO
 	if (filePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
@@ -3074,7 +3080,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		cmd.arguments << "+dmflags2" << QString::number( activeLaunchOpts.gameOpts.flags2 );
 	if (ui->compatLevelCmbBox->isEnabled() && activeLaunchOpts.compatLevel >= 0)
 		cmd.arguments << getCompatLevelArgs( executableName, engineProperties.compLvlStyle, activeLaunchOpts.compatLevel );
-	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())  // TODO
+	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
 	if (ui->allowCheatsChkBox->isChecked())
 		cmd.arguments << "+sv_cheats" << "1";

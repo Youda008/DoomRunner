@@ -25,6 +25,7 @@
 
 class QItemSelection;
 class QComboBox;
+class QLineEdit;
 class QProcess;
 
 namespace Ui {
@@ -154,6 +155,9 @@ class MainWindow : public QMainWindow {
 
 	void toggleAbsolutePaths( bool absolute );
 
+	QString lineEditOrLastDir( QLineEdit * line );
+	void browseDir( const QString & dirPurpose, QLineEdit * targetLine );
+
 	void setAltDirsRelativeToConfigs( const QString & dirName );
 
 	void restorePreset( int index );
@@ -197,6 +201,8 @@ class MainWindow : public QMainWindow {
 	Ui::MainWindow * ui;
 
 	uint tickCount;
+
+	QString lastUsedDirectory;  // TODO: common base
 
 	QString optionsFilePath;
 

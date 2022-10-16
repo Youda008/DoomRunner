@@ -25,6 +25,7 @@
 
 class QItemSelection;
 class QComboBox;
+class QLineEdit;
 class OptionsToLoad;
 
 namespace Ui {
@@ -157,6 +158,9 @@ class MainWindow : public QMainWindow {
 
 	void updateEngineTraits();
 
+	QString lineEditOrLastDir( QLineEdit * line );
+	void browseDir( const QString & dirPurpose, QLineEdit * targetLine );
+
 	void setAltDirsRelativeToConfigs( const QString & dirName );
 
 	void updateIWADsFromDir();
@@ -214,6 +218,8 @@ class MainWindow : public QMainWindow {
 	Ui::MainWindow * ui = nullptr;
 
 	uint tickCount = 0;
+
+	QString lastUsedDirectory;  // TODO: common base
 
 	QDir appDataDir;   ///< directory where this application can store its data
 	QString optionsFilePath;

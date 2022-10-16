@@ -89,10 +89,9 @@ class SetupDialog : public QDialog {
 	void setupEngineList();
 	void setupIWADList();
 
-	QString lineEditOrLastDir( QLineEdit * line );
-
 	void toggleAutoIWADUpdate( bool enabled );
 
+	QString lineEditOrLastDir( QLineEdit * line );
 	void browseDir( const QString & dirPurpose, QLineEdit * targetLine );
 
  private: // members
@@ -101,9 +100,9 @@ class SetupDialog : public QDialog {
 
 	uint tickCount;
 
-	ConfirmationFilter engineConfirmationFilter;
-
 	QString lastUsedDirectory;
+
+	ConfirmationFilter engineConfirmationFilter;
 
  public: // return values from this dialog
 

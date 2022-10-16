@@ -52,6 +52,8 @@ SetupDialog::SetupDialog(
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
 
+	lastUsedDirectory = iwadSettings.dir;
+
 	// setup list views
 
 	setupEngineList();
@@ -198,16 +200,6 @@ SetupDialog::~SetupDialog()
 //----------------------------------------------------------------------------------------------------------------------
 //  slots
 
-void SetupDialog::manageIWADsManually()
-{
-	toggleAutoIWADUpdate( false );
-}
-
-void SetupDialog::manageIWADsAutomatically()
-{
-	toggleAutoIWADUpdate( true );
-}
-
 void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 {
 	iwadSettings.updateFromDir = enabled;
@@ -232,6 +224,16 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 		updateIWADsFromDir();
 }
 
+void SetupDialog::manageIWADsManually()
+{
+	toggleAutoIWADUpdate( false );
+}
+
+void SetupDialog::manageIWADsAutomatically()
+{
+	toggleAutoIWADUpdate( true );
+}
+
 void SetupDialog::toggleIWADSubdirs( bool checked )
 {
 	iwadSettings.searchSubdirs = checked;
@@ -240,6 +242,29 @@ void SetupDialog::toggleIWADSubdirs( bool checked )
 		updateIWADsFromDir();
 }
 
+QString SetupDialog::lineEditOrLastDir( QLineEdit * line )
+{
+	QString lineText = line->text();
+	return !lineText.isEmpty() ? lineText : lastUsedDirectory;
+}
+
+void SetupDialog::browseDir( const QString & dirPurpose, QLineEdit * targetLine )
+{
+	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the directory with "+dirPurpose, lineEditOrLastDir( targetLine ) );
+	if (path.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path comming out of the file dialog is always absolute
+	if (pathContext.usingRelativePaths())
+		path = pathContext.getRelativePath( path );
+
+	// next time use this dir as the starting dir of the file dialog for convenience
+	lastUsedDirectory = path;
+
+	targetLine->setText( path );
+	// the rest of the actions will be performed in the line edit callback,
+	// because we want to do the same things when user edits the path manually
+}
 
 void SetupDialog::browseIWADDir()
 {
@@ -254,21 +279,6 @@ void SetupDialog::browseMapDir()
 void SetupDialog::browseModDir()
 {
 	browseDir( "mods", ui->modDirLine );
-}
-
-void SetupDialog::browseDir( const QString & dirPurpose, QLineEdit * targetLine )
-{
-	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the directory with "+dirPurpose, targetLine->text() );
-	if (path.isEmpty())  // user probably clicked cancel
-		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
-
-	targetLine->setText( path );
-	// the rest of the actions will be performed in the line edit callback,
-	// because we want to do the same things when user edits the path manually
 }
 
 void SetupDialog::changeIWADDir( const QString & text )
@@ -291,7 +301,7 @@ void SetupDialog::changeModDir( const QString & text )
 
 void SetupDialog::iwadAdd()
 {
-	QString path = OwnFileDialog::getOpenFileName( this, "Locate the IWAD", QString(),
+	QString path = OwnFileDialog::getOpenFileName( this, "Locate the IWAD", lastUsedDirectory,
 		  makeFileFilter( "Doom data files", iwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
 		+ "All files (*)"
@@ -302,6 +312,9 @@ void SetupDialog::iwadAdd()
 	// the path comming out of the file dialog is always absolute
 	if (pathContext.usingRelativePaths())
 		path = pathContext.getRelativePath( path );
+
+	// next time use this dir as the starting dir of the file dialog for convenience
+	lastUsedDirectory = getDirOfFile( path );
 
 	appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );
 }

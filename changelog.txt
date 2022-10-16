@@ -1,3 +1,12 @@
+1.6.4
+- removed special characters from paths derived from Preset names
+- prevented using +screenshot_dir and -stdout for engines that don't support it
+- save options.json to %appdata% if the current directory is not writable
+- workaround for freezing file dialogs on some Linux desktop environments
+- prevented showing "doesn't exist" warning when a path is empty (not set)
+- fixed compatbility level "out of bounds" error when restoring with no engine selected
+- fixed switching relative/absolute paths for selected map packs
+
 1.6.3
 - fixed the "Show FPS" checkbox not restoring previous value after restarting the launcher
 - fixed the compatibility level not reseting correctly when the "Save globally" setting is used

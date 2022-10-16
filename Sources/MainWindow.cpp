@@ -67,7 +67,7 @@ static constexpr bool DontVerifyPaths = false;
 
 static bool verifyPath( const QString & path, const QString & errorMessage )
 {
-	if (!QFileInfo::exists( path ))
+	if (!path.isEmpty() && !QFileInfo::exists( path ))
 	{
 		QMessageBox::warning( nullptr, "File or directory no longer exists", errorMessage.arg( path ) );
 		return false;
@@ -2565,7 +2565,6 @@ void MainWindow::loadOptions( const QString & filePath )
 
 		deserialize( jsMaps, mapSettings );
 
-		// TODO: don't verify empty
 		verifyPath( mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 	}
 

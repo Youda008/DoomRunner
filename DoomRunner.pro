@@ -47,6 +47,7 @@ SOURCES += \
     Sources/MainWindow.cpp \
     Sources/NewConfigDialog.cpp \
     Sources/OSUtils.cpp \
+    Sources/OwnFileDialog.cpp \
     Sources/ProcessOutputWindow.cpp \
     Sources/SetupDialog.cpp \
     Sources/UpdateChecker.cpp \
@@ -73,6 +74,7 @@ HEADERS += \
     Sources/MainWindow.hpp \
     Sources/NewConfigDialog.hpp \
     Sources/OSUtils.hpp \
+    Sources/OwnFileDialog.hpp \
     Sources/ProcessOutputWindow.hpp \
     Sources/SetupDialog.hpp \
     Sources/UpdateChecker.hpp \

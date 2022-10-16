@@ -27,6 +27,12 @@
 
 //======================================================================================================================
 
+const QString & getLinuxDesktopEnv()
+{
+	static const QString desktopEnv = qEnvironmentVariable("XDG_CURRENT_DESKTOP");  // only need to read this once
+	return desktopEnv;
+}
+
 QVector< MonitorInfo > listMonitors()
 {
 	QVector< MonitorInfo > monitors;

@@ -8,7 +8,8 @@
 #include "EngineDialog.hpp"
 #include "ui_EngineDialog.h"
 
-#include <QFileDialog>
+#include "OwnFileDialog.hpp"
+
 #include <QStandardPaths>
 #include <QDir>
 #include <QTimer>
@@ -88,7 +89,7 @@ static QString getConfigDirOfEngine( const QString & enginePath )
 	// In Windows ZDoom stores its config in the directory of its binaries,
 	// but in Linux it stores them in standard user's app config dir (usually something like /home/user/.config/)
  #ifdef _WIN32
-	return getDirOfFile( enginePath );
+	return getDirOfFile( enginePath );  // TODO
  #else
 	QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
 	QString engineName = getFileNameFromPath( enginePath );
@@ -98,7 +99,7 @@ static QString getConfigDirOfEngine( const QString & enginePath )
 
 void EngineDialog::browseEngine()
 {
-	QString enginePath = QFileDialog::getOpenFileName( this, "Locate engine's executable", ui->pathLine->text(),
+	QString enginePath = OwnFileDialog::getOpenFileName( this, "Locate engine's executable", ui->pathLine->text(),
  #ifdef _WIN32
 		"Executable files (*.exe);;"
  #endif
@@ -127,7 +128,7 @@ void EngineDialog::browseEngine()
 
 void EngineDialog::browseConfigDir()
 {
-	QString dirPath = QFileDialog::getExistingDirectory( this, "Locate engine's config directory", ui->configDirLine->text() );
+	QString dirPath = OwnFileDialog::getExistingDirectory( this, "Locate engine's config directory", ui->configDirLine->text() );
 	if (dirPath.isEmpty())  // user probably clicked cancel
 		return;
 

@@ -17,6 +17,17 @@
 
 //======================================================================================================================
 
+inline bool isWindows()
+{
+ #ifdef _WIN32
+	return true;
+ #else
+	return false;
+ #endif
+}
+
+const QString & getLinuxDesktopEnv();
+
 struct MonitorInfo
 {
 	QString name;

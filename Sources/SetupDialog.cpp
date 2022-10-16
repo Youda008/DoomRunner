@@ -10,6 +10,7 @@
 
 #include "EngineDialog.hpp"
 
+#include "OwnFileDialog.hpp"
 #include "EventFilters.hpp"  // ConfirmationFilter
 #include "WidgetUtils.hpp"
 #include "FileSystemUtils.hpp"  // PathContext
@@ -20,7 +21,6 @@
 #include <QStringBuilder>
 #include <QDir>
 #include <QFileInfo>
-#include <QFileDialog>
 #include <QAction>
 
 
@@ -258,7 +258,7 @@ void SetupDialog::browseModDir()
 
 void SetupDialog::browseDir( const QString & dirPurpose, QLineEdit * targetLine )
 {
-	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory with "+dirPurpose, targetLine->text() );
+	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the directory with "+dirPurpose, targetLine->text() );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -291,7 +291,7 @@ void SetupDialog::changeModDir( const QString & text )
 
 void SetupDialog::iwadAdd()
 {
-	QString path = QFileDialog::getOpenFileName( this, "Locate the IWAD", QString(),
+	QString path = OwnFileDialog::getOpenFileName( this, "Locate the IWAD", QString(),
 		  makeFileFilter( "Doom data files", iwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
 		+ "All files (*)"

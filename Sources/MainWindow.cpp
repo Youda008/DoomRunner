@@ -24,6 +24,7 @@
 #include "LangUtils.hpp"
 #include "FileSystemUtils.hpp"
 #include "OSUtils.hpp"
+#include "OwnFileDialog.hpp"
 #include "WidgetUtils.hpp"
 #include "DoomUtils.hpp"
 #include "MiscUtils.hpp"  // checkPath
@@ -38,7 +39,6 @@
 #include <QFile>
 #include <QDir>
 #include <QFileIconProvider>
-#include <QFileDialog>
 #include <QMessageBox>
 #include <QTimer>
 #include <QProcess>
@@ -1240,7 +1240,7 @@ void MainWindow::presetInsertSeparator()
 
 void MainWindow::modAdd()
 {
-	QStringList paths = QFileDialog::getOpenFileNames( this, "Locate the mod file", modSettings.dir,
+	QStringList paths = OwnFileDialog::getOpenFileNames( this, "Locate the mod file", modSettings.dir,
 		  makeFileFilter( "Doom mod files", pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
 		+ "All files (*)"
@@ -1273,7 +1273,7 @@ void MainWindow::modAdd()
 
 void MainWindow::modAddDir()
 {
-	QString path = QFileDialog::getExistingDirectory( this, "Locate the mod directory", modSettings.dir );
+	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the mod directory", modSettings.dir );
 
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
@@ -1876,7 +1876,7 @@ void MainWindow::changeScreenshotDir( const QString & dir )
 
 void MainWindow::browseSaveDir()
 {
-	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory with saves", pathContext.baseDir().path() );
+	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the directory with saves", pathContext.baseDir().path() );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -1890,7 +1890,7 @@ void MainWindow::browseSaveDir()
 
 void MainWindow::browseScreenshotDir()
 {
-	QString path = QFileDialog::getExistingDirectory( this, "Locate the directory for screenshots", pathContext.baseDir().path() );
+	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the directory for screenshots", pathContext.baseDir().path() );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -2803,7 +2803,7 @@ void MainWindow::exportPresetToScript()
 		return;
 	}
 
-	QString filePath = QFileDialog::getSaveFileName( this, "Export preset", QString(), scriptFileSuffix );
+	QString filePath = OwnFileDialog::getSaveFileName( this, "Export preset", QString(), scriptFileSuffix );
 	if (filePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
@@ -2853,7 +2853,7 @@ void MainWindow::exportPresetToShortcut()
 	QString enginePath = engineModel[ selectedEngineIdx ].path;
 	QString workingDir = getAbsoluteDirOfFile( enginePath );
 
-	QString filePath = QFileDialog::getSaveFileName( this, "Export preset", shortcutFileSuffix );
+	QString filePath = OwnFileDialog::getSaveFileName( this, "Export preset", shortcutFileSuffix );
 	if (filePath.isEmpty())  // user probably clicked cancel
 	{
 		return;

@@ -50,6 +50,7 @@ SOURCES += \
     Sources/OSUtils.cpp \
     Sources/OptionsSerializer.cpp \
     Sources/OptionsStorageDialog.cpp \
+    Sources/OwnFileDialog.cpp \
     Sources/ProcessOutputWindow.cpp \
     Sources/SetupDialog.cpp \
     Sources/UpdateChecker.cpp \
@@ -79,6 +80,7 @@ HEADERS += \
     Sources/OSUtils.hpp \
     Sources/OptionsSerializer.hpp \
     Sources/OptionsStorageDialog.hpp \
+    Sources/OwnFileDialog.hpp \
     Sources/ProcessOutputWindow.hpp \
     Sources/SetupDialog.hpp \
     Sources/UpdateChecker.hpp \

@@ -2858,7 +2858,7 @@ void MainWindow::exportPresetToShortcut()
 	QString enginePath = engineModel[ selectedEngineIdx ].path;
 	QString workingDir = getAbsoluteDirOfFile( enginePath );
 
-	QString filePath = OwnFileDialog::getSaveFileName( this, "Export preset", shortcutFileSuffix );  // TODO
+	QString filePath = OwnFileDialog::getSaveFileName( this, "Export preset", QString(), shortcutFileSuffix );
 	if (filePath.isEmpty())  // user probably clicked cancel
 	{
 		return;

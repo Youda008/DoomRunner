@@ -17,7 +17,7 @@
 
 bool checkPath_MsgBox( const QString & path, const QString & errorMessage )
 {
-	if (!QFileInfo::exists( path ))
+	if (!path.isEmpty() && !QFileInfo::exists( path ))
 	{
 		QMessageBox::warning( nullptr, "File or directory no longer exists", errorMessage.arg( path ) );
 		return false;
@@ -27,7 +27,7 @@ bool checkPath_MsgBox( const QString & path, const QString & errorMessage )
 
 void checkPath_exception( const QString & path )
 {
-	if (!QFileInfo::exists( path ))
+	if (!path.isEmpty() && !QFileInfo::exists( path ))
 	{
 		throw FileOrDirNotFound{ path };
 	}

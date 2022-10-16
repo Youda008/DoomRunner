@@ -315,9 +315,8 @@ MainWindow::MainWindow()
 	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::runAboutDialog );
 	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
 
- #ifndef _WIN32  // Windows-only feature
-	ui->exportPresetToShortcutAction->setEnabled( false );
- #endif
+	if (isWindows())  // Windows-only feature
+		ui->exportPresetToShortcutAction->setEnabled( false );
 
 	// setup main list views
 
@@ -574,7 +573,7 @@ void MainWindow::onWindowShown()
 	// so we have to do this here, when the window is already fully loaded.
 
 	// create a directory for application data, if it doesn't exist already
-	appDataDir.setPath( getAppDataDir() );
+	appDataDir.setPath( getThisAppDataDir() );
 	if (!appDataDir.exists())
 	{
 		appDataDir.mkpath(".");
@@ -2957,10 +2956,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.
-	#ifdef _WIN32
-		if (settings.showEngineOutput && engineTraits.hasStdoutParam())
+		if (isWindows() && settings.showEngineOutput && engineTraits.hasStdoutParam())
 			cmd.arguments << "-stdout";
-	#endif
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config

@@ -55,7 +55,7 @@ QVector< MonitorInfo > listMonitors()
 	return monitors;
 }
 
-QString getAppDataDir()
+QString getThisAppDataDir()
 {
 	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
  #ifdef _WIN32
@@ -66,6 +66,19 @@ QString getAppDataDir()
 		return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
  #else
 	return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
+ #endif
+}
+
+QString getAppDataDir( const QString & executablePath )
+{
+	// In Windows engines store their config in the directory of its binaries,
+	// but in Linux it stores them in standard user's app config dir (usually something like /home/user/.config/)
+ #ifdef _WIN32
+	return getDirOfFile( executablePath );
+ #else
+	QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
+	QString appName = getFileNameFromPath( executablePath );
+	return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
  #endif
 }
 

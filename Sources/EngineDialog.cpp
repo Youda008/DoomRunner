@@ -9,8 +9,8 @@
 #include "ui_EngineDialog.h"
 
 #include "OwnFileDialog.hpp"
+#include "OSUtils.hpp"
 
-#include <QStandardPaths>
 #include <QDir>
 #include <QTimer>
 #include <QMessageBox>
@@ -77,24 +77,10 @@ static QString getEngineName( const QString & enginePath )
 {
 	// In Windows we can use the directory name, which can tell slightly more than just the binary
 	// but in Linux we have to fallback to the binary name, because all binaries are in same dir.
- #ifdef _WIN32
-	return getDirnameOfFile( enginePath );
- #else
-	return getFileNameFromPath( enginePath );
- #endif
-}
-
-static QString getConfigDirOfEngine( const QString & enginePath )
-{
-	// In Windows ZDoom stores its config in the directory of its binaries,
-	// but in Linux it stores them in standard user's app config dir (usually something like /home/user/.config/)
- #ifdef _WIN32
-	return getDirOfFile( enginePath );  // TODO
- #else
-	QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
-	QString engineName = getFileNameFromPath( enginePath );
-	return standardConfigDir.filePath( engineName );  // -> /home/user/.config/zdoom
- #endif
+	if (isWindows())
+		return getDirnameOfFile( enginePath );
+	else
+		return getFileNameFromPath( enginePath );
 }
 
 void EngineDialog::browseEngine()
@@ -118,7 +104,7 @@ void EngineDialog::browseEngine()
 		ui->nameLine->setText( getEngineName( enginePath ) );
 
 	if (ui->configDirLine->text().isEmpty())  // don't overwrite existing config dir
-		ui->configDirLine->setText( getConfigDirOfEngine( enginePath ) );
+		ui->configDirLine->setText( getAppDataDir( enginePath ) );
 
 	// guess the engine family based on executable's name
 	QString executableName = getFileBasenameFromPath( enginePath );

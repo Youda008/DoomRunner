@@ -13,6 +13,8 @@
 #include <QTextStream>
 #include <QRegularExpression>
 #include <QProcess>
+#include <QDesktopServices>  // fallback for openFileLocation
+#include <QUrl>
 
 
 //======================================================================================================================

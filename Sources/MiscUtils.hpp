@@ -11,7 +11,11 @@
 
 #include "Common.hpp"
 
+#include "FileSystemUtils.hpp"  // PathContext
+
 #include <QString>
+
+class QLineEdit;
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -36,6 +40,24 @@ QString replaceStringBetween( QString source, char startingChar, char endingChar
 
 /// Creates a file filter for the QFileDialog::getOpenFileNames.
 QString makeFileFilter( const char * filterName, const QVector< QString > & suffixes );
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  common base for windows/dialogs dealing with user-defined directories
+
+class DialogCommon {
+
+ protected:
+
+	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
+	QString lastUsedDir;  ///<
+
+	DialogCommon( PathContext pathContext ) : pathContext( std::move(pathContext) ) {}
+
+	QString lineEditOrLastDir( QLineEdit * line );
+	void browseDir( QWidget * parent, const QString & dirPurpose, QLineEdit * targetLine );
+
+};
 
 
 #endif // MISC_UTILS_INCLUDED

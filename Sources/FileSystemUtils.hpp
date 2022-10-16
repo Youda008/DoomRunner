@@ -11,13 +11,13 @@
 
 #include "Common.hpp"
 
-class QModelIndex;
-
 #include <QString>
 #include <QStringBuilder>
 #include <QByteArray>
 #include <QDir>
 #include <QFileInfo>
+
+class QModelIndex;
 
 #include <functional>
 
@@ -57,7 +57,9 @@ class PathContext {
 		: _baseDir( baseDir ), _prevBaseDir( prevBaseDir ), _pathStyle( pathStyle ), _quotePaths( quotePaths ) {}
 
 	PathContext( const PathContext & other ) = default;
+	PathContext( PathContext && other ) = default;
 	PathContext & operator=( const PathContext & other ) = default;
+	PathContext & operator=( PathContext && other ) = default;
 
 	const QDir & baseDir() const                       { return _baseDir; }
 	PathStyle pathStyle() const                        { return _pathStyle; }

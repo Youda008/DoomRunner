@@ -11,10 +11,10 @@
 
 #include "Common.hpp"
 
+#include "MiscUtils.hpp"  // DialogCommon
 #include "UserData.hpp"  // Engine, IWAD
 #include "ListModel.hpp"
 #include "EventFilters.hpp"  // ConfirmationFilter
-#include "FileSystemUtils.hpp"  // PathContext
 
 #include <QDialog>
 
@@ -28,7 +28,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class SetupDialog : public QDialog {
+class SetupDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 
@@ -91,22 +91,15 @@ class SetupDialog : public QDialog {
 
 	void toggleAutoIWADUpdate( bool enabled );
 
-	QString lineEditOrLastDir( QLineEdit * line );
-	void browseDir( const QString & dirPurpose, QLineEdit * targetLine );
-
  private: // members
 
 	Ui::SetupDialog * ui;
 
 	uint tickCount;
 
-	QString lastUsedDirectory;
-
 	ConfirmationFilter engineConfirmationFilter;
 
  public: // return values from this dialog
-
-	PathContext pathContext;
 
 	EditableListModel< Engine > engineModel;
 

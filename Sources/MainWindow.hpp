@@ -11,9 +11,9 @@
 
 #include "Common.hpp"
 
+#include "MiscUtils.hpp"  // DialogCommon
 #include "UserData.hpp"
 #include "ListModel.hpp"
-#include "FileSystemUtils.hpp"  // PathContext
 #include "UpdateChecker.hpp"
 
 #include <QMainWindow>
@@ -35,7 +35,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow, private DialogCommon {
 
 	Q_OBJECT
 
@@ -158,9 +158,6 @@ class MainWindow : public QMainWindow {
 
 	void updateEngineTraits();
 
-	QString lineEditOrLastDir( QLineEdit * line );
-	void browseDir( const QString & dirPurpose, QLineEdit * targetLine );
-
 	void setAltDirsRelativeToConfigs( const QString & dirName );
 
 	void updateIWADsFromDir();
@@ -219,8 +216,6 @@ class MainWindow : public QMainWindow {
 
 	uint tickCount = 0;
 
-	QString lastUsedDirectory;  // TODO: common base
-
 	QDir appDataDir;   ///< directory where this application can store its data
 	QString optionsFilePath;
 
@@ -233,8 +228,6 @@ class MainWindow : public QMainWindow {
 	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
 
 	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
-
-	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
 
 	UpdateChecker updateChecker;
 

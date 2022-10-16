@@ -276,7 +276,9 @@ CompatibilityOptions & MainWindow::activeCompatOptions()
 MainWindow::MainWindow()
 :
 	QMainWindow( nullptr ),
-	pathContext( QApplication::applicationDirPath(), useAbsolutePathsByDefault ), // all relative paths will internally be stored relative to the application's dir
+	DialogCommon(
+		PathContext( QApplication::applicationDirPath(), useAbsolutePathsByDefault )  // all relative paths will internally be stored relative to the application's dir
+	),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
@@ -745,7 +747,6 @@ void MainWindow::runSetupDialog()
 		modSettings = dialog.modSettings;
 		settings = dialog.settings;
 		// update all stored paths
-		pathContext.toggleAbsolutePaths( settings.useAbsolutePaths );
 		toggleAbsolutePaths( settings.useAbsolutePaths );
 		currentEngine = pathContext.convertPath( currentEngine );
 		currentIWAD = pathContext.convertPath( currentIWAD );
@@ -1873,38 +1874,14 @@ void MainWindow::changeScreenshotDir( const QString & dir )
 	updateLaunchCommand();
 }
 
-QString MainWindow::lineEditOrLastDir( QLineEdit * line )
-{
-	QString lineText = line->text();
-	return !lineText.isEmpty() ? lineText : lastUsedDirectory;
-}
-
-void MainWindow::browseDir( const QString & dirPurpose, QLineEdit * targetLine )
-{
-	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the directory for "+dirPurpose, lineEditOrLastDir( targetLine ) );
-	if (path.isEmpty())  // user probably clicked cancel
-		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
-
-	// next time use this dir as the starting dir of the file dialog for convenience
-	lastUsedDirectory = path;
-
-	targetLine->setText( path );
-	// the rest of the actions will be performed in the line edit callback,
-	// because we want to do the same things when user edits the path manually
-}
-
 void MainWindow::browseSaveDir()
 {
-	browseDir( "saves", ui->saveDirLine );
+	browseDir( this, "with saves", ui->saveDirLine );
 }
 
 void MainWindow::browseScreenshotDir()
 {
-	browseDir( "screenshots", ui->screenshotDirLine );
+	browseDir( this, "for screenshots", ui->screenshotDirLine );
 }
 
 

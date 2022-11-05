@@ -46,6 +46,7 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 	{ "chocolate-doom",  EngineFamily::ChocolateDoom },
 	{ "crispy-doom",     EngineFamily::ChocolateDoom },
 	{ "doomretro",       EngineFamily::ChocolateDoom },
+	{ "strife-ve",       EngineFamily::ChocolateDoom },
 };
 
 static const EngineFamilyTraits engineFamilyTraits [] =

@@ -661,11 +661,12 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 
 	if (tickCount % dirUpdateDelay == 0)
 	{
-		if (iwadSettings.updateFromDir)
-			updateIWADsFromDir();
-		updateConfigFilesFromDir();
-		updateSaveFilesFromDir();
-		updateDemoFilesFromDir();
+		// Because the current dir is now different, the launcher's paths no longer work,
+		// so prevent reloading lists from directories because user would lose selection.
+		if (!engineRunning)
+		{
+			updateListsFromDirs();
+		}
 	}
 
 	if (tickCount % 60 == 0)
@@ -2033,6 +2034,15 @@ void MainWindow::updateEngineTraits()
 // to be re-selected, so we have to manually notify the callbacks (which were disabled before) that the selection was
 // reset, so that everything updates correctly.
 
+void MainWindow::updateListsFromDirs()
+{
+	if (iwadSettings.updateFromDir)
+		updateIWADsFromDir();
+	updateConfigFilesFromDir();
+	updateSaveFilesFromDir();
+	updateDemoFilesFromDir();
+}
+
 void MainWindow::updateIWADsFromDir()
 {
 	auto origSelection = getSelectedItemIDs( ui->iwadListView, iwadModel );
@@ -3157,9 +3167,17 @@ void MainWindow::launch()
 	// The command paths are always generated relative to the engine's dir.
 	QString currentDir = QDir::currentPath();
 	QDir::setCurrent( engineDir );
+	// Because the current dir is now different, the launcher's paths no longer work,
+	// so prevent reloading lists from directories because user would lose selection.
+	engineRunning = true;
 
 	// at the end of function restore the previous current dir
-	auto guard = atScopeEndDo( [&](){ QDir::setCurrent( currentDir ); } );
+	auto guard = atScopeEndDo( [&]()
+	{
+		QDir::setCurrent( currentDir );
+		engineRunning = false;
+		updateListsFromDirs();
+	});
 
 	if (settings.showEngineOutput)
 	{

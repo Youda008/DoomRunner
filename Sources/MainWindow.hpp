@@ -160,6 +160,7 @@ class MainWindow : public QMainWindow, private DialogCommon {
 
 	void setAltDirsRelativeToConfigs( const QString & dirName );
 
+	void updateListsFromDirs();
 	void updateIWADsFromDir();
 	void refreshMapPacks();
 	void updateConfigFilesFromDir();
@@ -215,6 +216,8 @@ class MainWindow : public QMainWindow, private DialogCommon {
 	Ui::MainWindow * ui = nullptr;
 
 	uint tickCount = 0;
+
+	bool engineRunning = false;
 
 	QDir appDataDir;   ///< directory where this application can store its data
 	QString optionsFilePath;

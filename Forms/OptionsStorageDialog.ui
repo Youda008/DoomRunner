@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>505</width>
-    <height>192</height>
+    <width>509</width>
+    <height>274</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -50,70 +50,10 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="1" colspan="2">
-    <widget class="QWidget" name="widget_3" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QRadioButton" name="compatBtn_none">
-        <property name="toolTip">
-         <string>These options will not be stored. Everytime you start the launcher, default values will be loaded.</string>
-        </property>
-        <property name="text">
-         <string>Not stored</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="compatBtn_global">
-        <property name="toolTip">
-         <string>These options will be stored in global storage (common for all presets). Everytime you start the launcher, they will be restored to the state when you closed it.</string>
-        </property>
-        <property name="text">
-         <string>Stored globally</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="compatBtn_preset">
-        <property name="toolTip">
-         <string>Each preset will have its own options. Everytime you select a preset, these options will be restored from it.</string>
-        </property>
-        <property name="text">
-         <string>Stored in preset</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="4" column="0" colspan="3">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
    <item row="3" column="0">
     <widget class="QLabel" name="compatLabel">
      <property name="text">
       <string>Compatibility options</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="launchLabel">
-     <property name="text">
-      <string>Launch options &amp; multiplayer options</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="gameplayLabel">
-     <property name="text">
-      <string>Gameplay options</string>
      </property>
     </widget>
    </item>
@@ -158,6 +98,152 @@
       </item>
       <item>
        <widget class="QRadioButton" name="launchBtn_preset">
+        <property name="toolTip">
+         <string>Each preset will have its own options. Everytime you select a preset, these options will be restored from it.</string>
+        </property>
+        <property name="text">
+         <string>Stored in preset</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="3">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" colspan="2">
+    <widget class="QWidget" name="widget_3" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QRadioButton" name="compatBtn_none">
+        <property name="toolTip">
+         <string>These options will not be stored. Everytime you start the launcher, default values will be loaded.</string>
+        </property>
+        <property name="text">
+         <string>Not stored</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="compatBtn_global">
+        <property name="toolTip">
+         <string>These options will be stored in global storage (common for all presets). Everytime you start the launcher, they will be restored to the state when you closed it.</string>
+        </property>
+        <property name="text">
+         <string>Stored globally</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="compatBtn_preset">
+        <property name="toolTip">
+         <string>Each preset will have its own options. Everytime you select a preset, these options will be restored from it.</string>
+        </property>
+        <property name="text">
+         <string>Stored in preset</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="gameplayLabel">
+     <property name="text">
+      <string>Gameplay options</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" colspan="2">
+    <widget class="QWidget" name="widget_4" native="true">
+     <property name="toolTip">
+      <string>Each preset will have its own options. Everytime you select a preset, these options will be restored from it.</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QRadioButton" name="videoBtn_none">
+        <property name="toolTip">
+         <string>These options will not be stored. Everytime you start the launcher, default values will be loaded.</string>
+        </property>
+        <property name="text">
+         <string>Not stored</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="videoBtn_global">
+        <property name="toolTip">
+         <string>These options will be stored in global storage (common for all presets). Everytime you start the launcher, they will be restored to the state when you closed it.</string>
+        </property>
+        <property name="text">
+         <string>Stored globally</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="videoBtn_preset">
+        <property name="text">
+         <string>Stored in preset</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="launchLabel">
+     <property name="text">
+      <string>Launch options &amp; multiplayer options</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Video options</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Audio options</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1" colspan="2">
+    <widget class="QWidget" name="widget_5" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QRadioButton" name="audioBtn_none">
+        <property name="toolTip">
+         <string>These options will not be stored. Everytime you start the launcher, default values will be loaded.</string>
+        </property>
+        <property name="text">
+         <string>Not stored</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="audioBtn_global">
+        <property name="toolTip">
+         <string>These options will be stored in global storage (common for all presets). Everytime you start the launcher, they will be restored to the state when you closed it.</string>
+        </property>
+        <property name="text">
+         <string>Stored globally</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="audioBtn_preset">
         <property name="toolTip">
          <string>Each preset will have its own options. Everytime you select a preset, these options will be restored from it.</string>
         </property>

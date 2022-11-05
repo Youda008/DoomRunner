@@ -179,6 +179,38 @@ CompatibilityOptions & MainWindow::activeCompatOptions()
 	return compatOpts;
 }
 
+VideoOptions & MainWindow::activeVideoOptions()
+{
+	if (settings.videoOptsStorage == StoreToPreset)
+	{
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+		{
+			return presetModel[ selectedPresetIdx ].videoOpts;
+		}
+	}
+
+	// We always have to save somewhere, because generateLaunchCommand() might read stored values from it.
+	// In case the optsStorage == DontStore, we will just skip serializing it to JSON.
+	return videoOpts;
+}
+
+AudioOptions & MainWindow::activeAudioOptions()
+{
+	if (settings.audioOptsStorage == StoreToPreset)
+	{
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+		if (selectedPresetIdx >= 0)
+		{
+			return presetModel[ selectedPresetIdx ].audioOpts;
+		}
+	}
+
+	// We always have to save somewhere, because generateLaunchCommand() might read stored values from it.
+	// In case the optsStorage == DontStore, we will just skip serializing it to JSON.
+	return audioOpts;
+}
+
 /// Stores value to a preset if it's selected.
 #define STORE_TO_PRESET_IF_SELECTED( presetMember, value ) \
 {\
@@ -251,12 +283,12 @@ CompatibilityOptions & MainWindow::activeCompatOptions()
 
 #define STORE_VIDEO_OPTION( structMember, value ) \
 {\
-	STORE_TO_GLOBAL_STORAGE_IF_SAFE( videoOpts.structMember, value ) \
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.videoOptsStorage, activeVideoOptions(), structMember, value ) \
 }
 
 #define STORE_AUDIO_OPTION( structMember, value ) \
 {\
-	STORE_TO_GLOBAL_STORAGE_IF_SAFE( audioOpts.structMember, value ) \
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.audioOptsStorage, activeAudioOptions(), structMember, value ) \
 }
 
 #define STORE_PRESET_OPTION( structMember, value ) \
@@ -645,6 +677,8 @@ void MainWindow::updateOptionsGrpBoxTitles( const StorageSettings & storageSetti
 	updateGroupBoxTitle( ui->multiplayerGrpBox, storageSettings.launchOptsStorage );
 	updateGroupBoxTitle( ui->gameplayGrpBox, storageSettings.gameOptsStorage );
 	updateGroupBoxTitle( ui->compatGrpBox, storageSettings.compatOptsStorage );
+	updateGroupBoxTitle( ui->videoGrpBox, storageSettings.videoOptsStorage );
+	updateGroupBoxTitle( ui->audioGrpBox, storageSettings.audioOptsStorage );
 }
 
 void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
@@ -2444,9 +2478,11 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	if (settings.compatOptsStorage == StoreGlobally)
 		restoreCompatibilityOptions( compatOpts );  // this clears items that are invalid
 
-	restoreVideoOptions( videoOpts );
+	if (settings.videoOptsStorage == StoreGlobally)
+		restoreVideoOptions( videoOpts );
 
-	restoreAudioOptions( audioOpts );
+	if (settings.audioOptsStorage == StoreGlobally)
+		restoreAudioOptions( audioOpts );
 
 	restoreGlobalOptions( globalOpts );
 
@@ -2644,6 +2680,12 @@ void MainWindow::restorePreset( int presetIdx )
 
 	if (settings.compatOptsStorage == StoreToPreset)
 		restoreCompatibilityOptions( preset.compatOpts );  // this clears items that are invalid
+
+	if (settings.videoOptsStorage == StoreToPreset)
+		restoreVideoOptions( preset.videoOpts );  // this clears items that are invalid
+
+	if (settings.audioOptsStorage == StoreToPreset)
+		restoreAudioOptions( preset.audioOpts );  // this clears items that are invalid
 
 	restoreAlternativePaths( preset.altPaths );
 

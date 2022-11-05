@@ -25,6 +25,8 @@ OptionsStorageDialog::OptionsStorageDialog( QWidget * parent, const StorageSetti
 	restoreStorage( storageSettings.launchOptsStorage, ui->launchBtn_none, ui->launchBtn_global, ui->launchBtn_preset );
 	restoreStorage( storageSettings.gameOptsStorage, ui->gameplayBtn_none, ui->gameplayBtn_global, ui->gameplayBtn_preset );
 	restoreStorage( storageSettings.compatOptsStorage, ui->compatBtn_none, ui->compatBtn_global, ui->compatBtn_preset );
+	restoreStorage( storageSettings.videoOptsStorage, ui->videoBtn_none, ui->videoBtn_global, ui->videoBtn_preset );
+	restoreStorage( storageSettings.audioOptsStorage, ui->audioBtn_none, ui->audioBtn_global, ui->audioBtn_preset );
 
 	// setup buttons
 
@@ -39,6 +41,14 @@ OptionsStorageDialog::OptionsStorageDialog( QWidget * parent, const StorageSetti
 	connect( ui->compatBtn_none, &QRadioButton::clicked, this, &thisClass::compatStorage_none );
 	connect( ui->compatBtn_global, &QRadioButton::clicked, this, &thisClass::compatStorage_global );
 	connect( ui->compatBtn_preset, &QRadioButton::clicked, this, &thisClass::compatStorage_preset );
+
+	connect( ui->videoBtn_none, &QRadioButton::clicked, this, &thisClass::videoStorage_none );
+	connect( ui->videoBtn_global, &QRadioButton::clicked, this, &thisClass::videoStorage_global );
+	connect( ui->videoBtn_preset, &QRadioButton::clicked, this, &thisClass::videoStorage_preset );
+
+	connect( ui->audioBtn_none, &QRadioButton::clicked, this, &thisClass::audioStorage_none );
+	connect( ui->audioBtn_global, &QRadioButton::clicked, this, &thisClass::audioStorage_global );
+	connect( ui->audioBtn_preset, &QRadioButton::clicked, this, &thisClass::audioStorage_preset );
 }
 
 void OptionsStorageDialog::restoreStorage( OptionsStorage storage, QRadioButton * noneBtn, QRadioButton * globalBtn, QRadioButton * presetBtn )
@@ -103,4 +113,34 @@ void OptionsStorageDialog::compatStorage_global()
 void OptionsStorageDialog::compatStorage_preset()
 {
 	storageSettings.compatOptsStorage = StoreToPreset;
+}
+
+void OptionsStorageDialog::videoStorage_none()
+{
+	storageSettings.videoOptsStorage = DontStore;
+}
+
+void OptionsStorageDialog::videoStorage_global()
+{
+	storageSettings.videoOptsStorage = StoreGlobally;
+}
+
+void OptionsStorageDialog::videoStorage_preset()
+{
+	storageSettings.videoOptsStorage = StoreToPreset;
+}
+
+void OptionsStorageDialog::audioStorage_none()
+{
+	storageSettings.audioOptsStorage = DontStore;
+}
+
+void OptionsStorageDialog::audioStorage_global()
+{
+	storageSettings.audioOptsStorage = StoreGlobally;
+}
+
+void OptionsStorageDialog::audioStorage_preset()
+{
+	storageSettings.audioOptsStorage = StoreToPreset;
 }

@@ -210,6 +210,8 @@ class MainWindow : public QMainWindow, private DialogCommon {
 	MultiplayerOptions & activeMultiplayerOptions();
 	GameplayOptions & activeGameplayOptions();
 	CompatibilityOptions & activeCompatOptions();
+	VideoOptions & activeVideoOptions();
+	AudioOptions & activeAudioOptions();
 
  private: // internal members
 

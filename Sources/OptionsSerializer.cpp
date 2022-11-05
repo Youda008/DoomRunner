@@ -411,6 +411,12 @@ static QJsonObject serialize( const Preset & preset, const StorageSettings & set
 	if (settings.compatOptsStorage == StoreToPreset)
 		jsPreset["compatibility_options"] = serialize( preset.compatOpts );
 
+	if (settings.videoOptsStorage == StoreToPreset)
+		jsPreset["video_options"] = serialize( preset.videoOpts );
+
+	if (settings.audioOptsStorage == StoreToPreset)
+		jsPreset["audio_options"] = serialize( preset.audioOpts );
+
 	jsPreset["alternative_paths"] = serialize( preset.altPaths );
 
 	// preset-specific args
@@ -482,6 +488,14 @@ static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const 
 		if (JsonObjectCtx jsOptions = jsPreset.getObject( "compatibility_options" ))
 			deserialize( jsOptions, preset.compatOpts );
 
+	if (settings.videoOptsStorage == StoreToPreset)
+		if (JsonObjectCtx jsOptions = jsPreset.getObject( "video_options" ))
+			deserialize( jsOptions, preset.videoOpts );
+
+	if (settings.audioOptsStorage == StoreToPreset)
+		if (JsonObjectCtx jsOptions = jsPreset.getObject( "audio_options" ))
+			deserialize( jsOptions, preset.audioOpts );
+
 	if (JsonObjectCtx jsOptions = jsPreset.getObject( "alternative_paths" ))
 		deserialize( jsOptions, preset.altPaths );
 
@@ -519,6 +533,8 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 		jsOptsStorage["launch_opts"] = int( settings.launchOptsStorage );
 		jsOptsStorage["gameplay_opts"] = int( settings.gameOptsStorage );
 		jsOptsStorage["compat_opts"] = int( settings.compatOptsStorage );
+		jsOptsStorage["video_opts"] = int( settings.videoOptsStorage );
+		jsOptsStorage["audio_opts"] = int( settings.audioOptsStorage );
 
 		jsSettings["options_storage"] = jsOptsStorage;
 	}
@@ -536,6 +552,8 @@ static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & se
 		settings.launchOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "launch_opts", settings.launchOptsStorage );
 		settings.gameOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "gameplay_opts", settings.gameOptsStorage );
 		settings.compatOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "compat_opts", settings.compatOptsStorage );
+		settings.videoOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "video_opts", settings.videoOptsStorage );
+		settings.audioOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "audio_opts", settings.audioOptsStorage );
 	}
 }
 
@@ -583,9 +601,11 @@ static void serializeOptionsToJson( const OptionsToSave & opts, QJsonObject & js
 	if (opts.settings.compatOptsStorage == StoreGlobally)
 		jsOpts["compatibility_options"] = serialize( opts.compatOpts );
 
-	jsOpts["video_options"] = serialize( opts.videoOpts );
+	if (opts.settings.videoOptsStorage == StoreGlobally)
+		jsOpts["video_options"] = serialize( opts.videoOpts );
 
-	jsOpts["audio_options"] = serialize( opts.audioOpts );
+	if (opts.settings.audioOptsStorage == StoreGlobally)
+		jsOpts["audio_options"] = serialize( opts.audioOpts );
 
 	jsOpts["global_options"] = serialize( opts.globalOpts );
 
@@ -715,11 +735,13 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 		if (JsonObjectCtx jsOptions = jsOpts.getObject( "compatibility_options" ))
 			deserialize( jsOptions, opts.compatOpts );
 
-	if (JsonObjectCtx jsOptions = jsOpts.getObject( "video_options" ))
-		deserialize( jsOptions, opts.videoOpts );
+	if (opts.settings.videoOptsStorage == StoreGlobally)
+		if (JsonObjectCtx jsOptions = jsOpts.getObject( "video_options" ))
+			deserialize( jsOptions, opts.videoOpts );
 
-	if (JsonObjectCtx jsOptions = jsOpts.getObject( "audio_options" ))
-		deserialize( jsOptions, opts.audioOpts );
+	if (opts.settings.audioOptsStorage == StoreGlobally)
+		if (JsonObjectCtx jsOptions = jsOpts.getObject( "audio_options" ))
+			deserialize( jsOptions, opts.audioOpts );
 
 	if (JsonObjectCtx jsOptions = jsOpts.getObject( "global_options" ))
 		deserialize( jsOptions, opts.globalOpts );

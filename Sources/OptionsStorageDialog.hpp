@@ -53,6 +53,14 @@ class OptionsStorageDialog : public QDialog {
 	void compatStorage_global();
 	void compatStorage_preset();
 
+	void videoStorage_none();
+	void videoStorage_global();
+	void videoStorage_preset();
+
+	void audioStorage_none();
+	void audioStorage_global();
+	void audioStorage_preset();
+
  private: // members
 
 	Ui::OptionsStorageDialog * ui;

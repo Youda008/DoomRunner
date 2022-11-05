@@ -507,7 +507,7 @@
           <item>
            <widget class="QGroupBox" name="launchModeGrpBox">
             <property name="title">
-             <string>Launch mode [configurable]</string>
+             <string>Launch mode [storage configurable]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_11">
              <item>
@@ -765,7 +765,7 @@
           <item>
            <widget class="QGroupBox" name="gameplayGrpBox">
             <property name="title">
-             <string>Gameplay [configurable]</string>
+             <string>Gameplay [storage configurable]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_16">
              <item>
@@ -926,7 +926,7 @@
           <item>
            <widget class="QGroupBox" name="compatGrpBox">
             <property name="title">
-             <string>Compatibility [configurable]</string>
+             <string>Compatibility [storage configurable]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_22">
              <item>
@@ -983,7 +983,7 @@
           <item>
            <widget class="QGroupBox" name="multiplayerGrpBox">
             <property name="title">
-             <string>Multiplayer [configurable]</string>
+             <string>Multiplayer [storage configurable]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_21">
              <item>
@@ -1571,7 +1571,7 @@
           <item>
            <widget class="QGroupBox" name="videoGrpBox">
             <property name="title">
-             <string>Video [stored globally]</string>
+             <string>Video [storage configurable]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_17">
              <item>
@@ -1707,7 +1707,7 @@
           <item>
            <widget class="QGroupBox" name="audioGrpBox">
             <property name="title">
-             <string>Audio [stored globally]</string>
+             <string>Audio [storage configurable]</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_18">
              <item>

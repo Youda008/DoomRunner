@@ -181,13 +181,13 @@ class MainWindow : public QMainWindow, private DialogCommon {
 	void restoreLoadedOptions( OptionsToLoad && opts );
 	void restorePreset( int index );
 
-	void restoreLaunchAndMultOptions( LaunchOptions & launchOpts, MultiplayerOptions & multOpts );
-	void restoreGameplayOptions( GameplayOptions & opts );
-	void restoreCompatibilityOptions( CompatibilityOptions & opts );
-	void restoreAlternativePaths( AlternativePaths & opts );
-	void restoreVideoOptions( VideoOptions & opts );
-	void restoreAudioOptions( AudioOptions & opts );
-	void restoreGlobalOptions( GlobalOptions & opts );
+	void restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const MultiplayerOptions & multOpts );
+	void restoreGameplayOptions( const GameplayOptions & opts );
+	void restoreCompatibilityOptions( const CompatibilityOptions & opts );
+	void restoreAlternativePaths( const AlternativePaths & opts );
+	void restoreVideoOptions( const VideoOptions & opts );
+	void restoreAudioOptions( const AudioOptions & opts );
+	void restoreGlobalOptions( const GlobalOptions & opts );
 
 	struct ShellCommand
 	{

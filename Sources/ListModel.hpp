@@ -20,8 +20,10 @@
 #include <QMimeData>
 #include <QUrl>
 #include <QFileInfo>
+#include <QColor>
 #include <QBrush>
 
+#include <optional>
 #include <functional>
 #include <stdexcept>
 
@@ -88,6 +90,8 @@ class DropTarget {
   * The following methods should be overriden to point to the appropriate members. */
 struct ReadOnlyListModelItem
 {
+	std::optional< QColor > foregroundColor;
+	std::optional< QColor > backgroundColor;
 	bool isSeparator = false;  ///< true means this is a special item used to mark a section
 
 	const QString & getFilePath() const
@@ -168,6 +172,10 @@ class AListModel : public QAbstractListModel {
 	decltype( itemList.cbegin() ) begin() const   { return itemList.begin(); }
 	decltype( itemList.end() ) end()              { return itemList.end(); }
 	decltype( itemList.cend() ) end() const       { return itemList.end(); }
+	Item & first()                                { return itemList.first(); }
+	const Item & first() const                    { return itemList.first(); }
+	Item & last()                                 { return itemList.last(); }
+	const Item & last() const                     { return itemList.last(); }
 	void clear()                                  { itemList.clear(); }
 	void append( const Item & item )              { itemList.append( item ); }
 	void prepend( const Item & item )             { itemList.prepend( item ); }
@@ -287,6 +295,20 @@ class ReadOnlyListModel : public AListModel< Item > {
 				// Item elements. This way we generalize from the way the display string is constructed from the Item.
 				return makeDisplayString( item );
 			}
+			else if (role == Qt::ForegroundRole)
+			{
+				if (item.foregroundColor)
+					return QBrush( *item.foregroundColor );
+				else
+					return QVariant();  // default
+			}
+			else if (role == Qt::BackgroundRole)
+			{
+				if (item.backgroundColor)
+					return QBrush( *item.backgroundColor );
+				else
+					return QVariant();  // default
+			}
 			else if (role == Qt::UserRole)  // required for "Open File Location" action
 			{
 				return item.getFilePath();
@@ -325,9 +347,6 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 	/// whether editing of regular non-separator items is allowed
 	bool editingEnabled = false;
 
-	/// whether separators are allowed
-	bool separatorsEnabled = false;
-
 	/// whether items have a checkbox that can be checked and unchecked
 	bool checkableItems = false;
 
@@ -350,8 +369,6 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	void toggleEditing( bool enabled ) { editingEnabled = enabled; }
 
-	void toggleSeparators( bool enabled ) { separatorsEnabled = enabled; }
-
 	void toggleCheckableItems( bool enabled ) { checkableItems = enabled; }
 
 	/** Must be set before external drag&drop is enabled in the parent widget. */
@@ -366,14 +383,13 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			return Qt::ItemIsDropEnabled;  // otherwise you can't append dragged items to the end of the list
 
 		const Item & item = superClass::itemList[ index.row() ];
-		bool isSeparator = separatorsEnabled && item.isSeparator;
 
 		Qt::ItemFlags flags = QAbstractListModel::flags(index);
 
 		flags |= Qt::ItemIsDragEnabled;
-		if (editingEnabled || isSeparator)
+		if (editingEnabled || item.isSeparator)
 			flags |= Qt::ItemIsEditable;
-		if (checkableItems && !isSeparator)
+		if (checkableItems && !item.isSeparator)
 			flags |= Qt::ItemIsUserCheckable;
 
 		return flags;
@@ -385,7 +401,6 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			return QVariant();
 
 		const Item & item = superClass::itemList[ index.row() ];
-		bool isSeparator = separatorsEnabled && item.isSeparator;
 
 		try
 		{
@@ -395,7 +410,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 				// to specify it by a function for each view separately.
 				return makeDisplayString( item );
 			}
-			else if (role == Qt::EditRole && (editingEnabled || isSeparator))
+			else if (role == Qt::EditRole && (editingEnabled || item.isSeparator))
 			{
 				return item.getEditString();
 			}
@@ -403,16 +418,25 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			{
 				return item.isChecked() ? Qt::Checked : Qt::Unchecked;
 			}
-			else if (role == Qt::BackgroundRole && separatorsEnabled)
+			else if (role == Qt::ForegroundRole)
 			{
-				if (isSeparator)
-					return QBrush( Qt::lightGray );
+				if (item.foregroundColor)
+					return QBrush( *item.foregroundColor );
 				else
 					return QVariant();  // default
 			}
-			else if (role == Qt::TextAlignmentRole && separatorsEnabled)
+			else if (role == Qt::BackgroundRole)
 			{
-				if (isSeparator)
+				if (item.isSeparator)
+					return QBrush( Qt::lightGray );
+				else if (item.backgroundColor)
+					return QBrush( *item.backgroundColor );
+				else
+					return QVariant();  // default
+			}
+			else if (role == Qt::TextAlignmentRole)
+			{
+				if (item.isSeparator)
 					return Qt::AlignHCenter;
 				else
 					return QVariant();  // default
@@ -439,11 +463,10 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			return false;
 
 		Item & item = superClass::itemList[ index.row() ];
-		bool isSeparator = separatorsEnabled && item.isSeparator;
 
 		try
 		{
-			if (role == Qt::EditRole && (editingEnabled || isSeparator))
+			if (role == Qt::EditRole && (editingEnabled || item.isSeparator))
 			{
 				item.setEditString( value.toString() );
 				emit superClass::dataChanged( index, index, {Qt::EditRole} );
@@ -636,10 +659,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			if (!localPath.isEmpty())
 			{
 				QFileInfo fileInfo( pathContext->convertPath( localPath ) );
-				if (fileInfo.exists())
-				{
-					filesToBeInserted.append( fileInfo );
-				}
+				filesToBeInserted.append( std::move(fileInfo) );
 			}
 		}
 

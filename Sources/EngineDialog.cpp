@@ -9,6 +9,7 @@
 #include "ui_EngineDialog.h"
 
 #include "OwnFileDialog.hpp"
+#include "WidgetUtils.hpp"
 #include "OSUtils.hpp"
 
 #include <QDir>
@@ -27,6 +28,8 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	ui = new Ui::EngineDialog;
 	ui->setupUi(this);
 
+	origLineEditColor = getTextColor( ui->nameLine );  // note down the orig text color before changing it
+
 	// automatically initialize family combox fox from existing engine families
 	for (size_t familyIdx = 0; familyIdx < size_t(EngineFamily::_EnumEnd); ++familyIdx)
 	{
@@ -39,6 +42,10 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	ui->pathLine->setText( engine.path );
 	ui->configDirLine->setText( engine.configDir );
 	ui->familyCmbBox->setCurrentIndex( int(engine.family) );
+
+	// mark invalid paths
+	setTextColor( ui->pathLine, isInvalidFile( engine.path ) ? QColor( Qt::red ) : origLineEditColor );
+	setTextColor( ui->configDirLine, isInvalidDir( engine.configDir ) ? QColor( Qt::red ) : origLineEditColor );
 
 	connect( ui->browseEngineBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
 	connect( ui->browseConfigsBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
@@ -133,11 +140,15 @@ void EngineDialog::updateName( const QString & text )
 void EngineDialog::updatePath( const QString & text )
 {
 	engine.path = text;
+
+	setTextColor( ui->pathLine, isInvalidFile( text ) ? QColor( Qt::red ) : origLineEditColor );
 }
 
 void EngineDialog::updateConfigDir( const QString & text )
 {
 	engine.configDir = text;
+
+	setTextColor( ui->configDirLine, isInvalidDir( text ) ? QColor( Qt::red ) : origLineEditColor );
 }
 
 void EngineDialog::selectFamily( int familyIdx )

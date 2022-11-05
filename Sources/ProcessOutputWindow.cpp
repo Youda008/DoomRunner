@@ -8,6 +8,7 @@
 #include "ProcessOutputWindow.hpp"
 #include "ui_ProcessOutputWindow.h"
 
+#include "WidgetUtils.hpp"
 #include "FileSystemUtils.hpp"
 #include "OSUtils.hpp"
 
@@ -136,9 +137,7 @@ void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & de
 			textColor = QColor::fromHsv( 4, 180, 255 );    // lighter red
 			break;
 	}
-	QPalette palette = ui->statusLine->palette();
-	palette.setColor( QPalette::Text, textColor );
-	ui->statusLine->setPalette( palette );
+	setTextColor( ui->statusLine, textColor );
 
 	// toggle buttons
 	switch (status)

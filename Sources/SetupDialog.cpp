@@ -53,6 +53,8 @@ SetupDialog::SetupDialog(
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
 
+	origLineEditColor = getTextColor( ui->mapDirLine );  // note down the orig text color before changing it
+
 	lastUsedDir = iwadSettings.dir;
 
 	// setup list views
@@ -258,22 +260,28 @@ void SetupDialog::browseModDir()
 	browseDir( this, "with mods", ui->modDirLine );
 }
 
-void SetupDialog::changeIWADDir( const QString & text )
+void SetupDialog::changeIWADDir( const QString & dir )
 {
-	iwadSettings.dir = text;
+	iwadSettings.dir = dir;
+
+	setTextColor( ui->iwadDirLine, isInvalidDir( dir ) ? QColor( Qt::red ) : origLineEditColor );
 
 	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
 		updateIWADsFromDir();
 }
 
-void SetupDialog::changeMapDir( const QString & text )
+void SetupDialog::changeMapDir( const QString & dir )
 {
-	mapSettings.dir = text;
+	mapSettings.dir = dir;
+
+	setTextColor( ui->mapDirLine, isInvalidDir( dir ) ? QColor( Qt::red ) : origLineEditColor );
 }
 
-void SetupDialog::changeModDir( const QString & text )
+void SetupDialog::changeModDir( const QString & dir )
 {
-	modSettings.dir = text;
+	modSettings.dir = dir;
+
+	setTextColor( ui->modDirLine, isInvalidDir( dir ) ? QColor( Qt::red ) : origLineEditColor );
 }
 
 void SetupDialog::iwadAdd()
@@ -318,7 +326,12 @@ void SetupDialog::engineAdd()
 	int code = dialog.exec();
 
 	if (code == QDialog::Accepted)
-		appendItem( ui->iwadListView, engineModel, dialog.engine );
+	{
+		appendItem( ui->engineListView, engineModel, dialog.engine );
+
+		if (isInvalidFile( engineModel.last().path ) )
+			engineModel.last().foregroundColor = Qt::red;
+	}
 }
 
 void SetupDialog::engineDelete()
@@ -347,6 +360,8 @@ void SetupDialog::editEngine( const QModelIndex & index )
 	if (code == QDialog::Accepted)
 	{
 		selectedEngine = dialog.engine;
+
+		selectedEngine.foregroundColor = isInvalidFile( selectedEngine.path ) ? Qt::red : origLineEditColor;
 	}
 }
 

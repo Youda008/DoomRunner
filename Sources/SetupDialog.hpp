@@ -60,9 +60,9 @@ class SetupDialog : public QDialog, private DialogCommon {
 	void browseMapDir();
 	void browseModDir();
 
-	void changeIWADDir( const QString & text );
-	void changeMapDir( const QString & text );
-	void changeModDir( const QString & text );
+	void changeIWADDir( const QString & dir );
+	void changeMapDir( const QString & dir );
+	void changeModDir( const QString & dir );
 
 	void iwadAdd();
 	void iwadDelete();
@@ -98,6 +98,8 @@ class SetupDialog : public QDialog, private DialogCommon {
 	uint tickCount;
 
 	ConfirmationFilter engineConfirmationFilter;
+
+	QColor origLineEditColor;
 
  public: // return values from this dialog
 

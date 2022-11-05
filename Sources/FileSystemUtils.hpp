@@ -134,6 +134,21 @@ inline bool isValidDir( const QString & dirPath )
 	return !dirPath.isEmpty() && QDir( dirPath ).exists();
 }
 
+inline bool isInvalidDir( const QString & dirPath )
+{
+	return !dirPath.isEmpty() && !QDir( dirPath ).exists();  // either doesn't exist or it's a file
+}
+
+inline bool isValidFile( const QString & filePath )
+{
+	return !filePath.isEmpty() && QFileInfo( filePath ).isFile();
+}
+
+inline bool isInvalidFile( const QString & filePath )
+{
+	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // either doesn't exist or it's a directory
+}
+
 inline QString getAbsolutePath( const QString & path )
 {
 	return QFileInfo( path ).absoluteFilePath();

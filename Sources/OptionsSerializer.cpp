@@ -663,7 +663,8 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				checkPath_MsgBox( engine.path, "An Engine from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+				if (!checkPath_MsgBox( engine.path, "An Engine from the saved options (%1) no longer exists. Please update it in Menu -> Setup." ))
+					engine.foregroundColor = Qt::red;
 
 				opts.engines.append( std::move( engine ) );
 			}
@@ -695,7 +696,8 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
 						continue;
 
-					checkPath_MsgBox( iwad.path, "An IWAD from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+					if (!checkPath_MsgBox( iwad.path, "An IWAD from the saved options (%1) no longer exists. Please update it in Menu -> Setup." ))
+						iwad.foregroundColor = Qt::red;
 
 					opts.iwads.append( std::move( iwad ) );
 				}

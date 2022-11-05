@@ -470,7 +470,6 @@ void MainWindow::setupPresetList()
 
 	// setup editing and separators
 	presetModel.toggleEditing( true );
-	presetModel.toggleSeparators( true );
 	ui->presetListView->toggleNameEditing( true );
 
 	// set drag&drop behaviour
@@ -558,7 +557,6 @@ void MainWindow::setupModList()
 	modModel.toggleCheckableItems( true );
 
 	// setup separators
-	modModel.toggleSeparators( true );
 	ui->modListView->toggleNameEditing( true );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
@@ -616,7 +614,7 @@ void MainWindow::onWindowShown()
 	optionsFilePath = appDataDir.filePath( defaultOptionsFileName );
 
 	// try to load last saved state
-	if (QFileInfo::exists( optionsFilePath ))
+	if (isValidFile( optionsFilePath ))
 	{
 		loadOptions( optionsFilePath );
 	}
@@ -970,7 +968,8 @@ void MainWindow::selectEngine( int index )
 
 	if (index >= 0)
 	{
-		checkPath_MsgBox( engineModel[ index ].path, "The selected engine (%1) no longer exists, please update the engines at Menu -> Initial Setup." );
+		if (!isValidFile( engineModel[ index ].path ))
+			engineModel[ index ].foregroundColor = Qt::red;
 
 		supportsCustomMapNames = engineTraits[ index ].supportsCustomMapNames();
 	}
@@ -1017,7 +1016,7 @@ void MainWindow::selectConfig( int index )
 			engineModel[ ui->engineCmbBox->currentIndex() ].configDir,  // if config was selected, engine selection must be valid too
 			configModel[ index ].fileName
 		);
-		validConfigSelected = checkPath_MsgBox( configPath, "The selected config (%1) no longer exists, please select another one." );
+		validConfigSelected = isValidFile( configPath );
 	}
 
 	// update related UI elements
@@ -1045,7 +1044,8 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 
 	if (selectedIWADIdx >= 0)
 	{
-		checkPath_MsgBox( iwadModel[ selectedIWADIdx ].path, "The selected IWAD (%1) no longer exists, please select another one." );
+		if (!isValidFile( iwadModel[ selectedIWADIdx ].path ))
+			iwadModel[ selectedIWADIdx ].foregroundColor = Qt::red;
 	}
 
 	updateMapsFromSelectedWADs();
@@ -1133,7 +1133,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	QString mapDescFileName = mapDataFileInfo.completeBaseName() + ".txt";
 	QString mapDescFilePath = mapDataFilePath.mid( 0, mapDataFilePath.lastIndexOf('.') ) + ".txt";  // QFileInfo won't help with this
 
-	if (!QFileInfo::exists( mapDescFilePath ))
+	if (!isValidFile( mapDescFilePath ))
 	{
 		QMessageBox::warning( this, "Cannot open map description",
 			"Map description file \""%mapDescFileName%"\" does not exist" );
@@ -2473,10 +2473,10 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		restoreLaunchAndMultOptions( launchOpts, multOpts );  // this clears items that are invalid
 
 	if (settings.gameOptsStorage == StoreGlobally)
-		restoreGameplayOptions( gameOpts );  // this clears items that are invalid
+		restoreGameplayOptions( gameOpts );
 
 	if (settings.compatOptsStorage == StoreGlobally)
-		restoreCompatibilityOptions( compatOpts );  // this clears items that are invalid
+		restoreCompatibilityOptions( compatOpts );
 
 	if (settings.videoOptsStorage == StoreGlobally)
 		restoreVideoOptions( videoOpts );
@@ -2517,14 +2517,13 @@ void MainWindow::restorePreset( int presetIdx )
 												   { return engine.path == preset.selectedEnginePath; } );
 			if (engineIdx >= 0)
 			{
-				if (QFileInfo::exists( preset.selectedEnginePath ))
-				{
-					ui->engineCmbBox->setCurrentIndex( engineIdx );
-				}
-				else
+				ui->engineCmbBox->setCurrentIndex( engineIdx );
+
+				if (!isValidFile( preset.selectedEnginePath ))
 				{
 					QMessageBox::warning( this, "Engine no longer exists",
 						"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please update the engines at Menu -> Initial Setup." );
+					engineModel[ engineIdx ].foregroundColor = Qt::red;
 				}
 			}
 			else
@@ -2554,9 +2553,10 @@ void MainWindow::restorePreset( int presetIdx )
 												   { return config.fileName == preset.selectedConfig; } );
 			if (configIdx >= 0)
 			{
+				ui->configCmbBox->setCurrentIndex( configIdx );
+
 				// No sense to verify if this config file exists, the configModel has just been updated during
 				// selectEngine( ui->engineCmbBox->currentIndex() ), so there are only existing entries.
-				ui->configCmbBox->setCurrentIndex( configIdx );
 			}
 			else
 			{
@@ -2583,14 +2583,13 @@ void MainWindow::restorePreset( int presetIdx )
 			int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
 			if (iwadIdx >= 0)
 			{
-				if (QFileInfo::exists( preset.selectedIWAD ))
-				{
-					selectItemByIndex( ui->iwadListView, iwadIdx );
-				}
-				else
+				selectItemByIndex( ui->iwadListView, iwadIdx );
+
+				if (!isValidFile( preset.selectedIWAD ))
 				{
 					QMessageBox::warning( this, "IWAD no longer exists",
 						"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
+					iwadModel[ iwadIdx ].foregroundColor = Qt::red;
 				}
 			}
 			else
@@ -2623,7 +2622,7 @@ void MainWindow::restorePreset( int presetIdx )
 			QModelIndex mapIdx = mapModel.index( path );
 			if (mapIdx.isValid() && isInsideDir( path, mapRootDir ))
 			{
-				if (QFileInfo::exists( path ))
+				if (isValidFile( path ))
 				{
 					preset.selectedMapPacks.append( path );  // put back only items that are valid
 					selectItemByIndex( ui->mapDirView, mapIdx );
@@ -2653,20 +2652,15 @@ void MainWindow::restorePreset( int presetIdx )
 		deselectSelectedItems( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
 
 		modModel.startCompleteUpdate();
-		const QList< Mod > modsCopy = preset.mods;
-		preset.mods.clear();  // clear the list in the preset and let it repopulate only with valid items
 		modModel.clear();
-		for (const Mod & mod : modsCopy)
+		for (Mod & mod : preset.mods)
 		{
-			if (mod.isSeparator || QFileInfo::exists( mod.path ))
-			{
-				preset.mods.append( mod );  // put back only items that are valid
-				modModel.append( mod );
-			}
-			else
+			modModel.append( mod );
+			if (!mod.isSeparator && !isValidFile( mod.path ))
 			{
 				QMessageBox::warning( this, "Mod no longer exists",
-					"A mod from the preset ("%mod.path%") no longer exists. It will be removed from the list." );
+					"A mod from the preset ("%mod.path%") no longer exists. Please update it." );
+				modModel.last().foregroundColor = Qt::red;
 			}
 		}
 		modModel.finishCompleteUpdate();
@@ -2676,16 +2670,16 @@ void MainWindow::restorePreset( int presetIdx )
 		restoreLaunchAndMultOptions( preset.launchOpts, preset.multOpts );  // this clears items that are invalid
 
 	if (settings.gameOptsStorage == StoreToPreset)
-		restoreGameplayOptions( preset.gameOpts );  // this clears items that are invalid
+		restoreGameplayOptions( preset.gameOpts );
 
 	if (settings.compatOptsStorage == StoreToPreset)
-		restoreCompatibilityOptions( preset.compatOpts );  // this clears items that are invalid
+		restoreCompatibilityOptions( preset.compatOpts );
 
 	if (settings.videoOptsStorage == StoreToPreset)
-		restoreVideoOptions( preset.videoOpts );  // this clears items that are invalid
+		restoreVideoOptions( preset.videoOpts );
 
 	if (settings.audioOptsStorage == StoreToPreset)
-		restoreAudioOptions( preset.audioOpts );  // this clears items that are invalid
+		restoreAudioOptions( preset.audioOpts );
 
 	restoreAlternativePaths( preset.altPaths );
 
@@ -2704,7 +2698,7 @@ void MainWindow::restorePreset( int presetIdx )
 	updateLaunchCommand();
 }
 
-void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, MultiplayerOptions & multOpts )
+void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const MultiplayerOptions & multOpts )
 {
 	// launch mode
 	switch (launchOpts.mode)
@@ -2770,7 +2764,7 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, Multip
 	ui->fragLimitSpinBox->setValue( int( multOpts.fragLimit ) );
 }
 
-void MainWindow::restoreGameplayOptions( GameplayOptions & opts )
+void MainWindow::restoreGameplayOptions( const GameplayOptions & opts )
 {
 	ui->skillSpinBox->setValue( int( opts.skillNum ) );
 	ui->noMonstersChkBox->setChecked( opts.noMonsters );
@@ -2779,7 +2773,7 @@ void MainWindow::restoreGameplayOptions( GameplayOptions & opts )
 	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
 }
 
-void MainWindow::restoreCompatibilityOptions( CompatibilityOptions & opts )
+void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts )
 {
 	int compatLevelIdx = opts.compatLevel + 1;  // first item is reserved for indicating no selection
 	if (compatLevelIdx >= ui->compatLevelCmbBox->count())
@@ -2793,13 +2787,13 @@ void MainWindow::restoreCompatibilityOptions( CompatibilityOptions & opts )
 	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts );
 }
 
-void MainWindow::restoreAlternativePaths( AlternativePaths & opts )
+void MainWindow::restoreAlternativePaths( const AlternativePaths & opts )
 {
 	ui->saveDirLine->setText( opts.saveDir );
 	ui->screenshotDirLine->setText( opts.screenshotDir );
 }
 
-void MainWindow::restoreVideoOptions( VideoOptions & opts )
+void MainWindow::restoreVideoOptions( const VideoOptions & opts )
 {
 	if (opts.monitorIdx < ui->monitorCmbBox->count())
 		ui->monitorCmbBox->setCurrentIndex( opts.monitorIdx );
@@ -2810,14 +2804,14 @@ void MainWindow::restoreVideoOptions( VideoOptions & opts )
 	ui->showFpsChkBox->setChecked( opts.showFPS );
 }
 
-void MainWindow::restoreAudioOptions( AudioOptions & opts )
+void MainWindow::restoreAudioOptions( const AudioOptions & opts )
 {
 	ui->noSoundChkBox->setChecked( opts.noSound );
 	ui->noSfxChkBox->setChecked( opts.noSFX );
 	ui->noMusicChkBox->setChecked( opts.noMusic );
 }
 
-void MainWindow::restoreGlobalOptions( GlobalOptions & opts )
+void MainWindow::restoreGlobalOptions( const GlobalOptions & opts )
 {
 	ui->usePresetNameChkBox->setChecked( opts.usePresetNameAsDir );
 

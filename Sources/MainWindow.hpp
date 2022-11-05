@@ -174,6 +174,7 @@ class MainWindow : public QMainWindow {
 	QString getConfigDir() const;
 	QString getSaveDir() const;
 
+	void updateListsFromDirs();
 	void updateIWADsFromDir();
 	void refreshMapPacks();
 	void updateConfigFilesFromDir();
@@ -201,6 +202,8 @@ class MainWindow : public QMainWindow {
 	Ui::MainWindow * ui;
 
 	uint tickCount;
+
+	bool engineRunning = false;
 
 	QString lastUsedDirectory;  // TODO: common base
 

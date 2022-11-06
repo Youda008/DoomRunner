@@ -350,7 +350,7 @@ MainWindow::MainWindow()
 	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::runAboutDialog );
 	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
 
-	if (isWindows())  // Windows-only feature
+	if (!isWindows())  // Windows-only feature
 		ui->exportPresetToShortcutAction->setEnabled( false );
 
 	// setup main list views

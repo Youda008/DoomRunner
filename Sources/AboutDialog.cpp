@@ -8,6 +8,7 @@
 #include "AboutDialog.hpp"
 #include "ui_AboutDialog.h"
 
+#include "ColorThemes.hpp"
 #include "Version.hpp"
 #include "UpdateChecker.hpp"
 
@@ -24,6 +25,8 @@ AboutDialog::AboutDialog( QWidget * parent, bool checkForUpdates )
 {
 	ui = new Ui::AboutDialog;
 	ui->setupUi( this );
+
+	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	ui->appLabel->setText( ui->appLabel->text().arg( appVersion ) );
 	ui->qtLabel->setText( ui->qtLabel->text().arg( qtVersion ) );

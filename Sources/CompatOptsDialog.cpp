@@ -8,6 +8,8 @@
 #include "CompatOptsDialog.hpp"
 #include "ui_CompatOptsDialog.h"
 
+#include "ColorThemes.hpp"
+
 #include <QString>
 #include <QTextStream>
 #include <QLineEdit>
@@ -80,6 +82,8 @@ CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityDetails
 {
 	ui = new Ui::CompatOptsDialog;
     ui->setupUi( this );
+
+    updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	ui->compatflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->compatflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );

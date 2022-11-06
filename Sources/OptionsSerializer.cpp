@@ -527,6 +527,8 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 	jsSettings["close_on_launch"] = settings.closeOnLaunch;
 	jsSettings["show_engine_output"] = settings.showEngineOutput;
 
+	jsSettings["theme"] = themeToString( settings.theme );
+
 	{
 		QJsonObject jsOptsStorage;
 
@@ -546,6 +548,11 @@ static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & se
 	settings.useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.useAbsolutePaths );
 	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
+
+	QString themeStr = jsSettings.getString( "theme", "", DontShowError );
+	settings.theme = themeFromString( themeStr );
+	if (settings.theme == Theme::_EnumEnd)
+		settings.theme = Theme::SystemDefault;
 
 	if (JsonObjectCtx jsOptsStorage = jsSettings.getObject( "options_storage" ))
 	{

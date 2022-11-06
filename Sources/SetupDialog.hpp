@@ -81,6 +81,9 @@ class SetupDialog : public QDialog, private DialogCommon {
 
 	void toggleAbsolutePaths( bool checked );
 
+	void setDefaultTheme();
+	void setDarkTheme();
+
 	void toggleCloseOnLaunch( bool checked );
 	void toggleShowEngineOutput( bool checked );
 

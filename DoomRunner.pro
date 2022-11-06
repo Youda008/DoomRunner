@@ -32,6 +32,7 @@ QMAKE_CXXFLAGS += -Wno-comment
 
 SOURCES += \
     Sources/AboutDialog.cpp \
+    Sources/ColorThemes.cpp \
     Sources/CompatOptsDialog.cpp \
     Sources/DoomUtils.cpp \
     Sources/EditableListView.cpp \
@@ -61,6 +62,7 @@ SOURCES += \
 
 HEADERS += \
     Sources/AboutDialog.hpp \
+    Sources/ColorThemes.hpp \
     Sources/Common.hpp \
     Sources/CompatOptsDialog.hpp \
     Sources/DoomUtils.hpp \
@@ -107,7 +109,7 @@ DISTFILES += \
 
 win32:RC_ICONS += Resources/DoomRunner.ico
 
-win32:LIBS += -lole32 -luuid
+win32:LIBS += -lole32 -luuid -ldwmapi
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

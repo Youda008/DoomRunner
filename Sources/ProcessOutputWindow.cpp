@@ -8,6 +8,7 @@
 #include "ProcessOutputWindow.hpp"
 #include "ui_ProcessOutputWindow.h"
 
+#include "ColorThemes.hpp"
 #include "WidgetUtils.hpp"
 #include "FileSystemUtils.hpp"
 #include "OSUtils.hpp"
@@ -66,6 +67,8 @@ ProcessOutputWindow::ProcessOutputWindow( QWidget * parent )
 	ui->setupUi( this );
 	abortBtn = ui->buttonBox->button( QDialogButtonBox::StandardButton::Abort );
 	closeBtn = ui->buttonBox->button( QDialogButtonBox::StandardButton::Close );
+
+	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	QFont font = QFontDatabase::systemFont( QFontDatabase::FixedFont );
 	font.setPointSize( 10 );

@@ -140,6 +140,10 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 	}
 };
 
+// QColor doesn't have a constexpr constructor
+#define SEPARATOR_FOREGROUND QColor( Qt::black )
+#define SEPARATOR_BACKGROUND QColor( 0xA0A0A0 )
+
 
 //======================================================================================================================
 /** Abstract wrapper around list of arbitrary objects, mediating their content to UI view elements. */
@@ -297,15 +301,26 @@ class ReadOnlyListModel : public AListModel< Item > {
 			}
 			else if (role == Qt::ForegroundRole)
 			{
-				if (item.foregroundColor)
+				if (item.isSeparator)
+					return QBrush( SEPARATOR_FOREGROUND );
+				else if (item.foregroundColor)
 					return QBrush( *item.foregroundColor );
 				else
 					return QVariant();  // default
 			}
 			else if (role == Qt::BackgroundRole)
 			{
-				if (item.backgroundColor)
+				if (item.isSeparator)
+					return QBrush( SEPARATOR_BACKGROUND );
+				else if (item.backgroundColor)
 					return QBrush( *item.backgroundColor );
+				else
+					return QVariant();  // default
+			}
+			else if (role == Qt::TextAlignmentRole)
+			{
+				if (item.isSeparator)
+					return Qt::AlignHCenter;
 				else
 					return QVariant();  // default
 			}
@@ -420,7 +435,9 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			}
 			else if (role == Qt::ForegroundRole)
 			{
-				if (item.foregroundColor)
+				if (item.isSeparator)
+					return QBrush( SEPARATOR_FOREGROUND );
+				else if (item.foregroundColor)
 					return QBrush( *item.foregroundColor );
 				else
 					return QVariant();  // default
@@ -428,7 +445,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 			else if (role == Qt::BackgroundRole)
 			{
 				if (item.isSeparator)
-					return QBrush( Qt::lightGray );
+					return QBrush( SEPARATOR_BACKGROUND );
 				else if (item.backgroundColor)
 					return QBrush( *item.backgroundColor );
 				else

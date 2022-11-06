@@ -20,6 +20,7 @@
 #include "Version.hpp"
 #include "UpdateChecker.hpp"
 #include "EngineTraits.hpp"
+#include "ColorThemes.hpp"
 
 #include "LangUtils.hpp"
 #include "FileSystemUtils.hpp"
@@ -2380,6 +2381,9 @@ bool MainWindow::loadOptions( const QString & filePath )
 
 void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 {
+	if (settings.theme != Theme::SystemDefault)
+		setColorTheme( settings.theme );
+
 	if (opts.geometry.width > 0 && opts.geometry.height > 0)
 		this->resize( opts.geometry.width, opts.geometry.height );
 

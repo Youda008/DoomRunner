@@ -13,6 +13,7 @@
 
 #include "ListModel.hpp"  // ReadOnlyListModelItem, EditableListModelItem
 #include "JsonUtils.hpp"
+#include "ColorThemes.hpp"
 #include "EngineTraits.hpp"  // EngineFamily
 
 #include <QString>
@@ -307,6 +308,7 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	bool useAbsolutePaths = useAbsolutePathsByDefault;
 	bool closeOnLaunch = false;
 	bool showEngineOutput = showEngineOutputByDefault;
+	Theme theme;
 
 	void assign( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
 };

@@ -8,6 +8,8 @@
 #include "GameOptsDialog.hpp"
 #include "ui_GameOptsDialog.h"
 
+#include "ColorThemes.hpp"
+
 #include <QString>
 #include <QLineEdit>
 #include <QIntValidator>
@@ -90,6 +92,8 @@ GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayDetails & gamepl
 {
 	ui = new Ui::GameOptsDialog;
 	ui->setupUi( this );
+
+	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	ui->dmflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->dmflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );

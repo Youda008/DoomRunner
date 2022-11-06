@@ -12,6 +12,7 @@
 
 #include "OwnFileDialog.hpp"
 #include "EventFilters.hpp"  // ConfirmationFilter
+#include "ColorThemes.hpp"
 #include "WidgetUtils.hpp"
 #include "DoomUtils.hpp"
 #include "MiscUtils.hpp"  // makeFileFilter
@@ -21,6 +22,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QAction>
+#include <QTimer>
 
 
 //======================================================================================================================
@@ -55,6 +57,8 @@ SetupDialog::SetupDialog(
 
 	origLineEditColor = getTextColor( ui->mapDirLine );  // note down the orig text color before changing it
 
+	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
+
 	lastUsedDir = iwadSettings.dir;
 
 	// setup list views
@@ -76,6 +80,12 @@ SetupDialog::SetupDialog(
 	ui->absolutePathsChkBox->setChecked( settings.useAbsolutePaths );
 	ui->closeOnLaunchChkBox->setChecked( settings.closeOnLaunch );
 	ui->showEngineOutputChkBox->setChecked( settings.showEngineOutput );
+
+	switch (settings.theme)
+	{
+		case Theme::Dark: ui->themeBtn_dark->click(); break;
+		default:          ui->themeBtn_system->click(); break;
+	}
 
 	// setup buttons
 
@@ -103,6 +113,9 @@ SetupDialog::SetupDialog(
 	connect( ui->engineBtnDown, &QPushButton::clicked, this, &thisClass::engineMoveDown );
 
 	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAbsolutePaths );
+
+	connect( ui->themeBtn_system, &QRadioButton::clicked, this, &thisClass::setDefaultTheme );
+	connect( ui->themeBtn_dark, &QRadioButton::clicked, this, &thisClass::setDarkTheme );
 
 	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::toggleCloseOnLaunch );
 	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &thisClass::toggleShowEngineOutput );
@@ -192,6 +205,8 @@ void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
 		if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))  // the second prevents clearing the list when the path is invalid
 			updateIWADsFromDir();
 	}
+
+	//updateWindowBorder( this );
 }
 
 SetupDialog::~SetupDialog()
@@ -405,6 +420,20 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 
 	modSettings.dir = pathContext.convertPath( modSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
+}
+
+void SetupDialog::setDefaultTheme()
+{
+	settings.theme = Theme::SystemDefault;
+
+	setColorTheme( settings.theme );
+}
+
+void SetupDialog::setDarkTheme()
+{
+	settings.theme = Theme::Dark;
+
+	setColorTheme( settings.theme );
 }
 
 void SetupDialog::toggleCloseOnLaunch( bool checked )

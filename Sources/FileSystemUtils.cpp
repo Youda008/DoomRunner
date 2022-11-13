@@ -38,7 +38,7 @@ bool isDirectoryWritable( const QString & dirPath )
 
 QString fixExePath( const QString & exePath )
 {
-	if (!isWindows() && !exePath.contains("/"))  // the file is in the current working directory
+	if (!exePath.contains("/"))  // the file is in the current working directory
 	{
 		return "./" + exePath;
 	}

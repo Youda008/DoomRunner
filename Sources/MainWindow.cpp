@@ -2872,7 +2872,7 @@ void MainWindow::exportPresetToScript()
 void MainWindow::exportPresetToShortcut()
 {
  #if IS_WINDOWS
-	
+
 	int selectedIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedIdx < 0)
 	{
@@ -2910,11 +2910,11 @@ void MainWindow::exportPresetToShortcut()
 		QMessageBox::warning( this, "Cannot create shortcut", "Failed to create a shortcut. Check permissions." );
 		return;
 	}
-	
+
  #else
- 
+
 	QMessageBox::warning( this, "Not supported", "This feature only works on Windows." );
-	
+
  #endif
 }
 

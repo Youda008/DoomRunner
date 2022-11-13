@@ -34,9 +34,16 @@ class ExtendedTreeView : public QTreeView {
 	  * showing a horizontal scrollbar if the width is greater than the width of the widget. */
 	void toggleAutomaticColumnResizing( bool enabled )  { automaticallyResizeColumns = enabled; }
 
- private: // overridden methods
+	virtual void setModel( QAbstractItemModel * model ) override;
 
-	virtual void paintEvent( QPaintEvent * event ) override;
+ public slots:
+
+	void updateColumnSize();
+
+ private slots:
+
+	void onDataChanged( const QModelIndex &, const QModelIndex &, const QVector<int> & );
+	void onLayoutChanged( const QList< QPersistentModelIndex > &, QAbstractItemModel::LayoutChangeHint );
 
  protected: // members
 

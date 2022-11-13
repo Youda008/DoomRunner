@@ -1,3 +1,10 @@
+1.7
+- added explicit dark theme for Windows 10
+- improved tooltips for launch/multiplayer/gameplay/compatibility/output options
+- allowed to select different storage for different option groups
+- highlighting missing files and directories with red text
+- reorganized the JSON structure of options.json (old ones remain backward compatible)
+
 1.6.5
 - reduced CPU usage by resizing map dir view column only when necessary
 - workaround to prevent losing IWAD/map/config/save/demo selection when launching engine with output window enabled

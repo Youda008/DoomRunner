@@ -1,3 +1,9 @@
+1.6.5
+- reduced CPU usage by resizing map dir view column only when necessary
+- workaround to prevent losing IWAD/map/config/save/demo selection when launching engine with output window enabled
+- workaround for unintuitive Windows executable search order to allow launching engine from subfolders when equally named engine in DoomRunner's folder exists
+- added support for Strife Veteran Edition
+
 1.6.4
 - removed special characters from paths derived from Preset names
 - prevented using +screenshot_dir and -stdout for engines that don't support it

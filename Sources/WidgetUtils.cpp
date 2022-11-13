@@ -8,8 +8,7 @@
 #include "WidgetUtils.hpp"
 
 #include <QPalette>
-
-
+#include <QApplication>
 
 
 //======================================================================================================================
@@ -252,14 +251,14 @@ void expandParentsOfNode( QTreeView * view, const QModelIndex & index )
 			view->expand( currentIndex );
 }
 
-QColor getTextColor( const QWidget * widget )
-{
-	return widget->palette().color( QPalette::Text );
-}
-
 void setTextColor( QWidget * widget, QColor color )
 {
 	QPalette palette = widget->palette();
 	palette.setColor( QPalette::Text, color );
 	widget->setPalette( palette );
+}
+
+void restoreColors( QWidget * widget )
+{
+	widget->setPalette( qApp->palette() );
 }

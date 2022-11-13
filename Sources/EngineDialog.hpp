@@ -54,8 +54,6 @@ class EngineDialog : public QDialog {
 
 	PathContext pathContext;
 
-	QColor origLineEditColor;
-
  public: // return values from this dialog
 
 	Engine engine;

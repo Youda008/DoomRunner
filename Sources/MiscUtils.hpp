@@ -41,6 +41,11 @@ QString replaceStringBetween( QString source, char startingChar, char endingChar
 /// Creates a file filter for the QFileDialog::getOpenFileNames.
 QString makeFileFilter( const char * filterName, const QVector< QString > & suffixes );
 
+/// Highlights a non-existing file path by a different text color
+void highlightInvalidDir( QLineEdit * lineEdit, const QString & newPath );
+/// Highlights a non-existing dir path by a different text color
+void highlightInvalidFile( QLineEdit * lineEdit, const QString & newPath );
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  common base for windows/dialogs dealing with user-defined directories
@@ -50,7 +55,7 @@ class DialogCommon {
  protected:
 
 	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
-	QString lastUsedDir;  ///<
+	QString lastUsedDir;  ///< the last directory the user selected via QFileDialog::getExistingDirectory()
 
 	DialogCommon( PathContext pathContext ) : pathContext( std::move(pathContext) ) {}
 

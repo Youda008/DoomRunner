@@ -12,6 +12,7 @@
 #include "OwnFileDialog.hpp"
 #include "WidgetUtils.hpp"
 #include "OSUtils.hpp"
+#include "MiscUtils.hpp"  // highlightInvalidPath
 
 #include <QDir>
 #include <QTimer>
@@ -29,8 +30,6 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	ui = new Ui::EngineDialog;
 	ui->setupUi(this);
 
-	origLineEditColor = getTextColor( ui->nameLine );  // note down the orig text color before changing it
-
 	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	// automatically initialize family combox fox from existing engine families
@@ -47,8 +46,8 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	ui->familyCmbBox->setCurrentIndex( int(engine.family) );
 
 	// mark invalid paths
-	setTextColor( ui->pathLine, isInvalidFile( engine.path ) ? QColor( Qt::red ) : origLineEditColor );
-	setTextColor( ui->configDirLine, isInvalidDir( engine.configDir ) ? QColor( Qt::red ) : origLineEditColor );
+	highlightInvalidFile( ui->pathLine, engine.path  );
+	highlightInvalidDir( ui->configDirLine, engine.configDir );
 
 	connect( ui->browseEngineBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
 	connect( ui->browseConfigsBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
@@ -144,14 +143,14 @@ void EngineDialog::updatePath( const QString & text )
 {
 	engine.path = text;
 
-	setTextColor( ui->pathLine, isInvalidFile( text ) ? QColor( Qt::red ) : origLineEditColor );
+	highlightInvalidFile( ui->pathLine, text );
 }
 
 void EngineDialog::updateConfigDir( const QString & text )
 {
 	engine.configDir = text;
 
-	setTextColor( ui->configDirLine, isInvalidDir( text ) ? QColor( Qt::red ) : origLineEditColor );
+	highlightInvalidDir( ui->configDirLine, text );
 }
 
 void EngineDialog::selectFamily( int familyIdx )

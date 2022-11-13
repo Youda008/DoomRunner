@@ -15,7 +15,7 @@
 #include "ColorThemes.hpp"
 #include "WidgetUtils.hpp"
 #include "DoomUtils.hpp"
-#include "MiscUtils.hpp"  // makeFileFilter
+#include "MiscUtils.hpp"  // makeFileFilter, highlightInvalidPath
 
 #include <QString>
 #include <QStringBuilder>
@@ -55,8 +55,6 @@ SetupDialog::SetupDialog(
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
 
-	origLineEditColor = getTextColor( ui->mapDirLine );  // note down the orig text color before changing it
-
 	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	lastUsedDir = iwadSettings.dir;
@@ -86,6 +84,11 @@ SetupDialog::SetupDialog(
 		case Theme::Dark: ui->themeBtn_dark->click(); break;
 		default:          ui->themeBtn_system->click(); break;
 	}
+
+	// mark invalid paths
+	highlightInvalidDir( ui->iwadDirLine, iwadSettings.dir );
+	highlightInvalidDir( ui->mapDirLine, mapSettings.dir );
+	highlightInvalidDir( ui->modDirLine, modSettings.dir );
 
 	// setup buttons
 
@@ -279,7 +282,7 @@ void SetupDialog::changeIWADDir( const QString & dir )
 {
 	iwadSettings.dir = dir;
 
-	setTextColor( ui->iwadDirLine, isInvalidDir( dir ) ? QColor( Qt::red ) : origLineEditColor );
+	highlightInvalidDir( ui->iwadDirLine, dir );
 
 	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
 		updateIWADsFromDir();
@@ -289,14 +292,14 @@ void SetupDialog::changeMapDir( const QString & dir )
 {
 	mapSettings.dir = dir;
 
-	setTextColor( ui->mapDirLine, isInvalidDir( dir ) ? QColor( Qt::red ) : origLineEditColor );
+	highlightInvalidDir( ui->mapDirLine, dir );
 }
 
 void SetupDialog::changeModDir( const QString & dir )
 {
 	modSettings.dir = dir;
 
-	setTextColor( ui->modDirLine, isInvalidDir( dir ) ? QColor( Qt::red ) : origLineEditColor );
+	highlightInvalidDir( ui->modDirLine, dir );
 }
 
 void SetupDialog::iwadAdd()
@@ -376,7 +379,7 @@ void SetupDialog::editEngine( const QModelIndex & index )
 	{
 		selectedEngine = dialog.engine;
 
-		selectedEngine.foregroundColor = isInvalidFile( selectedEngine.path ) ? Qt::red : origLineEditColor;
+		selectedEngine.foregroundColor = isInvalidFile( selectedEngine.path ) ? Qt::red : qApp->palette().text().color();
 	}
 }
 

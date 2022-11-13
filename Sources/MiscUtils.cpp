@@ -8,6 +8,8 @@
 #include "MiscUtils.hpp"
 
 #include "OwnFileDialog.hpp"
+#include "FileSystemUtils.hpp"  // isValidDir, isValidFile
+#include "WidgetUtils.hpp"  // setTextColor
 
 #include <QFileInfo>
 #include <QTextStream>
@@ -76,6 +78,30 @@ QString makeFileFilter( const char * filterName, const QVector< QString > & suff
 
 	filterStream.flush();
 	return filter;
+}
+
+void highlightInvalidDir( QLineEdit * lineEdit, const QString & newPath )
+{
+	if (isInvalidDir( newPath ))
+	{
+		setTextColor( lineEdit, QColor( Qt::red ) );
+	}
+	else
+	{
+		restoreColors( lineEdit );
+	}
+}
+
+void highlightInvalidFile( QLineEdit * lineEdit, const QString & newPath )
+{
+	if (isInvalidFile( newPath ))
+	{
+		setTextColor( lineEdit, QColor( Qt::red ) );
+	}
+	else
+	{
+		restoreColors( lineEdit );
+	}
 }
 
 

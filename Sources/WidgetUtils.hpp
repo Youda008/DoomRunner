@@ -673,11 +673,11 @@ void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const 
 /// Expands all parent nodes from the selected node up to the root node, so that the selected node is immediately visible.
 void expandParentsOfNode( QTreeView * view, const QModelIndex & index );
 
-/// Returns text color of this widget.
-QColor getTextColor( const QWidget * widget );
-
 /// Changes text color of this widget.
 void setTextColor( QWidget * widget, QColor color );
+
+/// Restores all colors of this widget to default.
+void restoreColors( QWidget * widget );
 
 
 #endif // WIDGET_UTILS_INCLUDED

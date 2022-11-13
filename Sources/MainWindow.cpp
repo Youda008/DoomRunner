@@ -28,7 +28,7 @@
 #include "OwnFileDialog.hpp"
 #include "WidgetUtils.hpp"
 #include "DoomUtils.hpp"
-#include "MiscUtils.hpp"  // checkPath
+#include "MiscUtils.hpp"  // checkPath, highlightInvalidPath
 
 #include <QVector>
 #include <QList>
@@ -1907,6 +1907,8 @@ void MainWindow::changeSaveDir( const QString & dir )
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
 	STORE_TO_PRESET_IF_SELECTED( altPaths.saveDir, dir )
 
+	highlightInvalidDir( ui->saveDirLine, dir );
+
 	if (isValidDir( dir ))
 		updateSaveFilesFromDir();
 
@@ -1918,6 +1920,8 @@ void MainWindow::changeScreenshotDir( const QString & dir )
 	// Unlike the other launch options, here we in fact want to overwrite the stored value even during restoring,
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
 	STORE_TO_PRESET_IF_SELECTED( altPaths.screenshotDir, dir )
+
+	highlightInvalidDir( ui->screenshotDirLine, dir );
 
 	updateLaunchCommand();
 }

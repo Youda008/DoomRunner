@@ -102,8 +102,6 @@ class SetupDialog : public QDialog, private DialogCommon {
 
 	ConfirmationFilter engineConfirmationFilter;
 
-	QColor origLineEditColor;
-
  public: // return values from this dialog
 
 	EditableListModel< Engine > engineModel;

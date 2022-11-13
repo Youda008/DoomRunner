@@ -288,9 +288,11 @@ int moveUpSelectedItem( QListView * view, AListModel< Item > & model )
 	unsetCurrentItem( view );
 	deselectItemByIndex( view, selectedIdx );
 
+	model.orderAboutToChange();
+
 	model.move( selectedIdx, selectedIdx - 1 );
 
-	model.contentChanged( selectedIdx - 1 );  // this is basically just swapping content of 2 items
+	model.orderChanged();
 
 	selectAndSetCurrentByIndex( view, selectedIdx - 1 );
 	if (currentIdx >= 1)                                // if the current item was not the first one,
@@ -328,9 +330,11 @@ int moveDownSelectedItem( QListView * view, AListModel< Item > & model )
 	unsetCurrentItem( view );
 	deselectItemByIndex( view, selectedIdx );
 
+	model.orderAboutToChange();
+
 	model.move( selectedIdx, selectedIdx + 1 );
 
-	model.contentChanged( selectedIdx );  // this is basically just swapping content of 2 items
+	model.orderChanged();
 
 	selectAndSetCurrentByIndex( view, selectedIdx + 1 );
 	if (currentIdx < model.size() - 1)                    // if the current item was not the last one,
@@ -374,6 +378,8 @@ QVector<int> moveUpSelectedItems( QListView * view, AListModel< Item > & model )
 
 	deselectAllAndUnsetCurrent( view );
 
+	model.orderAboutToChange();
+
 	// do the move and select the new positions
 	for (int selectedIdx : selectedIndexesAsc)
 	{
@@ -381,7 +387,7 @@ QVector<int> moveUpSelectedItems( QListView * view, AListModel< Item > & model )
 		selectItemByIndex( view, selectedIdx - 1 );
 	}
 
-	model.contentChanged( selectedIndexesAsc.first() - 1 );  // this is basically just swapping content of few items
+	model.orderChanged();
 
 	if (currentIdx >= 1)                                // if the current item was not the first one,
 	{
@@ -424,6 +430,8 @@ QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model
 
 	deselectAllAndUnsetCurrent( view );
 
+	model.orderAboutToChange();
+
 	// do the move and select the new positions
 	for (int selectedIdx : selectedIndexesDesc)
 	{
@@ -431,7 +439,7 @@ QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model
 		selectItemByIndex( view, selectedIdx + 1 );
 	}
 
-	model.contentChanged( selectedIndexesDesc.last() );  // this is basically just swapping content of few items
+	model.orderChanged();
 
 	if (currentIdx < model.size() - 1)                    // if the current item was not the last one,
 	{

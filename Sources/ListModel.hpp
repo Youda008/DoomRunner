@@ -199,11 +199,23 @@ class AListModel : public QAbstractListModel {
 		const QModelIndex firstChangedIndex = createIndex( changedRowsBegin, /*column*/0 );
 		const QModelIndex lastChangedIndex = createIndex( changedRowsEnd - 1, /*column*/0 );
 
-		emit dataChanged( firstChangedIndex, lastChangedIndex, {Qt::DisplayRole, Qt::EditRole, Qt::CheckStateRole} );
+		emit dataChanged( firstChangedIndex, lastChangedIndex, {
+			Qt::DisplayRole, Qt::EditRole, Qt::CheckStateRole,
+			Qt::ForegroundRole, Qt::BackgroundRole, Qt::TextAlignmentRole
+		});
 	}
 
 	// One of the following functions must always be called before and after doing any modifications to the list,
 	// otherwise the list might not update correctly or it might even crash trying to access items that no longer exist.
+
+	void orderAboutToChange()
+	{
+		emit layoutAboutToBeChanged( {}, LayoutChangeHint::VerticalSortHint );
+	}
+	void orderChanged()
+	{
+		emit layoutChanged( {}, LayoutChangeHint::VerticalSortHint );
+	}
 
 	void startAppending( int count = 1 )
 	{

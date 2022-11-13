@@ -17,9 +17,15 @@
 
 //======================================================================================================================
 
-inline bool isWindows()
+#ifdef _WIN32
+	#define IS_WINDOWS true
+#else
+	#define IS_WINDOWS false
+#endif
+
+inline constexpr bool isWindows()
 {
- #ifdef _WIN32
+ #if IS_WINDOWS
 	return true;
  #else
 	return false;
@@ -50,11 +56,11 @@ bool isInSearchPath( const QString & filePath );
 /// Opens a directory of a file in a new File Explorer window.
 bool openFileLocation( const QString & filePath );
 
-#ifdef _WIN32
+#if IS_WINDOWS
 bool createWindowsShortcut(
 	QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir = "", QString description = ""
 );
-#endif // _WIN32
+#endif // IS_WINDOWS
 
 
 #endif // OS_UTILS_INCLUDED

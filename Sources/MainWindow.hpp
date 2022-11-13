@@ -11,10 +11,12 @@
 
 #include "Common.hpp"
 
-#include "MiscUtils.hpp"  // DialogCommon
 #include "UserData.hpp"
 #include "ListModel.hpp"
 #include "UpdateChecker.hpp"
+#include "ColorThemes.hpp"  // SystemThemeWatcher
+#include "OSUtils.hpp"  // IS_WINDOWS
+#include "MiscUtils.hpp"  // DialogCommon
 
 #include <QMainWindow>
 #include <QString>
@@ -235,6 +237,10 @@ class MainWindow : public QMainWindow, private DialogCommon {
 	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 	UpdateChecker updateChecker;
+
+ #if IS_WINDOWS
+	SystemThemeWatcher themeWatcher;
+ #endif
 
  private: // user data
 

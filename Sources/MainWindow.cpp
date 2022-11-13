@@ -55,7 +55,7 @@
 
 static const char defaultOptionsFileName [] = "options.json";
 
-#ifdef _WIN32
+#if IS_WINDOWS
 	static const QString scriptFileSuffix = "*.bat";
 	static const QString shortcutFileSuffix = "*.lnk";
 #else
@@ -339,6 +339,14 @@ MainWindow::MainWindow()
 	ui->setupUi( this );
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
+
+	// OS-specific initialization
+
+ #if IS_WINDOWS
+	// Qt on Windows does not automatically follow OS preferences, so we have to monitor the OS settings for changes
+	// and manually change our theme when it does.
+	themeWatcher.start();
+ #endif
 
 	// setup main menu actions
 
@@ -713,6 +721,10 @@ void MainWindow::closeEvent( QCloseEvent * event )
 {
 	if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
 		saveOptions( optionsFilePath );
+
+ #if IS_WINDOWS
+	themeWatcher.terminate();
+ #endif
 
 	QMainWindow::closeEvent( event );
 }
@@ -2381,8 +2393,7 @@ bool MainWindow::loadOptions( const QString & filePath )
 
 void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 {
-	if (settings.theme != Theme::SystemDefault)
-		setColorTheme( settings.theme );
+	setColorTheme( settings.theme );
 
 	if (opts.geometry.width > 0 && opts.geometry.height > 0)
 		this->resize( opts.geometry.width, opts.geometry.height );
@@ -2860,8 +2871,8 @@ void MainWindow::exportPresetToScript()
 
 void MainWindow::exportPresetToShortcut()
 {
- #ifdef _WIN32
-
+ #if IS_WINDOWS
+	
 	int selectedIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedIdx < 0)
 	{
@@ -2899,13 +2910,12 @@ void MainWindow::exportPresetToShortcut()
 		QMessageBox::warning( this, "Cannot create shortcut", "Failed to create a shortcut. Check permissions." );
 		return;
 	}
-
+	
  #else
-
+ 
 	QMessageBox::warning( this, "Not supported", "This feature only works on Windows." );
-	return;
-
- #endif // _WIN32
+	
+ #endif
 }
 
 void MainWindow::importPresetFromScript()

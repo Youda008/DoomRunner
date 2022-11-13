@@ -23,10 +23,11 @@ int main( int argc, char * argv [] )
 	// current dir needs to be set to the application's dir so that the app finds the user files with relative paths
 	QDir::setCurrent( QApplication::applicationDirPath() );
 
-	// initialize theme definitions
 	initThemes();
 
 	MainWindow w;
 	w.show();
-	return a.exec();
+	int exitCode = a.exec();
+
+	return exitCode;
 }

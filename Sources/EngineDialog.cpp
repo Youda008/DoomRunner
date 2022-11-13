@@ -96,7 +96,7 @@ static QString getEngineName( const QString & enginePath )
 void EngineDialog::browseEngine()
 {
 	QString enginePath = OwnFileDialog::getOpenFileName( this, "Locate engine's executable", ui->pathLine->text(),
- #ifdef _WIN32
+ #if IS_WINDOWS
 		"Executable files (*.exe);;"
  #endif
 		"All files (*)"

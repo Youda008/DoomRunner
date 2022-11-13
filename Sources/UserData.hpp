@@ -308,7 +308,7 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	bool useAbsolutePaths = useAbsolutePathsByDefault;
 	bool closeOnLaunch = false;
 	bool showEngineOutput = showEngineOutputByDefault;
-	Theme theme;
+	Theme theme = Theme::SystemDefault;
 
 	void assign( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
 };

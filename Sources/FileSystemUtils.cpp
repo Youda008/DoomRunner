@@ -7,6 +7,8 @@
 
 #include "FileSystemUtils.hpp"
 
+#include "OSUtils.hpp"
+
 #include <QDirIterator>
 #include <QFile>
 #include <QStringBuilder>
@@ -36,12 +38,10 @@ bool isDirectoryWritable( const QString & dirPath )
 
 QString fixExePath( const QString & exePath )
 {
- #ifndef _WIN32
-	if (!exePath.contains("/"))  // the file is in the current working directory
+	if (!isWindows() && !exePath.contains("/"))  // the file is in the current working directory
 	{
 		return "./" + exePath;
 	}
- #endif
 	return exePath;
 }
 

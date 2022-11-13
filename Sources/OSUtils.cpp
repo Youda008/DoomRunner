@@ -17,7 +17,7 @@
 #include <QScreen>
 #include <QProcess>
 
-#ifdef _WIN32
+#if IS_WINDOWS
 	#include <windows.h>
 	#include <shlobj.h>
 	//#include <winnls.h>
@@ -25,7 +25,7 @@
 	//#include <objbase.h>
 	//#include <objidl.h>
 	//#include <shlguid.h>
-#endif // _WIN32
+#endif // IS_WINDOWS
 
 
 //======================================================================================================================
@@ -58,28 +58,34 @@ QVector< MonitorInfo > listMonitors()
 QString getThisAppDataDir()
 {
 	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
- #ifdef _WIN32
-	QString appExeDir = QApplication::applicationDirPath();
-	if (isDirectoryWritable( appExeDir ))
-		return appExeDir;
-	else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%
+	if (isWindows())
+	{
+		QString appExeDir = QApplication::applicationDirPath();
+		if (isDirectoryWritable( appExeDir ))
+			return appExeDir;
+		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%
+			return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
+	}
+	else
+	{
 		return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
- #else
-	return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
- #endif
+	}
 }
 
 QString getAppDataDir( const QString & executablePath )
 {
 	// In Windows engines store their config in the directory of its binaries,
 	// but in Linux it stores them in standard user's app config dir (usually something like /home/user/.config/)
- #ifdef _WIN32
-	return getDirOfFile( executablePath );
- #else
-	QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
-	QString appName = getFileNameFromPath( executablePath );
-	return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
- #endif
+	if (isWindows())
+	{
+		return getDirOfFile( executablePath );
+	}
+	else
+	{
+		QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
+		QString appName = getFileNameFromPath( executablePath );
+		return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
+	}
 }
 
 bool isInSearchPath( const QString & filePath )
@@ -125,7 +131,7 @@ bool openFileLocation( const QString & filePath )
 #endif
 }
 
-#ifdef _WIN32
+#if IS_WINDOWS
 bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir, QString description )
 {
 	// prepare arguments for WinAPI
@@ -195,4 +201,4 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringLis
 
 	return true;
 }
-#endif // _WIN32
+#endif // IS_WINDOWS

@@ -11,7 +11,7 @@
 
 #include "Common.hpp"
 
-#include <QVector> // TODO: cleanup
+#include <QVector>
 #include <QString>
 #include <QStringList>
 

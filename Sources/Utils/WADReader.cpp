@@ -10,13 +10,10 @@
 #include "LangUtils.hpp"
 #include "FileSystemUtils.hpp"
 
-#include <QVector>  // TODO: cleanup
 #include <QHash>
-#include <QFileInfo>
 #include <QFile>
 #include <QTextStream>
 #include <QRegularExpression>
-
 #include <QDebug>
 
 

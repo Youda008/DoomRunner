@@ -30,6 +30,8 @@ QMAKE_CXXFLAGS += -Wno-attributes
 
 QMAKE_CXXFLAGS += -Wno-comment
 
+INCLUDEPATH += Sources
+
 HEADERS += \
     Sources/Dialogs/AboutDialog.hpp \
     Sources/Dialogs/CompatOptsDialog.hpp \

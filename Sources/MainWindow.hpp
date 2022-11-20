@@ -11,12 +11,12 @@
 
 #include "Common.hpp"
 
+#include "Dialogs/DialogCommon.hpp"
+#include "Widgets/ListModel.hpp"
 #include "UserData.hpp"
-#include "ListModel.hpp"
 #include "UpdateChecker.hpp"
 #include "ColorThemes.hpp"  // SystemThemeWatcher
-#include "OSUtils.hpp"  // IS_WINDOWS
-#include "MiscUtils.hpp"  // DialogCommon
+#include "Utils/OSUtils.hpp"  // IS_WINDOWS
 
 #include <QMainWindow>
 #include <QString>
@@ -37,7 +37,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class MainWindow : public QMainWindow, private DialogCommon {
+class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 
 	Q_OBJECT
 

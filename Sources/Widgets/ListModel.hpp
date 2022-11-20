@@ -11,8 +11,8 @@
 
 #include "Common.hpp"
 
-#include "LangUtils.hpp"
-#include "FileSystemUtils.hpp"  // PathContext
+//#include "Utils/LangUtils.hpp"
+#include "Utils/FileSystemUtils.hpp"  // PathContext
 
 #include <QAbstractListModel>
 #include <QList>

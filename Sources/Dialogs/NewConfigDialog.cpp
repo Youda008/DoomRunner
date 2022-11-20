@@ -8,7 +8,7 @@
 #include "NewConfigDialog.hpp"
 #include "ui_NewConfigDialog.h"
 
-#include "ColorThemes.hpp"
+#include "ColorThemes.hpp"  // updateWindowBorder
 
 
 //======================================================================================================================

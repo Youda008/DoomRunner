@@ -7,13 +7,11 @@
 
 #include "OptionsSerializer.hpp"
 
-#include "JsonUtils.hpp"
-#include "MiscUtils.hpp"  // checkPath
+#include "Utils/JsonUtils.hpp"
+#include "Utils/MiscUtils.hpp"  // checkPath
 #include "Version.hpp"
 
 #include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
 #include <QFileInfo>
 #include <QMessageBox>
 

@@ -8,7 +8,7 @@
 #include "AboutDialog.hpp"
 #include "ui_AboutDialog.h"
 
-#include "ColorThemes.hpp"
+#include "ColorThemes.hpp"  // updateWindowBorder
 #include "Version.hpp"
 #include "UpdateChecker.hpp"
 

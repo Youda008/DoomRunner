@@ -8,10 +8,10 @@
 #include "ProcessOutputWindow.hpp"
 #include "ui_ProcessOutputWindow.h"
 
-#include "ColorThemes.hpp"
-#include "WidgetUtils.hpp"
-#include "FileSystemUtils.hpp"
-#include "OSUtils.hpp"
+#include "ColorThemes.hpp"  // updateWindowBorder
+#include "Utils/WidgetUtils.hpp"
+#include "Utils/FileSystemUtils.hpp"
+#include "Utils/OSUtils.hpp"
 
 #include <QTextEdit>
 #include <QFontDatabase>

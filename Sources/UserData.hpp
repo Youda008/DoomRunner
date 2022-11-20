@@ -11,10 +11,10 @@
 
 #include "Common.hpp"
 
-#include "ListModel.hpp"  // ReadOnlyListModelItem, EditableListModelItem
-#include "JsonUtils.hpp"
-#include "ColorThemes.hpp"
-#include "EngineTraits.hpp"  // EngineFamily
+#include "Widgets/ListModel.hpp"  // ReadOnlyListModelItem, EditableListModelItem
+#include "Utils/JsonUtils.hpp"    // enumName, enumSize
+#include "ColorThemes.hpp"        // Theme
+#include "EngineTraits.hpp"       // EngineFamily
 
 #include <QString>
 #include <QFileInfo>

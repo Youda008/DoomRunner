@@ -12,6 +12,7 @@
 #include "Common.hpp"
 
 #include <QDialog>
+#include <QString>
 
 namespace Ui {
 	class NewConfigDialog;

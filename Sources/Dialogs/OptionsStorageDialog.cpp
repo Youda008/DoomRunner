@@ -8,7 +8,7 @@
 #include "OptionsStorageDialog.hpp"
 #include "ui_OptionsStorageDialog.h"
 
-#include "ColorThemes.hpp"
+#include "ColorThemes.hpp"  // updateWindowBorder
 
 
 //======================================================================================================================

@@ -11,6 +11,7 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <QCheckBox>
+#include <QDebug>
 
 //#include <QLinkedList> // obsolete? why???
 #include <list>

@@ -11,10 +11,10 @@
 
 #include "Common.hpp"
 
-#include "MiscUtils.hpp"  // DialogCommon
+#include "DialogCommon.hpp"
 #include "UserData.hpp"  // Engine, IWAD
-#include "ListModel.hpp"
-#include "EventFilters.hpp"  // ConfirmationFilter
+#include "Widgets/ListModel.hpp"
+#include "Utils/EventFilters.hpp"  // ConfirmationFilter
 
 #include <QDialog>
 
@@ -28,7 +28,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class SetupDialog : public QDialog, private DialogCommon {
+class SetupDialog : public QDialog, private DialogWithBrowseDir {
 
 	Q_OBJECT
 

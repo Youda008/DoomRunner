@@ -8,7 +8,7 @@
 #include "UpdateChecker.hpp"
 
 #include "Version.hpp"
-#include "LangUtils.hpp"
+#include "Utils/LangUtils.hpp"  // atScopeEndDo
 
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>

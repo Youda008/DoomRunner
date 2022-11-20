@@ -7,9 +7,9 @@
 
 #include "EngineTraits.hpp"
 
-#include "LangUtils.hpp"  // find
-#include "FileSystemUtils.hpp"  // getFileBasenameFromPath
-#include "UserData.hpp"  // Engine
+#include "Utils/LangUtils.hpp"        // find
+#include "Utils/FileSystemUtils.hpp"  // getFileBasenameFromPath
+#include "UserData.hpp"               // Engine
 
 #include <QHash>
 #include <QRegularExpression>

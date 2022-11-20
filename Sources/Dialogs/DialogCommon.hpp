@@ -11,7 +11,7 @@
 
 #include "Common.hpp"
 
-#include "FileSystemUtils.hpp"  // PathContext
+#include "Utils/FileSystemUtils.hpp"  // PathContext
 
 #include <QString>
 
@@ -19,14 +19,15 @@ class QWidget;
 class QLineEdit;
 
 
-class DialogCommon {
+class DialogWithBrowseDir {
 
  protected:
 
 	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
 	QString lastUsedDir;  ///< the last directory the user selected via QFileDialog::getExistingDirectory()
 
-	DialogCommon( PathContext pathContext ) : pathContext( std::move(pathContext) ) {}
+	DialogWithBrowseDir( PathContext pathContext )
+		: pathContext( std::move(pathContext) ) {}
 
 	QString lineEditOrLastDir( QLineEdit * line );
 	void browseDir( QWidget * parent, const QString & dirPurpose, QLineEdit * targetLine );

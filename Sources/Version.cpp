@@ -10,7 +10,7 @@
 #include <QString>
 #include <QStringList>
 
-struct Version
+struct Version  // TODO
 {
 	ushort major;
 	ushort minor;

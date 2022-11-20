@@ -8,7 +8,7 @@
 #include "GameOptsDialog.hpp"
 #include "ui_GameOptsDialog.h"
 
-#include "ColorThemes.hpp"
+#include "ColorThemes.hpp"  // updateWindowBorder
 
 #include <QString>
 #include <QLineEdit>

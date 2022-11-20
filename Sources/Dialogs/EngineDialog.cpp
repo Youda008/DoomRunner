@@ -8,11 +8,11 @@
 #include "EngineDialog.hpp"
 #include "ui_EngineDialog.h"
 
-#include "ColorThemes.hpp"
+#include "ColorThemes.hpp"  // updateWindowBorder
 #include "OwnFileDialog.hpp"
-#include "WidgetUtils.hpp"
-#include "OSUtils.hpp"
-#include "MiscUtils.hpp"  // highlightInvalidPath
+#include "Utils/WidgetUtils.hpp"
+#include "Utils/OSUtils.hpp"
+#include "Utils/MiscUtils.hpp"  // highlightInvalidPath
 
 #include <QDir>
 #include <QTimer>

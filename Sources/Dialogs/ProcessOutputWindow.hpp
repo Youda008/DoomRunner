@@ -12,7 +12,7 @@
 #include <QDialog>
 #include <QProcess>
 
-#include "EventFilters.hpp"
+#include "Utils/EventFilters.hpp"
 
 class QPushButton;
 class QCloseEvent;

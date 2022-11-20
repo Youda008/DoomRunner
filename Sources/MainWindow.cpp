@@ -8,27 +8,28 @@
 #include "MainWindow.hpp"
 #include "ui_MainWindow.h"
 
-#include "AboutDialog.hpp"
-#include "SetupDialog.hpp"
-#include "OptionsStorageDialog.hpp"
-#include "NewConfigDialog.hpp"
-#include "GameOptsDialog.hpp"
-#include "CompatOptsDialog.hpp"
-#include "ProcessOutputWindow.hpp"
+#include "Dialogs/AboutDialog.hpp"
+#include "Dialogs/SetupDialog.hpp"
+#include "Dialogs/OptionsStorageDialog.hpp"
+#include "Dialogs/NewConfigDialog.hpp"
+#include "Dialogs/OwnFileDialog.hpp"
+#include "Dialogs/GameOptsDialog.hpp"
+#include "Dialogs/CompatOptsDialog.hpp"
+#include "Dialogs/ProcessOutputWindow.hpp"
 
 #include "OptionsSerializer.hpp"
-#include "Version.hpp"
+#include "Version.hpp"  // window title
 #include "UpdateChecker.hpp"
-#include "EngineTraits.hpp"
 #include "ColorThemes.hpp"
+#include "EngineTraits.hpp"
+#include "DoomFileInfo.hpp"
 
-#include "LangUtils.hpp"
-#include "FileSystemUtils.hpp"
-#include "OSUtils.hpp"
-#include "OwnFileDialog.hpp"
-#include "WidgetUtils.hpp"
-#include "DoomUtils.hpp"
-#include "MiscUtils.hpp"  // checkPath, highlightInvalidPath
+#include "Utils/LangUtils.hpp"
+#include "Utils/FileSystemUtils.hpp"
+#include "Utils/OSUtils.hpp"
+#include "Utils/WidgetUtils.hpp"
+#include "Utils/WADReader.hpp"
+#include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidPath
 
 #include <QVector>
 #include <QList>
@@ -309,7 +310,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 MainWindow::MainWindow()
 :
 	QMainWindow( nullptr ),
-	DialogCommon(
+	DialogWithBrowseDir(
 		PathContext( QApplication::applicationDirPath(), useAbsolutePathsByDefault )  // all relative paths will internally be stored relative to the application's dir
 	),
 	engineModel(

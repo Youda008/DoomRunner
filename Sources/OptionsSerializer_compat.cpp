@@ -7,8 +7,8 @@
 
 #include "OptionsSerializer.hpp"  // OptionsToLoad
 
-#include "JsonUtils.hpp"
-#include "MiscUtils.hpp"  // checkPath
+#include "Utils/JsonUtils.hpp"
+#include "Utils/MiscUtils.hpp"  // checkPath
 #include "Version.hpp"
 
 #include <QFileInfo>

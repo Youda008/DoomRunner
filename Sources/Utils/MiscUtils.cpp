@@ -12,6 +12,7 @@
 
 #include <QFileInfo>
 #include <QTextStream>
+#include <QLineEdit>
 #include <QMessageBox>
 
 

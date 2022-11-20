@@ -7,7 +7,7 @@
 
 #include "OwnFileDialog.hpp"
 
-#include "OSUtils.hpp"
+#include "Utils/OSUtils.hpp"  // isWindows
 
 
 //======================================================================================================================

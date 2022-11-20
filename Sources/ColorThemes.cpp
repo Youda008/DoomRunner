@@ -7,8 +7,8 @@
 
 #include "ColorThemes.hpp"
 
-#include "LangUtils.hpp"
-#include "OSUtils.hpp"
+#include "Utils/LangUtils.hpp"  // find, atScopeEndDo
+#include "Utils/OSUtils.hpp"    // IS_WINDOWS
 
 #include <QApplication>
 #include <QGuiApplication>
@@ -18,13 +18,12 @@
 #include <QStyleFactory>
 #include <QPalette>
 #include <QColor>
-
 #include <QDebug>
 
 #if IS_WINDOWS
 	#include <windows.h>
 	#include <dwmapi.h>
-#endif // IS_WINDOWS
+#endif
 
 #include <algorithm>
 #include <functional>
@@ -170,7 +169,7 @@ void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEnabled )
 	);
 	if (lErrorCode != ERROR_SUCCESS)
 	{
-		qDebug() << "cannot open registry key: HKEY_CURRENT_USER /" << darkModeSubkeyPath;
+		qWarning() << "cannot open registry key: HKEY_CURRENT_USER /" << darkModeSubkeyPath;
 		return;
 	}
 
@@ -179,7 +178,7 @@ void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEnabled )
 	optAppsUseLightTheme = readRegistryDWORD( hThemeSettingsKey, nullptr, darkModeValueName );
 	if (!optAppsUseLightTheme)
 	{
-		qDebug() << "cannot read registry value" << darkModeValueName << "(error" << GetLastError() << ")";
+		qWarning() << "cannot read registry value" << darkModeValueName << "(error" << GetLastError() << ")";
 		return;
 	}
 
@@ -196,7 +195,7 @@ void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEnabled )
 		);
 		if (lErrorCode != ERROR_SUCCESS)
 		{
-			qDebug() << "RegNotifyChangeKeyValue failed";
+			qWarning() << "RegNotifyChangeKeyValue failed";
 			Sleep( 1000 );
 			continue;
 		}
@@ -204,7 +203,7 @@ void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEnabled )
 		optAppsUseLightTheme = readRegistryDWORD( hThemeSettingsKey, nullptr, darkModeValueName );
 		if (!optAppsUseLightTheme)
 		{
-			qDebug() << "cannot read registry value" << darkModeValueName << "(error" << GetLastError() << ")";
+			qWarning() << "cannot read registry value" << darkModeValueName << "(error" << GetLastError() << ")";
 			break;
 		}
 

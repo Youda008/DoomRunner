@@ -11,11 +11,10 @@
 #include "EngineDialog.hpp"
 
 #include "OwnFileDialog.hpp"
-#include "EventFilters.hpp"  // ConfirmationFilter
-#include "ColorThemes.hpp"
-#include "WidgetUtils.hpp"
-#include "DoomUtils.hpp"
-#include "MiscUtils.hpp"  // makeFileFilter, highlightInvalidPath
+#include "ColorThemes.hpp"  // updateWindowBorder
+#include "DoomFileInfo.hpp"
+#include "Utils/WidgetUtils.hpp"
+#include "Utils/MiscUtils.hpp"  // makeFileFilter, highlightInvalidPath
 
 #include <QString>
 #include <QStringBuilder>
@@ -38,7 +37,7 @@ SetupDialog::SetupDialog(
 )
 :
 	QDialog( parent ),
-	DialogCommon(
+	DialogWithBrowseDir(
 		PathContext( baseDir, settings.useAbsolutePaths )
 	),
 	engineModel( engineList,
@@ -208,8 +207,6 @@ void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
 		if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))  // the second prevents clearing the list when the path is invalid
 			updateIWADsFromDir();
 	}
-
-	//updateWindowBorder( this );
 }
 
 SetupDialog::~SetupDialog()

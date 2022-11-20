@@ -12,7 +12,7 @@
 #include "Common.hpp"
 
 #include "UserData.hpp"  // Engine
-#include "FileSystemUtils.hpp"  // PathContext
+#include "Utils/FileSystemUtils.hpp"  // PathContext
 
 #include <QDialog>
 

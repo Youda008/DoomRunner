@@ -12,10 +12,14 @@
 
 #include "Common.hpp"
 
-#include "EventFilters.hpp"  // ModifierHandler
+#include "Utils/EventFilters.hpp"  // ModifierHandler
 
 #include <QListView>
+
 class QMenu;
+class QAction;
+class QKeySequence;
+class QString;
 
 
 //======================================================================================================================

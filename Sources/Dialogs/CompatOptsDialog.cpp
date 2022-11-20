@@ -8,7 +8,7 @@
 #include "CompatOptsDialog.hpp"
 #include "ui_CompatOptsDialog.h"
 
-#include "ColorThemes.hpp"
+#include "ColorThemes.hpp"  // updateWindowBorder
 
 #include <QString>
 #include <QTextStream>

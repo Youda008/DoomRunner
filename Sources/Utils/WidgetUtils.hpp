@@ -11,9 +11,9 @@
 
 #include "Common.hpp"
 
-#include "LangUtils.hpp"  // findSuch
-#include "ListModel.hpp"
-#include "FileSystemUtils.hpp"  // fillListFromDir
+#include "LangUtils.hpp"         // findSuch
+#include "FileSystemUtils.hpp"   // fillListFromDir
+#include "Widgets/ListModel.hpp"
 
 #include <QAbstractItemView>
 #include <QListView>

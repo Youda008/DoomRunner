@@ -7,6 +7,7 @@
 
 #include "DialogCommon.hpp"
 
+#include "ColorThemes.hpp"
 #include "OwnFileDialog.hpp"
 
 #include <QLineEdit>
@@ -14,13 +15,13 @@
 
 //======================================================================================================================
 
-QString DialogCommon::lineEditOrLastDir( QLineEdit * line )
+QString DialogWithBrowseDir::lineEditOrLastDir( QLineEdit * line )
 {
 	QString lineText = line->text();
 	return !lineText.isEmpty() ? lineText : lastUsedDir;
 }
 
-void DialogCommon::browseDir( QWidget * parent, const QString & dirPurpose, QLineEdit * targetLine )
+void DialogWithBrowseDir::browseDir( QWidget * parent, const QString & dirPurpose, QLineEdit * targetLine )
 {
 	QString path = OwnFileDialog::getExistingDirectory( parent, "Locate the directory "+dirPurpose, lineEditOrLastDir( targetLine ) );
 	if (path.isEmpty())  // user probably clicked cancel

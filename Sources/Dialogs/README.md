@@ -1,0 +1,1 @@
+UI source code files - define behaviour of the dialog windows

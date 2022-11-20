@@ -1,0 +1,1 @@
+UI definition files - define appearance of the dialog windows

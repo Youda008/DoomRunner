@@ -1933,12 +1933,12 @@
   <customwidget>
    <class>EditableListView</class>
    <extends>QListView</extends>
-   <header location="global">Sources/EditableListView.hpp</header>
+   <header location="global">Sources/Widgets/EditableListView.hpp</header>
   </customwidget>
   <customwidget>
    <class>ExtendedTreeView</class>
    <extends>QTreeView</extends>
-   <header location="global">Sources/ExtendedTreeView.hpp</header>
+   <header location="global">Sources/Widgets/ExtendedTreeView.hpp</header>
   </customwidget>
  </customwidgets>
  <resources>

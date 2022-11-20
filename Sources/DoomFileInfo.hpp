@@ -2,16 +2,16 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: doom-specific utilities
+// Description: Doom file type recognition and known WAD detection
 //======================================================================================================================
 
-#ifndef DOOM_UTILS_INCLUDED
-#define DOOM_UTILS_INCLUDED
+#ifndef DOOM_FILE_INFO_INCLUDED
+#define DOOM_FILE_INFO_INCLUDED
 
 
 #include "Common.hpp"
 
-#include <QVector>
+#include <QVector> // TODO: cleanup
 #include <QString>
 #include <QStringList>
 
@@ -38,29 +38,7 @@ QStringList getModFileSuffixes();
 
 
 //======================================================================================================================
-//  WAD info loading
-
-enum class WadType
-{
-	IWAD,
-	PWAD,
-	Neither
-};
-
-struct WadInfo
-{
-	bool successfullyRead;
-	WadType type;
-	QStringList mapNames;
-};
-
-/// Reads required data from a wad file and stores it into a cache.
-/** If the file was already read earlier, it returns the cached info. */
-const WadInfo & getCachedWadInfo( const QString & filePath );
-
-
-//======================================================================================================================
-//  miscellaneous
+//  known WAD info
 
 QStringList getStandardMapNames( const QString & iwadFileName );
 
@@ -69,4 +47,4 @@ QStringList getStandardMapNames( const QString & iwadFileName );
 QString getStartingMap( const QString & wadFileName );
 
 
-#endif // DOOM_UTILS_INCLUDED
+#endif // DOOM_FILE_INFO_INCLUDED

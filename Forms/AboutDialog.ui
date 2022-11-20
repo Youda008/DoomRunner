@@ -120,7 +120,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLabel" name="webPageLabel">
+    <widget class="LabelWithHyperlink" name="webPageLabel">
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Project page: &lt;a href=&quot;https://github.com/Youda008/DoomRunner&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/Youda008/DoomRunner&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
@@ -136,7 +136,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="bugreportLabel">
+    <widget class="LabelWithHyperlink" name="bugreportLabel">
      <property name="text">
       <string>Please report all bugs and discuss design flaws at&lt;br/&gt;&lt;a href=&quot;https://github.com/Youda008/DoomRunner/issues&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/Youda008/DoomRunner/issues&lt;/span&gt;&lt;/a&gt;</string>
      </property>
@@ -181,6 +181,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LabelWithHyperlink</class>
+   <extends>QLabel</extends>
+   <header location="global">Sources/Widgets/LabelWithHyperlink.hpp</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -63,8 +63,3 @@ int Version::compare( const Version & other ) const
 	return ((this->major << 16) + (this->minor << 8) + (this->patch))
 	     - ((other.major << 16) + (other.minor << 8) + (other.patch));
 }
-
-static void testComparison( const char * left, const char * right )
-{
-	qDebug() << left << "<" << right << ":" << (Version(left) < Version(right));
-}

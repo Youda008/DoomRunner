@@ -41,6 +41,10 @@ void setColorTheme( Theme theme );
 // because the new title bar and window borders are not automatically changed by Qt.
 void updateWindowBorder( QWidget * window );
 
+// On Windows, palette.setColor( QPalette::Link, ... ) does not work, so we have to change the hyperlink color
+// by manually editing each widget's rich text.
+QString updateHyperlinkColor( const QString & richText );
+
 
 /// Monitors changes to the theme settings of the operating system.
 /** Qt on Windows does not automatically follow OS preferences, so the OS theme settings have to be manually monitored

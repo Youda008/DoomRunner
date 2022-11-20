@@ -18,6 +18,7 @@
 #include <QStyleFactory>
 #include <QPalette>
 #include <QColor>
+#include <QRegularExpression>
 #include <QDebug>
 
 #if IS_WINDOWS
@@ -308,6 +309,21 @@ void updateWindowBorder( [[maybe_unused]] QWidget * window )
 		SetFocus( reinterpret_cast< HWND >( static_cast< QWidget * >( window->parent() )->winId() ) );
 		SetFocus( reinterpret_cast< HWND >( window->winId() ) );
 	}
+ #endif
+}
+
+QString updateHyperlinkColor( const QString & richText )
+{
+ #if IS_WINDOWS
+	QString htmlColor = themeDefs[ size_t( g_currentThemeID.load() ) ].palette.color( QPalette::Link ).name();
+	QString newText( richText );
+	static QRegularExpression regex("color:#[0-9a-fA-F]{6}");
+	newText.replace( regex, "color:"+htmlColor );
+	qDebug() << richText;
+	qDebug() << newText;
+	return newText;
+ #else
+	return richText;
  #endif
 }
 

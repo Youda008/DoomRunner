@@ -13,7 +13,7 @@
 
 #include "Widgets/ListModel.hpp"  // ReadOnlyListModelItem, EditableListModelItem
 #include "Utils/JsonUtils.hpp"    // enumName, enumSize
-#include "ColorThemes.hpp"        // Theme
+#include "Themes.hpp"             // Theme
 #include "EngineTraits.hpp"       // EngineFamily
 
 #include <QString>
@@ -308,7 +308,8 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	bool useAbsolutePaths = useAbsolutePathsByDefault;
 	bool closeOnLaunch = false;
 	bool showEngineOutput = showEngineOutputByDefault;
-	Theme theme = Theme::SystemDefault;
+	ColorScheme colorScheme = ColorScheme::SystemDefault;
+	QString appStyle;
 
 	void assign( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
 };

@@ -55,12 +55,12 @@ HEADERS += \
     Sources/Widgets/ExtendedTreeView.hpp \
 	Sources/Widgets/LabelWithHyperlink.hpp \
     Sources/Widgets/ListModel.hpp \
-    Sources/ColorThemes.hpp \
     Sources/Common.hpp \
     Sources/DoomFileInfo.hpp \
     Sources/EngineTraits.hpp \
     Sources/MainWindow.hpp \
     Sources/OptionsSerializer.hpp \
+    Sources/Themes.hpp \
     Sources/UpdateChecker.hpp \
     Sources/UserData.hpp \
     Sources/Version.hpp \
@@ -88,11 +88,11 @@ SOURCES += \
     Sources/Widgets/ExtendedTreeView.cpp \
 	Sources/Widgets/LabelWithHyperlink.cpp \
     Sources/Widgets/ListModel.cpp \
-    Sources/ColorThemes.cpp \
     Sources/DoomFileInfo.cpp \
     Sources/EngineTraits.cpp \
     Sources/MainWindow.cpp \
     Sources/OptionsSerializer.cpp \
+    Sources/Themes.cpp \
     Sources/UpdateChecker.cpp \
     Sources/UserData.cpp \
     Sources/Version.cpp \

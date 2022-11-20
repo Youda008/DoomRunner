@@ -84,9 +84,9 @@ static void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 	else
 	{
 		engine.name = jsEngine.getString( "name", "<missing name>" );
-		engine.path = jsEngine.getString( "path", "" );  // empty path is used to indicate invalid entry to be skipped
+		engine.path = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
 		engine.configDir = jsEngine.getString( "config_dir", getDirOfFile( engine.path ) );
-		engine.family = familyFromStr( jsEngine.getString( "family", "", DontShowError ) );
+		engine.family = familyFromStr( jsEngine.getString( "family", {}, DontShowError ) );
 		if (engine.family == EngineFamily::_EnumEnd)
 			engine.family = guessEngineFamily( getFileBasenameFromPath( engine.path ) );
 	}
@@ -119,7 +119,7 @@ static void deserialize( const JsonObjectCtx & jsEngine, IWAD & iwad )
 	}
 	else
 	{
-		iwad.path = jsEngine.getString( "path", "" );  // empty path is used to indicate invalid entry to be skipped
+		iwad.path = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
 		iwad.name = jsEngine.getString( "name", QFileInfo( iwad.path ).fileName() );
 	}
 }
@@ -151,7 +151,7 @@ static void deserialize( const JsonObjectCtx & jsMod, Mod & mod )
 	}
 	else
 	{
-		mod.path = jsMod.getString( "path", "" );  // empty path is used to indicate invalid entry to be skipped
+		mod.path = jsMod.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
 		mod.fileName = QFileInfo( mod.path ).fileName();
 		mod.checked = jsMod.getBool( "checked", mod.checked );
 	}
@@ -525,7 +525,8 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 	jsSettings["close_on_launch"] = settings.closeOnLaunch;
 	jsSettings["show_engine_output"] = settings.showEngineOutput;
 
-	jsSettings["theme"] = themeToString( settings.theme );
+	jsSettings["app_style"] = settings.appStyle.isNull() ? QJsonValue( QJsonValue::Null ) : settings.appStyle;
+	jsSettings["color_scheme"] = schemeToString( settings.colorScheme );
 
 	{
 		QJsonObject jsOptsStorage;
@@ -547,10 +548,10 @@ static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & se
 	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 
-	QString themeStr = jsSettings.getString( "theme", "", DontShowError );
-	settings.theme = themeFromString( themeStr );
-	if (settings.theme == Theme::_EnumEnd)
-		settings.theme = Theme::SystemDefault;
+	settings.appStyle = jsSettings.getString( "app_style", {}, DontShowError );  // null value means system-default
+	settings.colorScheme = schemeFromString( jsSettings.getString( "color_scheme", {}, DontShowError ) );
+	if (settings.colorScheme == ColorScheme::_EnumEnd)
+		settings.colorScheme = ColorScheme::SystemDefault;
 
 	if (JsonObjectCtx jsOptsStorage = jsSettings.getObject( "options_storage" ))
 	{

@@ -75,10 +75,18 @@ SetupDialog::SetupDialog(
 	ui->closeOnLaunchChkBox->setChecked( settings.closeOnLaunch );
 	ui->showEngineOutputChkBox->setChecked( settings.showEngineOutput );
 
-	switch (settings.theme)
+	ui->styleCmbBox->addItem( "System default" );
+	ui->styleCmbBox->addItems( themes::getAvailableAppStyles() );
+	if (!settings.appStyle.isNull())
 	{
-		case Theme::Dark: ui->themeBtn_dark->click(); break;
-		default:          ui->themeBtn_system->click(); break;
+		int idx = ui->styleCmbBox->findText( settings.appStyle );
+		ui->styleCmbBox->setCurrentIndex( idx > 0 ? idx : 0 );
+	}
+
+	switch (settings.colorScheme)
+	{
+		case ColorScheme::Dark: ui->schemeBtn_dark->click(); break;
+		default:                ui->schemeBtn_system->click(); break;
 	}
 
 	// mark invalid paths
@@ -113,8 +121,9 @@ SetupDialog::SetupDialog(
 
 	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAbsolutePaths );
 
-	connect( ui->themeBtn_system, &QRadioButton::clicked, this, &thisClass::setDefaultTheme );
-	connect( ui->themeBtn_dark, &QRadioButton::clicked, this, &thisClass::setDarkTheme );
+	connect( ui->styleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectAppStyle );
+	connect( ui->schemeBtn_system, &QRadioButton::clicked, this, &thisClass::setDefaultScheme );
+	connect( ui->schemeBtn_dark, &QRadioButton::clicked, this, &thisClass::setDarkScheme );
 
 	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::toggleCloseOnLaunch );
 	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &thisClass::toggleShowEngineOutput );
@@ -419,18 +428,34 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 	ui->modDirLine->setText( modSettings.dir );
 }
 
-void SetupDialog::setDefaultTheme()
+void SetupDialog::selectAppStyle( int index )
 {
-	settings.theme = Theme::SystemDefault;
+	if (index == 0)
+		settings.appStyle.clear();
+	else
+		settings.appStyle = ui->styleCmbBox->itemText( index );
 
-	setColorTheme( settings.theme );
+	themes::setAppStyle( settings.appStyle );
 }
 
-void SetupDialog::setDarkTheme()
+void SetupDialog::setDefaultScheme()
 {
-	settings.theme = Theme::Dark;
+	settings.colorScheme = ColorScheme::SystemDefault;
 
-	setColorTheme( settings.theme );
+	themes::setAppColorScheme( settings.colorScheme );
+}
+
+void SetupDialog::setDarkScheme()
+{
+	settings.colorScheme = ColorScheme::Dark;
+
+	themes::setAppColorScheme( settings.colorScheme );
+
+	// The default Windows 10 style doesn't respect the dark colors.
+	if (settings.appStyle.isNull())
+	{
+		ui->styleCmbBox->setCurrentText("Fusion");
+	}
 }
 
 void SetupDialog::toggleCloseOnLaunch( bool checked )

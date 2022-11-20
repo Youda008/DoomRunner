@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>570</width>
-    <height>610</height>
+    <height>620</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -419,9 +419,23 @@
      <property name="title">
       <string>Theme</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_9">
-      <item>
-       <widget class="QRadioButton" name="themeBtn_system">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="styleLabel">
+        <property name="text">
+         <string>Application style</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="schemeLabel">
+        <property name="text">
+         <string>Color scheme</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="schemeBtn_system">
         <property name="text">
          <string>System default</string>
         </property>
@@ -430,10 +444,26 @@
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QRadioButton" name="themeBtn_dark">
+      <item row="1" column="2">
+       <widget class="QRadioButton" name="schemeBtn_dark">
         <property name="text">
          <string>Dark (override)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QComboBox" name="styleCmbBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>140</width>
+          <height>0</height>
+         </size>
         </property>
        </widget>
       </item>

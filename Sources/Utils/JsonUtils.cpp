@@ -195,7 +195,12 @@ QString JsonObjectCtx::getString( const QString & key, const QString & defaultVa
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedObject)[ key ];
-	if (!val.isString())
+	if (val.isNull())
+	{
+		invalidTypeAtKey( key, "string", showError );
+		return defaultVal;
+	}
+	else if (!val.isString())
 	{
 		invalidTypeAtKey( key, "string" );
 		return defaultVal;
@@ -346,7 +351,12 @@ QString JsonArrayCtx::getString( int index, const QString & defaultVal, bool sho
 		return defaultVal;
 	}
 	QJsonValue val = (*_wrappedArray)[ index ];
-	if (!val.isString())
+	if (val.isNull())
+	{
+		invalidTypeAtIdx( index, "string", showError );
+		return defaultVal;
+	}
+	else if (!val.isString())
 	{
 		invalidTypeAtIdx( index, "string" );
 		return defaultVal;
@@ -406,27 +416,31 @@ void JsonArrayCtx::indexOutOfBounds( int index, bool showError ) const
 		_context->dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading options file", message );
 }
 
-void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expectedType ) const
+void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expectedType, bool showError ) const
 {
 	QString actualType = typeStr[ (*_wrappedObject)[ key ].type() ];
 	QString message =
 		"Element " % elemPath( key ) % " has invalid type, expected " % expectedType % ", but found " % actualType % ". "
 		"Skipping this entry.";
 
-	if (_context->dontShowAgain)
+	if (!showError)
+		return;
+	else if (_context->dontShowAgain)
 		qWarning() << message;
 	else
 		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
 }
 
-void JsonArrayCtx::invalidTypeAtIdx( int index, const QString & expectedType ) const
+void JsonArrayCtx::invalidTypeAtIdx( int index, const QString & expectedType, bool showError ) const
 {
 	QString actualType = typeStr[ (*_wrappedArray)[ index ].type() ];
 	QString message =
 		"Element " % elemPath( index ) % " has invalid type. Expected " % expectedType % ", but found " % actualType % ". "
 		"Skipping this entry.";
 
-	if (_context->dontShowAgain)
+	if (!showError)
+		return;
+	else if (_context->dontShowAgain)
 		qWarning() << message;
 	else
 		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );

@@ -80,8 +80,9 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 
 	void toggleAbsolutePaths( bool checked );
 
-	void setDefaultTheme();
-	void setDarkTheme();
+	void selectAppStyle( int index );
+	void setDefaultScheme();
+	void setDarkScheme();
 
 	void toggleCloseOnLaunch( bool checked );
 	void toggleShowEngineOutput( bool checked );

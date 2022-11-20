@@ -7,7 +7,7 @@
 
 #include "LabelWithHyperlink.hpp"
 
-#include "ColorThemes.hpp"
+#include "Themes.hpp"
 
 
 //======================================================================================================================
@@ -18,5 +18,5 @@ LabelWithHyperlink::~LabelWithHyperlink() {}
 
 void LabelWithHyperlink::setText( const QString & text )
 {
-	superClass::setText( updateHyperlinkColor( text ) );
+	superClass::setText( themes::updateHyperlinkColor( text ) );
 }

@@ -14,7 +14,7 @@
 #include "Widgets/ListModel.hpp"
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
-#include "ColorThemes.hpp"  // SystemThemeWatcher
+#include "Themes.hpp"  // SystemThemeWatcher
 #include "Utils/OSUtils.hpp"  // IS_WINDOWS
 
 #include <QMainWindow>

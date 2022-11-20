@@ -233,7 +233,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
  protected:
 
 	void missingKey( const QString & key, bool showError ) const;
-	void invalidTypeAtKey( const QString & key, const QString & expectedType ) const;
+	void invalidTypeAtKey( const QString & key, const QString & expectedType, bool showError = true ) const;
 	QString elemPath( const QString & elemName ) const;
 
 };
@@ -300,7 +300,7 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
  protected:
 
 	void indexOutOfBounds( int index, bool showError ) const;
-	void invalidTypeAtIdx( int index, const QString & expectedType ) const;
+	void invalidTypeAtIdx( int index, const QString & expectedType, bool showError = true ) const;
 	QString elemPath( int index ) const;
 
 };

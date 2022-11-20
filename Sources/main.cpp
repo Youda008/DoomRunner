@@ -8,7 +8,7 @@
 #include "Common.hpp"
 
 #include "MainWindow.hpp"
-#include "ColorThemes.hpp"
+#include "Themes.hpp"
 
 #include <QApplication>
 #include <QDir>
@@ -23,7 +23,7 @@ int main( int argc, char * argv [] )
 	// current dir needs to be set to the application's dir so that the app finds the user files with relative paths
 	QDir::setCurrent( QApplication::applicationDirPath() );
 
-	initThemes();
+	themes::init();
 
 	MainWindow w;
 	w.show();

@@ -20,7 +20,7 @@
 #include "OptionsSerializer.hpp"
 #include "Version.hpp"  // window title
 #include "UpdateChecker.hpp"
-#include "ColorThemes.hpp"
+#include "Themes.hpp"
 #include "EngineTraits.hpp"
 #include "DoomFileInfo.hpp"
 
@@ -2210,7 +2210,7 @@ void MainWindow::updateCompatLevels()
 		ui->compatLevelCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
 		if (currentCompLvlStyle != CompatLevelStyle::None)
 		{
-			for (const QString & compatLvlStr : getCompatLevels( currentCompLvlStyle ))
+			for (const QString & compatLvlStr : getCompatLevels( currentCompLvlStyle ))  // TODO
 				ui->compatLevelCmbBox->addItem( compatLvlStr );
 		}
 
@@ -2398,7 +2398,8 @@ bool MainWindow::loadOptions( const QString & filePath )
 
 void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 {
-	setColorTheme( settings.theme );
+	themes::setAppStyle( settings.appStyle );
+	themes::setAppColorScheme( settings.colorScheme );
 
 	if (opts.geometry.width > 0 && opts.geometry.height > 0)
 		this->resize( opts.geometry.width, opts.geometry.height );

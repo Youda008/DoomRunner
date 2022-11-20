@@ -7,7 +7,7 @@
 
 #include "DialogCommon.hpp"
 
-#include "ColorThemes.hpp"  // updateWindowBorder
+#include "Themes.hpp"  // updateWindowBorder
 #include "OwnFileDialog.hpp"
 
 #include <QLineEdit>
@@ -18,7 +18,7 @@
 DialogCommon::DialogCommon( QWidget * thisWidget )
 {
 	// On Windows we need to manually make title bar of every new window dark, if dark theme is used.
-	updateWindowBorder( thisWidget );
+	themes::updateWindowBorder( thisWidget );
 }
 
 QString DialogWithBrowseDir::lineEditOrLastDir( QLineEdit * line )

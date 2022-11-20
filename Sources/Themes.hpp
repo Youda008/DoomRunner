@@ -23,7 +23,7 @@ enum class ColorScheme
 {
 	SystemDefault,
 	Dark,
-	// for explicit White scheme we would need a custom palette for Linux
+	Light,
 
 	_EnumEnd
 };

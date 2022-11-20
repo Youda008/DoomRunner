@@ -85,8 +85,9 @@ SetupDialog::SetupDialog(
 
 	switch (settings.colorScheme)
 	{
-		case ColorScheme::Dark: ui->schemeBtn_dark->click(); break;
-		default:                ui->schemeBtn_system->click(); break;
+		case ColorScheme::Dark:  ui->schemeBtn_dark->click(); break;
+		case ColorScheme::Light: ui->schemeBtn_light->click(); break;
+		default:                 ui->schemeBtn_system->click(); break;
 	}
 
 	// mark invalid paths
@@ -124,6 +125,7 @@ SetupDialog::SetupDialog(
 	connect( ui->styleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectAppStyle );
 	connect( ui->schemeBtn_system, &QRadioButton::clicked, this, &thisClass::setDefaultScheme );
 	connect( ui->schemeBtn_dark, &QRadioButton::clicked, this, &thisClass::setDarkScheme );
+	connect( ui->schemeBtn_light, &QRadioButton::clicked, this, &thisClass::setLightScheme );
 
 	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::toggleCloseOnLaunch );
 	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &thisClass::toggleShowEngineOutput );
@@ -456,6 +458,13 @@ void SetupDialog::setDarkScheme()
 	{
 		ui->styleCmbBox->setCurrentText("Fusion");
 	}
+}
+
+void SetupDialog::setLightScheme()
+{
+	settings.colorScheme = ColorScheme::Light;
+
+	themes::setAppColorScheme( settings.colorScheme );
 }
 
 void SetupDialog::toggleCloseOnLaunch( bool checked )

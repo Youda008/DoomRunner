@@ -83,6 +83,7 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 	void selectAppStyle( int index );
 	void setDefaultScheme();
 	void setDarkScheme();
+	void setLightScheme();
 
 	void toggleCloseOnLaunch( bool checked );
 	void toggleShowEngineOutput( bool checked );

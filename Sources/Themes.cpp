@@ -48,8 +48,7 @@
 //======================================================================================================================
 //  utils
 
-/*
-static void printColorForRole( QDebug d, const QPalette & palette, QPalette::ColorRole role )
+/*static void printColorForRole( QDebug d, const QPalette & palette, QPalette::ColorRole role )
 {
 	d << QString("%1").arg( QVariant::fromValue(role).toString(), -15 )
 	  << "   " << palette.color( QPalette::ColorGroup::Active, role ).name()
@@ -94,7 +93,7 @@ static void printPalette( QString name, const QPalette & palette )
 static void setColorForRole( QPalette & palette, QPalette::ColorRole role, QColor uniform )
 {
 	palette.setColor( QPalette::ColorGroup::All, role, uniform );
-}
+}*/
 
 static void setColorForRole( QPalette & palette, QPalette::ColorRole role, QColor active, QColor inactive, QColor disabled )
 {
@@ -102,7 +101,6 @@ static void setColorForRole( QPalette & palette, QPalette::ColorRole role, QColo
 	palette.setColor( QPalette::ColorGroup::Inactive, role, inactive );
 	palette.setColor( QPalette::ColorGroup::Disabled, role, disabled );
 }
-*/
 
 
 //======================================================================================================================
@@ -112,6 +110,7 @@ static const char * const schemeStrings [] =
 {
 	"default",
 	"dark",
+	"light",
 };
 static_assert( size_t(ColorScheme::_EnumEnd) == std::size(schemeStrings), "Please update this table" );
 
@@ -166,9 +165,60 @@ static void initColorPalettes()
 		darkPalette.setColor( QPalette::Disabled, QPalette::HighlightedText, disabledColor );
 	}
 
+	{
+
+		QPalette & lightPalette = palettes[ size_t(ColorScheme::Light) ];
+
+		// based on "Breeze Light" in KDE
+
+		setColorForRole( lightPalette, QPalette::WindowText,      QColor(0x232629), QColor(0x232629), QColor(0xa0a1a3) );
+		setColorForRole( lightPalette, QPalette::Button,          QColor(0xfcfcfc), QColor(0xfcfcfc), QColor(0xf0f0f0) );
+		setColorForRole( lightPalette, QPalette::Light,           QColor(0xffffff), QColor(0xffffff), QColor(0xffffff) );
+		setColorForRole( lightPalette, QPalette::Midlight,        QColor(0xf6f7f7), QColor(0xf6f7f7), QColor(0xebedee) );
+		setColorForRole( lightPalette, QPalette::Dark,            QColor(0x888e93), QColor(0x888e93), QColor(0x82878c) );
+		setColorForRole( lightPalette, QPalette::Mid,             QColor(0xc4c8cc), QColor(0xc4c8cc), QColor(0xbbc0c5) );
+		setColorForRole( lightPalette, QPalette::Text,            QColor(0x232629), QColor(0x232629), QColor(0xaaabac) );
+		setColorForRole( lightPalette, QPalette::BrightText,      QColor(0xffffff), QColor(0xffffff), QColor(0xffffff) );
+		setColorForRole( lightPalette, QPalette::ButtonText,      QColor(0x232629), QColor(0x232629), QColor(0xa8a9aa) );
+		setColorForRole( lightPalette, QPalette::Base,            QColor(0xffffff), QColor(0xffffff), QColor(0xf3f3f3) );
+		setColorForRole( lightPalette, QPalette::Window,          QColor(0xeff0f1), QColor(0xeff0f1), QColor(0xe3e5e7) );
+		setColorForRole( lightPalette, QPalette::Shadow,          QColor(0x474a4c), QColor(0x474a4c), QColor(0x474a4c) );
+		setColorForRole( lightPalette, QPalette::Highlight,       QColor(0x3daee9), QColor(0xc2e0f5), QColor(0xe3e5e7) );
+		setColorForRole( lightPalette, QPalette::HighlightedText, QColor(0xffffff), QColor(0x232629), QColor(0xa0a1a3) );
+		setColorForRole( lightPalette, QPalette::Link,            QColor(0x2980b9), QColor(0x2980b9), QColor(0xa3cae2) );
+		setColorForRole( lightPalette, QPalette::LinkVisited,     QColor(0x9b59b6), QColor(0x9b59b6), QColor(0xd6bae1) );
+		setColorForRole( lightPalette, QPalette::AlternateBase,   QColor(0xf7f7f7), QColor(0xf7f7f7), QColor(0xebebeb) );
+		setColorForRole( lightPalette, QPalette::ToolTipBase,     QColor(0xf7f7f7), QColor(0xf7f7f7), QColor(0xf7f7f7) );
+		setColorForRole( lightPalette, QPalette::ToolTipText,     QColor(0x232629), QColor(0x232629), QColor(0x232629) );
+		setColorForRole( lightPalette, QPalette::PlaceholderText, QColor(0x232629), QColor(0x232629), QColor(0x232629) );
+	}
+
 	// Define new palettes here
 
 	/* Full palette dumps for reference
+
+	Windows 10 default
+	------------------active----inactive--disabled
+	WindowText        #000000   #000000   #787878
+	Button            #f0f0f0   #f0f0f0   #f0f0f0
+	Light             #ffffff   #ffffff   #ffffff
+	Midlight          #e3e3e3   #e3e3e3   #f7f7f7
+	Dark              #a0a0a0   #a0a0a0   #a0a0a0
+	Mid               #a0a0a0   #a0a0a0   #a0a0a0
+	Text              #000000   #000000   #787878
+	BrightText        #ffffff   #ffffff   #ffffff
+	ButtonText        #000000   #000000   #787878
+	Base              #ffffff   #ffffff   #f0f0f0
+	Window            #f0f0f0   #f0f0f0   #f0f0f0
+	Shadow            #696969   #696969   #000000
+	Highlight         #0078d7   #f0f0f0   #0078d7
+	HighlightedText   #ffffff   #000000   #ffffff
+	Link              #0000ff   #0000ff   #0000ff
+	LinkVisited       #ff00ff   #ff00ff   #ff00ff
+	AlternateBase     #f5f5f5   #f5f5f5   #f5f5f5
+	ToolTipBase       #ffffdc   #ffffdc   #ffffdc
+	ToolTipText       #000000   #000000   #000000
+	PlaceholderText   #000000   #000000   #000000
 
 	KDE - Breeze Light
 	------------------active----inactive--disabled

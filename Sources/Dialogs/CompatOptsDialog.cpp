@@ -8,8 +8,6 @@
 #include "CompatOptsDialog.hpp"
 #include "ui_CompatOptsDialog.h"
 
-#include "ColorThemes.hpp"  // updateWindowBorder
-
 #include <QString>
 #include <QTextStream>
 #include <QLineEdit>
@@ -78,12 +76,11 @@ static const CompatFlag USE_ORIGINAL_SOUND      = { "compat_soundtarget",       
 CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityDetails & compatDetails )
 :
 	QDialog( parent ),
+	DialogCommon( this ),
 	compatDetails( compatDetails )
 {
 	ui = new Ui::CompatOptsDialog;
     ui->setupUi( this );
-
-    updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	ui->compatflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->compatflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );

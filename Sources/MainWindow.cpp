@@ -311,7 +311,7 @@ MainWindow::MainWindow()
 :
 	QMainWindow( nullptr ),
 	DialogWithBrowseDir(
-		PathContext( QApplication::applicationDirPath(), useAbsolutePathsByDefault )  // all relative paths will internally be stored relative to the application's dir
+		this, PathContext( QApplication::applicationDirPath(), useAbsolutePathsByDefault )  // all relative paths will internally be stored relative to the application's dir
 	),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }

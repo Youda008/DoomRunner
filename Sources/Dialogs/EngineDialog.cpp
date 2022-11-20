@@ -8,7 +8,6 @@
 #include "EngineDialog.hpp"
 #include "ui_EngineDialog.h"
 
-#include "ColorThemes.hpp"  // updateWindowBorder
 #include "OwnFileDialog.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/OSUtils.hpp"
@@ -24,13 +23,12 @@
 EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, const Engine & engine )
 :
 	QDialog( parent ),
+	DialogCommon( this ),
 	pathContext( pathContext ),
 	engine( engine )
 {
 	ui = new Ui::EngineDialog;
 	ui->setupUi(this);
-
-	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	// automatically initialize family combox fox from existing engine families
 	for (size_t familyIdx = 0; familyIdx < size_t(EngineFamily::_EnumEnd); ++familyIdx)

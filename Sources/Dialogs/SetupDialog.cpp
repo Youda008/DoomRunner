@@ -11,7 +11,6 @@
 #include "EngineDialog.hpp"
 
 #include "OwnFileDialog.hpp"
-#include "ColorThemes.hpp"  // updateWindowBorder
 #include "DoomFileInfo.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // makeFileFilter, highlightInvalidPath
@@ -38,7 +37,7 @@ SetupDialog::SetupDialog(
 :
 	QDialog( parent ),
 	DialogWithBrowseDir(
-		PathContext( baseDir, settings.useAbsolutePaths )
+		this, PathContext( baseDir, settings.useAbsolutePaths )
 	),
 	engineModel( engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
@@ -53,8 +52,6 @@ SetupDialog::SetupDialog(
 {
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
-
-	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	lastUsedDir = iwadSettings.dir;
 

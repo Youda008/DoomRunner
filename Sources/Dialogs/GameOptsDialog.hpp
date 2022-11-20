@@ -9,7 +9,7 @@
 #define GAME_OPTS_DIALOG_INCLUDED
 
 
-#include "Common.hpp"
+#include "DialogCommon.hpp"
 
 #include "UserData.hpp"  // GameplayOptions
 
@@ -25,7 +25,7 @@ struct DMFlag;
 
 //======================================================================================================================
 
-class GameOptsDialog : public QDialog {
+class GameOptsDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 

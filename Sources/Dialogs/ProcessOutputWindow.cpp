@@ -8,7 +8,6 @@
 #include "ProcessOutputWindow.hpp"
 #include "ui_ProcessOutputWindow.h"
 
-#include "ColorThemes.hpp"  // updateWindowBorder
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/FileSystemUtils.hpp"
 #include "Utils/OSUtils.hpp"
@@ -59,7 +58,8 @@ static const char * const killBtnText = "Kill";
 
 ProcessOutputWindow::ProcessOutputWindow( QWidget * parent )
 :
-	QDialog( parent )
+	QDialog( parent ),
+	DialogCommon( this )
 {
 	qDebug() << "ProcessOutputWindow()";
 
@@ -67,8 +67,6 @@ ProcessOutputWindow::ProcessOutputWindow( QWidget * parent )
 	ui->setupUi( this );
 	abortBtn = ui->buttonBox->button( QDialogButtonBox::StandardButton::Abort );
 	closeBtn = ui->buttonBox->button( QDialogButtonBox::StandardButton::Close );
-
-	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	QFont font = QFontDatabase::systemFont( QFontDatabase::FixedFont );
 	font.setPointSize( 10 );
@@ -264,7 +262,7 @@ void ProcessOutputWindow::keyPressed( int key, uint8_t modifiers )
 	// so we need to forward key presses to the process to allow the user control.
 	if (modifiers == 0 && key > 0 && key <= CHAR_MAX)
 	{
-		char ch = key;
+		char ch = char( key );
 		//qDebug() << "forwarding key press:" << ch;
 		process.write( &ch, 1 );
 	}

@@ -9,7 +9,7 @@
 #define OPTIONS_STORAGE_DIALOG_INCLUDED
 
 
-#include "Common.hpp"
+#include "DialogCommon.hpp"
 
 #include "UserData.hpp"  // OptionsStorage
 
@@ -24,7 +24,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class OptionsStorageDialog : public QDialog {
+class OptionsStorageDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 

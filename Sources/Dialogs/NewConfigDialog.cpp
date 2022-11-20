@@ -8,19 +8,16 @@
 #include "NewConfigDialog.hpp"
 #include "ui_NewConfigDialog.h"
 
-#include "ColorThemes.hpp"  // updateWindowBorder
-
 
 //======================================================================================================================
 
 NewConfigDialog::NewConfigDialog( QWidget * parent, const QString & currentConfigName )
 :
-	QDialog( parent )
+	QDialog( parent ),
+	DialogCommon( this )
 {
 	ui = new Ui::NewConfigDialog;
 	ui->setupUi(this);
-
-	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	ui->configNameLine->setText( currentConfigName );
 

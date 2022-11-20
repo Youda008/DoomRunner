@@ -8,8 +8,6 @@
 #include "GameOptsDialog.hpp"
 #include "ui_GameOptsDialog.h"
 
-#include "ColorThemes.hpp"  // updateWindowBorder
-
 #include <QString>
 #include <QLineEdit>
 #include <QIntValidator>
@@ -88,12 +86,11 @@ static const DMFlag SPAWN_WHERE_DIED             = { DM_FLAGS_2, 4096, false };
 GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayDetails & gameplayDetails )
 :
 	QDialog( parent ),
+	DialogCommon( this ),
 	gameplayDetails( gameplayDetails )
 {
 	ui = new Ui::GameOptsDialog;
 	ui->setupUi( this );
-
-	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	ui->dmflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->dmflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );

@@ -8,8 +8,6 @@
 #include "OptionsStorageDialog.hpp"
 #include "ui_OptionsStorageDialog.h"
 
-#include "ColorThemes.hpp"  // updateWindowBorder
-
 
 //======================================================================================================================
 //  OptionsStorageDialog
@@ -17,12 +15,11 @@
 OptionsStorageDialog::OptionsStorageDialog( QWidget * parent, const StorageSettings & settings )
 :
 	QDialog( parent ),
+	DialogCommon( this ),
 	storageSettings( settings )
 {
 	ui = new Ui::OptionsStorageDialog;
 	ui->setupUi( this );
-
-	updateWindowBorder( this );  // on Windows we need to manually make title bar of every new window dark, if dark theme is used
 
 	// restore options
 

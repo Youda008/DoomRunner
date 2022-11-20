@@ -9,7 +9,7 @@
 #define ENGINE_DIALOG_INCLUDED
 
 
-#include "Common.hpp"
+#include "DialogCommon.hpp"
 
 #include "UserData.hpp"  // Engine
 #include "Utils/FileSystemUtils.hpp"  // PathContext
@@ -23,7 +23,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class EngineDialog : public QDialog {
+class EngineDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 

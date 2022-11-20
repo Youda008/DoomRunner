@@ -19,18 +19,33 @@ class QWidget;
 class QLineEdit;
 
 
-class DialogWithBrowseDir {
+//======================================================================================================================
+
+/// Functionality common for all dialogs and windows.
+class DialogCommon {
+
+protected:
+
+	DialogCommon( QWidget * thisWidget );
+
+};
+
+/// Base for dialogs and windows dealing with user-defined directories.
+class DialogWithBrowseDir : public DialogCommon {
 
  protected:
 
 	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
 	QString lastUsedDir;  ///< the last directory the user selected via QFileDialog::getExistingDirectory()
 
-	DialogWithBrowseDir( PathContext pathContext )
-		: pathContext( std::move(pathContext) ) {}
+	DialogWithBrowseDir( QWidget * thisWidget, PathContext pathContext )
+		: DialogCommon( thisWidget ), pathContext( std::move(pathContext) ) {}
+
+	void browseDir( QWidget * parent, const QString & dirPurpose, QLineEdit * targetLine );
+
+ private:
 
 	QString lineEditOrLastDir( QLineEdit * line );
-	void browseDir( QWidget * parent, const QString & dirPurpose, QLineEdit * targetLine );
 
 };
 

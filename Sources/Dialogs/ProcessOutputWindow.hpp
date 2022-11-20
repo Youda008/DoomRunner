@@ -9,10 +9,12 @@
 #define ENGINE_OUTPUT_WINDOW_INCLUDED
 
 
-#include <QDialog>
-#include <QProcess>
+#include "DialogCommon.hpp"
 
 #include "Utils/EventFilters.hpp"
+
+#include <QDialog>
+#include <QProcess>
 
 class QPushButton;
 class QCloseEvent;
@@ -49,7 +51,7 @@ const char * toString( ProcessStatus status );
 //======================================================================================================================
 /** Dialog that displays process state and its standard output and error output as if it was a terminal. */
 
-class ProcessOutputWindow : public QDialog {
+class ProcessOutputWindow : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 

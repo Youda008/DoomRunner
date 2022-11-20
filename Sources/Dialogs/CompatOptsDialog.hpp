@@ -9,7 +9,7 @@
 #define COMPAT_OPTS_DIALOG_INCLUDED
 
 
-#include "Common.hpp"
+#include "DialogCommon.hpp"
 
 #include "UserData.hpp"  // CompatibilityOptions
 #include "EngineTraits.hpp"  // CompatLevelStyle
@@ -26,7 +26,7 @@ struct CompatFlag;
 
 //======================================================================================================================
 
-class CompatOptsDialog : public QDialog {
+class CompatOptsDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 

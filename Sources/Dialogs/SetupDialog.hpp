@@ -9,9 +9,8 @@
 #define SETUP_DIALOG_INCLUDED
 
 
-#include "Common.hpp"
-
 #include "DialogCommon.hpp"
+
 #include "UserData.hpp"  // Engine, IWAD
 #include "Widgets/ListModel.hpp"
 #include "Utils/EventFilters.hpp"  // ConfirmationFilter

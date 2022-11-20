@@ -9,7 +9,7 @@
 #define CONFIG_DIALOG_INCLUDED
 
 
-#include "Common.hpp"
+#include "DialogCommon.hpp"
 
 #include <QDialog>
 #include <QString>
@@ -21,7 +21,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class NewConfigDialog : public QDialog {
+class NewConfigDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 

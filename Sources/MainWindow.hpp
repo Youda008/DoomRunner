@@ -9,9 +9,8 @@
 #define MAIN_WINDOW_INCLUDED
 
 
-#include "Common.hpp"
-
 #include "Dialogs/DialogCommon.hpp"
+
 #include "Widgets/ListModel.hpp"
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"

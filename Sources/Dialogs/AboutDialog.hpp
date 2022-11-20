@@ -9,9 +9,11 @@
 #define ABOUT_DIALOG_INCLUDED
 
 
-#include <QDialog>
+#include "DialogCommon.hpp"
 
 #include "UpdateChecker.hpp"
+
+#include <QDialog>
 
 namespace Ui {
 	class AboutDialog;
@@ -20,7 +22,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class AboutDialog : public QDialog {
+class AboutDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 

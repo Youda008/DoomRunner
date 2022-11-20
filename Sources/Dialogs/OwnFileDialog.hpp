@@ -9,7 +9,7 @@
 #define OWN_FILE_DIALOG
 
 
-#include "Common.hpp"
+#include "DialogCommon.hpp"
 
 #include <QFileDialog>
 

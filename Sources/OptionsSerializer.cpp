@@ -815,9 +815,10 @@ static bool deserializeOptions( OptionsToLoad & opts, const QByteArray & bytes )
 	JsonDocumentCtx jsonDocCtx( jsonDoc );
 	const JsonObjectCtx & jsRoot = jsonDocCtx.rootObject();
 
-	QString optsVersion = jsRoot.getString( "version", "", DontShowError );
+	QString optsVersionStr = jsRoot.getString( "version", "", DontShowError );
+	Version optsVersion( optsVersionStr );
 
-	if (!optsVersion.isEmpty() && compareVersions( optsVersion, appVersion ) > 0)  // empty version means pre-1.4 version
+	if (!optsVersionStr.isEmpty() && optsVersion > appVersion)  // empty version means pre-1.4 version
 	{
 		QMessageBox::warning( nullptr, "Loading options from newer version",
 			"Detected saved options from newer version of DoomRunner. "
@@ -826,7 +827,7 @@ static bool deserializeOptions( OptionsToLoad & opts, const QByteArray & bytes )
 	}
 
 	// backward compatibility with older options format
-	if (optsVersion.isEmpty() || compareVersions( optsVersion, "1.7" ) < 0)
+	if (optsVersionStr.isEmpty() || optsVersion < "1.7")
 	{
 		jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version
 
@@ -835,7 +836,7 @@ static bool deserializeOptions( OptionsToLoad & opts, const QByteArray & bytes )
 	}
 	else
 	{
-		if (compareVersions( optsVersion, appVersion ) < 0)
+		if (optsVersion < appVersion)
 			jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version
 
 		deserializeOptionsFromJson( opts, jsRoot );

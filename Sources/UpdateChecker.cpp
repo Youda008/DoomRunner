@@ -94,7 +94,7 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 	}
 	QString availableVersion = match.captured(1);
 
-	bool updateAvailable = compareVersions( availableVersion, appVersion ) > 0;
+	bool updateAvailable = Version( availableVersion ) > appVersion;
 	if (!updateAvailable)
 	{
 		requestData.callback( UpdateNotAvailable, {}, { availableVersion } );

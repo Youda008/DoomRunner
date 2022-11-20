@@ -10,54 +10,61 @@
 #include <QString>
 #include <QStringList>
 
-struct Version  // TODO
-{
-	ushort major;
-	ushort minor;
-	ushort patch;
-};
+#include <QDebug>
 
-static bool parseVersion( const QString & versionStr, Version & version )
+Version::Version( const char * versionStr ) : Version( QString( versionStr ) ) {}
+
+Version::Version( const QString & versionStr )
 {
+	major = minor = patch = 0;
+
 	QStringList substrings = versionStr.split('.');
 	if (substrings.size() < 2)
-		return false;
+		return;
 
 	bool success = false;
 
-	version.major = substrings[0].toUShort( &success );
-	if (!success)
-		return false;
+	ushort major = substrings[0].toUShort( &success );
+	if (!success || major > UINT8_MAX)
+		return;
 
-	version.minor = substrings[1].toUShort( &success );
-	if (!success)
-		return false;
+	this->major = uint8_t( major );
+
+	ushort minor = substrings[1].toUShort( &success );
+	if (!success || minor > UINT8_MAX)
+		return;
+
+	this->minor = uint8_t( minor );
 
 	// this is optional, 0 by default
-	version.patch = substrings.size() > 2 ? substrings[2].toUShort() : 0;
+	if (substrings.size() > 2)
+	{
+		ushort patch = substrings[2].toUShort( &success );
+		if (!success || patch > UINT8_MAX)
+			return;
 
-	return true;
+		this->patch = uint8_t( patch );
+	}
 }
 
-int compareVersions( const QString & verStr1, const QString & verStr2 )
+int Version::compare( const Version & other ) const
 {
-	Version ver1, ver2;
-
-	bool parsed1 = parseVersion( verStr1, ver1 );
-	bool parsed2 = parseVersion( verStr2, ver2 );
+	bool valid1 = this->isValid();
+	bool valid2 = other.isValid();
 
 	// any version is bigger than error, 2 errors are equal
-	if (!parsed1 && !parsed2)
+	if (!valid1 && !valid2)
 		return 0;
-	else if (parsed1 && !parsed2)
+	else if (valid1 && !valid2)
 		return 1;
-	else if (!parsed1 && parsed2)
+	else if (!valid1 && valid2)
 		return -1;
 
-	if (ver1.major != ver2.major)
-		return ver1.major - ver2.major;
-	else if (ver1.minor != ver2.minor)
-		return ver1.minor - ver2.minor;
-	else
-		return ver1.patch - ver2.patch;
+	return ((this->major << 16) + (this->minor << 8) + (this->patch))
+	     - ((other.major << 16) + (other.minor << 8) + (other.patch));
+}
+
+static void testComparison( const char * left, const char * right )
+{
+	qDebug() << left << "<" << right << ":" << (Version(left) < Version(right));
 }

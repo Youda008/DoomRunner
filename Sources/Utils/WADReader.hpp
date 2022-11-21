@@ -15,6 +15,13 @@
 #include <QStringList>
 
 
+enum class ReadStatus
+{
+	Success,
+	FailedToRead,
+	InvalidFormat,
+};
+
 enum class WadType
 {
 	IWAD,
@@ -24,8 +31,8 @@ enum class WadType
 
 struct WadInfo
 {
-	bool successfullyRead;
-	WadType type;
+	ReadStatus status = ReadStatus::FailedToRead;
+	WadType type = WadType::Neither;
 	QStringList mapNames;
 };
 

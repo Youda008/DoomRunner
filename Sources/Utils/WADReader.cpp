@@ -16,6 +16,8 @@
 #include <QRegularExpression>
 #include <QDebug>
 
+#include <cctype>
+
 
 //======================================================================================================================
 //  WAD info loading
@@ -38,11 +40,32 @@ struct LumpEntry
 	char name [8];  ///< might not be null-terminated when the string takes all 8 bytes
 };
 
+static bool isPrintableAsciiString( const QString & str )
+{
+	for (auto c : str.toLatin1())
+		if (!isprint( c ))
+			return false;
+	return true;
+}
+
 static bool isMapMarker( const LumpEntry & lump, const QString & lumpName )
 {
+	static QSet< QString > blacklistedNames =
+	{
+		"SEGS",
+		"SECTORS",
+		"SSECTORS",
+		"LINEDEFS",
+		"SIDEDEFS",
+		"VERTEXES",
+		"NODES",
+		"BLOCKMAP",
+		"REJECT",
+	};
 	return lump.size == 0
-		&& !lumpName.contains("START") && !lumpName.contains("END")
-		&& !lumpName.contains("_S") && !lumpName.contains("_E");
+		&& !lumpName.endsWith("_START") && !lumpName.endsWith("_END")
+		&& !lumpName.endsWith("_S") && !lumpName.endsWith("_E")
+		&& !blacklistedNames.contains( lumpName );
 }
 
 static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QStringList & mapNames )
@@ -64,17 +87,18 @@ static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QStringList & m
 static WadInfo readWadInfoFromFile( const QString & filePath )
 {
 	WadInfo wadInfo;
-	wadInfo.successfullyRead = false;
 
 	QFile file( filePath );
 	if (!file.open( QIODevice::ReadOnly ))
 	{
+		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
 
 	WadHeader header;
 	if (file.read( (char*)&header, sizeof(header) ) < qint64( sizeof(header) ))
 	{
+		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
 
@@ -85,8 +109,21 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 	else
 		wadInfo.type = WadType::Neither;
 
+	if (wadInfo.type == WadType::Neither)  // not a WAD format
+	{
+		wadInfo.status = ReadStatus::InvalidFormat;
+		return wadInfo;
+	}
+
+	if (header.lumpDirOffset >= file.size() || header.numLumps < 1 || header.numLumps > 65536)  // some garbage -> not a WAD
+	{
+		wadInfo.status = ReadStatus::InvalidFormat;
+		return wadInfo;
+	}
+
 	if (!file.seek( header.lumpDirOffset ))
 	{
+		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
 
@@ -95,6 +132,7 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 	std::unique_ptr< LumpEntry [] > lumpDir( new LumpEntry [header.numLumps] );
 	if (file.read( (char*)lumpDir.get(), lumpDirSize ) < lumpDirSize)
 	{
+		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
 
@@ -107,6 +145,12 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 		strncpy( lumpName0, lump.name, sizeof(lump.name) );  // no, g++, this code is correct, lump.name is [8], sizeof(lumpName0) would make it read out of bounds
 		lumpName0[8] = '\0';
 		QString lumpName( lumpName0 );
+
+		if (lump.dataOffset > file.size() || !isPrintableAsciiString( lumpName ))  // some garbage -> not a WAD
+		{
+			wadInfo.status = ReadStatus::InvalidFormat;
+			return wadInfo;
+		}
 
 		// try to gather the map names from the marker lumps,
 		// but if we find a MAPINFO lump, let that one override the markers
@@ -122,7 +166,8 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 
 			if (!file.seek( lump.dataOffset ))
 			{
-				continue;
+				wadInfo.status = ReadStatus::FailedToRead;
+				return wadInfo;
 			}
 
 			QByteArray lumpData = file.read( lump.size );
@@ -139,7 +184,7 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 		}
 	}
 
-	wadInfo.successfullyRead = true;
+	wadInfo.status = ReadStatus::Success;
 	return wadInfo;
 }
 
@@ -150,14 +195,20 @@ const WadInfo & getCachedWadInfo( const QString & filePath )
   static QHash< QString, WadInfo > g_cachedWadTypes;
 
 	auto pos = g_cachedWadTypes.find( filePath );
-	if (pos == g_cachedWadTypes.end())
+	if (pos == g_cachedWadTypes.end() || pos->status == ReadStatus::FailedToRead)  // if it failed previously, try again
 	{
 		WadInfo wadInfo = readWadInfoFromFile( filePath );
 		pos = g_cachedWadTypes.insert( filePath, std::move(wadInfo) );
-		if (!pos->successfullyRead)
-		{
-			qWarning() << "failed to read from " << filePath;
-		}
 	}
+
+	if (pos->status == ReadStatus::FailedToRead)
+	{
+		qWarning() << "failed to read file" << filePath;
+	}
+	else if (pos->status == ReadStatus::InvalidFormat)
+	{
+		//qDebug() << "file" << filePath << "is not a WAD";
+	}
+
 	return pos.value();
 }

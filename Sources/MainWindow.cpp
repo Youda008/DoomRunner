@@ -2271,7 +2271,7 @@ void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringList > select
 			if (!isDirectory( selectedWAD ))
 			{
 				const WadInfo & wadInfo = getCachedWadInfo( selectedWAD );
-				if (wadInfo.successfullyRead)
+				if (wadInfo.status == ReadStatus::Success)
 					for (const QString & mapName : wadInfo.mapNames)
 						uniqueMapNames.insert( mapName.toUpper(), 0 );  // the int doesn't matter
 			}

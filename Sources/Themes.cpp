@@ -147,21 +147,22 @@ static void initColorPalettes()
 
 		// https://forum.qt.io/topic/101391/windows-10-dark-theme/4
 
-		QColor darkColor = QColor(45,45,45);
-		QColor disabledColor = QColor(127,127,127);
-		darkPalette.setColor( QPalette::Window, darkColor );
-		darkPalette.setColor( QPalette::WindowText, Qt::white );
-		darkPalette.setColor( QPalette::Base, QColor(18,18,18) );
-		darkPalette.setColor( QPalette::AlternateBase, darkColor );
-		darkPalette.setColor( QPalette::Text, Qt::white );
+		QColor darkColor = QColor(0x2D,0x2D,0x2D);
+		QColor disabledColor = QColor(0x7F,0x7F,0x7F);
+		darkPalette.setColor( QPalette::All,      QPalette::Window, darkColor );
+		darkPalette.setColor( QPalette::All,      QPalette::WindowText, Qt::white );
+		darkPalette.setColor( QPalette::Disabled, QPalette::WindowText, disabledColor );
+		darkPalette.setColor( QPalette::All,      QPalette::Base, QColor(0x12,0x12,0x12) );
+		darkPalette.setColor( QPalette::All,      QPalette::AlternateBase, darkColor );
+		darkPalette.setColor( QPalette::All,      QPalette::Text, Qt::white );
 		darkPalette.setColor( QPalette::Disabled, QPalette::Text, disabledColor );
-		darkPalette.setColor( QPalette::Button, darkColor );
-		darkPalette.setColor( QPalette::ButtonText, Qt::white );
+		darkPalette.setColor( QPalette::All,      QPalette::Button, darkColor );
+		darkPalette.setColor( QPalette::All,      QPalette::ButtonText, Qt::white );
 		darkPalette.setColor( QPalette::Disabled, QPalette::ButtonText, disabledColor );
-		darkPalette.setColor( QPalette::BrightText, Qt::red );
-		darkPalette.setColor( QPalette::Link, QColor(42,130,218) );  // TODO: 1d99f3
-		darkPalette.setColor( QPalette::Highlight, QColor(42,130,218) );
-		darkPalette.setColor( QPalette::HighlightedText, Qt::black );
+		darkPalette.setColor( QPalette::All,      QPalette::BrightText, Qt::red );
+		darkPalette.setColor( QPalette::All,      QPalette::Link, QColor(0x1D,0x99,0xF3) );
+		darkPalette.setColor( QPalette::All,      QPalette::Highlight, QColor(0x2A,0x82,0xDA) );
+		darkPalette.setColor( QPalette::All,      QPalette::HighlightedText, Qt::black );
 		darkPalette.setColor( QPalette::Disabled, QPalette::HighlightedText, disabledColor );
 	}
 
@@ -268,7 +269,7 @@ static void initColorPalettes()
 
 	Dark override
 	------------------active----inactive--disabled
-	WindowText        #ffffff   #ffffff   #ffffff
+	WindowText        #ffffff   #ffffff   #717171
 	Button            #2d2d2d   #2d2d2d   #2d2d2d
 	Light             #000000   #000000   #000000
 	Midlight          #000000   #000000   #000000

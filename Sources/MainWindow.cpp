@@ -1589,10 +1589,10 @@ void MainWindow::modeReplayDemo()
 void MainWindow::toggleSkillSubwidgets( bool enabled )
 {
 	// skillIdx is an index in the combo-box, which starts from 0, but Doom skill numbers actually start from 1
-	int skillNum = ui->skillCmbBox->currentIndex() + 1;
+	int skillIdx = ui->skillCmbBox->currentIndex() + 1;
 
 	ui->skillCmbBox->setEnabled( enabled );
-	ui->skillSpinBox->setEnabled( enabled && skillNum == Skill::Custom );
+	ui->skillSpinBox->setEnabled( enabled && skillIdx == Skill::Custom );
 }
 
 void MainWindow::toggleOptionsSubwidgets( bool enabled )
@@ -1663,19 +1663,18 @@ void MainWindow::selectDemoFile_replay( int demoIdx )
 //----------------------------------------------------------------------------------------------------------------------
 //  gameplay options
 
-void MainWindow::selectSkill( int skillIdx )
+void MainWindow::selectSkill( int comboBoxIdx )
 {
 	// skillIdx is an index in the combo-box which starts from 0, but Doom skill number actually starts from 1
-	int skillNum = skillIdx + 1;
+	int skillIdx = comboBoxIdx + 1;
 
-	ui->skillSpinBox->setEnabled( skillNum == Skill::Custom );
+	STORE_GAMEPLAY_OPTION( skillIdx, skillIdx )
 
-	// changeSkillNum() and selectSkill() indirectly invoke each other,
-	// this prevents unnecessary updates and potential infinite recursion
-	if (disableSelectionCallbacks)
-		return;
+	LaunchMode launchMode = getLaunchModeFromUI();
 
-	ui->skillSpinBox->setValue( skillNum );
+	ui->skillSpinBox->setEnabled( skillIdx == Skill::Custom && (launchMode == LaunchMap || launchMode == RecordDemo) );
+	if (skillIdx < Skill::Custom)
+		ui->skillSpinBox->setValue( skillIdx );
 
 	updateLaunchCommand();
 }
@@ -1683,18 +1682,6 @@ void MainWindow::selectSkill( int skillIdx )
 void MainWindow::changeSkillNum( int skillNum )
 {
 	STORE_GAMEPLAY_OPTION( skillNum, skillNum )
-
-	// changeSkillNum() and selectSkill() indirectly invoke each other,
-	// this prevents unnecessary updates and potential infinite recursion
-	disableSelectionCallbacks = true;
-
-	// the combo-box starts from 0, but Doom skill number actually starts from 1
-	if (skillNum > 0 && skillNum < Skill::Custom)
-		ui->skillCmbBox->setCurrentIndex( skillNum - 1 );
-	else
-		ui->skillCmbBox->setCurrentIndex( Skill::Custom - 1 );
-
-	disableSelectionCallbacks = false;
 
 	updateLaunchCommand();
 }
@@ -2813,7 +2800,12 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 
 void MainWindow::restoreGameplayOptions( const GameplayOptions & opts )
 {
-	ui->skillSpinBox->setValue( int( opts.skillNum ) );
+	ui->skillCmbBox->setCurrentIndex( opts.skillIdx - 1 );
+	if (opts.skillIdx < Skill::Custom)
+		ui->skillSpinBox->setValue( opts.skillIdx );
+	else
+		ui->skillSpinBox->setValue( opts.skillNum );
+
 	ui->noMonstersChkBox->setChecked( opts.noMonsters );
 	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
 	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );

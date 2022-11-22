@@ -263,6 +263,7 @@ static QJsonObject serialize( const GameplayOptions & opts )
 {
 	QJsonObject jsOptions;
 
+	jsOptions["skill_idx"] = int( opts.skillIdx );
 	jsOptions["skill_num"] = int( opts.skillNum );
 	jsOptions["no_monsters"] = opts.noMonsters;
 	jsOptions["fast_monsters"] = opts.fastMonsters;
@@ -276,6 +277,7 @@ static QJsonObject serialize( const GameplayOptions & opts )
 
 static void deserialize( const JsonObjectCtx & jsOptions, GameplayOptions & opts )
 {
+	opts.skillIdx = jsOptions.getInt( "skill_idx", opts.skillIdx );
 	opts.skillNum = jsOptions.getInt( "skill_num", opts.skillNum );
 	opts.noMonsters = jsOptions.getBool( "no_monsters", opts.noMonsters );
 	opts.fastMonsters = jsOptions.getBool( "fast_monsters", opts.fastMonsters );

@@ -179,7 +179,8 @@ struct GameplayDetails
 
 struct GameplayOptions : public GameplayDetails  // inherited instead of included to avoid long identifiers
 {
-	int skillNum = TooYoungToDie;
+	int skillIdx = TooYoungToDie;  ///< value in the skill combo-box (only from TooYoungToDie=1 to Custom=6)
+	int skillNum = skillIdx;  ///< value in the skill spin-box (when skillIdx == Custom, it can be any number)
 	bool noMonsters = false;
 	bool fastMonsters = false;
 	bool monstersRespawn = false;

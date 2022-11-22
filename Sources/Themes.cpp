@@ -48,7 +48,8 @@
 //======================================================================================================================
 //  utils
 
-/*static void printColorForRole( QDebug d, const QPalette & palette, QPalette::ColorRole role )
+/*
+static void printColorForRole( QDebug d, const QPalette & palette, QPalette::ColorRole role )
 {
 	d << QString("%1").arg( QVariant::fromValue(role).toString(), -15 )
 	  << "   " << palette.color( QPalette::ColorGroup::Active, role ).name()
@@ -89,13 +90,9 @@ static void printPalette( QString name, const QPalette & palette )
 	printColorForRole( d, palette, QPalette::ColorRole::ToolTipText );
 	printColorForRole( d, palette, QPalette::ColorRole::PlaceholderText );
 }
+*/
 
-static void setColorForRole( QPalette & palette, QPalette::ColorRole role, QColor uniform )
-{
-	palette.setColor( QPalette::ColorGroup::All, role, uniform );
-}*/
-
-static void setColorForRole( QPalette & palette, QPalette::ColorRole role, QColor active, QColor inactive, QColor disabled )
+static void setColorsForRole( QPalette & palette, QPalette::ColorRole role, QColor active, QColor inactive, QColor disabled )
 {
 	palette.setColor( QPalette::ColorGroup::Active, role, active );
 	palette.setColor( QPalette::ColorGroup::Inactive, role, inactive );
@@ -113,23 +110,6 @@ static const char * const schemeStrings [] =
 	"light",
 };
 static_assert( size_t(ColorScheme::_EnumEnd) == std::size(schemeStrings), "Please update this table" );
-
-const char * schemeToString( ColorScheme scheme )
-{
-	if (size_t(scheme) < std::size(schemeStrings))
-		return schemeStrings[ size_t(scheme) ];
-	else
-		return "<invalid>";
-}
-
-ColorScheme schemeFromString( const QString & schemeStr )
-{
-	int idx = find( schemeStrings, schemeStr );
-	if (idx >= 0)
-		return ColorScheme( idx );
-	else
-		return ColorScheme::_EnumEnd;
-}
 
 static QPalette palettes [ std::size(schemeStrings) ];
 
@@ -172,26 +152,26 @@ static void initColorPalettes()
 
 		// based on "Breeze Light" in KDE
 
-		setColorForRole( lightPalette, QPalette::WindowText,      QColor(0x232629), QColor(0x232629), QColor(0xa0a1a3) );
-		setColorForRole( lightPalette, QPalette::Button,          QColor(0xfcfcfc), QColor(0xfcfcfc), QColor(0xf0f0f0) );
-		setColorForRole( lightPalette, QPalette::Light,           QColor(0xffffff), QColor(0xffffff), QColor(0xffffff) );
-		setColorForRole( lightPalette, QPalette::Midlight,        QColor(0xf6f7f7), QColor(0xf6f7f7), QColor(0xebedee) );
-		setColorForRole( lightPalette, QPalette::Dark,            QColor(0x888e93), QColor(0x888e93), QColor(0x82878c) );
-		setColorForRole( lightPalette, QPalette::Mid,             QColor(0xc4c8cc), QColor(0xc4c8cc), QColor(0xbbc0c5) );
-		setColorForRole( lightPalette, QPalette::Text,            QColor(0x232629), QColor(0x232629), QColor(0xaaabac) );
-		setColorForRole( lightPalette, QPalette::BrightText,      QColor(0xffffff), QColor(0xffffff), QColor(0xffffff) );
-		setColorForRole( lightPalette, QPalette::ButtonText,      QColor(0x232629), QColor(0x232629), QColor(0xa8a9aa) );
-		setColorForRole( lightPalette, QPalette::Base,            QColor(0xffffff), QColor(0xffffff), QColor(0xf3f3f3) );
-		setColorForRole( lightPalette, QPalette::Window,          QColor(0xeff0f1), QColor(0xeff0f1), QColor(0xe3e5e7) );
-		setColorForRole( lightPalette, QPalette::Shadow,          QColor(0x474a4c), QColor(0x474a4c), QColor(0x474a4c) );
-		setColorForRole( lightPalette, QPalette::Highlight,       QColor(0x3daee9), QColor(0xc2e0f5), QColor(0xe3e5e7) );
-		setColorForRole( lightPalette, QPalette::HighlightedText, QColor(0xffffff), QColor(0x232629), QColor(0xa0a1a3) );
-		setColorForRole( lightPalette, QPalette::Link,            QColor(0x2980b9), QColor(0x2980b9), QColor(0xa3cae2) );
-		setColorForRole( lightPalette, QPalette::LinkVisited,     QColor(0x9b59b6), QColor(0x9b59b6), QColor(0xd6bae1) );
-		setColorForRole( lightPalette, QPalette::AlternateBase,   QColor(0xf7f7f7), QColor(0xf7f7f7), QColor(0xebebeb) );
-		setColorForRole( lightPalette, QPalette::ToolTipBase,     QColor(0xf7f7f7), QColor(0xf7f7f7), QColor(0xf7f7f7) );
-		setColorForRole( lightPalette, QPalette::ToolTipText,     QColor(0x232629), QColor(0x232629), QColor(0x232629) );
-		setColorForRole( lightPalette, QPalette::PlaceholderText, QColor(0x232629), QColor(0x232629), QColor(0x232629) );
+		setColorsForRole( lightPalette, QPalette::WindowText,      QColor(0x232629), QColor(0x232629), QColor(0xa0a1a3) );
+		setColorsForRole( lightPalette, QPalette::Button,          QColor(0xfcfcfc), QColor(0xfcfcfc), QColor(0xf0f0f0) );
+		setColorsForRole( lightPalette, QPalette::Light,           QColor(0xffffff), QColor(0xffffff), QColor(0xffffff) );
+		setColorsForRole( lightPalette, QPalette::Midlight,        QColor(0xf6f7f7), QColor(0xf6f7f7), QColor(0xebedee) );
+		setColorsForRole( lightPalette, QPalette::Dark,            QColor(0x888e93), QColor(0x888e93), QColor(0x82878c) );
+		setColorsForRole( lightPalette, QPalette::Mid,             QColor(0xc4c8cc), QColor(0xc4c8cc), QColor(0xbbc0c5) );
+		setColorsForRole( lightPalette, QPalette::Text,            QColor(0x232629), QColor(0x232629), QColor(0xaaabac) );
+		setColorsForRole( lightPalette, QPalette::BrightText,      QColor(0xffffff), QColor(0xffffff), QColor(0xffffff) );
+		setColorsForRole( lightPalette, QPalette::ButtonText,      QColor(0x232629), QColor(0x232629), QColor(0xa8a9aa) );
+		setColorsForRole( lightPalette, QPalette::Base,            QColor(0xffffff), QColor(0xffffff), QColor(0xf3f3f3) );
+		setColorsForRole( lightPalette, QPalette::Window,          QColor(0xeff0f1), QColor(0xeff0f1), QColor(0xe3e5e7) );
+		setColorsForRole( lightPalette, QPalette::Shadow,          QColor(0x474a4c), QColor(0x474a4c), QColor(0x474a4c) );
+		setColorsForRole( lightPalette, QPalette::Highlight,       QColor(0x3daee9), QColor(0xc2e0f5), QColor(0xe3e5e7) );
+		setColorsForRole( lightPalette, QPalette::HighlightedText, QColor(0xffffff), QColor(0x232629), QColor(0xa0a1a3) );
+		setColorsForRole( lightPalette, QPalette::Link,            QColor(0x2980b9), QColor(0x2980b9), QColor(0xa3cae2) );
+		setColorsForRole( lightPalette, QPalette::LinkVisited,     QColor(0x9b59b6), QColor(0x9b59b6), QColor(0xd6bae1) );
+		setColorsForRole( lightPalette, QPalette::AlternateBase,   QColor(0xf7f7f7), QColor(0xf7f7f7), QColor(0xebebeb) );
+		setColorsForRole( lightPalette, QPalette::ToolTipBase,     QColor(0xf7f7f7), QColor(0xf7f7f7), QColor(0xf7f7f7) );
+		setColorsForRole( lightPalette, QPalette::ToolTipText,     QColor(0x232629), QColor(0x232629), QColor(0x232629) );
+		setColorsForRole( lightPalette, QPalette::PlaceholderText, QColor(0x232629), QColor(0x232629), QColor(0x232629) );
 	}
 
 	// Define new palettes here
@@ -269,7 +249,7 @@ static void initColorPalettes()
 
 	Dark override
 	------------------active----inactive--disabled
-	WindowText        #ffffff   #ffffff   #717171
+	WindowText        #ffffff   #ffffff   #7f7f7f
 	Button            #2d2d2d   #2d2d2d   #2d2d2d
 	Light             #000000   #000000   #000000
 	Midlight          #000000   #000000   #000000
@@ -291,6 +271,23 @@ static void initColorPalettes()
 	PlaceholderText   #ffffff   #ffffff   #ffffff
 
 	*/
+}
+
+const char * schemeToString( ColorScheme scheme )
+{
+	if (size_t(scheme) < std::size(schemeStrings))
+		return schemeStrings[ size_t(scheme) ];
+	else
+		return "<invalid>";
+}
+
+ColorScheme schemeFromString( const QString & schemeStr )
+{
+	int idx = find( schemeStrings, schemeStr );
+	if (idx >= 0)
+		return ColorScheme( idx );
+	else
+		return ColorScheme::_EnumEnd;
 }
 
 static void setQtColorScheme( ColorScheme schemeID )

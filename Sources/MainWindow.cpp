@@ -369,6 +369,9 @@ MainWindow::MainWindow()
 	setupMapPackList();
 	setupModList();
 
+	// initialize separator colors according to default color scheme
+	updateSeparatorColors();
+
 	// setup combo-boxes
 
 	// we use custom model for engines, because we want to display the same list differently in different window
@@ -463,6 +466,10 @@ MainWindow::MainWindow()
 	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updatePresetCmdArgs );
 	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateGlobalCmdArgs );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
+
+	// setup reactions to external events
+
+	connect( qApp, &QApplication::paletteChanged, this, &thisClass::onGlobalPaletteChanged );
 
 	// this will call the function when the window is fully initialized and displayed
 	// not sure, which one of these 2 options is better
@@ -664,6 +671,25 @@ void MainWindow::onWindowShown()
 
 	// setup an update timer
 	startTimer( 1000 );
+}
+
+void MainWindow::onGlobalPaletteChanged( const QPalette & /*newPalette*/ )
+{
+	updateSeparatorColors();
+}
+
+void MainWindow::updateSeparatorColors()
+{
+	QPalette palette = qApp->palette();
+
+	QColor activeText = palette.color( QPalette::Active, QPalette::Text );
+	QColor activeBase = palette.color( QPalette::Active, QPalette::Base );
+
+	QColor foreground = activeText;
+	QColor background = mixColors( activeBase, 9, activeText, 4, QColor(12,12,12) );
+
+	presetModel.setSeparatorColor( foreground, background );
+	modModel.setSeparatorColor( foreground, background );
 }
 
 void MainWindow::updateOptionsGrpBoxTitles( const StorageSettings & storageSettings )

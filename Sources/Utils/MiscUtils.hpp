@@ -13,6 +13,7 @@
 
 #include <QString>
 #include <QVector>
+#include <QColor>
 
 class QLineEdit;
 
@@ -44,6 +45,10 @@ QString makeFileFilter( const char * filterName, const QVector< QString > & suff
 void highlightInvalidDir( QLineEdit * lineEdit, const QString & newPath );
 /// Highlights a non-existing dir path by a different text color
 void highlightInvalidFile( QLineEdit * lineEdit, const QString & newPath );
+
+/// Makes a component by component mix of the input colors that corresponds to expression:
+/// color1 * weight1 + color2 * weight2 + addition
+QColor mixColors( QColor color1, int weight1, QColor color2, int weight2, QColor addition );
 
 
 #endif // MISC_UTILS_INCLUDED

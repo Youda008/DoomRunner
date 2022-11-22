@@ -56,13 +56,13 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 
 	void onWindowShown();
 
+	void onGlobalPaletteChanged( const QPalette & newPalette );
+
 	void runAboutDialog();
 	void runSetupDialog();
 	void runOptsStorageDialog();
 	void runGameOptsDialog();
 	void runCompatOptsDialog();
-
-	void autoselectLoneItems();
 
 	void selectEngine( int index );
 	void selectConfig( int index );
@@ -151,6 +151,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	void setupMapPackList();
 	void setupModList();
 
+	void updateSeparatorColors();
 	void updateOptionsGrpBoxTitles( const StorageSettings & storageSettings );
 
 	void loadMonitorInfo( QComboBox * box );
@@ -158,6 +159,8 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	void toggleAbsolutePaths( bool absolute );
 
 	void updateEngineTraits();
+
+	void autoselectLoneItems();
 
 	void setAltDirsRelativeToConfigs( const QString & dirName );
 

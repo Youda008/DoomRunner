@@ -14,7 +14,7 @@
 #include "Widgets/ListModel.hpp"
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
-#include "Themes.hpp"  // SystemThemeWatcher
+#include "Themes.hpp"  // WindowsThemeWatcher
 #include "Utils/OSUtils.hpp"  // IS_WINDOWS
 
 #include <QMainWindow>
@@ -241,7 +241,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	UpdateChecker updateChecker;
 
  #if IS_WINDOWS
-	SystemThemeWatcher themeWatcher;
+	WindowsThemeWatcher themeWatcher;
  #endif
 
  private: // user data

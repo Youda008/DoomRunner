@@ -2223,8 +2223,7 @@ void MainWindow::updateCompatLevels()
 		ui->compatLevelCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
 		if (currentCompLvlStyle != CompatLevelStyle::None)
 		{
-			for (const QString & compatLvlStr : getCompatLevels( currentCompLvlStyle ))  // TODO
-				ui->compatLevelCmbBox->addItem( compatLvlStr );
+			ui->compatLevelCmbBox->addItems( getCompatLevels( currentCompLvlStyle ) );
 		}
 
 		ui->compatLevelCmbBox->setCurrentIndex( 0 );

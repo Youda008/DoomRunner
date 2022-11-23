@@ -64,7 +64,7 @@ static const QHash< QString, int > startingMonitorIndexes =
 	{ "zdoom", 1 },
 };
 
-static const QVector< QString > zdoomCompatLevels =
+static const QStringList zdoomCompatLevels =
 {
 	"0 - Default",        // All compatibility options are turned off.
 	"1 - Doom",           // Enables a set of options that should allow nearly all maps made for vanilla Doom to work in ZDoom:
@@ -81,7 +81,7 @@ static const QVector< QString > zdoomCompatLevels =
 	                      //   corpsegibs, hitscan, invisibility, nopassover, notossdrop, wallrun, maskedmidtex
 };
 
-static const QVector< QString > prboomCompatLevels =
+static const QStringList prboomCompatLevels =
 {
 	"0  - Doom v1.2",     // (note: flawed; use PrBoom+ 2.5.0.8 or higher instead if this complevel is desired)
 	"1  - Doom v1.666",
@@ -107,14 +107,14 @@ static const QVector< QString > prboomCompatLevels =
 	"21 - MBF21",
 };
 
-static const QVector< QString > noCompatLevels = {};
+static const QStringList noCompatLevels = {};
 
 
 
 //======================================================================================================================
 //  code
 
-const QVector< QString > & getCompatLevels( CompatLevelStyle style )
+const QStringList & getCompatLevels( CompatLevelStyle style )
 {
 	if (style == CompatLevelStyle::ZDoom)
 		return zdoomCompatLevels;

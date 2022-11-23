@@ -11,7 +11,6 @@
 
 #include "Common.hpp"
 
-#include <QVector>
 #include <QString>
 #include <QStringList>
 
@@ -35,7 +34,7 @@ enum class CompatLevelStyle
 	PrBoom,  // https://doom.fandom.com/wiki/PrBoom#Compatibility_modes_and_settings
 };
 
-const QVector< QString > & getCompatLevels( CompatLevelStyle style );
+const QStringList & getCompatLevels( CompatLevelStyle style );
 
 //----------------------------------------------------------------------------------------------------------------------
 

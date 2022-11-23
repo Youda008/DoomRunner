@@ -70,13 +70,13 @@ QString updateHyperlinkColor( const QString & richText );
   * Construct this object in a main thread and call start(), that will ensure the theme update is performed in
   * the main thread even though the monitoring will be done in a background thread.
   */
-class SystemThemeWatcher : public QThread {  // TODO
+class WindowsThemeWatcher : public QThread {
 
 	Q_OBJECT
 
  public:
 
-	SystemThemeWatcher();
+	WindowsThemeWatcher();
 
  protected:
 

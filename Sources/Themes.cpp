@@ -538,17 +538,17 @@ QString updateHyperlinkColor( const QString & richText )
 
 
 //======================================================================================================================
-//  SystemThemeWatcher
+//  WindowsThemeWatcher
 
-SystemThemeWatcher::SystemThemeWatcher()
+WindowsThemeWatcher::WindowsThemeWatcher()
 {
  #if IS_WINDOWS
 	// If this object is constructed in the main thread, this will make the updateTheme be called in the main thread.
-	connect( this, &SystemThemeWatcher::darkModeToggled, this, &SystemThemeWatcher::updateScheme );
+	connect( this, &WindowsThemeWatcher::darkModeToggled, this, &WindowsThemeWatcher::updateScheme );
  #endif
 }
 
-void SystemThemeWatcher::run()
+void WindowsThemeWatcher::run()
 {
  #if IS_WINDOWS
 	watchForSystemDarkModeChanges( [this]( bool darkModeEnabled )
@@ -558,7 +558,7 @@ void SystemThemeWatcher::run()
  #endif
 }
 
-void SystemThemeWatcher::updateScheme( [[maybe_unused]] bool darkModeEnabled )
+void WindowsThemeWatcher::updateScheme( [[maybe_unused]] bool darkModeEnabled )
 {
  #if IS_WINDOWS
 	if (g_currentSchemeID == ColorScheme::SystemDefault)

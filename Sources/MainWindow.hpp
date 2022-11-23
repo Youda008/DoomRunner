@@ -199,7 +199,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 		QStringList arguments;
 	};
 	ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths );
-	void updateLaunchCommand( bool verifyPaths = false );
+	void updateLaunchCommand();
 
  private: // MainWindow-specific utils
 

@@ -29,7 +29,7 @@
 #include "Utils/OSUtils.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/WADReader.hpp"
-#include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidPath
+#include "Utils/MiscUtils.hpp"  // checkPath, highlightPathIfInvalid
 
 #include <QVector>
 #include <QList>
@@ -895,7 +895,7 @@ void MainWindow::runCompatOptsDialog()
 
 void MainWindow::cloneConfig()
 {
-	QDir configDir( engineModel[ ui->engineCmbBox->currentIndex() ].configDir );  // if config was selected, engine selection must be valid too
+	QDir configDir( getConfigDir() );
 	QFileInfo oldConfig( configDir.filePath( ui->configCmbBox->currentText() ) );
 
 	NewConfigDialog dialog( this, oldConfig.completeBaseName() );
@@ -1008,9 +1008,6 @@ void MainWindow::selectEngine( int index )
 
 	if (index >= 0)
 	{
-		if (!isValidFile( engineModel[ index ].path ))
-			engineModel[ index ].foregroundColor = Qt::red;
-
 		supportsCustomMapNames = engineTraits[ index ].supportsCustomMapNames();
 	}
 
@@ -1052,10 +1049,7 @@ void MainWindow::selectConfig( int index )
 
 	if (index > 0)  // at index 0 there is an empty placeholder to allow deselecting config
 	{
-		QString configPath = getPathFromFileName(
-			engineModel[ ui->engineCmbBox->currentIndex() ].configDir,  // if config was selected, engine selection must be valid too
-			configModel[ index ].fileName
-		);
+		QString configPath = getPathFromFileName( getConfigDir(), configModel[ index ].fileName );
 		validConfigSelected = isValidFile( configPath );
 	}
 
@@ -1080,12 +1074,6 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 			presetModel[ selectedPresetIdx ].selectedIWAD.clear();
 		else
 			presetModel[ selectedPresetIdx ].selectedIWAD = iwadModel[ selectedIWADIdx ].path;
-	}
-
-	if (selectedIWADIdx >= 0)
-	{
-		if (!isValidFile( iwadModel[ selectedIWADIdx ].path ))
-			iwadModel[ selectedIWADIdx ].foregroundColor = Qt::red;
 	}
 
 	updateMapsFromSelectedWADs();
@@ -1921,7 +1909,7 @@ void MainWindow::changeSaveDir( const QString & dir )
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
 	STORE_TO_PRESET_IF_SELECTED( altPaths.saveDir, dir )
 
-	highlightInvalidDir( ui->saveDirLine, dir );
+	highlightDirPathIfFile( ui->saveDirLine, dir );  // non-existing dir is ok becase it will be created automatically
 
 	if (isValidDir( dir ))
 		updateSaveFilesFromDir();
@@ -1935,7 +1923,7 @@ void MainWindow::changeScreenshotDir( const QString & dir )
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
 	STORE_TO_PRESET_IF_SELECTED( altPaths.screenshotDir, dir )
 
-	highlightInvalidDir( ui->screenshotDirLine, dir );
+	highlightDirPathIfFile( ui->screenshotDirLine, dir );  // non-existing dir is ok becase it will be created automatically
 
 	updateLaunchCommand();
 }
@@ -2410,6 +2398,7 @@ bool MainWindow::loadOptions( const QString & filePath )
 
 void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 {
+	// TODO
 	themes::setAppStyle( settings.appStyle );
 	themes::setAppColorScheme( settings.colorScheme );
 
@@ -2556,7 +2545,7 @@ void MainWindow::restorePreset( int presetIdx )
 				{
 					QMessageBox::warning( this, "Engine no longer exists",
 						"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please update the engines at Menu -> Initial Setup." );
-					engineModel[ engineIdx ].foregroundColor = Qt::red;
+					highlightInvalidListItem( engineModel[ engineIdx ] );
 				}
 			}
 			else
@@ -2622,7 +2611,7 @@ void MainWindow::restorePreset( int presetIdx )
 				{
 					QMessageBox::warning( this, "IWAD no longer exists",
 						"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
-					iwadModel[ iwadIdx ].foregroundColor = Qt::red;
+					highlightInvalidListItem( iwadModel[ iwadIdx ] );
 				}
 			}
 			else
@@ -2693,7 +2682,7 @@ void MainWindow::restorePreset( int presetIdx )
 			{
 				QMessageBox::warning( this, "Mod no longer exists",
 					"A mod from the preset ("%mod.path%") no longer exists. Please update it." );
-				modModel.last().foregroundColor = Qt::red;
+				highlightInvalidListItem( modModel.last() );
 			}
 		}
 		modModel.finishCompleteUpdate();
@@ -2950,7 +2939,7 @@ void MainWindow::importPresetFromScript()
 //----------------------------------------------------------------------------------------------------------------------
 //  launch command generation
 
-void MainWindow::updateLaunchCommand( bool verifyPaths )
+void MainWindow::updateLaunchCommand()
 {
 	// optimization - don't regenerate the command when we're about to make more changes right away
 	if (restoringOptionsInProgress || restoringPresetInProgress)
@@ -2972,7 +2961,7 @@ void MainWindow::updateLaunchCommand( bool verifyPaths )
 	// because it will be executed with the current directory set to engine's directory.
 	QString baseDir = getDirOfFile( engineModel[ selectedEngineIdx ].path );
 
-	auto cmd = generateLaunchCommand( baseDir, verifyPaths, QuotePaths );
+	auto cmd = generateLaunchCommand( baseDir, DontVerifyPaths, QuotePaths );
 
 	QString newCommand = cmd.executable % ' ' % cmd.arguments.join(' ');
 
@@ -2990,20 +2979,21 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 {
 	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir.
 	PathContext base( baseDir, pathContext.baseDir(), pathContext.pathStyle(), quotePaths );
+	PathChecker p( this, verifyPaths );
 
 	ShellCommand cmd;
 
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx < 0)
 	{
-		return {};  // no sense to generate a command when we don't even know the engine
+		return {};  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
+	Engine & selectedEngine = engineModel[ selectedEngineIdx ];
 	const EngineTraits & engineTraits = this->engineTraits[ selectedEngineIdx ];
 
 	{
-		assertValidPath( verifyPaths, selectedEngine.path, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
+		p.checkItemPath( selectedEngine, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
 
 		// Either the executable is in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
 		// in which case it should be (and sometimes must be) started directly by using only its name,
@@ -3024,7 +3014,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		{
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
-			assertValidPath( verifyPaths, configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
+			p.checkPath( configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
 			cmd.arguments << "-config" << base.rebaseAndQuotePath( configPath );
 		}
 	}
@@ -3032,7 +3022,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
 	{
-		assertValidPath( verifyPaths, iwadModel[ selectedIwadIdx ].path, "The selected IWAD (%1) no longer exists. Please select another one." );
+		p.checkItemPath( iwadModel[ selectedIwadIdx ], "The selected IWAD (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
@@ -3041,7 +3031,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	const QStringList selectedMapPacks = getSelectedMapPacks();
 	for (const QString & mapFilePath : selectedMapPacks)
 	{
-		assertValidPath( verifyPaths, mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
+		p.checkPath( mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
 		if (suffix == "deh")
@@ -3053,11 +3043,11 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 			selectedFiles.append( mapFilePath );
 	}
 
-	for (const Mod & mod : modModel)
+	for (Mod & mod : modModel)
 	{
 		if (mod.checked)
 		{
-			assertValidPath( verifyPaths, mod.path, "The selected mod (%1) no longer exists. Please update the mod list." );
+			p.checkItemPath( mod, "The selected mod (%1) no longer exists. Please update the mod list." );
 
 			QString suffix = QFileInfo( mod.path ).suffix().toLower();
 			if (suffix == "deh")
@@ -3087,7 +3077,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
 		QString savePath = getPathFromFileName( getSaveDir(), ui->saveFileCmbBox->currentText() );
-		assertValidPath( verifyPaths, savePath, "The selected save file (%1) no longer exists. Please select another one." );
+		p.checkPath( savePath, "The selected save file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
@@ -3099,7 +3089,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
 		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileCmbBox_replay->currentText() );
-		assertValidPath( verifyPaths, demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
+		p.checkPath( demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
 		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}
 
@@ -3197,7 +3187,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	if (!ui->globalCmdArgsLine->text().isEmpty())
 		cmd.arguments << ui->globalCmdArgsLine->text().split( ' ', Qt::SkipEmptyParts );
 
-	return cmd;
+	return p.gotSomeInvalidPaths() ? ShellCommand() : cmd;
 }
 
 void MainWindow::launch()
@@ -3211,14 +3201,10 @@ void MainWindow::launch()
 
 	QString engineDir = getAbsoluteDirOfFile( engineModel[ selectedEngineIdx ].path );
 
-	// re-run the command construction, but display error message and abort when there is invalid path
-	ShellCommand cmd;
-	try
-	{
-		// When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
-		cmd = generateLaunchCommand( engineDir, VerifyPaths, DontQuotePaths );
-	}
-	catch (const FileOrDirNotFound &)
+	// Re-run the command construction, but display error message and abort when there is invalid path.
+	// When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
+	ShellCommand cmd = generateLaunchCommand( engineDir, VerifyPaths, DontQuotePaths );
+	if (cmd.executable.isNull())
 	{
 		return;  // errors are already shown during the generation
 	}

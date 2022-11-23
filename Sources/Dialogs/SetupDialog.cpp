@@ -13,7 +13,7 @@
 #include "OwnFileDialog.hpp"
 #include "DoomFileInfo.hpp"
 #include "Utils/WidgetUtils.hpp"
-#include "Utils/MiscUtils.hpp"  // makeFileFilter, highlightInvalidPath
+#include "Utils/MiscUtils.hpp"  // makeFileFilter, highlightPathIfInvalid
 
 #include <QString>
 #include <QStringBuilder>
@@ -91,9 +91,9 @@ SetupDialog::SetupDialog(
 	}
 
 	// mark invalid paths
-	highlightInvalidDir( ui->iwadDirLine, iwadSettings.dir );
-	highlightInvalidDir( ui->mapDirLine, mapSettings.dir );
-	highlightInvalidDir( ui->modDirLine, modSettings.dir );
+	highlightDirPathIfInvalid( ui->iwadDirLine, iwadSettings.dir );
+	highlightDirPathIfInvalid( ui->mapDirLine, mapSettings.dir );
+	highlightDirPathIfInvalid( ui->modDirLine, modSettings.dir );
 
 	// setup buttons
 
@@ -287,7 +287,7 @@ void SetupDialog::changeIWADDir( const QString & dir )
 {
 	iwadSettings.dir = dir;
 
-	highlightInvalidDir( ui->iwadDirLine, dir );
+	highlightDirPathIfInvalid( ui->iwadDirLine, dir );
 
 	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
 		updateIWADsFromDir();
@@ -297,14 +297,14 @@ void SetupDialog::changeMapDir( const QString & dir )
 {
 	mapSettings.dir = dir;
 
-	highlightInvalidDir( ui->mapDirLine, dir );
+	highlightDirPathIfInvalid( ui->mapDirLine, dir );
 }
 
 void SetupDialog::changeModDir( const QString & dir )
 {
 	modSettings.dir = dir;
 
-	highlightInvalidDir( ui->modDirLine, dir );
+	highlightDirPathIfInvalid( ui->modDirLine, dir );
 }
 
 void SetupDialog::iwadAdd()
@@ -351,9 +351,6 @@ void SetupDialog::engineAdd()
 	if (code == QDialog::Accepted)
 	{
 		appendItem( ui->engineListView, engineModel, dialog.engine );
-
-		if (isInvalidFile( engineModel.last().path ) )
-			engineModel.last().foregroundColor = Qt::red;
 	}
 }
 
@@ -383,8 +380,6 @@ void SetupDialog::editEngine( const QModelIndex & index )
 	if (code == QDialog::Accepted)
 	{
 		selectedEngine = dialog.engine;
-
-		selectedEngine.foregroundColor = isInvalidFile( selectedEngine.path ) ? Qt::red : qApp->palette().text().color();
 	}
 }
 

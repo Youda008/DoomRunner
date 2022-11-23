@@ -155,7 +155,7 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				checkPath_MsgBox( engine.path, "An Engine from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+				checkPath( engine.path, "An Engine from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 
 				opts.engines.append( std::move( engine ) );
 			}
@@ -168,7 +168,7 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 
 		if (opts.iwadSettings.updateFromDir)
 		{
-			checkPath_MsgBox( opts.iwadSettings.dir, "IWAD directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+			checkNonEmptyPath( opts.iwadSettings.dir, "IWAD directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 		}
 		else
 		{
@@ -187,7 +187,7 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
 						continue;
 
-					checkPath_MsgBox( iwad.path, "An IWAD from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+					checkPath( iwad.path, "An IWAD from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 
 					opts.iwads.append( std::move( iwad ) );
 				}
@@ -199,14 +199,14 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 	{
 		deserialize( jsMaps, opts.mapSettings );
 
-		checkPath_MsgBox( opts.mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+		checkNonEmptyPath( opts.mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 	}
 
 	if (JsonObjectCtx jsMods = jsOpts.getObject( "mods" ))
 	{
 		deserialize( jsMods, opts.modSettings );
 
-		checkPath_MsgBox( opts.modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+		checkNonEmptyPath( opts.modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 	}
 
 	// options

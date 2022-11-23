@@ -44,8 +44,8 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	ui->familyCmbBox->setCurrentIndex( int(engine.family) );
 
 	// mark invalid paths
-	highlightInvalidFile( ui->pathLine, engine.path  );
-	highlightInvalidDir( ui->configDirLine, engine.configDir );
+	highlightFilePathIfInvalid( ui->pathLine, engine.path  );
+	highlightDirPathIfInvalid( ui->configDirLine, engine.configDir );
 
 	connect( ui->browseEngineBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
 	connect( ui->browseConfigsBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
@@ -55,9 +55,6 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	connect( ui->configDirLine, &QLineEdit::textChanged, this, &thisClass::updateConfigDir );
 
 	connect( ui->familyCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectFamily );
-
-	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &thisClass::accept );
-	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &thisClass::reject );
 
 	// this will call the function when the window is fully initialized and displayed
 	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
@@ -141,14 +138,14 @@ void EngineDialog::updatePath( const QString & text )
 {
 	engine.path = text;
 
-	highlightInvalidFile( ui->pathLine, text );
+	highlightFilePathIfInvalid( ui->pathLine, text );
 }
 
 void EngineDialog::updateConfigDir( const QString & text )
 {
 	engine.configDir = text;
 
-	highlightInvalidDir( ui->configDirLine, text );
+	highlightDirPathIfInvalid( ui->configDirLine, text );
 }
 
 void EngineDialog::selectFamily( int familyIdx )
@@ -160,4 +157,33 @@ void EngineDialog::selectFamily( int familyIdx )
 	}
 
 	engine.family = EngineFamily( familyIdx );
+}
+
+void EngineDialog::accept()
+{
+	if (engine.name.isEmpty())
+	{
+		QMessageBox::warning( this, "Engine name is empty", "Please give the engine some name." );
+		return;
+	}
+	if (engine.path.isEmpty())
+	{
+		QMessageBox::warning( this, "Executable path is empty", "Please specify the engine's executable path." );
+		return;
+	}
+	if (isInvalidFile( engine.path ))
+	{
+		QMessageBox::warning( this, "Executable doesn't exist", "Please fix the engine's executable path, such file doesn't exist." );
+		return;
+	}
+	if (isInvalidDir( engine.configDir ))
+	{
+		QMessageBox::warning( this, "Config dir doesn't exist", "Please fix the engine's config dir, such directory doesn't exist." );
+		return;
+	}
+
+	// all problems fixed -> remove highlighting if it was there
+	unhighlightListItem( engine );
+
+	superClass::accept();
 }

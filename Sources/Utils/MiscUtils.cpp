@@ -19,7 +19,76 @@
 //----------------------------------------------------------------------------------------------------------------------
 //  path verification
 
-bool checkPath_MsgBox( const QString & path, const QString & errorMessage )
+static const QColor highlightColor = Qt::red;
+
+bool highlightDirPathIfInvalid( QLineEdit * lineEdit, const QString & path )
+{
+	if (isInvalidDir( path ))
+	{
+		setTextColor( lineEdit, QColor( highlightColor ) );
+		return true;
+	}
+	else
+	{
+		restoreColors( lineEdit );
+		return false;
+	}
+}
+
+bool highlightFilePathIfInvalid( QLineEdit * lineEdit, const QString & path )
+{
+	if (isInvalidFile( path ))
+	{
+		setTextColor( lineEdit, QColor( highlightColor ) );
+		return true;
+	}
+	else
+	{
+		restoreColors( lineEdit );
+		return false;
+	}
+}
+
+bool highlightDirPathIfFile( QLineEdit * lineEdit, const QString & path )
+{
+	if (isValidFile( path ))
+	{
+		setTextColor( lineEdit, QColor( highlightColor ) );
+		return true;
+	}
+	else
+	{
+		restoreColors( lineEdit );
+		return false;
+	}
+}
+
+void highlightInvalidListItem( ReadOnlyListModelItem & item )
+{
+	item.foregroundColor = highlightColor;
+}
+
+void unhighlightListItem( ReadOnlyListModelItem & item )
+{
+	item.foregroundColor.reset();
+}
+
+bool checkPath( const QString & path, const QString & errorMessage )
+{
+	if (path.isEmpty())
+	{
+		QMessageBox::warning( nullptr, "Path is empty", errorMessage.arg( path ) );
+		return false;
+	}
+	if (!QFileInfo::exists( path ))
+	{
+		QMessageBox::warning( nullptr, "File or directory no longer exists", errorMessage.arg( path ) );
+		return false;
+	}
+	return true;
+}
+
+bool checkNonEmptyPath( const QString & path, const QString & errorMessage )
 {
 	if (!path.isEmpty() && !QFileInfo::exists( path ))
 	{
@@ -29,19 +98,27 @@ bool checkPath_MsgBox( const QString & path, const QString & errorMessage )
 	return true;
 }
 
-void checkPath_exception( const QString & path )
+bool PathChecker::_checkPath( const QString & path, const QString & errorMessage )
 {
-	if (!path.isEmpty() && !QFileInfo::exists( path ))
+	if (path.isEmpty())
 	{
-		throw FileOrDirNotFound{ path };
+		if (!errorMessageDisplayed)
+		{
+			QMessageBox::warning( parent, "Path is empty", errorMessage.arg( path ) );
+			errorMessageDisplayed = true;  // don't spam too many errors when something goes wrong
+		}
+		return false;
 	}
-}
-
-void assertValidPath( bool verificationRequired, const QString & path, const QString & errorMessage )
-{
-	if (verificationRequired)
-		if (!checkPath_MsgBox( path, errorMessage ))
-			throw FileOrDirNotFound{ path };
+	if (!QFileInfo::exists( path ))
+	{
+		if (!errorMessageDisplayed)
+		{
+			QMessageBox::warning( parent, "File or directory no longer exists", errorMessage.arg( path ) );
+			errorMessageDisplayed = true;  // don't spam too many errors when something goes wrong
+		}
+		return false;
+	}
+	return true;
 }
 
 
@@ -77,30 +154,6 @@ QString makeFileFilter( const char * filterName, const QVector< QString > & suff
 
 	filterStream.flush();
 	return filter;
-}
-
-void highlightInvalidDir( QLineEdit * lineEdit, const QString & newPath )
-{
-	if (isInvalidDir( newPath ))
-	{
-		setTextColor( lineEdit, QColor( Qt::red ) );
-	}
-	else
-	{
-		restoreColors( lineEdit );
-	}
-}
-
-void highlightInvalidFile( QLineEdit * lineEdit, const QString & newPath )
-{
-	if (isInvalidFile( newPath ))
-	{
-		setTextColor( lineEdit, QColor( Qt::red ) );
-	}
-	else
-	{
-		restoreColors( lineEdit );
-	}
 }
 
 QColor mixColors( QColor color1, int weight1, QColor color2, int weight2, QColor addition )

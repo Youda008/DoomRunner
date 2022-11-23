@@ -45,7 +45,7 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 	);
 	virtual ~SetupDialog() override;
 
- private:
+ private: // overridden methods
 
 	virtual void timerEvent( QTimerEvent * event ) override;
 

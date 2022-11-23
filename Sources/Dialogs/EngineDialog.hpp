@@ -28,6 +28,7 @@ class EngineDialog : public QDialog, private DialogCommon {
 	Q_OBJECT
 
 	using thisClass = EngineDialog;
+	using superClass = QDialog;
 
  public:
 
@@ -47,6 +48,10 @@ class EngineDialog : public QDialog, private DialogCommon {
 	void updatePath( const QString & text );
 	void updateConfigDir( const QString & text );
 	void selectFamily( int familyIdx );
+
+ public slots: // overridden methods
+
+	virtual void accept() override;
 
  private:
 

@@ -8,7 +8,7 @@
 #include "OptionsSerializer.hpp"
 
 #include "Utils/JsonUtils.hpp"
-#include "Utils/MiscUtils.hpp"  // checkPath
+#include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidListItem
 #include "Version.hpp"
 
 #include <QJsonDocument>
@@ -671,8 +671,8 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				if (!checkPath_MsgBox( engine.path, "An Engine from the saved options (%1) no longer exists. Please update it in Menu -> Setup." ))
-					engine.foregroundColor = Qt::red;
+				if (!checkPath( engine.path, "An Engine from the saved options (%1) no longer exists. Please update it in Menu -> Setup." ))
+					highlightInvalidListItem( engine );
 
 				opts.engines.append( std::move( engine ) );
 			}
@@ -685,7 +685,7 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 
 		if (opts.iwadSettings.updateFromDir)
 		{
-			checkPath_MsgBox( opts.iwadSettings.dir, "IWAD directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+			checkNonEmptyPath( opts.iwadSettings.dir, "IWAD directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 		}
 		else
 		{
@@ -704,8 +704,8 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
 						continue;
 
-					if (!checkPath_MsgBox( iwad.path, "An IWAD from the saved options (%1) no longer exists. Please update it in Menu -> Setup." ))
-						iwad.foregroundColor = Qt::red;
+					if (!checkPath( iwad.path, "An IWAD from the saved options (%1) no longer exists. Please update it in Menu -> Setup." ))
+						highlightInvalidListItem( iwad );
 
 					opts.iwads.append( std::move( iwad ) );
 				}
@@ -717,14 +717,14 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 	{
 		deserialize( jsMaps, opts.mapSettings );
 
-		checkPath_MsgBox( opts.mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+		checkNonEmptyPath( opts.mapSettings.dir, "Map directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 	}
 
 	if (JsonObjectCtx jsMods = jsOpts.getObject( "mods" ))
 	{
 		deserialize( jsMods, opts.modSettings );
 
-		checkPath_MsgBox( opts.modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
+		checkNonEmptyPath( opts.modSettings.dir, "Mod directory from the saved options (%1) no longer exists. Please update it in Menu -> Setup." );
 	}
 
 	// options

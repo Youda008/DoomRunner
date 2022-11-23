@@ -24,6 +24,18 @@ static void deserialize_pre17( const JsonObjectCtx & jsIWADs, IwadSettings & iwa
 	iwadSettings.searchSubdirs = jsIWADs.getBool( "subdirs", iwadSettings.searchSubdirs );
 }
 
+static void deserialize_pre17( const JsonObjectCtx & jsOptions, GameplayOptions & opts )
+{
+	opts.skillNum = jsOptions.getInt( "skill_num", opts.skillNum );
+	opts.skillIdx = opts.skillNum;
+	opts.noMonsters = jsOptions.getBool( "no_monsters", opts.noMonsters );
+	opts.fastMonsters = jsOptions.getBool( "fast_monsters", opts.fastMonsters );
+	opts.monstersRespawn = jsOptions.getBool( "monsters_respawn", opts.monstersRespawn );
+	opts.dmflags1 = jsOptions.getInt( "dmflags1", opts.dmflags1 );
+	opts.dmflags2 = jsOptions.getInt( "dmflags2", opts.dmflags2 );
+	opts.allowCheats = jsOptions.getBool( "allow_cheats", opts.allowCheats );
+}
+
 static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, const StorageSettings & settings )
 {
 	preset.name = jsPreset.getString( "name", "<missing name>" );
@@ -78,7 +90,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, 
 
 			deserialize( jsOptions, preset.multOpts );
 
-			deserialize( jsOptions, preset.gameOpts );
+			deserialize_pre17( jsOptions, preset.gameOpts );
 
 			deserialize( jsOptions, preset.compatOpts );
 
@@ -98,10 +110,14 @@ static void deserialize_pre17( const JsonObjectCtx & jsSettings, LauncherSetting
 	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 
+	// leave appStyle and colorScheme at their defaults
+
 	OptionsStorage storage = jsSettings.getEnum< OptionsStorage >( "options_storage", settings.launchOptsStorage );
 	settings.launchOptsStorage = storage;
 	settings.gameOptsStorage = storage;
 	settings.compatOptsStorage = storage;
+	settings.videoOptsStorage = storage;
+	settings.audioOptsStorage = storage;
 }
 
 
@@ -203,7 +219,7 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 
 			deserialize( jsOptions, opts.multOpts );
 
-			deserialize( jsOptions, opts.gameOpts );
+			deserialize_pre17( jsOptions, opts.gameOpts );
 
 			deserialize( jsOptions, opts.compatOpts );
 		}

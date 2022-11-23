@@ -551,9 +551,9 @@ static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & se
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 
 	settings.appStyle = jsSettings.getString( "app_style", {}, DontShowError );  // null value means system-default
-	settings.colorScheme = schemeFromString( jsSettings.getString( "color_scheme", {}, DontShowError ) );
-	if (settings.colorScheme == ColorScheme::_EnumEnd)
-		settings.colorScheme = ColorScheme::SystemDefault;
+	ColorScheme colorScheme = schemeFromString( jsSettings.getString( "color_scheme" ) );
+	if (colorScheme != ColorScheme::_EnumEnd)
+		settings.colorScheme = colorScheme;  // otherwise leave default
 
 	if (JsonObjectCtx jsOptsStorage = jsSettings.getObject( "options_storage" ))
 	{

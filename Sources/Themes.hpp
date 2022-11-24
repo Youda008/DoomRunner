@@ -52,6 +52,9 @@ void setAppStyle( const QString & styleName );
 /** Determined by operating system, graphical environment and installed plugins. */
 QStringList getAvailableAppStyles();
 
+/// Returns which of the available app styles from getAvailableAppStyles() is the default on this operating system.
+QString getDefaultAppStyle();
+
 // On Windows this needs to be called everytime a new window (dialog) is created,
 // because the new title bar and window borders are not automatically changed by Qt.
 void updateWindowBorder( QWidget * window );

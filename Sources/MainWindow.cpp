@@ -2398,9 +2398,10 @@ bool MainWindow::loadOptions( const QString & filePath )
 
 void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 {
-	// TODO
-	themes::setAppStyle( settings.appStyle );
-	themes::setAppColorScheme( settings.colorScheme );
+	if (settings.appStyle != themes::getDefaultAppStyle())
+		themes::setAppStyle( settings.appStyle );
+	if (isWindows() || settings.colorScheme != ColorScheme::SystemDefault)
+		themes::setAppColorScheme( settings.colorScheme );
 
 	if (opts.geometry.width > 0 && opts.geometry.height > 0)
 		this->resize( opts.geometry.width, opts.geometry.height );

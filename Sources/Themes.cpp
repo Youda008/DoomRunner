@@ -477,12 +477,6 @@ void init()
 
 void setAppColorScheme( ColorScheme schemeID )
 {
-	if (schemeID == g_currentSchemeID)
-	{
-		return;
-	}
-	g_currentSchemeID = schemeID;
-
  #if IS_WINDOWS
 	// Qt on Windows does not automatically follow OS preferences, so we have to check the OS settings
 	// and manually override the default theme with our dark one in case it's enabled.
@@ -492,6 +486,12 @@ void setAppColorScheme( ColorScheme schemeID )
 		schemeID = ColorScheme::Dark;
 	}
  #endif
+
+	if (schemeID == g_currentSchemeID)
+	{
+		return;
+	}
+	g_currentSchemeID = schemeID;
 
 	setQtColorScheme( schemeID );
 
@@ -510,6 +510,11 @@ void setAppStyle( const QString & styleName )
 QStringList getAvailableAppStyles()
 {
 	return availableStyles;
+}
+
+QString getDefaultAppStyle()
+{
+	return defaultStyle;
 }
 
 void updateWindowBorder( [[maybe_unused]] QWidget * window )

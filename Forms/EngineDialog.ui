@@ -84,7 +84,7 @@
      <item>
       <widget class="QLabel" name="configDirLabel">
        <property name="text">
-        <string>Config dir</string>
+        <string>Config directory</string>
        </property>
       </widget>
      </item>

@@ -40,10 +40,10 @@ SetupDialog::SetupDialog(
 		this, PathContext( baseDir, settings.useAbsolutePaths )
 	),
 	engineModel( engineList,
-		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "  [" % engine.path % "]"; }
+		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.path % "]"; }
 	),
 	iwadModel( iwadList,
-		/*makeDisplayString*/ []( const IWAD & iwad ) -> QString { return iwad.name % "  [" % iwad.path % "]"; }
+		/*makeDisplayString*/ []( const IWAD & iwad ) -> QString { return iwad.name % "   [" % iwad.path % "]"; }
 	),
 	iwadSettings( iwadSettings ),
 	mapSettings( mapSettings ),

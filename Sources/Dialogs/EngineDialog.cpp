@@ -76,7 +76,6 @@ void EngineDialog::adjustUi()
 	ui->pathLabel->setMinimumWidth( maxLabelWidth );
 	ui->configDirLabel->setMinimumWidth( maxLabelWidth );
 	ui->familyLabel->setMinimumWidth( maxLabelWidth );
-	qDebug() << maxLabelWidth;
 }
 
 EngineDialog::~EngineDialog()
@@ -84,10 +83,12 @@ EngineDialog::~EngineDialog()
 	delete ui;
 }
 
-void EngineDialog::showEvent( QShowEvent * )
+void EngineDialog::showEvent( QShowEvent * event )
 {
 	// This can't be called in the constructor, because the widgets still don't have their final sizes there.
 	adjustUi();
+
+	superClass::showEvent( event );
 }
 
 void EngineDialog::onWindowShown()

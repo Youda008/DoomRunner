@@ -1,9 +1,10 @@
 1.7
-- added explicit dark theme for Windows 10
-- improved tooltips for launch/multiplayer/gameplay/compatibility/output options
+- added explicit dark and light theme
 - allowed to select different storage for different option groups
+- improved tooltips for launch/multiplayer/gameplay/compatibility/output options
 - highlighting missing files and directories with red text
 - reorganized the JSON structure of options.json (old ones remain backward compatible)
+- fixed crash when clicking on a map file that is not a WAD
 
 1.6.5
 - reduced CPU usage by resizing map dir view column only when necessary

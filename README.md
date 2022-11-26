@@ -20,13 +20,18 @@ If you extract a .wad file together with an equally named .txt file (for example
 The map list and IWAD list are automatically updated from selected directory, so everytime you download a new WAD, you don't need to manually add it to the launcher. The mod list supports drag&drop from directory window and internal drag&drop for reordering the files.
 
 
+## Project's state
+
+The development is at its end. There are not going to be any new major features, only bug-fixes of reported issues and small refinements.
+
+
 ## Download
 
 Pre-compiled executables for different operating systems can be found on [release page](https://github.com/Youda008/DoomRunner/releases)
 
 32-bit Linux build is currently not supported, because i don't have enough space on disk to install yet another operating system. But you can build it yourself, it shouldn't be hard.
 
-For Windows I only provide statically linked executable, because dynamic one does not make much sense. On Windows installing the Qt DLLs required to run this program is pain in the ass, and it's much easier to bundle everything together in a single file. If you really want the dynamic version, because you use lot's of Qt applications and saving those 20MB sounds worth it, please create an issue.
+For Windows I only provide statically linked executable, because installing the Qt DLLs required to run this program is too much work and it's easier to have everything bundled together.
 
 
 ## How to install and run

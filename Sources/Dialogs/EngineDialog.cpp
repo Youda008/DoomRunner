@@ -60,9 +60,34 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
 }
 
+void EngineDialog::adjustUi()
+{
+	// align the start of the line edits
+	int maxLabelWidth = 0;
+	if (int width = ui->nameLabel->width(); width > maxLabelWidth)
+		maxLabelWidth = width;
+	if (int width = ui->pathLabel->width(); width > maxLabelWidth)
+		maxLabelWidth = width;
+	if (int width = ui->configDirLabel->width(); width > maxLabelWidth)
+		maxLabelWidth = width;
+	if (int width = ui->familyLabel->width(); width > maxLabelWidth)
+		maxLabelWidth = width;
+	ui->nameLabel->setMinimumWidth( maxLabelWidth );
+	ui->pathLabel->setMinimumWidth( maxLabelWidth );
+	ui->configDirLabel->setMinimumWidth( maxLabelWidth );
+	ui->familyLabel->setMinimumWidth( maxLabelWidth );
+	qDebug() << maxLabelWidth;
+}
+
 EngineDialog::~EngineDialog()
 {
 	delete ui;
+}
+
+void EngineDialog::showEvent( QShowEvent * )
+{
+	// This can't be called in the constructor, because the widgets still don't have their final sizes there.
+	adjustUi();
 }
 
 void EngineDialog::onWindowShown()

@@ -37,6 +37,7 @@ class EngineDialog : public QDialog, private DialogCommon {
 
  private: // methods
 
+	void adjustUi();
 	void onWindowShown();
 
  private slots:
@@ -51,6 +52,7 @@ class EngineDialog : public QDialog, private DialogCommon {
 
  public slots: // overridden methods
 
+	virtual void showEvent( QShowEvent * event ) override;
 	virtual void accept() override;
 
  private:

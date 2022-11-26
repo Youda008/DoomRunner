@@ -14,6 +14,7 @@
 #include <QTextStream>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QStringBuilder>
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -73,38 +74,68 @@ void unhighlightListItem( ReadOnlyListModelItem & item )
 	item.foregroundColor.reset();
 }
 
-bool checkPath( const QString & path, const QString & errorMessage )
+static QString & capitalize( QString & str )
+{
+	str[0] = str[0].toUpper();
+	return str;
+}
+
+static bool checkPath( const QString & path, QString fileOrDir, QString subjectName, QString errorPostscript )
 {
 	if (path.isEmpty())
 	{
-		QMessageBox::warning( nullptr, "Path is empty", errorMessage.arg( path ) );
+		QMessageBox::warning( nullptr, "Path is empty",
+			"The path of "%subjectName%" is empty. "%errorPostscript );
 		return false;
 	}
 	if (!QFileInfo::exists( path ))
 	{
-		QMessageBox::warning( nullptr, "File or directory no longer exists", errorMessage.arg( path ) );
+		QMessageBox::warning( nullptr, fileOrDir%" no longer exists",
+			capitalize(subjectName)%" ("%path%") no longer exists. "%errorPostscript );
 		return false;
 	}
 	return true;
 }
 
-bool checkNonEmptyPath( const QString & path, const QString & errorMessage )
+bool checkFilePath( const QString & path, QString subjectName, QString errorPostscript )
+{
+	return checkPath( path, "File", subjectName, errorPostscript );
+}
+
+bool checkDirPath( const QString & path, QString subjectName, QString errorPostscript )
+{
+	return checkPath( path, "Directory", subjectName, errorPostscript );
+}
+
+static bool checkNonEmptyPath( const QString & path, QString fileOrDir, QString subjectName, QString errorPostscript )
 {
 	if (!path.isEmpty() && !QFileInfo::exists( path ))
 	{
-		QMessageBox::warning( nullptr, "File or directory no longer exists", errorMessage.arg( path ) );
+		QMessageBox::warning( nullptr, fileOrDir%"no longer exists",
+			capitalize(subjectName)%" ("%path%") no longer exists. "%errorPostscript );
 		return false;
 	}
 	return true;
 }
 
-bool PathChecker::_checkPath( const QString & path, const QString & errorMessage )
+bool checkNonEmptyFilePath( const QString & path, QString subjectName, QString errorPostscript )
+{
+	return checkNonEmptyPath( path, "File", subjectName, errorPostscript );
+}
+
+bool checkNonEmptyDirPath( const QString & path, QString subjectName, QString errorPostscript )
+{
+	return checkNonEmptyPath( path, "Directory", subjectName, errorPostscript );
+}
+
+bool PathChecker::_checkPath( const QString & path, QString fileOrDir, QString subjectName, QString errorPostscript )
 {
 	if (path.isEmpty())
 	{
 		if (!errorMessageDisplayed)
 		{
-			QMessageBox::warning( parent, "Path is empty", errorMessage.arg( path ) );
+			QMessageBox::warning( parent, "Path is empty",
+				"Path of "%subjectName%" is empty. "%errorPostscript );
 			errorMessageDisplayed = true;  // don't spam too many errors when something goes wrong
 		}
 		return false;
@@ -113,7 +144,23 @@ bool PathChecker::_checkPath( const QString & path, const QString & errorMessage
 	{
 		if (!errorMessageDisplayed)
 		{
-			QMessageBox::warning( parent, "File or directory no longer exists", errorMessage.arg( path ) );
+			QMessageBox::warning( parent, fileOrDir%" no longer exists",
+				capitalize(subjectName)%" ("%path%") no longer exists. "%errorPostscript );
+			errorMessageDisplayed = true;  // don't spam too many errors when something goes wrong
+		}
+		return false;
+	}
+	return true;
+}
+
+bool PathChecker::_checkNotAFile( const QString & dirPath, QString subjectName, QString errorPostscript )
+{
+	if (QFileInfo( dirPath ).isFile())
+	{
+		if (!errorMessageDisplayed)
+		{
+			QMessageBox::warning( parent, "Path is a file",
+				capitalize(subjectName)%" "%dirPath%" is a file, but it should be a directory. "%errorPostscript );
 			errorMessageDisplayed = true;  // don't spam too many errors when something goes wrong
 		}
 		return false;

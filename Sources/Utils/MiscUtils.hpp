@@ -41,8 +41,10 @@ void highlightInvalidListItem( ReadOnlyListModelItem & item );
 /// Removed the highlighting of this item in its views.
 void unhighlightListItem( ReadOnlyListModelItem & item );
 
-bool checkPath( const QString & path, const QString & errorMessage );
-bool checkNonEmptyPath( const QString & path, const QString & errorMessage );
+bool checkFilePath( const QString & path, QString subjectName, QString errorPostscript );
+bool checkDirPath( const QString & path, QString subjectName, QString errorPostscript );
+bool checkNonEmptyFilePath( const QString & path, QString subjectName, QString errorPostscript );
+bool checkNonEmptyDirPath( const QString & path, QString subjectName, QString errorPostscript );
 
 class PathChecker {
 
@@ -50,28 +52,45 @@ class PathChecker {
 	bool verificationRequired;
 	bool errorMessageDisplayed = false;
 
-	bool _checkPath( const QString & path, const QString & errorMessage );
+	bool _checkPath( const QString & path, QString fileOrDir, QString subjectName, QString errorPostscript );
+	bool _checkNotAFile( const QString & dirPath, QString subjectName, QString errorPostscript );
 
  public:
 
 	PathChecker( QWidget * parent, bool verificationRequired )
 		: parent( parent ), verificationRequired( verificationRequired ) {}
 
-	bool checkPath( const QString & path, const QString & errorMessage )
+	bool checkFilePath( const QString & path, QString subjectName, QString errorPostscript )
 	{
 		if (!verificationRequired)
 			return true;
 
-		return _checkPath( path, errorMessage );
+		return _checkPath( path, "File", subjectName, errorPostscript );
+	}
+
+	bool checkDirPath( const QString & path, QString subjectName, QString errorPostscript )
+	{
+		if (!verificationRequired)
+			return true;
+
+		return _checkPath( path, "Directory", subjectName, errorPostscript );
+	}
+
+	bool checkNotAFile( const QString & dirPath, QString subjectName, QString errorPostscript )
+	{
+		if (!verificationRequired)
+			return true;
+
+		return _checkNotAFile( dirPath, subjectName, errorPostscript );
 	}
 
 	template< typename ListItem >
-	bool checkItemPath( ListItem & item, const QString & errorMessage )
+	bool checkItemPath( ListItem & item, QString subjectName, QString errorPostscript )
 	{
 		if (!verificationRequired)
 			return true;
 
-		bool verified = _checkPath( item.getFilePath(), errorMessage );
+		bool verified = _checkPath( item.getFilePath(), "File", subjectName, errorPostscript );
 		if (!verified)
 			highlightInvalidListItem( item );
 		else

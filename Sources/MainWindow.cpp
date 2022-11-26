@@ -2545,14 +2545,18 @@ void MainWindow::restorePreset( int presetIdx )
 				if (!isValidFile( preset.selectedEnginePath ))
 				{
 					QMessageBox::warning( this, "Engine no longer exists",
-						"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists, please update the engines at Menu -> Initial Setup." );
+						"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists. "
+						"Please update its path in Menu -> Initial Setup, or select another one."
+					);
 					highlightInvalidListItem( engineModel[ engineIdx ] );
 				}
 			}
 			else
 			{
 				QMessageBox::warning( this, "Engine no longer exists",
-					"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list, please select another one." );
+					"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list. "
+					"Please select another one."
+				);
 				preset.selectedEnginePath.clear();
 			}
 		}
@@ -2584,7 +2588,9 @@ void MainWindow::restorePreset( int presetIdx )
 			else
 			{
 				QMessageBox::warning( this, "Config no longer exists",
-					"Config file selected for this preset ("%preset.selectedConfig%") no longer exists, please select another one." );
+					"Config file selected for this preset ("%preset.selectedConfig%") no longer exists. "
+					"Please select another one."
+				);
 				preset.selectedConfig.clear();
 			}
 		}
@@ -2611,14 +2617,18 @@ void MainWindow::restorePreset( int presetIdx )
 				if (!isValidFile( preset.selectedIWAD ))
 				{
 					QMessageBox::warning( this, "IWAD no longer exists",
-						"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
+						"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
+						"Please select another one."
+					);
 					highlightInvalidListItem( iwadModel[ iwadIdx ] );
 				}
 			}
 			else
 			{
 				QMessageBox::warning( this, "IWAD no longer exists",
-					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists, please select another one." );
+					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
+					"Please select another one."
+				);
 				preset.selectedIWAD.clear();
 			}
 		}
@@ -2653,13 +2663,15 @@ void MainWindow::restorePreset( int presetIdx )
 				else
 				{
 					QMessageBox::warning( this, "Map file no longer exists",
-						"Map file selected for this preset ("%path%") no longer exists." );
+						"Map file selected for this preset ("%path%") no longer exists."
+					);
 				}
 			}
 			else
 			{
 				QMessageBox::warning( this, "Map file no longer exists",
-					"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")." );
+					"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")."
+				);
 			}
 		}
 
@@ -2754,7 +2766,8 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 		if (saveFileIdx < 0)
 		{
 			QMessageBox::warning( this, "Save file no longer exists",
-				"Save file \""%launchOpts.saveFile%"\" no longer exists, please select another one." );
+				"Save file \""%launchOpts.saveFile%"\" no longer exists. Please select another one."
+			);
 			launchOpts.saveFile.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
 		}
 	}
@@ -2769,7 +2782,8 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 		if (demoFileIdx < 0)
 		{
 			QMessageBox::warning( this, "Demo file no longer exists",
-				"Demo file \""%launchOpts.demoFile_replay%"\" no longer exists, please select another one." );
+				"Demo file \""%launchOpts.demoFile_replay%"\" no longer exists. Please select another one."
+			);
 			launchOpts.demoFile_replay.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
 		}
 	}
@@ -2994,7 +3008,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	const EngineTraits & engineTraits = this->engineTraits[ selectedEngineIdx ];
 
 	{
-		p.checkItemPath( selectedEngine, "The selected engine (%1) no longer exists. Please update its path in Menu -> Setup." );
+		p.checkItemPath( selectedEngine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
 		// Either the executable is in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
 		// in which case it should be (and sometimes must be) started directly by using only its name,
@@ -3015,7 +3029,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		{
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
-			p.checkPath( configPath, "The selected config (%1) no longer exists. Please update the config dir in Menu -> Setup" );
+			p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
 			cmd.arguments << "-config" << base.rebaseAndQuotePath( configPath );
 		}
 	}
@@ -3023,7 +3037,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
 	{
-		p.checkItemPath( iwadModel[ selectedIwadIdx ], "The selected IWAD (%1) no longer exists. Please select another one." );
+		p.checkItemPath( iwadModel[ selectedIwadIdx ], "selected IWAD", "Please select another one." );
 		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
@@ -3032,7 +3046,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	const QStringList selectedMapPacks = getSelectedMapPacks();
 	for (const QString & mapFilePath : selectedMapPacks)
 	{
-		p.checkPath( mapFilePath, "The selected map pack (%1) no longer exists. Please select another one." );
+		p.checkFilePath( mapFilePath, "the selected map pack", "Please select another one." );
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
 		if (suffix == "deh")
@@ -3048,7 +3062,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		if (mod.checked)
 		{
-			p.checkItemPath( mod, "The selected mod (%1) no longer exists. Please update the mod list." );
+			p.checkItemPath( mod, "the selected mod", "Please update the mod list." );
 
 			QString suffix = QFileInfo( mod.path ).suffix().toLower();
 			if (suffix == "deh")
@@ -3078,7 +3092,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
 		QString savePath = getPathFromFileName( getSaveDir(), ui->saveFileCmbBox->currentText() );
-		p.checkPath( savePath, "The selected save file (%1) no longer exists. Please select another one." );
+		p.checkFilePath( savePath, "the selected save file", "Please select another one." );
 		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
@@ -3090,7 +3104,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
 		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileCmbBox_replay->currentText() );
-		p.checkPath( demoPath, "The selected demo file (%1) no longer exists. Please select another one." );
+		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
 		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}
 
@@ -3159,9 +3173,15 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	}
 
 	if (!ui->saveDirLine->text().isEmpty())
+	{
+		p.checkNotAFile( ui->saveDirLine->text(), "the save dir", "" );
 		cmd.arguments << engineTraits.saveDirParam() << base.rebaseAndQuotePath( ui->saveDirLine->text() );
+	}
 	if (!ui->screenshotDirLine->text().isEmpty())
+	{
+		p.checkNotAFile( ui->saveDirLine->text(), "the screenshot dir", "" );
 		cmd.arguments << "+screenshot_dir" << base.rebaseAndQuotePath( ui->screenshotDirLine->text() );
+	}
 
 	if (ui->monitorCmbBox->currentIndex() > 0)
 	{

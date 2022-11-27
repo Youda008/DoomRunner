@@ -2655,7 +2655,7 @@ void MainWindow::restorePreset( int presetIdx )
 			QModelIndex mapIdx = mapModel.index( path );
 			if (mapIdx.isValid() && isInsideDir( path, mapRootDir ))
 			{
-				if (isValidFile( path ))
+				if (isValidEntry( path ))
 				{
 					preset.selectedMapPacks.append( path );  // put back only items that are valid
 					selectItemByIndex( ui->mapDirView, mapIdx );
@@ -2691,7 +2691,7 @@ void MainWindow::restorePreset( int presetIdx )
 		for (Mod & mod : preset.mods)
 		{
 			modModel.append( mod );
-			if (!mod.isSeparator && !isValidFile( mod.path ))
+			if (!mod.isSeparator && !isValidEntry( mod.path ))
 			{
 				QMessageBox::warning( this, "Mod no longer exists",
 					"A mod from the preset ("%mod.path%") no longer exists. Please update it." );
@@ -3008,7 +3008,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	const EngineTraits & engineTraits = this->engineTraits[ selectedEngineIdx ];
 
 	{
-		p.checkItemPath( selectedEngine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
+		p.checkItemFilePath( selectedEngine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
 		// Either the executable is in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
 		// in which case it should be (and sometimes must be) started directly by using only its name,
@@ -3037,7 +3037,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
 	{
-		p.checkItemPath( iwadModel[ selectedIwadIdx ], "selected IWAD", "Please select another one." );
+		p.checkItemFilePath( iwadModel[ selectedIwadIdx ], "selected IWAD", "Please select another one." );
 		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
@@ -3046,7 +3046,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	const QStringList selectedMapPacks = getSelectedMapPacks();
 	for (const QString & mapFilePath : selectedMapPacks)
 	{
-		p.checkFilePath( mapFilePath, "the selected map pack", "Please select another one." );
+		p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
 		if (suffix == "deh")
@@ -3062,7 +3062,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		if (mod.checked)
 		{
-			p.checkItemPath( mod, "the selected mod", "Please update the mod list." );
+			p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
 
 			QString suffix = QFileInfo( mod.path ).suffix().toLower();
 			if (suffix == "deh")

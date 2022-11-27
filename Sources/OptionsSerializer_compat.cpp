@@ -155,7 +155,7 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				if (!checkFilePath( engine.path, "an Engine from the saved options", "Please update it in Menu -> Setup." ))
+				if (!PathChecker::checkFilePath( engine.path, true, "an Engine from the saved options", "Please update it in Menu -> Setup." ))
 					highlightInvalidListItem( engine );
 
 				opts.engines.append( std::move( engine ) );
@@ -169,7 +169,7 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 
 		if (opts.iwadSettings.updateFromDir)
 		{
-			checkNonEmptyDirPath( opts.iwadSettings.dir, "IWAD directory from the saved options", "Please update it in Menu -> Setup." );
+			PathChecker::checkNonEmptyDirPath( opts.iwadSettings.dir, true, "IWAD directory from the saved options", "Please update it in Menu -> Setup." );
 		}
 		else
 		{
@@ -188,7 +188,7 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
 						continue;
 
-					if (!checkFilePath( iwad.path, "an IWAD from the saved options", "Please update it in Menu -> Setup." ))
+					if (!PathChecker::checkFilePath( iwad.path, true, "an IWAD from the saved options", "Please update it in Menu -> Setup." ))
 						highlightInvalidListItem( iwad );
 
 					opts.iwads.append( std::move( iwad ) );
@@ -201,14 +201,14 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 	{
 		deserialize( jsMaps, opts.mapSettings );
 
-		checkNonEmptyDirPath( opts.mapSettings.dir, "map directory from the saved options", "Please update it in Menu -> Setup." );
+		PathChecker::checkNonEmptyDirPath( opts.mapSettings.dir, true, "map directory from the saved options", "Please update it in Menu -> Setup." );
 	}
 
 	if (JsonObjectCtx jsMods = jsOpts.getObject( "mods" ))
 	{
 		deserialize( jsMods, opts.modSettings );
 
-		checkNonEmptyDirPath( opts.modSettings.dir, "mod directory from the saved options", "Please update it in Menu -> Setup." );
+		PathChecker::checkNonEmptyDirPath( opts.modSettings.dir, true, "mod directory from the saved options", "Please update it in Menu -> Setup." );
 	}
 
 	// options

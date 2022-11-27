@@ -671,7 +671,7 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				if (!checkFilePath( engine.path, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ))
+				if (!PathChecker::checkFilePath( engine.path, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ))
 					highlightInvalidListItem( engine );
 
 				opts.engines.append( std::move( engine ) );
@@ -685,7 +685,7 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 
 		if (opts.iwadSettings.updateFromDir)
 		{
-			checkNonEmptyDirPath( opts.iwadSettings.dir, "IWAD directory from the saved options", "Please update it in Menu -> Initial Setup." );
+			PathChecker::checkNonEmptyDirPath( opts.iwadSettings.dir, true, "IWAD directory from the saved options", "Please update it in Menu -> Initial Setup." );
 		}
 		else
 		{
@@ -704,7 +704,7 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
 						continue;
 
-					if (!checkFilePath( iwad.path, "an IWAD from the saved options", "Please update it in Menu -> Initial Setup." ))
+					if (!PathChecker::checkFilePath( iwad.path, true, "an IWAD from the saved options", "Please update it in Menu -> Initial Setup." ))
 						highlightInvalidListItem( iwad );
 
 					opts.iwads.append( std::move( iwad ) );
@@ -717,14 +717,14 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 	{
 		deserialize( jsMaps, opts.mapSettings );
 
-		checkNonEmptyDirPath( opts.mapSettings.dir, "map directory from the saved options", "Please update it in Menu -> Initial Setup." );
+		PathChecker::checkNonEmptyDirPath( opts.mapSettings.dir, true, "map directory from the saved options", "Please update it in Menu -> Initial Setup." );
 	}
 
 	if (JsonObjectCtx jsMods = jsOpts.getObject( "mods" ))
 	{
 		deserialize( jsMods, opts.modSettings );
 
-		checkNonEmptyDirPath( opts.modSettings.dir, "mod directory from the saved options", "Please update it in Menu -> Initial Setup." );
+		PathChecker::checkNonEmptyDirPath( opts.modSettings.dir, true, "mod directory from the saved options", "Please update it in Menu -> Initial Setup." );
 	}
 
 	// options

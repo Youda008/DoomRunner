@@ -41,61 +41,141 @@ void highlightInvalidListItem( ReadOnlyListModelItem & item );
 /// Removed the highlighting of this item in its views.
 void unhighlightListItem( ReadOnlyListModelItem & item );
 
-bool checkFilePath( const QString & path, QString subjectName, QString errorPostscript );
-bool checkDirPath( const QString & path, QString subjectName, QString errorPostscript );
-bool checkNonEmptyFilePath( const QString & path, QString subjectName, QString errorPostscript );
-bool checkNonEmptyDirPath( const QString & path, QString subjectName, QString errorPostscript );
-
 class PathChecker {
 
 	QWidget * parent;
 	bool verificationRequired;
 	bool errorMessageDisplayed = false;
 
-	bool _checkPath( const QString & path, QString fileOrDir, QString subjectName, QString errorPostscript );
-	bool _checkNotAFile( const QString & dirPath, QString subjectName, QString errorPostscript );
+ private: // internal D.R.Y. helpers
 
- public:
+	enum class EntryType
+	{
+		File,
+		Dir,
+		Both
+	};
 
-	PathChecker( QWidget * parent, bool verificationRequired )
-		: parent( parent ), verificationRequired( verificationRequired ) {}
+	static void _maybeShowError( bool & errorMessageDisplayed, QWidget * parent, QString title, QString message );
 
-	bool checkFilePath( const QString & path, QString subjectName, QString errorPostscript )
+	static bool _checkPath( const QString & path, EntryType expectedType, bool & errorMessageDisplayed,
+	                        QWidget * parent, QString subjectName, QString errorPostscript );
+	static bool _checkNonEmptyPath( const QString & path, EntryType expectedType, bool & errorMessageDisplayed,
+	                                QWidget * parent, QString subjectName, QString errorPostscript );
+	static bool _checkCollision( const QString & path, EntryType expectedType, bool & errorMessageDisplayed,
+	                             QWidget * parent, QString subjectName, QString errorPostscript );
+
+	bool _checkPath( const QString & path, EntryType expectedType, QString subjectName, QString errorPostscript )
 	{
 		if (!verificationRequired)
 			return true;
 
-		return _checkPath( path, "File", subjectName, errorPostscript );
-	}
-
-	bool checkDirPath( const QString & path, QString subjectName, QString errorPostscript )
-	{
-		if (!verificationRequired)
-			return true;
-
-		return _checkPath( path, "Directory", subjectName, errorPostscript );
-	}
-
-	bool checkNotAFile( const QString & dirPath, QString subjectName, QString errorPostscript )
-	{
-		if (!verificationRequired)
-			return true;
-
-		return _checkNotAFile( dirPath, subjectName, errorPostscript );
+		return _checkPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
 	}
 
 	template< typename ListItem >
-	bool checkItemPath( ListItem & item, QString subjectName, QString errorPostscript )
+	bool _checkItemPath( ListItem & item, EntryType expectedType, QString subjectName, QString errorPostscript )
 	{
 		if (!verificationRequired)
 			return true;
 
-		bool verified = _checkPath( item.getFilePath(), "File", subjectName, errorPostscript );
+		bool verified = _checkPath( item.getFilePath(), expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
 		if (!verified)
 			highlightInvalidListItem( item );
 		else
 			unhighlightListItem( item );
 		return verified;
+	}
+
+	bool _checkCollision( const QString & path, EntryType expectedType, QString subjectName, QString errorPostscript )
+	{
+		if (!verificationRequired)
+			return true;
+
+		if (path.isEmpty() || !QFileInfo::exists( path ))
+			return true;
+
+		return _checkCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	}
+
+ public: // context-free
+
+	static bool checkFilePath( const QString & path, bool showError, QString subjectName, QString errorPostscript )
+	{
+		bool errorMessageDisplayed = !showError;
+		return _checkPath( path, EntryType::File, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
+	}
+
+	static bool checkDirPath( const QString & path, bool showError, QString subjectName, QString errorPostscript )
+	{
+		bool errorMessageDisplayed = !showError;
+		return _checkPath( path, EntryType::Dir, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
+	}
+
+	static bool checkNonEmptyFilePath( const QString & path, bool showError, QString subjectName, QString errorPostscript )
+	{
+		if (path.isEmpty())
+			return true;
+
+		bool errorMessageDisplayed = !showError;
+		return _checkNonEmptyPath( path, EntryType::File, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
+	}
+
+	static bool checkNonEmptyDirPath( const QString & path, bool showError, QString subjectName, QString errorPostscript )
+	{
+		if (path.isEmpty())
+			return true;
+
+		bool errorMessageDisplayed = !showError;
+		return _checkNonEmptyPath( path, EntryType::Dir, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
+	}
+
+ public: // context-sensitive (depend on settings from constructor)
+
+	PathChecker( QWidget * parent, bool verificationRequired )
+		: parent( parent ), verificationRequired( verificationRequired ) {}
+
+	bool checkAnyPath( const QString & path, QString subjectName, QString errorPostscript )
+	{
+		return _checkPath( path, EntryType::Both, subjectName, errorPostscript );
+	}
+
+	bool checkFilePath( const QString & path, QString subjectName, QString errorPostscript )
+	{
+		return _checkPath( path, EntryType::File, subjectName, errorPostscript );
+	}
+
+	bool checkDirPath( const QString & path, QString subjectName, QString errorPostscript )
+	{
+		return _checkPath( path, EntryType::Dir, subjectName, errorPostscript );
+	}
+
+	bool checkNotAFile( const QString & path, QString subjectName, QString errorPostscript )
+	{
+		return _checkCollision( path, EntryType::Dir, subjectName, errorPostscript );
+	}
+
+	bool checkNotADir( const QString & path, QString subjectName, QString errorPostscript )
+	{
+		return _checkCollision( path, EntryType::File, subjectName, errorPostscript );
+	}
+
+	template< typename ListItem >
+	bool checkItemAnyPath( ListItem & item, QString subjectName, QString errorPostscript )
+	{
+		return _checkItemPath( item, EntryType::Both, subjectName, errorPostscript );
+	}
+
+	template< typename ListItem >
+	bool checkItemFilePath( ListItem & item, QString subjectName, QString errorPostscript )
+	{
+		return _checkItemPath( item, EntryType::File, subjectName, errorPostscript );
+	}
+
+	template< typename ListItem >
+	bool checkItemDirPath( ListItem & item, QString subjectName, QString errorPostscript )
+	{
+		return _checkItemPath( item, EntryType::Dir, subjectName, errorPostscript );
 	}
 
 	bool gotSomeInvalidPaths() const
@@ -108,6 +188,13 @@ class PathChecker {
 
 //----------------------------------------------------------------------------------------------------------------------
 //  other
+
+/// Makes the first letter of a string capital.
+inline QString & capitalize( QString & str )
+{
+	str[0] = str[0].toUpper();
+	return str;
+}
 
 /// Replaces everything between startingChar and endingChar with replaceWith
 QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith );

@@ -97,6 +97,41 @@ ScopeGuard< EndFunc > atScopeEndDo( EndFunc && endFunc )
 
 
 //======================================================================================================================
+//  value matching
+
+template< typename Source, typename Result >
+struct CorrespondingPair
+{
+	Source possibleValue;
+	Result correspondingResult;
+};
+
+template< typename Source, typename Result >
+CorrespondingPair< Source, Result > corresponds( Source source, Result result )
+{
+	return { source, result };
+}
+
+template< typename Source, typename Result, typename ... Args >
+Result correspondingValue( Source source, CorrespondingPair< Source, Result > && lastPair )
+{
+	if (source == lastPair.possibleValue)
+		return std::move( lastPair.correspondingResult );
+	else
+		return Result();
+}
+
+template< typename Source, typename Result, typename ... Args >
+Result correspondingValue( Source source, CorrespondingPair< Source, Result > && firstPair, Args && ... otherPairs )
+{
+	if (source == firstPair.possibleValue)
+		return std::move( firstPair.correspondingResult );
+	else
+		return correspondingValue( source, std::move( otherPairs ) ... );
+}
+
+
+//======================================================================================================================
 //  other
 
 // just to be little more explicit when needed

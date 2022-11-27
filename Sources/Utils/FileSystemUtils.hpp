@@ -149,6 +149,11 @@ inline bool isInvalidFile( const QString & filePath )
 	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // either doesn't exist or it's a directory
 }
 
+inline bool isValidEntry( const QString & path )
+{
+	return !path.isEmpty() && QFileInfo::exists( path );
+}
+
 inline QString getAbsolutePath( const QString & path )
 {
 	return QFileInfo( path ).absoluteFilePath();

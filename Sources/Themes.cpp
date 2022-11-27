@@ -454,7 +454,10 @@ static void toggleDarkTitleBars( bool enable )
 //======================================================================================================================
 //  main logic
 
-static std::atomic< ColorScheme > g_currentSchemeID = ColorScheme::SystemDefault;
+// make sure these variables are only accessed from the main thread, or make them std::atomic
+static ColorScheme g_currentUserSchemeID = ColorScheme::SystemDefault;  ///< the scheme user chose via setAppColorScheme()
+static ColorScheme g_currentRealSchemeID = ColorScheme::SystemDefault;  ///< the scheme that was really set after examining system settings
+static QString g_currentStyle;  ///< the application style the user chose via setAppStyle()
 
 namespace themes {
 
@@ -475,35 +478,50 @@ void init()
  #endif
 }
 
-void setAppColorScheme( ColorScheme schemeID )
+void setAppColorScheme( ColorScheme userSchemeID )
 {
+	ColorScheme realSchemeID = userSchemeID;
+	g_currentUserSchemeID = userSchemeID;
+
  #if IS_WINDOWS
 	// Qt on Windows does not automatically follow OS preferences, so we have to check the OS settings
-	// and manually override the default theme with our dark one in case it's enabled.
+	// and manually override the user-selected default theme with our dark one in case it's enabled.
 	const bool systemDarkModeEnabled = isSystemDarkModeEnabled();
-	if (schemeID == ColorScheme::SystemDefault && systemDarkModeEnabled)
+	if (userSchemeID == ColorScheme::SystemDefault && systemDarkModeEnabled)
 	{
-		schemeID = ColorScheme::Dark;
+		realSchemeID = ColorScheme::Dark;
 	}
  #endif
 
-	if (schemeID == g_currentSchemeID)
+	if (realSchemeID == g_currentRealSchemeID)
 	{
-		return;
+		return;  // nothing to be done, this scheme is already active
 	}
-	g_currentSchemeID = schemeID;
+	g_currentRealSchemeID = realSchemeID;
 
-	setQtColorScheme( schemeID );
+	setQtColorScheme( realSchemeID );
 
  #if IS_WINDOWS
 	// On Windows the title bar follows the system preferences and isn't controlled by Qt,
 	// so in case the user requests explicit dark theme we use this hack to make it dark too.
-	toggleDarkTitleBars( schemeID == ColorScheme::Dark && !systemDarkModeEnabled );
+	toggleDarkTitleBars( realSchemeID == ColorScheme::Dark && !systemDarkModeEnabled );
+	// The dark colors don't work well with the default Windows style.
+	// We have to use "Fusion", that's the only style where it looks good.
+	if (realSchemeID == ColorScheme::Dark)
+	{
+		setAppStyle( "Fusion" );
+	}
  #endif
 }
 
 void setAppStyle( const QString & styleName )
 {
+	if (styleName == g_currentStyle)
+	{
+		return;  // nothing to be done, this style is already active
+	}
+	g_currentStyle = styleName;
+
 	setQtStyle( styleName );
 }
 
@@ -520,7 +538,7 @@ QString getDefaultAppStyle()
 void updateWindowBorder( [[maybe_unused]] QWidget * window )
 {
  #if IS_WINDOWS
-	if (g_currentSchemeID == ColorScheme::Dark)
+	if (g_currentRealSchemeID == ColorScheme::Dark && !isSystemDarkModeEnabled())
 	{
 		toggleDarkTitleBar( reinterpret_cast< HWND >( window->winId() ), true );
 		// This is the only way how to force the window title bar to redraw with the new settings.
@@ -532,7 +550,7 @@ void updateWindowBorder( [[maybe_unused]] QWidget * window )
 
 QString updateHyperlinkColor( const QString & richText )
 {
-	QString htmlColor = palettes[ size_t( g_currentSchemeID.load() ) ].color( QPalette::Link ).name();
+	QString htmlColor = palettes[ size_t( g_currentRealSchemeID ) ].color( QPalette::Link ).name();
 	QString newText( richText );
 	static QRegularExpression regex("color:#[0-9a-fA-F]{6}");
 	newText.replace( regex, "color:"+htmlColor );
@@ -565,10 +583,23 @@ void WindowsThemeWatcher::run()
 
 void WindowsThemeWatcher::updateScheme( [[maybe_unused]] bool darkModeEnabled )
 {
+	// This will be executed in the main thread.
  #if IS_WINDOWS
-	if (g_currentSchemeID == ColorScheme::SystemDefault)
+	if (g_currentUserSchemeID == ColorScheme::SystemDefault)
 	{
-		setQtColorScheme( darkModeEnabled ? ColorScheme::Dark : ColorScheme::SystemDefault );
+		ColorScheme realSchemeID = darkModeEnabled ? ColorScheme::Dark : ColorScheme::SystemDefault;
+		if (realSchemeID == g_currentRealSchemeID)
+		{
+			return;  // nothing to be done, this scheme is already active
+		}
+		g_currentRealSchemeID = realSchemeID;
+
+		setQtColorScheme( realSchemeID );
+		toggleDarkTitleBars( realSchemeID == ColorScheme::Dark && !darkModeEnabled );
+		if (realSchemeID == ColorScheme::Dark)
+		{
+			themes::setAppStyle( "Fusion" );
+		}
 	}
  #endif
 }

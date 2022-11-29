@@ -267,6 +267,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 		QString fileName;
 		ConfigFile( const QString & fileName ) : fileName( fileName ) {}
 		ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
+		QString getID() const { return fileName; }
 	};
 	ReadOnlyListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
 
@@ -275,6 +276,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 		QString fileName;
 		SaveFile( const QString & fileName ) : fileName( fileName ) {}
 		SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
+		QString getID() const { return fileName; }
 	};
 	ReadOnlyListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
 
@@ -283,6 +285,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 		QString fileName;
 		DemoFile( const QString & fileName ) : fileName( fileName ) {}
 		DemoFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
+		QString getID() const { return fileName; }
 	};
 	ReadOnlyListModel< DemoFile > demoModel;    ///< list of demo files found in pre-defined directory
 

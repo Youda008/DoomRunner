@@ -1,6 +1,7 @@
 1.7.1
 - fixed automatic adaptation to Windows 10 theme settings
 - fixed reporting directories as errors where directories are allowed
+- fixed losing IWAD/config/save/demo file selection when closing Initial Setup dialog
 
 1.7
 - added explicit dark and light theme

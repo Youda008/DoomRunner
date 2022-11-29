@@ -27,6 +27,7 @@
 #include <QFileInfo>
 
 #include <functional>
+#include <type_traits>
 
 
 //======================================================================================================================
@@ -464,7 +465,7 @@ bool editItemAtIndex( QListView * view, int index );
 
 /// Gets a persistent item ID of the current item that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getCurrentItemID( QListView * view, const AListModel< Item > & model ) -> decltype( Item{}.getID() )
+auto getCurrentItemID( QListView * view, const AListModel< Item > & model ) -> std::result_of_t<decltype(&Item::getID)(Item)>
 {
 	int selectedItemIdx = getCurrentItemIndex( view );
 	if (selectedItemIdx >= 0)
@@ -475,7 +476,7 @@ auto getCurrentItemID( QListView * view, const AListModel< Item > & model ) -> d
 
 /// Gets a persistent item ID of a selected item that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> decltype( Item{}.getID() )
+auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> std::result_of_t<decltype(&Item::getID)(Item)>
 {
 	int selectedItemIdx = getSelectedItemIndex( view );
 	if (selectedItemIdx >= 0)
@@ -486,7 +487,7 @@ auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> 
 
 /// Attempts to set a previous current item defined by its persistant itemID.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool setCurrentItemByID( QListView * view, const AListModel< Item > & model, const decltype( Item{}.getID() ) & itemID )
+bool setCurrentItemByID( QListView * view, const AListModel< Item > & model, const std::result_of_t<decltype(&Item::getID)(Item)> & itemID )
 {
 	if (!itemID.isEmpty())
 	{
@@ -502,7 +503,7 @@ bool setCurrentItemByID( QListView * view, const AListModel< Item > & model, con
 
 /// Attempts to select a previously selected item defined by its persistant itemID.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool selectItemByID( QListView * view, const AListModel< Item > & model, const decltype( Item{}.getID() ) & itemID )
+bool selectItemByID( QListView * view, const AListModel< Item > & model, const std::result_of_t<decltype(&Item::getID)(Item)> & itemID )
 {
 	if (!itemID.isEmpty())
 	{
@@ -518,7 +519,7 @@ bool selectItemByID( QListView * view, const AListModel< Item > & model, const d
 
 /// Gets persistent item IDs that survive node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemIDs( QListView * view, const AListModel< Item > & model ) -> QVector< decltype( Item{}.getID() ) >
+auto getSelectedItemIDs( QListView * view, const AListModel< Item > & model ) -> QVector< std::result_of_t<decltype(&Item::getID)(Item)> >
 {
 	QVector< decltype( Item{}.getID() ) > itemIDs;
 	for (int selectedItemIdx : getSelectedItemIndexes( view ))
@@ -528,7 +529,7 @@ auto getSelectedItemIDs( QListView * view, const AListModel< Item > & model ) ->
 
 /// Attempts to select previously selected items defined by their persistant itemIDs.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-void selectItemsByIDs( QListView * view, const AListModel< Item > & model, const QVector< decltype( Item{}.getID() ) > & itemIDs )
+void selectItemsByIDs( QListView * view, const AListModel< Item > & model, const QVector< std::result_of_t<decltype(&Item::getID)(Item)> > & itemIDs )
 {
 	for (const auto & itemID : itemIDs)
 	{
@@ -612,7 +613,7 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 
 /// Gets a persistent item ID that survives node shifting, adding or removal.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getCurrentItemID( QComboBox * view, const AListModel< Item > & model ) -> decltype( Item{}.getID() )
+auto getCurrentItemID( QComboBox * view, const AListModel< Item > & model ) -> std::result_of_t<decltype(&Item::getID)(Item)>
 {
 	int selectedItemIdx = view->currentIndex();
 	if (selectedItemIdx >= 0)
@@ -623,7 +624,7 @@ auto getCurrentItemID( QComboBox * view, const AListModel< Item > & model ) -> d
 
 /// Attempts to select a previously selected item defined by persistant itemID.
 template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool setCurrentItemByID( QComboBox * view, const AListModel< Item > & model, const decltype( Item{}.getID() ) & itemID )
+bool setCurrentItemByID( QComboBox * view, const AListModel< Item > & model, const std::result_of_t<decltype(&Item::getID)(Item)> & itemID )
 {
 	if (!itemID.isEmpty())
 	{

@@ -803,6 +803,9 @@ void MainWindow::runSetupDialog()
 		auto currentIWAD = getCurrentItemID( ui->iwadListView, iwadModel );
 		auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwadModel );
 
+		// workaround (read the comment at automatic list updates)
+		disableSelectionCallbacks = true;
+
 		// deselect the items
 		ui->engineCmbBox->setCurrentIndex( -1 );
 		deselectAllAndUnsetCurrent( ui->iwadListView );
@@ -815,10 +818,11 @@ void MainWindow::runSetupDialog()
 		engineModel.assignList( std::move( dialog.engineModel.list() ) );
 		updateEngineTraits();  // sync engineTraits with engineModel
 		iwadModel.assignList( std::move( dialog.iwadModel.list() ) );
-		iwadSettings = dialog.iwadSettings;
-		mapSettings = dialog.mapSettings;
-		modSettings = dialog.modSettings;
-		settings = dialog.settings;
+		iwadSettings = std::move( dialog.iwadSettings );
+		mapSettings = std::move( dialog.mapSettings );
+		modSettings = std::move( dialog.modSettings );
+		settings = std::move( dialog.settings );
+
 		// update all stored paths
 		toggleAbsolutePaths( settings.useAbsolutePaths );
 		currentEngine = pathContext.convertPath( currentEngine );
@@ -831,9 +835,18 @@ void MainWindow::runSetupDialog()
 		refreshMapPacks();
 
 		// select back the previously selected items
-		setCurrentItemByID( ui->engineCmbBox, engineModel, currentEngine );
+		bool engineFound = setCurrentItemByID( ui->engineCmbBox, engineModel, currentEngine );
 		setCurrentItemByID( ui->iwadListView, iwadModel, currentIWAD );
-		selectItemByID( ui->iwadListView, iwadModel, selectedIWAD );
+		bool iwadFound = selectItemByID( ui->iwadListView, iwadModel, selectedIWAD );
+
+		disableSelectionCallbacks = false;
+
+		// If the previously selected items were not found in the updated lists,
+		// call the callbacks manually because they were disabled.
+		if (!currentEngine.isEmpty() && !engineFound)
+			selectEngine( -1 );
+		if (!selectedIWAD.isEmpty() && !iwadFound)
+			toggleIWAD( QItemSelection(), QItemSelection()/*TODO*/ );
 
 		updateLaunchCommand();
 	}
@@ -852,9 +865,7 @@ void MainWindow::runOptsStorageDialog()
 	if (code == QDialog::Accepted)
 	{
 		settings.assign( dialog.storageSettings );
-
 		updateOptionsGrpBoxTitles( settings );
-
 		updateLaunchCommand();
 	}
 }

@@ -847,8 +847,6 @@ void MainWindow::runSetupDialog()
 			selectEngine( -1 );
 		if (!selectedIWAD.isEmpty() && !iwadFound)
 			toggleIWAD( QItemSelection(), QItemSelection()/*TODO*/ );
-
-		updateLaunchCommand();
 	}
 }
 
@@ -2069,8 +2067,6 @@ void MainWindow::toggleAbsolutePaths( bool absolute )
 
 	ui->saveDirLine->setText( pathContext.convertPath( ui->saveDirLine->text() ) );
 	ui->screenshotDirLine->setText( pathContext.convertPath( ui->screenshotDirLine->text() ) );
-
-	updateLaunchCommand();
 }
 
 /// initializes engineTraits to be in sync with current engineModel

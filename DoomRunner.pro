@@ -53,7 +53,6 @@ HEADERS += \
     Sources/Utils/WidgetUtils.hpp \
     Sources/Widgets/EditableListView.hpp \
     Sources/Widgets/ExtendedTreeView.hpp \
-	Sources/Widgets/LabelWithHyperlink.hpp \
     Sources/Widgets/ListModel.hpp \
     Sources/Common.hpp \
     Sources/DoomFileInfo.hpp \
@@ -86,7 +85,6 @@ SOURCES += \
     Sources/Utils/WidgetUtils.cpp \
     Sources/Widgets/EditableListView.cpp \
     Sources/Widgets/ExtendedTreeView.cpp \
-	Sources/Widgets/LabelWithHyperlink.cpp \
     Sources/Widgets/ListModel.cpp \
     Sources/DoomFileInfo.cpp \
     Sources/EngineTraits.cpp \

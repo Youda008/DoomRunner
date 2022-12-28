@@ -33,7 +33,7 @@ static const QString releasePageUrl = "https://github.com/Youda008/DoomRunner/re
 static const QString changelogUrl = "https://raw.githubusercontent.com/Youda008/DoomRunner/master/changelog.txt";
 
 #define HYPERLINK( text, url ) \
-	"<a href=\""%url%"\"><span style=\" text-decoration: underline; color:#0000ff;\">"%text%"</span></a>"
+	"<a href=\""%url%"\"><span style=\"\">"%text%"</span></a>"
 
 
 UpdateChecker::UpdateChecker()

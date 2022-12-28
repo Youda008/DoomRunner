@@ -8,6 +8,7 @@
 #include "UpdateChecker.hpp"
 
 #include "Version.hpp"
+#include "Themes.hpp"
 #include "Utils/LangUtils.hpp"  // atScopeEndDo
 
 #include <QNetworkAccessManager>
@@ -249,6 +250,9 @@ bool showUpdateNotification( QWidget * parent, QStringList versionInfo, bool inc
 	QString newVersion = versionInfo.first();
 
 	QMessageBox msgBox( QMessageBox::Information, "Update available", "", QMessageBox::Ok, parent );
+
+	// On Windows we need to manually make title bar of every new window dark, if dark theme is used.
+	themes::updateWindowBorder( &msgBox );
 
 	// add checkbox for automatic update checks
 	QCheckBox chkBox( "Check for updates on every start" );

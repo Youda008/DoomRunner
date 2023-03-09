@@ -13,6 +13,7 @@
 #include <QFile>
 #include <QStringBuilder>
 #include <QRegularExpression>
+#include <QThread>  // sleep
 
 
 //======================================================================================================================
@@ -74,45 +75,40 @@ QString readWholeFile( const QString & filePath, QByteArray & dest )
 	return {};
 }
 
-QString updateFileSafely( const QString & filePath, const QByteArray & newContent )
+QString updateFileSafely( const QString & origFilePath, const QByteArray & newContent )
 {
 	// Write to a different file than the original and after it's done and closed, replace the original with the new.
 	// This is done to prevent data loss, when the program (or OS) crashes during writing to drive.
 
-	QFile oldFile( filePath );
-	if (oldFile.exists())
-	{
-		QString tempOldFilePath = filePath+".old";
-		if (!oldFile.rename( tempOldFilePath ))
-		{
-			return "Could not rename previous file "%filePath%" to "%tempOldFilePath%": "%oldFile.errorString();
-		}
-	}
-
-	QFile newFile( filePath );
+	QString newFilePath = origFilePath+".new";
+	QFile newFile( newFilePath );
 	if (!newFile.open( QIODevice::WriteOnly ))
 	{
-		return "Could not open file "%filePath%" for writing: "%newFile.errorString();
+		return "Could not open file "%newFilePath%" for writing: "%newFile.errorString();
 	}
 
 	newFile.write( newContent );
 	if (newFile.error() != QFile::NoError)
 	{
-		return "Could not write to file "%filePath%": "%newFile.errorString();
+		return "Could not write to file "%newFilePath%": "%newFile.errorString();
 	}
 
 	newFile.close();
 
-	if (oldFile.fileName() != newFile.fileName())  // there was a previous version of the file that was renamed
+	QThread::msleep( 20 );  // desperate attempt to fix user's persisting problem with losing the file due to power-outage
+
+	QFile oldFile( origFilePath );
+	if (oldFile.exists())
 	{
-		if (!oldFile.exists())
-		{
-			return "Old file was renamed to "%oldFile.fileName()%" but now it doesn't exist? WTF?";
-		}
 		if (!oldFile.remove())
 		{
-			return "Could not delete the previous file "%filePath%": "%oldFile.errorString();
+			return "Could not delete the previous file "%origFilePath%": "%oldFile.errorString();
 		}
+	}
+
+	if (!newFile.rename( origFilePath ))
+	{
+		return "Could not rename the new file "%newFilePath%" back to "%origFilePath%": "%newFile.errorString();
 	}
 
 	return {};

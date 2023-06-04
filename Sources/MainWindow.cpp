@@ -739,8 +739,13 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 
 	if (tickCount % 60 == 0)
 	{
-		if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
-			saveOptions( optionsFilePath );   // TODO: engineRunning
+		// Because the current dir is now different, the launcher's paths no longer work,
+		// so prevent saving options into unwanted directories.
+		if (!engineRunning
+		 && !optionsCorrupted)  // don't overwrite existing file with empty data, just because there was a syntax error
+		{
+			saveOptions( optionsFilePath );
+		}
 	}
 }
 

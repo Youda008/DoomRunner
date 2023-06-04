@@ -11,10 +11,11 @@
 
 #include "Common.hpp"
 
-#include "Widgets/ListModel.hpp"  // ReadOnlyListModelItem, EditableListModelItem
-#include "Utils/JsonUtils.hpp"    // enumName, enumSize
-#include "Themes.hpp"             // Theme
-#include "EngineTraits.hpp"       // EngineFamily
+#include "Widgets/ListModel.hpp"     // ReadOnlyListModelItem, EditableListModelItem
+#include "Utils/JsonUtils.hpp"       // enumName, enumSize
+#include "Utils/FileSystemUtils.hpp" // PathStyle
+#include "EngineTraits.hpp"          // EngineFamily
+#include "Themes.hpp"                // Theme
 
 #include <QString>
 #include <QFileInfo>
@@ -25,10 +26,10 @@
 //  OS-specific defaults
 
 #ifdef _WIN32
-	constexpr bool useAbsolutePathsByDefault = false;
+	constexpr PathStyle defaultPathStyle = PathStyle::Relative;
 	constexpr bool showEngineOutputByDefault = false;
 #else
-	constexpr bool useAbsolutePathsByDefault = true;
+	constexpr PathStyle defaultPathStyle = PathStyle::Absolute;
 	constexpr bool showEngineOutputByDefault = true;
 #endif
 
@@ -305,8 +306,8 @@ struct StorageSettings
 /// Additional launcher settings
 struct LauncherSettings : public StorageSettings  // inherited instead of included to avoid long identifiers
 {
+	PathStyle pathStyle = defaultPathStyle;
 	bool checkForUpdates = true;
-	bool useAbsolutePaths = useAbsolutePathsByDefault;
 	bool closeOnLaunch = false;
 	bool showEngineOutput = showEngineOutputByDefault;
 	ColorScheme colorScheme = ColorScheme::SystemDefault;

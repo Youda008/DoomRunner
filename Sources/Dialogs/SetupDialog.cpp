@@ -37,7 +37,7 @@ SetupDialog::SetupDialog(
 :
 	QDialog( parent ),
 	DialogWithBrowseDir(
-		this, PathContext( baseDir, settings.useAbsolutePaths )
+		this, PathContext( baseDir, settings.pathStyle )
 	),
 	engineModel( engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.path % "]"; }
@@ -71,7 +71,7 @@ SetupDialog::SetupDialog(
 	ui->iwadSubdirs->setChecked( iwadSettings.searchSubdirs );
 	ui->mapDirLine->setText( mapSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
-	ui->absolutePathsChkBox->setChecked( settings.useAbsolutePaths );
+	ui->absolutePathsChkBox->setChecked( settings.pathStyle == PathStyle::Absolute );
 	ui->closeOnLaunchChkBox->setChecked( settings.closeOnLaunch );
 	ui->showEngineOutputChkBox->setChecked( settings.showEngineOutput );
 
@@ -399,9 +399,9 @@ void SetupDialog::updateIWADsFromDir()
 
 void SetupDialog::toggleAbsolutePaths( bool checked )
 {
-	settings.useAbsolutePaths = checked;
+	settings.pathStyle = checked ? PathStyle::Absolute : PathStyle::Relative;
 
-	pathContext.toggleAbsolutePaths( settings.useAbsolutePaths );
+	pathContext.setPathStyle( settings.pathStyle );
 
 	for (Engine & engine : engineModel)
 	{

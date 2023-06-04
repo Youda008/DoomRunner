@@ -105,8 +105,10 @@ static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, 
 
 static void deserialize_pre17( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
 {
+	bool useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
+	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
+
 	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
-	settings.useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.useAbsolutePaths );
 	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 

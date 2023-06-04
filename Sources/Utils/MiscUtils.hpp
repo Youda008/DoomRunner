@@ -202,6 +202,15 @@ QString replaceStringBetween( QString source, char startingChar, char endingChar
 /// Creates a file filter for the QFileDialog::getOpenFileNames.
 QString makeFileFilter( const char * filterName, const QVector< QString > & suffixes );
 
+struct Argument
+{
+	QString str;  ///< individual argument trimmed from whitespaces and quotes
+	bool quoted;  ///< whether this argument was originally quoted
+};
+/// Splits a command line string into individual arguments, taking into account quotes.
+/** NOTE: This is simplified, it will not handle the full command line syntax, only the basic cases. */
+QVector< Argument > splitCommandLineArguments( const QString & argsStr );
+
 /// Makes a component by component mix of the input colors that corresponds to expression:
 /// color1 * weight1 + color2 * weight2 + addition
 QColor mixColors( QColor color1, int weight1, QColor color2, int weight2, QColor addition );

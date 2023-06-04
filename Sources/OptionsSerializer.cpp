@@ -522,8 +522,8 @@ static void deserialize( const JsonObjectCtx & jsGeometry, WindowGeometry & geom
 
 static void serialize( QJsonObject & jsSettings, const LauncherSettings & settings )
 {
+	jsSettings["use_absolute_paths"] = settings.pathStyle == PathStyle::Absolute;
 	jsSettings["check_for_updates"] = settings.checkForUpdates;
-	jsSettings["use_absolute_paths"] = settings.useAbsolutePaths;
 	jsSettings["close_on_launch"] = settings.closeOnLaunch;
 	jsSettings["show_engine_output"] = settings.showEngineOutput;
 
@@ -545,8 +545,10 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 
 static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
 {
+	bool useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
+	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
+
 	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
-	settings.useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.useAbsolutePaths );
 	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 

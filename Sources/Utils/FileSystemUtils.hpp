@@ -11,6 +11,8 @@
 
 #include "Common.hpp"
 
+#include "OSUtils.hpp"
+
 #include <QString>
 #include <QStringBuilder>
 #include <QByteArray>
@@ -33,6 +35,11 @@ enum class PathStyle
 
 constexpr bool QuotePaths = true;
 constexpr bool DontQuotePaths = false;
+
+inline QString quoted( const QString & path )
+{
+	return '"' % path % '"';
+}
 
 
 //======================================================================================================================
@@ -83,29 +90,24 @@ class PathContext {
 		return usingAbsolutePaths() ? getAbsolutePath( path ) : getRelativePath( path );
 	}
 
-	QString rebasePath( const QString & path ) const
+	QString rebasePath( const QString & path, bool isExecutable = false ) const
 	{
 		if (path.isEmpty())
 			return {};
 
 		QString absPath = QDir::isAbsolutePath( path ) ? path : _prevBaseDir.filePath( path );
+		QString newPath = usingAbsolutePaths() ? absPath : _baseDir.relativeFilePath( absPath );
 
-		return usingAbsolutePaths() ? absPath : _baseDir.relativeFilePath( absPath );
-	}
-
-	QString rebasePathToRelative( const QString & path ) const
-	{
-		if (path.isEmpty())
-			return {};
-
-		QString absPath = QDir::isAbsolutePath( path ) ? path : _prevBaseDir.filePath( path );
-
-		return _baseDir.relativeFilePath( absPath );
+		return isExecutable ? fixExePath( newPath ) : newPath;
 	}
 
 	QString rebaseAndQuotePath( const QString & path ) const
 	{
-		return maybeQuoted( rebasePath( path ) );
+		return maybeQuoted( rebasePath( path, false ) );
+	}
+	QString rebaseAndQuoteExePath( const QString & path ) const
+	{
+		return maybeQuoted( rebasePath( path, true ) );
 	}
 
  private:
@@ -113,9 +115,19 @@ class PathContext {
 	QString maybeQuoted( const QString & path ) const
 	{
 		if (_quotePaths)
-			return '"' % path % '"';
+			return quoted( path );
 		else
 			return path;
+	}
+
+	/// On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
+	QString fixExePath( const QString & exePath ) const
+	{
+		if (!isWindows() && !exePath.contains("/"))  // the file is in the current working directory
+		{
+			return "./" + exePath;
+		}
+		return exePath;
 	}
 
 };
@@ -202,9 +214,6 @@ inline bool createDirIfDoesntExist( const QString & dirPath )
 
 /// Returns if it's possible to write files into a directory.
 bool isDirectoryWritable( const QString & dirPath );
-
-/// On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
-QString fixExePath( const QString & exePath );
 
 /// Replaces any disallowed path characters from a string.
 QString sanitizePath( const QString & path );

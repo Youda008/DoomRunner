@@ -156,7 +156,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 
 	void loadMonitorInfo( QComboBox * box );
 
-	void toggleAbsolutePaths( bool absolute );
+	void togglePathStyle( PathStyle style );
 
 	void updateEngineTraits();
 

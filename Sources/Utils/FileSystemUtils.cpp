@@ -37,15 +37,6 @@ bool isDirectoryWritable( const QString & dirPath )
 	return tryToWriteFile( getPathFromFileName( dirPath, "write_test.txt" ) );
 }
 
-QString fixExePath( const QString & exePath )
-{
-	if (!exePath.contains("/"))  // the file is in the current working directory
-	{
-		return "./" + exePath;
-	}
-	return exePath;
-}
-
 QString sanitizePath( const QString & path )
 {
 	QString sanitizedPath = path;

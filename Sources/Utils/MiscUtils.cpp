@@ -175,6 +175,65 @@ QString makeFileFilter( const char * filterName, const QVector< QString > & suff
 	return filter;
 }
 
+QVector< Argument > splitCommandLineArguments( const QString & argsStr )
+{
+	QVector< Argument > args;
+
+	QString currentArg;
+
+	bool escaped = false;
+	bool inQuotes = false;
+	for (int currentPos = 0; currentPos < argsStr.size(); ++currentPos)
+	{
+		QChar currentChar = argsStr[ currentPos ];
+
+		if (escaped)
+		{
+			escaped = false;
+			currentArg += currentChar;
+			// We should handle all the special characters like '\n', '\t', '\b', but screw it, it's not needed.
+		}
+		else if (inQuotes) // and not escaped
+		{
+			if (currentChar == '\\') {
+				escaped = true;
+			} else if (currentChar == '"') {
+				inQuotes = false;
+				args.append( Argument{ std::move(currentArg), true } );
+				currentArg.clear();
+			} else {
+				currentArg += currentChar;
+			}
+		}
+		else // not escaped and not in quotes
+		{
+			if (currentChar == '\\') {
+				escaped = true;
+			} else if (currentChar == '"') {
+				inQuotes = true;
+				if (!currentArg.isEmpty()) {
+					args.append( Argument{ std::move(currentArg), false } );
+					currentArg.clear();
+				}
+			} else if (currentChar == ' ') {
+				if (!currentArg.isEmpty()) {
+					args.append( Argument{ std::move(currentArg), false } );
+					currentArg.clear();
+				}
+			} else {
+				currentArg += currentChar;
+			}
+		}
+	}
+
+	if (!currentArg.isEmpty())
+	{
+		args.append( Argument{ std::move(currentArg), (inQuotes && argsStr.back() != '"') } );
+	}
+
+	return args;
+}
+
 QColor mixColors( QColor color1, int weight1, QColor color2, int weight2, QColor addition )
 {
 	int weightSum = weight1 + weight2;

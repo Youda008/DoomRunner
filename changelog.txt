@@ -1,3 +1,7 @@
+1.7.2
+- fixed quoting engine path when exporting to shell script
+- fixed quoting additional command line arguments containing a file path
+
 1.7.1
 - fixed automatic adaptation to Windows 10 theme settings
 - fixed reporting directories as errors where directories are allowed

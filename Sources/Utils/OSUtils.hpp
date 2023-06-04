@@ -57,6 +57,12 @@ bool isInSearchPath( const QString & filePath );
 bool openFileLocation( const QString & filePath );
 
 #if IS_WINDOWS
+/// Creates a Windows shortcut to an executable with arguments.
+/** \param shortcutFile Path to the shortcut file to be created.
+  * \param targetFile Path to the file the shortcut will point to.
+  *                   Must be either absolute or relative to the current working directory of this running application.
+  * \param targetArgs Command-line arguments for the targetFile, if it's an executable.
+  *                   If the arguments contain file path, they must be relative to the workingDir. */
 bool createWindowsShortcut(
 	QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir = "", QString description = ""
 );

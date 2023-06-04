@@ -311,7 +311,7 @@ MainWindow::MainWindow()
 :
 	QMainWindow( nullptr ),
 	DialogWithBrowseDir(
-		this, PathContext( QApplication::applicationDirPath(), useAbsolutePathsByDefault )  // all relative paths will internally be stored relative to the application's dir
+		this, PathContext( QApplication::applicationDirPath(), defaultPathStyle )  // all relative paths will internally be stored relative to the application's dir
 	),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
@@ -740,7 +740,7 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 	if (tickCount % 60 == 0)
 	{
 		if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
-			saveOptions( optionsFilePath );
+			saveOptions( optionsFilePath );   // TODO: engineRunning
 	}
 }
 
@@ -802,6 +802,7 @@ void MainWindow::runSetupDialog()
 		auto currentEngine = getCurrentItemID( ui->engineCmbBox, engineModel );
 		auto currentIWAD = getCurrentItemID( ui->iwadListView, iwadModel );
 		auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwadModel );
+		auto oldPathStyle = settings.pathStyle;
 
 		// workaround (read the comment at automatic list updates)
 		disableSelectionCallbacks = true;
@@ -824,7 +825,7 @@ void MainWindow::runSetupDialog()
 		settings = std::move( dialog.settings );
 
 		// update all stored paths
-		toggleAbsolutePaths( settings.useAbsolutePaths );
+		togglePathStyle( settings.pathStyle );
 		currentEngine = pathContext.convertPath( currentEngine );
 		currentIWAD = pathContext.convertPath( currentIWAD );
 		selectedIWAD = pathContext.convertPath( selectedIWAD );
@@ -847,6 +848,9 @@ void MainWindow::runSetupDialog()
 			selectEngine( -1 );
 		if (!selectedIWAD.isEmpty() && !iwadFound)
 			toggleIWAD( QItemSelection(), QItemSelection()/*TODO*/ );
+
+		if (settings.pathStyle != oldPathStyle)  // path style changed -> launch command must be updated
+			updateLaunchCommand();
 	}
 }
 
@@ -2026,9 +2030,9 @@ void MainWindow::updateGlobalCmdArgs( const QString & text )
 //----------------------------------------------------------------------------------------------------------------------
 //  misc
 
-void MainWindow::toggleAbsolutePaths( bool absolute )
+void MainWindow::togglePathStyle( PathStyle style )
 {
-	pathContext.toggleAbsolutePaths( absolute );
+	pathContext.setPathStyle( style );
 
 	for (Engine & engine : engineModel)
 	{
@@ -2478,7 +2482,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	}
 
 	// make sure all paths loaded from JSON are stored in correct format
-	toggleAbsolutePaths( settings.useAbsolutePaths );
+	togglePathStyle( settings.pathStyle );
 
 	// load the last selected preset
 	if (!opts.selectedPreset.isEmpty())
@@ -2879,28 +2883,29 @@ void MainWindow::exportPresetToScript()
 		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
+	const QString & presetName = presetModel[ selectedIdx ].name;
 
-	QString filePath = OwnFileDialog::getSaveFileName( this, "Export preset", QString(), scriptFileSuffix );
-	if (filePath.isEmpty())  // user probably clicked cancel
+	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", sanitizePath( presetName ), scriptFileSuffix );
+	if (scriptFilePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
 	}
-	QFileInfo fileInfo( filePath );
+	QFileInfo scriptFileInfo( scriptFilePath );
 
-	auto cmd = generateLaunchCommand( fileInfo.path(), DontVerifyPaths, QuotePaths );
+	auto cmd = generateLaunchCommand( scriptFileInfo.path(), DontVerifyPaths, QuotePaths );
 
-	QFile file( filePath );
-	if (!file.open( QIODevice::WriteOnly | QIODevice::Text ))
+	QFile scriptFile( scriptFilePath );
+	if (!scriptFile.open( QIODevice::WriteOnly | QIODevice::Text ))
 	{
 		QMessageBox::warning( this, "Cannot open file", "Cannot open file for writing. Check directory permissions." );
 		return;
 	}
 
-	QTextStream stream( &file );
+	QTextStream stream( &scriptFile );
 
 	stream << cmd.executable << " " << cmd.arguments.join(' ') << endl;  // keep endl to maintain compatibility with older Qt
 
-	file.close();
+	scriptFile.close();
 }
 
 void MainWindow::exportPresetToShortcut()
@@ -2913,7 +2918,6 @@ void MainWindow::exportPresetToShortcut()
 		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
-
 	const Preset & selectedPreset = presetModel[ selectedIdx ];
 
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
@@ -2930,15 +2934,18 @@ void MainWindow::exportPresetToShortcut()
 	QString enginePath = engineModel[ selectedEngineIdx ].path;
 	QString workingDir = getAbsoluteDirOfFile( enginePath );
 
-	QString filePath = OwnFileDialog::getSaveFileName( this, "Export preset", QString(), shortcutFileSuffix );
-	if (filePath.isEmpty())  // user probably clicked cancel
+	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", sanitizePath( selectedPreset.name ), shortcutFileSuffix );
+	if (shortcutPath.isEmpty())  // user probably clicked cancel
 	{
 		return;
 	}
 
 	auto cmd = generateLaunchCommand( workingDir, DontVerifyPaths, QuotePaths );
 
-	bool success = createWindowsShortcut( filePath, enginePath, cmd.arguments, workingDir, selectedPreset.name );
+	// Use enginePath (relative to the current working dir of this running application),
+	// not cmd.executable (relative to the workingDir - the engine dir).
+	// Paths in cmd.arguments must be relative to the workingDir.
+	bool success = createWindowsShortcut( shortcutPath, enginePath, cmd.arguments, workingDir, selectedPreset.name );
 	if (!success)
 	{
 		QMessageBox::warning( this, "Cannot create shortcut", "Failed to create a shortcut. Check permissions." );
@@ -3017,14 +3024,12 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		p.checkItemFilePath( selectedEngine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
-		// Either the executable is in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
-		// in which case it should be (and sometimes must be) started directly by using only its name,
+		// If it's in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
+		// it should be (and sometimes must be) started directly by using only its name.
 		if (isInSearchPath( selectedEngine.path ))
 			cmd.executable = getFileNameFromPath( selectedEngine.path );
-		// or it is in the current working directory (because we switched the working dir to the engine's dir),
-		// in which case we ignore the absolute paths and add a relative path to the local file (with ./ on Linux).
 		else
-			cmd.executable = fixExePath( base.rebasePathToRelative( selectedEngine.path ) );
+			cmd.executable = base.rebaseAndQuoteExePath( selectedEngine.path );
 
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.
@@ -3209,11 +3214,23 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	if (ui->noMusicChkBox->isChecked())
 		cmd.arguments << "-nomusic";
 
+	auto appendCustomArguments = [&]( QStringList & args, const QString & customArgsStr )
+	{
+		auto splitArgs = splitCommandLineArguments( customArgsStr );
+		for (const auto & arg : splitArgs)
+		{
+			if (quotePaths && arg.quoted)
+				args << quoted( arg.str );
+			else
+				args << arg.str;
+		}
+	};
+
 	if (!ui->presetCmdArgsLine->text().isEmpty())
-		cmd.arguments << ui->presetCmdArgsLine->text().split( ' ', Qt::SkipEmptyParts );
+		appendCustomArguments( cmd.arguments, ui->presetCmdArgsLine->text() );
 
 	if (!ui->globalCmdArgsLine->text().isEmpty())
-		cmd.arguments << ui->globalCmdArgsLine->text().split( ' ', Qt::SkipEmptyParts );
+		appendCustomArguments( cmd.arguments, ui->globalCmdArgsLine->text() );
 
 	return p.gotSomeInvalidPaths() ? ShellCommand() : cmd;
 }
@@ -3265,6 +3282,8 @@ void MainWindow::launch()
 		engineRunning = false;
 		updateListsFromDirs();
 	});
+
+	//qDebug() << cmd.executable << cmd.arguments;
 
 	if (settings.showEngineOutput)
 	{

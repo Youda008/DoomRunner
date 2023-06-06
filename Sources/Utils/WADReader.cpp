@@ -142,7 +142,7 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 
 		// we need to make sure we have a null-terminated string, because the original one isn't when it's 8 chars long
 		char lumpName0 [9];
-		strncpy( lumpName0, lump.name, sizeof(lump.name) );  // no, g++, this code is correct, lump.name is [8], sizeof(lumpName0) would make it read out of bounds
+		strncpy( lumpName0, lump.name, std::min( sizeof(lumpName0), sizeof(lump.name) ) );
 		lumpName0[8] = '\0';
 		QString lumpName( lumpName0 );
 

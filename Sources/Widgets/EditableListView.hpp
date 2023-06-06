@@ -38,21 +38,6 @@ class EditableListView : public QListView {
 	EditableListView( QWidget * parent );
 	virtual ~EditableListView() override;
 
-	// drag&drop
-	// We support 3 kinds of drag&drop operations, that can be separately enabled/disabled:
-	// 1. intra-widget d&d - drag&drop from inside this widget for manual reordering of items on the list
-	// 2. inter-widget d&d - drag&drop from another widget for moving items between different widgets
-	// 3. external file d&d - drag&drop from directory window for inserting file paths into the list
-
-	/// internal drag&drop for reordering items inside this widget, enabled by default
-	void toggleIntraWidgetDragAndDrop( bool enabled );
-
-	/// internal drag&drop for moving items from other widgets, disabled by default
-	void toggleInterWidgetDragAndDrop( bool enabled );
-
-	/// external drag&drop for moving files from directory window, disabled by default
-	void toggleExternalFileDragAndDrop( bool enabled );
-
 	// editing
 
 	/// Enables/disables editing the item names by double-clicking on them, default is disabled.
@@ -66,6 +51,9 @@ class EditableListView : public QListView {
 
 	/// Closes edit mode for the currently edited and commits the edit data into the model.
 	void stopEditingAndCommit();
+
+	/// Enables/disables actions (context menu entries, key presses) that modify the list (inserting, deleting, reordering)
+	void toggleListModifications( bool enabled );
 
 	// right-click menu
 
@@ -81,6 +69,24 @@ class EditableListView : public QListView {
 	/// Enables adding a named separator line between items of this list view.
 	void enableInsertSeparator();
 
+	/// Enables opening a search bar via a context menu and a key shortcut.
+	void enableFinding();
+
+	// drag&drop
+	// We support 3 kinds of drag&drop operations, that can be separately enabled/disabled:
+	// 1. intra-widget d&d - drag&drop from inside this widget for manual reordering of items on the list
+	// 2. inter-widget d&d - drag&drop from another widget for moving items between different widgets
+	// 3. external file d&d - drag&drop from directory window for inserting file paths into the list
+
+	/// internal drag&drop for reordering items inside this widget, enabled by default
+	void toggleIntraWidgetDragAndDrop( bool enabled );
+
+	/// internal drag&drop for moving items from other widgets, disabled by default
+	void toggleInterWidgetDragAndDrop( bool enabled );
+
+	/// external drag&drop for moving files from directory window, disabled by default
+	void toggleExternalFileDragAndDrop( bool enabled );
+
  public: // members
 
 	// these actions will emit trigger signals when a menu item is clicked or a shortcut is pressed
@@ -91,8 +97,14 @@ class EditableListView : public QListView {
 	QAction * moveDownAction = nullptr;
 	QAction * openFileLocationAction = nullptr;
 	QAction * insertSeparatorAction = nullptr;
+	QAction * findAction = nullptr;
 
  protected: // methods
+
+	// right-click menu
+
+	virtual void contextMenuEvent( QContextMenuEvent * e ) override;
+	QAction * addOwnAction( const QString & text, const QKeySequence & shortcut );
 
 	// drag&drop
 
@@ -119,14 +131,6 @@ class EditableListView : public QListView {
 	virtual void keyPressEvent( QKeyEvent * event ) override;
 	virtual void keyReleaseEvent( QKeyEvent * event ) override;
 
-	// right-click menu
-
-	virtual void contextMenuEvent( QContextMenuEvent * e ) override;
-
-	// misc
-
-	QAction * addOwnAction( const QString & text, const QKeySequence & shortcut );
-
  protected slots:
 
 	void openFileLocation();
@@ -136,18 +140,21 @@ class EditableListView : public QListView {
 	/// emitted either when items are dropped to this view from another widget or just moved within this view itself
 	void itemsDropped( int row, int count );
 
- protected: // members
+ protected: // internal members
+
+	QMenu * contextMenu;
+	ModifierHandler modifierHandler;
+
+ protected: // configuration
+
+	bool allowEditNames;
+	bool allowModifyList;
+
+	bool contextMenuEnabled;
 
 	bool allowIntraWidgetDnD;
 	bool allowInterWidgetDnD;
 	bool allowExternFileDnD;
-	bool allowEditNames;
-
-	ModifierHandler modifierHandler;
-
-	bool contexMenuActive;
-
-	QMenu * contextMenu;
 
 };
 

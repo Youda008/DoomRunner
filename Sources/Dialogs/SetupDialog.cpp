@@ -147,8 +147,12 @@ void SetupDialog::setupEngineList()
 	// give the model our path convertor, it will need it for converting paths dropped from directory
 	engineModel.setPathContext( &pathContext );
 
-	// set drag&drop behaviour
+	// setup editing
+	engineModel.toggleEditing( false );
 	ui->engineListView->toggleNameEditing( false );
+	ui->engineListView->toggleListModifications( true );
+
+	// set drag&drop behaviour
 	ui->engineListView->toggleIntraWidgetDragAndDrop( true );
 	ui->engineListView->toggleInterWidgetDragAndDrop( false );
 	ui->engineListView->toggleExternalFileDragAndDrop( true );
@@ -183,6 +187,7 @@ void SetupDialog::setupIWADList()
 	// setup editing
 	iwadModel.toggleEditing( !iwadSettings.updateFromDir );
 	ui->iwadListView->toggleNameEditing( !iwadSettings.updateFromDir );
+	ui->iwadListView->toggleListModifications( !iwadSettings.updateFromDir );
 
 	// set drag&drop behaviour
 	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadSettings.updateFromDir );
@@ -190,7 +195,7 @@ void SetupDialog::setupIWADList()
 	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );
 
 	// setup reaction to key shortcuts and right click
-	ui->iwadListView->toggleContextMenu( iwadSettings.updateFromDir );
+	ui->iwadListView->toggleContextMenu( true );
 	ui->iwadListView->enableOpenFileLocation();
 	connect( ui->iwadListView->addAction, &QAction::triggered, this, &thisClass::iwadAdd );
 	connect( ui->iwadListView->deleteAction, &QAction::triggered, this, &thisClass::iwadDelete );
@@ -243,7 +248,7 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadListView->toggleIntraWidgetDragAndDrop( !enabled );
 	ui->iwadListView->toggleExternalFileDragAndDrop( !enabled );
 
-	ui->iwadListView->toggleContextMenu( !enabled );
+	ui->iwadListView->toggleListModifications( !enabled );
 
 	// populate the list
 	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is empty

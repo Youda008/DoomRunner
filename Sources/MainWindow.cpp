@@ -488,6 +488,7 @@ void MainWindow::setupPresetList()
 	// setup editing and separators
 	presetModel.toggleEditing( true );
 	ui->presetListView->toggleNameEditing( true );
+	ui->presetListView->toggleListModifications( true );
 
 	// set drag&drop behaviour
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
@@ -573,8 +574,10 @@ void MainWindow::setupModList()
 	// setup item checkboxes
 	modModel.toggleCheckableItems( true );
 
-	// setup separators
+	// setup editing and separators
+	modModel.toggleEditing( false );
 	ui->modListView->toggleNameEditing( true );
+	ui->modListView->toggleListModifications( true );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
 	modModel.setPathContext( &pathContext );

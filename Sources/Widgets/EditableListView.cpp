@@ -49,24 +49,24 @@
 
 EditableListView::EditableListView( QWidget * parent ) : QListView( parent )
 {
+	allowEditNames = false;
+	this->setEditTriggers( QAbstractItemView::NoEditTriggers );
+
+	allowModifyList = false;
+
+	contextMenu = new QMenu( this );  // will be deleted when this QListView (their parent) is deleted
+	addAction = addOwnAction( "Add", { Qt::Key_Insert } );
+	deleteAction = addOwnAction( "Delete", { Qt::Key_Delete } );
+	moveUpAction = addOwnAction( "Move up", { Qt::CTRL + Qt::Key_Up } );  // shut-up clang, this is the official way to do it by Qt doc
+	moveDownAction = addOwnAction( "Move down", { Qt::CTRL + Qt::Key_Down } );
+	contextMenuEnabled = false;
+
 	allowIntraWidgetDnD = true;
 	allowInterWidgetDnD = false;
 	allowExternFileDnD = false;
 	updateDragDropMode();
 	this->setDefaultDropAction( Qt::MoveAction );
 	this->setDropIndicatorShown( true );
-
-	allowEditNames = false;
-	this->setEditTriggers( QAbstractItemView::NoEditTriggers );
-
-	contextMenu = new QMenu( this );  // will be deleted when this QListView (their parent) is deleted
-
-	contexMenuActive = false;
-
-	addAction = addOwnAction( "Add", { Qt::Key_Insert } );
-	deleteAction = addOwnAction( "Delete", { Qt::Key_Delete } );
-	moveUpAction = addOwnAction( "Move up", { Qt::CTRL + Qt::Key_Up } );  // shut-up clang, this is the official way to do it by Qt doc
-	moveDownAction = addOwnAction( "Move down", { Qt::CTRL + Qt::Key_Down } );
 }
 
 QAction * EditableListView::addOwnAction( const QString & text, const QKeySequence & shortcut )
@@ -83,6 +83,124 @@ EditableListView::~EditableListView()
 {
 	// QAction members get deleted as children of this QListView (their parent)
 }
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  editing
+
+void EditableListView::toggleNameEditing( bool enabled )
+{
+	allowEditNames = enabled;
+
+	if (enabled)
+		this->setEditTriggers( QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed );
+	else
+		this->setEditTriggers( QAbstractItemView::NoEditTriggers );
+}
+
+bool EditableListView::isEditModeOpen() const
+{
+	return this->state() == QAbstractItemView::EditingState;
+}
+
+bool EditableListView::startEditingCurrentItem()
+{
+	this->edit( this->currentIndex() );
+	return isEditModeOpen();
+}
+
+void EditableListView::stopEditingAndCommit()
+{
+	// yet another idiotic workaround because Qt is fucking dumb
+	//
+	// Qt does not give us access to the editor and does not allow us to manually close it or commit the data of it.
+	// But when the current index is changed, it is done automatically. So we change the current index to some nonsense
+	// and then restore it back, and Qt will do it for us for a bit of extra overhead.
+
+	QModelIndex currentIndex = this->currentIndex();
+	this->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
+	this->selectionModel()->setCurrentIndex( currentIndex, QItemSelectionModel::NoUpdate );
+}
+
+void EditableListView::toggleListModifications( bool enabled )
+{
+	allowModifyList = enabled;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  right-click menu
+
+void EditableListView::toggleContextMenu( bool enabled )
+{
+	contextMenuEnabled = enabled;
+}
+
+void EditableListView::enableItemCloning()
+{
+	cloneAction = addOwnAction( "Clone", { Qt::CTRL + Qt::Key_C } );
+}
+
+void EditableListView::enableOpenFileLocation()
+{
+	openFileLocationAction = addOwnAction( "Open file location", {} );
+	connect( openFileLocationAction, &QAction::triggered, this, &thisClass::openFileLocation );
+}
+
+void EditableListView::enableInsertSeparator()
+{
+	insertSeparatorAction = addOwnAction( "Insert separator", {} );
+}
+
+void EditableListView::enableFinding()
+{
+	findAction = addOwnAction( "Find", QKeySequence::Find );
+}
+
+void EditableListView::contextMenuEvent( QContextMenuEvent * event )
+{
+	QModelIndex clickedItemIndex = this->indexAt( event->pos() );
+
+	if (!contextMenuEnabled)
+		return;
+
+	if (addAction)
+		addAction->setEnabled( allowModifyList );
+	if (deleteAction)
+		deleteAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (cloneAction)
+		cloneAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (moveUpAction)
+		moveUpAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (moveDownAction)
+		moveDownAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (openFileLocationAction)
+		openFileLocationAction->setEnabled( clickedItemIndex.isValid() );
+	if (insertSeparatorAction)
+		insertSeparatorAction->setEnabled( allowModifyList );
+	if (findAction)
+		findAction->setEnabled( true );
+
+	contextMenu->popup( event->globalPos() );
+}
+
+void EditableListView::openFileLocation()
+{
+	QModelIndex currentIdx = selectionModel()->currentIndex();
+	if (!currentIdx.isValid())
+	{
+		QMessageBox::warning( this->parentWidget(), "No item chosen", "You did not click on any file." );
+		return;
+	}
+
+	QString filePath = model()->data( currentIdx, Qt::UserRole ).toString();
+
+	if (!::openFileLocation( filePath ))
+	{
+		QMessageBox::warning( this->parentWidget(), "Error opening directory", "Unknown error prevented opening a directory." );
+	}
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  drag&drop
@@ -238,43 +356,6 @@ void EditableListView::itemsDropped()
 	}
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-//  name editing
-
-void EditableListView::toggleNameEditing( bool enabled )
-{
-	allowEditNames = enabled;
-
-	if (enabled)
-		this->setEditTriggers( QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed );
-	else
-		this->setEditTriggers( QAbstractItemView::NoEditTriggers );
-}
-
-bool EditableListView::isEditModeOpen() const
-{
-	return this->state() == QAbstractItemView::EditingState;
-}
-
-bool EditableListView::startEditingCurrentItem()
-{
-	this->edit( this->currentIndex() );
-	return isEditModeOpen();
-}
-
-void EditableListView::stopEditingAndCommit()
-{
-	// yet another idiotic workaround because Qt is fucking dumb
-	//
-	// Qt does not give us access to the editor and does not allow us to manually close it or commit the data of it.
-	// But when the current index is changed, it is done automatically. So we change the current index to some nonsense
-	// and then restore it back, and Qt will do it for us for a bit of extra overhead.
-
-	QModelIndex currentIndex = this->currentIndex();
-	this->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
-	this->selectionModel()->setCurrentIndex( currentIndex, QItemSelectionModel::NoUpdate );
-}
-
 
 //----------------------------------------------------------------------------------------------------------------------
 //  keyboard control
@@ -326,67 +407,4 @@ void EditableListView::keyReleaseEvent( QKeyEvent * event )
 	}
 
 	superClass::keyReleaseEvent( event );
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//  right-click menu
-
-void EditableListView::toggleContextMenu( bool enabled )
-{
-	contexMenuActive = enabled;
-}
-
-void EditableListView::enableItemCloning()
-{
-	cloneAction = addOwnAction( "Clone", { Qt::CTRL + Qt::Key_C } );
-}
-
-void EditableListView::enableOpenFileLocation()
-{
-	openFileLocationAction = addOwnAction( "Open file location", {} );
-	connect( openFileLocationAction, &QAction::triggered, this, &thisClass::openFileLocation );
-}
-
-void EditableListView::enableInsertSeparator()
-{
-	insertSeparatorAction = addOwnAction( "Insert separator", {} );
-}
-
-void EditableListView::contextMenuEvent( QContextMenuEvent * event )
-{
-	QModelIndex eventIndex = this->indexAt( event->pos() );
-
-	if (addAction)
-		addAction->setEnabled( contexMenuActive );
-	if (deleteAction)
-		deleteAction->setEnabled( contexMenuActive && eventIndex.isValid() );
-	if (cloneAction)
-		cloneAction->setEnabled( contexMenuActive && eventIndex.isValid() );
-	if (moveUpAction)
-		moveUpAction->setEnabled( contexMenuActive && eventIndex.isValid() );
-	if (moveDownAction)
-		moveDownAction->setEnabled( contexMenuActive && eventIndex.isValid() );
-	if (openFileLocationAction)
-		openFileLocationAction->setEnabled( eventIndex.isValid() );
-	if (insertSeparatorAction)
-		insertSeparatorAction->setEnabled( contexMenuActive );
-
-	contextMenu->popup( event->globalPos() );
-}
-
-void EditableListView::openFileLocation()
-{
-	QModelIndex currentIdx = selectionModel()->currentIndex();
-	if (!currentIdx.isValid())
-	{
-		QMessageBox::warning( this->parentWidget(), "No item chosen", "You did not click on any file." );
-		return;
-	}
-
-	QString filePath = model()->data( currentIdx, Qt::UserRole ).toString();
-
-	if (!::openFileLocation( filePath ))
-	{
-		QMessageBox::warning( this->parentWidget(), "Error opening directory", "Unknown error prevented opening a directory." );
-	}
 }

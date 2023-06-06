@@ -420,7 +420,7 @@ MainWindow::MainWindow()
 	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &thisClass::modeReplayDemo );
 
 	// mutiplayer
-	connect( ui->multiplayerChkBox, &QCheckBox::toggled, this, &thisClass::toggleMultiplayer );
+	connect( ui->multiplayerGrpBox, &QGroupBox::toggled, this, &thisClass::toggleMultiplayer );
 	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMultRole );
 	connect( ui->hostnameLine, &QLineEdit::textChanged, this, &thisClass::changeHost );
 	connect( ui->portSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changePort );
@@ -1580,9 +1580,9 @@ void MainWindow::modeDefault()
 	ui->demoFileCmbBox_replay->setEnabled( false );
 
 	toggleSkillSubwidgets( false );
-	toggleOptionsSubwidgets( true && !ui->multiplayerChkBox->isChecked() );
+	toggleOptionsSubwidgets( !ui->multiplayerGrpBox->isChecked() );
 
-	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Server)
+	if (ui->multiplayerGrpBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Server)
 	{
 		ui->multRoleCmbBox->setCurrentIndex( Client );   // only client can use default launch mode
 	}
@@ -1603,7 +1603,7 @@ void MainWindow::modeLaunchMap()
 	toggleSkillSubwidgets( true );
 	toggleOptionsSubwidgets( true );
 
-	if (ui->multiplayerChkBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Client)
+	if (ui->multiplayerGrpBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Client)
 	{
 		ui->multRoleCmbBox->setCurrentIndex( Server );   // only server can select a map
 	}
@@ -1656,7 +1656,7 @@ void MainWindow::modeReplayDemo()
 	toggleSkillSubwidgets( false );
 	toggleOptionsSubwidgets( false );
 
-	ui->multiplayerChkBox->setChecked( false );   // no multiplayer when replaying demo
+	ui->multiplayerGrpBox->setChecked( false );   // no multiplayer when replaying demo
 
 	updateLaunchCommand();
 }
@@ -1832,13 +1832,11 @@ void MainWindow::toggleMultiplayer( bool checked )
 	{
 		if (launchMode == LaunchMap && multRole == Client)  // client doesn't select map, server does
 		{
-			ui->launchMode_default->click();
-			launchMode = Default;
+			ui->multRoleCmbBox->setCurrentIndex( Server );
 		}
-		if (launchMode == Default && multRole == Server)  // server MUST choose a map
+		if (launchMode == Default && multRole == Server)  // server cannot start as default, only client can
 		{
-			ui->launchMode_map->click();
-			launchMode = LaunchMap;
+			ui->multRoleCmbBox->setCurrentIndex( Client );
 		}
 		if (launchMode == ReplayDemo)  // can't replay demo in multiplayer
 		{
@@ -1858,7 +1856,7 @@ void MainWindow::selectMultRole( int role )
 {
 	STORE_MULT_OPTION( multRole, MultRole( role ) )
 
-	bool multEnabled = ui->multiplayerChkBox->isChecked();
+	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
 	bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
 	bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
@@ -1910,7 +1908,7 @@ void MainWindow::selectGameMode( int gameMode )
 {
 	STORE_MULT_OPTION( gameMode, GameMode( gameMode ) )
 
-	bool multEnabled = ui->multiplayerChkBox->isChecked();
+	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
 	bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
@@ -2874,7 +2872,7 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 	}
 
 	// multiplayer
-	ui->multiplayerChkBox->setChecked( multOpts.isMultiplayer );
+	ui->multiplayerGrpBox->setChecked( multOpts.isMultiplayer );
 	ui->multRoleCmbBox->setCurrentIndex( int( multOpts.multRole ) );
 	ui->hostnameLine->setText( multOpts.hostName );
 	ui->portSpinBox->setValue( multOpts.port );
@@ -3213,7 +3211,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	if (ui->allowCheatsChkBox->isChecked())
 		cmd.arguments << "+sv_cheats" << "1";
 
-	if (ui->multiplayerChkBox->isChecked())
+	if (ui->multiplayerGrpBox->isChecked())
 	{
 		switch (ui->multRoleCmbBox->currentIndex())
 		{

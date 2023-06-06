@@ -1036,14 +1036,10 @@
             <property name="title">
              <string>Multiplayer [storage configurable]</string>
             </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
             <layout class="QVBoxLayout" name="verticalLayout_21">
-             <item>
-              <widget class="QCheckBox" name="multiplayerChkBox">
-               <property name="text">
-                <string>Multiplayer game</string>
-               </property>
-              </widget>
-             </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_33">
                <item>

@@ -88,6 +88,9 @@ class DropTarget {
 //======================================================================================================================
 //  support structs
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"  // std::optional sometimes makes false positive warnings
+
 /** Each item of ReadOnlyListModel must inherit from this struct to satisfy the requirements of the model.
   * The following methods should be overriden to point to the appropriate members. */
 struct ReadOnlyListModelItem
@@ -104,6 +107,8 @@ struct ReadOnlyListModelItem
 		);
 	}
 };
+
+#pragma GCC diagnostic pop
 
 /** Each item of EditableListModel must inherit from this struct to satisfy the requirements of the model.
   * The following methods should be overriden to point to the appropriate members. */

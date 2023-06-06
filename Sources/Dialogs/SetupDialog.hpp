@@ -105,9 +105,9 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 
  public: // return values from this dialog
 
-	EditableListModel< Engine > engineModel;
+	EditableDirectListModel< Engine > engineModel;
 
-	EditableListModel< IWAD > iwadModel;
+	EditableDirectListModel< IWAD > iwadModel;
 	IwadSettings iwadSettings;
 
 	MapSettings mapSettings;

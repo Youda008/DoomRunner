@@ -43,6 +43,57 @@
                 </widget>
                </item>
                <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_34">
+                 <item>
+                  <widget class="QToolButton" name="searchShowBtn">
+                   <property name="toolTip">
+                    <string>show/hide search bar</string>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>9</width>
+                     <height>8</height>
+                    </size>
+                   </property>
+                   <property name="arrowType">
+                    <enum>Qt::DownArrow</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="searchLabel">
+                   <property name="text">
+                    <string>Search</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="searchLine"/>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_36">
+                 <item>
+                  <widget class="QCheckBox" name="caseSensitiveChkBox">
+                   <property name="text">
+                    <string>case sensitive</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="regexChkBox">
+                   <property name="toolTip">
+                    <string>regular expression</string>
+                   </property>
+                   <property name="text">
+                    <string>reg. exp.</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_3">
                  <item>
                   <widget class="QToolButton" name="presetBtnAdd">

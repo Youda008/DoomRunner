@@ -399,7 +399,7 @@ void SetupDialog::editCurrentEngine()
 
 void SetupDialog::updateIWADsFromDir()
 {
-	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
+	updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
 }
 
 void SetupDialog::toggleAbsolutePaths( bool checked )

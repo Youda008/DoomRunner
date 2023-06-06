@@ -508,6 +508,12 @@ void MainWindow::setupPresetList()
 	connect( ui->presetListView->moveUpAction, &QAction::triggered, this, &thisClass::presetMoveUp );
 	connect( ui->presetListView->moveDownAction, &QAction::triggered, this, &thisClass::presetMoveDown );
 	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::presetInsertSeparator );
+
+	// setup search
+	presetSearchPanel = new SearchPanel( ui->searchShowBtn, ui->searchLine, ui->caseSensitiveChkBox, ui->regexChkBox );
+	ui->presetListView->enableFinding();
+	connect( ui->presetListView->findAction, &QAction::triggered, presetSearchPanel, &SearchPanel::expand );
+	connect( presetSearchPanel, &SearchPanel::searchParamsChanged, this, &thisClass::searchPresets );
 }
 
 void MainWindow::setupIWADList()
@@ -623,6 +629,8 @@ void MainWindow::onWindowShown()
 {
 	// In the constructor, some properties of the window are not yet initialized, like window dimensions,
 	// so we have to do this here, when the window is already fully loaded.
+
+	presetSearchPanel->collapse();  // hide it by default, it's shown on startup
 
 	// create a directory for application data, if it doesn't exist already
 	appDataDir.setPath( getThisAppDataDir() );
@@ -1316,6 +1324,64 @@ void MainWindow::presetInsertSeparator()
 
 	// open edit mode so that user can name the preset
 	editItemAtIndex( ui->presetListView, insertIdx );
+}
+
+void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool useRegex )
+{
+	if (phrase.length() > 0)
+	{
+		// remember which preset was selected before the search results were shown
+		if (isSomethingSelected( ui->presetListView ))
+		{
+			selectedPresetBeforeSearch = getSelectedItemID( ui->presetListView, presetModel );
+		}
+
+		// filter the model data
+		presetModel.startCompleteUpdate();
+		presetModel.search( phrase, caseSensitive, useRegex );
+		presetModel.finishCompleteUpdate();
+
+		// try to re-select the same preset as before
+		if (!selectedPresetBeforeSearch.isEmpty())
+		{
+			selectItemByID( ui->presetListView, presetModel, selectedPresetBeforeSearch );
+		}
+
+		// disable UI actions that are not allowed in a filtered list
+		ui->presetBtnAdd->setEnabled( false );
+		ui->presetBtnClone->setEnabled( false );
+		ui->presetBtnUp->setEnabled( false );
+		ui->presetBtnDown->setEnabled( false );
+		ui->presetListView->toggleListModifications( false );
+		ui->presetListView->toggleIntraWidgetDragAndDrop( false );
+	}
+	else
+	{
+		// remember which preset was selected before the search results were deleted
+		if (isSomethingSelected( ui->presetListView ))
+		{
+			selectedPresetBeforeSearch = getSelectedItemID( ui->presetListView, presetModel );
+		}
+
+		// restore the model data
+		presetModel.startCompleteUpdate();
+		presetModel.restore();
+		presetModel.finishCompleteUpdate();
+
+		// try to re-select the same preset as before
+		if (!selectedPresetBeforeSearch.isEmpty())
+		{
+			selectItemByID( ui->presetListView, presetModel, selectedPresetBeforeSearch );
+		}
+
+		// re-enable all UI actions
+		ui->presetBtnAdd->setEnabled( true );
+		ui->presetBtnClone->setEnabled( true );
+		ui->presetBtnUp->setEnabled( true );
+		ui->presetBtnDown->setEnabled( true );
+		ui->presetListView->toggleListModifications( true );
+		ui->presetListView->toggleIntraWidgetDragAndDrop( true );
+	}
 }
 
 
@@ -2122,7 +2188,7 @@ void MainWindow::updateIWADsFromDir()
 	// workaround (read the big comment above)
 	disableSelectionCallbacks = true;
 
-	updateListFromDir< IWAD >( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
+	updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
 
 	disableSelectionCallbacks = false;
 
@@ -2352,7 +2418,7 @@ bool MainWindow::saveOptions( const QString & filePath )
 		globalOpts,
 
 		// presets
-		presetModel.list(),
+		presetModel.fullList(),
 		getSelectedItemIndex( ui->presetListView ),
 
 		// global settings

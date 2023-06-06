@@ -11,6 +11,7 @@
 
 #include "Common.hpp"
 
+#include "Utils/LangUtils.hpp"  // PointerIterator
 #include "Utils/FileSystemUtils.hpp"  // PathContext
 
 #include <QAbstractListModel>
@@ -19,6 +20,7 @@
 #include <QMimeData>
 #include <QUrl>
 #include <QFileInfo>
+#include <QRegularExpression>
 #include <QColor>
 #include <QBrush>
 
@@ -95,7 +97,7 @@ struct ReadOnlyListModelItem
 
 	const QString & getFilePath() const
 	{
-		throw std::runtime_error(
+		throw std::logic_error(
 			"File path has been requested, but getting Item's file path is not implemented. "
 			"Either re-implement getFilePath() or disable actions requiring path in the view."
 		);
@@ -108,7 +110,7 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 {
 	const QString & getEditString() const
 	{
-		throw std::runtime_error(
+		throw std::logic_error(
 			"Edit has been requested, but editing this Item is not implemented. "
 			"Either re-implement getEditString() or disable editing in the view."
 		);
@@ -116,7 +118,7 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 
 	void setEditString( const QString & /*str*/ )
 	{
-		throw std::runtime_error(
+		throw std::logic_error(
 			"Edit has been requested, but editing this Item is not implemented. "
 			"Either re-implement setEditString() or disable editing in the view."
 		);
@@ -124,7 +126,7 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 
 	bool isChecked() const
 	{
-		throw std::runtime_error(
+		throw std::logic_error(
 			"Check state has been requested, but checking this Item is not implemented. "
 			"Either re-implement isChecked() or disable checkable items in the view."
 		);
@@ -132,7 +134,7 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 
 	void setChecked( bool /*checked*/ ) const
 	{
-		throw std::runtime_error(
+		throw std::logic_error(
 			"Check state has been requested, but checking this Item is not implemented. "
 			"Either re-implement setChecked() or disable checkable items in the view."
 		);
@@ -141,47 +143,229 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 
 
 //======================================================================================================================
-/** Abstract wrapper around list of arbitrary objects, mediating their content to UI view elements. */
+/// TODO
 
-template< typename Item >
-class AListModel : public QAbstractListModel {
+template< typename Item_ >
+class DirectList {
 
- protected:
-
-	QList< Item > itemList;
+	QList< Item_ > _list;
 
  public:
 
-	AListModel() {}
-	AListModel( const QList< Item > & itemList ) : itemList( itemList ) {}
+	using Item = Item_;
+
+	DirectList() {}
+	DirectList( const QList< Item > & itemList ) : _list( itemList ) {}
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
-	QList< Item > & list()                        { return itemList; }
-	const QList< Item > & list() const            { return itemList; }
-	void updateList( const QList< Item > & list ) { itemList = list; }
-	void assignList( QList< Item > && list )      { itemList = std::move(list); }
+	auto & list()                                 { return _list; }
+	const auto & list() const                     { return _list; }
+	void updateList( const QList< Item > & list ) { _list = list; }
+	void assignList( QList< Item > && list )      { _list = std::move(list); }
 
-	int count() const                             { return itemList.count(); }
-	int size() const                              { return itemList.size(); }
-	bool isEmpty() const                          { return itemList.isEmpty(); }
-	Item & operator[]( int idx )                  { return itemList[ idx ]; }
-	const Item & operator[]( int idx ) const      { return itemList[ idx ]; }
-	decltype( itemList.begin() ) begin()          { return itemList.begin(); }
-	decltype( itemList.cbegin() ) begin() const   { return itemList.begin(); }
-	decltype( itemList.end() ) end()              { return itemList.end(); }
-	decltype( itemList.cend() ) end() const       { return itemList.end(); }
-	Item & first()                                { return itemList.first(); }
-	const Item & first() const                    { return itemList.first(); }
-	Item & last()                                 { return itemList.last(); }
-	const Item & last() const                     { return itemList.last(); }
-	void clear()                                  { itemList.clear(); }
-	void append( const Item & item )              { itemList.append( item ); }
-	void prepend( const Item & item )             { itemList.prepend( item ); }
-	void insert( int idx, const Item & item )     { itemList.insert( idx, item ); }
-	void removeAt( int idx )                      { itemList.removeAt( idx ); }
-	void move( int from, int to )                 { itemList.move( from, to ); }
-	int indexOf( const Item & item ) const        { return itemList.indexOf( item ); }
+	// content access
+
+	using iterator = decltype( _list.begin() );
+	using const_iterator = decltype( _list.cbegin() );
+
+	auto count() const                            { return _list.count(); }
+	auto size() const                             { return _list.size(); }
+	auto isEmpty() const                          { return _list.isEmpty(); }
+	auto & operator[]( int idx )                  { return _list[ idx ]; }
+	const auto & operator[]( int idx ) const      { return _list[ idx ]; }
+	iterator begin()                              { return _list.begin(); }
+	const_iterator begin() const                  { return _list.begin(); }
+	iterator end()                                { return _list.end(); }
+	const_iterator end() const                    { return _list.end(); }
+	auto & first()                                { return _list.first(); }
+	const auto & first() const                    { return _list.first(); }
+	auto & last()                                 { return _list.last(); }
+	const auto & last() const                     { return _list.last(); }
+	auto indexOf( const Item & item ) const       { return _list.indexOf( item ); }
+
+	// list modification
+
+	void clear()                                  { _list.clear(); }
+	void append( const Item & item )              { _list.append( item ); }
+	void prepend( const Item & item )             { _list.prepend( item ); }
+	void insert( int idx, const Item & item )     { _list.insert( idx, item ); }
+	void removeAt( int idx )                      { _list.removeAt( idx ); }
+	void move( int from, int to )                 { _list.move( from, to ); }
+
+	//-- special -------------------------------------------------------------------------------------------------------
+
+	/// Whether the list modification functions can be safely called.
+	bool canBeModified() const { return true; }
+
+};
+
+
+//======================================================================================================================
+/// TODO
+
+template< typename Item_ >
+class FilteredList {
+
+	QList< Item_ > _fullList;
+	QVector< Item_ * > _filteredList;
+
+ public:
+
+	using Item = Item_;
+
+	FilteredList() {}
+	FilteredList( const QList< Item > & itemList ) : _fullList( itemList ) { restore(); }
+
+	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
+
+	auto & fullList()                             { return _fullList; }
+	const auto & fullList() const                 { return _fullList; }
+	auto & filteredList()                         { return _filteredList; }
+	const auto & filteredList() const             { return _filteredList; }
+	void updateList( const QList< Item > & list ) { _fullList = list; restore(); }
+	void assignList( QList< Item > && list )      { _fullList = std::move(list); restore(); }
+
+	// content access
+
+	using iterator = PointerIterator< decltype( _filteredList.begin() ) >;
+	using const_iterator = PointerIterator< decltype( _filteredList.cbegin() ) >;
+
+	auto count() const                            { return _filteredList.count(); }
+	auto size() const                             { return _filteredList.size(); }
+	auto isEmpty() const                          { return _filteredList.isEmpty(); }
+	auto & operator[]( int idx )                  { return *_filteredList[ idx ]; }
+	const auto & operator[]( int idx ) const      { return *_filteredList[ idx ]; }
+	iterator begin()                              { return PointerIterator( _filteredList.begin() ); }
+	const_iterator begin() const                  { return PointerIterator( _filteredList.begin() ); }
+	iterator end()                                { return PointerIterator( _filteredList.end() ); }
+	const_iterator end() const                    { return PointerIterator( _filteredList.end() ); }
+	auto & first()                                { return *_filteredList.first(); }
+	const auto & first() const                    { return *_filteredList.first(); }
+	auto & last()                                 { return *_filteredList.last(); }
+	const auto & last() const                     { return *_filteredList.last(); }
+	auto indexOf( const Item & item ) const       { return _filteredList.indexOf( &item ); }
+
+	// list modification - only when the list is not filtered
+
+	void clear()
+	{
+		ensureCanBeModified();
+		_filteredList.clear();
+		_fullList.clear();
+	}
+
+	void append( const Item & item )
+	{
+		ensureCanBeModified();
+		_fullList.append( item );
+		_filteredList.append( &_fullList.last() );
+	}
+
+	void prepend( const Item & item )
+	{
+		ensureCanBeModified();
+		_fullList.prepend( item );
+		_filteredList.prepend( &_fullList.first() );
+	}
+
+	void insert( int idx, const Item & item )
+	{
+		ensureCanBeModified();
+		_fullList.insert( idx, item );
+		_filteredList.insert( idx, &_fullList[ idx ] );
+	}
+
+	void removeAt( int idx )
+	{
+		if (!isFiltered())
+		{
+			_fullList.removeAt( idx );
+			_filteredList.removeAt( idx );
+		}
+		else
+		{
+			// can be allowed for filtered list, but the fullList entry needs to be found and deleted too
+			auto * ptr = _filteredList.takeAt( idx );
+			for (int i = 0; i < _fullList.size(); ++i)
+				if (&_fullList[i] == ptr)
+					_fullList.removeAt( i );
+		}
+	}
+
+	void move( int from, int to )
+	{
+		ensureCanBeModified();
+		_fullList.move( from, to );
+		_filteredList.move( from, to );
+	}
+
+	//-- searching/filtering -------------------------------------------------------------------------------------------
+
+	/// Filters the list model entries to display only those that match a given criteria.
+	void search( const QString & phrase, bool caseSensitive, bool useRegex )
+	{
+		_filteredList.clear();
+
+		if (useRegex)
+		{
+			QRegularExpression regex( phrase );
+			for (auto & item : _fullList)
+				if (!item.isSeparator && regex.isValid() && regex.match( item.getEditString() ).hasMatch())
+					_filteredList.append( &item );
+		}
+		else
+		{
+			Qt::CaseSensitivity caseSensitivity = caseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
+			for (auto & item : _fullList)
+				if (!item.isSeparator && item.getEditString().contains( phrase, caseSensitivity ))
+					_filteredList.append( &item );
+		}
+	}
+
+	/// Restores the list model to display the full unfiltered content.
+	void restore()
+	{
+		_filteredList.clear();
+		for (auto & item : _fullList)
+			_filteredList.append( &item );
+	}
+
+	/// Whether the list is currently filtered or showing the full content.
+	bool isFiltered() const
+	{
+		return _filteredList.size() != _fullList.size();
+	}
+
+	//-- special -------------------------------------------------------------------------------------------------------
+
+	/// Whether the list modification functions can be safely called.
+	/** This list cannot be modified when it is filtered. */
+	bool canBeModified() const
+	{
+		return !isFiltered();
+	}
+
+ protected:
+
+	void ensureCanBeModified()
+	{
+		if (!canBeModified())
+		{
+			qCritical() << "the list cannot be modified when it is filtered";
+			throw std::logic_error("the list cannot be modified when it is filtered");
+		}
+	}
+
+};
+
+
+//======================================================================================================================
+/// Common functionality of all our list models.
+
+class ListModelCommon : public QAbstractListModel {
+
+ public:
 
 	//-- data change notifications -------------------------------------------------------------------------------------
 
@@ -189,7 +373,7 @@ class AListModel : public QAbstractListModel {
 	void contentChanged( int changedRowsBegin, int changedRowsEnd = -1 )
 	{
 		if (changedRowsEnd < 0)
-			changedRowsEnd = itemList.size();
+			changedRowsEnd = this->rowCount();
 
 		const QModelIndex firstChangedIndex = createIndex( changedRowsBegin, /*column*/0 );
 		const QModelIndex lastChangedIndex = createIndex( changedRowsEnd - 1, /*column*/0 );
@@ -214,7 +398,7 @@ class AListModel : public QAbstractListModel {
 
 	void startAppending( int count = 1 )
 	{
-		beginInsertRows( QModelIndex(), itemList.size(), itemList.size() + count - 1 );
+		beginInsertRows( QModelIndex(), this->rowCount(), this->rowCount() + count - 1 );
 	}
 	void finishAppending()
 	{
@@ -248,13 +432,6 @@ class AListModel : public QAbstractListModel {
 		endResetModel();
 	}
 
-	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
-
-	virtual int rowCount( const QModelIndex & = QModelIndex() ) const override
-	{
-		return itemList.size();
-	}
-
 	//-- miscellaneous -------------------------------------------------------------------------------------------------
 
 	QModelIndex makeIndex( int row )
@@ -266,12 +443,14 @@ class AListModel : public QAbstractListModel {
 
 
 //======================================================================================================================
-/** Wrapper around list of arbitrary objects, mediating their content to UI view elements with read-only access. */
+/// Wrapper around list of arbitrary objects, mediating their content to UI view elements with read-only access.
 
-template< typename Item >  // must be a subclass of ReadOnlyListModelItem
-class ReadOnlyListModel : public AListModel< Item > {
+template< typename ListImpl >  // ListImpl::Item must be a subclass of ReadOnlyListModelItem
+class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 
-	using superClass = AListModel< Item >;
+ public:
+
+	using Item = typename ListImpl::Item;
 
  protected:
 
@@ -287,10 +466,10 @@ class ReadOnlyListModel : public AListModel< Item > {
  public:
 
 	ReadOnlyListModel( std::function< QString ( const Item & ) > makeDisplayString )
-		: AListModel< Item >(), makeDisplayString( makeDisplayString ) {}
+		: ListImpl(), makeDisplayString( makeDisplayString ) {}
 
 	ReadOnlyListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
-		: AListModel< Item >( itemList ), makeDisplayString( makeDisplayString ) {}
+		: ListImpl( itemList ), makeDisplayString( makeDisplayString ) {}
 
 	void setDisplayStringFunc( std::function< QString ( const Item & ) > makeDisplayString )
 		{ this->makeDisplayString = makeDisplayString; }
@@ -298,12 +477,19 @@ class ReadOnlyListModel : public AListModel< Item > {
 	void setSeparatorColor( QColor foreground, QColor background )
 		{ separatorForeground = foreground; separatorBackground = background; }
 
+	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
+
+	virtual int rowCount( const QModelIndex & = QModelIndex() ) const override
+	{
+		return this->size();
+	}
+
 	QVariant data( const QModelIndex & index, int role ) const override
 	{
-		if (!index.isValid() || index.row() >= superClass::itemList.size())
+		if (!index.isValid() || index.row() >= this->size())
 			return QVariant();
 
-		const Item & item = superClass::itemList[ index.row() ];
+		const Item & item = (*this)[ index.row() ];
 
 		try
 		{
@@ -347,7 +533,7 @@ class ReadOnlyListModel : public AListModel< Item > {
 				return QVariant();
 			}
 		}
-		catch (const std::runtime_error & e)
+		catch (const std::logic_error & e)
 		{
 			qWarning() << e.what();
 			return QVariant();
@@ -358,13 +544,15 @@ class ReadOnlyListModel : public AListModel< Item > {
 
 
 //======================================================================================================================
-/** Wrapper around list of arbitrary objects, mediating their names to UI view elements.
-  * Supports in-place editing, internal drag&drop reordering, and external file drag&drops. */
+/// Wrapper around list of arbitrary objects, mediating their names to UI view elements.
+/** Supports in-place editing, internal drag&drop reordering, and external file drag&drops. */
 
-template< typename Item >  // must be a subclass of EditableListModelItem
-class EditableListModel : public AListModel< Item >, public DropTarget {
+template< typename ListImpl >  // ListImpl::Item must be a subclass of EditableListModelItem
+class EditableListModel : public ListModelCommon, public ListImpl, public DropTarget {
 
-	using superClass = AListModel< Item >;
+ public:
+
+	using Item = typename ListImpl::Item;
 
  protected:
 
@@ -389,10 +577,10 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
  public:
 
 	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString )
-		: AListModel< Item >(), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
+		: ListImpl(), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
 
 	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
-		: AListModel< Item >( itemList ), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
+		: ListImpl( itemList ), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
 
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
@@ -413,14 +601,19 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
+	virtual int rowCount( const QModelIndex & = QModelIndex() ) const override
+	{
+		return this->size();
+	}
+
 	virtual Qt::ItemFlags flags( const QModelIndex & index ) const override
 	{
 		if (!index.isValid())
 			return Qt::ItemIsDropEnabled;  // otherwise you can't append dragged items to the end of the list
 
-		const Item & item = superClass::itemList[ index.row() ];
+		const Item & item = (*this)[ index.row() ];
 
-		Qt::ItemFlags flags = QAbstractListModel::flags(index);
+		Qt::ItemFlags flags = QAbstractListModel::flags( index );
 
 		flags |= Qt::ItemIsDragEnabled;
 		if (editingEnabled || item.isSeparator)
@@ -433,10 +626,10 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	virtual QVariant data( const QModelIndex & index, int role ) const override
 	{
-		if (!index.isValid() || index.parent().isValid() || index.row() >= superClass::itemList.size())
+		if (!index.isValid() || index.parent().isValid() || index.row() >= this->size())
 			return QVariant();
 
-		const Item & item = superClass::itemList[ index.row() ];
+		const Item & item = (*this)[ index.row() ];
 
 		try
 		{
@@ -488,7 +681,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 				return QVariant();
 			}
 		}
-		catch (const std::runtime_error & e)
+		catch (const std::logic_error & e)
 		{
 			qWarning() << e.what();
 			return QVariant();
@@ -497,23 +690,23 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	virtual bool setData( const QModelIndex & index, const QVariant & value, int role ) override
 	{
-		if (index.parent().isValid() || !index.isValid() || index.row() >= superClass::itemList.size())
+		if (index.parent().isValid() || !index.isValid() || index.row() >= this->size())
 			return false;
 
-		Item & item = superClass::itemList[ index.row() ];
+		Item & item = (*this)[ index.row() ];
 
 		try
 		{
 			if (role == Qt::EditRole && (editingEnabled || item.isSeparator))
 			{
 				item.setEditString( value.toString() );
-				emit superClass::dataChanged( index, index, {Qt::EditRole} );
+				emit QAbstractListModel::dataChanged( index, index, {Qt::EditRole} );
 				return true;
 			}
 			else if (role == Qt::CheckStateRole && checkableItems)
 			{
 				item.setChecked( value == Qt::Checked ? true : false );
-				emit superClass::dataChanged( index, index, {Qt::CheckStateRole} );
+				emit QAbstractListModel::dataChanged( index, index, {Qt::CheckStateRole} );
 				return true;
 			}
 			else
@@ -521,7 +714,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 				return false;
 			}
 		}
-		catch (const std::runtime_error & e)
+		catch (const std::logic_error & e)
 		{
 			qWarning() << e.what();
 			return false;
@@ -530,15 +723,21 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	virtual bool insertRows( int row, int count, const QModelIndex & parent ) override
 	{
-		if (parent.isValid())
+		if (parent.isValid() || row < 0)
 			return false;
+
+		if (!this->canBeModified())
+		{
+			qWarning() << "Cannot insertRows into this model now. It should have been restricted by the ListView.";
+			return false;
+		}
 
 		QAbstractListModel::beginInsertRows( parent, row, row + count - 1 );
 
 		// n times moving all the elements forward to insert one is not nice
 		// but it happens only once in awhile and the number of elements is almost always very low
 		for (int i = 0; i < count; i++)
-			superClass::itemList.insert( row + i, Item() );
+			this->insert( row + i, Item() );
 
 		QAbstractListModel::endInsertRows();
 
@@ -547,8 +746,14 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 
 	virtual bool removeRows( int row, int count, const QModelIndex & parent ) override
 	{
-		if (parent.isValid() || row < 0 || row + count > superClass::itemList.size())
+		if (parent.isValid() || row < 0 || row + count > this->size())
 			return false;
+
+		if (!this->canBeModified())
+		{
+			qWarning() << "Cannot removeRows from this model now. It should have been restricted by the ListView.";
+			return false;
+		}
 
 		QAbstractListModel::beginRemoveRows( parent, row, row + count - 1 );
 
@@ -556,7 +761,7 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		// but it happens only once in awhile and the number of elements is almost always very low
 		for (int i = 0; i < count; i++)
 		{
-			superClass::itemList.removeAt( row );
+			this->removeAt( row );
 			if (row < DropTarget::droppedRow())  // we are removing a row that is before the target row
 				DropTarget::decrementRow();      // so target row's index is moving backwards
 		}
@@ -615,8 +820,14 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 	virtual bool dropMimeData( const QMimeData * mime, Qt::DropAction action, int row, int, const QModelIndex & parent ) override
 	{
 		// in edge cases always append to the end of the list
-		if (row < 0 || row > superClass::itemList.size())
-			row = superClass::itemList.size();
+		if (row < 0 || row > this->size())
+			row = this->size();
+
+		if (!this->canBeModified())
+		{
+			qWarning() << "Cannot drop into this model now. It should have been restricted by the ListView.";
+			return false;
+		}
 
 		if (mime->hasFormat( internalMimeType ) && action == Qt::MoveAction)
 		{
@@ -660,16 +871,19 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		QVector< Item * > origItemRefs;
 		for (int origItemIdx : origItemIndexes)
 		{
-			origItemRefs.append( &superClass::itemList[ origItemIdx ] );
+			origItemRefs.append( &(*this)[ origItemIdx ] );
 		}
 
 		// allocate space for the items to move to
-		insertRows( row, count, parent );
+		if (!insertRows( row, count, parent ))
+		{
+			return false;
+		}
 
 		// move the original items to the target position
 		for (int i = 0; i < count; i++)
 		{
-			superClass::itemList[ row + i ] = std::move( *origItemRefs[i] );
+			(*this)[ row + i ] = std::move( *origItemRefs[i] );
 		}
 
 		// idiotic workaround because Qt is fucking retarded   (read the comment at the top of EditableListView.cpp)
@@ -702,13 +916,16 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 		}
 
 		// allocate space for the items to be dropped to
-		insertRows( row, filesToBeInserted.count(), parent );
+		if (!insertRows( row, filesToBeInserted.count(), parent ))
+		{
+			return false;
+		}
 
 		for (int i = 0; i < filesToBeInserted.count(); i++)
 		{
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 			// Therefore only author of Item knows how to assign a dropped file into it, so he must define it by a constructor.
-			superClass::itemList[ row + i ] = Item( filesToBeInserted[ i ] );
+			(*this)[ row + i ] = Item( filesToBeInserted[ i ] );
 		}
 
 		// idiotic workaround because Qt is fucking retarded   (read the comment at the top of EditableListView.cpp)
@@ -720,6 +937,14 @@ class EditableListModel : public AListModel< Item >, public DropTarget {
 	}
 
 };
+
+
+//======================================================================================================================
+
+template< typename Item > using ReadOnlyDirectListModel   = ReadOnlyListModel< DirectList< Item > >;
+template< typename Item > using ReadOnlyFilteredListModel = ReadOnlyListModel< FilteredList< Item > >;
+template< typename Item > using EditableDirectListModel   = EditableListModel< DirectList< Item > >;
+template< typename Item > using EditableFilteredListModel = EditableListModel< FilteredList< Item > >;
 
 
 #endif // LIST_MODEL_INCLUDED

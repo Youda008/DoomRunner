@@ -57,7 +57,6 @@ struct Engine : public EditableListModelItem
 
 	// requirements of EditableListModel
 	const QString & getFilePath() const { return path; }
-
 	QString getID() const { return path; }
 };
 
@@ -73,7 +72,6 @@ struct IWAD : public EditableListModelItem
 	const QString & getEditString() const { return name; }
 	void setEditString( const QString & str ) { name = str; }
 	const QString & getFilePath() const { return path; }
-
 	QString getID() const { return path; }
 };
 
@@ -259,6 +257,7 @@ struct Preset : public EditableListModelItem
 	// requirements of EditableListModel
 	const QString & getEditString() const { return name; }
 	void setEditString( const QString & str ) { name = str; }
+	QString getID() const { return name; }
 
 	Preset() {}
 	Preset( const QString & name ) : name( name ) {}

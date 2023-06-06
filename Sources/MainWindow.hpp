@@ -12,6 +12,7 @@
 #include "Dialogs/DialogCommon.hpp"
 
 #include "Widgets/ListModel.hpp"
+#include "Widgets/SearchPanel.hpp"
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
 #include "Themes.hpp"  // WindowsThemeWatcher
@@ -81,6 +82,8 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	void presetMoveUp();
 	void presetMoveDown();
 	void presetInsertSeparator();
+
+	void searchPresets( const QString & phrase, bool caseSensitive, bool useRegex );
 
 	void modAdd();
 	void modAddDir();
@@ -220,6 +223,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
  private: // internal members
 
 	Ui::MainWindow * ui = nullptr;
+	SearchPanel * presetSearchPanel = nullptr;
 
 	uint tickCount = 0;
 
@@ -233,6 +237,8 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	bool disableSelectionCallbacks = false;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
 	bool restoringOptionsInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 	bool restoringPresetInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
+
+	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
 
 	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
 
@@ -251,7 +257,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	//
 	// You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
 
-	ReadOnlyListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
+	ReadOnlyDirectListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
 
 	// We need to store extra information for each engine, but making it a part of Engine struct is not a good idea,
 	// because this extra info is not user-defined and should not be serialized.
@@ -269,7 +275,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 		ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		QString getID() const { return fileName; }
 	};
-	ReadOnlyListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
+	ReadOnlyDirectListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
 
 	struct SaveFile : public ReadOnlyListModelItem
 	{
@@ -278,7 +284,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 		SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		QString getID() const { return fileName; }
 	};
-	ReadOnlyListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
+	ReadOnlyDirectListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
 
 	struct DemoFile : public ReadOnlyListModelItem
 	{
@@ -287,18 +293,18 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 		DemoFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		QString getID() const { return fileName; }
 	};
-	ReadOnlyListModel< DemoFile > demoModel;    ///< list of demo files found in pre-defined directory
+	ReadOnlyDirectListModel< DemoFile > demoModel;    ///< list of demo files found in pre-defined directory
 
 	IwadSettings iwadSettings;    ///< IWAD-related preferences (value returned by SetupDialog)
-	ReadOnlyListModel< IWAD > iwadModel;    ///< user-ordered list of iwads (managed by SetupDialog)
+	ReadOnlyDirectListModel< IWAD > iwadModel;    ///< user-ordered list of iwads (managed by SetupDialog)
 
 	MapSettings mapSettings;    ///< map-related preferences (value returned by SetupDialog)
 	QFileSystemModel mapModel;  ///< model representing a directory with map files
 
 	ModSettings modSettings;    ///< mod-related preferences (value returned by SetupDialog)
-	EditableListModel< Mod > modModel;
+	EditableDirectListModel< Mod > modModel;
 
-	EditableListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
+	EditableFilteredListModel< Preset > presetModel;    ///< user-made presets, when one is selected from the list view, it applies its stored options to the other widgets
 
 	LaunchOptions launchOpts;
 	MultiplayerOptions multOpts;

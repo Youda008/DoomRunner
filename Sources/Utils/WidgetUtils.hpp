@@ -104,9 +104,18 @@ void chooseItemByIndex( QTreeView * view, const QModelIndex & index );
 
 
 /// Adds an item to the end of the list and selects it.
-template< typename Item >
-void appendItem( QListView * view, AListModel< Item > & model, const Item & item )
+template< typename ListModel >
+void appendItem( QListView * view, ListModel & model, const typename ListModel::Item & item )
 {
+	if (!model.canBeModified())
+	{
+		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
+			"Cannot append item because the model is locked for changes. "
+			"This should have been restricted by the UI, please create an issue on Github page."
+		);
+		return;
+	}
+
 	deselectAllAndUnsetCurrent( view );
 
 	model.startAppending( 1 );
@@ -119,9 +128,18 @@ void appendItem( QListView * view, AListModel< Item > & model, const Item & item
 }
 
 /// Adds an item to the begining of the list and selects it.
-template< typename Item >
-void prependItem( QListView * view, AListModel< Item > & model, const Item & item )
+template< typename ListModel >
+void prependItem( QListView * view, ListModel & model, const typename ListModel::Item & item )
 {
+	if (!model.canBeModified())
+	{
+		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
+			"Cannot prepend item because the model is locked for changes. "
+			"This should have been restricted by the UI, please create an issue on Github page."
+		);
+		return;
+	}
+
 	deselectAllAndUnsetCurrent( view );
 
 	model.startInserting( 0 );
@@ -134,9 +152,18 @@ void prependItem( QListView * view, AListModel< Item > & model, const Item & ite
 }
 
 /// Adds an item to the middle of the list and selects it.
-template< typename Item >
-void insertItem( QListView * view, AListModel< Item > & model, const Item & item, int index )
+template< typename ListModel >
+void insertItem( QListView * view, ListModel & model, const typename ListModel::Item & item, int index )
 {
+	if (!model.canBeModified())
+	{
+		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
+			"Cannot insert item because the model is locked for changes. "
+			"This should have been restricted by the UI, please create an issue on Github page."
+		);
+		return;
+	}
+
 	deselectAllAndUnsetCurrent( view );
 
 	model.startInserting( index );
@@ -150,8 +177,8 @@ void insertItem( QListView * view, AListModel< Item > & model, const Item & item
 
 /// Deletes a selected item and attempts to select an item following the deleted one.
 /** Pops up a warning box if nothing is selected. */
-template< typename Item >
-int deleteSelectedItem( QListView * view, AListModel< Item > & model )
+template< typename ListModel >
+int deleteSelectedItem( QListView * view, ListModel & model )
 {
 	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
@@ -165,7 +192,7 @@ int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 
 	model.startDeleting( selectedIdx );
 
-	model.removeAt( selectedIdx );
+	model.removeAt( selectedIdx );  // TODO
 
 	model.finishDeleting();
 
@@ -187,9 +214,18 @@ int deleteSelectedItem( QListView * view, AListModel< Item > & model )
 
 /// Deletes all selected items and attempts to select the item following the deleted ones.
 /** Pops up a warning box if nothing is selected. */
-template< typename Item >
-QVector<int> deleteSelectedItems( QListView * view, AListModel< Item > & model )
+template< typename ListModel >
+QVector<int> deleteSelectedItems( QListView * view, ListModel & model )
 {
+	if (!model.canBeModified())
+	{
+		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
+			"Cannot delete selected items because the model is locked for changes. "
+			"This should have been restricted by the UI, please create an issue on Github page."
+		);
+		return {};
+	}
+
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty())
 	{
@@ -236,9 +272,18 @@ QVector<int> deleteSelectedItems( QListView * view, AListModel< Item > & model )
 
 /// Creates a copy of a selected item and selects the newly created one.
 /** Pops up a warning box if nothing is selected. */
-template< typename Item >
-int cloneSelectedItem( QListView * view, AListModel< Item > & model )
+template< typename ListModel >
+int cloneSelectedItem( QListView * view, ListModel & model )
 {
+	if (!model.canBeModified())
+	{
+		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
+			"Cannot clone selected item because the model is locked for changes. "
+			"This should have been restricted by the UI, please create an issue on Github page."
+		);
+		return -1;
+	}
+
 	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
@@ -268,9 +313,18 @@ int cloneSelectedItem( QListView * view, AListModel< Item > & model )
 
 /// Moves a selected item up and updates the selection to point to the new position.
 /** Pops up a warning box if nothing is selected. */
-template< typename Item >
-int moveUpSelectedItem( QListView * view, AListModel< Item > & model )
+template< typename ListModel >
+int moveUpSelectedItem( QListView * view, ListModel & model )
 {
+	if (!model.canBeModified())
+	{
+		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
+			"Cannot move up selected item because the model is locked for changes. "
+			"This should have been restricted by the UI, please create an issue on Github page."
+		);
+		return -1;
+	}
+
 	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
@@ -310,9 +364,18 @@ int moveUpSelectedItem( QListView * view, AListModel< Item > & model )
 
 /// Moves a selected item down and updates the selection to point to the new position.
 /** Pops up a warning box if nothing is selected. */
-template< typename Item >
-int moveDownSelectedItem( QListView * view, AListModel< Item > & model )
+template< typename ListModel >
+int moveDownSelectedItem( QListView * view, ListModel & model )
 {
+	if (!model.canBeModified())
+	{
+		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
+			"Cannot move down selected item because the model is locked for changes. "
+			"This should have been restricted by the UI, please create an issue on Github page."
+		);
+		return -1;
+	}
+
 	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
@@ -352,9 +415,18 @@ int moveDownSelectedItem( QListView * view, AListModel< Item > & model )
 
 /// Moves all selected items up and updates the selection to point to the new position.
 /** Pops up a warning box if nothing is selected. */
-template< typename Item >
-QVector<int> moveUpSelectedItems( QListView * view, AListModel< Item > & model )
+template< typename ListModel >
+QVector<int> moveUpSelectedItems( QListView * view, ListModel & model )
 {
+	if (!model.canBeModified())
+	{
+		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
+			"Cannot move up selected items because the model is locked for changes. "
+			"This should have been restricted by the UI, please create an issue on Github page."
+		);
+		return {};
+	}
+
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty())
 	{
@@ -404,9 +476,18 @@ QVector<int> moveUpSelectedItems( QListView * view, AListModel< Item > & model )
 
 /// Moves all selected items down and updates the selection to point to the new position.
 /** Pops up a warning box if nothing is selected. */
-template< typename Item >
-QVector<int> moveDownSelectedItems( QListView * view, AListModel< Item > & model )
+template< typename ListModel >
+QVector<int> moveDownSelectedItems( QListView * view, ListModel & model )
 {
+	if (!model.canBeModified())
+	{
+		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
+			"Cannot move down selected items because the model is locked for changes. "
+			"This should have been restricted by the UI, please create an issue on Github page."
+		);
+		return {};
+	}
+
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty())
 	{
@@ -464,8 +545,8 @@ bool editItemAtIndex( QListView * view, int index );
 
 
 /// Gets a persistent item ID of the current item that survives node shifting, adding or removal.
-template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getCurrentItemID( QListView * view, const AListModel< Item > & model ) -> std::result_of_t<decltype(&Item::getID)(Item)>
+template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
+QString getCurrentItemID( QListView * view, const ListModel & model )
 {
 	int selectedItemIdx = getCurrentItemIndex( view );
 	if (selectedItemIdx >= 0)
@@ -475,8 +556,8 @@ auto getCurrentItemID( QListView * view, const AListModel< Item > & model ) -> s
 }
 
 /// Gets a persistent item ID of a selected item that survives node shifting, adding or removal.
-template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> std::result_of_t<decltype(&Item::getID)(Item)>
+template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
+QString getSelectedItemID( QListView * view, const ListModel & model )
 {
 	int selectedItemIdx = getSelectedItemIndex( view );
 	if (selectedItemIdx >= 0)
@@ -486,9 +567,11 @@ auto getSelectedItemID( QListView * view, const AListModel< Item > & model ) -> 
 }
 
 /// Attempts to set a previous current item defined by its persistant itemID.
-template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool setCurrentItemByID( QListView * view, const AListModel< Item > & model, const std::result_of_t<decltype(&Item::getID)(Item)> & itemID )
+template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
+bool setCurrentItemByID( QListView * view, const ListModel & model, const QString & itemID )
 {
+	using Item = typename ListModel::Item;
+
 	if (!itemID.isEmpty())
 	{
 		int newItemIdx = findSuch( model, [&]( const Item & item ) { return item.getID() == itemID; } );
@@ -502,9 +585,11 @@ bool setCurrentItemByID( QListView * view, const AListModel< Item > & model, con
 }
 
 /// Attempts to select a previously selected item defined by its persistant itemID.
-template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool selectItemByID( QListView * view, const AListModel< Item > & model, const std::result_of_t<decltype(&Item::getID)(Item)> & itemID )
+template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
+bool selectItemByID( QListView * view, const ListModel & model, const QString & itemID )
 {
+	using Item = typename ListModel::Item;
+
 	if (!itemID.isEmpty())
 	{
 		int newItemIdx = findSuch( model, [&]( const Item & item ) { return item.getID() == itemID; } );
@@ -518,19 +603,21 @@ bool selectItemByID( QListView * view, const AListModel< Item > & model, const s
 }
 
 /// Gets persistent item IDs that survive node shifting, adding or removal.
-template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemIDs( QListView * view, const AListModel< Item > & model ) -> QVector< std::result_of_t<decltype(&Item::getID)(Item)> >
+template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
+auto getSelectedItemIDs( QListView * view, const ListModel & model ) -> QVector< QString >
 {
-	QVector< decltype( Item{}.getID() ) > itemIDs;
+	QVector< QString > itemIDs;
 	for (int selectedItemIdx : getSelectedItemIndexes( view ))
 		itemIDs.append( model[ selectedItemIdx ].getID() );
 	return itemIDs;
 }
 
 /// Attempts to select previously selected items defined by their persistant itemIDs.
-template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-void selectItemsByIDs( QListView * view, const AListModel< Item > & model, const QVector< std::result_of_t<decltype(&Item::getID)(Item)> > & itemIDs )
+template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
+void selectItemsByIDs( QListView * view, const ListModel & model, const QVector< QString > & itemIDs )
 {
+	using Item = typename ListModel::Item;
+
 	for (const auto & itemID : itemIDs)
 	{
 		int newItemIdx = findSuch( model, [&]( const Item & item ) { return item.getID() == itemID; } );
@@ -560,10 +647,12 @@ bool areSelectionsEqual( const QVector< ItemID > & selection1, const QVector< It
 }
 
 /// Fills a list with entries found in a directory.
-template< typename Item >
-void updateListFromDir( AListModel< Item > & model, QListView * view, const QString & dir, bool recursively,
+template< typename ListModel >
+void updateListFromDir( ListModel & model, QListView * view, const QString & dir, bool recursively,
                         const PathContext & pathContext, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
+	using Item = typename ListModel::Item;
+
 	// Doing a differential update (deleting only things that were deleted and adding only things that were added)
 	// is not worth here. It's too complicated and prone to bugs and its advantages are too small.
 	// Instead we just clear everything and then load it from scratch according to the current state of the directory
@@ -612,8 +701,8 @@ void updateListFromDir( AListModel< Item > & model, QListView * view, const QStr
 
 
 /// Gets a persistent item ID that survives node shifting, adding or removal.
-template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getCurrentItemID( QComboBox * view, const AListModel< Item > & model ) -> std::result_of_t<decltype(&Item::getID)(Item)>
+template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
+QString getCurrentItemID( QComboBox * view, const ListModel & model )
 {
 	int selectedItemIdx = view->currentIndex();
 	if (selectedItemIdx >= 0)
@@ -623,9 +712,11 @@ auto getCurrentItemID( QComboBox * view, const AListModel< Item > & model ) -> s
 }
 
 /// Attempts to select a previously selected item defined by persistant itemID.
-template< typename Item >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool setCurrentItemByID( QComboBox * view, const AListModel< Item > & model, const std::result_of_t<decltype(&Item::getID)(Item)> & itemID )
+template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
+bool setCurrentItemByID( QComboBox * view, const ListModel & model, const QString & itemID )
 {
+	using Item = typename ListModel::Item;
+
 	if (!itemID.isEmpty())
 	{
 		int newItemIdx = findSuch( model, [&]( const Item & item ) { return item.getID() == itemID; } );
@@ -639,11 +730,13 @@ bool setCurrentItemByID( QComboBox * view, const AListModel< Item > & model, con
 }
 
 /// Fills a combo-box with entries found in a directory.
-template< typename Item >
-void updateComboBoxFromDir( AListModel< Item > & model, QComboBox * view, const QString & dir, bool recursively,
+template< typename ListModel >
+void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString & dir, bool recursively,
                             bool includeEmptyItem, const PathContext & pathContext,
                             std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
+	using Item = typename ListModel::Item;
+
 	// note down the currently selected item
 	QString lastText = view->currentText();
 

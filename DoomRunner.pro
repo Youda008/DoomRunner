@@ -63,6 +63,7 @@ HEADERS += \
     Sources/UpdateChecker.hpp \
     Sources/UserData.hpp \
     Sources/Version.hpp \
+	Sources/Widgets/SearchPanel.hpp
 
 SOURCES += \
     Sources/Dialogs/AboutDialog.cpp \
@@ -94,6 +95,7 @@ SOURCES += \
     Sources/UpdateChecker.cpp \
     Sources/UserData.cpp \
     Sources/Version.cpp \
+	Sources/Widgets/SearchPanel.cpp \
     Sources/main.cpp \
 
 FORMS += \

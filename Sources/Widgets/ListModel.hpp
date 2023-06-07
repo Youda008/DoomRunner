@@ -13,6 +13,7 @@
 
 #include "Utils/LangUtils.hpp"  // PointerIterator
 #include "Utils/FileSystemUtils.hpp"  // PathContext
+#include "Themes.hpp"  // separator colors
 
 #include <QAbstractListModel>
 #include <QList>
@@ -459,10 +460,6 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 	/// function that takes Item and constructs a String that will be displayed in the view
 	std::function< QString ( const Item & ) > makeDisplayString;
 
-	// colors that visually distinguished separators from the rest of the items
-	QColor separatorForeground = Qt::black;
-	QColor separatorBackground = QRgb( 0xA0A0A0 );
-
  public:
 
 	ReadOnlyListModel( std::function< QString ( const Item & ) > makeDisplayString )
@@ -473,9 +470,6 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 
 	void setDisplayStringFunc( std::function< QString ( const Item & ) > makeDisplayString )
 		{ this->makeDisplayString = makeDisplayString; }
-
-	void setSeparatorColor( QColor foreground, QColor background )
-		{ separatorForeground = foreground; separatorBackground = background; }
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
@@ -502,7 +496,7 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 			else if (role == Qt::ForegroundRole)
 			{
 				if (item.isSeparator)
-					return QBrush( separatorForeground );
+					return QBrush( themes::getCurrentPalette().separatorText );
 				else if (item.foregroundColor)
 					return QBrush( *item.foregroundColor );
 				else
@@ -511,7 +505,7 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 			else if (role == Qt::BackgroundRole)
 			{
 				if (item.isSeparator)
-					return QBrush( separatorBackground );
+					return QBrush( themes::getCurrentPalette().separatorBackground );
 				else if (item.backgroundColor)
 					return QBrush( *item.backgroundColor );
 				else
@@ -561,10 +555,6 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	/// function that takes Item and constructs a String that will be displayed in the view
 	std::function< QString ( const Item & ) > makeDisplayString;
 
-	// colors that visually distinguished separators from the rest of the items
-	QColor separatorForeground = Qt::black;
-	QColor separatorBackground = QRgb( 0xA0A0A0 );
-
 	/// whether editing of regular non-separator items is allowed
 	bool editingEnabled = false;
 
@@ -587,9 +577,6 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	void setDisplayStringFunc( std::function< QString ( const Item & ) > makeDisplayString )
 		{ this->makeDisplayString = makeDisplayString; }
-
-	void setSeparatorColor( QColor foreground, QColor background )
-		{ separatorForeground = foreground; separatorBackground = background; }
 
 	void toggleEditing( bool enabled ) { editingEnabled = enabled; }
 
@@ -650,7 +637,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 			else if (role == Qt::ForegroundRole)
 			{
 				if (item.isSeparator)
-					return QBrush( separatorForeground );
+					return QBrush( themes::getCurrentPalette().separatorText );
 				else if (item.foregroundColor)
 					return QBrush( *item.foregroundColor );
 				else
@@ -659,7 +646,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 			else if (role == Qt::BackgroundRole)
 			{
 				if (item.isSeparator)
-					return QBrush( separatorBackground );
+					return QBrush( themes::getCurrentPalette().separatorBackground );
 				else if (item.backgroundColor)
 					return QBrush( *item.backgroundColor );
 				else

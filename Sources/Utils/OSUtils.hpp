@@ -17,12 +17,6 @@
 
 //======================================================================================================================
 
-#ifdef _WIN32
-	#define IS_WINDOWS true
-#else
-	#define IS_WINDOWS false
-#endif
-
 inline constexpr bool isWindows()
 {
  #if IS_WINDOWS

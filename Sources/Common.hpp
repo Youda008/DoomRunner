@@ -24,5 +24,11 @@ using std::as_const;
 
 //using namespace std;  // we're working with Qt, so not a good idea
 
+#ifdef _WIN32
+	#define IS_WINDOWS true
+#else
+	#define IS_WINDOWS false
+#endif
+
 
 #endif // COMMON_INCLUDED

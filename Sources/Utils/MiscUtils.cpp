@@ -233,13 +233,3 @@ QVector< Argument > splitCommandLineArguments( const QString & argsStr )
 
 	return args;
 }
-
-QColor mixColors( QColor color1, int weight1, QColor color2, int weight2, QColor addition )
-{
-	int weightSum = weight1 + weight2;
-	return QColor(
-		(color1.red()   * weight1 + color2.red()   * weight2) / weightSum + addition.red(),
-		(color1.green() * weight1 + color2.green() * weight2) / weightSum + addition.green(),
-		(color1.blue()  * weight1 + color2.blue()  * weight2) / weightSum + addition.blue()
-	);
-}

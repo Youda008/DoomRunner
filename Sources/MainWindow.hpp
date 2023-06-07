@@ -16,7 +16,6 @@
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
 #include "Themes.hpp"  // WindowsThemeWatcher
-#include "Utils/OSUtils.hpp"  // IS_WINDOWS
 
 #include <QMainWindow>
 #include <QString>
@@ -56,8 +55,6 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
  private slots:
 
 	void onWindowShown();
-
-	void onGlobalPaletteChanged( const QPalette & newPalette );
 
 	void runAboutDialog();
 	void runSetupDialog();
@@ -154,7 +151,6 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	void setupMapPackList();
 	void setupModList();
 
-	void updateSeparatorColors();
 	void updateOptionsGrpBoxTitles( const StorageSettings & storageSettings );
 
 	void loadMonitorInfo( QComboBox * box );

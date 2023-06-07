@@ -11,7 +11,6 @@
 #include "Utils/OSUtils.hpp"    // IS_WINDOWS
 
 #include <QApplication>
-#include <QGuiApplication>
 #include <QWidget>
 #include <QWindow>
 #include <QStyle>
@@ -99,9 +98,23 @@ static void setColorsForRole( QPalette & palette, QPalette::ColorRole role, QCol
 	palette.setColor( QPalette::ColorGroup::Disabled, role, disabled );
 }
 
+// Makes a component by component mix of the input colors that corresponds to expression:
+// color1 * weight1 + color2 * weight2 + addition
+static QColor mixColors( QColor color1, int weight1, QColor color2, int weight2, QColor addition )
+{
+	int weightSum = weight1 + weight2;
+	return QColor(
+		(color1.red()   * weight1 + color2.red()   * weight2) / weightSum + addition.red(),
+		(color1.green() * weight1 + color2.green() * weight2) / weightSum + addition.green(),
+		(color1.blue()  * weight1 + color2.blue()  * weight2) / weightSum + addition.blue()
+	);
+}
+
 
 //======================================================================================================================
 //  color schemes
+
+std::pair< QColor, QColor > deriveSeparatorColors( const QPalette & palette );
 
 static const char * const schemeStrings [] =
 {
@@ -111,22 +124,23 @@ static const char * const schemeStrings [] =
 };
 static_assert( size_t(ColorScheme::_EnumEnd) == std::size(schemeStrings), "Please update this table" );
 
-static QPalette palettes [ std::size(schemeStrings) ];
+static themes::Palette palettes [ std::size(schemeStrings) ];
 
-// This cannot be done in a static intializer, because it depends on qApp being already initialized.
+// This cannot be done in a static initializer, because it depends on qApp being already initialized.
 static void initColorPalettes()
 {
 	{
-		QPalette & systemPalette = palettes[ size_t(ColorScheme::SystemDefault) ];
+		themes::Palette & systemPalette = palettes[ size_t(ColorScheme::SystemDefault) ];
 
-		systemPalette = qApp->palette();
+		static_cast< QPalette & >( systemPalette ) = qApp->palette();
+
+		std::tie( systemPalette.separatorText, systemPalette.separatorBackground ) = deriveSeparatorColors( systemPalette );
 	}
 
 	{
-		QPalette & darkPalette = palettes[ size_t(ColorScheme::Dark) ];
+		themes::Palette & darkPalette = palettes[ size_t(ColorScheme::Dark) ];
 
 		// https://forum.qt.io/topic/101391/windows-10-dark-theme/4
-
 		QColor darkColor = QColor(0x2D,0x2D,0x2D);
 		QColor disabledColor = QColor(0x7F,0x7F,0x7F);
 		darkPalette.setColor( QPalette::All,      QPalette::Window, darkColor );
@@ -144,14 +158,14 @@ static void initColorPalettes()
 		darkPalette.setColor( QPalette::All,      QPalette::Highlight, QColor(0x2A,0x82,0xDA) );
 		darkPalette.setColor( QPalette::All,      QPalette::HighlightedText, Qt::black );
 		darkPalette.setColor( QPalette::Disabled, QPalette::HighlightedText, disabledColor );
+
+		std::tie( darkPalette.separatorText, darkPalette.separatorBackground ) = deriveSeparatorColors( darkPalette );
 	}
 
 	{
-
-		QPalette & lightPalette = palettes[ size_t(ColorScheme::Light) ];
+		themes::Palette & lightPalette = palettes[ size_t(ColorScheme::Light) ];
 
 		// based on "Breeze Light" in KDE
-
 		setColorsForRole( lightPalette, QPalette::WindowText,      QColor(0x232629), QColor(0x232629), QColor(0xa0a1a3) );
 		setColorsForRole( lightPalette, QPalette::Button,          QColor(0xfcfcfc), QColor(0xfcfcfc), QColor(0xf0f0f0) );
 		setColorsForRole( lightPalette, QPalette::Light,           QColor(0xffffff), QColor(0xffffff), QColor(0xffffff) );
@@ -172,9 +186,11 @@ static void initColorPalettes()
 		setColorsForRole( lightPalette, QPalette::ToolTipBase,     QColor(0xf7f7f7), QColor(0xf7f7f7), QColor(0xf7f7f7) );
 		setColorsForRole( lightPalette, QPalette::ToolTipText,     QColor(0x232629), QColor(0x232629), QColor(0x232629) );
 		setColorsForRole( lightPalette, QPalette::PlaceholderText, QColor(0x232629), QColor(0x232629), QColor(0x232629) );
+
+		std::tie( lightPalette.separatorText, lightPalette.separatorBackground ) = deriveSeparatorColors( lightPalette );
 	}
 
-	// Define new palettes here
+	// ---> Define new palettes here <---
 
 	/* Full palette dumps for reference
 
@@ -271,6 +287,17 @@ static void initColorPalettes()
 	PlaceholderText   #ffffff   #ffffff   #ffffff
 
 	*/
+}
+
+std::pair< QColor, QColor > deriveSeparatorColors( const QPalette & palette )
+{
+	QColor activeText = palette.color( QPalette::Active, QPalette::Text );
+	QColor activeBase = palette.color( QPalette::Active, QPalette::Base );
+
+	QColor textColor = activeText;
+	QColor backgroundColor = mixColors( activeBase, 9, activeText, 4, QColor(12,12,12) );
+
+	return { textColor, backgroundColor };
 }
 
 const char * schemeToString( ColorScheme scheme )
@@ -514,15 +541,18 @@ void setAppColorScheme( ColorScheme userSchemeID )
  #endif
 }
 
-void setAppStyle( const QString & styleName )
+const Palette & getCurrentPalette()
 {
-	if (styleName == g_currentStyle)
-	{
-		return;  // nothing to be done, this style is already active
-	}
-	g_currentStyle = styleName;
+	return palettes[ size_t(g_currentRealSchemeID) ];
+}
 
-	setQtStyle( styleName );
+QString updateHyperlinkColor( const QString & richText )
+{
+	QString htmlColor = palettes[ size_t( g_currentRealSchemeID ) ].color( QPalette::Link ).name();
+	QString newText( richText );
+	static QRegularExpression regex("color:#[0-9a-fA-F]{6}");
+	newText.replace( regex, "color:"+htmlColor );
+	return newText;
 }
 
 QStringList getAvailableAppStyles()
@@ -533,6 +563,17 @@ QStringList getAvailableAppStyles()
 QString getDefaultAppStyle()
 {
 	return defaultStyle;
+}
+
+void setAppStyle( const QString & styleName )
+{
+	if (styleName == g_currentStyle)
+	{
+		return;  // nothing to be done, this style is already active
+	}
+	g_currentStyle = styleName;
+
+	setQtStyle( styleName );
 }
 
 void updateWindowBorder( [[maybe_unused]] QWidget * window )
@@ -548,43 +589,31 @@ void updateWindowBorder( [[maybe_unused]] QWidget * window )
  #endif
 }
 
-QString updateHyperlinkColor( const QString & richText )
-{
-	QString htmlColor = palettes[ size_t( g_currentRealSchemeID ) ].color( QPalette::Link ).name();
-	QString newText( richText );
-	static QRegularExpression regex("color:#[0-9a-fA-F]{6}");
-	newText.replace( regex, "color:"+htmlColor );
-	return newText;
-}
-
 } // namespace themes
 
 
 //======================================================================================================================
 //  WindowsThemeWatcher
 
+#if IS_WINDOWS
+
 WindowsThemeWatcher::WindowsThemeWatcher()
 {
- #if IS_WINDOWS
 	// If this object is constructed in the main thread, this will make the updateTheme be called in the main thread.
 	connect( this, &WindowsThemeWatcher::darkModeToggled, this, &WindowsThemeWatcher::updateScheme );
- #endif
 }
 
 void WindowsThemeWatcher::run()
 {
- #if IS_WINDOWS
 	watchForSystemDarkModeChanges( [this]( bool darkModeEnabled )
 	{
 		emit darkModeToggled( darkModeEnabled );
 	});
- #endif
 }
 
 void WindowsThemeWatcher::updateScheme( [[maybe_unused]] bool darkModeEnabled )
 {
 	// This will be executed in the main thread.
- #if IS_WINDOWS
 	if (g_currentUserSchemeID == ColorScheme::SystemDefault)
 	{
 		ColorScheme realSchemeID = darkModeEnabled ? ColorScheme::Dark : ColorScheme::SystemDefault;
@@ -601,5 +630,6 @@ void WindowsThemeWatcher::updateScheme( [[maybe_unused]] bool darkModeEnabled )
 			themes::setAppStyle( "Fusion" );
 		}
 	}
- #endif
 }
+
+#endif // IS_WINDOWS

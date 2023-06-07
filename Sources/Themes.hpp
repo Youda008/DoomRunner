@@ -13,6 +13,7 @@
 
 #include <QThread>
 #include <QStringList>
+#include <QPalette>
 
 class QWidget;
 
@@ -35,18 +36,31 @@ ColorScheme schemeFromString( const QString & schemeStr );
 
 namespace themes {
 
-/// Must be called at the start of the program, before setColorScheme() is called.
+
+/// Must be called at the start of the program, before the following functions are called.
 void init();
+
+
+// color schemes
 
 /// Sets a color scheme for the whole application.
 /** init() must be called before calling this function. */
 void setAppColorScheme( ColorScheme scheme );
 
-/// Sets a visual style for the whole application.
-/** If the style name is null string - QString(), system default is selected.
-  * Passing in a non-existing style name will result in an error message box.
-  * init() must be called before calling this function. */
-void setAppStyle( const QString & styleName );
+/// Our own extended color palette.
+struct Palette : public QPalette
+{
+	QColor separatorText = Qt::black;
+	QColor separatorBackground = QRgb( 0xA0A0A0 );
+};
+const Palette & getCurrentPalette();
+
+// Sometimes hyperlinks in a widget's text specify color in HTML tag, which overrides palette.setColor( QPalette::Link, ... )
+// In such case this needs to be called to update the HTML tag color.
+QString updateHyperlinkColor( const QString & richText );
+
+
+// app styles
 
 /// Returns possible values to the setAppStyle() function.
 /** Determined by operating system, graphical environment and installed plugins. */
@@ -55,13 +69,16 @@ QStringList getAvailableAppStyles();
 /// Returns which of the available app styles from getAvailableAppStyles() is the default on this operating system.
 QString getDefaultAppStyle();
 
+/// Sets a visual style for the whole application.
+/** If the style name is null string - QString(), system default is selected.
+  * Passing in a non-existing style name will result in an error message box.
+  * init() must be called before calling this function. */
+void setAppStyle( const QString & styleName );
+
 // On Windows this needs to be called everytime a new window (dialog) is created,
 // because the new title bar and window borders are not automatically changed by Qt.
 void updateWindowBorder( QWidget * window );
 
-// On Windows, palette.setColor( QPalette::Link, ... ) does not work, so we have to change the hyperlink color
-// by manually editing each widget's rich text.
-QString updateHyperlinkColor( const QString & richText );
 
 } // namespace themes
 
@@ -73,6 +90,7 @@ QString updateHyperlinkColor( const QString & richText );
   * Construct this object in a main thread and call start(), that will ensure the theme update is performed in
   * the main thread even though the monitoring will be done in a background thread.
   */
+#ifdef _WIN32
 class WindowsThemeWatcher : public QThread {
 
 	Q_OBJECT
@@ -96,6 +114,7 @@ class WindowsThemeWatcher : public QThread {
 	void updateScheme( bool darkModeEnabled );
 
 };
+#endif // _WIN32
 
 
 #endif // THEMES_INCLUDED

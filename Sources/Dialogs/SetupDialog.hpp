@@ -20,6 +20,7 @@
 class QDir;
 class QLineEdit;
 class QAction;
+class QItemSelection;
 
 namespace Ui {
 	class SetupDialog;
@@ -39,8 +40,8 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 	explicit SetupDialog(
 		QWidget * parent,
 		const QDir & baseDir,
-		const QList< Engine > & engineList,
-		const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
+		const EngineSettings & engineSettings, const QList< Engine > & engineList,
+		const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 		const MapSettings & mapSettings, const ModSettings & modSettings,
 		const LauncherSettings & settings
 	);
@@ -59,6 +60,9 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 	void engineMoveUp();
 	void engineMoveDown();
 
+	void engineSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
+	void setEngineAsDefault();
+
 	void editEngine( const QModelIndex & index );
 	void editSelectedEngine();
 
@@ -68,6 +72,9 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 	void iwadDelete();
 	void iwadMoveUp();
 	void iwadMoveDown();
+
+	void iwadSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
+	void setIWADAsDefault();
 
 	void manageIWADsManually();
 	void manageIWADsAutomatically();
@@ -110,16 +117,20 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 
 	Ui::SetupDialog * ui;
 
+	QAction * setDefaultEngineAction;
+	QAction * setDefaultIWADAction;
+
 	uint tickCount;
 
 	ConfirmationFilter engineConfirmationFilter;
 
  public: // return values from this dialog
 
+	EngineSettings engineSettings;
 	EditableDirectListModel< Engine > engineModel;
 
-	EditableDirectListModel< IWAD > iwadModel;
 	IwadSettings iwadSettings;
+	EditableDirectListModel< IWAD > iwadModel;
 
 	MapSettings mapSettings;
 

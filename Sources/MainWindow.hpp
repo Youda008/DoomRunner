@@ -159,7 +159,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 
 	void updateEngineTraits();
 
-	void autoselectLoneItems();
+	void autoselectItems();
 
 	void setAltDirsRelativeToConfigs( const QString & dirName );
 
@@ -253,6 +253,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	//
 	// You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
 
+	EngineSettings engineSettings;    ///< engine-related preferences (value returned by SetupDialog)
 	ReadOnlyDirectListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
 
 	// We need to store extra information for each engine, but making it a part of Engine struct is not a good idea,

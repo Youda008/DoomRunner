@@ -34,6 +34,7 @@ ColorScheme schemeFromString( const QString & schemeStr );
 /// Our own extended color palette.
 struct Palette : public QPalette
 {
+	QColor defaultEntryText;
 	QColor separatorText = Qt::black;
 	QColor separatorBackground = QRgb( 0xA0A0A0 );
 };

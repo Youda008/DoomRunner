@@ -656,7 +656,7 @@ void MainWindow::onWindowShown()
 		// automatically select those essential items (engine, IWAD, ...) that are alone in their list
 		// This is done to make it as easy as possible for beginners who just downloaded GZDoom and Brutal Doom
 		// and want to start it as easily as possible with no interest about all the other possibilities.
-		autoselectLoneItems();
+		autoselectItems();
 	}
 
 	if (settings.checkForUpdates)
@@ -775,9 +775,10 @@ void MainWindow::runSetupDialog()
 	SetupDialog dialog(
 		this,
 		pathContext.baseDir(),
+		engineSettings,
 		engineModel.list(),
-		iwadModel.list(),
 		iwadSettings,
+		iwadModel.list(),
 		mapSettings,
 		modSettings,
 		settings
@@ -806,10 +807,11 @@ void MainWindow::runSetupDialog()
 		iwadModel.startCompleteUpdate();
 
 		// update our data from the dialog
+		engineSettings = std::move( dialog.engineSettings );
 		engineModel.assignList( std::move( dialog.engineModel.list() ) );
 		updateEngineTraits();  // sync engineTraits with engineModel
-		iwadModel.assignList( std::move( dialog.iwadModel.list() ) );
 		iwadSettings = std::move( dialog.iwadSettings );
+		iwadModel.assignList( std::move( dialog.iwadModel.list() ) );
 		mapSettings = std::move( dialog.mapSettings );
 		modSettings = std::move( dialog.modSettings );
 		settings = std::move( dialog.settings );
@@ -936,13 +938,41 @@ void MainWindow::cloneConfig()
 //----------------------------------------------------------------------------------------------------------------------
 //  item selection
 
-/// Automatically selects those essential items (like engine of IWAD) that are alone in their list.
-void MainWindow::autoselectLoneItems()
+/// Automatically selects essential items (like engine of IWAD) marked as default, or those that are alone in their list.
+void MainWindow::autoselectItems()
 {
-	if (engineModel.size() == 1 && ui->engineCmbBox->currentIndex() < 0)
-		ui->engineCmbBox->setCurrentIndex( 0 );
-	if (iwadModel.size() == 1 && !isSomethingSelected( ui->iwadListView ))
-		selectAndSetCurrentByIndex( ui->iwadListView, 0 );
+	if (ui->engineCmbBox->currentIndex() < 0)
+	{
+		if (engineModel.size() == 1)
+		{
+			// automatically select engine that is alone in the list
+			// This is done to make it as easy as possible for beginners who just downloaded GZDoom and Brutal Doom
+			// and want to start it as easily as possible with no interest about all the other possibilities.
+			ui->engineCmbBox->setCurrentIndex( 0 );
+		}
+		else
+		{
+			// select engine marked as default
+			int defaultIdx = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
+			if (defaultIdx >= 0)
+				ui->engineCmbBox->setCurrentIndex( defaultIdx );
+		}
+	}
+
+	if (!isSomethingSelected( ui->iwadListView ))
+	{
+		if (iwadModel.size() == 1)
+		{
+			selectAndSetCurrentByIndex( ui->iwadListView, 0 );
+		}
+		else
+		{
+			// select IWAD marked as default
+			int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
+			if (defaultIdx >= 0)
+				selectAndSetCurrentByIndex( ui->iwadListView, defaultIdx );
+		}
+	}
 }
 
 void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
@@ -1226,10 +1256,8 @@ void MainWindow::presetAdd()
 	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will clear the prev preset
 	clearPresetSubWidgets();
 
-	// automatically select those essential items (engine, IWAD, ...) that are alone in their list
-	// This is done to make it as easy as possible for beginners who just downloaded GZDoom and Brutal Doom
-	// and want to start it as easily as possible with no interest about all the other possibilities.
-	autoselectLoneItems();
+	// try to select the essential items automatically
+	autoselectItems();
 
 	// open edit mode so that user can name the preset
 	ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );
@@ -2394,6 +2422,7 @@ bool MainWindow::saveOptions( const QString & filePath )
 		getSelectedItemIndex( ui->presetListView ),
 
 		// global settings
+		engineSettings,
 		iwadSettings,
 		mapSettings,
 		modSettings,
@@ -2428,6 +2457,7 @@ bool MainWindow::loadOptions( const QString & filePath )
 		{},  // selected preset
 
 		// global settings - load directly into this class members
+		engineSettings,
 		iwadSettings,
 		mapSettings,
 		modSettings,
@@ -2483,6 +2513,18 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		engineModel.assignList( std::move(opts.engines) );
 		updateEngineTraits();  // sync engineTraits with engineModel
 		engineModel.finishCompleteUpdate();
+
+		// mark the default engine, if chosen
+		int defaultIdx = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
+		if (defaultIdx >= 0)
+		{
+			engineModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
+		}
+		else
+		{
+			QMessageBox::warning( nullptr, "Default engine no longer exists",
+				"Engine that was marked as default ("%engineSettings.defaultEngine%") no longer exists. Please select another one." );
+		}
 	}
 
 	// IWADs
@@ -2498,6 +2540,18 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 			iwadModel.startCompleteUpdate();
 			iwadModel.assignList( std::move(opts.iwads) );
 			iwadModel.finishCompleteUpdate();
+		}
+
+		// mark the default IWAD, if chosen
+		int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
+		if (defaultIdx >= 0)
+		{
+			iwadModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
+		}
+		else
+		{
+			QMessageBox::warning( nullptr, "Default IWAD no longer exists",
+				"IWAD that was marked as default ("%iwadSettings.defaultIWAD%") no longer exists. Please select another one." );
 		}
 	}
 

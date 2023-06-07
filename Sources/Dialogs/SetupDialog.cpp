@@ -29,8 +29,8 @@
 SetupDialog::SetupDialog(
 	QWidget * parent,
 	const QDir & baseDir,
-	const QList< Engine > & engineList,
-	const QList< IWAD > & iwadList, const IwadSettings & iwadSettings,
+	const EngineSettings & engineSettings, const QList< Engine > & engineList,
+	const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 	const MapSettings & mapSettings, const ModSettings & modSettings,
 	const LauncherSettings & settings
 )
@@ -39,13 +39,14 @@ SetupDialog::SetupDialog(
 	DialogWithBrowseDir(
 		this, PathContext( baseDir, settings.pathStyle )
 	),
+	engineSettings( engineSettings ),
 	engineModel( engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.path % "]"; }
 	),
+	iwadSettings( iwadSettings ),
 	iwadModel( iwadList,
 		/*makeDisplayString*/ []( const IWAD & iwad ) -> QString { return iwad.name % "   [" % iwad.path % "]"; }
 	),
-	iwadSettings( iwadSettings ),
 	mapSettings( mapSettings ),
 	modSettings( modSettings ),
 	settings( settings )
@@ -157,8 +158,9 @@ void SetupDialog::setupEngineList()
 	ui->engineListView->toggleInterWidgetDragAndDrop( false );
 	ui->engineListView->toggleExternalFileDragAndDrop( true );
 
-	// set reaction to a double-click on an item
+	// set reaction to clicks inside the view
 	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::editEngine );
+	connect( ui->engineListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::engineSelectionChanged );
 
 	// setup enter key detection and reaction
 	ui->engineListView->installEventFilter( &engineConfirmationFilter );
@@ -166,11 +168,13 @@ void SetupDialog::setupEngineList()
 
 	// setup reaction to key shortcuts and right click
 	ui->engineListView->toggleContextMenu( true );
+	setDefaultEngineAction = ui->engineListView->addAction( "Set as default", {} );
 	ui->engineListView->enableOpenFileLocation();
 	connect( ui->engineListView->addItemAction, &QAction::triggered, this, &thisClass::engineAdd );
 	connect( ui->engineListView->deleteItemAction, &QAction::triggered, this, &thisClass::engineDelete );
 	connect( ui->engineListView->moveItemUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
 	connect( ui->engineListView->moveItemDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
+	connect( setDefaultEngineAction, &QAction::triggered, this, &thisClass::setEngineAsDefault );
 }
 
 void SetupDialog::setupIWADList()
@@ -194,13 +198,18 @@ void SetupDialog::setupIWADList()
 	ui->iwadListView->toggleInterWidgetDragAndDrop( false );
 	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );
 
+	// set reaction to clicks inside the view
+	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::iwadSelectionChanged );
+
 	// setup reaction to key shortcuts and right click
 	ui->iwadListView->toggleContextMenu( true );
+	setDefaultIWADAction = ui->iwadListView->addAction( "Set as default", {} );
 	ui->iwadListView->enableOpenFileLocation();
 	connect( ui->iwadListView->addItemAction, &QAction::triggered, this, &thisClass::iwadAdd );
 	connect( ui->iwadListView->deleteItemAction, &QAction::triggered, this, &thisClass::iwadDelete );
 	connect( ui->iwadListView->moveItemUpAction, &QAction::triggered, this, &thisClass::iwadMoveUp );
 	connect( ui->iwadListView->moveItemDownAction, &QAction::triggered, this, &thisClass::iwadMoveDown );
+	connect( setDefaultIWADAction, &QAction::triggered, this, &thisClass::setIWADAsDefault );
 }
 
 void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
@@ -229,6 +238,43 @@ SetupDialog::~SetupDialog()
 
 
 //----------------------------------------------------------------------------------------------------------------------
+//  local utils
+
+template< typename ListModel >
+void setItemAsDefault( QListView * view, ListModel & model, QAction * setDefaultAction, QString & defaultItemID )
+{
+	int selectedIdx = getSelectedItemIndex( view );
+	if (selectedIdx < 0)
+	{
+		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		return;
+	}
+
+	auto & selectedItem = model[ selectedIdx ];
+
+	QString prevDefaultItemID = defaultItemID;
+	defaultItemID = selectedItem.getID();
+
+	// unmark the previous default entry
+	int prevIdx = findSuch( model, [&]( const auto & item ){ return item.getID() == prevDefaultItemID; } );
+	if (prevIdx >= 0)
+		model[ prevIdx ].textColor = themes::getCurrentPalette().color( QPalette::Text );
+
+	if (defaultItemID != prevDefaultItemID)
+	{
+		// mark the new default entry
+		selectedItem.textColor = themes::getCurrentPalette().defaultEntryText;
+		setDefaultAction->setText( "Unset as default" );
+	}
+	else  // already marked, clear the default status
+	{
+		defaultItemID.clear();
+		setDefaultAction->setText( "Set as default" );
+	}
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
 //  engines
 
 void SetupDialog::engineAdd()
@@ -245,7 +291,12 @@ void SetupDialog::engineAdd()
 
 void SetupDialog::engineDelete()
 {
-	deleteSelectedItem( ui->engineListView, engineModel );
+	int defaultIdx = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
+
+	int deletedIdx = deleteSelectedItem( ui->engineListView, engineModel );
+
+	if (deletedIdx == defaultIdx)
+		engineSettings.defaultEngine.clear();
 }
 
 void SetupDialog::engineMoveUp()
@@ -256,6 +307,23 @@ void SetupDialog::engineMoveUp()
 void SetupDialog::engineMoveDown()
 {
 	moveDownSelectedItem( ui->engineListView, engineModel );
+}
+
+void SetupDialog::engineSelectionChanged( const QItemSelection &, const QItemSelection & )
+{
+	int selectedIdx = getSelectedItemIndex( ui->engineListView );
+	setDefaultEngineAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
+	if (selectedIdx >= 0)
+	{
+		// allow unsetting as default
+		bool isDefaultItem = engineModel[ selectedIdx ].getID() == engineSettings.defaultEngine;
+		setDefaultEngineAction->setText( !isDefaultItem ? "Set as default" : "Unset as default" );
+	}
+}
+
+void SetupDialog::setEngineAsDefault()
+{
+	setItemAsDefault( ui->engineListView, engineModel, setDefaultEngineAction, engineSettings.defaultEngine );
 }
 
 void SetupDialog::editEngine( const QModelIndex & index )
@@ -307,7 +375,12 @@ void SetupDialog::iwadAdd()
 
 void SetupDialog::iwadDelete()
 {
-	deleteSelectedItem( ui->iwadListView, iwadModel );
+	int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
+
+	int deletedIdx = deleteSelectedItem( ui->iwadListView, iwadModel );
+
+	if (deletedIdx == defaultIdx)
+		iwadSettings.defaultIWAD.clear();
 }
 
 void SetupDialog::iwadMoveUp()
@@ -318,6 +391,23 @@ void SetupDialog::iwadMoveUp()
 void SetupDialog::iwadMoveDown()
 {
 	moveDownSelectedItem( ui->iwadListView, iwadModel );
+}
+
+void SetupDialog::iwadSelectionChanged( const QItemSelection &, const QItemSelection & )
+{
+	int selectedIdx = getSelectedItemIndex( ui->iwadListView );
+	setDefaultIWADAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
+	if (selectedIdx >= 0)
+	{
+		// allow unsetting as default
+		bool isDefaultItem = iwadModel[ selectedIdx ].getID() == iwadSettings.defaultIWAD;
+		setDefaultIWADAction->setText( !isDefaultItem ? "Set as default" : "Unset as default" );
+	}
+}
+
+void SetupDialog::setIWADAsDefault()
+{
+	setItemAsDefault( ui->iwadListView, iwadModel, setDefaultIWADAction, iwadSettings.defaultIWAD );
 }
 
 void SetupDialog::toggleAutoIWADUpdate( bool enabled )

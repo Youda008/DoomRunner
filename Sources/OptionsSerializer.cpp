@@ -157,6 +157,20 @@ static void deserialize( const JsonObjectCtx & jsMod, Mod & mod )
 	}
 }
 
+static QJsonObject serialize( const EngineSettings & engineSettings )
+{
+	QJsonObject jsEngines;
+
+	jsEngines["default_engine"] = engineSettings.defaultEngine;
+
+	return jsEngines;
+}
+
+static void deserialize( const JsonObjectCtx & jsEngines, EngineSettings & engineSettings )
+{
+	engineSettings.defaultEngine = jsEngines.getString( "default_engine", {}, DontShowError );
+}
+
 static QJsonObject serialize( const IwadSettings & iwadSettings )
 {
 	QJsonObject jsIWADs;
@@ -164,6 +178,7 @@ static QJsonObject serialize( const IwadSettings & iwadSettings )
 	jsIWADs["auto_update"] = iwadSettings.updateFromDir;
 	jsIWADs["directory"] = iwadSettings.dir;
 	jsIWADs["search_subdirs"] = iwadSettings.searchSubdirs;
+	jsIWADs["default_iwad"] = iwadSettings.defaultIWAD;
 
 	return jsIWADs;
 }
@@ -173,6 +188,7 @@ static void deserialize( const JsonObjectCtx & jsIWADs, IwadSettings & iwadSetti
 	iwadSettings.updateFromDir = jsIWADs.getBool( "auto_update", iwadSettings.updateFromDir );
 	iwadSettings.dir = jsIWADs.getString( "directory" );
 	iwadSettings.searchSubdirs = jsIWADs.getBool( "search_subdirs", iwadSettings.searchSubdirs );
+	iwadSettings.defaultIWAD = jsIWADs.getString( "default_iwad", {}, DontShowError );
 }
 
 static QJsonObject serialize( const MapSettings & mapSettings )
@@ -577,7 +593,7 @@ static void serializeOptionsToJson( const OptionsToSave & opts, QJsonObject & js
 
 	{
 		// better keep room for adding some engine settings later, so that we don't have to break compatibility again
-		QJsonObject jsEngines;
+		QJsonObject jsEngines = serialize( opts.engineSettings );
 
 		jsEngines["engine_list"] = serializeList( opts.engines );
 
@@ -658,6 +674,8 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 
 	if (JsonObjectCtx jsEngines = jsOpts.getObject( "engines" ))
 	{
+		deserialize( jsEngines, opts.engineSettings );
+
 		if (JsonArrayCtx jsEngineArray = jsEngines.getArray( "engine_list" ))
 		{
 			// iterate manually, so that we can filter-out invalid items

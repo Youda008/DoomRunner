@@ -267,11 +267,17 @@ struct Preset : public EditableListModelItem
 //----------------------------------------------------------------------------------------------------------------------
 //  global settings
 
+struct EngineSettings
+{
+	QString defaultEngine;
+};
+
 struct IwadSettings
 {
 	QString dir;                  ///< directory to update IWAD list from (value returned by SetupDialog)
 	bool updateFromDir = false;   ///< whether the IWAD list should be periodically updated from a directory
 	bool searchSubdirs = false;   ///< whether to search for IWADs recursivelly in subdirectories
+	QString defaultIWAD;
 };
 
 struct MapSettings

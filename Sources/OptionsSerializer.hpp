@@ -39,6 +39,7 @@ struct OptionsToSave
 	int selectedPresetIdx;
 
 	// global settings
+	const EngineSettings & engineSettings;
 	const IwadSettings & iwadSettings;
 	const MapSettings & mapSettings;
 	const ModSettings & modSettings;
@@ -66,6 +67,7 @@ struct OptionsToLoad
 	QString selectedPreset;
 
 	// global settings
+	EngineSettings & engineSettings;
 	IwadSettings & iwadSettings;
 	MapSettings & mapSettings;
 	ModSettings & modSettings;

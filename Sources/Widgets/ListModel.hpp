@@ -497,8 +497,8 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 			{
 				if (item.isSeparator)
 					return QBrush( themes::getCurrentPalette().separatorText );
-				else if (item.foregroundColor)
-					return QBrush( *item.foregroundColor );
+				else if (item.textColor)
+					return QBrush( *item.textColor );
 				else
 					return QVariant();  // default
 			}
@@ -638,8 +638,8 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 			{
 				if (item.isSeparator)
 					return QBrush( themes::getCurrentPalette().separatorText );
-				else if (item.foregroundColor)
-					return QBrush( *item.foregroundColor );
+				else if (item.textColor)
+					return QBrush( *item.textColor );
 				else
 					return QVariant();  // default
 			}

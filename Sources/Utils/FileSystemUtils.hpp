@@ -27,7 +27,7 @@ class QModelIndex;
 //======================================================================================================================
 //  general
 
-enum class PathStyle
+enum class PathStyle : uint8_t
 {
 	Relative,
 	Absolute

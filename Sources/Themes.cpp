@@ -45,7 +45,38 @@
 
 
 //======================================================================================================================
-//  utils
+//  App styles
+
+static QString defaultStyle;  ///< style active when application starts, depends on system settings
+static QStringList availableStyles;  ///< styles available on this operating system and graphical environment
+
+static void initStyles()
+{
+	defaultStyle = qApp->style()->objectName();
+	availableStyles = QStyleFactory::keys();
+}
+
+static void setQtStyle( const QString & styleName )
+{
+	if (styleName.isNull())
+	{
+		qApp->setStyle( QStyleFactory::create( defaultStyle ) );
+	}
+	else if (availableStyles.contains( styleName ))
+	{
+		qApp->setStyle( QStyleFactory::create( styleName ) );
+	}
+	else
+	{
+		QMessageBox::warning( nullptr, "Unknown style name",
+			"Unable to set application style to \""%styleName%"\". Such style doesn't exist."
+		);
+	}
+}
+
+
+//======================================================================================================================
+//  palette utils
 
 /*
 static void printColorForRole( QDebug d, const QPalette & palette, QPalette::ColorRole role )
@@ -110,11 +141,20 @@ static QColor mixColors( QColor color1, int weight1, QColor color2, int weight2,
 	);
 }
 
+static std::pair< QColor, QColor > deriveSeparatorColors( const QPalette & palette )
+{
+	QColor activeText = palette.color( QPalette::Active, QPalette::Text );
+	QColor activeBase = palette.color( QPalette::Active, QPalette::Base );
+
+	QColor textColor = activeText;
+	QColor backgroundColor = mixColors( activeBase, 9, activeText, 4, QColor(12,12,12) );
+
+	return { textColor, backgroundColor };
+}
+
 
 //======================================================================================================================
 //  color schemes
-
-std::pair< QColor, QColor > deriveSeparatorColors( const QPalette & palette );
 
 static const char * const schemeStrings [] =
 {
@@ -124,13 +164,13 @@ static const char * const schemeStrings [] =
 };
 static_assert( size_t(ColorScheme::_EnumEnd) == std::size(schemeStrings), "Please update this table" );
 
-static themes::Palette palettes [ std::size(schemeStrings) ];
+static Palette palettes [ std::size(schemeStrings) ];
 
 // This cannot be done in a static initializer, because it depends on qApp being already initialized.
 static void initColorPalettes()
 {
 	{
-		themes::Palette & systemPalette = palettes[ size_t(ColorScheme::SystemDefault) ];
+		Palette & systemPalette = palettes[ size_t(ColorScheme::SystemDefault) ];
 
 		static_cast< QPalette & >( systemPalette ) = qApp->palette();
 
@@ -138,7 +178,7 @@ static void initColorPalettes()
 	}
 
 	{
-		themes::Palette & darkPalette = palettes[ size_t(ColorScheme::Dark) ];
+		Palette & darkPalette = palettes[ size_t(ColorScheme::Dark) ];
 
 		// https://forum.qt.io/topic/101391/windows-10-dark-theme/4
 		QColor darkColor = QColor(0x2D,0x2D,0x2D);
@@ -163,7 +203,7 @@ static void initColorPalettes()
 	}
 
 	{
-		themes::Palette & lightPalette = palettes[ size_t(ColorScheme::Light) ];
+		Palette & lightPalette = palettes[ size_t(ColorScheme::Light) ];
 
 		// based on "Breeze Light" in KDE
 		setColorsForRole( lightPalette, QPalette::WindowText,      QColor(0x232629), QColor(0x232629), QColor(0xa0a1a3) );
@@ -289,15 +329,11 @@ static void initColorPalettes()
 	*/
 }
 
-std::pair< QColor, QColor > deriveSeparatorColors( const QPalette & palette )
+static void setQtColorScheme( ColorScheme schemeID )
 {
-	QColor activeText = palette.color( QPalette::Active, QPalette::Text );
-	QColor activeBase = palette.color( QPalette::Active, QPalette::Base );
+	const QPalette & selectedPalette = palettes[ size_t(schemeID) ];
 
-	QColor textColor = activeText;
-	QColor backgroundColor = mixColors( activeBase, 9, activeText, 4, QColor(12,12,12) );
-
-	return { textColor, backgroundColor };
+	qApp->setPalette( selectedPalette );
 }
 
 const char * schemeToString( ColorScheme scheme )
@@ -315,44 +351,6 @@ ColorScheme schemeFromString( const QString & schemeStr )
 		return ColorScheme( idx );
 	else
 		return ColorScheme::_EnumEnd;
-}
-
-static void setQtColorScheme( ColorScheme schemeID )
-{
-	const QPalette & selectedPalette = palettes[ size_t(schemeID) ];
-
-	qApp->setPalette( selectedPalette );
-}
-
-
-//======================================================================================================================
-//  App styles
-
-static QString defaultStyle;  ///< style active when application starts, depends on system settings
-static QStringList availableStyles;  ///< styles available on this operating system and graphical environment
-
-static void initStyles()
-{
-	defaultStyle = qApp->style()->objectName();
-	availableStyles = QStyleFactory::keys();
-}
-
-static void setQtStyle( const QString & styleName )
-{
-	if (styleName.isNull())
-	{
-		qApp->setStyle( QStyleFactory::create( defaultStyle ) );
-	}
-	else if (availableStyles.contains( styleName ))
-	{
-		qApp->setStyle( QStyleFactory::create( styleName ) );
-	}
-	else
-	{
-		QMessageBox::warning( nullptr, "Unknown style name",
-			"Unable to set application style to \""%styleName%"\". Such style doesn't exist."
-		);
-	}
 }
 
 
@@ -505,6 +503,40 @@ void init()
  #endif
 }
 
+QStringList getAvailableAppStyles()
+{
+	return availableStyles;
+}
+
+QString getDefaultAppStyle()
+{
+	return defaultStyle;
+}
+
+void setAppStyle( const QString & styleName )
+{
+	if (styleName == g_currentStyle)
+	{
+		return;  // nothing to be done, this style is already active
+	}
+	g_currentStyle = styleName;
+
+	setQtStyle( styleName );
+}
+
+void updateWindowBorder( [[maybe_unused]] QWidget * window )
+{
+ #if IS_WINDOWS
+	if (g_currentRealSchemeID == ColorScheme::Dark && !isSystemDarkModeEnabled())
+	{
+		toggleDarkTitleBar( reinterpret_cast< HWND >( window->winId() ), true );
+		// This is the only way how to force the window title bar to redraw with the new settings.
+		SetFocus( reinterpret_cast< HWND >( static_cast< QWidget * >( window->parent() )->winId() ) );
+		SetFocus( reinterpret_cast< HWND >( window->winId() ) );
+	}
+ #endif
+}
+
 void setAppColorScheme( ColorScheme userSchemeID )
 {
 	ColorScheme realSchemeID = userSchemeID;
@@ -553,40 +585,6 @@ QString updateHyperlinkColor( const QString & richText )
 	static QRegularExpression regex("color:#[0-9a-fA-F]{6}");
 	newText.replace( regex, "color:"+htmlColor );
 	return newText;
-}
-
-QStringList getAvailableAppStyles()
-{
-	return availableStyles;
-}
-
-QString getDefaultAppStyle()
-{
-	return defaultStyle;
-}
-
-void setAppStyle( const QString & styleName )
-{
-	if (styleName == g_currentStyle)
-	{
-		return;  // nothing to be done, this style is already active
-	}
-	g_currentStyle = styleName;
-
-	setQtStyle( styleName );
-}
-
-void updateWindowBorder( [[maybe_unused]] QWidget * window )
-{
- #if IS_WINDOWS
-	if (g_currentRealSchemeID == ColorScheme::Dark && !isSystemDarkModeEnabled())
-	{
-		toggleDarkTitleBar( reinterpret_cast< HWND >( window->winId() ), true );
-		// This is the only way how to force the window title bar to redraw with the new settings.
-		SetFocus( reinterpret_cast< HWND >( static_cast< QWidget * >( window->parent() )->winId() ) );
-		SetFocus( reinterpret_cast< HWND >( window->winId() ) );
-	}
- #endif
 }
 
 } // namespace themes

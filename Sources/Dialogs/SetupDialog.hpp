@@ -19,6 +19,7 @@
 
 class QDir;
 class QLineEdit;
+class QAction;
 
 namespace Ui {
 	class SetupDialog;
@@ -51,9 +52,28 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 
  private slots:
 
+	// engines
+
+	void engineAdd();
+	void engineDelete();
+	void engineMoveUp();
+	void engineMoveDown();
+
+	void editEngine( const QModelIndex & index );
+	void editSelectedEngine();
+
+	// IWADs
+
+	void iwadAdd();
+	void iwadDelete();
+	void iwadMoveUp();
+	void iwadMoveDown();
+
 	void manageIWADsManually();
 	void manageIWADsAutomatically();
 	void toggleIWADSubdirs( bool checked );
+
+	// game file directories
 
 	void browseIWADDir();
 	void browseMapDir();
@@ -63,30 +83,21 @@ class SetupDialog : public QDialog, private DialogWithBrowseDir {
 	void changeMapDir( const QString & dir );
 	void changeModDir( const QString & dir );
 
-	void iwadAdd();
-	void iwadDelete();
-	void iwadMoveUp();
-	void iwadMoveDown();
-
-	void engineAdd();
-	void engineDelete();
-	void engineMoveUp();
-	void engineMoveDown();
-
-	void editEngine( const QModelIndex & index );
-	void editCurrentEngine();
-
 	void updateIWADsFromDir();
 
-	void toggleAbsolutePaths( bool checked );
+	// theme options
 
 	void selectAppStyle( int index );
 	void setDefaultScheme();
 	void setDarkScheme();
 	void setLightScheme();
 
-	void toggleCloseOnLaunch( bool checked );
+	// other
+
+	void toggleAbsolutePaths( bool checked );
+
 	void toggleShowEngineOutput( bool checked );
+	void toggleCloseOnLaunch( bool checked );
 
  private: // methods
 

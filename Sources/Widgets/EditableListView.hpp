@@ -55,22 +55,26 @@ class EditableListView : public QListView {
 	/// Enables/disables actions (context menu entries, key presses) that modify the list (inserting, deleting, reordering)
 	void toggleListModifications( bool enabled );
 
-	// right-click menu
+	// context menu
 
-	/// Setting this to false will grey-out the context menu items so that they can't be clicked, false is default.
+	/// Enables/disables the ability to open a context menu by clicking with right mouse button.
 	void toggleContextMenu( bool enabled );
 
 	/// Enables clone action in a right-click context menu and CTRL+C shortcut.
 	void enableItemCloning();
-
-	/// Enables "Open file location" action in a right-click context menu.
-	void enableOpenFileLocation();
 
 	/// Enables adding a named separator line between items of this list view.
 	void enableInsertSeparator();
 
 	/// Enables opening a search bar via a context menu and a key shortcut.
 	void enableFinding();
+
+	/// Enables "Open file location" action in a right-click context menu.
+	void enableOpenFileLocation();
+
+	/// Creates a custom action and adds it to the context menu.
+	/** The resulting QAction object will emit triggered() signal that needs to be connected to the desired callback. */
+	QAction * addAction( const QString & text, const QKeySequence & shortcut );
 
 	// drag&drop
 	// We support 3 kinds of drag&drop operations, that can be separately enabled/disabled:
@@ -87,24 +91,23 @@ class EditableListView : public QListView {
 	/// external drag&drop for moving files from directory window, disabled by default
 	void toggleExternalFileDragAndDrop( bool enabled );
 
- public: // members
+ public: // actions (context menu entries with shortcuts)
 
-	// these actions will emit trigger signals when a menu item is clicked or a shortcut is pressed
-	QAction * addAction = nullptr;
-	QAction * deleteAction = nullptr;
-	QAction * cloneAction = nullptr;
-	QAction * moveUpAction = nullptr;
-	QAction * moveDownAction = nullptr;
-	QAction * openFileLocationAction = nullptr;
+	// These actions will emit triggered() signal that needs to be connected to the desired callback.
+	QAction * addItemAction = nullptr;
+	QAction * deleteItemAction = nullptr;
+	QAction * cloneItemAction = nullptr;
+	QAction * moveItemUpAction = nullptr;
+	QAction * moveItemDownAction = nullptr;
 	QAction * insertSeparatorAction = nullptr;
-	QAction * findAction = nullptr;
+	QAction * findItemAction = nullptr;
+	QAction * openFileLocationAction = nullptr;
 
  protected: // methods
 
 	// right-click menu
 
 	virtual void contextMenuEvent( QContextMenuEvent * e ) override;
-	QAction * addOwnAction( const QString & text, const QKeySequence & shortcut );
 
 	// drag&drop
 

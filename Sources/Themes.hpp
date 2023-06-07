@@ -31,6 +31,13 @@ enum class ColorScheme
 const char * schemeToString( ColorScheme scheme );
 ColorScheme schemeFromString( const QString & schemeStr );
 
+/// Our own extended color palette.
+struct Palette : public QPalette
+{
+	QColor separatorText = Qt::black;
+	QColor separatorBackground = QRgb( 0xA0A0A0 );
+};
+
 
 //======================================================================================================================
 
@@ -39,25 +46,6 @@ namespace themes {
 
 /// Must be called at the start of the program, before the following functions are called.
 void init();
-
-
-// color schemes
-
-/// Sets a color scheme for the whole application.
-/** init() must be called before calling this function. */
-void setAppColorScheme( ColorScheme scheme );
-
-/// Our own extended color palette.
-struct Palette : public QPalette
-{
-	QColor separatorText = Qt::black;
-	QColor separatorBackground = QRgb( 0xA0A0A0 );
-};
-const Palette & getCurrentPalette();
-
-// Sometimes hyperlinks in a widget's text specify color in HTML tag, which overrides palette.setColor( QPalette::Link, ... )
-// In such case this needs to be called to update the HTML tag color.
-QString updateHyperlinkColor( const QString & richText );
 
 
 // app styles
@@ -78,6 +66,19 @@ void setAppStyle( const QString & styleName );
 // On Windows this needs to be called everytime a new window (dialog) is created,
 // because the new title bar and window borders are not automatically changed by Qt.
 void updateWindowBorder( QWidget * window );
+
+
+// color schemes
+
+/// Sets a color scheme for the whole application.
+/** init() must be called before calling this function. */
+void setAppColorScheme( ColorScheme scheme );
+
+const Palette & getCurrentPalette();
+
+// Sometimes hyperlinks in a widget's text specify color in HTML tag, which overrides palette.setColor( QPalette::Link, ... )
+// In such case this needs to be called to update the HTML tag color.
+QString updateHyperlinkColor( const QString & richText );
 
 
 } // namespace themes

@@ -305,12 +305,12 @@ struct StorageSettings
 /// Additional launcher settings
 struct LauncherSettings : public StorageSettings  // inherited instead of included to avoid long identifiers
 {
-	PathStyle pathStyle = defaultPathStyle;
-	bool checkForUpdates = true;
-	bool closeOnLaunch = false;
-	bool showEngineOutput = showEngineOutputByDefault;
-	ColorScheme colorScheme = ColorScheme::SystemDefault;
 	QString appStyle;
+	ColorScheme colorScheme = ColorScheme::SystemDefault;
+	PathStyle pathStyle = defaultPathStyle;
+	bool showEngineOutput = showEngineOutputByDefault;
+	bool closeOnLaunch = false;
+	bool checkForUpdates = true;
 
 	void assign( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
 };

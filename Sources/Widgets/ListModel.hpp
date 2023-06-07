@@ -92,7 +92,7 @@ class DropTarget {
   * The following methods should be overriden to point to the appropriate members. */
 struct ReadOnlyListModelItem
 {
-	std::optional< QColor > foregroundColor;
+	std::optional< QColor > textColor;
 	std::optional< QColor > backgroundColor;
 	bool isSeparator = false;  ///< true means this is a special item used to mark a section
 

@@ -105,14 +105,14 @@ static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, 
 
 static void deserialize_pre17( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
 {
+	// leave appStyle and colorScheme at their defaults
+
 	bool useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
 	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
 
-	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
-	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
-
-	// leave appStyle and colorScheme at their defaults
+	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
+	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
 
 	OptionsStorage storage = jsSettings.getEnum< OptionsStorage >( "options_storage", settings.launchOptsStorage );
 	settings.launchOptsStorage = storage;

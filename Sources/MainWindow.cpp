@@ -495,17 +495,17 @@ void MainWindow::setupPresetList()
 	ui->presetListView->toggleContextMenu( true );
 	ui->presetListView->enableItemCloning();
 	ui->presetListView->enableInsertSeparator();
-	connect( ui->presetListView->addAction, &QAction::triggered, this, &thisClass::presetAdd );
-	connect( ui->presetListView->deleteAction, &QAction::triggered, this, &thisClass::presetDelete );
-	connect( ui->presetListView->cloneAction, &QAction::triggered, this, &thisClass::presetClone );
-	connect( ui->presetListView->moveUpAction, &QAction::triggered, this, &thisClass::presetMoveUp );
-	connect( ui->presetListView->moveDownAction, &QAction::triggered, this, &thisClass::presetMoveDown );
+	connect( ui->presetListView->addItemAction, &QAction::triggered, this, &thisClass::presetAdd );
+	connect( ui->presetListView->deleteItemAction, &QAction::triggered, this, &thisClass::presetDelete );
+	connect( ui->presetListView->cloneItemAction, &QAction::triggered, this, &thisClass::presetClone );
+	connect( ui->presetListView->moveItemUpAction, &QAction::triggered, this, &thisClass::presetMoveUp );
+	connect( ui->presetListView->moveItemDownAction, &QAction::triggered, this, &thisClass::presetMoveDown );
 	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::presetInsertSeparator );
 
 	// setup search
 	presetSearchPanel = new SearchPanel( ui->searchShowBtn, ui->searchLine, ui->caseSensitiveChkBox, ui->regexChkBox );
 	ui->presetListView->enableFinding();
-	connect( ui->presetListView->findAction, &QAction::triggered, presetSearchPanel, &SearchPanel::expand );
+	connect( ui->presetListView->findItemAction, &QAction::triggered, presetSearchPanel, &SearchPanel::expand );
 	connect( presetSearchPanel, &SearchPanel::searchParamsChanged, this, &thisClass::searchPresets );
 }
 
@@ -592,12 +592,12 @@ void MainWindow::setupModList()
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
-	ui->modListView->enableOpenFileLocation();
 	ui->modListView->enableInsertSeparator();
-	connect( ui->modListView->addAction, &QAction::triggered, this, &thisClass::modAdd );
-	connect( ui->modListView->deleteAction, &QAction::triggered, this, &thisClass::modDelete );
-	connect( ui->modListView->moveUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
-	connect( ui->modListView->moveDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
+	ui->modListView->enableOpenFileLocation();
+	connect( ui->modListView->addItemAction, &QAction::triggered, this, &thisClass::modAdd );
+	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &thisClass::modDelete );
+	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
+	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
 	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::modInsertSeparator );
 }
 

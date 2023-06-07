@@ -66,12 +66,12 @@ bool highlightDirPathIfFile( QLineEdit * lineEdit, const QString & path )
 
 void highlightInvalidListItem( ReadOnlyListModelItem & item )
 {
-	item.foregroundColor = highlightColor;
+	item.textColor = highlightColor;
 }
 
 void unhighlightListItem( ReadOnlyListModelItem & item )
 {
-	item.foregroundColor.reset();
+	item.textColor.reset();
 }
 
 

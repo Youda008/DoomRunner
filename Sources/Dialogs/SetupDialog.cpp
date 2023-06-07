@@ -72,8 +72,8 @@ SetupDialog::SetupDialog(
 	ui->mapDirLine->setText( mapSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
 	ui->absolutePathsChkBox->setChecked( settings.pathStyle == PathStyle::Absolute );
-	ui->closeOnLaunchChkBox->setChecked( settings.closeOnLaunch );
 	ui->showEngineOutputChkBox->setChecked( settings.showEngineOutput );
+	ui->closeOnLaunchChkBox->setChecked( settings.closeOnLaunch );
 
 	ui->styleCmbBox->addItem( "System default" );
 	ui->styleCmbBox->addItems( themes::getAvailableAppStyles() );
@@ -127,8 +127,8 @@ SetupDialog::SetupDialog(
 	connect( ui->schemeBtn_dark, &QRadioButton::clicked, this, &thisClass::setDarkScheme );
 	connect( ui->schemeBtn_light, &QRadioButton::clicked, this, &thisClass::setLightScheme );
 
-	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::toggleCloseOnLaunch );
 	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &thisClass::toggleShowEngineOutput );
+	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::toggleCloseOnLaunch );
 
 	connect( ui->doneBtn, &QPushButton::clicked, this, &thisClass::accept );
 
@@ -162,15 +162,15 @@ void SetupDialog::setupEngineList()
 
 	// setup enter key detection and reaction
 	ui->engineListView->installEventFilter( &engineConfirmationFilter );
-	connect( &engineConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::editCurrentEngine );
+	connect( &engineConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::editSelectedEngine );
 
 	// setup reaction to key shortcuts and right click
 	ui->engineListView->toggleContextMenu( true );
 	ui->engineListView->enableOpenFileLocation();
-	connect( ui->engineListView->addAction, &QAction::triggered, this, &thisClass::engineAdd );
-	connect( ui->engineListView->deleteAction, &QAction::triggered, this, &thisClass::engineDelete );
-	connect( ui->engineListView->moveUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
-	connect( ui->engineListView->moveDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
+	connect( ui->engineListView->addItemAction, &QAction::triggered, this, &thisClass::engineAdd );
+	connect( ui->engineListView->deleteItemAction, &QAction::triggered, this, &thisClass::engineDelete );
+	connect( ui->engineListView->moveItemUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
+	connect( ui->engineListView->moveItemDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
 }
 
 void SetupDialog::setupIWADList()
@@ -197,10 +197,10 @@ void SetupDialog::setupIWADList()
 	// setup reaction to key shortcuts and right click
 	ui->iwadListView->toggleContextMenu( true );
 	ui->iwadListView->enableOpenFileLocation();
-	connect( ui->iwadListView->addAction, &QAction::triggered, this, &thisClass::iwadAdd );
-	connect( ui->iwadListView->deleteAction, &QAction::triggered, this, &thisClass::iwadDelete );
-	connect( ui->iwadListView->moveUpAction, &QAction::triggered, this, &thisClass::iwadMoveUp );
-	connect( ui->iwadListView->moveDownAction, &QAction::triggered, this, &thisClass::iwadMoveDown );
+	connect( ui->iwadListView->addItemAction, &QAction::triggered, this, &thisClass::iwadAdd );
+	connect( ui->iwadListView->deleteItemAction, &QAction::triggered, this, &thisClass::iwadDelete );
+	connect( ui->iwadListView->moveItemUpAction, &QAction::triggered, this, &thisClass::iwadMoveUp );
+	connect( ui->iwadListView->moveItemDownAction, &QAction::triggered, this, &thisClass::iwadMoveDown );
 }
 
 void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
@@ -229,7 +229,96 @@ SetupDialog::~SetupDialog()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  slots
+//  engines
+
+void SetupDialog::engineAdd()
+{
+	EngineDialog dialog( this, pathContext, {} );
+
+	int code = dialog.exec();
+
+	if (code == QDialog::Accepted)
+	{
+		appendItem( ui->engineListView, engineModel, dialog.engine );
+	}
+}
+
+void SetupDialog::engineDelete()
+{
+	deleteSelectedItem( ui->engineListView, engineModel );
+}
+
+void SetupDialog::engineMoveUp()
+{
+	moveUpSelectedItem( ui->engineListView, engineModel );
+}
+
+void SetupDialog::engineMoveDown()
+{
+	moveDownSelectedItem( ui->engineListView, engineModel );
+}
+
+void SetupDialog::editEngine( const QModelIndex & index )
+{
+	Engine & selectedEngine = engineModel[ index.row() ];
+
+	EngineDialog dialog( this, pathContext, selectedEngine );
+
+	int code = dialog.exec();
+
+	if (code == QDialog::Accepted)
+	{
+		selectedEngine = dialog.engine;
+	}
+}
+
+void SetupDialog::editSelectedEngine()
+{
+	int selectedEngineIdx = getSelectedItemIndex( ui->engineListView );
+	if (selectedEngineIdx >= 0)
+	{
+		editEngine( engineModel.makeIndex( selectedEngineIdx ) );
+	}
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  IWADs
+
+void SetupDialog::iwadAdd()
+{
+	QString path = OwnFileDialog::getOpenFileName( this, "Locate the IWAD", lastUsedDir,
+		  makeFileFilter( "Doom data files", iwadSuffixes )
+		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
+		+ "All files (*)"
+	);
+	if (path.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path comming out of the file dialog is always absolute
+	if (pathContext.usingRelativePaths())
+		path = pathContext.getRelativePath( path );
+
+	// next time use this dir as the starting dir of the file dialog for convenience
+	lastUsedDir = getDirOfFile( path );
+
+	appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );
+}
+
+void SetupDialog::iwadDelete()
+{
+	deleteSelectedItem( ui->iwadListView, iwadModel );
+}
+
+void SetupDialog::iwadMoveUp()
+{
+	moveUpSelectedItem( ui->iwadListView, iwadModel );
+}
+
+void SetupDialog::iwadMoveDown()
+{
+	moveDownSelectedItem( ui->iwadListView, iwadModel );
+}
 
 void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 {
@@ -273,6 +362,10 @@ void SetupDialog::toggleIWADSubdirs( bool checked )
 		updateIWADsFromDir();
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
+//  game file directories
+
 void SetupDialog::browseIWADDir()
 {
 	browseDir( this, "with IWADs", ui->iwadDirLine );
@@ -312,123 +405,14 @@ void SetupDialog::changeModDir( const QString & dir )
 	highlightDirPathIfInvalid( ui->modDirLine, dir );
 }
 
-void SetupDialog::iwadAdd()
-{
-	QString path = OwnFileDialog::getOpenFileName( this, "Locate the IWAD", lastUsedDir,
-		  makeFileFilter( "Doom data files", iwadSuffixes )
-		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
-		+ "All files (*)"
-	);
-	if (path.isEmpty())  // user probably clicked cancel
-		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
-
-	// next time use this dir as the starting dir of the file dialog for convenience
-	lastUsedDir = getDirOfFile( path );
-
-	appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );
-}
-
-void SetupDialog::iwadDelete()
-{
-	deleteSelectedItem( ui->iwadListView, iwadModel );
-}
-
-void SetupDialog::iwadMoveUp()
-{
-	moveUpSelectedItem( ui->iwadListView, iwadModel );
-}
-
-void SetupDialog::iwadMoveDown()
-{
-	moveDownSelectedItem( ui->iwadListView, iwadModel );
-}
-
-void SetupDialog::engineAdd()
-{
-	EngineDialog dialog( this, pathContext, {} );
-
-	int code = dialog.exec();
-
-	if (code == QDialog::Accepted)
-	{
-		appendItem( ui->engineListView, engineModel, dialog.engine );
-	}
-}
-
-void SetupDialog::engineDelete()
-{
-	deleteSelectedItem( ui->engineListView, engineModel );
-}
-
-void SetupDialog::engineMoveUp()
-{
-	moveUpSelectedItem( ui->engineListView, engineModel );
-}
-
-void SetupDialog::engineMoveDown()
-{
-	moveDownSelectedItem( ui->engineListView, engineModel );
-}
-
-void SetupDialog::editEngine( const QModelIndex & index )
-{
-	Engine & selectedEngine = engineModel[ index.row() ];
-
-	EngineDialog dialog( this, pathContext, selectedEngine );
-
-	int code = dialog.exec();
-
-	if (code == QDialog::Accepted)
-	{
-		selectedEngine = dialog.engine;
-	}
-}
-
-void SetupDialog::editCurrentEngine()
-{
-	int selectedEngineIdx = getSelectedItemIndex( ui->engineListView );
-	if (selectedEngineIdx >= 0)
-	{
-		editEngine( engineModel.makeIndex( selectedEngineIdx ) );
-	}
-}
-
 void SetupDialog::updateIWADsFromDir()
 {
 	updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
 }
 
-void SetupDialog::toggleAbsolutePaths( bool checked )
-{
-	settings.pathStyle = checked ? PathStyle::Absolute : PathStyle::Relative;
 
-	pathContext.setPathStyle( settings.pathStyle );
-
-	for (Engine & engine : engineModel)
-	{
-		engine.path = pathContext.convertPath( engine.path );
-		engine.configDir = pathContext.convertPath( engine.configDir );
-	}
-	engineModel.contentChanged( 0 );
-
-	iwadSettings.dir = pathContext.convertPath( iwadSettings.dir );
-	ui->iwadDirLine->setText( iwadSettings.dir );
-	for (IWAD & iwad : iwadModel)
-	{
-		iwad.path = pathContext.convertPath( iwad.path );
-	}
-	iwadModel.contentChanged( 0 );
-
-	mapSettings.dir = pathContext.convertPath( mapSettings.dir );
-	ui->mapDirLine->setText( mapSettings.dir );
-
-	modSettings.dir = pathContext.convertPath( modSettings.dir );
-	ui->modDirLine->setText( modSettings.dir );
-}
+//----------------------------------------------------------------------------------------------------------------------
+//  theme options
 
 void SetupDialog::selectAppStyle( int index )
 {
@@ -467,15 +451,36 @@ void SetupDialog::setLightScheme()
 	themes::setAppColorScheme( settings.colorScheme );
 }
 
-void SetupDialog::toggleCloseOnLaunch( bool checked )
-{
-	settings.closeOnLaunch = checked;
 
-	if (checked && settings.showEngineOutput)
+//----------------------------------------------------------------------------------------------------------------------
+//  other
+
+void SetupDialog::toggleAbsolutePaths( bool checked )
+{
+	settings.pathStyle = checked ? PathStyle::Absolute : PathStyle::Relative;
+
+	pathContext.setPathStyle( settings.pathStyle );
+
+	for (Engine & engine : engineModel)
 	{
-		// both options cannot be enabled, that would make no sense
-		ui->showEngineOutputChkBox->setChecked( false );
+		engine.path = pathContext.convertPath( engine.path );
+		engine.configDir = pathContext.convertPath( engine.configDir );
 	}
+	engineModel.contentChanged( 0 );
+
+	iwadSettings.dir = pathContext.convertPath( iwadSettings.dir );
+	ui->iwadDirLine->setText( iwadSettings.dir );
+	for (IWAD & iwad : iwadModel)
+	{
+		iwad.path = pathContext.convertPath( iwad.path );
+	}
+	iwadModel.contentChanged( 0 );
+
+	mapSettings.dir = pathContext.convertPath( mapSettings.dir );
+	ui->mapDirLine->setText( mapSettings.dir );
+
+	modSettings.dir = pathContext.convertPath( modSettings.dir );
+	ui->modDirLine->setText( modSettings.dir );
 }
 
 void SetupDialog::toggleShowEngineOutput( bool checked )
@@ -486,5 +491,16 @@ void SetupDialog::toggleShowEngineOutput( bool checked )
 	{
 		// both options cannot be enabled, that would make no sense
 		ui->closeOnLaunchChkBox->setChecked( false );
+	}
+}
+
+void SetupDialog::toggleCloseOnLaunch( bool checked )
+{
+	settings.closeOnLaunch = checked;
+
+	if (checked && settings.showEngineOutput)
+	{
+		// both options cannot be enabled, that would make no sense
+		ui->showEngineOutputChkBox->setChecked( false );
 	}
 }

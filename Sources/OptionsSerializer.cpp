@@ -522,13 +522,13 @@ static void deserialize( const JsonObjectCtx & jsGeometry, WindowGeometry & geom
 
 static void serialize( QJsonObject & jsSettings, const LauncherSettings & settings )
 {
-	jsSettings["use_absolute_paths"] = settings.pathStyle == PathStyle::Absolute;
-	jsSettings["check_for_updates"] = settings.checkForUpdates;
-	jsSettings["close_on_launch"] = settings.closeOnLaunch;
-	jsSettings["show_engine_output"] = settings.showEngineOutput;
-
 	jsSettings["app_style"] = settings.appStyle.isNull() ? QJsonValue( QJsonValue::Null ) : settings.appStyle;
 	jsSettings["color_scheme"] = schemeToString( settings.colorScheme );
+
+	jsSettings["use_absolute_paths"] = settings.pathStyle == PathStyle::Absolute;
+	jsSettings["show_engine_output"] = settings.showEngineOutput;
+	jsSettings["close_on_launch"] = settings.closeOnLaunch;
+	jsSettings["check_for_updates"] = settings.checkForUpdates;
 
 	{
 		QJsonObject jsOptsStorage;
@@ -545,17 +545,17 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 
 static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
 {
-	bool useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
-	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
-
-	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
-	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
-	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
-
 	settings.appStyle = jsSettings.getString( "app_style", {}, DontShowError );  // null value means system-default
 	ColorScheme colorScheme = schemeFromString( jsSettings.getString( "color_scheme" ) );
 	if (colorScheme != ColorScheme::_EnumEnd)
 		settings.colorScheme = colorScheme;  // otherwise leave default
+
+	bool useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
+	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
+
+	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
+	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
+	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
 
 	if (JsonObjectCtx jsOptsStorage = jsSettings.getObject( "options_storage" ))
 	{

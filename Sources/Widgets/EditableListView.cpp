@@ -55,10 +55,10 @@ EditableListView::EditableListView( QWidget * parent ) : QListView( parent )
 	allowModifyList = false;
 
 	contextMenu = new QMenu( this );  // will be deleted when this QListView (their parent) is deleted
-	addAction = addOwnAction( "Add", { Qt::Key_Insert } );
-	deleteAction = addOwnAction( "Delete", { Qt::Key_Delete } );
-	moveUpAction = addOwnAction( "Move up", { Qt::CTRL + Qt::Key_Up } );  // shut-up clang, this is the official way to do it by Qt doc
-	moveDownAction = addOwnAction( "Move down", { Qt::CTRL + Qt::Key_Down } );
+	addItemAction = addAction( "Add", { Qt::Key_Insert } );
+	deleteItemAction = addAction( "Delete", { Qt::Key_Delete } );
+	moveItemUpAction = addAction( "Move up", { Qt::CTRL + Qt::Key_Up } );  // shut-up clang, this is the official way to do it by Qt doc
+	moveItemDownAction = addAction( "Move down", { Qt::CTRL + Qt::Key_Down } );
 	contextMenuEnabled = false;
 
 	allowIntraWidgetDnD = true;
@@ -69,7 +69,7 @@ EditableListView::EditableListView( QWidget * parent ) : QListView( parent )
 	this->setDropIndicatorShown( true );
 }
 
-QAction * EditableListView::addOwnAction( const QString & text, const QKeySequence & shortcut )
+QAction * EditableListView::addAction( const QString & text, const QKeySequence & shortcut )
 {
 	QAction * action = new QAction( text, this );
 	action->setShortcut( shortcut );
@@ -138,23 +138,23 @@ void EditableListView::toggleContextMenu( bool enabled )
 
 void EditableListView::enableItemCloning()
 {
-	cloneAction = addOwnAction( "Clone", { Qt::CTRL + Qt::Key_C } );
-}
-
-void EditableListView::enableOpenFileLocation()
-{
-	openFileLocationAction = addOwnAction( "Open file location", {} );
-	connect( openFileLocationAction, &QAction::triggered, this, &thisClass::openFileLocation );
+	cloneItemAction = addAction( "Clone", { Qt::CTRL + Qt::Key_C } );
 }
 
 void EditableListView::enableInsertSeparator()
 {
-	insertSeparatorAction = addOwnAction( "Insert separator", {} );
+	insertSeparatorAction = addAction( "Insert separator", {} );
 }
 
 void EditableListView::enableFinding()
 {
-	findAction = addOwnAction( "Find", QKeySequence::Find );
+	findItemAction = addAction( "Find", QKeySequence::Find );
+}
+
+void EditableListView::enableOpenFileLocation()
+{
+	openFileLocationAction = addAction( "Open file location", {} );
+	connect( openFileLocationAction, &QAction::triggered, this, &thisClass::openFileLocation );
 }
 
 void EditableListView::contextMenuEvent( QContextMenuEvent * event )
@@ -164,22 +164,22 @@ void EditableListView::contextMenuEvent( QContextMenuEvent * event )
 	if (!contextMenuEnabled)
 		return;
 
-	if (addAction)
-		addAction->setEnabled( allowModifyList );
-	if (deleteAction)
-		deleteAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-	if (cloneAction)
-		cloneAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-	if (moveUpAction)
-		moveUpAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-	if (moveDownAction)
-		moveDownAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-	if (openFileLocationAction)
-		openFileLocationAction->setEnabled( clickedItemIndex.isValid() );
+	if (addItemAction)
+		addItemAction->setEnabled( allowModifyList );
+	if (deleteItemAction)
+		deleteItemAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (cloneItemAction)
+		cloneItemAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (moveItemUpAction)
+		moveItemUpAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (moveItemDownAction)
+		moveItemDownAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
 	if (insertSeparatorAction)
 		insertSeparatorAction->setEnabled( allowModifyList );
-	if (findAction)
-		findAction->setEnabled( true );
+	if (findItemAction)
+		findItemAction->setEnabled( true );
+	if (openFileLocationAction)
+		openFileLocationAction->setEnabled( clickedItemIndex.isValid() );
 
 	contextMenu->popup( event->globalPos() );
 }
@@ -193,7 +193,14 @@ void EditableListView::openFileLocation()
 		return;
 	}
 
-	QString filePath = model()->data( currentIdx, Qt::UserRole ).toString();
+	auto userData = model()->data( currentIdx, Qt::UserRole );
+	if (userData.type() != QVariant::Type::String)
+	{
+		qWarning() << "EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
+		              "otherwise openFileLocation will not work.";
+	}
+
+	QString filePath = userData.toString();
 
 	if (!::openFileLocation( filePath ))
 	{

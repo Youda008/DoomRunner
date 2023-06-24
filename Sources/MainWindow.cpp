@@ -71,10 +71,9 @@ static constexpr bool DontVerifyPaths = false;
 //======================================================================================================================
 //  MainWindow-specific utils
 
-QStringList MainWindow::getSelectedMapPacks() const
+template< typename Functor >
+void MainWindow::forEachSelectedMapPack( const Functor & loopBody ) const
 {
-	QStringList selectedMapPacks;
-
 	// clicking on an item in QTreeView with QFileSystemModel selects all elements (columns) of a row,
 	// but we only care about the first one
 	const auto selectedRows = getSelectedRows( ui->mapDirView );
@@ -83,8 +82,18 @@ QStringList MainWindow::getSelectedMapPacks() const
 	for (const QModelIndex & index : selectedRows)
 	{
 		QString modelPath = mapModel.filePath( index );
-		selectedMapPacks.append( pathContext.convertPath( modelPath ) );
+		loopBody( pathContext.convertPath( modelPath ) );
 	}
+}
+
+QStringList MainWindow::getSelectedMapPacks() const
+{
+	QStringList selectedMapPacks;
+
+	forEachSelectedMapPack( [&]( const QString & mapPackPath )
+	{
+		selectedMapPacks.append( mapPackPath );
+	});
 
 	return selectedMapPacks;
 }
@@ -116,6 +125,89 @@ LaunchMode MainWindow::getLaunchModeFromUI() const
 		return LaunchMode::ReplayDemo;
 	else
 		return LaunchMode::Default;
+}
+
+// Iterates over all directories which the engine will need to access (either for reading or writing).
+// Required for supporting sandbox environments like Snap or Flatpak
+template< typename Functor >
+void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
+{
+	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	if (selectedEngineIdx < 0)
+	{
+		return;
+	}
+
+	const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
+
+	// dir of config files
+	int configIdx = ui->configCmbBox->currentIndex();
+	if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
+	{
+		loopBody( selectedEngine.configDir );
+	}
+
+	// dir of IWAD
+	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
+	if (selectedIwadIdx >= 0)
+	{
+		loopBody( getDirOfFile( iwadModel[ selectedIwadIdx ].path ) );
+	}
+
+	// dir of map files
+	if (isSomethingSelected( ui->mapDirView ))
+	{
+		loopBody( mapSettings.dir );  // all map files will always be inside the configured map dir
+	}
+
+	// dirs of mod files
+	QDir modDir( modSettings.dir );
+	bool modDirUsed = false;
+	for (const Mod & mod : modModel)
+	{
+		if (!mod.checked)
+			continue;
+
+		if (isInsideDir( mod.path, modDir ))  // aggregate all mods inside the configured mod dir under single dir path
+		{
+			if (!modDirUsed)  // use it only once
+			{
+				loopBody( modSettings.dir );
+				modDirUsed = true;
+			}
+		}
+		else  // but still add directories outside of the configured mod dir, because mod dir is only a hint
+		{
+			loopBody( getDirOfFile( mod.path ) );
+		}
+	}
+
+	// dir of saves and demo files
+	LaunchMode launchMode = getLaunchModeFromUI();
+	if ((launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
+	 || (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty()))
+	{
+		loopBody( getSaveDir() );
+	}
+
+	// dir of screenshots
+	if (!ui->screenshotDirLine->text().isEmpty())
+	{
+		loopBody( ui->screenshotDirLine->text() );
+	}
+}
+
+// Gets (deduplicated) directories which the engine will need to access (either for reading or writing).
+QStringList MainWindow::getDirsToBeAccessed() const
+{
+	QSet< QString > dirSet;  // de-duplicate the paths
+
+	forEachDirToBeAccessed( [&]( const QString & dir )
+	{
+		dirSet.insert( dir );
+	});
+
+	return QStringList( dirSet.begin(), dirSet.end() );
 }
 
 LaunchOptions & MainWindow::activeLaunchOptions()
@@ -3158,12 +3250,36 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		p.checkItemFilePath( selectedEngine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
-		// If it's in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
-		// it should be (and sometimes must be) started directly by using only its name.
-		if (isInSearchPath( selectedEngine.path ))
+		// different installations require different ways to launch the engine executable
+		if (engineTraits.sandboxEnv() == Sandbox::Snap)
+		{
+			cmd.executable = "snap";
+			cmd.arguments << "run";
+			// TODO: permissions
+			cmd.arguments << engineTraits.sandboxAppName();
+		}
+		else if (engineTraits.sandboxEnv() == Sandbox::Flatpak)
+		{
+			cmd.executable = "flatpak";
+			cmd.arguments << "run";
+			for (const QString & dir : getDirsToBeAccessed())
+			{
+				QString fileSystemPermission = "--filesystem=" + getAbsolutePath( dir );
+				cmd.arguments << base.maybeQuoted( fileSystemPermission );
+				cmd.extraPermissions << fileSystemPermission;
+			}
+			cmd.arguments << engineTraits.sandboxAppName();
+		}
+		else if (isInSearchPath( selectedEngine.path ))
+		{
+			// If it's in a search path (C:\Windows\System32, /usr/bin, ...)
+			// it should be (and sometimes must be) started directly by using only its name.
 			cmd.executable = getFileNameFromPath( selectedEngine.path );
+		}
 		else
+		{
 			cmd.executable = base.rebaseAndQuoteExePath( selectedEngine.path );
+		}
 
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.
@@ -3189,8 +3305,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 
 	QVector< QString > selectedFiles;
 
-	const QStringList selectedMapPacks = getSelectedMapPacks();
-	for (const QString & mapFilePath : selectedMapPacks)
+	forEachSelectedMapPack( [&]( const QString & mapFilePath )
 	{
 		p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
 
@@ -3202,7 +3317,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		else
 			// combine all files under a single -file parameter
 			selectedFiles.append( mapFilePath );
-	}
+	});
 
 	for (Mod & mod : modModel)
 	{
@@ -3384,6 +3499,30 @@ void MainWindow::launch()
 	if (cmd.executable.isNull())
 	{
 		return;  // errors are already shown during the generation
+	}
+
+	// If extra permissions are needed to run the engine inside its sandbox environment, better ask the user.
+	if (settings.askForSandboxPermissions && !cmd.extraPermissions.isEmpty())
+	{
+		auto engineName = getFileNameFromPath( engineModel[ selectedEngineIdx ].path );
+		auto sandboxName = engineTraits[ selectedEngineIdx ].sandboxEnvName();
+
+		QMessageBox messageBox( QMessageBox::Question, "Extra permissions needed",
+			engineName%" requires extra permissions to be able to access files outside of its "%sandboxName%" environment. "
+			"Are you ok with these permissions to be granted to "%engineName%"?",
+			QMessageBox::Yes | QMessageBox::No,
+			this
+		);
+		messageBox.setDetailedText( cmd.extraPermissions.join('\n') );
+		messageBox.setCheckBox( new QCheckBox( "don't ask again" ) );
+
+		int answer = messageBox.exec();
+		if (answer != QMessageBox::Yes)
+		{
+			return;
+		}
+
+		settings.askForSandboxPermissions = !messageBox.checkBox()->isChecked();
 	}
 
 	// make sure the alternative save dir exists, because engine will not create it if demo file path points there

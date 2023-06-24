@@ -319,6 +319,7 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	bool showEngineOutput = showEngineOutputByDefault;
 	bool closeOnLaunch = false;
 	bool checkForUpdates = true;
+	bool askForSandboxPermissions = true;
 
 	void assign( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
 };

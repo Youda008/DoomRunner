@@ -110,8 +110,6 @@ class PathContext {
 		return maybeQuoted( rebasePath( path, true ) );
 	}
 
- private:
-
 	QString maybeQuoted( const QString & path ) const
 	{
 		if (_quotePaths)

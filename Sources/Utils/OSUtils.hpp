@@ -37,6 +37,8 @@ struct MonitorInfo
 };
 QVector< MonitorInfo > listMonitors();
 
+QString getHomeDir();
+
 /// Returns directory for this application to save its data into.
 QString getThisAppDataDir();
 
@@ -46,6 +48,22 @@ QString getAppDataDir( const QString & executablePath );
 /// Returns whether an executable is inside one of directories where the system will find it.
 /** If true it means the executable can be started directly by using only its name without its path. */
 bool isInSearchPath( const QString & filePath );
+
+enum class Sandbox
+{
+	None,
+	Snap,
+	Flatpak,
+};
+QString getSandboxName( Sandbox sandbox );
+
+struct ExecutableTraits
+{
+	QString executableBaseName;   ///< executable name without file suffix
+	Sandbox sandboxEnv;
+	QString sandboxAppName;   ///< application name which the sandbox uses to start it
+};
+ExecutableTraits getExecutableTraits( const QString & executablePath );
 
 /// Opens a directory of a file in a new File Explorer window.
 bool openFileLocation( const QString & filePath );

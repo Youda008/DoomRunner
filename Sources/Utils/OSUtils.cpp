@@ -14,6 +14,7 @@
 #include <QGuiApplication>
 #include <QDesktopServices>  // fallback for openFileLocation
 #include <QUrl>
+#include <QRegularExpression>
 #include <QScreen>
 #include <QProcess>
 
@@ -55,6 +56,11 @@ QVector< MonitorInfo > listMonitors()
 	return monitors;
 }
 
+QString getHomeDir()
+{
+	return QStandardPaths::writableLocation( QStandardPaths::HomeLocation );
+}
+
 QString getThisAppDataDir()
 {
 	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
@@ -82,15 +88,59 @@ QString getAppDataDir( const QString & executablePath )
 	}
 	else
 	{
-		QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
-		QString appName = getFileNameFromPath( executablePath );
-		return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
+		ExecutableTraits traits = getExecutableTraits( executablePath );
+		if (traits.sandboxEnv == Sandbox::Snap)
+		{
+			return getHomeDir()%"/snap/"%traits.executableBaseName%"/current/.config/"%traits.executableBaseName;
+		}
+		else if (traits.sandboxEnv == Sandbox::Flatpak)
+		{
+			return getHomeDir()%"/.var/app/"%traits.sandboxAppName%"/.config/"%traits.executableBaseName;
+		}
+		else
+		{
+			QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
+			QString appName = getFileNameFromPath( executablePath );
+			return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
+		}
 	}
+}
+
+QString getSandboxName( Sandbox sandbox )
+{
+	switch (sandbox)
+	{
+		case Sandbox::Snap:    return "Snap";
+		case Sandbox::Flatpak: return "Flatpak";
+		default:               return "<invalid>";
+	}
+}
+
+ExecutableTraits getExecutableTraits( const QString & executablePath )
+{
+	ExecutableTraits traits;
+
+	traits.executableBaseName = getFileBasenameFromPath( executablePath );
+
+	static QRegularExpression snapRegex("^/snap/");
+	static QRegularExpression flatpakRegex("^/var/lib/flatpak/app/([^/]+)/");
+	QRegularExpressionMatch match;
+	if ((match = snapRegex.match( executablePath )).hasMatch())
+	{
+		traits.sandboxEnv = Sandbox::Snap;
+		traits.sandboxAppName = getFileNameFromPath( executablePath );
+	}
+	else if ((match = flatpakRegex.match( executablePath )).hasMatch())
+	{
+		traits.sandboxEnv = Sandbox::Flatpak;
+		traits.sandboxAppName = match.captured(1);
+	}
+
+	return traits;
 }
 
 bool isInSearchPath( const QString & filePath )
 {
-	// this should also handle the snap installations, since directory of snap executables is inside PATH
 	return !QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ).isEmpty();
 }
 

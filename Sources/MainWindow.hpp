@@ -198,18 +198,23 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	{
 		QString executable;
 		QStringList arguments;
+		QStringList extraPermissions;  // extra Snap/Flatpack permissions needed to run this command
 	};
 	ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand();
 
  private: // MainWindow-specific utils
 
+	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
 	QStringList getSelectedMapPacks() const;
 
 	QString getConfigDir() const;
 	QString getSaveDir() const;
 
 	LaunchMode getLaunchModeFromUI() const;
+
+	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
+	QStringList getDirsToBeAccessed() const;
 
 	LaunchOptions & activeLaunchOptions();
 	MultiplayerOptions & activeMultiplayerOptions();

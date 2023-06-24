@@ -547,6 +547,7 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 	jsSettings["show_engine_output"] = settings.showEngineOutput;
 	jsSettings["close_on_launch"] = settings.closeOnLaunch;
 	jsSettings["check_for_updates"] = settings.checkForUpdates;
+	jsSettings["ask_for_sandbox_permissions"] = settings.askForSandboxPermissions;
 
 	{
 		QJsonObject jsOptsStorage;
@@ -574,6 +575,7 @@ static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & se
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
+	settings.askForSandboxPermissions = jsSettings.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
 
 	if (JsonObjectCtx jsOptsStorage = jsSettings.getObject( "options_storage" ))
 	{

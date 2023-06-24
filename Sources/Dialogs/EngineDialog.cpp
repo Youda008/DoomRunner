@@ -106,12 +106,20 @@ void EngineDialog::onWindowShown()
 
 static QString getEngineName( const QString & enginePath )
 {
-	// In Windows we can use the directory name, which can tell slightly more than just the binary
-	// but in Linux we have to fallback to the binary name, because all binaries are in same dir.
 	if (isWindows())
+	{
+		// in Windows we can use the directory name, which can tell slightly more than just the binary
 		return getDirnameOfFile( enginePath );
+	}
 	else
-		return getFileNameFromPath( enginePath );
+	{
+		// but in Linux we have to fallback to the binary name (or use the Flatpak name if there is one)
+		ExecutableTraits traits = getExecutableTraits( enginePath );
+		if (traits.sandboxEnv != Sandbox::None)
+			return traits.sandboxAppName;
+		else
+			return traits.executableBaseName;
+	}
 }
 
 void EngineDialog::browseEngine()

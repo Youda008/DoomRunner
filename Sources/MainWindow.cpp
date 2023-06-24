@@ -3215,7 +3215,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	}
 	if (!ui->screenshotDirLine->text().isEmpty())
 	{
-		p.checkNotAFile( ui->saveDirLine->text(), "the screenshot dir", "" );
+		p.checkNotAFile( ui->screenshotDirLine->text(), "the screenshot dir", "" );
 		cmd.arguments << "+screenshot_dir" << base.rebaseAndQuotePath( ui->screenshotDirLine->text() );
 	}
 

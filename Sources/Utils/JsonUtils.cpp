@@ -371,12 +371,12 @@ QString JsonArrayCtx::getString( int index, const QString & defaultVal, bool sho
 static bool checkableMessageBox( QMessageBox::Icon icon, const QString & title, const QString & message )
 {
 	QMessageBox msgBox( icon, title, message, QMessageBox::Ok );
-	QCheckBox chkBox( "ignore the rest of these warnings" );
-	msgBox.setCheckBox( &chkBox );
+	QCheckBox * chkBox = new QCheckBox( "ignore the rest of these warnings" );
+	msgBox.setCheckBox( chkBox );  // msgBox takes ownership of chkBox
 
 	msgBox.exec();
 
-	return chkBox.isChecked();
+	return chkBox->isChecked();
 }
 
 static const char * typeStr [] = {

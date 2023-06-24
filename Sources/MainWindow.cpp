@@ -482,6 +482,7 @@ void MainWindow::setupPresetList()
 	presetModel.toggleEditing( true );
 	ui->presetListView->toggleNameEditing( true );
 	ui->presetListView->toggleListModifications( true );
+	connect( &presetModel, &QAbstractListModel::dataChanged, this, &thisClass::presetDataChanged );
 
 	// set drag&drop behaviour
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
@@ -1048,7 +1049,7 @@ void MainWindow::selectEngine( int index )
 	ui->mapCmbBox->setEditable( supportsCustomMapNames );
 	ui->mapCmbBox_demo->setEditable( supportsCustomMapNames );
 
-	// automatic alt dirs are derived from engine's config directory, which has now changed, so this need to be refreshed
+	// automatic alt dirs are derived from engine's config directory, which has now changed, so this needs to be refreshed
 	if (globalOpts.usePresetNameAsDir)
 	{
 		QString presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : "";
@@ -1157,6 +1158,21 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 	}
 
 	updateLaunchCommand();
+}
+
+void MainWindow::presetDataChanged( const QModelIndex & topLeft, const QModelIndex &, const QVector<int> & roles )
+{
+	if (roles.contains( Qt::EditRole ))
+	{
+		int editedIdx = topLeft.row();  // there cannot be more than 1 items edited at a time
+
+		// automatic alt dirs are derived from preset name, which has now changed, so this needs to be refreshed
+		if (globalOpts.usePresetNameAsDir && isSelectedIndex( ui->presetListView, editedIdx ))
+		{
+			const QString & presetName = presetModel[ editedIdx ].name;
+			setAltDirsRelativeToConfigs( sanitizePath( presetName ) );
+		}
+	}
 }
 
 void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles )

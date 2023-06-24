@@ -2520,7 +2520,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		{
 			engineModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
 		}
-		else
+		else if (!engineSettings.defaultEngine.isEmpty())
 		{
 			QMessageBox::warning( nullptr, "Default engine no longer exists",
 				"Engine that was marked as default ("%engineSettings.defaultEngine%") no longer exists. Please select another one." );
@@ -2548,7 +2548,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		{
 			iwadModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
 		}
-		else
+		else if (!iwadSettings.defaultIWAD.isEmpty())
 		{
 			QMessageBox::warning( nullptr, "Default IWAD no longer exists",
 				"IWAD that was marked as default ("%iwadSettings.defaultIWAD%") no longer exists. Please select another one." );

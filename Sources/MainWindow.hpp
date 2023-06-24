@@ -69,6 +69,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	void togglePreset( const QItemSelection & selected, const QItemSelection & deselected );
 	void toggleIWAD( const QItemSelection & selected, const QItemSelection & deselected );
 	void toggleMapPack( const QItemSelection & selected, const QItemSelection & deselected );
+	void presetDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 	void modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 
 	void showMapPackDesc( const QModelIndex & index );

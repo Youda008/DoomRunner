@@ -30,6 +30,7 @@
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/WADReader.hpp"
 #include "Utils/MiscUtils.hpp"  // checkPath, highlightPathIfInvalid
+#include "Utils/ErrorHandling.hpp"
 
 #include <QVector>
 #include <QList>
@@ -2959,8 +2960,9 @@ void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts 
 	int compatLevelIdx = opts.compatLevel + 1;  // first item is reserved for indicating no selection
 	if (compatLevelIdx >= ui->compatLevelCmbBox->count())
 	{
-		QMessageBox::critical( this, "Cannot restore compat level",
-			"Stored compat level is out of bounds of the current combo-box content. Bug?" );
+		reportBugToUser( this, "Cannot restore compat level",
+			"Stored compat level is out of bounds of the current combo-box content."
+		);
 		return;
 	}
 	ui->compatLevelCmbBox->setCurrentIndex( compatLevelIdx );
@@ -3292,8 +3294,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 			 case Cooperative: // default mode, which is started without any param
 				break;
 			 default:
-				QMessageBox::critical( this, "Invalid game mode index",
-					"The game mode index is out of range. This is a bug, please create an issue on Github page." );
+				reportBugToUser( this, "Invalid game mode index", "The game mode index is out of range." );
 			}
 			if (ui->teamDmgSpinBox->value() != 0.0)
 				cmd.arguments << "+teamdamage" << QString::number( ui->teamDmgSpinBox->value(), 'f', 2 );
@@ -3307,8 +3308,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 			cmd.arguments << "-join" << ui->hostnameLine->text() % ":" % ui->portSpinBox->text();
 			break;
 		 default:
-			QMessageBox::critical( this, "Invalid multiplayer role index",
-				"The multiplayer role index is out of range. This is a bug, please create an issue on Github page." );
+			reportBugToUser( this, "Invalid multiplayer role index", "The multiplayer role index is out of range." );
 		}
 	}
 

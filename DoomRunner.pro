@@ -43,6 +43,7 @@ HEADERS += \
     Sources/Dialogs/OwnFileDialog.hpp \
     Sources/Dialogs/ProcessOutputWindow.hpp \
     Sources/Dialogs/SetupDialog.hpp \
+	Sources/Utils/ErrorHandling.hpp \
     Sources/Utils/EventFilters.hpp \
     Sources/Utils/FileSystemUtils.hpp \
     Sources/Utils/JsonUtils.hpp \
@@ -76,6 +77,7 @@ SOURCES += \
     Sources/Dialogs/OwnFileDialog.cpp \
     Sources/Dialogs/ProcessOutputWindow.cpp \
     Sources/Dialogs/SetupDialog.cpp \
+	Sources/Utils/ErrorHandling.cpp \
     Sources/Utils/EventFilters.cpp \
     Sources/Utils/FileSystemUtils.cpp \
     Sources/Utils/LangUtils.cpp \

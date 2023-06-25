@@ -14,6 +14,7 @@
 #include "LangUtils.hpp"         // findSuch
 #include "FileSystemUtils.hpp"   // fillListFromDir
 #include "Widgets/ListModel.hpp"
+#include "Utils/ErrorHandling.hpp"
 
 #include <QAbstractItemView>
 #include <QListView>
@@ -109,9 +110,8 @@ void appendItem( QListView * view, ListModel & model, const typename ListModel::
 {
 	if (!model.canBeModified())
 	{
-		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
-			"Cannot append item because the model is locked for changes. "
-			"This should have been restricted by the UI, please create an issue on Github page."
+		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+			"Cannot append item because the model is locked for changes."
 		);
 		return;
 	}
@@ -133,9 +133,8 @@ void prependItem( QListView * view, ListModel & model, const typename ListModel:
 {
 	if (!model.canBeModified())
 	{
-		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
-			"Cannot prepend item because the model is locked for changes. "
-			"This should have been restricted by the UI, please create an issue on Github page."
+		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+			"Cannot prepend item because the model is locked for changes."
 		);
 		return;
 	}
@@ -157,9 +156,8 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 {
 	if (!model.canBeModified())
 	{
-		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
-			"Cannot insert item because the model is locked for changes. "
-			"This should have been restricted by the UI, please create an issue on Github page."
+		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+			"Cannot insert item because the model is locked for changes."
 		);
 		return;
 	}
@@ -219,9 +217,8 @@ QVector<int> deleteSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
-			"Cannot delete selected items because the model is locked for changes. "
-			"This should have been restricted by the UI, please create an issue on Github page."
+		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+			"Cannot delete selected items because the model is locked for changes."
 		);
 		return {};
 	}
@@ -277,9 +274,8 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
-			"Cannot clone selected item because the model is locked for changes. "
-			"This should have been restricted by the UI, please create an issue on Github page."
+		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+			"Cannot clone selected item because the model is locked for changes."
 		);
 		return -1;
 	}
@@ -318,9 +314,8 @@ int moveUpSelectedItem( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
-			"Cannot move up selected item because the model is locked for changes. "
-			"This should have been restricted by the UI, please create an issue on Github page."
+		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+			"Cannot move up selected item because the model is locked for changes."
 		);
 		return -1;
 	}
@@ -369,9 +364,8 @@ int moveDownSelectedItem( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
-			"Cannot move down selected item because the model is locked for changes. "
-			"This should have been restricted by the UI, please create an issue on Github page."
+		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+			"Cannot move down selected item because the model is locked for changes."
 		);
 		return -1;
 	}
@@ -420,9 +414,8 @@ QVector<int> moveUpSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
-			"Cannot move up selected items because the model is locked for changes. "
-			"This should have been restricted by the UI, please create an issue on Github page."
+		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+			"Cannot move up selected items because the model is locked for changes."
 		);
 		return {};
 	}
@@ -481,9 +474,8 @@ QVector<int> moveDownSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		QMessageBox::critical( view->parentWidget(), "Model cannot be modified",
-			"Cannot move down selected items because the model is locked for changes. "
-			"This should have been restricted by the UI, please create an issue on Github page."
+		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+			"Cannot move down selected items because the model is locked for changes."
 		);
 		return {};
 	}
@@ -780,6 +772,11 @@ void setTextColor( QWidget * widget, QColor color );
 
 /// Restores all colors of this widget to default.
 void restoreColors( QWidget * widget );
+
+/// makes a hyperlink for a widget's text
+#define HYPERLINK( text, url ) \
+	"<a href=\""%url%"\"><span style=\"\">"%text%"</span></a>"
+
 
 
 #endif // WIDGET_UTILS_INCLUDED

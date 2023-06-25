@@ -12,6 +12,7 @@
 #include "Utils/EventFilters.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/OSUtils.hpp"  // openFileLocation
+#include "Utils/ErrorHandling.hpp"
 
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
@@ -204,10 +205,9 @@ void EditableListView::openCurrentFileLocation()
 	auto userData = model()->data( currentIdx, Qt::UserRole );
 	if (userData.type() != QVariant::Type::String)
 	{
-		QMessageBox::critical( this->parentWidget(), "Unsupported model",
+		reportBugToUser( this->parentWidget(), "Unsupported model",
 			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
-			"otherwise openFileLocation will not work. "
-			"This is a bug, please create an issue on the Github page."
+			"otherwise openFileLocation will not work."
 		);
 		return;
 	}
@@ -237,10 +237,9 @@ void EditableListView::toggleIcons()
 	ListModelCommon * model = dynamic_cast< ListModelCommon * >( this->model() );
 	if (!model)
 	{
-		QMessageBox::critical( this->parentWidget(), "Unsupported model",
+		reportBugToUser( this->parentWidget(), "Unsupported model",
 			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
-			"otherwise icons cannot be toggled. "
-			"This is a bug, please create an issue on the Github page."
+			"otherwise icons cannot be toggled."
 		);
 		return;
 	}

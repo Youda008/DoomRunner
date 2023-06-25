@@ -60,8 +60,7 @@ int getSelectedItemIndex( QListView * view )   // this function is for single se
 	}
 	if (selectedIndexes.size() > 1)
 	{
-		QMessageBox::critical( view->parentWidget(), "Multiple items selected",
-			"Multiple items are selected. This shouldn't be possible, please create an issue on Github page." );
+		reportBugToUser( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
 		return -1;
 	}
 	return selectedIndexes[0].row();
@@ -158,8 +157,7 @@ QModelIndex getSelectedItemIndex( QTreeView * view )   // this function is for s
 	}
 	if (selectedIndexes.size() > 1)
 	{
-		QMessageBox::critical( view->parentWidget(), "Multiple items selected",
-			"Multiple items are selected. This shouldn't be possible, please create an issue on Github page." );
+		reportBugToUser( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
 		return {};
 	}
 	return selectedIndexes[0];

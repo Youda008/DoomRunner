@@ -12,6 +12,7 @@
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/OSUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // highlightInvalidPath
+#include "Utils/ErrorHandling.hpp"
 
 #include <QDir>
 #include <QTimer>
@@ -178,8 +179,7 @@ void EngineDialog::selectFamily( int familyIdx )
 {
 	if (familyIdx < 0 || familyIdx >= int(EngineFamily::_EnumEnd))
 	{
-		QMessageBox::critical( this, "Invalid engine family index",
-			"Family combo-box index is out of bounds. This shouldn't be possible, please create an issue on Github page." );
+		reportBugToUser( this, "Invalid engine family index", "Family combo-box index is out of bounds." );
 	}
 
 	engine.family = EngineFamily( familyIdx );

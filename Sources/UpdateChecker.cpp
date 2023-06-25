@@ -10,6 +10,7 @@
 #include "Version.hpp"
 #include "Themes.hpp"
 #include "Utils/LangUtils.hpp"  // atScopeEndDo
+#include "Utils/WidgetUtils.hpp"  // HYPERLINK
 
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -32,9 +33,6 @@
 static const QString availableVersionUrl = "https://raw.githubusercontent.com/Youda008/DoomRunner/master/version.txt";
 static const QString releasePageUrl = "https://github.com/Youda008/DoomRunner/releases";
 static const QString changelogUrl = "https://raw.githubusercontent.com/Youda008/DoomRunner/master/changelog.txt";
-
-#define HYPERLINK( text, url ) \
-	"<a href=\""%url%"\"><span style=\"\">"%text%"</span></a>"
 
 
 UpdateChecker::UpdateChecker()

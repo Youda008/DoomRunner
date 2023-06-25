@@ -600,6 +600,11 @@ void MainWindow::setupModList()
 	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
 	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
 	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::modInsertSeparator );
+
+	// setup icons
+	ui->modListView->enableTogglingIcons();  // allow the icons to be toggled via context-menu
+	ui->modListView->toggleIcons( true );  // we need to do this instead of modModel.toggleIcons() in order to update the action text
+	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::modToggleIcons );
 }
 
 void MainWindow::loadMonitorInfo( QComboBox * box )
@@ -1554,6 +1559,11 @@ void MainWindow::modInsertSeparator()
 
 	// open edit mode so that user can name the preset
 	editItemAtIndex( ui->modListView, insertIdx );
+}
+
+void MainWindow::modToggleIcons()
+{
+	modSettings.showIcons = modModel.areIconsEnabled();
 }
 
 void MainWindow::modsDropped( int dropRow, int count )
@@ -2586,6 +2596,8 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		modModel.clear();
 		// mods will be restored to the UI, when a preset is selected
 		modModel.finishCompleteUpdate();
+
+		ui->modListView->toggleIcons( modSettings.showIcons );
 	}
 
 	// presets

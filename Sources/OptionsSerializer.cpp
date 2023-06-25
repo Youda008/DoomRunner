@@ -210,6 +210,7 @@ static QJsonObject serialize( const ModSettings & modSettings )
 	QJsonObject jsMods;
 
 	jsMods["directory"] = modSettings.dir;
+	jsMods["show_icons"] = modSettings.showIcons;
 
 	return jsMods;
 }
@@ -217,6 +218,7 @@ static QJsonObject serialize( const ModSettings & modSettings )
 static void deserialize( const JsonObjectCtx & jsMods, ModSettings & modSettings )
 {
 	modSettings.dir = jsMods.getString( "directory" );
+	modSettings.showIcons = jsMods.getBool( "show_icons", modSettings.showIcons, DontShowError );
 }
 
 static QJsonObject serialize( const LaunchOptions & opts )

@@ -24,6 +24,7 @@
 #include <QRegularExpression>
 #include <QColor>
 #include <QBrush>
+#include <QIcon>
 
 #include <optional>
 #include <functional>
@@ -104,6 +105,14 @@ struct ReadOnlyListModelItem
 		throw std::logic_error(
 			"File path has been requested, but getting Item's file path is not implemented. "
 			"Either re-implement getFilePath() or disable actions requiring path in the view."
+		);
+	}
+
+	const QIcon & getIcon() const
+	{
+		throw std::logic_error(
+			"Icon has been requested, but getting Item's icon is not implemented. "
+			"Either re-implement getIcon() or disable icons in the view."
 		);
 	}
 };
@@ -373,6 +382,11 @@ class ListModelCommon : public QAbstractListModel {
 
  public:
 
+	//-- model configuration -------------------------------------------------------------------------------------------
+
+	void toggleIcons( bool enabled )  { iconsEnabled = enabled; }
+	bool areIconsEnabled() const      { return iconsEnabled; }
+
 	//-- data change notifications -------------------------------------------------------------------------------------
 
 	/// Notifies the view that the content of some items has been changed.
@@ -445,6 +459,10 @@ class ListModelCommon : public QAbstractListModel {
 		return index( row, /*column*/0, /*parent*/QModelIndex() );
 	}
 
+ protected:
+
+	bool iconsEnabled = false;
+
 };
 
 
@@ -458,20 +476,13 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 
 	using Item = typename ListImpl::Item;
 
- protected:
-
-	// Each list view might want to display the same data differently, so we allow the user of the list model
-	// to specify it by a function for each view separately.
-	/// function that takes Item and constructs a String that will be displayed in the view
-	std::function< QString ( const Item & ) > makeDisplayString;
-
- public:
-
 	ReadOnlyListModel( std::function< QString ( const Item & ) > makeDisplayString )
 		: ListImpl(), makeDisplayString( makeDisplayString ) {}
 
 	ReadOnlyListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
 		: ListImpl( itemList ), makeDisplayString( makeDisplayString ) {}
+
+	//-- model configuration -------------------------------------------------------------------------------------------
 
 	void setDisplayStringFunc( std::function< QString ( const Item & ) > makeDisplayString )
 		{ this->makeDisplayString = makeDisplayString; }
@@ -523,6 +534,10 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 				else
 					return QVariant();  // default
 			}
+			else if (role == Qt::DecorationRole && iconsEnabled && !item.isSeparator)
+			{
+				return item.getIcon();
+			}
 			else if (role == Qt::UserRole)  // required for "Open File Location" action
 			{
 				return item.getFilePath();
@@ -539,6 +554,13 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 		}
 	}
 
+ protected: // configuration
+
+	// Each list view might want to display the same data differently, so we allow the user of the list model
+	// to specify it by a function for each view separately.
+	/// function that takes Item and constructs a String that will be displayed in the view
+	std::function< QString ( const Item & ) > makeDisplayString;
+
 };
 
 
@@ -553,24 +575,6 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	using Item = typename ListImpl::Item;
 
- protected:
-
-	// Each list view might want to display the same data differently, so we allow the user of the list model
-	// to specify it by a function for each view separately.
-	/// function that takes Item and constructs a String that will be displayed in the view
-	std::function< QString ( const Item & ) > makeDisplayString;
-
-	/// whether editing of regular non-separator items is allowed
-	bool editingEnabled = false;
-
-	/// whether items have a checkbox that can be checked and unchecked
-	bool checkableItems = false;
-
-	/// optional path helper that will convert paths dropped from directory to absolute or relative
-	const PathContext * pathContext;
-
- public:
-
 	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString )
 		: ListImpl(), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
 
@@ -582,6 +586,8 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	void setDisplayStringFunc( std::function< QString ( const Item & ) > makeDisplayString )
 		{ this->makeDisplayString = makeDisplayString; }
+
+	void toggleIcons( bool enabled ) { iconsEnabled = enabled; }
 
 	void toggleEditing( bool enabled ) { editingEnabled = enabled; }
 
@@ -663,6 +669,10 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 					return Qt::AlignHCenter;
 				else
 					return QVariant();  // default
+			}
+			else if (role == Qt::DecorationRole && iconsEnabled && !item.isSeparator)
+			{
+				return item.getIcon();
 			}
 			else if (role == Qt::UserRole)  // required for "Open File Location" action
 			{
@@ -928,10 +938,27 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		return true;
 	}
 
+ protected: // configuration
+
+	// Each list view might want to display the same data differently, so we allow the user of the list model
+	// to specify it by a function for each view separately.
+	/// function that takes Item and constructs a String that will be displayed in the view
+	std::function< QString ( const Item & ) > makeDisplayString;
+
+	/// whether editing of regular non-separator items is allowed
+	bool editingEnabled = false;
+
+	/// whether items have a checkbox that can be checked and unchecked
+	bool checkableItems = false;
+
+	/// optional path helper that will convert paths dropped from directory to absolute or relative
+	const PathContext * pathContext;
+
 };
 
 
 //======================================================================================================================
+//  aliases
 
 template< typename Item > using ReadOnlyDirectListModel   = ReadOnlyListModel< DirectList< Item > >;
 template< typename Item > using ReadOnlyFilteredListModel = ReadOnlyListModel< FilteredList< Item > >;

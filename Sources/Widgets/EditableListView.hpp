@@ -72,6 +72,9 @@ class EditableListView : public QListView {
 	/// Enables "Open file location" action in a right-click context menu.
 	void enableOpenFileLocation();
 
+	/// Allows the user to show or hide item icons via context menu.
+	void enableTogglingIcons();
+
 	/// Creates a custom action and adds it to the context menu.
 	/** The resulting QAction object will emit triggered() signal that needs to be connected to the desired callback. */
 	QAction * addAction( const QString & text, const QKeySequence & shortcut );
@@ -91,6 +94,21 @@ class EditableListView : public QListView {
 	/// external drag&drop for moving files from directory window, disabled by default
 	void toggleExternalFileDragAndDrop( bool enabled );
 
+ public slots:
+
+	/// Attempts to open a directory of the last clicked item in a new File Explorer window.
+	void openCurrentFileLocation();
+
+	/// Enables/disables the item icons and updates the text of the context menu entry, default is disabled.
+	void toggleIcons( bool enabled );
+
+	bool areIconsEnabled() const;
+
+ signals:
+
+	/// emitted either when items are dropped to this view from another widget or just moved within this view itself
+	void itemsDropped( int row, int count );
+
  public: // actions (context menu entries with shortcuts)
 
 	// These actions will emit triggered() signal that needs to be connected to the desired callback.
@@ -102,6 +120,7 @@ class EditableListView : public QListView {
 	QAction * insertSeparatorAction = nullptr;
 	QAction * findItemAction = nullptr;
 	QAction * openFileLocationAction = nullptr;
+	QAction * toggleIconsAction = nullptr;
 
  protected: // methods
 
@@ -136,12 +155,7 @@ class EditableListView : public QListView {
 
  protected slots:
 
-	void openFileLocation();
-
- signals:
-
-	/// emitted either when items are dropped to this view from another widget or just moved within this view itself
-	void itemsDropped( int row, int count );
+	void toggleIcons();
 
  protected: // internal members
 

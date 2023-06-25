@@ -87,6 +87,7 @@ struct Mod : public EditableListModelItem
 	bool isChecked() const { return checked; }
 	void setChecked( bool checked ) { this->checked = checked; }
 	const QString & getFilePath() const { return path; }
+	const QIcon & getIcon() const;
 
 	Mod() {}
 	Mod( const QFileInfo & file, bool checked = true )
@@ -288,6 +289,7 @@ struct MapSettings
 struct ModSettings
 {
 	QString dir;   ///< directory with mods, starting dir for "Add mod" dialog
+	bool showIcons = true;   ///< whether the mod list should show file-system icons provided by the OS
 };
 
 enum OptionsStorage

@@ -154,7 +154,13 @@ void EditableListView::enableFinding()
 void EditableListView::enableOpenFileLocation()
 {
 	openFileLocationAction = addAction( "Open file location", {} );
-	connect( openFileLocationAction, &QAction::triggered, this, &thisClass::openFileLocation );
+	connect( openFileLocationAction, &QAction::triggered, this, &thisClass::openCurrentFileLocation );
+}
+
+void EditableListView::enableTogglingIcons()
+{
+	toggleIconsAction = addAction( "Show icons", {} );
+	connect( toggleIconsAction, &QAction::triggered, this, QOverload<>::of( &thisClass::toggleIcons ) );
 }
 
 void EditableListView::contextMenuEvent( QContextMenuEvent * event )
@@ -180,11 +186,13 @@ void EditableListView::contextMenuEvent( QContextMenuEvent * event )
 		findItemAction->setEnabled( true );
 	if (openFileLocationAction)
 		openFileLocationAction->setEnabled( clickedItemIndex.isValid() );
+	if (toggleIconsAction)
+		toggleIconsAction->setEnabled( true );
 
 	contextMenu->popup( event->globalPos() );
 }
 
-void EditableListView::openFileLocation()
+void EditableListView::openCurrentFileLocation()
 {
 	QModelIndex currentIdx = selectionModel()->currentIndex();
 	if (!currentIdx.isValid())
@@ -196,8 +204,12 @@ void EditableListView::openFileLocation()
 	auto userData = model()->data( currentIdx, Qt::UserRole );
 	if (userData.type() != QVariant::Type::String)
 	{
-		qWarning() << "EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
-		              "otherwise openFileLocation will not work.";
+		QMessageBox::critical( this->parentWidget(), "Unsupported model",
+			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
+			"otherwise openFileLocation will not work. "
+			"This is a bug, please create an issue on the Github page."
+		);
+		return;
 	}
 
 	QString filePath = userData.toString();
@@ -205,6 +217,44 @@ void EditableListView::openFileLocation()
 	if (!::openFileLocation( filePath ))
 	{
 		QMessageBox::warning( this->parentWidget(), "Error opening directory", "Unknown error prevented opening a directory." );
+	}
+}
+
+bool EditableListView::areIconsEnabled() const
+{
+	if (ListModelCommon * model = dynamic_cast< ListModelCommon * >( this->model() ))
+	{
+		return model->areIconsEnabled();
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void EditableListView::toggleIcons()
+{
+	ListModelCommon * model = dynamic_cast< ListModelCommon * >( this->model() );
+	if (!model)
+	{
+		QMessageBox::critical( this->parentWidget(), "Unsupported model",
+			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
+			"otherwise icons cannot be toggled. "
+			"This is a bug, please create an issue on the Github page."
+		);
+		return;
+	}
+
+	bool newIconState = !model->areIconsEnabled();
+	model->toggleIcons( newIconState );
+	toggleIconsAction->setText( newIconState ? "Hide icons" : "Show icons" );
+}
+
+void EditableListView::toggleIcons( bool enabled )
+{
+	if (areIconsEnabled() != enabled)
+	{
+		toggleIcons();
 	}
 }
 
@@ -335,31 +385,31 @@ void EditableListView::itemsDropped()
 	//
 	// retrieve the destination drop indexes from the model and update the selection accordingly
 
-	if (DropTarget * model = dynamic_cast< DropTarget * >( this->model() ))
-	{
-		if (model->wasDroppedInto())
-		{
-			int row = model->droppedRow();
-			int count = model->droppedCount();
-
-			// When an item is in edit mode and current index changes, the content of the line editor is dumped
-			// into old current item and the edit mode closed. Therefore we must change the current index in advance,
-			// otherwise the edit content gets saved into a wrong item.
-			unsetCurrentItem( this );
-			deselectSelectedItems( this );
-			for (int i = 0; i < count; i++)
-				selectItemByIndex( this, row + i );
-			setCurrentItemByIndex( this, row + count - 1 );
-
-			emit itemsDropped( row, count );
-
-			model->resetDropState();
-		}
-	}
-	else
+	DropTarget * model = dynamic_cast< DropTarget * >( this->model() );
+	if (!model)
 	{
 		qWarning() << "EditableListView should be used only together with EditableListModel, "
 		              "otherwise drag&drop will not work properly.";
+		return;
+	}
+
+	if (model->wasDroppedInto())
+	{
+		int row = model->droppedRow();
+		int count = model->droppedCount();
+
+		// When an item is in edit mode and current index changes, the content of the line editor is dumped
+		// into old current item and the edit mode closed. Therefore we must change the current index in advance,
+		// otherwise the edit content gets saved into a wrong item.
+		unsetCurrentItem( this );
+		deselectSelectedItems( this );
+		for (int i = 0; i < count; i++)
+			selectItemByIndex( this, row + i );
+		setCurrentItemByIndex( this, row + count - 1 );
+
+		emit itemsDropped( row, count );
+
+		model->resetDropState();
 	}
 }
 

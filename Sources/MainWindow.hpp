@@ -89,6 +89,7 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	void modMoveUp();
 	void modMoveDown();
 	void modInsertSeparator();
+	void modToggleIcons();
 	void modsDropped( int row, int count );
 
 	void modeDefault();

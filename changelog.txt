@@ -1,3 +1,7 @@
+1.7.3
+- save/screenshot dirs will now correctly update when the preset name is edited
+- fixed save dir being mistakenly verified instead of screenshot dir
+
 1.7.2
 - fixed quoting engine path when exporting to shell script
 - fixed quoting additional command line arguments containing a file path

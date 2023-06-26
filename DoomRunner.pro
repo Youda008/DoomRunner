@@ -4,10 +4,13 @@
 #
 #-------------------------------------------------
 
-QT       += core gui widgets network
-
 TARGET = DoomRunner
+
 TEMPLATE = app
+QT += core gui widgets network
+
+
+#-- compiler options -----------------------------
 
 CONFIG += c++17
 
@@ -29,6 +32,9 @@ QMAKE_CXXFLAGS += -Wno-deprecated-copy
 QMAKE_CXXFLAGS += -Wno-attributes
 
 QMAKE_CXXFLAGS += -Wno-comment
+
+
+#-- sources --------------------------------------
 
 INCLUDEPATH += Sources
 
@@ -118,11 +124,19 @@ DISTFILES += \
     Resources/DoomRunner.ico
 
 # To set an icon for the exe file we need to use the Windows resource system, see https://doc.qt.io/qt-6/appicon.html
-win32:RC_ICONS += Resources/DoomRunner.ico
+win32: RC_ICONS += Resources/DoomRunner.ico
 
-win32:LIBS += -lole32 -luuid -ldwmapi
 
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /usr/bin
+#-- libraries ------------------------------------
+
+win32: LIBS += -lole32 -luuid -ldwmapi
+
+
+#-- deployment -----------------------------------
+
+qnx {
+	target.path = /tmp/$${TARGET}/bin
+} else: unix: !android {
+	target.path = /usr/bin
+}
 !isEmpty(target.path): INSTALLS += target

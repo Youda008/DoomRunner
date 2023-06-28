@@ -36,7 +36,7 @@ SetupDialog::SetupDialog(
 )
 :
 	QDialog( parent ),
-	DialogWithBrowseDir(
+	DialogWithPaths(
 		this, PathContext( baseDir, settings.pathStyle )
 	),
 	engineSettings( engineSettings ),
@@ -355,20 +355,13 @@ void SetupDialog::editSelectedEngine()
 
 void SetupDialog::iwadAdd()
 {
-	QString path = OwnFileDialog::getOpenFileName( this, "Locate the IWAD", lastUsedDir,
+	QString path = browseFile( this, "IWAD", lastUsedDir,
 		  makeFileFilter( "Doom data files", iwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
 		+ "All files (*)"
 	);
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
-
-	// next time use this dir as the starting dir of the file dialog for convenience
-	lastUsedDir = getDirOfFile( path );
 
 	appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );
 }

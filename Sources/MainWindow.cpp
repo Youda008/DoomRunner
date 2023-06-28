@@ -403,7 +403,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 MainWindow::MainWindow()
 :
 	QMainWindow( nullptr ),
-	DialogWithBrowseDir(
+	DialogWithPaths(
 		this, PathContext( QApplication::applicationDirPath(), defaultPathStyle )  // all relative paths will internally be stored relative to the application's dir
 	),
 	engineModel(
@@ -3109,14 +3109,16 @@ void MainWindow::exportPresetToScript()
 		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
-	const QString & presetName = presetModel[ selectedIdx ].name;
 
-	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", sanitizePath( presetName ), scriptFileSuffix );
+	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, scriptFileSuffix );
 	if (scriptFilePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
 	}
+
 	QFileInfo scriptFileInfo( scriptFilePath );
+
+	lastUsedDir = scriptFileInfo.path();
 
 	auto cmd = generateLaunchCommand( scriptFileInfo.path(), DontVerifyPaths, QuotePaths );
 
@@ -3153,18 +3155,20 @@ void MainWindow::exportPresetToShortcut()
 		return;  // no sense to generate a command when we don't even know the engine
 	}
 
+	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, shortcutFileSuffix );
+	if (shortcutPath.isEmpty())  // user probably clicked cancel
+	{
+		return;
+	}
+
+	lastUsedDir = getDirOfFile( shortcutPath );
+
 	// The paths in the arguments needs to be relative to the engine's directory
 	// because it will be executed with the current directory set to engine's directory,
 	// But the executable itself must be either absolute or relative to the current working dir
 	// so that it is correctly saved to the shortcut.
 	QString enginePath = engineModel[ selectedEngineIdx ].path;
 	QString workingDir = getAbsoluteDirOfFile( enginePath );
-
-	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", sanitizePath( selectedPreset.name ), shortcutFileSuffix );
-	if (shortcutPath.isEmpty())  // user probably clicked cancel
-	{
-		return;
-	}
 
 	auto cmd = generateLaunchCommand( workingDir, DontVerifyPaths, QuotePaths );
 

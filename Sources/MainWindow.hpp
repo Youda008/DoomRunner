@@ -36,7 +36,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class MainWindow : public QMainWindow, private DialogWithBrowseDir {
+class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	Q_OBJECT
 

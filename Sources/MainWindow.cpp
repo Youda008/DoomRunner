@@ -729,7 +729,7 @@ void MainWindow::onWindowShown()
 	presetSearchPanel->collapse();  // hide it by default, it's shown on startup
 
 	// create a directory for application data, if it doesn't exist already
-	appDataDir.setPath( getThisAppDataDir() );
+	appDataDir.setPath( getThisAppConfigDir() );
 	if (!appDataDir.exists())
 	{
 		appDataDir.mkpath(".");

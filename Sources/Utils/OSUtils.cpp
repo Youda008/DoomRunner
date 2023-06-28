@@ -61,15 +61,15 @@ QString getHomeDir()
 	return QStandardPaths::writableLocation( QStandardPaths::HomeLocation );
 }
 
-QString getThisAppDataDir()
+QString getThisAppConfigDir()
 {
 	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
 	if (isWindows())
 	{
-		QString appExeDir = QApplication::applicationDirPath();
-		if (isDirectoryWritable( appExeDir ))
-			return appExeDir;
-		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%
+		QString thisExeDir = QApplication::applicationDirPath();
+		if (isDirectoryWritable( thisExeDir ))
+			return thisExeDir;
+		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Local
 			return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
 	}
 	else
@@ -78,13 +78,34 @@ QString getThisAppDataDir()
 	}
 }
 
-QString getAppDataDir( const QString & executablePath )
+QString getThisAppDataDir()
 {
-	// In Windows engines store their config in the directory of its binaries,
-	// but in Linux it stores them in standard user's app config dir (usually something like /home/user/.config/)
+	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
 	if (isWindows())
 	{
-		return getDirOfFile( executablePath );
+		QString thisExeDir = QApplication::applicationDirPath();
+		if (isDirectoryWritable( thisExeDir ))
+			return thisExeDir;
+		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Roaming
+			return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
+	}
+	else
+	{
+		return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
+	}
+}
+
+QString getEngineConfigDir( const QString & executablePath )
+{
+	// In Windows engines store their config in the directory of its binaries or in Saved Games,
+	// but in Linux they store them in standard user's app config dir (usually something like /home/user/.config/)
+	if (isWindows())
+	{
+		QString exeDir = getDirOfFile( executablePath );
+		if (isDirectoryWritable( exeDir ))
+			return exeDir;
+		else  // if we cannot write to the directory of the executable (e.g. Program Files), try Saved Games
+			return qEnvironmentVariable("USERPROFILE")+"/Saved Games";  // this is not bullet-proof but will work for 90% of users
 	}
 	else
 	{

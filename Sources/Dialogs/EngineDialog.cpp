@@ -143,7 +143,7 @@ void EngineDialog::browseEngine()
 		ui->nameLine->setText( getEngineName( enginePath ) );
 
 	if (ui->configDirLine->text().isEmpty())  // don't overwrite existing config dir
-		ui->configDirLine->setText( getAppDataDir( enginePath ) );
+		ui->configDirLine->setText( getEngineConfigDir( enginePath ) );
 
 	// guess the engine family based on executable's name
 	QString executableName = getFileBasenameFromPath( enginePath );

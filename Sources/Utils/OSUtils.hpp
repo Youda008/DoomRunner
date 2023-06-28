@@ -39,11 +39,14 @@ QVector< MonitorInfo > listMonitors();
 
 QString getHomeDir();
 
-/// Returns directory for this application to save its data into.
+/// Returns directory for this application to save its config into.
+QString getThisAppConfigDir();
+
+/// Returns directory for this application to save its data into. This may be the same as the config dir.
 QString getThisAppDataDir();
 
-/// Returns directory for any application to save its data into.
-QString getAppDataDir( const QString & executablePath );
+/// Returns directory where Doom engines usually save their configuration.
+QString getEngineConfigDir( const QString & executablePath );
 
 /// Returns whether an executable is inside one of directories where the system will find it.
 /** If true it means the executable can be started directly by using only its name without its path. */

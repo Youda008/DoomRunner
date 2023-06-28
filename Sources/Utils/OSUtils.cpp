@@ -29,32 +29,8 @@
 #endif // IS_WINDOWS
 
 
-//======================================================================================================================
-
-const QString & getLinuxDesktopEnv()
-{
-	static const QString desktopEnv = qEnvironmentVariable("XDG_CURRENT_DESKTOP");  // only need to read this once
-	return desktopEnv;
-}
-
-QVector< MonitorInfo > listMonitors()
-{
-	QVector< MonitorInfo > monitors;
-
-	// in the end this work well for both platforms, just ZDoom indexes the monitors from 1 while GZDoom from 0
-	QList< QScreen * > screens = QGuiApplication::screens();
-	for (int monitorIdx = 0; monitorIdx < screens.count(); monitorIdx++)
-	{
-		MonitorInfo myInfo;
-		myInfo.name = screens[ monitorIdx ]->name();
-		myInfo.width = screens[ monitorIdx ]->size().width();
-		myInfo.height = screens[ monitorIdx ]->size().height();
-		myInfo.isPrimary = monitorIdx == 0;
-		monitors.push_back( myInfo );
-	}
-
-	return monitors;
-}
+//----------------------------------------------------------------------------------------------------------------------
+//  standard directories and installation properties
 
 QString getHomeDir()
 {
@@ -127,6 +103,11 @@ QString getEngineConfigDir( const QString & executablePath )
 	}
 }
 
+bool isInSearchPath( const QString & filePath )
+{
+	return !QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ).isEmpty();
+}
+
 QString getSandboxName( Sandbox sandbox )
 {
 	switch (sandbox)
@@ -160,10 +141,38 @@ ExecutableTraits getExecutableTraits( const QString & executablePath )
 	return traits;
 }
 
-bool isInSearchPath( const QString & filePath )
+
+//----------------------------------------------------------------------------------------------------------------------
+//  graphical environment
+
+const QString & getLinuxDesktopEnv()
 {
-	return !QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ).isEmpty();
+	static const QString desktopEnv = qEnvironmentVariable("XDG_CURRENT_DESKTOP");  // only need to read this once
+	return desktopEnv;
 }
+
+QVector< MonitorInfo > listMonitors()
+{
+	QVector< MonitorInfo > monitors;
+
+	// in the end this work well for both platforms, just ZDoom indexes the monitors from 1 while GZDoom from 0
+	QList< QScreen * > screens = QGuiApplication::screens();
+	for (int monitorIdx = 0; monitorIdx < screens.count(); monitorIdx++)
+	{
+		MonitorInfo myInfo;
+		myInfo.name = screens[ monitorIdx ]->name();
+		myInfo.width = screens[ monitorIdx ]->size().width();
+		myInfo.height = screens[ monitorIdx ]->size().height();
+		myInfo.isPrimary = monitorIdx == 0;
+		monitors.push_back( myInfo );
+	}
+
+	return monitors;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  miscellaneous
 
 bool openFileLocation( const QString & filePath )
 {

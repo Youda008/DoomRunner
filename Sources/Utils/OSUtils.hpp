@@ -26,16 +26,7 @@ inline constexpr bool isWindows()
  #endif
 }
 
-const QString & getLinuxDesktopEnv();
-
-struct MonitorInfo
-{
-	QString name;
-	int width;
-	int height;
-	bool isPrimary;
-};
-QVector< MonitorInfo > listMonitors();
+//-- standard directories and installation properties ----------------------------------------------
 
 QString getHomeDir();
 
@@ -67,6 +58,21 @@ struct ExecutableTraits
 	QString sandboxAppName;   ///< application name which the sandbox uses to start it
 };
 ExecutableTraits getExecutableTraits( const QString & executablePath );
+
+//-- graphical environment -------------------------------------------------------------------------
+
+const QString & getLinuxDesktopEnv();
+
+struct MonitorInfo
+{
+	QString name;
+	int width;
+	int height;
+	bool isPrimary;
+};
+QVector< MonitorInfo > listMonitors();
+
+//-- miscellaneous ---------------------------------------------------------------------------------
 
 /// Opens a directory of a file in a new File Explorer window.
 bool openFileLocation( const QString & filePath );

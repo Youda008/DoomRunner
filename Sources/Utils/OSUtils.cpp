@@ -127,6 +127,22 @@ ShellCommand getRunCommand( const QString & executablePath, const PathContext & 
 	ExecutableTraits traits = getExecutableTraits( executablePath );
 
 	// different installations require different ways to launch the engine executable
+ #ifdef FLATPAK_BUILD
+	if (getAbsoluteDirOfFile( executablePath ) == QApplication::applicationDirPath())
+	{
+		// We are inside a Flatpak package but launching an app inside the same Flatpak package,
+		// no special command or permissions needed.
+		cmd.executable = getFileNameFromPath( executablePath );
+		return cmd;  // this is all we need, skip the rest
+	}
+	else
+	{
+		// We are inside a Flatpak package and launching an app outside of this Flatpak package,
+		// need to launch it in a special mode granting it special permissions.
+		cmdParts << "flatpak-spawn" << "--host";
+		// prefix added, continue with the rest
+	}
+ #endif
 	if (traits.sandboxEnv == Sandbox::Snap)
 	{
 		cmdParts << "snap";

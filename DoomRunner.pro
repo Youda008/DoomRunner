@@ -132,11 +132,18 @@ win32: RC_ICONS += Resources/DoomRunner.ico
 win32: LIBS += -lole32 -luuid -ldwmapi
 
 
+#-- user configuration ---------------------------
+
+# add "CONFIG+=flatpak" to the qmake command to activate this
+flatpak: DEFINES += FLATPAK_BUILD
+
+
 #-- deployment -----------------------------------
 
 qnx {
 	target.path = /tmp/$${TARGET}/bin
 } else: unix: !android {
-	target.path = /usr/bin
+	flatpak: target.path = /app/bin
+	else: target.path = /usr/bin
 }
 !isEmpty(target.path): INSTALLS += target

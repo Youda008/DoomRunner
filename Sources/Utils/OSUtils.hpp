@@ -36,9 +36,6 @@ QString getThisAppConfigDir();
 /// Returns directory for this application to save its data into. This may be the same as the config dir.
 QString getThisAppDataDir();
 
-/// Returns directory where Doom engines usually save their configuration.
-QString getEngineConfigDir( const QString & executablePath );
-
 /// Returns whether an executable is inside one of directories where the system will find it.
 /** If true it means the executable can be started directly by using only its name without its path. */
 bool isInSearchPath( const QString & filePath );

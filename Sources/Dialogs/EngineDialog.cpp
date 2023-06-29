@@ -17,6 +17,7 @@
 #include <QDir>
 #include <QTimer>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 
 //======================================================================================================================
@@ -106,19 +107,56 @@ void EngineDialog::onWindowShown()
 
 static QString getEngineName( const QString & enginePath )
 {
+	// In Windows we can use the directory name, which can tell slightly more than just the binary,
+	// but in Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
 	if (isWindows())
 	{
-		// in Windows we can use the directory name, which can tell slightly more than just the binary
 		return getDirnameOfFile( enginePath );
 	}
 	else
 	{
-		// but in Linux we have to fallback to the binary name (or use the Flatpak name if there is one)
 		ExecutableTraits traits = getExecutableTraits( enginePath );
 		if (traits.sandboxEnv != Sandbox::None)
 			return traits.sandboxAppName;
 		else
 			return traits.executableBaseName;
+	}
+}
+
+static QString getEngineConfigDir( const QString & enginePath )
+{
+	// In Windows engines usually store their config in the directory of its binaries or in Saved Games,
+	// but in Linux they store them in standard user's app config dir (usually something like /home/user/.config/)
+	if (isWindows())
+	{
+		QString engineDir = getDirOfFile( enginePath );
+		if (isDirectoryWritable( engineDir ))
+		{
+			return engineDir;
+		}
+		else  // if we cannot write to the directory of the executable (e.g. Program Files), try Saved Games
+		{
+			// this is not bullet-proof but will work for 90% of users
+			return qEnvironmentVariable("USERPROFILE")%"/Saved Games/"%getFileNameFromPath( enginePath );
+		}
+	}
+	else
+	{
+		ExecutableTraits traits = getExecutableTraits( enginePath );
+		if (traits.sandboxEnv == Sandbox::Snap)
+		{
+			return getHomeDir()%"/snap/"%traits.executableBaseName%"/current/.config/"%traits.executableBaseName;
+		}
+		else if (traits.sandboxEnv == Sandbox::Flatpak)
+		{
+			return getHomeDir()%"/.var/app/"%traits.sandboxAppName%"/.config/"%traits.executableBaseName;
+		}
+		else
+		{
+			QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
+			QString appName = getFileNameFromPath( enginePath );
+			return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
+		}
 	}
 }
 

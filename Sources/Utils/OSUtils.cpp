@@ -71,38 +71,6 @@ QString getThisAppDataDir()
 	}
 }
 
-QString getEngineConfigDir( const QString & executablePath )
-{
-	// In Windows engines store their config in the directory of its binaries or in Saved Games,
-	// but in Linux they store them in standard user's app config dir (usually something like /home/user/.config/)
-	if (isWindows())
-	{
-		QString exeDir = getDirOfFile( executablePath );
-		if (isDirectoryWritable( exeDir ))
-			return exeDir;
-		else  // if we cannot write to the directory of the executable (e.g. Program Files), try Saved Games
-			return qEnvironmentVariable("USERPROFILE")+"/Saved Games";  // this is not bullet-proof but will work for 90% of users
-	}
-	else
-	{
-		ExecutableTraits traits = getExecutableTraits( executablePath );
-		if (traits.sandboxEnv == Sandbox::Snap)
-		{
-			return getHomeDir()%"/snap/"%traits.executableBaseName%"/current/.config/"%traits.executableBaseName;
-		}
-		else if (traits.sandboxEnv == Sandbox::Flatpak)
-		{
-			return getHomeDir()%"/.var/app/"%traits.sandboxAppName%"/.config/"%traits.executableBaseName;
-		}
-		else
-		{
-			QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
-			QString appName = getFileNameFromPath( executablePath );
-			return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
-		}
-	}
-}
-
 bool isInSearchPath( const QString & filePath )
 {
 	return !QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ).isEmpty();

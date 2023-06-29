@@ -3255,35 +3255,38 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		p.checkItemFilePath( selectedEngine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
 		// different installations require different ways to launch the engine executable
+		QStringList cmdParts;
 		if (engineTraits.sandboxEnv() == Sandbox::Snap)
 		{
-			cmd.executable = "snap";
-			cmd.arguments << "run";
+			cmdParts << "snap";
+			cmdParts << "run";
 			// TODO: permissions
-			cmd.arguments << engineTraits.sandboxAppName();
+			cmdParts << engineTraits.sandboxAppName();
 		}
 		else if (engineTraits.sandboxEnv() == Sandbox::Flatpak)
 		{
-			cmd.executable = "flatpak";
-			cmd.arguments << "run";
+			cmdParts << "flatpak";
+			cmdParts << "run";
 			for (const QString & dir : getDirsToBeAccessed())
 			{
 				QString fileSystemPermission = "--filesystem=" + getAbsolutePath( dir );
-				cmd.arguments << base.maybeQuoted( fileSystemPermission );
+				cmdParts << base.maybeQuoted( fileSystemPermission );
 				cmd.extraPermissions << fileSystemPermission;
 			}
-			cmd.arguments << engineTraits.sandboxAppName();
+			cmdParts << engineTraits.sandboxAppName();
 		}
 		else if (isInSearchPath( selectedEngine.path ))
 		{
 			// If it's in a search path (C:\Windows\System32, /usr/bin, ...)
 			// it should be (and sometimes must be) started directly by using only its name.
-			cmd.executable = getFileNameFromPath( selectedEngine.path );
+			cmdParts << getFileNameFromPath( selectedEngine.path );
 		}
 		else
 		{
-			cmd.executable = base.rebaseAndQuoteExePath( selectedEngine.path );
+			cmdParts << base.rebaseAndQuoteExePath( selectedEngine.path );
 		}
+		cmd.executable = cmdParts.takeFirst();
+		cmd.arguments = std::move( cmdParts );
 
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.

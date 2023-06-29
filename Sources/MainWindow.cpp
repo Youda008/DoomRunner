@@ -3267,7 +3267,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		{
 			cmdParts << "flatpak";
 			cmdParts << "run";
-			for (const QString & dir : getDirsToBeAccessed())
+			auto requiredDirs = getDirsToBeAccessed();
+			for (const QString & dir : requiredDirs)
 			{
 				QString fileSystemPermission = "--filesystem=" + getAbsolutePath( dir );
 				cmdParts << base.maybeQuoted( fileSystemPermission );

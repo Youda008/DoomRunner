@@ -3234,13 +3234,13 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
-MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths )
+ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths )
 {
+	ShellCommand cmd;
+
 	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir.
 	PathContext base( baseDir, pathContext.baseDir(), pathContext.pathStyle(), quotePaths );
 	PathChecker p( this, verifyPaths );
-
-	ShellCommand cmd;
 
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx < 0)
@@ -3254,40 +3254,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		p.checkItemFilePath( selectedEngine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
-		// different installations require different ways to launch the engine executable
-		QStringList cmdParts;
-		if (engineTraits.sandboxEnv() == Sandbox::Snap)
-		{
-			cmdParts << "snap";
-			cmdParts << "run";
-			// TODO: permissions
-			cmdParts << engineTraits.sandboxAppName();
-		}
-		else if (engineTraits.sandboxEnv() == Sandbox::Flatpak)
-		{
-			cmdParts << "flatpak";
-			cmdParts << "run";
-			auto requiredDirs = getDirsToBeAccessed();
-			for (const QString & dir : requiredDirs)
-			{
-				QString fileSystemPermission = "--filesystem=" + getAbsolutePath( dir );
-				cmdParts << base.maybeQuoted( fileSystemPermission );
-				cmd.extraPermissions << fileSystemPermission;
-			}
-			cmdParts << engineTraits.sandboxAppName();
-		}
-		else if (isInSearchPath( selectedEngine.path ))
-		{
-			// If it's in a search path (C:\Windows\System32, /usr/bin, ...)
-			// it should be (and sometimes must be) started directly by using only its name.
-			cmdParts << getFileNameFromPath( selectedEngine.path );
-		}
-		else
-		{
-			cmdParts << base.rebaseAndQuoteExePath( selectedEngine.path );
-		}
-		cmd.executable = cmdParts.takeFirst();
-		cmd.arguments = std::move( cmdParts );
+		// get the beginning of the launch command based on OS and installation type
+		cmd = getRunCommand( selectedEngine.path, base, getDirsToBeAccessed() );
 
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.

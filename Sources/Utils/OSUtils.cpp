@@ -109,6 +109,59 @@ ExecutableTraits getExecutableTraits( const QString & executablePath )
 	return traits;
 }
 
+// On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
+inline static QString fixExePath( const QString & exePath )
+{
+	if (!isWindows() && !exePath.contains("/"))  // the file is in the current working directory
+	{
+		return "./" + exePath;
+	}
+	return exePath;
+}
+
+ShellCommand getRunCommand( const QString & executablePath, const PathContext & base, const QStringList & dirsToBeAccessed )
+{
+	ShellCommand cmd;
+	QStringList cmdParts;
+
+	ExecutableTraits traits = getExecutableTraits( executablePath );
+
+	// different installations require different ways to launch the engine executable
+	if (traits.sandboxEnv == Sandbox::Snap)
+	{
+		cmdParts << "snap";
+		cmdParts << "run";
+		// TODO: permissions
+		cmdParts << traits.sandboxAppName;
+	}
+	else if (traits.sandboxEnv == Sandbox::Flatpak)
+	{
+		cmdParts << "flatpak";
+		cmdParts << "run";
+		for (const QString & dir : dirsToBeAccessed)
+		{
+			QString fileSystemPermission = "--filesystem=" + getAbsolutePath( dir );
+			cmdParts << base.maybeQuoted( fileSystemPermission );
+			cmd.extraPermissions << fileSystemPermission;
+		}
+		cmdParts << traits.sandboxAppName;
+	}
+	else if (isInSearchPath( executablePath ))
+	{
+		// If it's in a search path (C:\Windows\System32, /usr/bin, ...)
+		// it should be (and sometimes must be) started directly by using only its name.
+		cmdParts << getFileNameFromPath( executablePath );
+	}
+	else
+	{
+		cmdParts << base.maybeQuoted( fixExePath( base.rebasePath( executablePath ) ) );
+	}
+
+	cmd.executable = cmdParts.takeFirst();
+	cmd.arguments = std::move( cmdParts );
+	return cmd;
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  graphical environment

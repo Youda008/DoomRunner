@@ -194,12 +194,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void restoreAudioOptions( const AudioOptions & opts );
 	void restoreGlobalOptions( const GlobalOptions & opts );
 
-	struct ShellCommand
-	{
-		QString executable;
-		QStringList arguments;
-		QStringList extraPermissions;  // extra Snap/Flatpack permissions needed to run this command
-	};
 	ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand();
 

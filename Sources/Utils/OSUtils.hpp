@@ -12,7 +12,10 @@
 #include "Common.hpp"
 
 #include <QString>
+#include <QList>
 #include <QVector>
+
+class PathContext;
 
 
 //======================================================================================================================
@@ -55,6 +58,21 @@ struct ExecutableTraits
 	QString sandboxAppName;   ///< application name which the sandbox uses to start it
 };
 ExecutableTraits getExecutableTraits( const QString & executablePath );
+
+struct ShellCommand
+{
+	QString executable;
+	QStringList arguments;
+	QStringList extraPermissions;  // extra sandbox permissions needed to run this command
+};
+/// Returns a shell command needed to run a specified executable without parameters.
+/** The result may be different based on operating system and where the executable is installed.
+  * \param base path options with base directory for relative paths and whether paths should be quoted
+  * \param dirsToBeAccessed Directories to which the executable will need a read access.
+  *                         Required to setup permissions for a sandbox environment. */
+ShellCommand getRunCommand(
+	const QString & executablePath, const PathContext & base, const QStringList & dirsToBeAccessed = {}
+);
 
 //-- graphical environment -------------------------------------------------------------------------
 

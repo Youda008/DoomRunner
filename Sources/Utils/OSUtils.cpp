@@ -105,6 +105,10 @@ ExecutableTraits getExecutableTraits( const QString & executablePath )
 		traits.sandboxEnv = Sandbox::Flatpak;
 		traits.sandboxAppName = match.captured(1);
 	}
+	else
+	{
+		traits.sandboxEnv = Sandbox::None;
+	}
 
 	return traits;
 }

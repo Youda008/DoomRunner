@@ -73,7 +73,7 @@ QString getThisAppDataDir()
 
 bool isInSearchPath( const QString & filePath )
 {
-	return !QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ).isEmpty();
+	return QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ) == filePath;
 }
 
 QString getSandboxName( Sandbox sandbox )

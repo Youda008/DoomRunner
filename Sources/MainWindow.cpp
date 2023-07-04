@@ -348,6 +348,10 @@ MainWindow::MainWindow()
 	// Qt on Windows does not automatically follow OS preferences, so we have to monitor the OS settings for changes
 	// and manually change our theme when it does.
 	themeWatcher.start();
+ #else
+	// On Windows the application icon is already set using the Windows resource system, so loading this resource
+	// is unnecessary. But on Linux, we have to do it. See https://doc.qt.io/qt-6/appicon.html
+	this->setWindowIcon( QIcon(":/DoomRunner.ico") );
  #endif
 
 	// setup main menu actions

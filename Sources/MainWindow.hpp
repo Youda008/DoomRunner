@@ -204,6 +204,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QString getConfigDir() const;
 	QString getSaveDir() const;
+	QString getDemoDir() const;
 
 	LaunchMode getLaunchModeFromUI() const;
 

@@ -101,7 +101,7 @@ QStringList MainWindow::getSelectedMapPacks() const
 QString MainWindow::getConfigDir() const
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
+	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : QString();
 }
 
 QString MainWindow::getSaveDir() const
@@ -111,6 +111,12 @@ QString MainWindow::getSaveDir() const
 		return alternativeSaveDir;      // then use it
 	else                                // otherwise
 		return getConfigDir();          // use config dir
+}
+
+QString MainWindow::getDemoDir() const
+{
+	// let's not complicate things and treat save dir and demo dir as one
+	return getSaveDir();
 }
 
 LaunchMode MainWindow::getLaunchModeFromUI() const
@@ -144,7 +150,7 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 	int configIdx = ui->configCmbBox->currentIndex();
 	if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
 	{
-		loopBody( selectedEngine.configDir );
+		loopBody( selectedEngine.configDir );  // cannot be empty otherwise configIdx would be 0 or -1
 	}
 
 	// dir of IWAD
@@ -1003,8 +1009,15 @@ void MainWindow::runCompatOptsDialog()
 
 void MainWindow::cloneConfig()
 {
-	QDir configDir( getConfigDir() );
-	QFileInfo oldConfig( configDir.filePath( ui->configCmbBox->currentText() ) );
+	QString currentConfigFileName = ui->configCmbBox->currentText();
+	if (currentConfigFileName.isEmpty())
+	{
+		QMessageBox::warning( this, "No config selected", "You haven't selected any config file to be cloned." );
+		return;
+	}
+
+	QDir configDir( getConfigDir() );  // config dir cannot be empty, otherwise currentConfigFileName would be empty
+	QFileInfo oldConfig( configDir.filePath( currentConfigFileName ) );
 
 	NewConfigDialog dialog( this, oldConfig.completeBaseName() );
 
@@ -2082,15 +2095,19 @@ void MainWindow::setAltDirsRelativeToConfigs( const QString & dirName )
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx >= 0)
 	{
-		QString dirPath = getPathFromFileName( engineModel[ selectedEngineIdx ].configDir, dirName );
+		const QString & configDir = engineModel[ selectedEngineIdx ].configDir;
+		if (!configDir.isEmpty())  // config dir might not be configured
+		{
+			QString dirPath = getPathFromFileName( configDir, dirName );
 
-		ui->saveDirLine->setText( dirPath );
-		// Do not set screenshot_dir for engines that don't support it,
-		// some of them are bitchy and won't start if you supply them with unknown command line parameter.
-		if (engineTraits[ selectedEngineIdx ].hasScreenshotDirParam())
-			ui->screenshotDirLine->setText( dirPath );
-		else
-			ui->screenshotDirLine->clear();
+			ui->saveDirLine->setText( dirPath );
+			// Do not set screenshot_dir for engines that don't support it,
+			// some of them are bitchy and won't start if you supply them with unknown command line parameter.
+			if (engineTraits[ selectedEngineIdx ].hasScreenshotDirParam())
+				ui->screenshotDirLine->setText( dirPath );
+			else
+				ui->screenshotDirLine->clear();
+		}
 	}
 }
 
@@ -2379,7 +2396,7 @@ void MainWindow::updateSaveFilesFromDir()
 
 void MainWindow::updateDemoFilesFromDir()
 {
-	QString demoDir = getSaveDir();
+	QString demoDir = getDemoDir();
 
 	// workaround (read the big comment above)
 	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
@@ -3265,6 +3282,7 @@ ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool ve
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
 		{
+			// at this point the configDir cannot be empty, otherwise the configCmbBox would be empty and the index 0 or -1
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
 			p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
@@ -3328,19 +3346,21 @@ ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool ve
 	}
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
+		// save dir cannot be empty, otherwise the saveFileCmbBox would be empty
 		QString savePath = getPathFromFileName( getSaveDir(), ui->saveFileCmbBox->currentText() );
 		p.checkFilePath( savePath, "the selected save file", "Please select another one." );
 		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
-		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileLine_record->text() );
+		QString demoPath = getPathFromFileName( getDemoDir(), ui->demoFileLine_record->text() );
 		cmd.arguments << "-record" << base.rebaseAndQuotePath( demoPath );
 		cmd.arguments << engineTraits.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
-		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileCmbBox_replay->currentText() );
+		// demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
+		QString demoPath = getPathFromFileName( getDemoDir(), ui->demoFileCmbBox_replay->currentText() );
 		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
 		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}

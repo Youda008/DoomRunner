@@ -155,7 +155,7 @@ inline QString getAbsolutePath( const QString & path )
 
 inline QString getPathFromFileName( const QString & dirPath, const QString & fileName )
 {
-	return QDir( dirPath ).filePath( fileName );
+	return !dirPath.isEmpty() ? QDir( dirPath ).filePath( fileName ) : fileName;
 }
 
 inline QString getFileNameFromPath( const QString & filePath )

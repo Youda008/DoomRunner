@@ -125,12 +125,12 @@ inline bool isDirectory( const QString & path )
 
 inline bool isValidDir( const QString & dirPath )
 {
-	return !dirPath.isEmpty() && QDir( dirPath ).exists();
+	return !dirPath.isEmpty() && QFileInfo( dirPath ).isDir();
 }
 
 inline bool isInvalidDir( const QString & dirPath )
 {
-	return !dirPath.isEmpty() && !QDir( dirPath ).exists();  // either doesn't exist or it's a file
+	return !dirPath.isEmpty() && !QFileInfo( dirPath ).isDir();  // it exists but it's not a dir
 }
 
 inline bool isValidFile( const QString & filePath )
@@ -140,7 +140,7 @@ inline bool isValidFile( const QString & filePath )
 
 inline bool isInvalidFile( const QString & filePath )
 {
-	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // either doesn't exist or it's a directory
+	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // it exists but it's not a file
 }
 
 inline bool isValidEntry( const QString & path )

@@ -241,22 +241,37 @@ void EngineDialog::accept()
 {
 	if (engine.name.isEmpty())
 	{
-		QMessageBox::warning( this, "Engine name is empty", "Please give the engine some name." );
+		QMessageBox::warning( this, "Engine name cannot be empty", "Please give the engine some name." );
 		return;
 	}
+
 	if (engine.path.isEmpty())
 	{
-		QMessageBox::warning( this, "Executable path is empty", "Please specify the engine's executable path." );
+		QMessageBox::warning( this, "Executable path cannot be empty",
+			"Please specify the engine's executable path."
+		);
 		return;
 	}
-	if (isInvalidFile( engine.path ))
+	else if (isInvalidFile( engine.path ))
 	{
-		QMessageBox::warning( this, "Executable doesn't exist", "Please fix the engine's executable path, such file doesn't exist." );
+		QMessageBox::warning( this, "Executable doesn't exist",
+			"Please fix the engine's executable path, such file doesn't exist."
+		);
 		return;
 	}
-	if (isInvalidDir( engine.configDir ))
+
+	if (engine.configDir.isEmpty())
 	{
-		QMessageBox::warning( this, "Config dir doesn't exist", "Please fix the engine's config dir, such directory doesn't exist." );
+		QMessageBox::warning( this, "Config dir cannot be empty",
+			"Please specify the engine's config directory, this launcher cannot operate without it."
+		);
+		return;
+	}
+	else if (isInvalidDir( engine.configDir ))
+	{
+		QMessageBox::warning( this, "Config dir doesn't exist",
+			"Please fix the engine's config directory, such directory doesn't exist."
+		);
 		return;
 	}
 

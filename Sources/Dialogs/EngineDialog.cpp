@@ -154,7 +154,7 @@ static QString getEngineConfigDir( const QString & enginePath )
 		else
 		{
 			QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
-			QString appName = getFileNameFromPath( enginePath );
+			QString appName = getFileBasenameFromPath( enginePath );
 			return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
 		}
 	}

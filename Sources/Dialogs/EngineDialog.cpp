@@ -105,7 +105,7 @@ void EngineDialog::onWindowShown()
 		done( QDialog::Rejected );
 }
 
-static QString getEngineName( const QString & enginePath )
+static QString suggestEngineName( const QString & enginePath )
 {
 	// In Windows we can use the directory name, which can tell slightly more than just the binary,
 	// but in Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
@@ -123,7 +123,7 @@ static QString getEngineName( const QString & enginePath )
 	}
 }
 
-static QString getEngineConfigDir( const QString & enginePath )
+static QString suggestEngineConfigDir( const QString & enginePath )
 {
 	// In Windows engines usually store their config in the directory of its binaries or in Saved Games,
 	// but in Linux they store them in standard user's app config dir (usually something like /home/user/.config/)
@@ -147,15 +147,21 @@ static QString getEngineConfigDir( const QString & enginePath )
 		{
 			return getHomeDir()%"/snap/"%traits.executableBaseName%"/current/.config/"%traits.executableBaseName;
 		}
-		else if (traits.sandboxEnv == Sandbox::Flatpak)
+		else if (traits.sandboxEnv == Sandbox::Flatpak)  // the engine is a Flatpak installation
 		{
 			return getHomeDir()%"/.var/app/"%traits.sandboxAppName%"/.config/"%traits.executableBaseName;
 		}
 		else
 		{
-			QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
+		 #ifdef FLATPAK_BUILD  // the launcher is a Flatpak installation
+			// Inside Flatpak environment the GenericConfigLocation points into the Flatpak sandbox of this application.
+			// But we need the system-wide config dir, and that's available via Qt, so we must do this guessing hack.
+			QString standardConfigDir = getHomeDir()+"/.config";
+		 #else
+			QString standardConfigDir = QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
+		 #endif
 			QString appName = getFileBasenameFromPath( enginePath );
-			return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
+			return getPathFromFileName( standardConfigDir, appName );  // -> /home/user/.config/zdoom
 		}
 	}
 }
@@ -178,10 +184,10 @@ void EngineDialog::browseEngine()
 	ui->pathLine->setText( enginePath );
 
 	if (ui->nameLine->text().isEmpty())  // don't overwrite existing name
-		ui->nameLine->setText( getEngineName( enginePath ) );
+		ui->nameLine->setText( suggestEngineName( enginePath ) );
 
 	if (ui->configDirLine->text().isEmpty())  // don't overwrite existing config dir
-		ui->configDirLine->setText( getEngineConfigDir( enginePath ) );
+		ui->configDirLine->setText( suggestEngineConfigDir( enginePath ) );
 
 	// guess the engine family based on executable's name
 	QString executableName = getFileBasenameFromPath( enginePath );

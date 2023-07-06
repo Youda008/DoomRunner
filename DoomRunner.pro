@@ -39,89 +39,87 @@ QMAKE_CXXFLAGS += -Wno-comment
 INCLUDEPATH += Sources
 
 HEADERS += \
-    Sources/Dialogs/AboutDialog.hpp \
-    Sources/Dialogs/CompatOptsDialog.hpp \
+	Sources/Dialogs/AboutDialog.hpp \
+	Sources/Dialogs/CompatOptsDialog.hpp \
 	Sources/Dialogs/DialogCommon.hpp \
-    Sources/Dialogs/EngineDialog.hpp \
-    Sources/Dialogs/GameOptsDialog.hpp \
-    Sources/Dialogs/NewConfigDialog.hpp \
-    Sources/Dialogs/OptionsStorageDialog.hpp \
-    Sources/Dialogs/OwnFileDialog.hpp \
-    Sources/Dialogs/ProcessOutputWindow.hpp \
-    Sources/Dialogs/SetupDialog.hpp \
+	Sources/Dialogs/EngineDialog.hpp \
+	Sources/Dialogs/GameOptsDialog.hpp \
+	Sources/Dialogs/NewConfigDialog.hpp \
+	Sources/Dialogs/OptionsStorageDialog.hpp \
+	Sources/Dialogs/OwnFileDialog.hpp \
+	Sources/Dialogs/ProcessOutputWindow.hpp \
+	Sources/Dialogs/SetupDialog.hpp \
 	Sources/Utils/ErrorHandling.hpp \
-    Sources/Utils/EventFilters.hpp \
-    Sources/Utils/FileSystemUtils.hpp \
-    Sources/Utils/JsonUtils.hpp \
-    Sources/Utils/LangUtils.hpp \
-    Sources/Utils/MiscUtils.hpp \
-    Sources/Utils/OSUtils.hpp \
-    Sources/Utils/WADReader.hpp \
-    Sources/Utils/WidgetUtils.hpp \
-    Sources/Widgets/EditableListView.hpp \
-    Sources/Widgets/ExtendedTreeView.hpp \
-    Sources/Widgets/ListModel.hpp \
-    Sources/Common.hpp \
-    Sources/DoomFileInfo.hpp \
-    Sources/EngineTraits.hpp \
-    Sources/MainWindow.hpp \
-    Sources/OptionsSerializer.hpp \
-    Sources/Themes.hpp \
-    Sources/UpdateChecker.hpp \
-    Sources/UserData.hpp \
-    Sources/Version.hpp \
+	Sources/Utils/EventFilters.hpp \
+	Sources/Utils/FileSystemUtils.hpp \
+	Sources/Utils/JsonUtils.hpp \
+	Sources/Utils/LangUtils.hpp \
+	Sources/Utils/MiscUtils.hpp \
+	Sources/Utils/OSUtils.hpp \
+	Sources/Utils/WADReader.hpp \
+	Sources/Utils/WidgetUtils.hpp \
+	Sources/Widgets/EditableListView.hpp \
+	Sources/Widgets/ExtendedTreeView.hpp \
+	Sources/Widgets/ListModel.hpp \
+	Sources/Common.hpp \
+	Sources/DoomFileInfo.hpp \
+	Sources/EngineTraits.hpp \
+	Sources/MainWindow.hpp \
+	Sources/OptionsSerializer.hpp \
+	Sources/Themes.hpp \
+	Sources/UpdateChecker.hpp \
+	Sources/UserData.hpp \
+	Sources/Version.hpp \
 	Sources/Widgets/SearchPanel.hpp
 
 SOURCES += \
-    Sources/Dialogs/AboutDialog.cpp \
-    Sources/Dialogs/CompatOptsDialog.cpp \
+	Sources/Dialogs/AboutDialog.cpp \
+	Sources/Dialogs/CompatOptsDialog.cpp \
 	Sources/Dialogs/DialogCommon.cpp \
-    Sources/Dialogs/EngineDialog.cpp \
-    Sources/Dialogs/GameOptsDialog.cpp \
-    Sources/Dialogs/NewConfigDialog.cpp \
-    Sources/Dialogs/OptionsStorageDialog.cpp \
-    Sources/Dialogs/OwnFileDialog.cpp \
-    Sources/Dialogs/ProcessOutputWindow.cpp \
-    Sources/Dialogs/SetupDialog.cpp \
+	Sources/Dialogs/EngineDialog.cpp \
+	Sources/Dialogs/GameOptsDialog.cpp \
+	Sources/Dialogs/NewConfigDialog.cpp \
+	Sources/Dialogs/OptionsStorageDialog.cpp \
+	Sources/Dialogs/OwnFileDialog.cpp \
+	Sources/Dialogs/ProcessOutputWindow.cpp \
+	Sources/Dialogs/SetupDialog.cpp \
 	Sources/Utils/ErrorHandling.cpp \
-    Sources/Utils/EventFilters.cpp \
-    Sources/Utils/FileSystemUtils.cpp \
-    Sources/Utils/LangUtils.cpp \
-    Sources/Utils/JsonUtils.cpp \
-    Sources/Utils/MiscUtils.cpp \
-    Sources/Utils/OSUtils.cpp \
-    Sources/Utils/WADReader.cpp \
-    Sources/Utils/WidgetUtils.cpp \
-    Sources/Widgets/EditableListView.cpp \
-    Sources/Widgets/ExtendedTreeView.cpp \
-    Sources/Widgets/ListModel.cpp \
-    Sources/DoomFileInfo.cpp \
-    Sources/EngineTraits.cpp \
-    Sources/MainWindow.cpp \
-    Sources/OptionsSerializer.cpp \
-    Sources/Themes.cpp \
-    Sources/UpdateChecker.cpp \
-    Sources/UserData.cpp \
-    Sources/Version.cpp \
+	Sources/Utils/EventFilters.cpp \
+	Sources/Utils/FileSystemUtils.cpp \
+	Sources/Utils/LangUtils.cpp \
+	Sources/Utils/JsonUtils.cpp \
+	Sources/Utils/MiscUtils.cpp \
+	Sources/Utils/OSUtils.cpp \
+	Sources/Utils/WADReader.cpp \
+	Sources/Utils/WidgetUtils.cpp \
+	Sources/Widgets/EditableListView.cpp \
+	Sources/Widgets/ExtendedTreeView.cpp \
+	Sources/Widgets/ListModel.cpp \
+	Sources/DoomFileInfo.cpp \
+	Sources/EngineTraits.cpp \
+	Sources/MainWindow.cpp \
+	Sources/OptionsSerializer.cpp \
+	Sources/Themes.cpp \
+	Sources/UpdateChecker.cpp \
+	Sources/UserData.cpp \
+	Sources/Version.cpp \
 	Sources/Widgets/SearchPanel.cpp \
-    Sources/main.cpp \
+	Sources/main.cpp \
 
 FORMS += \
-    Forms/AboutDialog.ui \
-    Forms/CompatOptsDialog.ui \
-    Forms/EngineDialog.ui \
-    Forms/GameOptsDialog.ui \
-    Forms/MainWindow.ui \
-    Forms/NewConfigDialog.ui \
-    Forms/OptionsStorageDialog.ui \
-    Forms/ProcessOutputWindow.ui \
-    Forms/SetupDialog.ui \
+	Forms/AboutDialog.ui \
+	Forms/CompatOptsDialog.ui \
+	Forms/EngineDialog.ui \
+	Forms/GameOptsDialog.ui \
+	Forms/MainWindow.ui \
+	Forms/NewConfigDialog.ui \
+	Forms/OptionsStorageDialog.ui \
+	Forms/ProcessOutputWindow.ui \
+	Forms/SetupDialog.ui \
 
 RESOURCES += \
-    Resources/Resources.qrc
+	Resources/Resources.qrc
 
-DISTFILES += \
-    Resources/DoomRunner.ico
 
 # To set an icon for the exe file we need to use the Windows resource system, see https://doc.qt.io/qt-6/appicon.html
 win32: RC_ICONS += Resources/DoomRunner.ico
@@ -140,9 +138,9 @@ flatpak: DEFINES += FLATPAK_BUILD
 
 #-- deployment -----------------------------------
 
-qnx {
-	target.path = /tmp/$${TARGET}/bin
-} else: unix: !android {
+unix: !android
+{
+	# executable
 	flatpak: target.path = /app/bin
 	else: target.path = /usr/bin
 }

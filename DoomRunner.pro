@@ -140,8 +140,6 @@ flatpak: DEFINES += FLATPAK_BUILD
 
 unix: !android
 {
-	# executable
-	flatpak: target.path = /app/bin
-	else: target.path = /usr/bin
+	target.path = /usr/bin
 }
 !isEmpty(target.path): INSTALLS += target

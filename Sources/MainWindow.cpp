@@ -71,10 +71,9 @@ static constexpr bool DontVerifyPaths = false;
 //======================================================================================================================
 //  MainWindow-specific utils
 
-QStringList MainWindow::getSelectedMapPacks() const
+template< typename Functor >
+void MainWindow::forEachSelectedMapPack( const Functor & loopBody ) const
 {
-	QStringList selectedMapPacks;
-
 	// clicking on an item in QTreeView with QFileSystemModel selects all elements (columns) of a row,
 	// but we only care about the first one
 	const auto selectedRows = getSelectedRows( ui->mapDirView );
@@ -83,8 +82,18 @@ QStringList MainWindow::getSelectedMapPacks() const
 	for (const QModelIndex & index : selectedRows)
 	{
 		QString modelPath = mapModel.filePath( index );
-		selectedMapPacks.append( pathContext.convertPath( modelPath ) );
+		loopBody( pathContext.convertPath( modelPath ) );
 	}
+}
+
+QStringList MainWindow::getSelectedMapPacks() const
+{
+	QStringList selectedMapPacks;
+
+	forEachSelectedMapPack( [&]( const QString & mapPackPath )
+	{
+		selectedMapPacks.append( mapPackPath );
+	});
 
 	return selectedMapPacks;
 }
@@ -92,7 +101,7 @@ QStringList MainWindow::getSelectedMapPacks() const
 QString MainWindow::getConfigDir() const
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : "";
+	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : QString();
 }
 
 QString MainWindow::getSaveDir() const
@@ -102,6 +111,12 @@ QString MainWindow::getSaveDir() const
 		return alternativeSaveDir;      // then use it
 	else                                // otherwise
 		return getConfigDir();          // use config dir
+}
+
+QString MainWindow::getDemoDir() const
+{
+	// let's not complicate things and treat save dir and demo dir as one
+	return getSaveDir();
 }
 
 LaunchMode MainWindow::getLaunchModeFromUI() const
@@ -116,6 +131,89 @@ LaunchMode MainWindow::getLaunchModeFromUI() const
 		return LaunchMode::ReplayDemo;
 	else
 		return LaunchMode::Default;
+}
+
+// Iterates over all directories which the engine will need to access (either for reading or writing).
+// Required for supporting sandbox environments like Snap or Flatpak
+template< typename Functor >
+void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
+{
+	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	if (selectedEngineIdx < 0)
+	{
+		return;
+	}
+
+	const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
+
+	// dir of config files
+	int configIdx = ui->configCmbBox->currentIndex();
+	if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
+	{
+		loopBody( selectedEngine.configDir );  // cannot be empty otherwise configIdx would be 0 or -1
+	}
+
+	// dir of IWAD
+	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
+	if (selectedIwadIdx >= 0)
+	{
+		loopBody( getDirOfFile( iwadModel[ selectedIwadIdx ].path ) );
+	}
+
+	// dir of map files
+	if (isSomethingSelected( ui->mapDirView ))
+	{
+		loopBody( mapSettings.dir );  // all map files will always be inside the configured map dir
+	}
+
+	// dirs of mod files
+	QDir modDir( modSettings.dir );
+	bool modDirUsed = false;
+	for (const Mod & mod : modModel)
+	{
+		if (!mod.checked)
+			continue;
+
+		if (isInsideDir( mod.path, modDir ))  // aggregate all mods inside the configured mod dir under single dir path
+		{
+			if (!modDirUsed)  // use it only once
+			{
+				loopBody( modSettings.dir );
+				modDirUsed = true;
+			}
+		}
+		else  // but still add directories outside of the configured mod dir, because mod dir is only a hint
+		{
+			loopBody( getDirOfFile( mod.path ) );
+		}
+	}
+
+	// dir of saves and demo files
+	LaunchMode launchMode = getLaunchModeFromUI();
+	if ((launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
+	 || (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty()))
+	{
+		loopBody( getSaveDir() );
+	}
+
+	// dir of screenshots
+	if (!ui->screenshotDirLine->text().isEmpty())
+	{
+		loopBody( ui->screenshotDirLine->text() );
+	}
+}
+
+// Gets (deduplicated) directories which the engine will need to access (either for reading or writing).
+QStringList MainWindow::getDirsToBeAccessed() const
+{
+	QSet< QString > dirSet;  // de-duplicate the paths
+
+	forEachDirToBeAccessed( [&]( const QString & dir )
+	{
+		dirSet.insert( dir );
+	});
+
+	return QStringList( dirSet.begin(), dirSet.end() );
 }
 
 LaunchOptions & MainWindow::activeLaunchOptions()
@@ -311,7 +409,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 MainWindow::MainWindow()
 :
 	QMainWindow( nullptr ),
-	DialogWithBrowseDir(
+	DialogWithPaths(
 		this, PathContext( QApplication::applicationDirPath(), defaultPathStyle )  // all relative paths will internally be stored relative to the application's dir
 	),
 	engineModel(
@@ -348,6 +446,10 @@ MainWindow::MainWindow()
 	// Qt on Windows does not automatically follow OS preferences, so we have to monitor the OS settings for changes
 	// and manually change our theme when it does.
 	themeWatcher.start();
+ #else
+	// On Windows the application icon is already set using the Windows resource system, so loading this resource
+	// is unnecessary. But on Linux, we have to do it. See https://doc.qt.io/qt-6/appicon.html
+	this->setWindowIcon( QIcon(":/DoomRunner.ico") );
  #endif
 
 	// setup main menu actions
@@ -633,7 +735,7 @@ void MainWindow::onWindowShown()
 	presetSearchPanel->collapse();  // hide it by default, it's shown on startup
 
 	// create a directory for application data, if it doesn't exist already
-	appDataDir.setPath( getThisAppDataDir() );
+	appDataDir.setPath( getThisAppConfigDir() );
 	if (!appDataDir.exists())
 	{
 		appDataDir.mkpath(".");
@@ -907,8 +1009,15 @@ void MainWindow::runCompatOptsDialog()
 
 void MainWindow::cloneConfig()
 {
-	QDir configDir( getConfigDir() );
-	QFileInfo oldConfig( configDir.filePath( ui->configCmbBox->currentText() ) );
+	QString currentConfigFileName = ui->configCmbBox->currentText();
+	if (currentConfigFileName.isEmpty())
+	{
+		QMessageBox::warning( this, "No config selected", "You haven't selected any config file to be cloned." );
+		return;
+	}
+
+	QDir configDir( getConfigDir() );  // config dir cannot be empty, otherwise currentConfigFileName would be empty
+	QFileInfo oldConfig( configDir.filePath( currentConfigFileName ) );
 
 	NewConfigDialog dialog( this, oldConfig.completeBaseName() );
 
@@ -1986,15 +2095,19 @@ void MainWindow::setAltDirsRelativeToConfigs( const QString & dirName )
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx >= 0)
 	{
-		QString dirPath = getPathFromFileName( engineModel[ selectedEngineIdx ].configDir, dirName );
+		const QString & configDir = engineModel[ selectedEngineIdx ].configDir;
+		if (!configDir.isEmpty())  // config dir might not be configured
+		{
+			QString dirPath = getPathFromFileName( configDir, dirName );
 
-		ui->saveDirLine->setText( dirPath );
-		// Do not set screenshot_dir for engines that don't support it,
-		// some of them are bitchy and won't start if you supply them with unknown command line parameter.
-		if (engineTraits[ selectedEngineIdx ].hasScreenshotDirParam())
-			ui->screenshotDirLine->setText( dirPath );
-		else
-			ui->screenshotDirLine->clear();
+			ui->saveDirLine->setText( dirPath );
+			// Do not set screenshot_dir for engines that don't support it,
+			// some of them are bitchy and won't start if you supply them with unknown command line parameter.
+			if (engineTraits[ selectedEngineIdx ].hasScreenshotDirParam())
+				ui->screenshotDirLine->setText( dirPath );
+			else
+				ui->screenshotDirLine->clear();
+		}
 	}
 }
 
@@ -2283,7 +2396,7 @@ void MainWindow::updateSaveFilesFromDir()
 
 void MainWindow::updateDemoFilesFromDir()
 {
-	QString demoDir = getSaveDir();
+	QString demoDir = getDemoDir();
 
 	// workaround (read the big comment above)
 	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
@@ -3013,14 +3126,16 @@ void MainWindow::exportPresetToScript()
 		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
-	const QString & presetName = presetModel[ selectedIdx ].name;
 
-	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", sanitizePath( presetName ), scriptFileSuffix );
+	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, scriptFileSuffix );
 	if (scriptFilePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
 	}
+
 	QFileInfo scriptFileInfo( scriptFilePath );
+
+	lastUsedDir = scriptFileInfo.path();
 
 	auto cmd = generateLaunchCommand( scriptFileInfo.path(), DontVerifyPaths, QuotePaths );
 
@@ -3057,18 +3172,20 @@ void MainWindow::exportPresetToShortcut()
 		return;  // no sense to generate a command when we don't even know the engine
 	}
 
+	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, shortcutFileSuffix );
+	if (shortcutPath.isEmpty())  // user probably clicked cancel
+	{
+		return;
+	}
+
+	lastUsedDir = getDirOfFile( shortcutPath );
+
 	// The paths in the arguments needs to be relative to the engine's directory
 	// because it will be executed with the current directory set to engine's directory,
 	// But the executable itself must be either absolute or relative to the current working dir
 	// so that it is correctly saved to the shortcut.
 	QString enginePath = engineModel[ selectedEngineIdx ].path;
 	QString workingDir = getAbsoluteDirOfFile( enginePath );
-
-	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", sanitizePath( selectedPreset.name ), shortcutFileSuffix );
-	if (shortcutPath.isEmpty())  // user probably clicked cancel
-	{
-		return;
-	}
 
 	auto cmd = generateLaunchCommand( workingDir, DontVerifyPaths, QuotePaths );
 
@@ -3134,13 +3251,13 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
-MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths )
+ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths )
 {
+	ShellCommand cmd;
+
 	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir.
 	PathContext base( baseDir, pathContext.baseDir(), pathContext.pathStyle(), quotePaths );
 	PathChecker p( this, verifyPaths );
-
-	ShellCommand cmd;
 
 	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx < 0)
@@ -3154,12 +3271,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		p.checkItemFilePath( selectedEngine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
-		// If it's in a search path (C:\Windows\System32, /usr/bin, /snap/bin, ...)
-		// it should be (and sometimes must be) started directly by using only its name.
-		if (isInSearchPath( selectedEngine.path ))
-			cmd.executable = getFileNameFromPath( selectedEngine.path );
-		else
-			cmd.executable = base.rebaseAndQuoteExePath( selectedEngine.path );
+		// get the beginning of the launch command based on OS and installation type
+		cmd = getRunCommand( selectedEngine.path, base, getDirsToBeAccessed() );
 
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.
@@ -3169,6 +3282,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
 		{
+			// at this point the configDir cannot be empty, otherwise the configCmbBox would be empty and the index 0 or -1
 			QString configPath = getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
 			p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
@@ -3185,8 +3299,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 
 	QVector< QString > selectedFiles;
 
-	const QStringList selectedMapPacks = getSelectedMapPacks();
-	for (const QString & mapFilePath : selectedMapPacks)
+	forEachSelectedMapPack( [&]( const QString & mapFilePath )
 	{
 		p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
 
@@ -3198,7 +3311,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 		else
 			// combine all files under a single -file parameter
 			selectedFiles.append( mapFilePath );
-	}
+	});
 
 	for (Mod & mod : modModel)
 	{
@@ -3233,19 +3346,21 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	}
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
+		// save dir cannot be empty, otherwise the saveFileCmbBox would be empty
 		QString savePath = getPathFromFileName( getSaveDir(), ui->saveFileCmbBox->currentText() );
 		p.checkFilePath( savePath, "the selected save file", "Please select another one." );
 		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
-		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileLine_record->text() );
+		QString demoPath = getPathFromFileName( getDemoDir(), ui->demoFileLine_record->text() );
 		cmd.arguments << "-record" << base.rebaseAndQuotePath( demoPath );
 		cmd.arguments << engineTraits.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
-		QString demoPath = getPathFromFileName( getSaveDir(), ui->demoFileCmbBox_replay->currentText() );
+		// demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
+		QString demoPath = getPathFromFileName( getDemoDir(), ui->demoFileCmbBox_replay->currentText() );
 		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
 		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}
@@ -3380,6 +3495,30 @@ void MainWindow::launch()
 	if (cmd.executable.isNull())
 	{
 		return;  // errors are already shown during the generation
+	}
+
+	// If extra permissions are needed to run the engine inside its sandbox environment, better ask the user.
+	if (settings.askForSandboxPermissions && !cmd.extraPermissions.isEmpty())
+	{
+		auto engineName = getFileNameFromPath( engineModel[ selectedEngineIdx ].path );
+		auto sandboxName = engineTraits[ selectedEngineIdx ].sandboxEnvName();
+
+		QMessageBox messageBox( QMessageBox::Question, "Extra permissions needed",
+			engineName%" requires extra permissions to be able to access files outside of its "%sandboxName%" environment. "
+			"Are you ok with these permissions to be granted to "%engineName%"?",
+			QMessageBox::Yes | QMessageBox::No,
+			this
+		);
+		messageBox.setDetailedText( cmd.extraPermissions.join('\n') );
+		messageBox.setCheckBox( new QCheckBox( "don't ask again" ) );
+
+		int answer = messageBox.exec();
+		if (answer != QMessageBox::Yes)
+		{
+			return;
+		}
+
+		settings.askForSandboxPermissions = !messageBox.checkBox()->isChecked();
 	}
 
 	// make sure the alternative save dir exists, because engine will not create it if demo file path points there

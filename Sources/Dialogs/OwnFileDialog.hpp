@@ -2,7 +2,7 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: custom QFileDialog wrapper, workaround for some issues with less common Linux graphical environments
+// Description: custom QFileDialog wrapper
 //======================================================================================================================
 
 #ifndef OWN_FILE_DIALOG

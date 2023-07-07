@@ -1,17 +1,18 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="AddItem.png">Icons/AddItem.png</file>
-        <file alias="AddFile.png">Icons/AddFile.png</file>
-        <file alias="AddDir.png">Icons/AddDir.png</file>
-        <file alias="DeleteItem.png">Icons/DeleteItem.png</file>
-        <file alias="DeleteFile.png">Icons/DeleteFile.png</file>
-        <file alias="CopyFile.png">Icons/CopyFile.png</file>
-        <file alias="MoveUp.png">Icons/MoveUp.png</file>
-        <file alias="MoveDown.png">Icons/MoveDown.png</file>
-        <file alias="BrowseDir.png">Icons/BrowseDir.png</file>
-        <file alias="Checkmark.png">Icons/Checkmark.png</file>
-        <file alias="File.png">Icons/File.png</file>
-        <file alias="Dir.png">Icons/Dir.png</file>
-        <file alias="Play.png">Icons/Play.png</file>
+        <file alias="DoomRunner.ico">DoomRunner.ico</file>
+        <file alias="AddItem.png">Buttons/AddItem.png</file>
+        <file alias="AddFile.png">Buttons/AddFile.png</file>
+        <file alias="AddDir.png">Buttons/AddDir.png</file>
+        <file alias="DeleteItem.png">Buttons/DeleteItem.png</file>
+        <file alias="DeleteFile.png">Buttons/DeleteFile.png</file>
+        <file alias="CopyFile.png">Buttons/CopyFile.png</file>
+        <file alias="MoveUp.png">Buttons/MoveUp.png</file>
+        <file alias="MoveDown.png">Buttons/MoveDown.png</file>
+        <file alias="BrowseDir.png">Buttons/BrowseDir.png</file>
+        <file alias="Checkmark.png">Buttons/Checkmark.png</file>
+        <file alias="File.png">Buttons/File.png</file>
+        <file alias="Dir.png">Buttons/Dir.png</file>
+        <file alias="Play.png">Buttons/Play.png</file>
     </qresource>
 </RCC>

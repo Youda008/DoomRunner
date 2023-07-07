@@ -113,6 +113,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsSettings, LauncherSetting
 	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
 	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
+	settings.askForSandboxPermissions = jsSettings.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
 
 	OptionsStorage storage = jsSettings.getEnum< OptionsStorage >( "options_storage", settings.launchOptsStorage );
 	settings.launchOptsStorage = storage;

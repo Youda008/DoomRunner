@@ -11,6 +11,8 @@
 
 #include "Common.hpp"
 
+#include "Utils/OSUtils.hpp"  // ExecutableTraits
+
 #include <QString>
 #include <QStringList>
 
@@ -66,14 +68,15 @@ struct EngineFamilyTraits
 };
 
 /// Properties and capabilities of a particular engine that decide what command-line parameters will be used.
-class EngineTraits : private EngineFamilyTraits
+class EngineTraits : private ExecutableTraits, private EngineFamilyTraits
 {
-	QString executableName;
-
  public:
 
-	EngineTraits( const EngineFamilyTraits & familyTraits, const QString & executableName )
-		: EngineFamilyTraits( familyTraits ), executableName( executableName ) {}
+	EngineTraits( const Engine & engine );
+
+	Sandbox sandboxEnv() const                  { return ExecutableTraits::sandboxEnv; }
+	QString sandboxEnvName() const              { return getSandboxName( ExecutableTraits::sandboxEnv ); }
+	const QString & sandboxAppName() const      { return ExecutableTraits::sandboxAppName; }
 
 	CompatLevelStyle compatLevelStyle() const   { return EngineFamilyTraits::compLvlStyle; }
 	const char * saveDirParam() const           { return EngineFamilyTraits::saveDirParam; }

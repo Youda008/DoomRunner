@@ -36,7 +36,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class MainWindow : public QMainWindow, private DialogWithBrowseDir {
+class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	Q_OBJECT
 
@@ -194,22 +194,22 @@ class MainWindow : public QMainWindow, private DialogWithBrowseDir {
 	void restoreAudioOptions( const AudioOptions & opts );
 	void restoreGlobalOptions( const GlobalOptions & opts );
 
-	struct ShellCommand
-	{
-		QString executable;
-		QStringList arguments;
-	};
 	ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand();
 
  private: // MainWindow-specific utils
 
+	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
 	QStringList getSelectedMapPacks() const;
 
 	QString getConfigDir() const;
 	QString getSaveDir() const;
+	QString getDemoDir() const;
 
 	LaunchMode getLaunchModeFromUI() const;
+
+	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
+	QStringList getDirsToBeAccessed() const;
 
 	LaunchOptions & activeLaunchOptions();
 	MultiplayerOptions & activeMultiplayerOptions();

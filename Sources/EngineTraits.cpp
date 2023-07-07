@@ -156,15 +156,21 @@ EngineFamily guessEngineFamily( const QString & executableName )
 //----------------------------------------------------------------------------------------------------------------------
 //  EngineTraits
 
+EngineTraits::EngineTraits( const Engine & engine )
+{
+	// initialize all ExecutableTraits members
+	static_cast< ExecutableTraits & >( *this ) = getExecutableTraits( engine.path );
+
+	// initialize all EngineFamilyTraits members
+	if (size_t(engine.family) < std::size(engineFamilyTraits))
+		static_cast< EngineFamilyTraits & >( *this ) = engineFamilyTraits[ size_t(engine.family) ];
+	else
+		static_cast< EngineFamilyTraits & >( *this ) = engineFamilyTraits[ 0 ];  // use ZDoom traits as fallback
+}
+
 EngineTraits getEngineTraits( const Engine & engine )
 {
-	QString executableName = getFileBasenameFromPath( engine.path );
-
-	const EngineFamilyTraits * familyTraits = &engineFamilyTraits[ 0 ];  // use ZDoom traits as fallback
-	if (size_t(engine.family) < std::size(engineFamilyTraits))
-		familyTraits = &engineFamilyTraits[ size_t(engine.family) ];
-
-	return EngineTraits( *familyTraits, executableName );
+	return EngineTraits( engine );
 }
 
 QStringList EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
@@ -202,7 +208,7 @@ QStringList EngineTraits::getCompatLevelArgs( int compatLevel ) const
 {
 	// Properly working -compatmode is present only in GZDoom,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
-	if (executableName.toLower() == "gzdoom")
+	if (executableBaseName.toLower() == "gzdoom")
 		return { "-compatmode", QString::number( compatLevel ) };
 	if (compLvlStyle == CompatLevelStyle::ZDoom)
 		return { "+compatmode", QString::number( compatLevel ) };
@@ -215,7 +221,7 @@ QStringList EngineTraits::getCompatLevelArgs( int compatLevel ) const
 QString EngineTraits::getCmdMonitorIndex( int ownIndex ) const
 {
 	int startingMonitorIndex = 0;
-	auto iter = startingMonitorIndexes.find( executableName.toLower() );
+	auto iter = startingMonitorIndexes.find( executableBaseName.toLower() );
 	if (iter != startingMonitorIndexes.end())
 		startingMonitorIndex = iter.value();
 

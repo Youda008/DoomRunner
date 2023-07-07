@@ -12,7 +12,10 @@
 #include "Common.hpp"
 
 #include <QString>
+#include <QList>
 #include <QVector>
+
+class PathContext;
 
 
 //======================================================================================================================
@@ -26,6 +29,53 @@ inline constexpr bool isWindows()
  #endif
 }
 
+//-- standard directories and installation properties ----------------------------------------------
+
+QString getHomeDir();
+
+/// Returns directory for this application to save its config into.
+QString getThisAppConfigDir();
+
+/// Returns directory for this application to save its data into. This may be the same as the config dir.
+QString getThisAppDataDir();
+
+/// Returns whether an executable is inside one of directories where the system will find it.
+/** If true it means the executable can be started directly by using only its name without its path. */
+bool isInSearchPath( const QString & filePath );
+
+enum class Sandbox
+{
+	None,
+	Snap,
+	Flatpak,
+};
+QString getSandboxName( Sandbox sandbox );
+
+struct ExecutableTraits
+{
+	QString executableBaseName;   ///< executable name without file suffix
+	Sandbox sandboxEnv;
+	QString sandboxAppName;   ///< application name which the sandbox uses to start it
+};
+ExecutableTraits getExecutableTraits( const QString & executablePath );
+
+struct ShellCommand
+{
+	QString executable;
+	QStringList arguments;
+	QStringList extraPermissions;  // extra sandbox permissions needed to run this command
+};
+/// Returns a shell command needed to run a specified executable without parameters.
+/** The result may be different based on operating system and where the executable is installed.
+  * \param base path options with base directory for relative paths and whether paths should be quoted
+  * \param dirsToBeAccessed Directories to which the executable will need a read access.
+  *                         Required to setup permissions for a sandbox environment. */
+ShellCommand getRunCommand(
+	const QString & executablePath, const PathContext & base, const QStringList & dirsToBeAccessed = {}
+);
+
+//-- graphical environment -------------------------------------------------------------------------
+
 const QString & getLinuxDesktopEnv();
 
 struct MonitorInfo
@@ -37,15 +87,7 @@ struct MonitorInfo
 };
 QVector< MonitorInfo > listMonitors();
 
-/// Returns directory for this application to save its data into.
-QString getThisAppDataDir();
-
-/// Returns directory for any application to save its data into.
-QString getAppDataDir( const QString & executablePath );
-
-/// Returns whether an executable is inside one of directories where the system will find it.
-/** If true it means the executable can be started directly by using only its name without its path. */
-bool isInSearchPath( const QString & filePath );
+//-- miscellaneous ---------------------------------------------------------------------------------
 
 /// Opens a directory of a file in a new File Explorer window.
 bool openFileLocation( const QString & filePath );

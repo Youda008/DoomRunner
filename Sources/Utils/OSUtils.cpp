@@ -14,6 +14,7 @@
 #include <QGuiApplication>
 #include <QDesktopServices>  // fallback for openFileLocation
 #include <QUrl>
+#include <QRegularExpression>
 #include <QScreen>
 #include <QProcess>
 
@@ -28,7 +29,162 @@
 #endif // IS_WINDOWS
 
 
-//======================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------
+//  standard directories and installation properties
+
+QString getHomeDir()
+{
+	return QStandardPaths::writableLocation( QStandardPaths::HomeLocation );
+}
+
+QString getThisAppConfigDir()
+{
+	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
+	if (isWindows())
+	{
+		QString thisExeDir = QApplication::applicationDirPath();
+		if (isDirectoryWritable( thisExeDir ))
+			return thisExeDir;
+		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Local
+			return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
+	}
+	else
+	{
+		return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
+	}
+}
+
+QString getThisAppDataDir()
+{
+	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
+	if (isWindows())
+	{
+		QString thisExeDir = QApplication::applicationDirPath();
+		if (isDirectoryWritable( thisExeDir ))
+			return thisExeDir;
+		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Roaming
+			return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
+	}
+	else
+	{
+		return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
+	}
+}
+
+bool isInSearchPath( const QString & filePath )
+{
+	return QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ) == filePath;
+}
+
+QString getSandboxName( Sandbox sandbox )
+{
+	switch (sandbox)
+	{
+		case Sandbox::Snap:    return "Snap";
+		case Sandbox::Flatpak: return "Flatpak";
+		default:               return "<invalid>";
+	}
+}
+
+ExecutableTraits getExecutableTraits( const QString & executablePath )
+{
+	ExecutableTraits traits;
+
+	traits.executableBaseName = getFileBasenameFromPath( executablePath );
+
+	static QRegularExpression snapRegex("^/snap/");
+	static QRegularExpression flatpakRegex("^/var/lib/flatpak/app/([^/]+)/");
+	QRegularExpressionMatch match;
+	if ((match = snapRegex.match( executablePath )).hasMatch())
+	{
+		traits.sandboxEnv = Sandbox::Snap;
+		traits.sandboxAppName = getFileNameFromPath( executablePath );
+	}
+	else if ((match = flatpakRegex.match( executablePath )).hasMatch())
+	{
+		traits.sandboxEnv = Sandbox::Flatpak;
+		traits.sandboxAppName = match.captured(1);
+	}
+	else
+	{
+		traits.sandboxEnv = Sandbox::None;
+	}
+
+	return traits;
+}
+
+// On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
+inline static QString fixExePath( const QString & exePath )
+{
+	if (!isWindows() && !exePath.contains("/"))  // the file is in the current working directory
+	{
+		return "./" + exePath;
+	}
+	return exePath;
+}
+
+ShellCommand getRunCommand( const QString & executablePath, const PathContext & base, const QStringList & dirsToBeAccessed )
+{
+	ShellCommand cmd;
+	QStringList cmdParts;
+
+	ExecutableTraits traits = getExecutableTraits( executablePath );
+
+	// different installations require different ways to launch the engine executable
+ #ifdef FLATPAK_BUILD
+	if (getAbsoluteDirOfFile( executablePath ) == QApplication::applicationDirPath())
+	{
+		// We are inside a Flatpak package but launching an app inside the same Flatpak package,
+		// no special command or permissions needed.
+		cmd.executable = getFileNameFromPath( executablePath );
+		return cmd;  // this is all we need, skip the rest
+	}
+	else
+	{
+		// We are inside a Flatpak package and launching an app outside of this Flatpak package,
+		// need to launch it in a special mode granting it special permissions.
+		cmdParts << "flatpak-spawn" << "--host";
+		// prefix added, continue with the rest
+	}
+ #endif
+	if (traits.sandboxEnv == Sandbox::Snap)
+	{
+		cmdParts << "snap";
+		cmdParts << "run";
+		// TODO: permissions
+		cmdParts << traits.sandboxAppName;
+	}
+	else if (traits.sandboxEnv == Sandbox::Flatpak)
+	{
+		cmdParts << "flatpak";
+		cmdParts << "run";
+		for (const QString & dir : dirsToBeAccessed)
+		{
+			QString fileSystemPermission = "--filesystem=" + getAbsolutePath( dir );
+			cmdParts << base.maybeQuoted( fileSystemPermission );
+			cmd.extraPermissions << fileSystemPermission;
+		}
+		cmdParts << traits.sandboxAppName;
+	}
+	else if (isInSearchPath( executablePath ))
+	{
+		// If it's in a search path (C:\Windows\System32, /usr/bin, ...)
+		// it should be (and sometimes must be) started directly by using only its name.
+		cmdParts << getFileNameFromPath( executablePath );
+	}
+	else
+	{
+		cmdParts << base.maybeQuoted( fixExePath( base.rebasePath( executablePath ) ) );
+	}
+
+	cmd.executable = cmdParts.takeFirst();
+	cmd.arguments = std::move( cmdParts );
+	return cmd;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  graphical environment
 
 const QString & getLinuxDesktopEnv()
 {
@@ -55,44 +211,9 @@ QVector< MonitorInfo > listMonitors()
 	return monitors;
 }
 
-QString getThisAppDataDir()
-{
-	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
-	if (isWindows())
-	{
-		QString appExeDir = QApplication::applicationDirPath();
-		if (isDirectoryWritable( appExeDir ))
-			return appExeDir;
-		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%
-			return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
-	}
-	else
-	{
-		return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
-	}
-}
 
-QString getAppDataDir( const QString & executablePath )
-{
-	// In Windows engines store their config in the directory of its binaries,
-	// but in Linux it stores them in standard user's app config dir (usually something like /home/user/.config/)
-	if (isWindows())
-	{
-		return getDirOfFile( executablePath );
-	}
-	else
-	{
-		QDir standardConfigDir( QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation ) );
-		QString appName = getFileNameFromPath( executablePath );
-		return standardConfigDir.filePath( appName );  // -> /home/user/.config/zdoom
-	}
-}
-
-bool isInSearchPath( const QString & filePath )
-{
-	// this should also handle the snap installations, since directory of snap executables is inside PATH
-	return !QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ).isEmpty();
-}
+//----------------------------------------------------------------------------------------------------------------------
+//  miscellaneous
 
 bool openFileLocation( const QString & filePath )
 {

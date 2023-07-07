@@ -11,8 +11,6 @@
 
 #include "Common.hpp"
 
-#include "OSUtils.hpp"
-
 #include <QString>
 #include <QStringBuilder>
 #include <QByteArray>
@@ -90,7 +88,7 @@ class PathContext {
 		return usingAbsolutePaths() ? getAbsolutePath( path ) : getRelativePath( path );
 	}
 
-	QString rebasePath( const QString & path, bool isExecutable = false ) const
+	QString rebasePath( const QString & path ) const
 	{
 		if (path.isEmpty())
 			return {};
@@ -98,19 +96,13 @@ class PathContext {
 		QString absPath = QDir::isAbsolutePath( path ) ? path : _prevBaseDir.filePath( path );
 		QString newPath = usingAbsolutePaths() ? absPath : _baseDir.relativeFilePath( absPath );
 
-		return isExecutable ? fixExePath( newPath ) : newPath;
+		return newPath;
 	}
 
 	QString rebaseAndQuotePath( const QString & path ) const
 	{
-		return maybeQuoted( rebasePath( path, false ) );
+		return maybeQuoted( rebasePath( path ) );
 	}
-	QString rebaseAndQuoteExePath( const QString & path ) const
-	{
-		return maybeQuoted( rebasePath( path, true ) );
-	}
-
- private:
 
 	QString maybeQuoted( const QString & path ) const
 	{
@@ -118,16 +110,6 @@ class PathContext {
 			return quoted( path );
 		else
 			return path;
-	}
-
-	/// On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
-	QString fixExePath( const QString & exePath ) const
-	{
-		if (!isWindows() && !exePath.contains("/"))  // the file is in the current working directory
-		{
-			return "./" + exePath;
-		}
-		return exePath;
 	}
 
 };
@@ -143,12 +125,12 @@ inline bool isDirectory( const QString & path )
 
 inline bool isValidDir( const QString & dirPath )
 {
-	return !dirPath.isEmpty() && QDir( dirPath ).exists();
+	return !dirPath.isEmpty() && QFileInfo( dirPath ).isDir();
 }
 
 inline bool isInvalidDir( const QString & dirPath )
 {
-	return !dirPath.isEmpty() && !QDir( dirPath ).exists();  // either doesn't exist or it's a file
+	return !dirPath.isEmpty() && !QFileInfo( dirPath ).isDir();  // it exists but it's not a dir
 }
 
 inline bool isValidFile( const QString & filePath )
@@ -158,7 +140,7 @@ inline bool isValidFile( const QString & filePath )
 
 inline bool isInvalidFile( const QString & filePath )
 {
-	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // either doesn't exist or it's a directory
+	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // it exists but it's not a file
 }
 
 inline bool isValidEntry( const QString & path )
@@ -173,7 +155,7 @@ inline QString getAbsolutePath( const QString & path )
 
 inline QString getPathFromFileName( const QString & dirPath, const QString & fileName )
 {
-	return QDir( dirPath ).filePath( fileName );
+	return !dirPath.isEmpty() ? QDir( dirPath ).filePath( fileName ) : fileName;
 }
 
 inline QString getFileNameFromPath( const QString & filePath )

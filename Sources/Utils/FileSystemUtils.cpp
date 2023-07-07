@@ -11,6 +11,7 @@
 
 #include <QDirIterator>
 #include <QFile>
+#include <QSaveFile>
 #include <QStringBuilder>
 #include <QRegularExpression>
 #include <QThread>  // sleep
@@ -66,40 +67,23 @@ QString readWholeFile( const QString & filePath, QByteArray & dest )
 	return {};
 }
 
-QString updateFileSafely( const QString & origFilePath, const QByteArray & newContent )
+QString updateFileSafely( const QString & filePath, const QByteArray & newContent )
 {
-	// Write to a different file than the original and after it's done and closed, replace the original with the new.
-	// This is done to prevent data loss, when the program (or OS) crashes during writing to drive.
-
-	QString newFilePath = origFilePath+".new";
-	QFile newFile( newFilePath );
-	if (!newFile.open( QIODevice::WriteOnly ))
+	QSaveFile file( filePath );
+	if (!file.open( QIODevice::WriteOnly ))
 	{
-		return "Could not open file "%newFilePath%" for writing: "%newFile.errorString();
+		return "Could not open file "%filePath%" for writing: "%file.errorString();
 	}
 
-	newFile.write( newContent );
-	if (newFile.error() != QFile::NoError)
+	file.write( newContent );
+	if (file.error() != QFile::NoError)
 	{
-		return "Could not write to file "%newFilePath%": "%newFile.errorString();
+		return "Could not write to file "%filePath%": "%file.errorString();
 	}
 
-	newFile.close();
-
-	QThread::msleep( 20 );  // desperate attempt to fix user's persisting problem with losing the file due to power-outage
-
-	QFile oldFile( origFilePath );
-	if (oldFile.exists())
+	if (!file.commit())
 	{
-		if (!oldFile.remove())
-		{
-			return "Could not delete the previous file "%origFilePath%": "%oldFile.errorString();
-		}
-	}
-
-	if (!newFile.rename( origFilePath ))
-	{
-		return "Could not rename the new file "%newFilePath%" back to "%origFilePath%": "%newFile.errorString();
+		return "Could not commit the changes to file "%filePath%": "%file.errorString();
 	}
 
 	return {};

@@ -67,6 +67,9 @@ static const char defaultOptionsFileName [] = "options.json";
 static constexpr bool VerifyPaths = true;
 static constexpr bool DontVerifyPaths = false;
 
+// to be used when we want to pass empty string, but a reference or pointer is required
+static const QString emptyString;
+
 
 //======================================================================================================================
 //  MainWindow-specific utils
@@ -216,6 +219,13 @@ QStringList MainWindow::getDirsToBeAccessed() const
 	return QStringList( dirSet.begin(), dirSet.end() );
 }
 
+// This needs to be called everytime the user make a change that needs to be saved into the options file.
+void MainWindow::scheduleSavingOptions( bool storedOptionsModified )
+{
+	// update the options file at the nearest file-saving cycle
+	optionsNeedUpdate = optionsNeedUpdate || storedOptionsModified;
+}
+
 LaunchOptions & MainWindow::activeLaunchOptions()
 {
 	if (settings.launchOptsStorage == StoreToPreset)
@@ -313,18 +323,22 @@ AudioOptions & MainWindow::activeAudioOptions()
 }
 
 /// Stores value to a preset if it's selected.
-#define STORE_TO_PRESET_IF_SELECTED( presetMember, value ) \
+#define STORE_TO_CURRENT_PRESET( presetMember, value ) [&]()\
 {\
+	bool valueChanged = false; \
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView ); \
 	if (selectedPresetIdx >= 0) \
 	{\
+		valueChanged = (presetModel[ selectedPresetIdx ].presetMember != (value)); \
 		presetModel[ selectedPresetIdx ].presetMember = (value); \
 	}\
-}
+	return valueChanged; \
+}()
 
 /// Stores value to a preset if it's selected and if it's safe to do.
-#define STORE_TO_PRESET_IF_SAFE( presetMember, value ) \
+#define STORE_TO_CURRENT_PRESET_IF_SAFE( presetMember, value ) [&]()\
 {\
+	bool valueChanged = false; \
 	/* Only store the value to the preset if we are not restoring from it, */ \
 	/* otherwise we would overwrite a stored value we want to restore later. */ \
 	if (!restoringPresetInProgress) \
@@ -332,75 +346,69 @@ AudioOptions & MainWindow::activeAudioOptions()
 		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView ); \
 		if (selectedPresetIdx >= 0) \
 		{\
+			valueChanged = (presetModel[ selectedPresetIdx ].presetMember != (value)); \
 			presetModel[ selectedPresetIdx ].presetMember = (value); \
 		}\
 	}\
-}
+	return valueChanged; \
+}()
 
 /// Stores value to a global storage if it's safe to do.
-#define STORE_TO_GLOBAL_STORAGE_IF_SAFE( globalMember, value ) \
+#define STORE_TO_GLOBAL_STORAGE_IF_SAFE( globalMember, value ) [&]()\
 {\
+	bool valueChanged = false; \
 	/* Only store the value to the global options if we are not restoring from it, */ \
 	/* otherwise we would overwrite a stored value we want to restore later. */ \
 	if (!restoringOptionsInProgress) \
+	{\
+		valueChanged = (globalMember != (value)); \
 		globalMember = (value); \
-}
+	}\
+	return valueChanged; \
+}()
 
 /// Stores value to a dynamically selected storage if it's possible and if it's safe to do.
-#define STORE_TO_DYNAMIC_STORAGE_IF_SAFE( storageSetting, activeStorage, structMember, value ) \
+#define STORE_TO_DYNAMIC_STORAGE_IF_SAFE( storageSetting, activeStorage, structMember, value ) [&]()\
 {\
+	bool valueChanged = false; \
 	/* Only store the value to the global options or preset if we are not restoring from the same location, */ \
 	/* otherwise we would overwrite a stored value we want to restore later. */ \
 	bool preventSaving = (storageSetting == StoreGlobally && restoringOptionsInProgress) \
 	                  || (storageSetting == StoreToPreset && restoringPresetInProgress); \
 	if (!preventSaving) \
+	{\
+		valueChanged = (activeStorage.structMember != (value)); \
 		activeStorage.structMember = (value); \
-}
+	}\
+	return valueChanged; \
+}()
 
 #define STORE_LAUNCH_OPTION( structMember, value ) \
-{\
-	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.launchOptsStorage, activeLaunchOptions(), structMember, value ) \
-}
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.launchOptsStorage, activeLaunchOptions(), structMember, value )
 
 #define STORE_MULT_OPTION( structMember, value ) \
-{\
-	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.launchOptsStorage, activeMultiplayerOptions(), structMember, value ) \
-}
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.launchOptsStorage, activeMultiplayerOptions(), structMember, value )
 
 #define STORE_GAMEPLAY_OPTION( structMember, value ) \
-{\
-	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.gameOptsStorage, activeGameplayOptions(), structMember, value ) \
-}
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.gameOptsStorage, activeGameplayOptions(), structMember, value )
 
 #define STORE_COMPAT_OPTION( structMember, value ) \
-{\
-	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.compatOptsStorage, activeCompatOptions(), structMember, value ) \
-}
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.compatOptsStorage, activeCompatOptions(), structMember, value )
 
 #define STORE_ALT_PATH( structMember, value ) \
-{\
-	STORE_TO_PRESET_IF_SAFE( altPaths.structMember, value ) \
-}
+	STORE_TO_CURRENT_PRESET_IF_SAFE( altPaths.structMember, value )
 
 #define STORE_VIDEO_OPTION( structMember, value ) \
-{\
-	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.videoOptsStorage, activeVideoOptions(), structMember, value ) \
-}
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.videoOptsStorage, activeVideoOptions(), structMember, value )
 
 #define STORE_AUDIO_OPTION( structMember, value ) \
-{\
-	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.audioOptsStorage, activeAudioOptions(), structMember, value ) \
-}
+	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.audioOptsStorage, activeAudioOptions(), structMember, value )
 
 #define STORE_PRESET_OPTION( structMember, value ) \
-{\
-	STORE_TO_PRESET_IF_SAFE( structMember, value ) \
-}
+	STORE_TO_CURRENT_PRESET_IF_SAFE( structMember, value )
 
 #define STORE_GLOBAL_OPTION( structMember, value ) \
-{\
-	STORE_TO_GLOBAL_STORAGE_IF_SAFE( globalOpts.structMember, value ) \
-}
+	STORE_TO_GLOBAL_STORAGE_IF_SAFE( globalOpts.structMember, value )
 
 
 //======================================================================================================================
@@ -478,6 +486,7 @@ MainWindow::MainWindow()
 	ui->engineCmbBox->setModel( &engineModel );
 	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectEngine );
 
+	configModel.append({""});  // always have an empty item, so that index doesn't have to switch between -1 and 0
 	ui->configCmbBox->setModel( &configModel );
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectConfig );
 
@@ -591,6 +600,7 @@ void MainWindow::setupPresetList()
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
+	connect( ui->presetListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::presetsReordered );
 
 	// set reaction when an item is selected
 	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::togglePreset );
@@ -831,14 +841,16 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 		}
 	}
 
-	if (tickCount % 60 == 0)
+	if (tickCount % 10 == 0)
 	{
 		// Because the current dir is now different, the launcher's paths no longer work,
 		// so prevent saving options into unwanted directories.
 		if (!engineRunning
+		 && optionsNeedUpdate  // don't do unnecessary file writes when nothing has changed
 		 && !optionsCorrupted)  // don't overwrite existing file with empty data, just because there was a syntax error
 		{
 			saveOptions( optionsFilePath );
+			optionsNeedUpdate = false;
 		}
 	}
 }
@@ -870,6 +882,7 @@ void MainWindow::runAboutDialog()
 
 	dialog.exec();
 
+	scheduleSavingOptions( settings.checkForUpdates != dialog.checkForUpdates );
 	settings.checkForUpdates = dialog.checkForUpdates;
 }
 
@@ -904,7 +917,7 @@ void MainWindow::runSetupDialog()
 		auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwadModel );
 		auto oldPathStyle = settings.pathStyle;
 
-		// workaround (read the comment at automatic list updates)
+		// prevent unnecessary updates when an engine or IWAD is deselected and then the same one selected again.
 		disableSelectionCallbacks = true;
 
 		// deselect the items
@@ -950,6 +963,8 @@ void MainWindow::runSetupDialog()
 		if (!selectedIWAD.isEmpty() && !iwadFound)
 			toggleIWAD( QItemSelection(), QItemSelection()/*TODO*/ );
 
+		scheduleSavingOptions();
+
 		if (settings.pathStyle != oldPathStyle)  // path style changed -> launch command must be updated
 			updateLaunchCommand();
 	}
@@ -968,8 +983,8 @@ void MainWindow::runOptsStorageDialog()
 	if (code == QDialog::Accepted)
 	{
 		settings.assign( dialog.storageSettings );
+		scheduleSavingOptions();
 		updateOptionsGrpBoxTitles( settings );
-		updateLaunchCommand();
 	}
 }
 
@@ -985,6 +1000,7 @@ void MainWindow::runGameOptsDialog()
 	if (code == QDialog::Accepted)
 	{
 		activeGameOpts.assign( dialog.gameplayDetails );
+		scheduleSavingOptions();
 		updateLaunchCommand();
 	}
 }
@@ -1003,6 +1019,7 @@ void MainWindow::runCompatOptsDialog()
 		activeCompatOpts.assign( dialog.compatDetails );
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
 		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( dialog.compatDetails );
+		scheduleSavingOptions();
 		updateLaunchCommand();
 	}
 }
@@ -1143,31 +1160,20 @@ void MainWindow::selectEngine( int index )
 	if (disableSelectionCallbacks)
 		return;
 
-	// update the current preset
-	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0 && !restoringPresetInProgress)
-	{
-		if (index < 0)  // engine combo box was reset to "no engine selected" state
-			presetModel[ selectedPresetIdx ].selectedEnginePath.clear();
-		else
-			presetModel[ selectedPresetIdx ].selectedEnginePath = engineModel[ index ].path;
-	}
+	const QString & enginePath = index >= 0 ? engineModel[ index ].path : emptyString;
 
-	bool supportsCustomMapNames = false;
-
-	if (index >= 0)
-	{
-		supportsCustomMapNames = engineTraits[ index ].supportsCustomMapNames();
-	}
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedEnginePath, enginePath );
 
 	// only allow editing, if the engine supports specifying map by its name
+	bool supportsCustomMapNames = index >= 0 ? engineTraits[ index ].supportsCustomMapNames() : false;
 	ui->mapCmbBox->setEditable( supportsCustomMapNames );
 	ui->mapCmbBox_demo->setEditable( supportsCustomMapNames );
 
 	// automatic alt dirs are derived from engine's config directory, which has now changed, so this needs to be refreshed
 	if (globalOpts.usePresetNameAsDir)
 	{
-		QString presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : "";
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+		const QString & presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : emptyString;
 		setAltDirsRelativeToConfigs( sanitizePath( presetName ) );
 	}
 
@@ -1176,6 +1182,7 @@ void MainWindow::selectEngine( int index )
 	updateDemoFilesFromDir();
 	updateCompatLevels();
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1184,18 +1191,11 @@ void MainWindow::selectConfig( int index )
 	if (disableSelectionCallbacks)
 		return;
 
-	// update the current preset
-	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0 && !restoringPresetInProgress)
-	{
-		if (index < 0)  // config combo box was reset to "no config selected" state
-			presetModel[ selectedPresetIdx ].selectedConfig.clear();
-		else
-			presetModel[ selectedPresetIdx ].selectedConfig = configModel[ index ].fileName;
-	}
+	const QString & configFileName = index >= 0 ? configModel[ index ].fileName : emptyString;
+
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedConfig, configFileName );
 
 	bool validConfigSelected = false;
-
 	if (index > 0)  // at index 0 there is an empty placeholder to allow deselecting config
 	{
 		QString configPath = getPathFromFileName( getConfigDir(), configModel[ index ].fileName );
@@ -1205,6 +1205,7 @@ void MainWindow::selectConfig( int index )
 	// update related UI elements
 	ui->configCloneBtn->setEnabled( validConfigSelected );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1214,19 +1215,13 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 		return;
 
 	int selectedIWADIdx = getSelectedItemIndex( ui->iwadListView );
+	const QString & iwadPath = selectedIWADIdx >= 0 ? iwadModel[ selectedIWADIdx ].path : emptyString;
 
-	// update the current preset
-	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0 && !restoringPresetInProgress)
-	{
-		if (selectedIWADIdx < 0)
-			presetModel[ selectedPresetIdx ].selectedIWAD.clear();
-		else
-			presetModel[ selectedPresetIdx ].selectedIWAD = iwadModel[ selectedIWADIdx ].path;
-	}
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedIWAD, iwadPath );
 
 	updateMapsFromSelectedWADs();
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1237,12 +1232,7 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 
 	QStringList selectedMapPacks = getSelectedMapPacks();
 
-	// update the current preset
-	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0 && !restoringPresetInProgress)
-	{
-		presetModel[ selectedPresetIdx ].selectedMapPacks = selectedMapPacks;
-	}
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedMapPacks, selectedMapPacks );
 
 	// expand the parent directory nodes that are collapsed
 	const auto selectedRows = getSelectedRows( ui->mapDirView );
@@ -1272,15 +1262,16 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 		}
 	}
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::presetDataChanged( const QModelIndex & topLeft, const QModelIndex &, const QVector<int> & roles )
 {
+	int editedIdx = topLeft.row();  // there cannot be more than 1 items edited at a time
+
 	if (roles.contains( Qt::EditRole ))
 	{
-		int editedIdx = topLeft.row();  // there cannot be more than 1 items edited at a time
-
 		// automatic alt dirs are derived from preset name, which has now changed, so this needs to be refreshed
 		if (globalOpts.usePresetNameAsDir && isSelectedIndex( ui->presetListView, editedIdx ))
 		{
@@ -1288,6 +1279,8 @@ void MainWindow::presetDataChanged( const QModelIndex & topLeft, const QModelInd
 			setAltDirsRelativeToConfigs( sanitizePath( presetName ) );
 		}
 	}
+
+	scheduleSavingOptions( true );  // there's no way to determine if the name has changed, because the value in the model is already modified.
 }
 
 void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles )
@@ -1295,20 +1288,21 @@ void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex 
 	int topModIdx = topLeft.row();
 	int bottomModIdx = bottomRight.row();
 
-	// update the current preset
-	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0 && !restoringPresetInProgress)
+	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
 	{
-		for (int idx = topModIdx; idx <= bottomModIdx; idx++)
+		// update the current preset
+		int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
+		if (selectedPresetIdx >= 0 && !restoringPresetInProgress)
 		{
-			presetModel[ selectedPresetIdx ].mods[ idx ] = modModel[ idx ];
+			for (int idx = topModIdx; idx <= bottomModIdx; idx++)
+			{
+				presetModel[ selectedPresetIdx ].mods[ idx ].checked = modModel[ idx ].checked;
+			}
 		}
 	}
 
-	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
-	{
-		updateLaunchCommand();
-	}
+	scheduleSavingOptions( true );  // we can assume options storage was modified, otherwise this callback wouldn't be called
+	updateLaunchCommand();
 }
 
 void MainWindow::showMapPackDesc( const QModelIndex & index )
@@ -1379,6 +1373,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 
 void MainWindow::presetAdd()
 {
+	// TODO: find nearest non-existing number
   static uint presetNum = 1;
 
 	appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum++ ) } );
@@ -1392,6 +1387,8 @@ void MainWindow::presetAdd()
 
 	// open edit mode so that user can name the preset
 	ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );
+
+	scheduleSavingOptions();
 }
 
 void MainWindow::presetDelete()
@@ -1414,34 +1411,48 @@ void MainWindow::presetDelete()
 	int selectedPresetIdx = getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0)
 	{
-		restorePreset( selectedPresetIdx );
+		restorePreset( selectedPresetIdx );  // select the next preset
 	}
 	else
 	{
 		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
 		clearPresetSubWidgets();
 	}
+
+	scheduleSavingOptions();
 }
 
 void MainWindow::presetClone()
 {
-	int origIdx = cloneSelectedItem( ui->presetListView, presetModel );
+	int selectedIdx = cloneSelectedItem( ui->presetListView, presetModel );
 
-	if (origIdx >= 0)
+	if (selectedIdx >= 0)
 	{
 		// open edit mode so that user can name the preset
 		editItemAtIndex( ui->presetListView, presetModel.size() - 1 );
+
+		scheduleSavingOptions();
 	}
 }
 
 void MainWindow::presetMoveUp()
 {
-	moveUpSelectedItem( ui->presetListView, presetModel );
+	int selectedIdx = moveUpSelectedItem( ui->presetListView, presetModel );
+
+	if (selectedIdx >= 0)
+	{
+		scheduleSavingOptions();
+	}
 }
 
 void MainWindow::presetMoveDown()
 {
-	moveDownSelectedItem( ui->presetListView, presetModel );
+	int selectedIdx = moveDownSelectedItem( ui->presetListView, presetModel );
+
+	if (selectedIdx >= 0)
+	{
+		scheduleSavingOptions();
+	}
 }
 
 void MainWindow::presetInsertSeparator()
@@ -1457,6 +1468,13 @@ void MainWindow::presetInsertSeparator()
 
 	// open edit mode so that user can name the preset
 	editItemAtIndex( ui->presetListView, insertIdx );
+
+	scheduleSavingOptions();
+}
+
+void MainWindow::presetsReordered()
+{
+	scheduleSavingOptions();
 }
 
 void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool useRegex )
@@ -1551,6 +1569,7 @@ void MainWindow::modAdd()
 		}
 	}
 
+	scheduleSavingOptions();
 	updateLaunchCommand();
 }
 
@@ -1576,6 +1595,7 @@ void MainWindow::modAddDir()
 		presetModel[ selectedPresetIdx ].mods.append( mod );
 	}
 
+	scheduleSavingOptions();
 	updateLaunchCommand();
 }
 
@@ -1598,6 +1618,7 @@ void MainWindow::modDelete()
 		}
 	}
 
+	scheduleSavingOptions();
 	updateLaunchCommand();
 }
 
@@ -1622,6 +1643,7 @@ void MainWindow::modMoveUp()
 		}
 	}
 
+	scheduleSavingOptions();
 	updateLaunchCommand();
 }
 
@@ -1646,6 +1668,7 @@ void MainWindow::modMoveDown()
 		}
 	}
 
+	scheduleSavingOptions();
 	updateLaunchCommand();
 }
 
@@ -1669,11 +1692,15 @@ void MainWindow::modInsertSeparator()
 
 	// open edit mode so that user can name the preset
 	editItemAtIndex( ui->modListView, insertIdx );
+
+	scheduleSavingOptions();
 }
 
 void MainWindow::modToggleIcons()
 {
 	modSettings.showIcons = modModel.areIconsEnabled();
+
+	scheduleSavingOptions();
 }
 
 void MainWindow::modsDropped( int dropRow, int count )
@@ -1700,6 +1727,7 @@ void MainWindow::modsDropped( int dropRow, int count )
 		}
 	}
 
+	scheduleSavingOptions();
 	updateLaunchCommand();
 }
 
@@ -1709,7 +1737,7 @@ void MainWindow::modsDropped( int dropRow, int count )
 
 void MainWindow::modeDefault()
 {
-	STORE_LAUNCH_OPTION( mode, Default )
+	bool storageModified = STORE_LAUNCH_OPTION( mode, Default );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1725,12 +1753,13 @@ void MainWindow::modeDefault()
 		ui->multRoleCmbBox->setCurrentIndex( Client );   // only client can use default launch mode
 	}
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::modeLaunchMap()
 {
-	STORE_LAUNCH_OPTION( mode, LaunchMap )
+	bool storageModified = STORE_LAUNCH_OPTION( mode, LaunchMap );
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1746,12 +1775,13 @@ void MainWindow::modeLaunchMap()
 		ui->multRoleCmbBox->setCurrentIndex( Server );   // only server can select a map
 	}
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::modeSavedGame()
 {
-	STORE_LAUNCH_OPTION( mode, LoadSave )
+	bool storageModified = STORE_LAUNCH_OPTION( mode, LoadSave );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
@@ -1762,12 +1792,13 @@ void MainWindow::modeSavedGame()
 	toggleSkillSubwidgets( false );
 	toggleOptionsSubwidgets( false );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::modeRecordDemo()
 {
-	STORE_LAUNCH_OPTION( mode, RecordDemo )
+	bool storageModified = STORE_LAUNCH_OPTION( mode, RecordDemo );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1778,12 +1809,13 @@ void MainWindow::modeRecordDemo()
 	toggleSkillSubwidgets( true );
 	toggleOptionsSubwidgets( true );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::modeReplayDemo()
 {
-	STORE_LAUNCH_OPTION( mode, ReplayDemo )
+	bool storageModified = STORE_LAUNCH_OPTION( mode, ReplayDemo );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1796,6 +1828,7 @@ void MainWindow::modeReplayDemo()
 
 	ui->multiplayerGrpBox->setChecked( false );   // no multiplayer when replaying demo
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1823,8 +1856,9 @@ void MainWindow::changeMap( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	STORE_LAUNCH_OPTION( mapName, mapName )
+	bool storageModified = STORE_LAUNCH_OPTION( mapName, mapName );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1833,8 +1867,9 @@ void MainWindow::changeMap_demo( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	STORE_LAUNCH_OPTION( mapName_demo, mapName )
+	bool storageModified = STORE_LAUNCH_OPTION( mapName_demo, mapName );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1845,8 +1880,9 @@ void MainWindow::selectSavedGame( int saveIdx )
 
 	QString saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : "";
 
-	STORE_LAUNCH_OPTION( saveFile, saveFileName )
+	bool storageModified = STORE_LAUNCH_OPTION( saveFile, saveFileName );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1855,8 +1891,9 @@ void MainWindow::changeDemoFile_record( const QString & fileName )
 	if (disableSelectionCallbacks)
 		return;
 
-	STORE_LAUNCH_OPTION( demoFile_record, fileName )
+	bool storageModified = STORE_LAUNCH_OPTION( demoFile_record, fileName );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1867,8 +1904,9 @@ void MainWindow::selectDemoFile_replay( int demoIdx )
 
 	QString demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : "";
 
-	STORE_LAUNCH_OPTION( demoFile_replay, demoFileName )
+	bool storageModified = STORE_LAUNCH_OPTION( demoFile_replay, demoFileName );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1881,7 +1919,7 @@ void MainWindow::selectSkill( int comboBoxIdx )
 	// skillIdx is an index in the combo-box which starts from 0, but Doom skill number actually starts from 1
 	int skillIdx = comboBoxIdx + 1;
 
-	STORE_GAMEPLAY_OPTION( skillIdx, skillIdx )
+	bool storageModified = STORE_GAMEPLAY_OPTION( skillIdx, skillIdx );
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 
@@ -1889,41 +1927,47 @@ void MainWindow::selectSkill( int comboBoxIdx )
 	if (skillIdx < Skill::Custom)
 		ui->skillSpinBox->setValue( skillIdx );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::changeSkillNum( int skillNum )
 {
-	STORE_GAMEPLAY_OPTION( skillNum, skillNum )
+	bool storageModified = STORE_GAMEPLAY_OPTION( skillNum, skillNum );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoMonsters( bool checked )
 {
-	STORE_GAMEPLAY_OPTION( noMonsters, checked )
+	bool storageModified = STORE_GAMEPLAY_OPTION( noMonsters, checked );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleFastMonsters( bool checked )
 {
-	STORE_GAMEPLAY_OPTION( fastMonsters, checked )
+	bool storageModified = STORE_GAMEPLAY_OPTION( fastMonsters, checked );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleMonstersRespawn( bool checked )
 {
-	STORE_GAMEPLAY_OPTION( monstersRespawn, checked )
+	bool storageModified = STORE_GAMEPLAY_OPTION( monstersRespawn, checked );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleAllowCheats( bool checked )
 {
-	STORE_GAMEPLAY_OPTION( allowCheats, checked )
+	bool storageModified = STORE_GAMEPLAY_OPTION( allowCheats, checked );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1936,8 +1980,9 @@ void MainWindow::selectCompatLevel( int compatLevel )
 	if (disableSelectionCallbacks)
 		return;
 
-	STORE_COMPAT_OPTION( compatLevel, compatLevel - 1 )  // first item is reserved for indicating no selection
+	bool storageModified = STORE_COMPAT_OPTION( compatLevel, compatLevel - 1 );  // first item is reserved for indicating no selection
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1947,7 +1992,7 @@ void MainWindow::selectCompatLevel( int compatLevel )
 
 void MainWindow::toggleMultiplayer( bool checked )
 {
-	STORE_MULT_OPTION( isMultiplayer, checked )
+	bool storageModified = STORE_MULT_OPTION( isMultiplayer, checked );
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -1987,12 +2032,13 @@ void MainWindow::toggleMultiplayer( bool checked )
 		(launchMode == Default && !checked) || launchMode == LaunchMap || launchMode == RecordDemo
 	);
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::selectMultRole( int role )
 {
-	STORE_MULT_OPTION( multRole, MultRole( role ) )
+	bool storageModified = STORE_MULT_OPTION( multRole, MultRole(role) );
 
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -2018,33 +2064,37 @@ void MainWindow::selectMultRole( int role )
 		}
 	}
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::changeHost( const QString & hostName )
 {
-	STORE_MULT_OPTION( hostName, hostName )
+	bool storageModified = STORE_MULT_OPTION( hostName, hostName );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::changePort( int port )
 {
-	STORE_MULT_OPTION( port, uint16_t( port ) )
+	bool storageModified = STORE_MULT_OPTION( port, uint16_t(port) );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::selectNetMode( int netMode )
 {
-	STORE_MULT_OPTION( netMode, NetMode( netMode ) )
+	bool storageModified = STORE_MULT_OPTION( netMode, NetMode(netMode) );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::selectGameMode( int gameMode )
 {
-	STORE_MULT_OPTION( gameMode, GameMode( gameMode ) )
+	bool storageModified = STORE_MULT_OPTION( gameMode, GameMode(gameMode) );
 
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
@@ -2055,34 +2105,42 @@ void MainWindow::selectGameMode( int gameMode )
 	ui->timeLimitSpinBox->setEnabled( multEnabled && multRole == Server && isDeathMatch );
 	ui->fragLimitSpinBox->setEnabled( multEnabled && multRole == Server && isDeathMatch );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::changePlayerCount( int count )
 {
-	STORE_MULT_OPTION( playerCount, uint( count ) )
+	bool storageModified = STORE_MULT_OPTION( playerCount, uint( count ) );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTeamDamage( double damage )
 {
-	STORE_MULT_OPTION( teamDamage, damage )
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wfloat-equal"
+	bool storageModified = STORE_MULT_OPTION( teamDamage, damage );
+ #pragma GCC diagnostic pop
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::changeTimeLimit( int timeLimit )
 {
-	STORE_MULT_OPTION( timeLimit, uint( timeLimit ) )
+	bool storageModified = STORE_MULT_OPTION( timeLimit, uint(timeLimit) );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::changeFragLimit( int fragLimit )
 {
-	STORE_MULT_OPTION( fragLimit, uint( fragLimit ) )
+	bool storageModified = STORE_MULT_OPTION( fragLimit, uint(fragLimit) );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2113,7 +2171,7 @@ void MainWindow::setAltDirsRelativeToConfigs( const QString & dirName )
 
 void MainWindow::toggleUsePresetName( bool checked )
 {
-	STORE_GLOBAL_OPTION( usePresetNameAsDir, checked )
+	bool storageModified = STORE_GLOBAL_OPTION( usePresetNameAsDir, checked );
 
 	ui->saveDirLine->setEnabled( !checked );
 	ui->saveDirBtn->setEnabled( !checked );
@@ -2128,19 +2186,22 @@ void MainWindow::toggleUsePresetName( bool checked )
 		// overwrite whatever is currently in the preset or global launch options
 		setAltDirsRelativeToConfigs( sanitizePath( presetName ) );
 	}
+
+	scheduleSavingOptions( storageModified );
 }
 
 void MainWindow::changeSaveDir( const QString & dir )
 {
 	// Unlike the other launch options, here we in fact want to overwrite the stored value even during restoring,
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
-	STORE_TO_PRESET_IF_SELECTED( altPaths.saveDir, dir )
+	bool storageModified = STORE_TO_CURRENT_PRESET( altPaths.saveDir, dir );
 
 	highlightDirPathIfFile( ui->saveDirLine, dir );  // non-existing dir is ok becase it will be created automatically
 
 	if (isValidDir( dir ))
 		updateSaveFilesFromDir();
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2148,10 +2209,11 @@ void MainWindow::changeScreenshotDir( const QString & dir )
 {
 	// Unlike the other launch options, here we in fact want to overwrite the stored value even during restoring,
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
-	STORE_TO_PRESET_IF_SELECTED( altPaths.screenshotDir, dir )
+	bool storageModified = STORE_TO_CURRENT_PRESET( altPaths.screenshotDir, dir );
 
 	highlightDirPathIfFile( ui->screenshotDirLine, dir );  // non-existing dir is ok becase it will be created automatically
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2171,29 +2233,33 @@ void MainWindow::browseScreenshotDir()
 
 void MainWindow::selectMonitor( int index )
 {
-	STORE_VIDEO_OPTION( monitorIdx, index )
+	bool storageModified = STORE_VIDEO_OPTION( monitorIdx, index );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionX( const QString & xStr )
 {
-	STORE_VIDEO_OPTION( resolutionX, xStr.toUInt() )
+	bool storageModified = STORE_VIDEO_OPTION( resolutionX, xStr.toUInt() );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::changeResolutionY( const QString & yStr )
 {
-	STORE_VIDEO_OPTION( resolutionY, yStr.toUInt() )
+	bool storageModified = STORE_VIDEO_OPTION( resolutionY, yStr.toUInt() );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleShowFps( bool checked )
 {
-	STORE_VIDEO_OPTION( showFPS, checked )
+	bool storageModified = STORE_VIDEO_OPTION( showFPS, checked );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2203,22 +2269,25 @@ void MainWindow::toggleShowFps( bool checked )
 
 void MainWindow::toggleNoSound( bool checked )
 {
-	STORE_AUDIO_OPTION( noSound, checked )
+	bool storageModified = STORE_AUDIO_OPTION( noSound, checked );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoSFX( bool checked )
 {
-	STORE_AUDIO_OPTION( noSFX, checked )
+	bool storageModified = STORE_AUDIO_OPTION( noSFX, checked );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::toggleNoMusic( bool checked )
 {
-	STORE_AUDIO_OPTION( noMusic, checked )
+	bool storageModified = STORE_AUDIO_OPTION( noMusic, checked );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2228,15 +2297,17 @@ void MainWindow::toggleNoMusic( bool checked )
 
 void MainWindow::updatePresetCmdArgs( const QString & text )
 {
-	STORE_PRESET_OPTION( cmdArgs, text )
+	bool storageModified = STORE_PRESET_OPTION( cmdArgs, text );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::updateGlobalCmdArgs( const QString & text )
 {
-	STORE_GLOBAL_OPTION( cmdArgs, text )
+	bool storageModified = STORE_GLOBAL_OPTION( cmdArgs, text );
 
+	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2246,6 +2317,8 @@ void MainWindow::updateGlobalCmdArgs( const QString & text )
 
 void MainWindow::togglePathStyle( PathStyle style )
 {
+	bool styleChanged = style != pathContext.pathStyle();
+
 	pathContext.setPathStyle( style );
 
 	for (Engine & engine : engineModel)
@@ -2285,6 +2358,8 @@ void MainWindow::togglePathStyle( PathStyle style )
 
 	ui->saveDirLine->setText( pathContext.convertPath( ui->saveDirLine->text() ) );
 	ui->screenshotDirLine->setText( pathContext.convertPath( ui->screenshotDirLine->text() ) );
+
+	scheduleSavingOptions( styleChanged );
 }
 
 /// initializes engineTraits to be in sync with current engineModel
@@ -2462,7 +2537,7 @@ void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringList > select
 	int selectedIwadIdx = getSelectedItemIndex( ui->iwadListView );
 	QString selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : "";
 
-	if (!selectedMapPacks)  // optimization, it the caller already has them, use his ones instead of getting them again
+	if (!selectedMapPacks)  // optimization: it the caller already has them, use his ones instead of getting them again
 		selectedMapPacks = getSelectedMapPacks();
 
 	// note down the currently selected items
@@ -2649,10 +2724,15 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	{
 		ui->engineCmbBox->setCurrentIndex( -1 );  // if something is selected, this invokes the callback, which updates the dependent widgets
 
+		disableSelectionCallbacks = true;  // prevent updating engine-dependent widgets back and forth
+
 		engineModel.startCompleteUpdate();
 		engineModel.assignList( std::move(opts.engines) );
 		updateEngineTraits();  // sync engineTraits with engineModel
-		engineModel.finishCompleteUpdate();
+		engineModel.finishCompleteUpdate();      // if the list is not empty, this changes the engine index from -1 to 0,
+		ui->engineCmbBox->setCurrentIndex( -1 ); // but we need it to stay -1
+
+		disableSelectionCallbacks = false;
 
 		// mark the default engine, if chosen
 		int defaultIdx = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
@@ -2787,6 +2867,7 @@ void MainWindow::restorePreset( int presetIdx )
 
 		ui->engineCmbBox->setCurrentIndex( -1 );
 
+		// TODO: simplify
 		if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
 		{
 			int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
@@ -3217,7 +3298,7 @@ void MainWindow::importPresetFromScript()
 
 void MainWindow::updateLaunchCommand()
 {
-	// optimization - don't regenerate the command when we're about to make more changes right away
+	// optimization: don't regenerate the command when we're about to make more changes right away
 	if (restoringOptionsInProgress || restoringPresetInProgress)
 		return;
 

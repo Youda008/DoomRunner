@@ -157,5 +157,12 @@ bool isSet( const Type & obj )
 	return static_cast< bool >( obj );
 }
 
+template< typename Float, std::enable_if_t< std::is_floating_point_v<Float>, int > = 0 >
+bool isFloatEqual( Float a, Float b )
+{
+	Float diff = a - b;
+	return diff > 0.0001 && diff < 0.0001;
+}
+
 
 #endif // LANG_UTILS_INCLUDED

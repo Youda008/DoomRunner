@@ -80,6 +80,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void presetMoveUp();
 	void presetMoveDown();
 	void presetInsertSeparator();
+	void presetsReordered();
 
 	void searchPresets( const QString & phrase, bool caseSensitive, bool useRegex );
 
@@ -211,6 +212,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
 	QStringList getDirsToBeAccessed() const;
 
+	void scheduleSavingOptions( bool storedOptionsModified = true );
+
 	LaunchOptions & activeLaunchOptions();
 	MultiplayerOptions & activeMultiplayerOptions();
 	GameplayOptions & activeGameplayOptions();
@@ -230,7 +233,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QDir appDataDir;   ///< directory where this application can store its data
 	QString optionsFilePath;
 
-	bool optionsCorrupted = false;  ///< true when was a critical error during parsing of options file, such content should not be saved
+	bool optionsNeedUpdate = false;  ///< indicates that the user has made a change and the options file needs to be updated
+	bool optionsCorrupted = false;  ///< true if there was a critical error during parsing of the options file, such content should not be saved
 
 	bool disableSelectionCallbacks = false;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
 	bool restoringOptionsInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options

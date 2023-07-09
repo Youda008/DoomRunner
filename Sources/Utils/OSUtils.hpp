@@ -99,7 +99,7 @@ bool openFileLocation( const QString & filePath );
   * \param targetArgs Command-line arguments for the targetFile, if it's an executable.
   *                   If the arguments contain file path, they must be relative to the workingDir. */
 bool createWindowsShortcut(
-	QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir = "", QString description = ""
+	QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir = {}, QString description = {}
 );
 #endif // IS_WINDOWS
 

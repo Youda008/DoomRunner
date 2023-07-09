@@ -1879,7 +1879,7 @@ void MainWindow::onSavedGameSelected( int saveIdx )
 	if (disableSelectionCallbacks)
 		return;
 
-	QString saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : "";
+	const QString & saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : emptyString;
 
 	bool storageModified = STORE_LAUNCH_OPTION( saveFile, saveFileName );
 
@@ -1903,7 +1903,7 @@ void MainWindow::onDemoFileSelected_replay( int demoIdx )
 	if (disableSelectionCallbacks)
 		return;
 
-	QString demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : "";
+	const QString & demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : emptyString;
 
 	bool storageModified = STORE_LAUNCH_OPTION( demoFile_replay, demoFileName );
 
@@ -2182,7 +2182,7 @@ void MainWindow::onUsePresetNameToggled( bool checked )
 	if (checked)
 	{
 		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		QString presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : "";
+		const QString & presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : emptyString;
 
 		// overwrite whatever is currently in the preset or global launch options
 		setAltDirsRelativeToConfigs( fs::sanitizePath( presetName ) );
@@ -2536,7 +2536,7 @@ void MainWindow::updateCompatLevels()
 void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringVec > selectedMapPacks )
 {
 	int selectedIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
-	QString selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : "";
+	const QString & selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : emptyString;
 
 	if (!selectedMapPacks)  // optimization: it the caller already has them, use his ones instead of getting them again
 		selectedMapPacks = getSelectedMapPacks();
@@ -3514,12 +3514,12 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 
 	if (!ui->saveDirLine->text().isEmpty())
 	{
-		p.checkNotAFile( ui->saveDirLine->text(), "the save dir", "" );
+		p.checkNotAFile( ui->saveDirLine->text(), "the save dir", {} );
 		cmd.arguments << engineTraits.saveDirParam() << base.rebaseAndQuotePath( ui->saveDirLine->text() );
 	}
 	if (!ui->screenshotDirLine->text().isEmpty())
 	{
-		p.checkNotAFile( ui->screenshotDirLine->text(), "the screenshot dir", "" );
+		p.checkNotAFile( ui->screenshotDirLine->text(), "the screenshot dir", {} );
 		cmd.arguments << "+screenshot_dir" << base.rebaseAndQuotePath( ui->screenshotDirLine->text() );
 	}
 

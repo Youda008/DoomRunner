@@ -86,7 +86,7 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 
 	void closeDialog( int resultCode );
 
-	void setOwnStatus( ProcessStatus status, const QString & detail = "" );
+	void setOwnStatus( ProcessStatus status, const QString & detail = QString() );
 
  private: // members
 

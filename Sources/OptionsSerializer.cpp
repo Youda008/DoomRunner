@@ -654,7 +654,7 @@ static void serializeOptionsToJson( const OptionsToSave & opts, QJsonObject & js
 		jsOpts["presets"] = jsPresetArray;
 	}
 
-	jsOpts["selected_preset"] = opts.selectedPresetIdx >= 0 ? opts.presets[ opts.selectedPresetIdx ].name : "";
+	jsOpts["selected_preset"] = opts.selectedPresetIdx >= 0 ? opts.presets[ opts.selectedPresetIdx ].name : QString();
 
 	// global settings
 

@@ -116,7 +116,10 @@ ExecutableTraits getExecutableTraits( const QString & executablePath )
 // On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
 inline static QString fixExePath( const QString & exePath )
 {
-	if (!isWindows() && !exePath.contains("/"))  // the file is in the current working directory
+	// On Windows this must be prefixed too! Otherwise Windows will prefer executable in the same directory as DoomRunner
+	// over executable in the current working directory
+	// https://superuser.com/questions/897644/how-does-windows-decide-which-executable-to-run/1683394#1683394
+	if (!exePath.contains("/"))  // the file is in the current working directory
 	{
 		return "./" + exePath;
 	}

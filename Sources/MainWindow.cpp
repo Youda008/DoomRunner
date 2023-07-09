@@ -3027,8 +3027,9 @@ void MainWindow::restorePreset( int presetIdx )
 			modModel.append( mod );
 			if (!mod.isSeparator && !isValidEntry( mod.path ))
 			{
-				QMessageBox::warning( this, "Mod no longer exists",
-					"A mod from the preset ("%mod.path%") no longer exists. Please update it." );
+				// Let's just highlight it now, we will show warning when the user tries to launch it.
+				//QMessageBox::warning( this, "Mod no longer exists",
+				//	"A mod file "%mod.path%" from this preset no longer exists. Please update it." );
 				highlightInvalidListItem( modModel.last() );
 			}
 		}

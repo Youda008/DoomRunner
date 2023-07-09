@@ -29,6 +29,11 @@
 #endif // IS_WINDOWS
 
 
+//======================================================================================================================
+
+namespace os {
+
+
 //----------------------------------------------------------------------------------------------------------------------
 //  standard directories and installation properties
 
@@ -42,7 +47,7 @@ QString getThisAppConfigDir()
 	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
  #if IS_WINDOWS
 	QString thisExeDir = QApplication::applicationDirPath();
-	if (isDirectoryWritable( thisExeDir ))
+	if (fs::isDirectoryWritable( thisExeDir ))
 		return thisExeDir;
 	else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Local
 		return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
@@ -56,7 +61,7 @@ QString getThisAppDataDir()
 	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
  #if IS_WINDOWS
 	QString thisExeDir = QApplication::applicationDirPath();
-	if (isDirectoryWritable( thisExeDir ))
+	if (fs::isDirectoryWritable( thisExeDir ))
 		return thisExeDir;
 	else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Roaming
 		return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
@@ -67,7 +72,7 @@ QString getThisAppDataDir()
 
 bool isInSearchPath( const QString & filePath )
 {
-	return QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ) == filePath;
+	return QStandardPaths::findExecutable( fs::getFileNameFromPath( filePath ) ) == filePath;
 }
 
 QString getSandboxName( Sandbox sandbox )
@@ -84,7 +89,7 @@ ExecutableTraits getExecutableTraits( const QString & executablePath )
 {
 	ExecutableTraits traits;
 
-	traits.executableBaseName = getFileBasenameFromPath( executablePath );
+	traits.executableBaseName = fs::getFileBasenameFromPath( executablePath );
 
 	static QRegularExpression snapRegex("^/snap/");
 	static QRegularExpression flatpakRegex("^/var/lib/flatpak/app/([^/]+)/");
@@ -92,7 +97,7 @@ ExecutableTraits getExecutableTraits( const QString & executablePath )
 	if ((match = snapRegex.match( executablePath )).hasMatch())
 	{
 		traits.sandboxEnv = Sandbox::Snap;
-		traits.sandboxAppName = getFileNameFromPath( executablePath );
+		traits.sandboxAppName = fs::getFileNameFromPath( executablePath );
 	}
 	else if ((match = flatpakRegex.match( executablePath )).hasMatch())
 	{
@@ -129,11 +134,11 @@ ShellCommand getRunCommand( const QString & executablePath, const PathContext & 
 
 	// different installations require different ways to launch the engine executable
  #ifdef FLATPAK_BUILD
-	if (getAbsoluteDirOfFile( executablePath ) == QApplication::applicationDirPath())
+	if (fs::getAbsoluteDirOfFile( executablePath ) == QApplication::applicationDirPath())
 	{
 		// We are inside a Flatpak package but launching an app inside the same Flatpak package,
 		// no special command or permissions needed.
-		cmd.executable = getFileNameFromPath( executablePath );
+		cmd.executable = fs::getFileNameFromPath( executablePath );
 		return cmd;  // this is all we need, skip the rest
 	}
 	else
@@ -157,7 +162,7 @@ ShellCommand getRunCommand( const QString & executablePath, const PathContext & 
 		cmdParts << "run";
 		for (const QString & dir : dirsToBeAccessed)
 		{
-			QString fileSystemPermission = "--filesystem=" + getAbsolutePath( dir );
+			QString fileSystemPermission = "--filesystem=" + fs::getAbsolutePath( dir );
 			cmdParts << base.maybeQuoted( fileSystemPermission );
 			cmd.extraPermissions << fileSystemPermission;
 		}
@@ -167,7 +172,7 @@ ShellCommand getRunCommand( const QString & executablePath, const PathContext & 
 	{
 		// If it's in a search path (C:\Windows\System32, /usr/bin, ...)
 		// it should be (and sometimes must be) started directly by using only its name.
-		cmdParts << getFileNameFromPath( executablePath );
+		cmdParts << fs::getFileNameFromPath( executablePath );
 	}
 	else
 	{
@@ -256,11 +261,11 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringLis
 
 	if (!shortcutFile.endsWith(".lnk"))
 		shortcutFile.append(".lnk");
-	shortcutFile = getAbsolutePath( shortcutFile );
-	targetFile = getAbsolutePath( targetFile );
+	shortcutFile = fs::getAbsolutePath( shortcutFile );
+	targetFile = fs::getAbsolutePath( targetFile );
 	QString targetArgsStr = targetArgs.join(' ');
 	if (workingDir.isEmpty())
-		workingDir = getAbsoluteDirOfFile( targetFile );
+		workingDir = fs::getAbsoluteDirOfFile( targetFile );
 
 	LPCWSTR pszLinkfile = reinterpret_cast< LPCWSTR >( shortcutFile.utf16() );
 	LPCWSTR pszTargetfile = reinterpret_cast< LPCWSTR >( targetFile.utf16() );
@@ -320,3 +325,6 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringLis
 	return true;
 }
 #endif // IS_WINDOWS
+
+
+} // namespace os

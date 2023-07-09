@@ -138,7 +138,7 @@ void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & de
 			textColor = QColor::fromHsv( 4, 180, 255 );    // lighter red
 			break;
 	}
-	setTextColor( ui->statusLine, textColor );
+	wdg::setTextColor( ui->statusLine, textColor );
 
 	// toggle buttons
 	switch (status)
@@ -191,7 +191,7 @@ ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const
 {
 	qDebug() << "runProcess:" << executable;
 
-	executableName = getFileNameFromPath( executable );
+	executableName = fs::getFileNameFromPath( executable );
 	this->setWindowTitle( executableName % " output" );
 
 	process.setProgram( executable );

@@ -68,13 +68,13 @@ struct EngineFamilyTraits
 };
 
 /// Properties and capabilities of a particular engine that decide what command-line parameters will be used.
-class EngineTraits : private ExecutableTraits, private EngineFamilyTraits
+class EngineTraits : private os::ExecutableTraits, private EngineFamilyTraits
 {
  public:
 
 	EngineTraits( const Engine & engine );
 
-	Sandbox sandboxEnv() const                  { return ExecutableTraits::sandboxEnv; }
+	os::Sandbox sandboxEnv() const              { return ExecutableTraits::sandboxEnv; }
 	QString sandboxEnvName() const              { return getSandboxName( ExecutableTraits::sandboxEnv ); }
 	const QString & sandboxAppName() const      { return ExecutableTraits::sandboxAppName; }
 

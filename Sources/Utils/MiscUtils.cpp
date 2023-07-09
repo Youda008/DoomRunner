@@ -24,42 +24,42 @@ static const QColor highlightColor = Qt::red;
 
 bool highlightDirPathIfInvalid( QLineEdit * lineEdit, const QString & path )
 {
-	if (isInvalidDir( path ))
+	if (fs::isInvalidDir( path ))
 	{
-		setTextColor( lineEdit, QColor( highlightColor ) );
+		wdg::setTextColor( lineEdit, QColor( highlightColor ) );
 		return true;
 	}
 	else
 	{
-		restoreColors( lineEdit );
+		wdg::restoreColors( lineEdit );
 		return false;
 	}
 }
 
 bool highlightFilePathIfInvalid( QLineEdit * lineEdit, const QString & path )
 {
-	if (isInvalidFile( path ))
+	if (fs::isInvalidFile( path ))
 	{
-		setTextColor( lineEdit, QColor( highlightColor ) );
+		wdg::setTextColor( lineEdit, QColor( highlightColor ) );
 		return true;
 	}
 	else
 	{
-		restoreColors( lineEdit );
+		wdg::restoreColors( lineEdit );
 		return false;
 	}
 }
 
 bool highlightDirPathIfFile( QLineEdit * lineEdit, const QString & path )
 {
-	if (isValidFile( path ))
+	if (fs::isValidFile( path ))
 	{
-		setTextColor( lineEdit, QColor( highlightColor ) );
+		wdg::setTextColor( lineEdit, QColor( highlightColor ) );
 		return true;
 	}
 	else
 	{
-		restoreColors( lineEdit );
+		wdg::restoreColors( lineEdit );
 		return false;
 	}
 }

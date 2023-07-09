@@ -11,6 +11,10 @@
 #include <QApplication>
 
 
+namespace wdg {
+
+
+
 //======================================================================================================================
 //  selection manipulation
 
@@ -260,3 +264,7 @@ void restoreColors( QWidget * widget )
 {
 	widget->setPalette( qApp->palette() );
 }
+
+
+
+} // namespace wdg

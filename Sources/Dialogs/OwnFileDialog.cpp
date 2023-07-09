@@ -21,7 +21,7 @@ static const QFileDialog::Options disableNativeDialogOnLinux( QFileDialog::Optio
  #else
 	// initialize once on first call and then re-use.
 	static const QFileDialog::Options DontUseNativeDialogOnLinux =
-		getLinuxDesktopEnv() == "KDE" ? QFileDialog::Options() : QFileDialog::Option::DontUseNativeDialog;
+		os::getLinuxDesktopEnv() == "KDE" ? QFileDialog::Options() : QFileDialog::Option::DontUseNativeDialog;
 	return options | DontUseNativeDialogOnLinux;
  #endif
 }
@@ -30,7 +30,7 @@ static const QString & getDefaultStartingDir()
 {
 	// initialize once on first call and then re-use.
  #ifdef FLATPAK_BUILD
-	static QString defaultStartingDir = getThisAppDataDir();  // should return $XDG_DATA_HOME
+	static QString defaultStartingDir = os::getThisAppDataDir();  // should return $XDG_DATA_HOME
  #else
 	static QString defaultStartingDir = {};  // let the OS choose one
  #endif

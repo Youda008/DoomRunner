@@ -110,10 +110,10 @@ static QString suggestEngineName( const QString & enginePath )
 	// In Windows we can use the directory name, which can tell slightly more than just the binary,
 	// but in Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
  #if IS_WINDOWS
-	return getDirnameOfFile( enginePath );
+	return fs::getDirnameOfFile( enginePath );
  #else
-	ExecutableTraits traits = getExecutableTraits( enginePath );
-	if (traits.sandboxEnv != Sandbox::None)
+	os::ExecutableTraits traits = os::getExecutableTraits( enginePath );
+	if (traits.sandboxEnv != os::Sandbox::None)
 		return traits.sandboxAppName;
 	else
 		return traits.executableBaseName;
@@ -127,39 +127,39 @@ static QString suggestEngineConfigDir( const QString & enginePath )
 
  #if IS_WINDOWS
 
-	QString engineDir = getDirOfFile( enginePath );
-	if (isDirectoryWritable( engineDir ))
+	QString engineDir = fs::getDirOfFile( enginePath );
+	if (fs::isDirectoryWritable( engineDir ))
 	{
 		return engineDir;
 	}
 	else  // if we cannot write to the directory of the executable (e.g. Program Files), try Saved Games
 	{
 		// this is not bullet-proof but will work for 90% of users
-		return qEnvironmentVariable("USERPROFILE")%"/Saved Games/"%getFileNameFromPath( enginePath );
+		return qEnvironmentVariable("USERPROFILE")%"/Saved Games/"%fs::getFileNameFromPath( enginePath );
 	}
 
  #else
 
-	ExecutableTraits traits = getExecutableTraits( enginePath );
-	if (traits.sandboxEnv == Sandbox::Snap)
+	os::ExecutableTraits traits = os::getExecutableTraits( enginePath );
+	if (traits.sandboxEnv == os::Sandbox::Snap)
 	{
-		return getHomeDir()%"/snap/"%traits.executableBaseName%"/current/.config/"%traits.executableBaseName;
+		return os::getHomeDir()%"/snap/"%traits.executableBaseName%"/current/.config/"%traits.executableBaseName;
 	}
-	else if (traits.sandboxEnv == Sandbox::Flatpak)  // the engine is a Flatpak installation
+	else if (traits.sandboxEnv == os::Sandbox::Flatpak)  // the engine is a Flatpak installation
 	{
-		return getHomeDir()%"/.var/app/"%traits.sandboxAppName%"/.config/"%traits.executableBaseName;
+		return os::getHomeDir()%"/.var/app/"%traits.sandboxAppName%"/.config/"%traits.executableBaseName;
 	}
 	else
 	{
 	 #ifdef FLATPAK_BUILD  // the launcher is a Flatpak installation
 		// Inside Flatpak environment the GenericConfigLocation points into the Flatpak sandbox of this application.
 		// But we need the system-wide config dir, and that's available via Qt, so we must do this guessing hack.
-		QString standardConfigDir = getHomeDir()+"/.config";
+		QString standardConfigDir = os::getHomeDir()+"/.config";
 	 #else
 		QString standardConfigDir = QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
 	 #endif
-		QString appName = getFileBasenameFromPath( enginePath );
-		return getPathFromFileName( standardConfigDir, appName );  // -> /home/user/.config/zdoom
+		QString appName = fs::getFileBasenameFromPath( enginePath );
+		return fs::getPathFromFileName( standardConfigDir, appName );  // -> /home/user/.config/zdoom
 	}
 
  #endif
@@ -189,7 +189,7 @@ void EngineDialog::browseEngine()
 		ui->configDirLine->setText( suggestEngineConfigDir( enginePath ) );
 
 	// guess the engine family based on executable's name
-	QString executableName = getFileBasenameFromPath( enginePath );
+	QString executableName = fs::getFileBasenameFromPath( enginePath );
 	EngineFamily guessedFamily = guessEngineFamily( executableName );
 	ui->familyCmbBox->setCurrentIndex( int(guessedFamily) );
 }
@@ -251,7 +251,7 @@ void EngineDialog::accept()
 		);
 		return;
 	}
-	else if (isInvalidFile( engine.path ))
+	else if (fs::isInvalidFile( engine.path ))
 	{
 		QMessageBox::warning( this, "Executable doesn't exist",
 			"Please fix the engine's executable path, such file doesn't exist."
@@ -266,7 +266,7 @@ void EngineDialog::accept()
 		);
 		return;
 	}
-	else if (isInvalidDir( engine.configDir ))
+	else if (fs::isInvalidDir( engine.configDir ))
 	{
 		QMessageBox::warning( this, "Config dir doesn't exist",
 			"Please fix the engine's config directory, such directory doesn't exist."

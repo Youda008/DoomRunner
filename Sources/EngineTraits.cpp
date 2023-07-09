@@ -159,7 +159,7 @@ EngineFamily guessEngineFamily( const QString & executableName )
 EngineTraits::EngineTraits( const Engine & engine )
 {
 	// initialize all ExecutableTraits members
-	static_cast< ExecutableTraits & >( *this ) = getExecutableTraits( engine.path );
+	static_cast< ExecutableTraits & >( *this ) = os::getExecutableTraits( engine.path );
 
 	// initialize all EngineFamilyTraits members
 	if (size_t(engine.family) < std::size(engineFamilyTraits))

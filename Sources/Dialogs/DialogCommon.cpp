@@ -34,7 +34,7 @@ QString DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc,
 		path = pathContext.getRelativePath( path );
 
 	// next time use this dir as the starting dir of the file dialog for convenience
-	lastUsedDir = getDirOfFile( path );
+	lastUsedDir = fs::getDirOfFile( path );
 
 	return path;
 }

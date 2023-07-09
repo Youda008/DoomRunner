@@ -214,7 +214,7 @@ void EditableListView::openCurrentFileLocation()
 
 	QString filePath = userData.toString();
 
-	if (!::openFileLocation( filePath ))
+	if (!os::openFileLocation( filePath ))
 	{
 		QMessageBox::warning( this->parentWidget(), "Error opening directory", "Unknown error prevented opening a directory." );
 	}
@@ -400,11 +400,11 @@ void EditableListView::itemsDropped()
 		// When an item is in edit mode and current index changes, the content of the line editor is dumped
 		// into old current item and the edit mode closed. Therefore we must change the current index in advance,
 		// otherwise the edit content gets saved into a wrong item.
-		unsetCurrentItem( this );
-		deselectSelectedItems( this );
+		wdg::unsetCurrentItem( this );
+		wdg::deselectSelectedItems( this );
 		for (int i = 0; i < count; i++)
-			selectItemByIndex( this, row + i );
-		setCurrentItemByIndex( this, row + count - 1 );
+			wdg::selectItemByIndex( this, row + i );
+		wdg::setCurrentItemByIndex( this, row + count - 1 );
 
 		emit itemsDropped( row, count );
 

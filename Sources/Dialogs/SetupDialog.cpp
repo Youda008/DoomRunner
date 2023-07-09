@@ -226,7 +226,7 @@ void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
 
 	if (tickCount % dirUpdateDelay == 0)
 	{
-		if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))  // the second prevents clearing the list when the path is invalid
+		if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))  // the second prevents clearing the list when the path is invalid
 			updateIWADsFromDir();
 	}
 }
@@ -243,7 +243,7 @@ SetupDialog::~SetupDialog()
 template< typename ListModel >
 void setItemAsDefault( QListView * view, ListModel & model, QAction * setDefaultAction, QString & defaultItemID )
 {
-	int selectedIdx = getSelectedItemIndex( view );
+	int selectedIdx = wdg::getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
 		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
@@ -285,7 +285,7 @@ void SetupDialog::engineAdd()
 
 	if (code == QDialog::Accepted)
 	{
-		appendItem( ui->engineListView, engineModel, dialog.engine );
+		wdg::appendItem( ui->engineListView, engineModel, dialog.engine );
 	}
 }
 
@@ -293,7 +293,7 @@ void SetupDialog::engineDelete()
 {
 	int defaultIdx = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
 
-	int deletedIdx = deleteSelectedItem( ui->engineListView, engineModel );
+	int deletedIdx = wdg::deleteSelectedItem( ui->engineListView, engineModel );
 
 	if (deletedIdx == defaultIdx)
 		engineSettings.defaultEngine.clear();
@@ -301,17 +301,17 @@ void SetupDialog::engineDelete()
 
 void SetupDialog::engineMoveUp()
 {
-	moveUpSelectedItem( ui->engineListView, engineModel );
+	wdg::moveUpSelectedItem( ui->engineListView, engineModel );
 }
 
 void SetupDialog::engineMoveDown()
 {
-	moveDownSelectedItem( ui->engineListView, engineModel );
+	wdg::moveDownSelectedItem( ui->engineListView, engineModel );
 }
 
 void SetupDialog::engineSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
-	int selectedIdx = getSelectedItemIndex( ui->engineListView );
+	int selectedIdx = wdg::getSelectedItemIndex( ui->engineListView );
 	setDefaultEngineAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
 	if (selectedIdx >= 0)
 	{
@@ -342,7 +342,7 @@ void SetupDialog::editEngine( const QModelIndex & index )
 
 void SetupDialog::editSelectedEngine()
 {
-	int selectedEngineIdx = getSelectedItemIndex( ui->engineListView );
+	int selectedEngineIdx = wdg::getSelectedItemIndex( ui->engineListView );
 	if (selectedEngineIdx >= 0)
 	{
 		editEngine( engineModel.makeIndex( selectedEngineIdx ) );
@@ -363,14 +363,14 @@ void SetupDialog::iwadAdd()
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
-	appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );
+	wdg::appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );
 }
 
 void SetupDialog::iwadDelete()
 {
 	int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
 
-	int deletedIdx = deleteSelectedItem( ui->iwadListView, iwadModel );
+	int deletedIdx = wdg::deleteSelectedItem( ui->iwadListView, iwadModel );
 
 	if (deletedIdx == defaultIdx)
 		iwadSettings.defaultIWAD.clear();
@@ -378,17 +378,17 @@ void SetupDialog::iwadDelete()
 
 void SetupDialog::iwadMoveUp()
 {
-	moveUpSelectedItem( ui->iwadListView, iwadModel );
+	wdg::moveUpSelectedItem( ui->iwadListView, iwadModel );
 }
 
 void SetupDialog::iwadMoveDown()
 {
-	moveDownSelectedItem( ui->iwadListView, iwadModel );
+	wdg::moveDownSelectedItem( ui->iwadListView, iwadModel );
 }
 
 void SetupDialog::iwadSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
-	int selectedIdx = getSelectedItemIndex( ui->iwadListView );
+	int selectedIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 	setDefaultIWADAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
 	if (selectedIdx >= 0)
 	{
@@ -423,7 +423,7 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadListView->toggleListModifications( !enabled );
 
 	// populate the list
-	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is empty
+	if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is empty
 		updateIWADsFromDir();
 }
 
@@ -441,7 +441,7 @@ void SetupDialog::toggleIWADSubdirs( bool checked )
 {
 	iwadSettings.searchSubdirs = checked;
 
-	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is empty
+	if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is empty
 		updateIWADsFromDir();
 }
 
@@ -470,7 +470,7 @@ void SetupDialog::changeIWADDir( const QString & dir )
 
 	highlightDirPathIfInvalid( ui->iwadDirLine, dir );
 
-	if (iwadSettings.updateFromDir && isValidDir( iwadSettings.dir ))
+	if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))
 		updateIWADsFromDir();
 }
 
@@ -490,7 +490,7 @@ void SetupDialog::changeModDir( const QString & dir )
 
 void SetupDialog::updateIWADsFromDir()
 {
-	updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
+	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
 }
 
 

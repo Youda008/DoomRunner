@@ -85,10 +85,10 @@ static void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 	{
 		engine.name = jsEngine.getString( "name", "<missing name>" );
 		engine.path = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
-		engine.configDir = jsEngine.getString( "config_dir", getDirOfFile( engine.path ) );
+		engine.configDir = jsEngine.getString( "config_dir", fs::getDirOfFile( engine.path ) );
 		engine.family = familyFromStr( jsEngine.getString( "family", {}, DontShowError ) );
 		if (engine.family == EngineFamily::_EnumEnd)
-			engine.family = guessEngineFamily( getFileBasenameFromPath( engine.path ) );
+			engine.family = guessEngineFamily( fs::getFileBasenameFromPath( engine.path ) );
 	}
 }
 
@@ -880,7 +880,7 @@ bool writeOptionsToFile( const OptionsToSave & opts, const QString & filePath )
 {
 	QByteArray bytes = serializeOptions( opts );
 
-	QString error = updateFileSafely( filePath, bytes );
+	QString error = fs::updateFileSafely( filePath, bytes );
 	if (!error.isEmpty())
 	{
 		QMessageBox::warning( nullptr, "Error saving options", error );
@@ -893,7 +893,7 @@ bool writeOptionsToFile( const OptionsToSave & opts, const QString & filePath )
 bool readOptionsFromFile( OptionsToLoad & opts, const QString & filePath )
 {
 	QByteArray bytes;
-	QString error = readWholeFile( filePath, bytes );
+	QString error = fs::readWholeFile( filePath, bytes );
 	if (!error.isEmpty())
 	{
 		QMessageBox::warning( nullptr, "Error loading options", error );

@@ -18,6 +18,11 @@
 class PathContext;
 
 
+//======================================================================================================================
+
+namespace os {
+
+
 //-- standard directories and installation properties ----------------------------------------------
 
 QString getHomeDir();
@@ -96,6 +101,9 @@ bool createWindowsShortcut(
 	QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir = "", QString description = ""
 );
 #endif // IS_WINDOWS
+
+
+} // namespace os
 
 
 #endif // OS_UTILS_INCLUDED

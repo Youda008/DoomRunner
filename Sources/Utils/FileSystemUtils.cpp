@@ -19,6 +19,9 @@
 
 //======================================================================================================================
 
+namespace fs {
+
+
 static bool tryToWriteFile( const QString & filePath )
 {
 	QFile file( filePath );
@@ -124,3 +127,6 @@ void traverseDirectory(
 		}
 	}
 }
+
+
+} // namespace fs

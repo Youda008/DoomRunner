@@ -118,6 +118,8 @@ class PathContext {
 //======================================================================================================================
 //  misc helper functions
 
+namespace fs {
+
 inline bool isDirectory( const QString & path )
 {
 	return QFileInfo( path ).isDir();
@@ -209,9 +211,13 @@ QString readWholeFile( const QString & filePath, QByteArray & dest );
   * Returns description of an error that might potentially happen, or empty string on success. */
 QString updateFileSafely( const QString & filePath, const QByteArray & newContent );
 
+} // namespace fs
+
 
 //======================================================================================================================
 //  traversing directory content
+
+namespace fs {
 
 // Plain enum just makes the elements polute global namespace and makes the FILE collide with declaration in stdio.h,
 // and enum class would make all bit operations incredibly painful.
@@ -234,6 +240,8 @@ void traverseDirectory(
 	const QString & dir, bool recursively, EntryTypes typesToVisit,
 	const PathContext & pathContext, const std::function< void ( const QFileInfo & entry ) > & visitEntry
 );
+
+} // namespace fs
 
 
 #endif // FILE_SYSTEM_UTILS_INCLUDED

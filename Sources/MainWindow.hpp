@@ -195,7 +195,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void restoreAudioOptions( const AudioOptions & opts );
 	void restoreGlobalOptions( const GlobalOptions & opts );
 
-	ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths );
+	os::ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand();
 
  private: // MainWindow-specific utils

@@ -41,6 +41,7 @@
 // the reordering, and then set the current item to the new one, after the reordering is done.
 
 
+namespace wdg {
 
 
 //======================================================================================================================
@@ -665,7 +666,7 @@ void updateListFromDir( ListModel & model, QListView * view, const QString & dir
 	                              // but that's an acceptable drawback, instead of making differential update
 	model.clear();
 
-	traverseDirectory( dir, recursively, EntryType::FILE, pathContext, [&]( const QFileInfo & file )
+	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathContext, [&]( const QFileInfo & file )
 	{
 		if (isDesiredFile( file ))
 		{
@@ -742,7 +743,7 @@ void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString &
 	if (includeEmptyItem)
 		model.append( QString() );
 
-	traverseDirectory( dir, recursively, EntryType::FILE, pathContext, [&]( const QFileInfo & file )
+	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathContext, [&]( const QFileInfo & file )
 	{
 		if (isDesiredFile( file ))
 		{
@@ -777,6 +778,8 @@ void restoreColors( QWidget * widget );
 #define HYPERLINK( text, url ) \
 	"<a href=\""%url%"\"><span style=\"\">"%text%"</span></a>"
 
+
+} // namespace wdg
 
 
 #endif // WIDGET_UTILS_INCLUDED

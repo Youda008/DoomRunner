@@ -11,6 +11,7 @@
 
 #include "Essential.hpp"
 
+#include "CommonTypes.hpp"
 #include "Widgets/ListModel.hpp"  // ReadOnlyListModelItem
 
 #include <QString>
@@ -200,7 +201,7 @@ inline QString & capitalize( QString & str )
 QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith );
 
 /// Creates a file filter for the QFileDialog::getOpenFileNames.
-QString makeFileFilter( const char * filterName, const QVector< QString > & suffixes );
+QString makeFileFilter( const char * filterName, const QStringVec & suffixes );
 
 struct Argument
 {

@@ -125,10 +125,10 @@ inline static QString fixExePath( const QString & exePath )
 	return exePath;
 }
 
-ShellCommand getRunCommand( const QString & executablePath, const PathContext & base, const QStringList & dirsToBeAccessed )
+ShellCommand getRunCommand( const QString & executablePath, const PathContext & base, const QStringVec & dirsToBeAccessed )
 {
 	ShellCommand cmd;
-	QStringList cmdParts;
+	QStringVec cmdParts;
 
 	ExecutableTraits traits = getExecutableTraits( executablePath );
 
@@ -255,7 +255,7 @@ bool openFileLocation( const QString & filePath )
 }
 
 #if IS_WINDOWS
-bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir, QString description )
+bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir, QString description )
 {
 	// prepare arguments for WinAPI
 

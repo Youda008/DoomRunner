@@ -68,7 +68,7 @@ static bool isMapMarker( const LumpEntry & lump, const QString & lumpName )
 		&& !blacklistedNames.contains( lumpName );
 }
 
-static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QStringList & mapNames )
+static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QStringVec & mapNames )
 {
 	QTextStream lumpText( lumpData, QIODevice::ReadOnly );
 

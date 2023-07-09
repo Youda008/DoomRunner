@@ -390,15 +390,15 @@ void CompatOptsDialog::updateCheckboxes()
 
 //----------------------------------------------------------------------------------------------------------------------
 
-static void addCmdLineOptionIfSet( QStringList & list, const CompatibilityDetails & compatDetails, const CompatFlag & flag )
+static void addCmdLineOptionIfSet( QStringVec & list, const CompatibilityDetails & compatDetails, const CompatFlag & flag )
 {
 	if (isEnabled( compatDetails, flag ))
 		list << "+" + flag.cvarName << "1";
 }
 
-QStringList CompatOptsDialog::getCmdArgsFromOptions( const CompatibilityDetails & compatDetails )
+QStringVec CompatOptsDialog::getCmdArgsFromOptions( const CompatibilityDetails & compatDetails )
 {
-	QStringList cmdArgs;
+	QStringVec cmdArgs;
 
 	addCmdLineOptionIfSet( cmdArgs, compatDetails, CRUSHED_MONSTERS );
 	addCmdLineOptionIfSet( cmdArgs, compatDetails, FRIENDLY_MONSTERS );

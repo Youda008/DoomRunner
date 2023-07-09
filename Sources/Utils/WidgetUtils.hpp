@@ -11,6 +11,7 @@
 
 #include "Essential.hpp"
 
+#include "CommonTypes.hpp"
 #include "LangUtils.hpp"         // findSuch
 #include "FileSystemUtils.hpp"   // fillListFromDir
 #include "Widgets/ListModel.hpp"
@@ -597,9 +598,9 @@ bool selectItemByID( QListView * view, const ListModel & model, const QString & 
 
 /// Gets persistent item IDs that survive node shifting, adding or removal.
 template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemIDs( QListView * view, const ListModel & model ) -> QVector< QString >
+auto getSelectedItemIDs( QListView * view, const ListModel & model ) -> QStringVec
 {
-	QVector< QString > itemIDs;
+	QStringVec itemIDs;
 	for (int selectedItemIdx : getSelectedItemIndexes( view ))
 		itemIDs.append( model[ selectedItemIdx ].getID() );
 	return itemIDs;
@@ -607,7 +608,7 @@ auto getSelectedItemIDs( QListView * view, const ListModel & model ) -> QVector<
 
 /// Attempts to select previously selected items defined by their persistant itemIDs.
 template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
-void selectItemsByIDs( QListView * view, const ListModel & model, const QVector< QString > & itemIDs )
+void selectItemsByIDs( QListView * view, const ListModel & model, const QStringVec & itemIDs )
 {
 	using Item = typename ListModel::Item;
 

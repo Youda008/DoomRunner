@@ -133,7 +133,7 @@ void UpdateChecker::changelogReceived( QNetworkReply * reply, RequestData & requ
 	*/
 
 	QString line;
-	QStringList versionInfo;
+	QStringVec versionInfo;
 
 	// find the line with the new version
 	while ((line = getLine( reply )) != requestData.newVersion && !reply->atEnd()) {}
@@ -243,7 +243,7 @@ static NewElements reworkLayout( QMessageBox & msgBox )
 	return newElements;
 }
 
-bool showUpdateNotification( QWidget * parent, QStringList versionInfo, bool includeCheckbox )
+bool showUpdateNotification( QWidget * parent, const QStringVec & versionInfo, bool includeCheckbox )
 {
 	QString newVersion = versionInfo.first();
 

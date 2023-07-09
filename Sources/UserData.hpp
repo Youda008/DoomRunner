@@ -242,7 +242,7 @@ struct Preset : public EditableListModelItem
 	QString selectedEnginePath;   // we store the engine by path, so that it does't break when user renames them or reorders them
 	QString selectedConfig;   // we store the config by name instead of index, so that it does't break when user reorders them
 	QString selectedIWAD;   // we store the IWAD by path instead of index, so that it doesn't break when user reorders them
-	QList< QString > selectedMapPacks;
+	QStringVec selectedMapPacks;
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 
 	LaunchOptions launchOpts;

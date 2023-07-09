@@ -10,6 +10,7 @@
 
 
 #include "Essential.hpp"
+#include "CommonTypes.hpp"
 
 #include <QObject>
 #include <QString>
@@ -40,7 +41,7 @@ class UpdateChecker : public QObject {
 		UpdateNotAvailable
 	};
 
-	using ResultCallback = std::function< void ( Result result, QString errorDetail, QStringList versionInfo ) >;
+	using ResultCallback = std::function< void ( Result result, QString errorDetail, QStringVec versionInfo ) >;
 
 	/// Asynchronously checks for updates via HTTP connection and calls your callback when it's ready.
 	void checkForUpdates_async( ResultCallback && callback );
@@ -77,7 +78,7 @@ class UpdateChecker : public QObject {
 //======================================================================================================================
 //  common result reactions
 
-bool showUpdateNotification( QWidget * parent, QStringList versionInfo, bool includeCheckbox );
+bool showUpdateNotification( QWidget * parent, const QStringVec & versionInfo, bool includeCheckbox );
 
 
 #endif // UPDATE_CHECKER_INCLUDED

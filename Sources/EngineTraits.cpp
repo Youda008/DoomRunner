@@ -173,7 +173,7 @@ EngineTraits getEngineTraits( const Engine & engine )
 	return EngineTraits( engine );
 }
 
-QStringList EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
+QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 {
 	if (mapName.isEmpty())
 	{
@@ -204,7 +204,7 @@ QStringList EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) cons
 	}
 }
 
-QStringList EngineTraits::getCompatLevelArgs( int compatLevel ) const
+QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 {
 	// Properly working -compatmode is present only in GZDoom,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.

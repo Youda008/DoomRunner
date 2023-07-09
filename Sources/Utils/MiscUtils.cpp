@@ -158,7 +158,7 @@ QString replaceStringBetween( QString source, char startingChar, char endingChar
 	return source;
 }
 
-QString makeFileFilter( const char * filterName, const QVector< QString > & suffixes )
+QString makeFileFilter( const char * filterName, const QStringVec & suffixes )
 {
 	QString filter;
 	QTextStream filterStream( &filter, QIODevice::WriteOnly );

@@ -10,6 +10,7 @@
 
 
 #include "Essential.hpp"
+#include "CommonTypes.hpp"
 
 #include <QVector>
 #include <QString>
@@ -21,13 +22,13 @@ class QFileInfo;
 //======================================================================================================================
 //  file type recognition
 
-extern const QVector< QString > configFileSuffixes;
+extern const QStringVec configFileSuffixes;
 extern const QString saveFileSuffix;
 extern const QString demoFileSuffix;
 
-extern const QVector< QString > iwadSuffixes;
-extern const QVector< QString > pwadSuffixes;
-extern const QVector< QString > dukeSuffixes;
+extern const QStringVec iwadSuffixes;
+extern const QStringVec pwadSuffixes;
+extern const QStringVec dukeSuffixes;
 
 // convenience wrappers to be used, where otherwise lambda would have to be written
 bool isIWAD( const QFileInfo & file );

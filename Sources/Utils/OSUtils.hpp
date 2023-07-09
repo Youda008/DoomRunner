@@ -10,6 +10,7 @@
 
 
 #include "Essential.hpp"
+#include "CommonTypes.hpp"
 
 #include <QString>
 #include <QList>
@@ -56,8 +57,8 @@ ExecutableTraits getExecutableTraits( const QString & executablePath );
 struct ShellCommand
 {
 	QString executable;
-	QStringList arguments;
-	QStringList extraPermissions;  // extra sandbox permissions needed to run this command
+	QStringVec arguments;
+	QStringVec extraPermissions;  // extra sandbox permissions needed to run this command
 };
 /// Returns a shell command needed to run a specified executable without parameters.
 /** The result may be different based on operating system and where the executable is installed.
@@ -65,7 +66,7 @@ struct ShellCommand
   * \param dirsToBeAccessed Directories to which the executable will need a read access.
   *                         Required to setup permissions for a sandbox environment. */
 ShellCommand getRunCommand(
-	const QString & executablePath, const PathContext & base, const QStringList & dirsToBeAccessed = {}
+	const QString & executablePath, const PathContext & base, const QStringVec & dirsToBeAccessed = {}
 );
 
 
@@ -98,7 +99,7 @@ bool openFileLocation( const QString & filePath );
   * \param targetArgs Command-line arguments for the targetFile, if it's an executable.
   *                   If the arguments contain file path, they must be relative to the workingDir. */
 bool createWindowsShortcut(
-	QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir = "", QString description = ""
+	QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir = "", QString description = ""
 );
 #endif // IS_WINDOWS
 

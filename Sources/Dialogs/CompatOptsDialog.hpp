@@ -11,6 +11,7 @@
 
 #include "DialogCommon.hpp"
 
+#include "CommonTypes.hpp"
 #include "UserData.hpp"  // CompatibilityOptions
 #include "EngineTraits.hpp"  // CompatLevelStyle
 
@@ -37,7 +38,7 @@ class CompatOptsDialog : public QDialog, private DialogCommon {
 	explicit CompatOptsDialog( QWidget * parent, const CompatibilityDetails & compatDetails );
 	virtual ~CompatOptsDialog() override;
 
-	static QStringList getCmdArgsFromOptions( const CompatibilityDetails & compatDetails );
+	static QStringVec getCmdArgsFromOptions( const CompatibilityDetails & compatDetails );
 
  private slots:
 

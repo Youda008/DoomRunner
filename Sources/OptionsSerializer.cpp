@@ -7,6 +7,7 @@
 
 #include "OptionsSerializer.hpp"
 
+#include "CommonTypes.hpp"
 #include "Utils/JsonUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidListItem
 #include "Version.hpp"
@@ -30,17 +31,17 @@ QJsonArray serializeList( const QList< Elem > & list )
 	return jsArray;
 }
 
-QJsonArray serializeStringList( const QList< QString > & list )
+QJsonArray serializeStringVec( const QStringVec & vec )
 {
 	QJsonArray jsArray;
-	for (const auto & elem : list)
+	for (const auto & elem : vec)
 	{
 		jsArray.append( elem );
 	}
 	return jsArray;
 }
 
-void deserializeStringList( const JsonArrayCtx & jsList, QList< QString > & list )
+void deserializeStringVec( const JsonArrayCtx & jsList, QStringVec & list )
 {
 	for (int i = 0; i < jsList.size(); i++)
 	{
@@ -411,7 +412,7 @@ static QJsonObject serialize( const Preset & preset, const StorageSettings & set
 	jsPreset["selected_config"] = preset.selectedConfig;
 	jsPreset["selected_IWAD"] = preset.selectedIWAD;
 
-	jsPreset["selected_mappacks"] = serializeStringList( preset.selectedMapPacks );
+	jsPreset["selected_mappacks"] = serializeStringVec( preset.selectedMapPacks );
 
 	jsPreset["mods"] = serializeList( preset.mods );
 
@@ -462,7 +463,7 @@ static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const 
 
 	if (JsonArrayCtx jsSelectedMapPacks = jsPreset.getArray( "selected_mappacks" ))
 	{
-		deserializeStringList( jsSelectedMapPacks, preset.selectedMapPacks );
+		deserializeStringVec( jsSelectedMapPacks, preset.selectedMapPacks );
 	}
 
 	if (JsonArrayCtx jsMods = jsPreset.getArray( "mods" ))

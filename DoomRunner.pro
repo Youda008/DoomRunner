@@ -61,6 +61,7 @@ HEADERS += \
 	Sources/Widgets/EditableListView.hpp \
 	Sources/Widgets/ExtendedTreeView.hpp \
 	Sources/Widgets/ListModel.hpp \
+	Sources/CommonTypes.hpp \
 	Sources/DoomFileInfo.hpp \
 	Sources/EngineTraits.hpp \
 	Sources/Essential.hpp \
@@ -95,6 +96,7 @@ SOURCES += \
 	Sources/Widgets/EditableListView.cpp \
 	Sources/Widgets/ExtendedTreeView.cpp \
 	Sources/Widgets/ListModel.cpp \
+	Sources/CommonTypes.cpp \
 	Sources/DoomFileInfo.cpp \
 	Sources/EngineTraits.cpp \
 	Sources/MainWindow.cpp \

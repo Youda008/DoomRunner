@@ -16,13 +16,13 @@
 //======================================================================================================================
 //  file type recognition
 
-const QVector< QString > configFileSuffixes = {"ini", "cfg"};
+const QStringVec configFileSuffixes = {"ini", "cfg"};
 const QString saveFileSuffix = "zds";
 const QString demoFileSuffix = "lmp";
 
-const QVector< QString > iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke"};
-const QVector< QString > pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex"};
-const QVector< QString > dukeSuffixes = {"grp", "rff"};
+const QStringVec iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke"};
+const QStringVec pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex"};
+const QStringVec dukeSuffixes = {"grp", "rff"};
 
 // The correct way would be to recognize the type by file header, but there are incorrectly made mods
 // that present themselfs as IWADs, so in order to support those we need to use the file suffix

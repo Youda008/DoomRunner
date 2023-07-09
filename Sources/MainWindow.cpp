@@ -89,9 +89,9 @@ void MainWindow::forEachSelectedMapPack( const Functor & loopBody ) const
 	}
 }
 
-QStringList MainWindow::getSelectedMapPacks() const
+QStringVec MainWindow::getSelectedMapPacks() const
 {
-	QStringList selectedMapPacks;
+	QStringVec selectedMapPacks;
 
 	forEachSelectedMapPack( [&]( const QString & mapPackPath )
 	{
@@ -207,7 +207,7 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 }
 
 // Gets (deduplicated) directories which the engine will need to access (either for reading or writing).
-QStringList MainWindow::getDirsToBeAccessed() const
+QStringVec MainWindow::getDirsToBeAccessed() const
 {
 	QSet< QString > dirSet;  // de-duplicate the paths
 
@@ -216,7 +216,7 @@ QStringList MainWindow::getDirsToBeAccessed() const
 		dirSet.insert( dir );
 	});
 
-	return QStringList( dirSet.begin(), dirSet.end() );
+	return QStringVec( dirSet.begin(), dirSet.end() );
 }
 
 // This needs to be called everytime the user make a change that needs to be saved into the options file.
@@ -782,7 +782,7 @@ void MainWindow::onWindowShown()
 	if (settings.checkForUpdates)
 	{
 		updateChecker.checkForUpdates_async(
-			/* result callback */[ this ]( UpdateChecker::Result result, QString /*errorDetail*/, QStringList versionInfo )
+			/* result callback */[ this ]( UpdateChecker::Result result, QString /*errorDetail*/, QStringVec versionInfo )
 			{
 				if (result == UpdateChecker::UpdateAvailable)
 				{
@@ -1231,7 +1231,7 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 	if (disableSelectionCallbacks)
 		return;
 
-	QStringList selectedMapPacks = getSelectedMapPacks();
+	QStringVec selectedMapPacks = getSelectedMapPacks();
 
 	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedMapPacks, selectedMapPacks );
 
@@ -2533,7 +2533,7 @@ void MainWindow::updateCompatLevels()
 }
 
 // this is not called regularly, but only when an IWAD or map WAD is selected or deselected
-void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringList > selectedMapPacks )
+void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringVec > selectedMapPacks )
 {
 	int selectedIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 	QString selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : "";
@@ -2563,7 +2563,7 @@ void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringList > select
 			break;  // if no IWAD is selected, let's leave this empty, it cannot be launched anyway
 		}
 
-		QStringList selectedWADs = QStringList( selectedIwadPath ) + *selectedMapPacks;
+		auto selectedWADs = QStringVec{ selectedIwadPath } + *selectedMapPacks;
 
 		// read the map names from the selected files and merge them so that entries are not duplicated
 		QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
@@ -2983,7 +2983,7 @@ void MainWindow::restorePreset( int presetIdx )
 
 		wdg::deselectSelectedItems( ui->mapDirView );
 
-		const QList< QString > mapPacksCopy = preset.selectedMapPacks;
+		const QStringVec mapPacksCopy = preset.selectedMapPacks;
 		preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
 		for (const QString & path : mapPacksCopy)
 		{
@@ -3382,7 +3382,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
-	QVector< QString > selectedFiles;
+	QStringVec selectedFiles;
 
 	forEachSelectedMapPack( [&]( const QString & mapFilePath )
 	{
@@ -3542,7 +3542,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 	if (ui->noMusicChkBox->isChecked())
 		cmd.arguments << "-nomusic";
 
-	auto appendCustomArguments = [&]( QStringList & args, const QString & customArgsStr )
+	auto appendCustomArguments = [&]( QStringVec & args, const QString & customArgsStr )
 	{
 		auto splitArgs = splitCommandLineArguments( customArgsStr );
 		for (const auto & arg : splitArgs)
@@ -3645,7 +3645,7 @@ void MainWindow::launch()
 	}
 	else
 	{
-		bool success = QProcess::startDetached( cmd.executable, cmd.arguments );
+		bool success = QProcess::startDetached( cmd.executable, cmd.arguments.toList() );
 		if (!success)
 		{
 			QMessageBox::warning( this, "Launch error", "Failed to execute launch command." );

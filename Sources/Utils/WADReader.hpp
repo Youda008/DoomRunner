@@ -10,9 +10,9 @@
 
 
 #include "Essential.hpp"
+#include "CommonTypes.hpp"
 
 #include <QString>
-#include <QStringList>
 
 
 enum class ReadStatus
@@ -33,7 +33,7 @@ struct WadInfo
 {
 	ReadStatus status = ReadStatus::FailedToRead;
 	WadType type = WadType::Neither;
-	QStringList mapNames;
+	QStringVec mapNames;
 };
 
 /// Reads required data from a wad file and stores it into a cache.

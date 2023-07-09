@@ -11,6 +11,7 @@
 
 #include "Essential.hpp"
 
+#include "CommonTypes.hpp"
 #include "Utils/OSUtils.hpp"  // ExecutableTraits
 
 #include <QString>
@@ -86,10 +87,10 @@ class EngineTraits : private os::ExecutableTraits, private EngineFamilyTraits
 	bool supportsCustomMapNames() const  { return mapParamStyle == MapParamStyle::Map; }
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
-	QStringList getMapArgs( int mapIdx, const QString & mapName ) const;
+	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;
 
 	// generates either "-complevel x" or "+compatmode x" depending on the engine capabilities
-	QStringList getCompatLevelArgs( int compatLevel ) const;
+	QStringVec getCompatLevelArgs( int compatLevel ) const;
 
 	// some engines index monitors from 1 and others from 0
 	QString getCmdMonitorIndex( int ownIndex ) const;

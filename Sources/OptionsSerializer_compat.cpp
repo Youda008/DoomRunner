@@ -54,7 +54,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, 
 
 	if (JsonArrayCtx jsSelectedMapPacks = jsPreset.getArray( "selected_mappacks" ))
 	{
-		deserializeStringList( jsSelectedMapPacks, preset.selectedMapPacks );
+		deserializeStringVec( jsSelectedMapPacks, preset.selectedMapPacks );
 	}
 
 	if (JsonArrayCtx jsMods = jsPreset.getArray( "mods" ))

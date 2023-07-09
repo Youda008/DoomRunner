@@ -8,7 +8,6 @@
 #include "Version.hpp"
 
 #include <QString>
-#include <QStringList>
 
 #include <QDebug>
 

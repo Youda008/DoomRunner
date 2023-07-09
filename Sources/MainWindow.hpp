@@ -173,7 +173,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
 	void updateCompatLevels();
-	void updateMapsFromSelectedWADs( std::optional< QStringList > selectedMapPacks = std::nullopt );
+	void updateMapsFromSelectedWADs( std::optional< QStringVec > selectedMapPacks = std::nullopt );
 
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();
@@ -201,7 +201,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
  private: // MainWindow-specific utils
 
 	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
-	QStringList getSelectedMapPacks() const;
+	QStringVec getSelectedMapPacks() const;
 
 	QString getConfigDir() const;
 	QString getSaveDir() const;
@@ -210,7 +210,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	LaunchMode getLaunchModeFromUI() const;
 
 	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
-	QStringList getDirsToBeAccessed() const;
+	QStringVec getDirsToBeAccessed() const;
 
 	void scheduleSavingOptions( bool storedOptionsModified = true );
 
@@ -244,7 +244,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
 
-	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
+	QStringVec compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 	UpdateChecker updateChecker;
 

@@ -58,7 +58,7 @@ QString getThisAppConfigDir()
 
 QString getThisAppDataDir()
 {
-	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
+	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.local/share/DoomRunner in Linux
  #if IS_WINDOWS
 	QString thisExeDir = QApplication::applicationDirPath();
 	if (fs::isDirectoryWritable( thisExeDir ))

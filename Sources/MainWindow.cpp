@@ -738,6 +738,28 @@ void MainWindow::loadMonitorInfo( QComboBox * box )
 	}
 }
 
+// Backward compatibility: Older versions stored options file in config dir.
+// We need to look if the options file is in the old directory and if it is, move it to the new one.
+static void moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir )
+{
+	if (newOptionsDir.exists( defaultOptionsFileName ))
+	{
+		return;  // always prefer the new one, if it already exists
+	}
+	
+	if (oldOptionsDir.exists( defaultOptionsFileName ))
+	{
+		QString message = 
+			"Found "%QString(defaultOptionsFileName)%" in the old data directory "%oldOptionsDir.path()%". "
+			"Moving it to the new data directory "%newOptionsDir.filePath( defaultOptionsFileName );
+		qInfo().noquote() << "NOTICE:" << message;
+	 #if !IS_WINDOWS
+		QMessageBox::information( nullptr, "Options file has been moved", message );
+	 #endif
+		oldOptionsDir.rename( defaultOptionsFileName, newOptionsDir.filePath( defaultOptionsFileName ) );
+	}
+}
+
 void MainWindow::onWindowShown()
 {
 	// In the constructor, some properties of the window are not yet initialized, like window dimensions,
@@ -746,12 +768,15 @@ void MainWindow::onWindowShown()
 	presetSearchPanel->collapse();  // hide it by default, it's shown on startup
 
 	// create a directory for application data, if it doesn't exist already
-	appDataDir.setPath( os::getThisAppConfigDir() );
+	appDataDir.setPath( os::getThisAppDataDir() );
 	if (!appDataDir.exists())
 	{
 		appDataDir.mkpath(".");
 	}
-
+	
+	// backward compatibility
+	moveOptionsFromOldDir( os::getThisAppConfigDir(), appDataDir );
+	
 	optionsFilePath = appDataDir.filePath( defaultOptionsFileName );
 
 	// try to load last saved state

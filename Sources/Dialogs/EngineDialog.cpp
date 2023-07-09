@@ -110,7 +110,7 @@ static QString getEngineName( const QString & enginePath )
 	if (isWindows())
 		return getDirnameOfFile( enginePath );
 	else
-		return getFileNameFromPath( enginePath );
+		return getFileBasenameFromPath( enginePath );
 }
 
 void EngineDialog::browseEngine()

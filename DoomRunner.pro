@@ -138,8 +138,12 @@ flatpak: DEFINES += FLATPAK_BUILD
 
 #-- deployment -----------------------------------
 
+# add "INSTALL_DIR=/custom/path" to the qmake command to override this default value
+isEmpty(INSTALL_DIR): INSTALL_DIR = /usr/bin
+
 unix: !android
 {
-	target.path = /usr/bin
+	target.path = $$INSTALL_DIR
 }
+
 !isEmpty(target.path): INSTALLS += target

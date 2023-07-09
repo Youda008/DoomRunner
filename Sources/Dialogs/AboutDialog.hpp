@@ -35,7 +35,7 @@ class AboutDialog : public QDialog, private DialogCommon {
 
  private slots:
 
-	void toggleUpdateChecking( bool enabled );
+	void onUpdateCheckingToggled( bool enabled );
 	void checkForUpdate();
 
  private:

@@ -41,25 +41,25 @@ class OptionsStorageDialog : public QDialog, private DialogCommon {
 
  private slots:
 
-	void launchStorage_none();
-	void launchStorage_global();
-	void launchStorage_preset();
+	void onLaunchStorageChosen_none();
+	void onLaunchStorageChosen_global();
+	void onLaunchStorageChosen_preset();
 
-	void gameplayStorage_none();
-	void gameplayStorage_global();
-	void gameplayStorage_preset();
+	void onGameplayStorageChosen_none();
+	void onGameplayStorageChosen_global();
+	void onGameplayStorageChosen_preset();
 
-	void compatStorage_none();
-	void compatStorage_global();
-	void compatStorage_preset();
+	void onCompatStorageChosen_none();
+	void onCompatStorageChosen_global();
+	void onCompatStorageChosen_preset();
 
-	void videoStorage_none();
-	void videoStorage_global();
-	void videoStorage_preset();
+	void onVideoStorageChosen_none();
+	void onVideoStorageChosen_global();
+	void onVideoStorageChosen_preset();
 
-	void audioStorage_none();
-	void audioStorage_global();
-	void audioStorage_preset();
+	void onAudioStorageChosen_none();
+	void onAudioStorageChosen_global();
+	void onAudioStorageChosen_preset();
 
  private: // members
 

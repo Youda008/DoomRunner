@@ -52,11 +52,11 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 	connect( ui->browseEngineBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
 	connect( ui->browseConfigsBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
 
-	connect( ui->nameLine, &QLineEdit::textChanged, this, &thisClass::updateName );
-	connect( ui->pathLine, &QLineEdit::textChanged, this, &thisClass::updatePath );
-	connect( ui->configDirLine, &QLineEdit::textChanged, this, &thisClass::updateConfigDir );
+	connect( ui->nameLine, &QLineEdit::textChanged, this, &thisClass::onNameChanged );
+	connect( ui->pathLine, &QLineEdit::textChanged, this, &thisClass::onPathChanged );
+	connect( ui->configDirLine, &QLineEdit::textChanged, this, &thisClass::onConfigDirChanged );
 
-	connect( ui->familyCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectFamily );
+	connect( ui->familyCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onFamilySelected );
 
 	// this will call the function when the window is fully initialized and displayed
 	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
@@ -207,26 +207,26 @@ void EngineDialog::browseConfigDir()
 	ui->configDirLine->setText( dirPath );
 }
 
-void EngineDialog::updateName( const QString & text )
+void EngineDialog::onNameChanged( const QString & text )
 {
 	engine.name = text;
 }
 
-void EngineDialog::updatePath( const QString & text )
+void EngineDialog::onPathChanged( const QString & text )
 {
 	engine.path = text;
 
 	highlightFilePathIfInvalid( ui->pathLine, text );
 }
 
-void EngineDialog::updateConfigDir( const QString & text )
+void EngineDialog::onConfigDirChanged( const QString & text )
 {
 	engine.configDir = text;
 
 	highlightDirPathIfInvalid( ui->configDirLine, text );
 }
 
-void EngineDialog::selectFamily( int familyIdx )
+void EngineDialog::onFamilySelected( int familyIdx )
 {
 	if (familyIdx < 0 || familyIdx >= int(EngineFamily::_EnumEnd))
 	{

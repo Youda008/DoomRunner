@@ -45,10 +45,10 @@ class EngineDialog : public QDialog, private DialogCommon {
 	void browseEngine();
 	void browseConfigDir();
 
-	void updateName( const QString & text );
-	void updatePath( const QString & text );
-	void updateConfigDir( const QString & text );
-	void selectFamily( int familyIdx );
+	void onNameChanged( const QString & text );
+	void onPathChanged( const QString & text );
+	void onConfigDirChanged( const QString & text );
+	void onFamilySelected( int familyIdx );
 
  public slots: // overridden methods
 

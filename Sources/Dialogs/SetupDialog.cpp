@@ -105,11 +105,11 @@ SetupDialog::SetupDialog(
 	connect( ui->mapDirBtn, &QPushButton::clicked, this, &thisClass::browseMapDir );
 	connect( ui->modDirBtn, &QPushButton::clicked, this, &thisClass::browseModDir );
 
-	connect( ui->iwadDirLine, &QLineEdit::textChanged, this, &thisClass::changeIWADDir );
-	connect( ui->mapDirLine, &QLineEdit::textChanged, this, &thisClass::changeMapDir );
-	connect( ui->modDirLine, &QLineEdit::textChanged, this, &thisClass::changeModDir );
+	connect( ui->iwadDirLine, &QLineEdit::textChanged, this, &thisClass::onIWADDirChanged );
+	connect( ui->mapDirLine, &QLineEdit::textChanged, this, &thisClass::onMapDirChanged );
+	connect( ui->modDirLine, &QLineEdit::textChanged, this, &thisClass::onModDirChanged );
 
-	connect( ui->iwadSubdirs, &QCheckBox::toggled, this, &thisClass::toggleIWADSubdirs );
+	connect( ui->iwadSubdirs, &QCheckBox::toggled, this, &thisClass::onIWADSubdirsToggled );
 
 	connect( ui->iwadBtnAdd, &QPushButton::clicked, this, &thisClass::iwadAdd );
 	connect( ui->iwadBtnDel, &QPushButton::clicked, this, &thisClass::iwadDelete );
@@ -121,15 +121,15 @@ SetupDialog::SetupDialog(
 	connect( ui->engineBtnUp, &QPushButton::clicked, this, &thisClass::engineMoveUp );
 	connect( ui->engineBtnDown, &QPushButton::clicked, this, &thisClass::engineMoveDown );
 
-	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAbsolutePaths );
+	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::onAbsolutePathsToggled );
 
-	connect( ui->styleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectAppStyle );
-	connect( ui->schemeBtn_system, &QRadioButton::clicked, this, &thisClass::setDefaultScheme );
-	connect( ui->schemeBtn_dark, &QRadioButton::clicked, this, &thisClass::setDarkScheme );
-	connect( ui->schemeBtn_light, &QRadioButton::clicked, this, &thisClass::setLightScheme );
+	connect( ui->styleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onAppStyleSelected );
+	connect( ui->schemeBtn_system, &QRadioButton::clicked, this, &thisClass::onDefaultSchemeChosen );
+	connect( ui->schemeBtn_dark, &QRadioButton::clicked, this, &thisClass::onDarkSchemeChosen );
+	connect( ui->schemeBtn_light, &QRadioButton::clicked, this, &thisClass::onLightSchemeChosen );
 
-	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &thisClass::toggleShowEngineOutput );
-	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::toggleCloseOnLaunch );
+	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &thisClass::onShowEngineOutputToggled );
+	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::onCloseOnLaunchToggled );
 
 	connect( ui->doneBtn, &QPushButton::clicked, this, &thisClass::accept );
 
@@ -160,7 +160,7 @@ void SetupDialog::setupEngineList()
 
 	// set reaction to clicks inside the view
 	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::editEngine );
-	connect( ui->engineListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::engineSelectionChanged );
+	connect( ui->engineListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onEngineSelectionChanged );
 
 	// setup enter key detection and reaction
 	ui->engineListView->installEventFilter( &engineConfirmationFilter );
@@ -199,7 +199,7 @@ void SetupDialog::setupIWADList()
 	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );
 
 	// set reaction to clicks inside the view
-	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::iwadSelectionChanged );
+	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onIWADSelectionChanged );
 
 	// setup reaction to key shortcuts and right click
 	ui->iwadListView->toggleContextMenu( true );
@@ -309,7 +309,7 @@ void SetupDialog::engineMoveDown()
 	wdg::moveDownSelectedItem( ui->engineListView, engineModel );
 }
 
-void SetupDialog::engineSelectionChanged( const QItemSelection &, const QItemSelection & )
+void SetupDialog::onEngineSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
 	int selectedIdx = wdg::getSelectedItemIndex( ui->engineListView );
 	setDefaultEngineAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
@@ -386,7 +386,7 @@ void SetupDialog::iwadMoveDown()
 	wdg::moveDownSelectedItem( ui->iwadListView, iwadModel );
 }
 
-void SetupDialog::iwadSelectionChanged( const QItemSelection &, const QItemSelection & )
+void SetupDialog::onIWADSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
 	int selectedIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 	setDefaultIWADAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
@@ -437,7 +437,7 @@ void SetupDialog::manageIWADsAutomatically()
 	toggleAutoIWADUpdate( true );
 }
 
-void SetupDialog::toggleIWADSubdirs( bool checked )
+void SetupDialog::onIWADSubdirsToggled( bool checked )
 {
 	iwadSettings.searchSubdirs = checked;
 
@@ -464,7 +464,7 @@ void SetupDialog::browseModDir()
 	browseDir( this, "with mods", ui->modDirLine );
 }
 
-void SetupDialog::changeIWADDir( const QString & dir )
+void SetupDialog::onIWADDirChanged( const QString & dir )
 {
 	iwadSettings.dir = dir;
 
@@ -474,14 +474,14 @@ void SetupDialog::changeIWADDir( const QString & dir )
 		updateIWADsFromDir();
 }
 
-void SetupDialog::changeMapDir( const QString & dir )
+void SetupDialog::onMapDirChanged( const QString & dir )
 {
 	mapSettings.dir = dir;
 
 	highlightDirPathIfInvalid( ui->mapDirLine, dir );
 }
 
-void SetupDialog::changeModDir( const QString & dir )
+void SetupDialog::onModDirChanged( const QString & dir )
 {
 	modSettings.dir = dir;
 
@@ -497,7 +497,7 @@ void SetupDialog::updateIWADsFromDir()
 //----------------------------------------------------------------------------------------------------------------------
 //  theme options
 
-void SetupDialog::selectAppStyle( int index )
+void SetupDialog::onAppStyleSelected( int index )
 {
 	if (index == 0)
 		settings.appStyle.clear();
@@ -507,14 +507,14 @@ void SetupDialog::selectAppStyle( int index )
 	themes::setAppStyle( settings.appStyle );
 }
 
-void SetupDialog::setDefaultScheme()
+void SetupDialog::onDefaultSchemeChosen()
 {
 	settings.colorScheme = ColorScheme::SystemDefault;
 
 	themes::setAppColorScheme( settings.colorScheme );
 }
 
-void SetupDialog::setDarkScheme()
+void SetupDialog::onDarkSchemeChosen()
 {
 	settings.colorScheme = ColorScheme::Dark;
 
@@ -527,7 +527,7 @@ void SetupDialog::setDarkScheme()
 	}
 }
 
-void SetupDialog::setLightScheme()
+void SetupDialog::onLightSchemeChosen()
 {
 	settings.colorScheme = ColorScheme::Light;
 
@@ -538,7 +538,7 @@ void SetupDialog::setLightScheme()
 //----------------------------------------------------------------------------------------------------------------------
 //  other
 
-void SetupDialog::toggleAbsolutePaths( bool checked )
+void SetupDialog::onAbsolutePathsToggled( bool checked )
 {
 	settings.pathStyle = checked ? PathStyle::Absolute : PathStyle::Relative;
 
@@ -566,7 +566,7 @@ void SetupDialog::toggleAbsolutePaths( bool checked )
 	ui->modDirLine->setText( modSettings.dir );
 }
 
-void SetupDialog::toggleShowEngineOutput( bool checked )
+void SetupDialog::onShowEngineOutputToggled( bool checked )
 {
 	settings.showEngineOutput = checked;
 
@@ -577,7 +577,7 @@ void SetupDialog::toggleShowEngineOutput( bool checked )
 	}
 }
 
-void SetupDialog::toggleCloseOnLaunch( bool checked )
+void SetupDialog::onCloseOnLaunchToggled( bool checked )
 {
 	settings.closeOnLaunch = checked;
 

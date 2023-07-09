@@ -485,22 +485,22 @@ MainWindow::MainWindow()
 
 	// we use custom model for engines, because we want to display the same list differently in different window
 	ui->engineCmbBox->setModel( &engineModel );
-	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectEngine );
+	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onEngineSelected );
 
 	configModel.append({""});  // always have an empty item, so that index doesn't have to switch between -1 and 0
 	ui->configCmbBox->setModel( &configModel );
-	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectConfig );
+	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onConfigSelected );
 
 	ui->saveFileCmbBox->setModel( &saveModel );
-	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSavedGame );
+	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onSavedGameSelected );
 
 	ui->demoFileCmbBox_replay->setModel( &demoModel );
-	connect( ui->demoFileCmbBox_replay, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectDemoFile_replay );
+	connect( ui->demoFileCmbBox_replay, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onDemoFileSelected_replay );
 
-	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::changeMap );
-	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &thisClass::changeMap_demo );
+	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::onMapChanged );
+	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &thisClass::onMapChanged_demo );
 
-	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::changeDemoFile_record );
+	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::onDemoFileChanged_record );
 
 	ui->compatLevelCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
 
@@ -523,58 +523,58 @@ MainWindow::MainWindow()
 	// setup launch options callbacks
 
 	// launch mode
-	connect( ui->launchMode_default, &QRadioButton::clicked, this, &thisClass::modeDefault );
-	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::modeLaunchMap );
-	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::modeSavedGame );
-	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &thisClass::modeRecordDemo );
-	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &thisClass::modeReplayDemo );
+	connect( ui->launchMode_default, &QRadioButton::clicked, this, &thisClass::onModeChosen_Default );
+	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::onModeChosen_LaunchMap );
+	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::onModeChosen_SavedGame );
+	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &thisClass::onModeChosen_RecordDemo );
+	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &thisClass::onModeChosen_ReplayDemo );
 
 	// mutiplayer
-	connect( ui->multiplayerGrpBox, &QGroupBox::toggled, this, &thisClass::toggleMultiplayer );
-	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMultRole );
-	connect( ui->hostnameLine, &QLineEdit::textChanged, this, &thisClass::changeHost );
-	connect( ui->portSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changePort );
-	connect( ui->netModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectNetMode );
-	connect( ui->gameModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectGameMode );
-	connect( ui->playerCountSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changePlayerCount );
-	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::changeTeamDamage );
-	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeTimeLimit );
-	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeFragLimit );
+	connect( ui->multiplayerGrpBox, &QGroupBox::toggled, this, &thisClass::onMultiplayerToggled );
+	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onMultRoleSelected );
+	connect( ui->hostnameLine, &QLineEdit::textChanged, this, &thisClass::onHostChanged );
+	connect( ui->portSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onPortChanged );
+	connect( ui->netModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onNetModeSelected );
+	connect( ui->gameModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onGameModeSelected );
+	connect( ui->playerCountSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onPlayerCountChanged );
+	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::onTeamDamageChanged );
+	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onTimeLimitChanged );
+	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onFragLimitChanged );
 
 	// gameplay
-	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectSkill );
-	connect( ui->skillSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::changeSkillNum );
-	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoMonsters );
-	connect( ui->fastMonstersChkBox, &QCheckBox::toggled, this, &thisClass::toggleFastMonsters );
-	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::toggleMonstersRespawn );
+	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onSkillSelected );
+	connect( ui->skillSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onSkillNumChanged );
+	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &thisClass::onNoMonstersToggled );
+	connect( ui->fastMonstersChkBox, &QCheckBox::toggled, this, &thisClass::onFastMonstersToggled );
+	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::onMonstersRespawnToggled );
 	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runGameOptsDialog );
 	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatOptsDialog );
-	connect( ui->compatLevelCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectCompatLevel );
-	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::toggleAllowCheats );
+	connect( ui->compatLevelCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onCompatLevelSelected );
+	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::onAllowCheatsToggled );
 
 	// alternative paths
-	connect( ui->usePresetNameChkBox, &QCheckBox::toggled, this, &thisClass::toggleUsePresetName );
-	connect( ui->saveDirLine, &QLineEdit::textChanged, this, &thisClass::changeSaveDir );
-	connect( ui->screenshotDirLine, &QLineEdit::textChanged, this, &thisClass::changeScreenshotDir );
+	connect( ui->usePresetNameChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameToggled );
+	connect( ui->saveDirLine, &QLineEdit::textChanged, this, &thisClass::onSaveDirChanged );
+	connect( ui->screenshotDirLine, &QLineEdit::textChanged, this, &thisClass::onScreenshotDirChanged );
 	connect( ui->saveDirBtn, &QPushButton::clicked, this, &thisClass::browseSaveDir );
 	connect( ui->screenshotDirBtn, &QPushButton::clicked, this, &thisClass::browseScreenshotDir );
 
 	// video
 	loadMonitorInfo( ui->monitorCmbBox );
-	connect( ui->monitorCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::selectMonitor );
-	connect( ui->resolutionXLine, &QLineEdit::textChanged, this, &thisClass::changeResolutionX );
-	connect( ui->resolutionYLine, &QLineEdit::textChanged, this, &thisClass::changeResolutionY );
-	connect( ui->showFpsChkBox, &QCheckBox::toggled, this, &thisClass::toggleShowFps );
+	connect( ui->monitorCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onMonitorSelected );
+	connect( ui->resolutionXLine, &QLineEdit::textChanged, this, &thisClass::onResolutionXChanged );
+	connect( ui->resolutionYLine, &QLineEdit::textChanged, this, &thisClass::onResolutionYChanged );
+	connect( ui->showFpsChkBox, &QCheckBox::toggled, this, &thisClass::onShowFpsToggled );
 
 	// audio
-	connect( ui->noSoundChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoSound );
-	connect( ui->noSfxChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoSFX);
-	connect( ui->noMusicChkBox, &QCheckBox::toggled, this, &thisClass::toggleNoMusic );
+	connect( ui->noSoundChkBox, &QCheckBox::toggled, this, &thisClass::onNoSoundToggled );
+	connect( ui->noSfxChkBox, &QCheckBox::toggled, this, &thisClass::onNoSFXToggled);
+	connect( ui->noMusicChkBox, &QCheckBox::toggled, this, &thisClass::onNoMusicToggled );
 
 	// setup the rest of widgets
 
-	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updatePresetCmdArgs );
-	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::updateGlobalCmdArgs );
+	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onPresetCmdArgsChanged );
+	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onGlobalCmdArgsChanged );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
 
 	// this will call the function when the window is fully initialized and displayed
@@ -595,16 +595,16 @@ void MainWindow::setupPresetList()
 	presetModel.toggleEditing( true );
 	ui->presetListView->toggleNameEditing( true );
 	ui->presetListView->toggleListModifications( true );
-	connect( &presetModel, &QAbstractListModel::dataChanged, this, &thisClass::presetDataChanged );
+	connect( &presetModel, &QAbstractListModel::dataChanged, this, &thisClass::onPresetDataChanged );
 
 	// set drag&drop behaviour
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
-	connect( ui->presetListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::presetsReordered );
+	connect( ui->presetListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::onPresetsReordered );
 
 	// set reaction when an item is selected
-	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::togglePreset );
+	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onPresetToggled );
 
 	// setup reaction to key shortcuts and right click
 	ui->presetListView->toggleContextMenu( true );
@@ -633,7 +633,7 @@ void MainWindow::setupIWADList()
 	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
 	// set reaction when an item is selected
-	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::toggleIWAD );
+	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onIWADToggled );
 }
 
 void MainWindow::setupMapPackList()
@@ -673,7 +673,7 @@ void MainWindow::setupMapPackList()
 	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
 
 	// set reaction when an item is selected
-	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::toggleMapPack );
+	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onMapPackToggled );
 	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
 }
 
@@ -700,10 +700,10 @@ void MainWindow::setupModList()
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
 	ui->modListView->toggleInterWidgetDragAndDrop( true );
 	ui->modListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::modsDropped );
+	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::onModsDropped );
 
 	// set reaction when an item is checked or unchecked
-	connect( &modModel, &QAbstractListModel::dataChanged, this, &thisClass::modDataChanged );
+	connect( &modModel, &QAbstractListModel::dataChanged, this, &thisClass::onModDataChanged );
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
@@ -960,9 +960,9 @@ void MainWindow::runSetupDialog()
 		// If the previously selected items were not found in the updated lists,
 		// call the callbacks manually because they were disabled.
 		if (!currentEngine.isEmpty() && !engineFound)
-			selectEngine( -1 );
+			onEngineSelected( -1 );
 		if (!selectedIWAD.isEmpty() && !iwadFound)
-			toggleIWAD( QItemSelection(), QItemSelection()/*TODO*/ );
+			onIWADToggled( QItemSelection(), QItemSelection()/*TODO*/ );
 
 		scheduleSavingOptions();
 
@@ -1109,7 +1109,7 @@ void MainWindow::autoselectItems()
 	}
 }
 
-void MainWindow::togglePreset( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
+void MainWindow::onPresetToggled( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
 	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0 && !presetModel[ selectedPresetIdx ].isSeparator)
@@ -1156,7 +1156,7 @@ void MainWindow::clearPresetSubWidgets()
 	ui->presetCmdArgsLine->clear();
 }
 
-void MainWindow::selectEngine( int index )
+void MainWindow::onEngineSelected( int index )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1187,7 +1187,7 @@ void MainWindow::selectEngine( int index )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectConfig( int index )
+void MainWindow::onConfigSelected( int index )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1210,7 +1210,7 @@ void MainWindow::selectConfig( int index )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
+void MainWindow::onIWADToggled( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1226,7 +1226,7 @@ void MainWindow::toggleIWAD( const QItemSelection & /*selected*/, const QItemSel
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
+void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1267,7 +1267,7 @@ void MainWindow::toggleMapPack( const QItemSelection & /*selected*/, const QItem
 	updateLaunchCommand();
 }
 
-void MainWindow::presetDataChanged( const QModelIndex & topLeft, const QModelIndex &, const QVector<int> & roles )
+void MainWindow::onPresetDataChanged( const QModelIndex & topLeft, const QModelIndex &, const QVector<int> & roles )
 {
 	int editedIdx = topLeft.row();  // there cannot be more than 1 items edited at a time
 
@@ -1284,7 +1284,7 @@ void MainWindow::presetDataChanged( const QModelIndex & topLeft, const QModelInd
 	scheduleSavingOptions( true );  // there's no way to determine if the name has changed, because the value in the model is already modified.
 }
 
-void MainWindow::modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles )
+void MainWindow::onModDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles )
 {
 	int topModIdx = topLeft.row();
 	int bottomModIdx = bottomRight.row();
@@ -1473,7 +1473,7 @@ void MainWindow::presetInsertSeparator()
 	scheduleSavingOptions();
 }
 
-void MainWindow::presetsReordered()
+void MainWindow::onPresetsReordered()
 {
 	scheduleSavingOptions();
 }
@@ -1704,7 +1704,7 @@ void MainWindow::modToggleIcons()
 	scheduleSavingOptions();
 }
 
-void MainWindow::modsDropped( int dropRow, int count )
+void MainWindow::onModsDropped( int dropRow, int count )
 {
 	// update the preset
 	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
@@ -1736,7 +1736,7 @@ void MainWindow::modsDropped( int dropRow, int count )
 //----------------------------------------------------------------------------------------------------------------------
 //  launch mode
 
-void MainWindow::modeDefault()
+void MainWindow::onModeChosen_Default()
 {
 	bool storageModified = STORE_LAUNCH_OPTION( mode, Default );
 
@@ -1758,7 +1758,7 @@ void MainWindow::modeDefault()
 	updateLaunchCommand();
 }
 
-void MainWindow::modeLaunchMap()
+void MainWindow::onModeChosen_LaunchMap()
 {
 	bool storageModified = STORE_LAUNCH_OPTION( mode, LaunchMap );
 
@@ -1780,7 +1780,7 @@ void MainWindow::modeLaunchMap()
 	updateLaunchCommand();
 }
 
-void MainWindow::modeSavedGame()
+void MainWindow::onModeChosen_SavedGame()
 {
 	bool storageModified = STORE_LAUNCH_OPTION( mode, LoadSave );
 
@@ -1797,7 +1797,7 @@ void MainWindow::modeSavedGame()
 	updateLaunchCommand();
 }
 
-void MainWindow::modeRecordDemo()
+void MainWindow::onModeChosen_RecordDemo()
 {
 	bool storageModified = STORE_LAUNCH_OPTION( mode, RecordDemo );
 
@@ -1814,7 +1814,7 @@ void MainWindow::modeRecordDemo()
 	updateLaunchCommand();
 }
 
-void MainWindow::modeReplayDemo()
+void MainWindow::onModeChosen_ReplayDemo()
 {
 	bool storageModified = STORE_LAUNCH_OPTION( mode, ReplayDemo );
 
@@ -1852,7 +1852,7 @@ void MainWindow::toggleOptionsSubwidgets( bool enabled )
 	ui->compatLevelCmbBox->setEnabled( enabled && lastCompLvlStyle != CompatLevelStyle::None );
 }
 
-void MainWindow::changeMap( const QString & mapName )
+void MainWindow::onMapChanged( const QString & mapName )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1863,7 +1863,7 @@ void MainWindow::changeMap( const QString & mapName )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeMap_demo( const QString & mapName )
+void MainWindow::onMapChanged_demo( const QString & mapName )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1874,7 +1874,7 @@ void MainWindow::changeMap_demo( const QString & mapName )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectSavedGame( int saveIdx )
+void MainWindow::onSavedGameSelected( int saveIdx )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1887,7 +1887,7 @@ void MainWindow::selectSavedGame( int saveIdx )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeDemoFile_record( const QString & fileName )
+void MainWindow::onDemoFileChanged_record( const QString & fileName )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1898,7 +1898,7 @@ void MainWindow::changeDemoFile_record( const QString & fileName )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectDemoFile_replay( int demoIdx )
+void MainWindow::onDemoFileSelected_replay( int demoIdx )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1915,7 +1915,7 @@ void MainWindow::selectDemoFile_replay( int demoIdx )
 //----------------------------------------------------------------------------------------------------------------------
 //  gameplay options
 
-void MainWindow::selectSkill( int comboBoxIdx )
+void MainWindow::onSkillSelected( int comboBoxIdx )
 {
 	// skillIdx is an index in the combo-box which starts from 0, but Doom skill number actually starts from 1
 	int skillIdx = comboBoxIdx + 1;
@@ -1932,7 +1932,7 @@ void MainWindow::selectSkill( int comboBoxIdx )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeSkillNum( int skillNum )
+void MainWindow::onSkillNumChanged( int skillNum )
 {
 	bool storageModified = STORE_GAMEPLAY_OPTION( skillNum, skillNum );
 
@@ -1940,7 +1940,7 @@ void MainWindow::changeSkillNum( int skillNum )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleNoMonsters( bool checked )
+void MainWindow::onNoMonstersToggled( bool checked )
 {
 	bool storageModified = STORE_GAMEPLAY_OPTION( noMonsters, checked );
 
@@ -1948,7 +1948,7 @@ void MainWindow::toggleNoMonsters( bool checked )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleFastMonsters( bool checked )
+void MainWindow::onFastMonstersToggled( bool checked )
 {
 	bool storageModified = STORE_GAMEPLAY_OPTION( fastMonsters, checked );
 
@@ -1956,7 +1956,7 @@ void MainWindow::toggleFastMonsters( bool checked )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleMonstersRespawn( bool checked )
+void MainWindow::onMonstersRespawnToggled( bool checked )
 {
 	bool storageModified = STORE_GAMEPLAY_OPTION( monstersRespawn, checked );
 
@@ -1964,7 +1964,7 @@ void MainWindow::toggleMonstersRespawn( bool checked )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleAllowCheats( bool checked )
+void MainWindow::onAllowCheatsToggled( bool checked )
 {
 	bool storageModified = STORE_GAMEPLAY_OPTION( allowCheats, checked );
 
@@ -1976,7 +1976,7 @@ void MainWindow::toggleAllowCheats( bool checked )
 //----------------------------------------------------------------------------------------------------------------------
 //  compatibility
 
-void MainWindow::selectCompatLevel( int compatLevel )
+void MainWindow::onCompatLevelSelected( int compatLevel )
 {
 	if (disableSelectionCallbacks)
 		return;
@@ -1991,7 +1991,7 @@ void MainWindow::selectCompatLevel( int compatLevel )
 //----------------------------------------------------------------------------------------------------------------------
 //  multiplayer
 
-void MainWindow::toggleMultiplayer( bool checked )
+void MainWindow::onMultiplayerToggled( bool checked )
 {
 	bool storageModified = STORE_MULT_OPTION( isMultiplayer, checked );
 
@@ -2037,7 +2037,7 @@ void MainWindow::toggleMultiplayer( bool checked )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectMultRole( int role )
+void MainWindow::onMultRoleSelected( int role )
 {
 	bool storageModified = STORE_MULT_OPTION( multRole, MultRole(role) );
 
@@ -2069,7 +2069,7 @@ void MainWindow::selectMultRole( int role )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeHost( const QString & hostName )
+void MainWindow::onHostChanged( const QString & hostName )
 {
 	bool storageModified = STORE_MULT_OPTION( hostName, hostName );
 
@@ -2077,7 +2077,7 @@ void MainWindow::changeHost( const QString & hostName )
 	updateLaunchCommand();
 }
 
-void MainWindow::changePort( int port )
+void MainWindow::onPortChanged( int port )
 {
 	bool storageModified = STORE_MULT_OPTION( port, uint16_t(port) );
 
@@ -2085,7 +2085,7 @@ void MainWindow::changePort( int port )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectNetMode( int netMode )
+void MainWindow::onNetModeSelected( int netMode )
 {
 	bool storageModified = STORE_MULT_OPTION( netMode, NetMode(netMode) );
 
@@ -2093,7 +2093,7 @@ void MainWindow::selectNetMode( int netMode )
 	updateLaunchCommand();
 }
 
-void MainWindow::selectGameMode( int gameMode )
+void MainWindow::onGameModeSelected( int gameMode )
 {
 	bool storageModified = STORE_MULT_OPTION( gameMode, GameMode(gameMode) );
 
@@ -2110,7 +2110,7 @@ void MainWindow::selectGameMode( int gameMode )
 	updateLaunchCommand();
 }
 
-void MainWindow::changePlayerCount( int count )
+void MainWindow::onPlayerCountChanged( int count )
 {
 	bool storageModified = STORE_MULT_OPTION( playerCount, uint( count ) );
 
@@ -2118,7 +2118,7 @@ void MainWindow::changePlayerCount( int count )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeTeamDamage( double damage )
+void MainWindow::onTeamDamageChanged( double damage )
 {
  #pragma GCC diagnostic push
  #pragma GCC diagnostic ignored "-Wfloat-equal"
@@ -2129,7 +2129,7 @@ void MainWindow::changeTeamDamage( double damage )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeTimeLimit( int timeLimit )
+void MainWindow::onTimeLimitChanged( int timeLimit )
 {
 	bool storageModified = STORE_MULT_OPTION( timeLimit, uint(timeLimit) );
 
@@ -2137,7 +2137,7 @@ void MainWindow::changeTimeLimit( int timeLimit )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeFragLimit( int fragLimit )
+void MainWindow::onFragLimitChanged( int fragLimit )
 {
 	bool storageModified = STORE_MULT_OPTION( fragLimit, uint(fragLimit) );
 
@@ -2170,7 +2170,7 @@ void MainWindow::setAltDirsRelativeToConfigs( const QString & dirName )
 	}
 }
 
-void MainWindow::toggleUsePresetName( bool checked )
+void MainWindow::onUsePresetNameToggled( bool checked )
 {
 	bool storageModified = STORE_GLOBAL_OPTION( usePresetNameAsDir, checked );
 
@@ -2191,7 +2191,7 @@ void MainWindow::toggleUsePresetName( bool checked )
 	scheduleSavingOptions( storageModified );
 }
 
-void MainWindow::changeSaveDir( const QString & dir )
+void MainWindow::onSaveDirChanged( const QString & dir )
 {
 	// Unlike the other launch options, here we in fact want to overwrite the stored value even during restoring,
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
@@ -2206,7 +2206,7 @@ void MainWindow::changeSaveDir( const QString & dir )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeScreenshotDir( const QString & dir )
+void MainWindow::onScreenshotDirChanged( const QString & dir )
 {
 	// Unlike the other launch options, here we in fact want to overwrite the stored value even during restoring,
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
@@ -2232,7 +2232,7 @@ void MainWindow::browseScreenshotDir()
 //----------------------------------------------------------------------------------------------------------------------
 //  video options
 
-void MainWindow::selectMonitor( int index )
+void MainWindow::onMonitorSelected( int index )
 {
 	bool storageModified = STORE_VIDEO_OPTION( monitorIdx, index );
 
@@ -2240,7 +2240,7 @@ void MainWindow::selectMonitor( int index )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeResolutionX( const QString & xStr )
+void MainWindow::onResolutionXChanged( const QString & xStr )
 {
 	bool storageModified = STORE_VIDEO_OPTION( resolutionX, xStr.toUInt() );
 
@@ -2248,7 +2248,7 @@ void MainWindow::changeResolutionX( const QString & xStr )
 	updateLaunchCommand();
 }
 
-void MainWindow::changeResolutionY( const QString & yStr )
+void MainWindow::onResolutionYChanged( const QString & yStr )
 {
 	bool storageModified = STORE_VIDEO_OPTION( resolutionY, yStr.toUInt() );
 
@@ -2256,7 +2256,7 @@ void MainWindow::changeResolutionY( const QString & yStr )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleShowFps( bool checked )
+void MainWindow::onShowFpsToggled( bool checked )
 {
 	bool storageModified = STORE_VIDEO_OPTION( showFPS, checked );
 
@@ -2268,7 +2268,7 @@ void MainWindow::toggleShowFps( bool checked )
 //----------------------------------------------------------------------------------------------------------------------
 //  audio options
 
-void MainWindow::toggleNoSound( bool checked )
+void MainWindow::onNoSoundToggled( bool checked )
 {
 	bool storageModified = STORE_AUDIO_OPTION( noSound, checked );
 
@@ -2276,7 +2276,7 @@ void MainWindow::toggleNoSound( bool checked )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleNoSFX( bool checked )
+void MainWindow::onNoSFXToggled( bool checked )
 {
 	bool storageModified = STORE_AUDIO_OPTION( noSFX, checked );
 
@@ -2284,7 +2284,7 @@ void MainWindow::toggleNoSFX( bool checked )
 	updateLaunchCommand();
 }
 
-void MainWindow::toggleNoMusic( bool checked )
+void MainWindow::onNoMusicToggled( bool checked )
 {
 	bool storageModified = STORE_AUDIO_OPTION( noMusic, checked );
 
@@ -2296,7 +2296,7 @@ void MainWindow::toggleNoMusic( bool checked )
 //----------------------------------------------------------------------------------------------------------------------
 //  additional command line arguments
 
-void MainWindow::updatePresetCmdArgs( const QString & text )
+void MainWindow::onPresetCmdArgsChanged( const QString & text )
 {
 	bool storageModified = STORE_PRESET_OPTION( cmdArgs, text );
 
@@ -2304,7 +2304,7 @@ void MainWindow::updatePresetCmdArgs( const QString & text )
 	updateLaunchCommand();
 }
 
-void MainWindow::updateGlobalCmdArgs( const QString & text )
+void MainWindow::onGlobalCmdArgsChanged( const QString & text )
 {
 	bool storageModified = STORE_GLOBAL_OPTION( cmdArgs, text );
 
@@ -2412,7 +2412,7 @@ void MainWindow::updateIWADsFromDir()
 	if (!wdg::areSelectionsEqual( newSelection, origSelection ))
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		toggleIWAD( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+		onIWADToggled( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
 	}
 }
 
@@ -2443,7 +2443,7 @@ void MainWindow::updateConfigFilesFromDir()
 	if (newConfigIdx != origConfigIdx)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		selectConfig( newConfigIdx );
+		onConfigSelected( newConfigIdx );
 	}
 }
 
@@ -2466,7 +2466,7 @@ void MainWindow::updateSaveFilesFromDir()
 	if (newSaveIdx != origSaveIdx)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		selectSavedGame( newSaveIdx );
+		onSavedGameSelected( newSaveIdx );
 	}
 }
 
@@ -2489,7 +2489,7 @@ void MainWindow::updateDemoFilesFromDir()
 	if (newDemoIdx != origDemoIdx)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		selectDemoFile_replay( newDemoIdx );
+		onDemoFileSelected_replay( newDemoIdx );
 	}
 }
 
@@ -2520,7 +2520,7 @@ void MainWindow::updateCompatLevels()
 		disableSelectionCallbacks = false;
 
 		// available compat levels changed -> reset the compat level index, because the previous one is no longer valid
-		selectCompatLevel( 0 );
+		onCompatLevelSelected( 0 );
 
 		// keep the widget enabled only if the engine supports compatibility levels
 		LaunchMode launchMode = getLaunchModeFromUI();
@@ -2603,12 +2603,12 @@ void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringList > select
 	if (ui->mapCmbBox->currentText() != origText)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		changeMap( ui->mapCmbBox->currentText() );
+		onMapChanged( ui->mapCmbBox->currentText() );
 	}
 	if (ui->mapCmbBox_demo->currentText() != origText_demo)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		changeMap_demo( ui->mapCmbBox->currentText() );
+		onMapChanged_demo( ui->mapCmbBox->currentText() );
 	}
 }
 
@@ -2900,7 +2900,7 @@ void MainWindow::restorePreset( int presetIdx )
 
 		// manually notify our class about the change, so that the preset and dependent widgets get updated
 		// This is needed before configs, saves and demos are restored, so that the entries are ready to be selected from.
-		selectEngine( ui->engineCmbBox->currentIndex() );
+		onEngineSelected( ui->engineCmbBox->currentIndex() );
 	}
 
 	// restore selected config
@@ -2933,7 +2933,7 @@ void MainWindow::restorePreset( int presetIdx )
 		disableSelectionCallbacks = false;
 
 		// manually notify our class about the change, so that the preset and dependent widgets get updated
-		selectConfig( ui->configCmbBox->currentIndex() );
+		onConfigSelected( ui->configCmbBox->currentIndex() );
 	}
 
 	// restore selected IWAD
@@ -2972,7 +2972,7 @@ void MainWindow::restorePreset( int presetIdx )
 
 		// manually notify our class about the change, so that the preset and dependent widgets get updated
 		// This is needed before launch options are restored, so that the map names are ready to be selected.
-		toggleIWAD( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+		onIWADToggled( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
 	}
 
 	// restore selected MapPack
@@ -3014,7 +3014,7 @@ void MainWindow::restorePreset( int presetIdx )
 
 		// manually notify our class about the change, so that the preset and dependent widgets get updated
 		// Because this updates the preset with selected items, only the valid ones will be stored and invalid removed.
-		toggleMapPack( ui->mapDirView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+		onMapPackToggled( ui->mapDirView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
 	}
 
 	// restore list of mods

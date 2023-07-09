@@ -31,25 +31,25 @@ OptionsStorageDialog::OptionsStorageDialog( QWidget * parent, const StorageSetti
 
 	// setup buttons
 
-	connect( ui->launchBtn_none, &QRadioButton::clicked, this, &thisClass::launchStorage_none );
-	connect( ui->launchBtn_global, &QRadioButton::clicked, this, &thisClass::launchStorage_global );
-	connect( ui->launchBtn_preset, &QRadioButton::clicked, this, &thisClass::launchStorage_preset );
+	connect( ui->launchBtn_none, &QRadioButton::clicked, this, &thisClass::onLaunchStorageChosen_none );
+	connect( ui->launchBtn_global, &QRadioButton::clicked, this, &thisClass::onLaunchStorageChosen_global );
+	connect( ui->launchBtn_preset, &QRadioButton::clicked, this, &thisClass::onLaunchStorageChosen_preset );
 
-	connect( ui->gameplayBtn_none, &QRadioButton::clicked, this, &thisClass::gameplayStorage_none );
-	connect( ui->gameplayBtn_global, &QRadioButton::clicked, this, &thisClass::gameplayStorage_global );
-	connect( ui->gameplayBtn_preset, &QRadioButton::clicked, this, &thisClass::gameplayStorage_preset );
+	connect( ui->gameplayBtn_none, &QRadioButton::clicked, this, &thisClass::onGameplayStorageChosen_none );
+	connect( ui->gameplayBtn_global, &QRadioButton::clicked, this, &thisClass::onGameplayStorageChosen_global );
+	connect( ui->gameplayBtn_preset, &QRadioButton::clicked, this, &thisClass::onGameplayStorageChosen_preset );
 
-	connect( ui->compatBtn_none, &QRadioButton::clicked, this, &thisClass::compatStorage_none );
-	connect( ui->compatBtn_global, &QRadioButton::clicked, this, &thisClass::compatStorage_global );
-	connect( ui->compatBtn_preset, &QRadioButton::clicked, this, &thisClass::compatStorage_preset );
+	connect( ui->compatBtn_none, &QRadioButton::clicked, this, &thisClass::onCompatStorageChosen_none );
+	connect( ui->compatBtn_global, &QRadioButton::clicked, this, &thisClass::onCompatStorageChosen_global );
+	connect( ui->compatBtn_preset, &QRadioButton::clicked, this, &thisClass::onCompatStorageChosen_preset );
 
-	connect( ui->videoBtn_none, &QRadioButton::clicked, this, &thisClass::videoStorage_none );
-	connect( ui->videoBtn_global, &QRadioButton::clicked, this, &thisClass::videoStorage_global );
-	connect( ui->videoBtn_preset, &QRadioButton::clicked, this, &thisClass::videoStorage_preset );
+	connect( ui->videoBtn_none, &QRadioButton::clicked, this, &thisClass::onVideoStorageChosen_none );
+	connect( ui->videoBtn_global, &QRadioButton::clicked, this, &thisClass::onVideoStorageChosen_global );
+	connect( ui->videoBtn_preset, &QRadioButton::clicked, this, &thisClass::onVideoStorageChosen_preset );
 
-	connect( ui->audioBtn_none, &QRadioButton::clicked, this, &thisClass::audioStorage_none );
-	connect( ui->audioBtn_global, &QRadioButton::clicked, this, &thisClass::audioStorage_global );
-	connect( ui->audioBtn_preset, &QRadioButton::clicked, this, &thisClass::audioStorage_preset );
+	connect( ui->audioBtn_none, &QRadioButton::clicked, this, &thisClass::onAudioStorageChosen_none );
+	connect( ui->audioBtn_global, &QRadioButton::clicked, this, &thisClass::onAudioStorageChosen_global );
+	connect( ui->audioBtn_preset, &QRadioButton::clicked, this, &thisClass::onAudioStorageChosen_preset );
 }
 
 void OptionsStorageDialog::restoreStorage( OptionsStorage storage, QRadioButton * noneBtn, QRadioButton * globalBtn, QRadioButton * presetBtn )
@@ -71,77 +71,77 @@ OptionsStorageDialog::~OptionsStorageDialog()
 //----------------------------------------------------------------------------------------------------------------------
 //  slots
 
-void OptionsStorageDialog::launchStorage_none()
+void OptionsStorageDialog::onLaunchStorageChosen_none()
 {
 	storageSettings.launchOptsStorage = DontStore;
 }
 
-void OptionsStorageDialog::launchStorage_global()
+void OptionsStorageDialog::onLaunchStorageChosen_global()
 {
 	storageSettings.launchOptsStorage = StoreGlobally;
 }
 
-void OptionsStorageDialog::launchStorage_preset()
+void OptionsStorageDialog::onLaunchStorageChosen_preset()
 {
 	storageSettings.launchOptsStorage = StoreToPreset;
 }
 
-void OptionsStorageDialog::gameplayStorage_none()
+void OptionsStorageDialog::onGameplayStorageChosen_none()
 {
 	storageSettings.gameOptsStorage = DontStore;
 }
 
-void OptionsStorageDialog::gameplayStorage_global()
+void OptionsStorageDialog::onGameplayStorageChosen_global()
 {
 	storageSettings.gameOptsStorage = StoreGlobally;
 }
 
-void OptionsStorageDialog::gameplayStorage_preset()
+void OptionsStorageDialog::onGameplayStorageChosen_preset()
 {
 	storageSettings.gameOptsStorage = StoreToPreset;
 }
 
-void OptionsStorageDialog::compatStorage_none()
+void OptionsStorageDialog::onCompatStorageChosen_none()
 {
 	storageSettings.compatOptsStorage = DontStore;
 }
 
-void OptionsStorageDialog::compatStorage_global()
+void OptionsStorageDialog::onCompatStorageChosen_global()
 {
 	storageSettings.compatOptsStorage = StoreGlobally;
 }
 
-void OptionsStorageDialog::compatStorage_preset()
+void OptionsStorageDialog::onCompatStorageChosen_preset()
 {
 	storageSettings.compatOptsStorage = StoreToPreset;
 }
 
-void OptionsStorageDialog::videoStorage_none()
+void OptionsStorageDialog::onVideoStorageChosen_none()
 {
 	storageSettings.videoOptsStorage = DontStore;
 }
 
-void OptionsStorageDialog::videoStorage_global()
+void OptionsStorageDialog::onVideoStorageChosen_global()
 {
 	storageSettings.videoOptsStorage = StoreGlobally;
 }
 
-void OptionsStorageDialog::videoStorage_preset()
+void OptionsStorageDialog::onVideoStorageChosen_preset()
 {
 	storageSettings.videoOptsStorage = StoreToPreset;
 }
 
-void OptionsStorageDialog::audioStorage_none()
+void OptionsStorageDialog::onAudioStorageChosen_none()
 {
 	storageSettings.audioOptsStorage = DontStore;
 }
 
-void OptionsStorageDialog::audioStorage_global()
+void OptionsStorageDialog::onAudioStorageChosen_global()
 {
 	storageSettings.audioOptsStorage = StoreGlobally;
 }
 
-void OptionsStorageDialog::audioStorage_preset()
+void OptionsStorageDialog::onAudioStorageChosen_preset()
 {
 	storageSettings.audioOptsStorage = StoreToPreset;
 }

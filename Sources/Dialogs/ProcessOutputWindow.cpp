@@ -77,14 +77,14 @@ ProcessOutputWindow::ProcessOutputWindow( QWidget * parent )
 	// capture key presses so that we can send them to the process
 	keyPressFilter.toggleKeyPressSupression( true );  // stop Enter/Esc key events, otherwise they would close the window
 	ui->textEdit->installEventFilter( &keyPressFilter );
-	connect( &keyPressFilter, &KeyPressFilter::keyPressed, this, &thisClass::keyPressed );
+	connect( &keyPressFilter, &KeyPressFilter::keyPressed, this, &thisClass::onKeyPressed );
 
 	closeBtn->setText("Close");
-	connect( abortBtn, &QPushButton::clicked, this, &thisClass::abortClicked );
+	connect( abortBtn, &QPushButton::clicked, this, &thisClass::onAbortClicked );
 	connect( closeBtn, &QPushButton::clicked, this, &thisClass::reject );
 
 	// closeEvent() is not called when the dialog is closed, we have to connect this to the finished() signal
-	connect( this, &QDialog::finished, this, &thisClass::dialogClosed );
+	connect( this, &QDialog::finished, this, &thisClass::onDialogClosed );
 
 	setOwnStatus( ProcessStatus::NotStarted );
 }
@@ -198,10 +198,10 @@ ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const
 	process.setArguments( arguments );
 	process.setProcessChannelMode( QProcess::MergedChannels );  // merge stdout and stderr
 
-	connect( &process, &QProcess::started, this, &thisClass::processStarted );
+	connect( &process, &QProcess::started, this, &thisClass::onProcessStarted );
 	connect( &process, &QProcess::readyReadStandardOutput, this, &thisClass::readProcessOutput );
-	connect( &process, QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ), this, &thisClass::processFinished );
-	connect( &process, &QProcess::errorOccurred, this, &thisClass::errorOccurred );
+	connect( &process, QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ), this, &thisClass::onProcessFinished );
+	connect( &process, &QProcess::errorOccurred, this, &thisClass::onErrorOccurred );
 
 	setOwnStatus( ProcessStatus::Starting );
 
@@ -222,7 +222,7 @@ ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const
 	return ownStatus;
 }
 
-void ProcessOutputWindow::processStarted()
+void ProcessOutputWindow::onProcessStarted()
 {
 	qDebug() << "processStarted";
 
@@ -257,7 +257,7 @@ void ProcessOutputWindow::readProcessOutput()
 	ui->textEdit->setTextCursor( cursor );
 }
 
-void ProcessOutputWindow::keyPressed( int key, uint8_t modifiers )
+void ProcessOutputWindow::onKeyPressed( int key, uint8_t modifiers )
 {
 	// Sometimes the process can print something like "Press 'Q' to quit",
 	// so we need to forward key presses to the process to allow the user control.
@@ -269,7 +269,7 @@ void ProcessOutputWindow::keyPressed( int key, uint8_t modifiers )
 	}
 }
 
-void ProcessOutputWindow::processFinished( int exitCode, QProcess::ExitStatus exitStatus )
+void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus exitStatus )
 {
 	qDebug() << "processFinished:" << exitCode << "," << exitStatus;
 
@@ -315,7 +315,7 @@ void ProcessOutputWindow::processFinished( int exitCode, QProcess::ExitStatus ex
 }
 
 
-void ProcessOutputWindow::errorOccurred( QProcess::ProcessError error )
+void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 {
 	qDebug() << "errorOccurred:" << error;
 
@@ -362,7 +362,7 @@ void ProcessOutputWindow::errorOccurred( QProcess::ProcessError error )
 	}
 }
 
-void ProcessOutputWindow::abortClicked( bool )
+void ProcessOutputWindow::onAbortClicked( bool )
 {
 	qDebug() << "abortClicked:" << abortBtn->text();
 
@@ -398,7 +398,7 @@ void ProcessOutputWindow::closeDialog( int resultCode )
 	this->done( resultCode );
 }
 
-void ProcessOutputWindow::dialogClosed( int resultCode )
+void ProcessOutputWindow::onDialogClosed( int resultCode )
 {
 	qDebug() << "dialogClosed:" << resultCode;
 }

@@ -62,13 +62,13 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void runGameOptsDialog();
 	void runCompatOptsDialog();
 
-	void selectEngine( int index );
-	void selectConfig( int index );
-	void togglePreset( const QItemSelection & selected, const QItemSelection & deselected );
-	void toggleIWAD( const QItemSelection & selected, const QItemSelection & deselected );
-	void toggleMapPack( const QItemSelection & selected, const QItemSelection & deselected );
-	void presetDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
-	void modDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
+	void onEngineSelected( int index );
+	void onConfigSelected( int index );
+	void onPresetToggled( const QItemSelection & selected, const QItemSelection & deselected );
+	void onIWADToggled( const QItemSelection & selected, const QItemSelection & deselected );
+	void onMapPackToggled( const QItemSelection & selected, const QItemSelection & deselected );
+	void onPresetDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
+	void onModDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 
 	void showMapPackDesc( const QModelIndex & index );
 
@@ -80,7 +80,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void presetMoveUp();
 	void presetMoveDown();
 	void presetInsertSeparator();
-	void presetsReordered();
+	void onPresetsReordered();
 
 	void searchPresets( const QString & phrase, bool caseSensitive, bool useRegex );
 
@@ -91,59 +91,59 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modMoveDown();
 	void modInsertSeparator();
 	void modToggleIcons();
-	void modsDropped( int row, int count );
+	void onModsDropped( int row, int count );
 
-	void modeDefault();
-	void modeLaunchMap();
-	void modeSavedGame();
-	void modeRecordDemo();
-	void modeReplayDemo();
-	void changeMap( const QString & mapName );
-	void selectSavedGame( int index );
-	void changeMap_demo( const QString & mapName );
-	void changeDemoFile_record( const QString & fileName );
-	void selectDemoFile_replay( int index );
+	void onModeChosen_Default();
+	void onModeChosen_LaunchMap();
+	void onModeChosen_SavedGame();
+	void onModeChosen_RecordDemo();
+	void onModeChosen_ReplayDemo();
+	void onMapChanged( const QString & mapName );
+	void onSavedGameSelected( int index );
+	void onMapChanged_demo( const QString & mapName );
+	void onDemoFileChanged_record( const QString & fileName );
+	void onDemoFileSelected_replay( int index );
 
-	void selectSkill( int skillIdx );
-	void changeSkillNum( int skillNum );
-	void toggleNoMonsters( bool checked );
-	void toggleFastMonsters( bool checked );
-	void toggleMonstersRespawn( bool checked );
-	void toggleAllowCheats( bool checked );
-	void selectCompatLevel( int compatLevel );
+	void onSkillSelected( int skillIdx );
+	void onSkillNumChanged( int skillNum );
+	void onNoMonstersToggled( bool checked );
+	void onFastMonstersToggled( bool checked );
+	void onMonstersRespawnToggled( bool checked );
+	void onAllowCheatsToggled( bool checked );
+	void onCompatLevelSelected( int compatLevel );
 
-	void toggleMultiplayer( bool checked );
-	void selectMultRole( int role );
-	void changeHost( const QString & host );
-	void changePort( int port );
-	void selectNetMode( int mode );
-	void selectGameMode( int mode );
-	void changePlayerCount( int count );
-	void changeTeamDamage( double damage );
-	void changeTimeLimit( int limit );
-	void changeFragLimit( int limit );
+	void onMultiplayerToggled( bool checked );
+	void onMultRoleSelected( int role );
+	void onHostChanged( const QString & host );
+	void onPortChanged( int port );
+	void onNetModeSelected( int mode );
+	void onGameModeSelected( int mode );
+	void onPlayerCountChanged( int count );
+	void onTeamDamageChanged( double damage );
+	void onTimeLimitChanged( int limit );
+	void onFragLimitChanged( int limit );
 
-	void toggleUsePresetName( bool checked );
-	void changeSaveDir( const QString & dir );
-	void changeScreenshotDir( const QString & dir );
+	void onUsePresetNameToggled( bool checked );
+	void onSaveDirChanged( const QString & dir );
+	void onScreenshotDirChanged( const QString & dir );
 	void browseSaveDir();
 	void browseScreenshotDir();
 
-	void selectMonitor( int index );
-	void changeResolutionX( const QString & xStr );
-	void changeResolutionY( const QString & yStr );
-	void toggleShowFps( bool checked );
+	void onMonitorSelected( int index );
+	void onResolutionXChanged( const QString & xStr );
+	void onResolutionYChanged( const QString & yStr );
+	void onShowFpsToggled( bool checked );
 
-	void toggleNoSound( bool checked );
-	void toggleNoSFX( bool checked );
-	void toggleNoMusic( bool checked );
+	void onNoSoundToggled( bool checked );
+	void onNoSFXToggled( bool checked );
+	void onNoMusicToggled( bool checked );
 
 	void exportPresetToScript();
 	void exportPresetToShortcut();
 	void importPresetFromScript();
 
-	void updatePresetCmdArgs( const QString & text );
-	void updateGlobalCmdArgs( const QString & text );
+	void onPresetCmdArgsChanged( const QString & text );
+	void onGlobalCmdArgsChanged( const QString & text );
 
 	void launch();
 

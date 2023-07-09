@@ -60,7 +60,7 @@ class SetupDialog : public QDialog, private DialogWithPaths {
 	void engineMoveUp();
 	void engineMoveDown();
 
-	void engineSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
+	void onEngineSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
 	void setEngineAsDefault();
 
 	void editEngine( const QModelIndex & index );
@@ -73,12 +73,12 @@ class SetupDialog : public QDialog, private DialogWithPaths {
 	void iwadMoveUp();
 	void iwadMoveDown();
 
-	void iwadSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
+	void onIWADSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
 	void setIWADAsDefault();
 
 	void manageIWADsManually();
 	void manageIWADsAutomatically();
-	void toggleIWADSubdirs( bool checked );
+	void onIWADSubdirsToggled( bool checked );
 
 	// game file directories
 
@@ -86,25 +86,25 @@ class SetupDialog : public QDialog, private DialogWithPaths {
 	void browseMapDir();
 	void browseModDir();
 
-	void changeIWADDir( const QString & dir );
-	void changeMapDir( const QString & dir );
-	void changeModDir( const QString & dir );
+	void onIWADDirChanged( const QString & dir );
+	void onMapDirChanged( const QString & dir );
+	void onModDirChanged( const QString & dir );
 
 	void updateIWADsFromDir();
 
 	// theme options
 
-	void selectAppStyle( int index );
-	void setDefaultScheme();
-	void setDarkScheme();
-	void setLightScheme();
+	void onAppStyleSelected( int index );
+	void onDefaultSchemeChosen();
+	void onDarkSchemeChosen();
+	void onLightSchemeChosen();
 
 	// other
 
-	void toggleAbsolutePaths( bool checked );
+	void onAbsolutePathsToggled( bool checked );
 
-	void toggleShowEngineOutput( bool checked );
-	void toggleCloseOnLaunch( bool checked );
+	void onShowEngineOutputToggled( bool checked );
+	void onCloseOnLaunchToggled( bool checked );
 
  private: // methods
 

@@ -69,17 +69,17 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 
  private slots:
 
-	void processStarted();
+	void onProcessStarted();
 	void readProcessOutput();
-	void processFinished( int exitCode, QProcess::ExitStatus exitStatus );
-	void errorOccurred( QProcess::ProcessError error );
+	void onProcessFinished( int exitCode, QProcess::ExitStatus exitStatus );
+	void onErrorOccurred( QProcess::ProcessError error );
 
-	void keyPressed( int key, uint8_t modifiers );
+	void onKeyPressed( int key, uint8_t modifiers );
 
-	void abortClicked( bool checked );
+	void onAbortClicked( bool checked );
 
 	// closeEvent() is not called when the dialog is closed, we have to connect this to the finished() signal
-	void dialogClosed( int result );
+	void onDialogClosed( int result );
 
  private: // methods
 

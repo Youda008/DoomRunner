@@ -9,7 +9,7 @@
 #define ENGINE_TRAITS_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include "Utils/OSUtils.hpp"  // ExecutableTraits
 

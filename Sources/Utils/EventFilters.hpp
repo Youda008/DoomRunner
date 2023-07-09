@@ -9,7 +9,7 @@
 #define EVENT_FILTERS_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include <QObject>
 

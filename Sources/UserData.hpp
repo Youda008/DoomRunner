@@ -9,7 +9,7 @@
 #define USER_DATA_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include "Widgets/ListModel.hpp"     // ReadOnlyListModelItem, EditableListModelItem
 #include "Utils/JsonUtils.hpp"       // enumName, enumSize

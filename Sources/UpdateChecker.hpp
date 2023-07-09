@@ -9,7 +9,7 @@
 #define UPDATE_CHECKER_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include <QObject>
 #include <QString>

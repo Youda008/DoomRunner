@@ -9,7 +9,7 @@
 #define MISC_UTILS_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include "Widgets/ListModel.hpp"  // ReadOnlyListModelItem
 

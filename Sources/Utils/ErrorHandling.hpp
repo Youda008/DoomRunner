@@ -9,7 +9,7 @@
 #define ERROR_HANDLING_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include <QString>
 

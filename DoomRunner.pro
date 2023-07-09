@@ -61,9 +61,9 @@ HEADERS += \
 	Sources/Widgets/EditableListView.hpp \
 	Sources/Widgets/ExtendedTreeView.hpp \
 	Sources/Widgets/ListModel.hpp \
-	Sources/Common.hpp \
 	Sources/DoomFileInfo.hpp \
 	Sources/EngineTraits.hpp \
+	Sources/Essential.hpp \
 	Sources/MainWindow.hpp \
 	Sources/OptionsSerializer.hpp \
 	Sources/Themes.hpp \

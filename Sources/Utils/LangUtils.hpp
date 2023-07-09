@@ -9,7 +9,7 @@
 #define LANG_UTILS_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include <algorithm>
 

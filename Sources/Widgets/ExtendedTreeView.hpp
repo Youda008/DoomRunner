@@ -9,7 +9,7 @@
 #define EXTENDED_TREE_VIEW_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include <QTreeView>
 #include <QList>

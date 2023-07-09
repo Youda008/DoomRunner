@@ -2,11 +2,11 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: commonly used includes, types and constants
+// Description: essential includes, types and constants
 //======================================================================================================================
 
-#ifndef COMMON_INCLUDED
-#define COMMON_INCLUDED
+#ifndef ESSENTIAL_INCLUDED
+#define ESSENTIAL_INCLUDED
 
 
 #include <memory>
@@ -31,4 +31,4 @@ using std::as_const;
 #endif
 
 
-#endif // COMMON_INCLUDED
+#endif // ESSENTIAL_INCLUDED

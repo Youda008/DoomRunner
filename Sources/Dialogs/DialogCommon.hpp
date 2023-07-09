@@ -9,7 +9,7 @@
 #define DIALOG_COMMON_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include "Utils/FileSystemUtils.hpp"  // PathContext
 

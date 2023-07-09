@@ -9,7 +9,7 @@
 #define WIDGET_UTILS_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include "LangUtils.hpp"         // findSuch
 #include "FileSystemUtils.hpp"   // fillListFromDir

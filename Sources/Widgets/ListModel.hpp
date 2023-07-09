@@ -9,7 +9,7 @@
 #define LIST_MODEL_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include "Utils/LangUtils.hpp"  // PointerIterator
 #include "Utils/FileSystemUtils.hpp"  // PathContext

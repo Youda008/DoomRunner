@@ -10,7 +10,7 @@
 #define EDITABLE_LIST_VIEW_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include "Utils/EventFilters.hpp"  // ModifierHandler
 

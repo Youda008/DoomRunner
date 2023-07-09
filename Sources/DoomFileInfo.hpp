@@ -9,7 +9,7 @@
 #define DOOM_FILE_INFO_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include <QVector>
 #include <QString>

@@ -9,7 +9,7 @@
 #define WAD_READER_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include <QString>
 #include <QStringList>

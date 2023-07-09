@@ -9,7 +9,7 @@
 #define THEMES_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include <QThread>
 #include <QStringList>

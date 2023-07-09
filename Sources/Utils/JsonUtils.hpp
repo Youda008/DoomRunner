@@ -9,7 +9,7 @@
 #define JSON_UTILS_INCLUDED
 
 
-#include "Common.hpp"
+#include "Essential.hpp"
 
 #include <QString>
 #include <QList>

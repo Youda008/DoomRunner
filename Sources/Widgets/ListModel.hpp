@@ -158,7 +158,8 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 
 
 //======================================================================================================================
-/// TODO
+/// A trivial wrapper around QList.
+/** One of possible list implementations for ListModel variants. */
 
 template< typename Item_ >
 class DirectList {
@@ -217,7 +218,8 @@ class DirectList {
 
 
 //======================================================================================================================
-/// TODO
+/// A wrapper around QList allowing to temporarily filter the content present only items matching a specified criteria.
+/** One of possible list implementations for ListModel variants. */
 
 template< typename Item_ >
 class FilteredList {

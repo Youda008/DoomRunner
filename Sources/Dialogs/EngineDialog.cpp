@@ -109,61 +109,60 @@ static QString suggestEngineName( const QString & enginePath )
 {
 	// In Windows we can use the directory name, which can tell slightly more than just the binary,
 	// but in Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
-	if (isWindows())
-	{
-		return getDirnameOfFile( enginePath );
-	}
+ #if IS_WINDOWS
+	return getDirnameOfFile( enginePath );
+ #else
+	ExecutableTraits traits = getExecutableTraits( enginePath );
+	if (traits.sandboxEnv != Sandbox::None)
+		return traits.sandboxAppName;
 	else
-	{
-		ExecutableTraits traits = getExecutableTraits( enginePath );
-		if (traits.sandboxEnv != Sandbox::None)
-			return traits.sandboxAppName;
-		else
-			return traits.executableBaseName;
-	}
+		return traits.executableBaseName;
+ #endif
 }
 
 static QString suggestEngineConfigDir( const QString & enginePath )
 {
 	// In Windows engines usually store their config in the directory of its binaries or in Saved Games,
 	// but in Linux they store them in standard user's app config dir (usually something like /home/user/.config/)
-	if (isWindows())
+
+ #if IS_WINDOWS
+
+	QString engineDir = getDirOfFile( enginePath );
+	if (isDirectoryWritable( engineDir ))
 	{
-		QString engineDir = getDirOfFile( enginePath );
-		if (isDirectoryWritable( engineDir ))
-		{
-			return engineDir;
-		}
-		else  // if we cannot write to the directory of the executable (e.g. Program Files), try Saved Games
-		{
-			// this is not bullet-proof but will work for 90% of users
-			return qEnvironmentVariable("USERPROFILE")%"/Saved Games/"%getFileNameFromPath( enginePath );
-		}
+		return engineDir;
+	}
+	else  // if we cannot write to the directory of the executable (e.g. Program Files), try Saved Games
+	{
+		// this is not bullet-proof but will work for 90% of users
+		return qEnvironmentVariable("USERPROFILE")%"/Saved Games/"%getFileNameFromPath( enginePath );
+	}
+
+ #else
+
+	ExecutableTraits traits = getExecutableTraits( enginePath );
+	if (traits.sandboxEnv == Sandbox::Snap)
+	{
+		return getHomeDir()%"/snap/"%traits.executableBaseName%"/current/.config/"%traits.executableBaseName;
+	}
+	else if (traits.sandboxEnv == Sandbox::Flatpak)  // the engine is a Flatpak installation
+	{
+		return getHomeDir()%"/.var/app/"%traits.sandboxAppName%"/.config/"%traits.executableBaseName;
 	}
 	else
 	{
-		ExecutableTraits traits = getExecutableTraits( enginePath );
-		if (traits.sandboxEnv == Sandbox::Snap)
-		{
-			return getHomeDir()%"/snap/"%traits.executableBaseName%"/current/.config/"%traits.executableBaseName;
-		}
-		else if (traits.sandboxEnv == Sandbox::Flatpak)  // the engine is a Flatpak installation
-		{
-			return getHomeDir()%"/.var/app/"%traits.sandboxAppName%"/.config/"%traits.executableBaseName;
-		}
-		else
-		{
-		 #ifdef FLATPAK_BUILD  // the launcher is a Flatpak installation
-			// Inside Flatpak environment the GenericConfigLocation points into the Flatpak sandbox of this application.
-			// But we need the system-wide config dir, and that's available via Qt, so we must do this guessing hack.
-			QString standardConfigDir = getHomeDir()+"/.config";
-		 #else
-			QString standardConfigDir = QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
-		 #endif
-			QString appName = getFileBasenameFromPath( enginePath );
-			return getPathFromFileName( standardConfigDir, appName );  // -> /home/user/.config/zdoom
-		}
+	 #ifdef FLATPAK_BUILD  // the launcher is a Flatpak installation
+		// Inside Flatpak environment the GenericConfigLocation points into the Flatpak sandbox of this application.
+		// But we need the system-wide config dir, and that's available via Qt, so we must do this guessing hack.
+		QString standardConfigDir = getHomeDir()+"/.config";
+	 #else
+		QString standardConfigDir = QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
+	 #endif
+		QString appName = getFileBasenameFromPath( enginePath );
+		return getPathFromFileName( standardConfigDir, appName );  // -> /home/user/.config/zdoom
 	}
+
+ #endif
 }
 
 void EngineDialog::browseEngine()

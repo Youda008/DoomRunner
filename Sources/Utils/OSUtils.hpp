@@ -18,17 +18,6 @@
 class PathContext;
 
 
-//======================================================================================================================
-
-inline constexpr bool isWindows()
-{
- #if IS_WINDOWS
-	return true;
- #else
-	return false;
- #endif
-}
-
 //-- standard directories and installation properties ----------------------------------------------
 
 QString getHomeDir();
@@ -74,9 +63,12 @@ ShellCommand getRunCommand(
 	const QString & executablePath, const PathContext & base, const QStringList & dirsToBeAccessed = {}
 );
 
+
 //-- graphical environment -------------------------------------------------------------------------
 
+#if !IS_WINDOWS
 const QString & getLinuxDesktopEnv();
+#endif
 
 struct MonitorInfo
 {
@@ -86,6 +78,7 @@ struct MonitorInfo
 	bool isPrimary;
 };
 QVector< MonitorInfo > listMonitors();
+
 
 //-- miscellaneous ---------------------------------------------------------------------------------
 

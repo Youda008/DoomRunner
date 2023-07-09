@@ -470,8 +470,9 @@ MainWindow::MainWindow()
 	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::runAboutDialog );
 	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
 
-	if (!isWindows())  // Windows-only feature
-		ui->exportPresetToShortcutAction->setEnabled( false );
+ #if !IS_WINDOWS  // Windows-only feature
+	ui->exportPresetToShortcutAction->setEnabled( false );
+ #endif
 
 	// setup main list views
 
@@ -2702,7 +2703,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 {
 	if (settings.appStyle != themes::getDefaultAppStyle())
 		themes::setAppStyle( settings.appStyle );
-	if (isWindows() || settings.colorScheme != ColorScheme::SystemDefault)
+	if (IS_WINDOWS || settings.colorScheme != ColorScheme::SystemDefault)
 		themes::setAppColorScheme( settings.colorScheme );
 
 	if (opts.geometry.width > 0 && opts.geometry.height > 0)
@@ -3358,8 +3359,10 @@ ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool ve
 
 		// On Windows ZDoom doesn't log its output to stdout by default.
 		// Force it to do so, so that our ProcessOutputWindow displays something.
-		if (isWindows() && settings.showEngineOutput && engineTraits.hasStdoutParam())
+	 #if IS_WINDOWS
+		if (settings.showEngineOutput && engineTraits.hasStdoutParam())
 			cmd.arguments << "-stdout";
+	 #endif
 
 		const int configIdx = ui->configCmbBox->currentIndex();
 		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config

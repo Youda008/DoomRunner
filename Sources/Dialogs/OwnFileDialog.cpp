@@ -7,7 +7,7 @@
 
 #include "OwnFileDialog.hpp"
 
-#include "Utils/OSUtils.hpp"  // isWindows
+#include "Utils/OSUtils.hpp"  // getLinuxDesktopEnv(), getThisAppDataDir()
 
 
 //======================================================================================================================
@@ -16,10 +16,14 @@
 // workaround for some issues with less common Linux graphical environments
 static const QFileDialog::Options disableNativeDialogOnLinux( QFileDialog::Options options )
 {
+ #if IS_WINDOWS
+	return options;
+ #else
 	// initialize once on first call and then re-use.
 	static const QFileDialog::Options DontUseNativeDialogOnLinux =
-		(isWindows() || getLinuxDesktopEnv() == "KDE") ? QFileDialog::Options() : QFileDialog::Option::DontUseNativeDialog;
+		getLinuxDesktopEnv() == "KDE" ? QFileDialog::Options() : QFileDialog::Option::DontUseNativeDialog;
 	return options | DontUseNativeDialogOnLinux;
+ #endif
 }
 
 static const QString & getDefaultStartingDir()

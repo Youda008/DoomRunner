@@ -8,7 +8,6 @@
 #include "Themes.hpp"
 
 #include "Utils/LangUtils.hpp"  // find, atScopeEndDo
-#include "Utils/OSUtils.hpp"    // IS_WINDOWS
 
 #include <QApplication>
 #include <QWidget>

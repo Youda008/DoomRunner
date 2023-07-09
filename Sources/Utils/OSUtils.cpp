@@ -40,35 +40,29 @@ QString getHomeDir()
 QString getThisAppConfigDir()
 {
 	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
-	if (isWindows())
-	{
-		QString thisExeDir = QApplication::applicationDirPath();
-		if (isDirectoryWritable( thisExeDir ))
-			return thisExeDir;
-		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Local
-			return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
-	}
-	else
-	{
+ #if IS_WINDOWS
+	QString thisExeDir = QApplication::applicationDirPath();
+	if (isDirectoryWritable( thisExeDir ))
+		return thisExeDir;
+	else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Local
 		return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
-	}
+ #else
+	return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
+ #endif
 }
 
 QString getThisAppDataDir()
 {
 	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
-	if (isWindows())
-	{
-		QString thisExeDir = QApplication::applicationDirPath();
-		if (isDirectoryWritable( thisExeDir ))
-			return thisExeDir;
-		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Roaming
-			return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
-	}
-	else
-	{
+ #if IS_WINDOWS
+	QString thisExeDir = QApplication::applicationDirPath();
+	if (isDirectoryWritable( thisExeDir ))
+		return thisExeDir;
+	else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Roaming
 		return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
-	}
+ #else
+	return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
+ #endif
 }
 
 bool isInSearchPath( const QString & filePath )
@@ -224,7 +218,7 @@ bool openFileLocation( const QString & filePath )
 
 	const QFileInfo fileInfo( filePath );
 
-#if defined(Q_OS_WIN)
+ #if defined(Q_OS_WIN)
 
 	QStringList args;
 	if (!fileInfo.isDir())
@@ -232,7 +226,7 @@ bool openFileLocation( const QString & filePath )
 	args += QDir::toNativeSeparators( fileInfo.canonicalFilePath() );
 	return QProcess::startDetached( "explorer.exe", args );
 
-#elif defined(Q_OS_MAC)
+ #elif defined(Q_OS_MAC)
 
 	QStringList args;
 	args << "-e";
@@ -247,12 +241,12 @@ bool openFileLocation( const QString & filePath )
 	args << "return";
 	return QProcess::execute( "/usr/bin/osascript", args );
 
-#else
+ #else
 
 	// We cannot select a file here, because no file browser really supports it.
 	return QDesktopServices::openUrl( QUrl::fromLocalFile( fileInfo.isDir()? fileInfo.filePath() : fileInfo.path() ) );
 
-#endif
+ #endif
 }
 
 #if IS_WINDOWS

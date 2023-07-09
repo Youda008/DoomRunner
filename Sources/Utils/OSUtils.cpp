@@ -91,7 +91,7 @@ QString getAppDataDir( const QString & executablePath )
 bool isInSearchPath( const QString & filePath )
 {
 	// this should also handle the snap installations, since directory of snap executables is inside PATH
-	return !QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ).isEmpty();
+	return QStandardPaths::findExecutable( getFileNameFromPath( filePath ) ) == filePath;
 }
 
 bool openFileLocation( const QString & filePath )

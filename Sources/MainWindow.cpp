@@ -740,23 +740,27 @@ void MainWindow::loadMonitorInfo( QComboBox * box )
 
 // Backward compatibility: Older versions stored options file in config dir.
 // We need to look if the options file is in the old directory and if it is, move it to the new one.
-static void moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir )
+static void moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir, QString optionsFileName )
 {
-	if (newOptionsDir.exists( defaultOptionsFileName ))
+	if (newOptionsDir.exists( optionsFileName ))
 	{
 		return;  // always prefer the new one, if it already exists
 	}
-	
-	if (oldOptionsDir.exists( defaultOptionsFileName ))
+
+	if (oldOptionsDir.exists( optionsFileName ))
 	{
-		QString message = 
-			"Found "%QString(defaultOptionsFileName)%" in the old data directory "%oldOptionsDir.path()%". "
-			"Moving it to the new data directory "%newOptionsDir.filePath( defaultOptionsFileName );
-		qInfo().noquote() << "NOTICE:" << message;
-	 #if !IS_WINDOWS
-		QMessageBox::information( nullptr, "Options file has been moved", message );
-	 #endif
-		oldOptionsDir.rename( defaultOptionsFileName, newOptionsDir.filePath( defaultOptionsFileName ) );
+		QString newOptionsFilePath = newOptionsDir.filePath( optionsFileName );
+
+		QMessageBox::information( nullptr, "Migrating options file",
+			"DoomRunner changed the location of "%optionsFileName%", where it stores your presets and other options. "
+			%optionsFileName%" has been found in the old data directory \""%oldOptionsDir.path()%"\" "
+			"and will be automatically moved to the new data directory "%newOptionsDir.path()
+		);
+		qInfo().noquote() <<
+			"NOTICE: Found "%optionsFileName%" in the old data directory \""%oldOptionsDir.path()%"\". "
+			"Moving it to the new data directory "%newOptionsDir.path();
+
+		oldOptionsDir.rename( optionsFileName, newOptionsFilePath );
 	}
 }
 
@@ -773,10 +777,10 @@ void MainWindow::onWindowShown()
 	{
 		appDataDir.mkpath(".");
 	}
-	
+
 	// backward compatibility
-	moveOptionsFromOldDir( os::getThisAppConfigDir(), appDataDir );
-	
+	moveOptionsFromOldDir( os::getThisAppConfigDir(), appDataDir, defaultOptionsFileName );
+
 	optionsFilePath = appDataDir.filePath( defaultOptionsFileName );
 
 	// try to load last saved state
@@ -3463,6 +3467,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
+		// if demo dir is empty (saveDirLine is empty and engine.configDir is not set)
 		QString demoPath = fs::getPathFromFileName( getDemoDir(), ui->demoFileLine_record->text() );
 		cmd.arguments << "-record" << base.rebaseAndQuotePath( demoPath );
 		cmd.arguments << engineTraits.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );

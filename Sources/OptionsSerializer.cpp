@@ -77,7 +77,7 @@ static QJsonObject serialize( const Engine & engine )
 
 static void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 {
-	engine.isSeparator = jsEngine.getBool( "separator", engine.isSeparator, DontShowError );
+	engine.isSeparator = jsEngine.getBool( "separator", false, DontShowError );
 	if (engine.isSeparator)
 	{
 		engine.name = jsEngine.getString( "name", "<missing name>" );
@@ -113,7 +113,7 @@ static QJsonObject serialize( const IWAD & iwad )
 
 static void deserialize( const JsonObjectCtx & jsEngine, IWAD & iwad )
 {
-	iwad.isSeparator = jsEngine.getBool( "separator", iwad.isSeparator, DontShowError );
+	iwad.isSeparator = jsEngine.getBool( "separator", false, DontShowError );
 	if (iwad.isSeparator)
 	{
 		iwad.name = jsEngine.getString( "name", "<missing name>" );
@@ -145,7 +145,7 @@ static QJsonObject serialize( const Mod & mod )
 
 static void deserialize( const JsonObjectCtx & jsMod, Mod & mod )
 {
-	mod.isSeparator = jsMod.getBool( "separator", mod.isSeparator, DontShowError );
+	mod.isSeparator = jsMod.getBool( "separator", false, DontShowError );
 	if (mod.isSeparator)
 	{
 		mod.fileName = jsMod.getString( "name", "<missing name>" );
@@ -239,11 +239,11 @@ static QJsonObject serialize( const LaunchOptions & opts )
 static void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & opts )
 {
 	opts.mode = jsOptions.getEnum< LaunchMode >( "launch_mode", opts.mode );
-	opts.mapName = jsOptions.getString( "map_name", opts.mapName );
-	opts.saveFile = jsOptions.getString( "save_file", opts.saveFile );
-	opts.mapName_demo = jsOptions.getString( "map_name_demo", opts.mapName_demo );
-	opts.demoFile_record = jsOptions.getString( "demo_file_record", opts.demoFile_record );
-	opts.demoFile_replay = jsOptions.getString( "demo_file_replay", opts.demoFile_replay );
+	opts.mapName = jsOptions.getString( "map_name" );
+	opts.saveFile = jsOptions.getString( "save_file" );
+	opts.mapName_demo = jsOptions.getString( "map_name_demo" );
+	opts.demoFile_record = jsOptions.getString( "demo_file_record" );
+	opts.demoFile_replay = jsOptions.getString( "demo_file_replay" );
 }
 
 static QJsonObject serialize( const MultiplayerOptions & opts )
@@ -268,7 +268,7 @@ static void deserialize( const JsonObjectCtx & jsOptions, MultiplayerOptions & o
 {
 	opts.isMultiplayer = jsOptions.getBool( "is_multiplayer", opts.isMultiplayer );
 	opts.multRole = jsOptions.getEnum< MultRole >( "mult_role", opts.multRole );
-	opts.hostName = jsOptions.getString( "host_name", opts.hostName );
+	opts.hostName = jsOptions.getString( "host_name" );
 	opts.port = jsOptions.getUInt16( "port", opts.port );
 	opts.netMode = jsOptions.getEnum< NetMode >( "net_mode", opts.netMode );
 	opts.gameMode = jsOptions.getEnum< GameMode >( "game_mode", opts.gameMode );
@@ -336,8 +336,8 @@ static QJsonObject serialize( const AlternativePaths & opts )
 
 static void deserialize( const JsonObjectCtx & jsOptions, AlternativePaths & opts )
 {
-	opts.saveDir = jsOptions.getString( "save_dir", opts.saveDir );
-	opts.screenshotDir = jsOptions.getString( "screenshot_dir", opts.screenshotDir );
+	opts.saveDir = jsOptions.getString( "save_dir" );
+	opts.screenshotDir = jsOptions.getString( "screenshot_dir" );
 }
 
 static QJsonObject serialize( const VideoOptions & opts )
@@ -535,8 +535,8 @@ static QJsonObject serialize( const WindowGeometry & geometry )
 
 static void deserialize( const JsonObjectCtx & jsGeometry, WindowGeometry & geometry )
 {
-	geometry.width = jsGeometry.getInt( "width", -1 );
-	geometry.height = jsGeometry.getInt( "height", -1 );
+	geometry.width = jsGeometry.getInt( "width", 0 );
+	geometry.height = jsGeometry.getInt( "height", 0 );
 }
 
 static void serialize( QJsonObject & jsSettings, const LauncherSettings & settings )

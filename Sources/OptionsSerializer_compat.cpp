@@ -40,7 +40,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, 
 {
 	preset.name = jsPreset.getString( "name", "<missing name>" );
 
-	preset.isSeparator = jsPreset.getBool( "separator", preset.isSeparator, DontShowError );
+	preset.isSeparator = jsPreset.getBool( "separator", false, DontShowError );
 	if (preset.isSeparator)
 	{
 		return;

@@ -3137,7 +3137,8 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	}
 
 	//-- launch mode and parameters ------------------------------------------------
-	// Beware that -loadgame must be relative to -savedir, while -record and -playdemo are relative to the working dir.
+	// Beware that -loadgame must be relative to -savedir (cannot be absolute),
+	// while -record and -playdemo are either absolute or relative to the working dir.
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 	if (launchMode == LaunchMap)
@@ -3148,7 +3149,7 @@ MainWindow::ShellCommand MainWindow::generateLaunchCommand( const QString & base
 	{
 		// save dir cannot be empty, otherwise the saveFileCmbBox would be empty
 		QString saveBaseDir = getSaveDir();  // ui->saveDirLine or engine.configDir
-		PathContext saveBase( saveBaseDir, pathContext.baseDir(), pathContext.pathStyle(), quotePaths );
+		PathContext saveBase( saveBaseDir, pathContext.baseDir(), PathStyle::Relative, quotePaths );
 		QString savePath = getPathFromFileName( saveBaseDir, ui->saveFileCmbBox->currentText() );
 		p.checkFilePath( savePath, "the selected save file", "Please select another one." );
 		cmd.arguments << "-loadgame" << saveBase.rebaseAndQuotePath( savePath );

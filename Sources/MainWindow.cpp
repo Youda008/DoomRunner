@@ -811,7 +811,6 @@ void MainWindow::runSetupDialog()
 		auto currentEngine = getCurrentItemID( ui->engineCmbBox, engineModel );
 		auto currentIWAD = getCurrentItemID( ui->iwadListView, iwadModel );
 		auto selectedIWAD = getSelectedItemID( ui->iwadListView, iwadModel );
-		auto oldPathStyle = settings.pathStyle;
 
 		// workaround (read the comment at automatic list updates)
 		disableSelectionCallbacks = true;
@@ -858,8 +857,7 @@ void MainWindow::runSetupDialog()
 		if (!selectedIWAD.isEmpty() && !iwadFound)
 			toggleIWAD( QItemSelection(), QItemSelection()/*TODO*/ );
 
-		if (settings.pathStyle != oldPathStyle)  // path style changed -> launch command must be updated
-			updateLaunchCommand();
+		updateLaunchCommand();
 	}
 }
 

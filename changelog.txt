@@ -1,6 +1,10 @@
 1.7.3
 - save/screenshot dirs will now correctly update when the preset name is edited
+- workaround for unintuitive Windows executable search order (2nd attempt)
+- fixed cooperation between Save dir and Save file fields so that correct save file is given to Doom engine when loading saved game
+- another attempt to prevent losing option.json when the computer is abruptly shut down
 - fixed save dir being mistakenly verified instead of screenshot dir
+- fixed automatic engine name and config dir deduction when file with suffix (.sh) is chosen on Linux
 
 1.7.2
 - fixed quoting engine path when exporting to shell script

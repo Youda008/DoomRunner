@@ -326,8 +326,8 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 
 struct WindowGeometry
 {
-	int width;
-	int height;
+	int width = 0;
+	int height = 0;
 
 	WindowGeometry() {}
 	WindowGeometry( const QRect & rect ) : width( rect.width() ), height( rect.height() ) {}

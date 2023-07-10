@@ -945,7 +945,6 @@ void MainWindow::runSetupDialog()
 		auto currentEngine = wdg::getCurrentItemID( ui->engineCmbBox, engineModel );
 		auto currentIWAD = wdg::getCurrentItemID( ui->iwadListView, iwadModel );
 		auto selectedIWAD = wdg::getSelectedItemID( ui->iwadListView, iwadModel );
-		auto oldPathStyle = settings.pathStyle;
 
 		// prevent unnecessary updates when an engine or IWAD is deselected and then the same one selected again.
 		disableSelectionCallbacks = true;
@@ -994,9 +993,7 @@ void MainWindow::runSetupDialog()
 			onIWADToggled( QItemSelection(), QItemSelection()/*TODO*/ );
 
 		scheduleSavingOptions();
-
-		if (settings.pathStyle != oldPathStyle)  // path style changed -> launch command must be updated
-			updateLaunchCommand();
+		updateLaunchCommand();
 	}
 }
 

@@ -3246,10 +3246,11 @@ void MainWindow::exportPresetToScript()
 	}
 
 	QFileInfo scriptFileInfo( scriptFilePath );
+	QString scriptDir = scriptFileInfo.path();
 
-	lastUsedDir = scriptFileInfo.path();
+	lastUsedDir = scriptDir;
 
-	auto cmd = generateLaunchCommand( scriptFileInfo.path(), DontVerifyPaths, QuotePaths );
+	auto cmd = generateLaunchCommand( scriptDir, DontVerifyPaths, QuotePaths );
 
 	QFile scriptFile( scriptFilePath );
 	if (!scriptFile.open( QIODevice::WriteOnly | QIODevice::Text ))
@@ -3347,9 +3348,9 @@ void MainWindow::updateLaunchCommand()
 
 	// The command needs to be relative to the engine's directory,
 	// because it will be executed with the current directory set to engine's directory.
-	QString baseDir = fs::getDirOfFile( engineModel[ selectedEngineIdx ].path );
+	QString engineDir = fs::getDirOfFile( engineModel[ selectedEngineIdx ].path );
 
-	auto cmd = generateLaunchCommand( baseDir, DontVerifyPaths, QuotePaths );
+	auto cmd = generateLaunchCommand( engineDir, DontVerifyPaths, QuotePaths );
 
 	QString newCommand = cmd.executable % ' ' % cmd.arguments.join(' ');
 
@@ -3367,11 +3368,13 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 {
 	os::ShellCommand cmd;
 
-	// All stored paths are relative to pathContext.baseDir(), but we need them relative to baseDir.
+	// All stored paths are relative to DoomRunner's directory, but we need them relative to baseDir (engine dir or script dir).
 	PathContext base( baseDir, pathContext.baseDir(), pathContext.pathStyle(), quotePaths );
 	PathChecker p( this, verifyPaths );
 
-	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	//-- engine --------------------------------------------------------------------
+
+	const int selectedEngineIdx = ui->engineCmbBox->currentIndex();
 	if (selectedEngineIdx < 0)
 	{
 		return {};  // no point in generating a command if we don't even know the engine, it determines everything
@@ -3385,34 +3388,34 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 
 		// get the beginning of the launch command based on OS and installation type
 		cmd = os::getRunCommand( selectedEngine.path, base, getDirsToBeAccessed() );
-
-		// On Windows ZDoom doesn't log its output to stdout by default.
-		// Force it to do so, so that our ProcessOutputWindow displays something.
-	 #if IS_WINDOWS
-		if (settings.showEngineOutput && engineTraits.hasStdoutParam())
-			cmd.arguments << "-stdout";
-	 #endif
-
-		const int configIdx = ui->configCmbBox->currentIndex();
-		if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
-		{
-			// at this point the configDir cannot be empty, otherwise the configCmbBox would be empty and the index 0 or -1
-			QString configPath = fs::getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
-
-			p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
-			cmd.arguments << "-config" << base.rebaseAndQuotePath( configPath );
-		}
 	}
 
-	int selectedIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
+	//-- engine's config -----------------------------------------------------------
+
+	const int configIdx = ui->configCmbBox->currentIndex();
+	if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
+	{
+		// at this point the configDir cannot be empty, otherwise the configCmbBox would be empty and the index 0 or -1
+		QString configPath = fs::getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
+
+		p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
+		cmd.arguments << "-config" << base.rebaseAndQuotePath( configPath );
+	}
+
+	//-- game data files -----------------------------------------------------------
+
+	// IWAD
+	const int selectedIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 	if (selectedIwadIdx >= 0)
 	{
 		p.checkItemFilePath( iwadModel[ selectedIwadIdx ], "selected IWAD", "Please select another one." );
 		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
-	QStringVec selectedFiles;
+	// Older engines only accept single -file parameter, so we must first collect all the additional files in this list.
+	QStringVec additionalFiles;
 
+	// map files
 	forEachSelectedMapPack( [&]( const QString & mapFilePath )
 	{
 		p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
@@ -3423,10 +3426,10 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 		else if (suffix == "bex")
 			cmd.arguments << "-bex" << base.rebaseAndQuotePath( mapFilePath );
 		else
-			// combine all files under a single -file parameter
-			selectedFiles.append( mapFilePath );
+			additionalFiles.append( mapFilePath );
 	});
 
+	// mod files
 	for (Mod & mod : modModel)
 	{
 		if (mod.checked)
@@ -3439,19 +3442,33 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 			else if (suffix == "bex")
 				cmd.arguments << "-bex" << base.rebaseAndQuotePath( mod.path );
 			else
-				// combine all files under a single -file parameter
-				selectedFiles.append( mod.path );
+				additionalFiles.append( mod.path );
 		}
 	}
 
-	// Older engines only accept single file parameter, we must list them here all together.
-	if (!selectedFiles.empty())
+	// combine all additional game files under a single -file parameter
+	if (!additionalFiles.empty())
 		cmd.arguments << "-file";
-	for (const QString & filePath : selectedFiles)
+	for (const QString & filePath : additionalFiles)
 		cmd.arguments << base.rebaseAndQuotePath( filePath );
 
-	const GameplayOptions & activeGameOpts = activeGameplayOptions();
-	const CompatibilityOptions & activeCompatOpts = activeCompatOptions();
+	//-- alternative directories ---------------------------------------------------
+	// Rather set them before the launch parameters, because some of the parameters
+	// (e.g. -loadgame) can be relative to these alternative directories.
+
+	if (!ui->saveDirLine->text().isEmpty())
+	{
+		p.checkNotAFile( ui->saveDirLine->text(), "the save dir", {} );
+		cmd.arguments << engineTraits.saveDirParam() << base.rebaseAndQuotePath( ui->saveDirLine->text() );
+	}
+	if (!ui->screenshotDirLine->text().isEmpty())
+	{
+		p.checkNotAFile( ui->screenshotDirLine->text(), "the screenshot dir", {} );
+		cmd.arguments << "+screenshot_dir" << base.rebaseAndQuotePath( ui->screenshotDirLine->text() );
+	}
+
+	//-- launch mode and parameters ------------------------------------------------
+	// Beware that -loadgame must be relative to -savedir, while -record and -playdemo are relative to the working dir.
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 	if (launchMode == LaunchMap)
@@ -3461,9 +3478,11 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
 		// save dir cannot be empty, otherwise the saveFileCmbBox would be empty
-		QString savePath = fs::getPathFromFileName( getSaveDir(), ui->saveFileCmbBox->currentText() );
+		QString saveBaseDir = getSaveDir();  // ui->saveDirLine or engine.configDir
+		PathContext saveBase( saveBaseDir, pathContext.baseDir(), pathContext.pathStyle(), quotePaths );
+		QString savePath = fs::getPathFromFileName( saveBaseDir, ui->saveFileCmbBox->currentText() );
 		p.checkFilePath( savePath, "the selected save file", "Please select another one." );
-		cmd.arguments << "-loadgame" << base.rebaseAndQuotePath( savePath );
+		cmd.arguments << "-loadgame" << saveBase.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
@@ -3480,6 +3499,9 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
 	}
 
+	//-- gameplay and compatibility options ----------------------------------------
+
+	const GameplayOptions & activeGameOpts = activeGameplayOptions();
 	if (ui->skillCmbBox->isEnabled())
 		cmd.arguments << "-skill" << ui->skillSpinBox->text();
 	if (ui->noMonstersChkBox->isEnabled() && ui->noMonstersChkBox->isChecked())
@@ -3492,12 +3514,16 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 		cmd.arguments << "+dmflags" << QString::number( activeGameOpts.dmflags1 );
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags2 != 0)
 		cmd.arguments << "+dmflags2" << QString::number( activeGameOpts.dmflags2 );
+
+	const CompatibilityOptions & activeCompatOpts = activeCompatOptions();
 	if (ui->compatLevelCmbBox->isEnabled() && activeCompatOpts.compatLevel >= 0)
 		cmd.arguments << engineTraits.getCompatLevelArgs( activeCompatOpts.compatLevel );
 	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
 	if (ui->allowCheatsChkBox->isChecked())
 		cmd.arguments << "+sv_cheats" << "1";
+
+	//-- multiplayer options -------------------------------------------------------
 
 	if (ui->multiplayerGrpBox->isChecked())
 	{
@@ -3542,17 +3568,16 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 		}
 	}
 
-	if (!ui->saveDirLine->text().isEmpty())
-	{
-		p.checkNotAFile( ui->saveDirLine->text(), "the save dir", {} );
-		cmd.arguments << engineTraits.saveDirParam() << base.rebaseAndQuotePath( ui->saveDirLine->text() );
-	}
-	if (!ui->screenshotDirLine->text().isEmpty())
-	{
-		p.checkNotAFile( ui->screenshotDirLine->text(), "the screenshot dir", {} );
-		cmd.arguments << "+screenshot_dir" << base.rebaseAndQuotePath( ui->screenshotDirLine->text() );
-	}
+	//-- output options ------------------------------------------------------------
 
+	// On Windows ZDoom doesn't log its output to stdout by default.
+	// Force it to do so, so that our ProcessOutputWindow displays something.
+ #if IS_WINDOWS
+	if (settings.showEngineOutput && engineTraits.hasStdoutParam())
+		cmd.arguments << "-stdout";
+ #endif
+
+	// video options
 	if (ui->monitorCmbBox->currentIndex() > 0)
 	{
 		int monitorIndex = ui->monitorCmbBox->currentIndex() - 1;  // the first item is a placeholder for leaving it default
@@ -3565,12 +3590,15 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 	if (ui->showFpsChkBox->isChecked())
 		cmd.arguments << "+vid_fps" << "1";
 
+	// audio options
 	if (ui->noSoundChkBox->isChecked())
 		cmd.arguments << "-nosound";
 	if (ui->noSfxChkBox->isChecked())
 		cmd.arguments << "-nosfx";
 	if (ui->noMusicChkBox->isChecked())
 		cmd.arguments << "-nomusic";
+
+	//-- additional custom command line arguments ----------------------------------
 
 	auto appendCustomArguments = [&]( QStringVec & args, const QString & customArgsStr )
 	{
@@ -3589,6 +3617,8 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 
 	if (!ui->globalCmdArgsLine->text().isEmpty())
 		appendCustomArguments( cmd.arguments, ui->globalCmdArgsLine->text() );
+
+	//------------------------------------------------------------------------------
 
 	return p.gotSomeInvalidPaths() ? os::ShellCommand() : cmd;
 }

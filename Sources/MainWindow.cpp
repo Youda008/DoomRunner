@@ -979,18 +979,17 @@ void MainWindow::runSetupDialog()
 		refreshMapPacks();
 
 		// select back the previously selected items
-		bool engineFound = wdg::setCurrentItemByID( ui->engineCmbBox, engineModel, currentEngine );
+		wdg::setCurrentItemByID( ui->engineCmbBox, engineModel, currentEngine );
 		wdg::setCurrentItemByID( ui->iwadListView, iwadModel, currentIWAD );
-		bool iwadFound = wdg::selectItemByID( ui->iwadListView, iwadModel, selectedIWAD );
+		wdg::selectItemByID( ui->iwadListView, iwadModel, selectedIWAD );
 
 		disableSelectionCallbacks = false;
 
-		// If the previously selected items were not found in the updated lists,
-		// call the callbacks manually because they were disabled.
-		if (!currentEngine.isEmpty() && !engineFound)
-			onEngineSelected( -1 );
-		if (!selectedIWAD.isEmpty() && !iwadFound)
-			onIWADToggled( QItemSelection(), QItemSelection()/*TODO*/ );
+		// Regardless whether the index of the selected items actually changed or whether they still exist,
+		// we have to call these callbacks, because their content (e.g. config dir) might have changed,
+		// and we need to update all the widgets dependent on that content.
+		onEngineSelected( ui->engineCmbBox->currentIndex() );
+		onIWADToggled( QItemSelection(), QItemSelection()/*TODO*/ );
 
 		scheduleSavingOptions();
 		updateLaunchCommand();

@@ -2223,7 +2223,7 @@ void MainWindow::onSaveDirChanged( const QString & dir )
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
 	bool storageModified = STORE_TO_CURRENT_PRESET( altPaths.saveDir, dir );
 
-	highlightDirPathIfFile( ui->saveDirLine, dir );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->saveDirLine, dir );  // non-existing dir is ok becase it will be created automatically
 
 	if (fs::isValidDir( dir ))
 		updateSaveFilesFromDir();
@@ -2238,7 +2238,7 @@ void MainWindow::onScreenshotDirChanged( const QString & dir )
 	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
 	bool storageModified = STORE_TO_CURRENT_PRESET( altPaths.screenshotDir, dir );
 
-	highlightDirPathIfFile( ui->screenshotDirLine, dir );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->screenshotDirLine, dir );  // non-existing dir is ok becase it will be created automatically
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();

@@ -32,9 +32,21 @@ bool highlightDirPathIfInvalid( QLineEdit * lineEdit, const QString & path );
 /** Returns true if the text was highlighted. */
 bool highlightFilePathIfInvalid( QLineEdit * lineEdit, const QString & path );
 
-/// Highlights a path that leads to a file instead of directory.
+/// Highlights a path in a QLineEdit that leads to a file instead of directory.
 /** Returns true if the text was highlighted. */
 bool highlightDirPathIfFile( QLineEdit * lineEdit, const QString & path );
+
+/// Highlights a path in a QLineEdit that leads to a directory instead of file.
+/** Returns true if the text was highlighted. */
+bool highlightFilePathIfDir( QLineEdit * lineEdit, const QString & path );
+
+/// Highlights a path in a QLineEdit that leads to a file instead of directory or it doesn't exist but can be created.
+/** Returns true if the text was highlighted. */
+bool highlightDirPathIfFileOrCanBeCreated( QLineEdit * lineEdit, const QString & path );
+
+/// Highlights a path in a QLineEdit that leads to a directory instead of file or it doesn't exist but can be created.
+/** Returns true if the text was highlighted. */
+bool highlightFilePathIfDirOrCanBeCreated( QLineEdit * lineEdit, const QString & path );
 
 /// Makes this item highlighted in its views.
 void highlightInvalidListItem( ReadOnlyListModelItem & item );

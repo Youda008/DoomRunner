@@ -140,6 +140,21 @@ static QColor mixColors( QColor color1, int weight1, QColor color2, int weight2,
 	);
 }
 
+static QColor getInvalidEntryColor( const QPalette & /*palette*/ )
+{
+	return Qt::red;
+}
+
+static QColor getToBeCreatedEntryColor( const QPalette & /*palette*/ )
+{
+	return QColor(0,0xA0,0);
+}
+
+static QColor getDefaultEntryColor( const QPalette & /*palette*/ )
+{
+	return QColor(0x00,0x7F,0xFF);
+}
+
 static std::pair< QColor, QColor > deriveSeparatorColors( const QPalette & palette )
 {
 	QColor activeText = palette.color( QPalette::Active, QPalette::Text );
@@ -149,11 +164,6 @@ static std::pair< QColor, QColor > deriveSeparatorColors( const QPalette & palet
 	QColor backgroundColor = mixColors( activeBase, 9, activeText, 4, QColor(12,12,12) );
 
 	return { textColor, backgroundColor };
-}
-
-static QColor deriveDefaultEntryColor( const QPalette & /*palette*/ )
-{
-	return QColor(0,0xA0,0);
 }
 
 
@@ -178,7 +188,9 @@ static void initColorPalettes()
 
 		static_cast< QPalette & >( systemPalette ) = qApp->palette();
 
-		systemPalette.defaultEntryText = deriveDefaultEntryColor( systemPalette );
+		systemPalette.invalidEntryText = getInvalidEntryColor( systemPalette );
+		systemPalette.toBeCreatedEntryText = getToBeCreatedEntryColor( systemPalette );
+		systemPalette.defaultEntryText = getDefaultEntryColor( systemPalette );
 		std::tie( systemPalette.separatorText, systemPalette.separatorBackground ) = deriveSeparatorColors( systemPalette );
 	}
 
@@ -204,7 +216,9 @@ static void initColorPalettes()
 		darkPalette.setColor( QPalette::All,      QPalette::HighlightedText, Qt::black );
 		darkPalette.setColor( QPalette::Disabled, QPalette::HighlightedText, disabledColor );
 
-		darkPalette.defaultEntryText = deriveDefaultEntryColor( darkPalette );
+		darkPalette.invalidEntryText = getInvalidEntryColor( darkPalette );
+		darkPalette.toBeCreatedEntryText = getToBeCreatedEntryColor( darkPalette );
+		darkPalette.defaultEntryText = getDefaultEntryColor( darkPalette );
 		std::tie( darkPalette.separatorText, darkPalette.separatorBackground ) = deriveSeparatorColors( darkPalette );
 	}
 
@@ -233,7 +247,9 @@ static void initColorPalettes()
 		setColorsForRole( lightPalette, QPalette::ToolTipText,     QColor(0x232629), QColor(0x232629), QColor(0x232629) );
 		setColorsForRole( lightPalette, QPalette::PlaceholderText, QColor(0x232629), QColor(0x232629), QColor(0x232629) );
 
-		lightPalette.defaultEntryText = deriveDefaultEntryColor( lightPalette );
+		lightPalette.invalidEntryText = getInvalidEntryColor( lightPalette );
+		lightPalette.toBeCreatedEntryText = getToBeCreatedEntryColor( lightPalette );
+		lightPalette.defaultEntryText = getDefaultEntryColor( lightPalette );
 		std::tie( lightPalette.separatorText, lightPalette.separatorBackground ) = deriveSeparatorColors( lightPalette );
 	}
 

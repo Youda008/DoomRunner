@@ -9,6 +9,7 @@
 
 #include "FileSystemUtils.hpp"  // isValidDir, isValidFile
 #include "WidgetUtils.hpp"  // setTextColor
+#include "Themes.hpp"  // getCurrentPalette
 
 #include <QFileInfo>
 #include <QTextStream>
@@ -20,13 +21,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 //  path highlighting
 
-static const QColor highlightColor = Qt::red;
-
 bool highlightDirPathIfInvalid( QLineEdit * lineEdit, const QString & path )
 {
 	if (fs::isInvalidDir( path ))
 	{
-		wdg::setTextColor( lineEdit, QColor( highlightColor ) );
+		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
 		return true;
 	}
 	else
@@ -40,7 +39,7 @@ bool highlightFilePathIfInvalid( QLineEdit * lineEdit, const QString & path )
 {
 	if (fs::isInvalidFile( path ))
 	{
-		wdg::setTextColor( lineEdit, QColor( highlightColor ) );
+		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
 		return true;
 	}
 	else
@@ -54,7 +53,73 @@ bool highlightDirPathIfFile( QLineEdit * lineEdit, const QString & path )
 {
 	if (fs::isValidFile( path ))
 	{
-		wdg::setTextColor( lineEdit, QColor( highlightColor ) );
+		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+		return true;
+	}
+	else
+	{
+		wdg::restoreColors( lineEdit );
+		return false;
+	}
+}
+
+bool highlightFilePathIfDir( QLineEdit * lineEdit, const QString & path )
+{
+	if (fs::isValidDir( path ))
+	{
+		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+		return true;
+	}
+	else
+	{
+		wdg::restoreColors( lineEdit );
+		return false;
+	}
+}
+
+bool highlightDirPathIfFileOrCanBeCreated( QLineEdit * lineEdit, const QString & path )
+{
+	if (path.isEmpty())
+	{
+		wdg::restoreColors( lineEdit );
+		return false;
+	}
+
+	QFileInfo dir( path );
+	if (!dir.exists())
+	{
+		wdg::setTextColor( lineEdit, themes::getCurrentPalette().toBeCreatedEntryText );
+		return true;
+	}
+	else if (dir.isFile())
+	{
+		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+		return true;
+	}
+	else
+	{
+		wdg::restoreColors( lineEdit );
+		return false;
+	}
+}
+
+bool highlightFilePathIfInvalidOrCanBeCreated( QLineEdit * lineEdit, const QString & path )
+{
+	if (path.isEmpty())
+	{
+		wdg::restoreColors( lineEdit );
+		return false;
+	}
+
+	QFileInfo file( path );
+	if (!file.exists())
+	{
+		wdg::setTextColor( lineEdit, themes::getCurrentPalette().toBeCreatedEntryText );
+		return true;
+	}
+	else if (file.isDir())
+	{
+		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
 		return true;
 	}
 	else
@@ -66,7 +131,7 @@ bool highlightDirPathIfFile( QLineEdit * lineEdit, const QString & path )
 
 void highlightInvalidListItem( ReadOnlyListModelItem & item )
 {
-	item.textColor = highlightColor;
+	item.textColor = themes::getCurrentPalette().invalidEntryText;
 }
 
 void unhighlightListItem( ReadOnlyListModelItem & item )

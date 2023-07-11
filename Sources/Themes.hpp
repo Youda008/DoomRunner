@@ -34,9 +34,11 @@ ColorScheme schemeFromString( const QString & schemeStr );
 /// Our own extended color palette.
 struct Palette : public QPalette
 {
-	QColor defaultEntryText;
-	QColor separatorText = Qt::black;
-	QColor separatorBackground = QRgb( 0xA0A0A0 );
+	QColor invalidEntryText;       ///< text color for a file/directory that doesn't exist or has a wrong type
+	QColor toBeCreatedEntryText;   ///< text color for a file/directory that doesn't exist but can be created
+	QColor defaultEntryText;       ///< text color for a file/directory that is set as default
+	QColor separatorText;          ///< text color for an entry that represents a visual separator
+	QColor separatorBackground;    ///< background color for an entry that represents a visual separator
 };
 
 

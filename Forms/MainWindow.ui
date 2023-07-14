@@ -250,7 +250,7 @@
                </sizepolicy>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;IWAD can be de-selected by holding CTRL and left-clicking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>IWAD can be de-selected by holding CTRL and left-clicking.</string>
               </property>
               <property name="title">
                <string>3. Select IWAD</string>
@@ -284,7 +284,7 @@
             <item>
              <widget class="QGroupBox" name="mapGrpBox">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Map pack can be de-selected by holding CTRL and left-clicking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>Map pack can be de-selected by holding CTRL and left-clicking.</string>
               </property>
               <property name="title">
                <string>4. Select map pack</string>
@@ -1515,6 +1515,9 @@
             <layout class="QVBoxLayout" name="verticalLayout_19">
              <item>
               <widget class="QCheckBox" name="usePresetNameChkBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Will automatically update the &lt;span style=&quot; color:#606060;&quot;&gt;Save dir&lt;/span&gt; and &lt;span style=&quot; color:#606060;&quot;&gt;Screenshot dir&lt;/span&gt; to point to a sub-directory of engine data directory named according to the currently selected preset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
                 <string>Use preset name as target directory [global option]</string>
                </property>
@@ -1525,7 +1528,7 @@
                <item>
                 <widget class="QLabel" name="saveDirLabel">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-savedir &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;path&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;&lt;br/&gt;&lt;/span&gt;Specifies an alternate directory to use for saved files. If this is not specified, ZDoom stores them in the directory indicated by the save_dir CVAR.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-savedir &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;path&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;&lt;br/&gt;&lt;/span&gt;Specifies an alternate directory to use for saved files. If this is not specified, ZDoom stores them in the directory indicated by the save_dir CVAR.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Save dir</string>
@@ -1559,7 +1562,7 @@
                <item>
                 <widget class="QLabel" name="screenshotDirLabel">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+screenshot_dir &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;path&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;&lt;br/&gt;&lt;/span&gt;This is the directory where screenshots will be saved if you do not provide a filename to the screenshot command. If this is unspecified (i.e. you leave it at its default), screenshots will be saved to the current working directory. Either an absolute path or a path relative to the current working directory can be used. The -shotdir parameter overrides it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+screenshot_dir &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;path&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;&lt;br/&gt;&lt;/span&gt;This is the directory where screenshots will be saved if you do not provide a filename to the screenshot command. If this is unspecified (i.e. you leave it at its default), screenshots will be saved to the current working directory. Either an absolute path or a path relative to the current working directory can be used. The -shotdir parameter overrides it.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Screenshot dir</string>

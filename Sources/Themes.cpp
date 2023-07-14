@@ -14,8 +14,10 @@
 #include <QWindow>
 #include <QStyle>
 #include <QStyleFactory>
+#include <QProxyStyle>
 #include <QPalette>
 #include <QColor>
+#include <QLabel>
 #include <QRegularExpression>
 #include <QStringBuilder>
 #include <QMessageBox>
@@ -49,21 +51,60 @@
 static QString defaultStyle;  ///< style active when application starts, depends on system settings
 static QStringList availableStyles;  ///< styles available on this operating system and graphical environment
 
+// idiotic workaround, because Qt is fucking stupid
+//
+// There is no way to set a tooltip delay, not even a global one, yet for a particular widget.
+// We have to build a list of widget names whose tooltips we want to modify and then check the list
+// in a global application style override.
+class TooltipDelayModifier : public QProxyStyle {
+
+ public:
+
+	using QProxyStyle::QProxyStyle;
+
+	int styleHint( StyleHint hint, const QStyleOption * option, const QWidget * widget, QStyleHintReturn * returnData ) const override
+	{
+		if (hint == QStyle::SH_ToolTip_WakeUpDelay)
+		{
+			if (dynamic_cast< const QLabel * >( widget ))
+			{
+				static const QSet< QString > noDelayLabels =
+				{
+					"executableLabel",
+					"configDirLabel",
+					"dataDirLabel",
+					"familyLabel",
+				};
+				if (noDelayLabels.contains( widget->objectName() ))
+				{
+					return 50;
+				}
+			}
+		}
+
+		return QProxyStyle::styleHint( hint, option, widget, returnData );
+	}
+
+};
+
 static void initStyles()
 {
 	defaultStyle = qApp->style()->objectName();
 	availableStyles = QStyleFactory::keys();
+
+	// this needs to be done here too, so that the tooltip modifications are applied even when no style is set
+	qApp->setStyle( new TooltipDelayModifier( qApp->style() ) );
 }
 
 static void setQtStyle( const QString & styleName )
 {
 	if (styleName.isNull())
 	{
-		qApp->setStyle( QStyleFactory::create( defaultStyle ) );
+		qApp->setStyle( new TooltipDelayModifier( QStyleFactory::create( defaultStyle ) ) );
 	}
 	else if (availableStyles.contains( styleName ))
 	{
-		qApp->setStyle( QStyleFactory::create( styleName ) );
+		qApp->setStyle( new TooltipDelayModifier( QStyleFactory::create( styleName ) ) );
 	}
 	else
 	{

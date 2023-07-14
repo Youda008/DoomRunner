@@ -3602,7 +3602,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 		auto splitArgs = splitCommandLineArguments( customArgsStr );
 		for (const auto & arg : splitArgs)
 		{
-			if (quotePaths && arg.quoted)
+			if (quotePaths && arg.wasQuoted)
 				args << quoted( arg.str );
 			else
 				args << arg.str;

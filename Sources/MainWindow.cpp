@@ -2247,12 +2247,12 @@ void MainWindow::onScreenshotDirChanged( const QString & dir )
 
 void MainWindow::browseSaveDir()
 {
-	browseDir( this, "with saves", ui->saveDirLine );
+	DialogWithPaths::browseDir( this, "with saves", ui->saveDirLine );
 }
 
 void MainWindow::browseScreenshotDir()
 {
-	browseDir( this, "for screenshots", ui->screenshotDirLine );
+	DialogWithPaths::browseDir( this, "for screenshots", ui->screenshotDirLine );
 }
 
 

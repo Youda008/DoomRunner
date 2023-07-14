@@ -353,7 +353,7 @@ void SetupDialog::editSelectedEngine()
 
 void SetupDialog::iwadAdd()
 {
-	QString path = browseFile( this, "IWAD", lastUsedDir,
+	QString path = DialogWithPaths::browseFile( this, "IWAD", lastUsedDir,
 		  makeFileFilter( "Doom data files", iwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
 		+ "All files (*)"
@@ -449,17 +449,17 @@ void SetupDialog::onIWADSubdirsToggled( bool checked )
 
 void SetupDialog::browseIWADDir()
 {
-	browseDir( this, "with IWADs", ui->iwadDirLine );
+	DialogWithPaths::browseDir( this, "with IWADs", ui->iwadDirLine );
 }
 
 void SetupDialog::browseMapDir()
 {
-	browseDir( this, "with maps", ui->mapDirLine );
+	DialogWithPaths::browseDir( this, "with maps", ui->mapDirLine );
 }
 
 void SetupDialog::browseModDir()
 {
-	browseDir( this, "with mods", ui->modDirLine );
+	DialogWithPaths::browseDir( this, "with mods", ui->modDirLine );
 }
 
 void SetupDialog::onIWADDirChanged( const QString & dir )

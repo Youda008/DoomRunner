@@ -182,7 +182,7 @@ static QString suggestEngineDataDir(
 
 void EngineDialog::browseExecutable()
 {
-	QString executablePath = browseFile( this, "engine's executable", QString(),
+	QString executablePath = DialogWithPaths::browseFile( this, "engine's executable", QString(),
  #if IS_WINDOWS
 		"Executable files (*.exe);;"
  #endif
@@ -219,12 +219,12 @@ void EngineDialog::browseExecutable()
 
 void EngineDialog::browseConfigDir()
 {
-	browseDir( this, "where engine stores configs", ui->configDirLine );
+	DialogWithPaths::browseDir( this, "where engine stores configs", ui->configDirLine );
 }
 
 void EngineDialog::browseDataDir()
 {
-	browseDir( this, "where engine stores data files", ui->dataDirLine );
+	DialogWithPaths::browseDir( this, "where engine stores data files", ui->dataDirLine );
 }
 
 void EngineDialog::onNameChanged( const QString & text )

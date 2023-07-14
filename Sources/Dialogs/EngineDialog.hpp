@@ -24,7 +24,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class EngineDialog : public QDialog, private DialogCommon {
+class EngineDialog : public QDialog, private DialogWithPaths {
 
 	Q_OBJECT
 
@@ -61,8 +61,6 @@ class EngineDialog : public QDialog, private DialogCommon {
  private:
 
 	Ui::EngineDialog * ui;
-
-	PathConvertor pathConvertor;
 
 	std::optional< ExeVersionInfo > engineVersionInfo;
 	QString suggestedName;

@@ -21,11 +21,10 @@
 
 //======================================================================================================================
 
-EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConvertor, const Engine & engine )
+EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, const Engine & engine )
 :
 	QDialog( parent ),
-	DialogCommon( this ),
-	pathConvertor( pathConvertor ),
+	DialogWithPaths( this, pathConv ),
 	engine( engine )
 {
 	ui = new Ui::EngineDialog;
@@ -183,7 +182,7 @@ static QString suggestEngineDataDir(
 
 void EngineDialog::browseExecutable()
 {
-	QString executablePath = OwnFileDialog::getOpenFileName( this, "Locate engine's executable", ui->executableLine->text(),
+	QString executablePath = browseFile( this, "engine's executable", QString(),
  #if IS_WINDOWS
 		"Executable files (*.exe);;"
  #endif
@@ -204,10 +203,9 @@ void EngineDialog::browseExecutable()
 	suggestedDataDir = suggestEngineDataDir( executablePath, executableTraits, engineVersionInfo );
 	EngineFamily guessedFamily = guessEngineFamily( executableTraits.executableBaseName );
 
-	// the paths comming out of the file dialog and suggestions are always absolute
+	// the suggested paths are always absolute
 	if (pathConvertor.usingRelativePaths())
 	{
-		executablePath = pathConvertor.getRelativePath( executablePath );
 		suggestedConfigDir = pathConvertor.getRelativePath( suggestedConfigDir );
 		suggestedDataDir = pathConvertor.getRelativePath( suggestedDataDir );
 	}
@@ -221,28 +219,12 @@ void EngineDialog::browseExecutable()
 
 void EngineDialog::browseConfigDir()
 {
-	QString dirPath = OwnFileDialog::getExistingDirectory( this, "Locate engine's config directory", ui->configDirLine->text() );
-	if (dirPath.isEmpty())  // user probably clicked cancel
-		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathConvertor.usingRelativePaths())
-		dirPath = pathConvertor.getRelativePath( dirPath );
-
-	ui->configDirLine->setText( dirPath );
+	browseDir( this, "where engine stores configs", ui->configDirLine );
 }
 
 void EngineDialog::browseDataDir()
 {
-	QString dirPath = OwnFileDialog::getExistingDirectory( this, "Locate engine's data directory", ui->dataDirLine->text() );
-	if (dirPath.isEmpty())  // user probably clicked cancel
-		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathConvertor.usingRelativePaths())
-		dirPath = pathConvertor.getRelativePath( dirPath );
-
-	ui->dataDirLine->setText( dirPath );
+	browseDir( this, "where engine stores data files", ui->dataDirLine );
 }
 
 void EngineDialog::onNameChanged( const QString & text )

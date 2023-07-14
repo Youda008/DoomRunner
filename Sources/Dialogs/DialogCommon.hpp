@@ -45,7 +45,7 @@ class DialogWithPaths : public DialogCommon {
 	QString browseFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );
 
 	/// Runs a file-system dialog to let the user select a directory and stores it for the next call.
-	QString browseDir( QWidget * parent, const QString & dirDesc, QString startingDir );
+	QString browseDir( QWidget * parent, const QString & dirDesc, QString startingDir = QString() );
 
 	/// Convenience wrapper that also stores the result into a text line.
 	void browseFile( QWidget * parent, const QString & fileDesc, QLineEdit * targetLine, const QString & filter );

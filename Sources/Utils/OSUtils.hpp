@@ -26,12 +26,33 @@ namespace os {
 
 //-- standard directories and installation properties ----------------------------------------------
 
+/// Returns home directory for the current user.
 QString getHomeDir();
 
-/// Returns directory for this application to save its config into.
+/// Returns directory for document files of the current user.
+QString getDocumentsDir();
+
+#if IS_WINDOWS
+/// Returns directory for game saves of the current user.
+QString getSavedGamesDir();
+#endif
+
+/// Returns parent directory where applications should store their config files.
+QString getAppConfigDir();
+
+/// Returns parent directory where applications should store their data files.
+QString getAppDataDir();
+
+/// Returns directory where selected application should store its config files.
+QString getConfigDirForApp( const QString & executablePath );
+
+/// Returns directory where selected application should store its data files.
+QString getDataDirForApp( const QString & executablePath );
+
+/// Returns directory where this application should save its config files.
 QString getThisAppConfigDir();
 
-/// Returns directory for this application to save its data into. This may be the same as the config dir.
+/// Returns directory where this application should save its data files. This may be the same as the config dir.
 QString getThisAppDataDir();
 
 /// Returns whether an executable is inside one of directories where the system will find it.

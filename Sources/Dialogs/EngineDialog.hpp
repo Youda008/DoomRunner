@@ -13,6 +13,7 @@
 
 #include "UserData.hpp"  // Engine
 #include "Utils/FileSystemUtils.hpp"  // PathContext
+#include "Utils/ExeReader.hpp"        // engine version info
 
 #include <QDialog>
 
@@ -42,12 +43,14 @@ class EngineDialog : public QDialog, private DialogCommon {
 
  private slots:
 
-	void browseEngine();
+	void browseExecutable();
 	void browseConfigDir();
+	void browseDataDir();
 
 	void onNameChanged( const QString & text );
-	void onPathChanged( const QString & text );
+	void onExecutableChanged( const QString & text );
 	void onConfigDirChanged( const QString & text );
+	void onDataDirChanged( const QString & text );
 	void onFamilySelected( int familyIdx );
 
  public slots: // overridden methods
@@ -60,6 +63,11 @@ class EngineDialog : public QDialog, private DialogCommon {
 	Ui::EngineDialog * ui;
 
 	PathContext pathContext;
+
+	std::optional< ExeVersionInfo > engineVersionInfo;
+	QString suggestedName;
+	QString suggestedConfigDir;
+	QString suggestedDataDir;
 
  public: // return values from this dialog
 

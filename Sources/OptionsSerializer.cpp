@@ -69,6 +69,7 @@ static QJsonObject serialize( const Engine & engine )
 		jsEngine["name"] = engine.name;
 		jsEngine["path"] = engine.path;
 		jsEngine["config_dir"] = engine.configDir;
+		jsEngine["data_dir"] = engine.dataDir;
 		jsEngine["family"] = familyToStr( engine.family );
 	}
 
@@ -87,6 +88,7 @@ static void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 		engine.name = jsEngine.getString( "name", "<missing name>" );
 		engine.path = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
 		engine.configDir = jsEngine.getString( "config_dir", fs::getDirOfFile( engine.path ) );
+		engine.dataDir = jsEngine.getString( "data_dir", engine.configDir, DontShowError );
 		engine.family = familyFromStr( jsEngine.getString( "family", {}, DontShowError ) );
 		if (engine.family == EngineFamily::_EnumEnd)
 			engine.family = guessEngineFamily( fs::getFileBasenameFromPath( engine.path ) );

@@ -51,6 +51,7 @@ HEADERS += \
 	Sources/Dialogs/SetupDialog.hpp \
 	Sources/Utils/ErrorHandling.hpp \
 	Sources/Utils/EventFilters.hpp \
+	Sources/Utils/ExeReader.hpp \
 	Sources/Utils/FileSystemUtils.hpp \
 	Sources/Utils/JsonUtils.hpp \
 	Sources/Utils/LangUtils.hpp \
@@ -86,6 +87,7 @@ SOURCES += \
 	Sources/Dialogs/SetupDialog.cpp \
 	Sources/Utils/ErrorHandling.cpp \
 	Sources/Utils/EventFilters.cpp \
+	Sources/Utils/ExeReader.cpp \
 	Sources/Utils/FileSystemUtils.cpp \
 	Sources/Utils/LangUtils.cpp \
 	Sources/Utils/JsonUtils.cpp \
@@ -129,7 +131,7 @@ win32: RC_ICONS += Resources/DoomRunner.ico
 
 #-- libraries ------------------------------------
 
-win32: LIBS += -lole32 -luuid -ldwmapi
+win32: LIBS += -lole32 -luuid -ldwmapi -lversion
 
 
 #-- user configuration ---------------------------

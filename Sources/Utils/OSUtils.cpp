@@ -21,12 +21,7 @@
 #if IS_WINDOWS
 	#include <windows.h>
 	#include <shlobj.h>
-	//#include <winnls.h>
-	//#include <shobjidl.h>
-	//#include <objbase.h>
-	//#include <objidl.h>
-	//#include <shlguid.h>
-#endif // IS_WINDOWS
+#endif
 
 
 //======================================================================================================================
@@ -42,9 +37,66 @@ QString getHomeDir()
 	return QStandardPaths::writableLocation( QStandardPaths::HomeLocation );
 }
 
+QString getDocumentsDir()
+{
+	return QStandardPaths::writableLocation( QStandardPaths::DocumentsLocation );
+}
+
+#if IS_WINDOWS
+QString getSavedGamesDir()
+{
+	PWSTR pszPath = nullptr;
+	HRESULT hr = SHGetKnownFolderPath( FOLDERID_SavedGames, KF_FLAG_DONT_UNEXPAND, nullptr, &pszPath );
+	if (FAILED(hr) || !pszPath)
+	{
+		return {};
+	}
+	auto dir = QString::fromWCharArray( pszPath );
+	CoTaskMemFree( pszPath );
+	dir.replace('\\', '/');
+	return dir;
+}
+#endif
+
+QString getAppConfigDir()
+{
+ #if !IS_WINDOWS && defined(FLATPAK_BUILD)  // the launcher is a Flatpak installation on Linux
+	// Inside Flatpak environment the GenericConfigLocation points into the Flatpak sandbox of this application.
+	// But we need the system-wide config dir, and that's not available via Qt, so we must do this guessing hack.
+	return getHomeDir()%"/.config";
+ #else
+	return QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
+ #endif
+}
+
+QString getAppDataDir()
+{
+ #if !IS_WINDOWS && defined(FLATPAK_BUILD)  // the launcher is a Flatpak installation on Linux
+	// Inside Flatpak environment the GenericDataLocation points into the Flatpak sandbox of this application.
+	// But we need the system-wide data dir, and that's not available via Qt, so we must do this guessing hack.
+	return getHomeDir()%"/.local/share";
+ #else
+	return QStandardPaths::writableLocation( QStandardPaths::GenericDataLocation );
+ #endif
+}
+
+QString getConfigDirForApp( const QString & executablePath )
+{
+	QString genericConfigDir = getAppConfigDir();
+	QString appName = fs::getFileBasenameFromPath( executablePath );
+	return fs::getPathFromFileName( genericConfigDir, appName );  // -> /home/youda/.config/zdoom
+}
+
+QString getDataDirForApp( const QString & executablePath )
+{
+	QString genericDataDir = getAppDataDir();
+	QString appName = fs::getFileBasenameFromPath( executablePath );
+	return fs::getPathFromFileName( genericDataDir, appName );  // -> /home/youda/.local/share/zdoom
+}
+
 QString getThisAppConfigDir()
 {
-	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
+	// mimic ZDoom behaviour - save to application's binary dir on Windows, but to /home/user/.config/DoomRunner on Linux
  #if IS_WINDOWS
 	QString thisExeDir = QApplication::applicationDirPath();
 	if (fs::isDirectoryWritable( thisExeDir ))
@@ -58,7 +110,7 @@ QString getThisAppConfigDir()
 
 QString getThisAppDataDir()
 {
-	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.local/share/DoomRunner in Linux
+	// mimic ZDoom behaviour - save to application's binary dir on Windows, but to /home/user/.local/share/DoomRunner on Linux
  #if IS_WINDOWS
 	QString thisExeDir = QApplication::applicationDirPath();
 	if (fs::isDirectoryWritable( thisExeDir ))
@@ -91,15 +143,15 @@ ExecutableTraits getExecutableTraits( const QString & executablePath )
 
 	traits.executableBaseName = fs::getFileBasenameFromPath( executablePath );
 
-	static QRegularExpression snapRegex("^/snap/");
-	static QRegularExpression flatpakRegex("^/var/lib/flatpak/app/([^/]+)/");
+	static QRegularExpression snapPathRegex("^/snap/");
+	static QRegularExpression flatpakPathRegex("^/var/lib/flatpak/app/([^/]+)/");
 	QRegularExpressionMatch match;
-	if ((match = snapRegex.match( executablePath )).hasMatch())
+	if ((match = snapPathRegex.match( executablePath )).hasMatch())
 	{
 		traits.sandboxEnv = Sandbox::Snap;
 		traits.sandboxAppName = fs::getFileNameFromPath( executablePath );
 	}
-	else if ((match = flatpakRegex.match( executablePath )).hasMatch())
+	else if ((match = flatpakPathRegex.match( executablePath )).hasMatch())
 	{
 		traits.sandboxEnv = Sandbox::Flatpak;
 		traits.sandboxAppName = match.captured(1);

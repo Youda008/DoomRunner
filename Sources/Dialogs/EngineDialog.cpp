@@ -17,7 +17,6 @@
 #include <QDir>
 #include <QTimer>
 #include <QMessageBox>
-#include <QStandardPaths>
 
 
 //======================================================================================================================
@@ -41,20 +40,24 @@ EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, c
 
 	// fill existing engine properties
 	ui->nameLine->setText( engine.name );
-	ui->pathLine->setText( engine.path );
+	ui->executableLine->setText( engine.path );
 	ui->configDirLine->setText( engine.configDir );
+	ui->dataDirLine->setText( engine.dataDir );
 	ui->familyCmbBox->setCurrentIndex( int(engine.family) );
 
 	// mark invalid paths
-	highlightFilePathIfInvalid( ui->pathLine, engine.path  );
+	highlightFilePathIfInvalid( ui->executableLine, engine.path  );
 	highlightDirPathIfInvalid( ui->configDirLine, engine.configDir );
+	highlightDirPathIfInvalid( ui->dataDirLine, engine.dataDir );
 
-	connect( ui->browseEngineBtn, &QPushButton::clicked, this, &thisClass::browseEngine );
-	connect( ui->browseConfigsBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
+	connect( ui->browseExecutableBtn, &QPushButton::clicked, this, &thisClass::browseExecutable );
+	connect( ui->browseConfigDirBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
+	connect( ui->browseDataDirBtn, &QPushButton::clicked, this, &thisClass::browseDataDir );
 
 	connect( ui->nameLine, &QLineEdit::textChanged, this, &thisClass::onNameChanged );
-	connect( ui->pathLine, &QLineEdit::textChanged, this, &thisClass::onPathChanged );
+	connect( ui->executableLine, &QLineEdit::textChanged, this, &thisClass::onExecutableChanged );
 	connect( ui->configDirLine, &QLineEdit::textChanged, this, &thisClass::onConfigDirChanged );
+	connect( ui->dataDirLine, &QLineEdit::textChanged, this, &thisClass::onDataDirChanged );
 
 	connect( ui->familyCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onFamilySelected );
 
@@ -68,15 +71,18 @@ void EngineDialog::adjustUi()
 	int maxLabelWidth = 0;
 	if (int width = ui->nameLabel->width(); width > maxLabelWidth)
 		maxLabelWidth = width;
-	if (int width = ui->pathLabel->width(); width > maxLabelWidth)
+	if (int width = ui->executableLabel->width(); width > maxLabelWidth)
 		maxLabelWidth = width;
 	if (int width = ui->configDirLabel->width(); width > maxLabelWidth)
+		maxLabelWidth = width;
+	if (int width = ui->dataDirLabel->width(); width > maxLabelWidth)
 		maxLabelWidth = width;
 	if (int width = ui->familyLabel->width(); width > maxLabelWidth)
 		maxLabelWidth = width;
 	ui->nameLabel->setMinimumWidth( maxLabelWidth );
-	ui->pathLabel->setMinimumWidth( maxLabelWidth );
+	ui->executableLabel->setMinimumWidth( maxLabelWidth );
 	ui->configDirLabel->setMinimumWidth( maxLabelWidth );
+	ui->dataDirLabel->setMinimumWidth( maxLabelWidth );
 	ui->familyLabel->setMinimumWidth( maxLabelWidth );
 }
 
@@ -99,98 +105,117 @@ void EngineDialog::onWindowShown()
 	// half-shown state and not close properly.
 
 	if (engine.path.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())
-		browseEngine();
+		browseExecutable();
 
 	if (engine.path.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())  // user closed the browseEngine dialog
 		done( QDialog::Rejected );
 }
 
-static QString suggestEngineName( const QString & enginePath )
-{
-	// In Windows we can use the directory name, which can tell slightly more than just the binary,
-	// but in Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
+static QString suggestEngineName(
+	[[maybe_unused]] const QString & executablePath, [[maybe_unused]] const os::ExecutableTraits & traits,
+	[[maybe_unused]] const std::optional< ExeVersionInfo > & versionInfo
+){
  #if IS_WINDOWS
-	return fs::getDirnameOfFile( enginePath );
+
+	// On Windows we can use the metadata built into the executable, or the name of its directory.
+	if (versionInfo)
+		return versionInfo->appName;  // exe metadata should be most reliable source
+	else
+		return fs::getDirnameOfFile( executablePath );
+
  #else
-	os::ExecutableTraits traits = os::getExecutableTraits( enginePath );
+
+	// On Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
 	if (traits.sandboxEnv != os::Sandbox::None)
 		return traits.sandboxAppName;
 	else
 		return traits.executableBaseName;
+
  #endif
 }
 
-static QString suggestEngineConfigDir( const QString & enginePath )
-{
-	// In Windows engines usually store their config in the directory of its binaries or in Saved Games,
-	// but in Linux they store them in standard user's app config dir (usually something like /home/user/.config/)
-
+static QString suggestEngineConfigDir(
+	[[maybe_unused]] const QString & executablePath, [[maybe_unused]] const os::ExecutableTraits & traits,
+	[[maybe_unused]] const std::optional< ExeVersionInfo > & versionInfo
+){
  #if IS_WINDOWS
 
-	QString engineDir = fs::getDirOfFile( enginePath );
-	if (fs::isDirectoryWritable( engineDir ))
-	{
-		return engineDir;
-	}
-	else  // if we cannot write to the directory of the executable (e.g. Program Files), try Saved Games
-	{
-		// this is not bullet-proof but will work for 90% of users
-		return qEnvironmentVariable("USERPROFILE")%"/Saved Games/"%fs::getFileNameFromPath( enginePath );
-	}
+	// On Windows, engines usually store their config in the directory of its binaries,
+	// with the exception of latest GZDoom (thanks Graph) that started storing it to Documents\My Games\GZDoom
+	if (versionInfo && versionInfo->appName == "GZDoom" && versionInfo->v >= Version(4,9,0))
+		return os::getDocumentsDir()%"/My Games/GZDoom";
+	else
+		return fs::getDirOfFile( executablePath );
 
  #else
 
-	os::ExecutableTraits traits = os::getExecutableTraits( enginePath );
+	// On Linux they store them in standard user's app config dir (usually something like /home/youda/.config/).
 	if (traits.sandboxEnv == os::Sandbox::Snap)
-	{
 		return os::getHomeDir()%"/snap/"%traits.executableBaseName%"/current/.config/"%traits.executableBaseName;
-	}
 	else if (traits.sandboxEnv == os::Sandbox::Flatpak)  // the engine is a Flatpak installation
-	{
 		return os::getHomeDir()%"/.var/app/"%traits.sandboxAppName%"/.config/"%traits.executableBaseName;
-	}
 	else
-	{
-	 #ifdef FLATPAK_BUILD  // the launcher is a Flatpak installation
-		// Inside Flatpak environment the GenericConfigLocation points into the Flatpak sandbox of this application.
-		// But we need the system-wide config dir, and that's available via Qt, so we must do this guessing hack.
-		QString standardConfigDir = os::getHomeDir()+"/.config";
-	 #else
-		QString standardConfigDir = QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
-	 #endif
-		QString appName = fs::getFileBasenameFromPath( enginePath );
-		return fs::getPathFromFileName( standardConfigDir, appName );  // -> /home/user/.config/zdoom
-	}
+		return os::getConfigDirForApp( executablePath );  // -> /home/youda/.config/zdoom
 
  #endif
 }
 
-void EngineDialog::browseEngine()
+static QString suggestEngineDataDir(
+	[[maybe_unused]] const QString & executablePath, [[maybe_unused]] const os::ExecutableTraits & traits,
+	[[maybe_unused]] const std::optional< ExeVersionInfo > & versionInfo
+){
+ #if IS_WINDOWS
+
+	// On Windows, engines usually store their data in the directory of its binaries,
+	// with the exception of latest GZDoom (thanks Graph) that started storing it to Saved Games\GZDoom
+	if (versionInfo && versionInfo->appName == "GZDoom" && versionInfo->v >= Version(4,9,0))
+		return os::getSavedGamesDir()%"/GZDoom";
+	else
+		return fs::getDirOfFile( executablePath );
+
+ #else
+
+	// On Linux it is generally the same as config dir.
+	return suggestEngineConfigDir( executablePath, traits, versionInfo );
+
+ #endif
+}
+
+void EngineDialog::browseExecutable()
 {
-	QString enginePath = OwnFileDialog::getOpenFileName( this, "Locate engine's executable", ui->pathLine->text(),
+	QString executablePath = OwnFileDialog::getOpenFileName( this, "Locate engine's executable", ui->executableLine->text(),
  #if IS_WINDOWS
 		"Executable files (*.exe);;"
  #endif
 		"All files (*)"
 	);
-	if (enginePath.isNull())  // user probably clicked cancel
+	if (executablePath.isNull())  // user probably clicked cancel
 		return;
 
-	// the path comming out of the file dialog is always absolute
+	auto executableTraits = os::getExecutableTraits( executablePath );
+
+ #if IS_WINDOWS
+	// I hate you Graph!
+	engineVersionInfo = readExeVersionInfo( executablePath );
+ #endif
+
+	suggestedName = suggestEngineName( executablePath, executableTraits, engineVersionInfo );
+	suggestedConfigDir = suggestEngineConfigDir( executablePath, executableTraits, engineVersionInfo );
+	suggestedDataDir = suggestEngineDataDir( executablePath, executableTraits, engineVersionInfo );
+	EngineFamily guessedFamily = guessEngineFamily( executableTraits.executableBaseName );
+
+	// the paths comming out of the file dialog and suggestions are always absolute
 	if (pathContext.usingRelativePaths())
-		enginePath = pathContext.getRelativePath( enginePath );
+	{
+		executablePath = pathContext.getRelativePath( executablePath );
+		suggestedConfigDir = pathContext.getRelativePath( suggestedConfigDir );
+		suggestedDataDir = pathContext.getRelativePath( suggestedDataDir );
+	}
 
-	ui->pathLine->setText( enginePath );
-
-	if (ui->nameLine->text().isEmpty())  // don't overwrite existing name
-		ui->nameLine->setText( suggestEngineName( enginePath ) );
-
-	if (ui->configDirLine->text().isEmpty())  // don't overwrite existing config dir
-		ui->configDirLine->setText( suggestEngineConfigDir( enginePath ) );
-
-	// guess the engine family based on executable's name
-	QString executableName = fs::getFileBasenameFromPath( enginePath );
-	EngineFamily guessedFamily = guessEngineFamily( executableName );
+	ui->executableLine->setText( executablePath );
+	ui->nameLine->setText( suggestedName );
+	ui->configDirLine->setText( suggestedConfigDir );
+	ui->dataDirLine->setText( suggestedDataDir );
 	ui->familyCmbBox->setCurrentIndex( int(guessedFamily) );
 }
 
@@ -207,23 +232,51 @@ void EngineDialog::browseConfigDir()
 	ui->configDirLine->setText( dirPath );
 }
 
+void EngineDialog::browseDataDir()
+{
+	QString dirPath = OwnFileDialog::getExistingDirectory( this, "Locate engine's data directory", ui->dataDirLine->text() );
+	if (dirPath.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path comming out of the file dialog is always absolute
+	if (pathContext.usingRelativePaths())
+		dirPath = pathContext.getRelativePath( dirPath );
+
+	ui->dataDirLine->setText( dirPath );
+}
+
 void EngineDialog::onNameChanged( const QString & text )
 {
 	engine.name = text;
 }
 
-void EngineDialog::onPathChanged( const QString & text )
+void EngineDialog::onExecutableChanged( const QString & text )
 {
 	engine.path = text;
 
-	highlightFilePathIfInvalid( ui->pathLine, text );
+	highlightFilePathIfInvalid( ui->executableLine, text );
 }
 
 void EngineDialog::onConfigDirChanged( const QString & text )
 {
 	engine.configDir = text;
 
-	highlightDirPathIfInvalid( ui->configDirLine, text );
+	if (text == suggestedConfigDir
+	 && QFileInfo( suggestedDataDir ).dir().exists())  // don't highlight with green if our suggestion is nonsense
+		highlightDirPathIfFileOrCanBeCreated( ui->configDirLine, text );
+	else
+		highlightDirPathIfInvalid( ui->configDirLine, text );
+}
+
+void EngineDialog::onDataDirChanged( const QString & text )
+{
+	engine.dataDir = text;
+
+	if (text == suggestedDataDir
+	 && QFileInfo( suggestedDataDir ).dir().exists())  // don't highlight with green if our suggestion is nonsense
+		highlightDirPathIfFileOrCanBeCreated( ui->dataDirLine, text );
+	else
+		highlightDirPathIfInvalid( ui->dataDirLine, text );
 }
 
 void EngineDialog::onFamilySelected( int familyIdx )
@@ -266,10 +319,25 @@ void EngineDialog::accept()
 		);
 		return;
 	}
-	else if (fs::isInvalidDir( engine.configDir ))
+	else if (engine.configDir != suggestedConfigDir && fs::isInvalidDir( engine.configDir ))
 	{
 		QMessageBox::warning( this, "Config dir doesn't exist",
 			"Please fix the engine's config directory, such directory doesn't exist."
+		);
+		return;
+	}
+
+	if (engine.dataDir.isEmpty())
+	{
+		QMessageBox::warning( this, "Data dir cannot be empty",
+			"Please specify the engine's data directory, this launcher cannot operate without it."
+		);
+		return;
+	}
+	else if (engine.dataDir != suggestedDataDir && fs::isInvalidDir( engine.dataDir ))
+	{
+		QMessageBox::warning( this, "Data dir doesn't exist",
+			"Please fix the engine's data directory, such directory doesn't exist."
 		);
 		return;
 	}

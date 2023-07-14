@@ -22,8 +22,6 @@
 #include <QFileInfo>
 #include <QFileSystemModel>
 
-#include <optional>
-
 class QItemSelection;
 class QComboBox;
 class QLineEdit;

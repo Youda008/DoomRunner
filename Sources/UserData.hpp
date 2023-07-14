@@ -25,7 +25,7 @@
 //======================================================================================================================
 //  OS-specific defaults
 
-#ifdef _WIN32
+#if IS_WINDOWS
 	constexpr PathStyle defaultPathStyle = PathStyle::Relative;
 	constexpr bool showEngineOutputByDefault = false;
 #else
@@ -49,11 +49,12 @@ struct Engine : public EditableListModelItem
 	QString name;        ///< user defined engine name
 	QString path;        ///< path to the engine's executable
 	QString configDir;   ///< directory with engine's .ini files
+	QString dataDir;     ///< directory for engine's data files (save files, demo files, ...)
 	EngineFamily family = EngineFamily::ZDoom;  ///< automatically detected, but user-selectable engine family
 
 	Engine() {}
 	Engine( const QFileInfo & file )
-		: name( file.fileName() ), path( file.filePath() ), configDir( file.dir().path() ) {}
+		: name( file.fileName() ), path( file.filePath() ), configDir( file.dir().path() ), dataDir( configDir ) {}
 
 	// requirements of EditableListModel
 	const QString & getFilePath() const { return path; }

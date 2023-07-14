@@ -16,7 +16,7 @@
 #include <QList>
 #include <QVector>
 
-class PathContext;
+class PathRebaser;
 
 
 //======================================================================================================================
@@ -83,11 +83,11 @@ struct ShellCommand
 };
 /// Returns a shell command needed to run a specified executable without parameters.
 /** The result may be different based on operating system and where the executable is installed.
-  * \param base path options with base directory for relative paths and whether paths should be quoted
+  * \param rebaser path convertor set up to rebase paths from current working dir to a selected new base dir
   * \param dirsToBeAccessed Directories to which the executable will need a read access.
   *                         Required to setup permissions for a sandbox environment. */
 ShellCommand getRunCommand(
-	const QString & executablePath, const PathContext & base, const QStringVec & dirsToBeAccessed = {}
+	const QString & executablePath, const PathRebaser & currentDirToNewBaseDir, const QStringVec & dirsToBeAccessed = {}
 );
 
 

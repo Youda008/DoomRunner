@@ -85,7 +85,7 @@ void MainWindow::forEachSelectedMapPack( const Functor & loopBody ) const
 	for (const QModelIndex & index : selectedRows)
 	{
 		QString modelPath = mapModel.filePath( index );
-		loopBody( pathContext.convertPath( modelPath ) );
+		loopBody( pathConvertor.convertPath( modelPath ) );
 	}
 }
 
@@ -418,7 +418,9 @@ MainWindow::MainWindow()
 :
 	QMainWindow( nullptr ),
 	DialogWithPaths(
-		this, PathContext( QApplication::applicationDirPath(), defaultPathStyle )  // all relative paths will internally be stored relative to the application's dir
+		// All relative paths will internally be stored relative to the current working dir,
+		// so that all file-system operations instantly work without the need to rebase the paths first.
+		this, PathConvertor( QDir::current(), defaultPathStyle )
 	),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
@@ -694,7 +696,7 @@ void MainWindow::setupModList()
 	ui->modListView->toggleListModifications( true );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	modModel.setPathContext( &pathContext );
+	modModel.setPathContext( &pathConvertor );
 
 	// set drag&drop behaviour
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
@@ -926,7 +928,7 @@ void MainWindow::runSetupDialog()
 
 	SetupDialog dialog(
 		this,
-		pathContext.baseDir(),
+		pathConvertor,
 		engineSettings,
 		engineModel.list(),
 		iwadSettings,
@@ -969,9 +971,9 @@ void MainWindow::runSetupDialog()
 
 		// update all stored paths
 		togglePathStyle( settings.pathStyle );
-		currentEngine = pathContext.convertPath( currentEngine );
-		currentIWAD = pathContext.convertPath( currentIWAD );
-		selectedIWAD = pathContext.convertPath( selectedIWAD );
+		currentEngine = pathConvertor.convertPath( currentEngine );
+		currentIWAD = pathConvertor.convertPath( currentIWAD );
+		selectedIWAD = pathConvertor.convertPath( selectedIWAD );
 
 		// notify the widgets to re-draw their content
 		engineModel.finishCompleteUpdate();
@@ -1576,9 +1578,9 @@ void MainWindow::modAdd()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
+	if (pathConvertor.usingRelativePaths())
 		for (QString & path : paths)
-			path = pathContext.getRelativePath( path );
+			path = pathConvertor.getRelativePath( path );
 
 	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
 
@@ -1607,8 +1609,8 @@ void MainWindow::modAddDir()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
+	if (pathConvertor.usingRelativePaths())
+		path = pathConvertor.getRelativePath( path );
 
 	Mod mod( QFileInfo( path ), true );
 
@@ -2343,47 +2345,47 @@ void MainWindow::onGlobalCmdArgsChanged( const QString & text )
 
 void MainWindow::togglePathStyle( PathStyle style )
 {
-	bool styleChanged = style != pathContext.pathStyle();
+	bool styleChanged = style != pathConvertor.pathStyle();
 
-	pathContext.setPathStyle( style );
+	pathConvertor.setPathStyle( style );
 
 	for (Engine & engine : engineModel)
 	{
-		engine.path = pathContext.convertPath( engine.path );
-		engine.configDir = pathContext.convertPath( engine.configDir );
+		engine.path = pathConvertor.convertPath( engine.path );
+		engine.configDir = pathConvertor.convertPath( engine.configDir );
 	}
 
-	iwadSettings.dir = pathContext.convertPath( iwadSettings.dir );
+	iwadSettings.dir = pathConvertor.convertPath( iwadSettings.dir );
 	for (IWAD & iwad : iwadModel)
 	{
-		iwad.path = pathContext.convertPath( iwad.path );
+		iwad.path = pathConvertor.convertPath( iwad.path );
 	}
 
-	mapSettings.dir = pathContext.convertPath( mapSettings.dir );
+	mapSettings.dir = pathConvertor.convertPath( mapSettings.dir );
 	mapModel.setRootPath( mapSettings.dir );
 
-	modSettings.dir = pathContext.convertPath( modSettings.dir );
+	modSettings.dir = pathConvertor.convertPath( modSettings.dir );
 	for (Mod & mod : modModel)
 	{
-		mod.path = pathContext.convertPath( mod.path );
+		mod.path = pathConvertor.convertPath( mod.path );
 	}
 
 	for (Preset & preset : presetModel)
 	{
-		preset.selectedEnginePath = pathContext.convertPath( preset.selectedEnginePath );
-		preset.selectedIWAD = pathContext.convertPath( preset.selectedIWAD );
+		preset.selectedEnginePath = pathConvertor.convertPath( preset.selectedEnginePath );
+		preset.selectedIWAD = pathConvertor.convertPath( preset.selectedIWAD );
 		for (QString & selectedMapPack : preset.selectedMapPacks)
 		{
-			selectedMapPack = pathContext.convertPath( selectedMapPack );
+			selectedMapPack = pathConvertor.convertPath( selectedMapPack );
 		}
 		for (Mod & mod : preset.mods)
 		{
-			mod.path = pathContext.convertPath( mod.path );
+			mod.path = pathConvertor.convertPath( mod.path );
 		}
 	}
 
-	ui->saveDirLine->setText( pathContext.convertPath( ui->saveDirLine->text() ) );
-	ui->screenshotDirLine->setText( pathContext.convertPath( ui->screenshotDirLine->text() ) );
+	ui->saveDirLine->setText( pathConvertor.convertPath( ui->saveDirLine->text() ) );
+	ui->screenshotDirLine->setText( pathConvertor.convertPath( ui->screenshotDirLine->text() ) );
 
 	scheduleSavingOptions( styleChanged );
 }
@@ -2429,7 +2431,7 @@ void MainWindow::updateIWADsFromDir()
 	// workaround (read the big comment above)
 	disableSelectionCallbacks = true;
 
-	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
+	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, isIWAD );
 
 	disableSelectionCallbacks = false;
 
@@ -2458,7 +2460,7 @@ void MainWindow::updateConfigFilesFromDir()
 
 	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
-	wdg::updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, /*recursively*/false, /*emptyItem*/true, pathContext,
+	wdg::updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, /*recursively*/false, /*emptyItem*/true, pathConvertor,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return configFileSuffixes.contains( file.suffix().toLower() ); }
 	);
 
@@ -2481,7 +2483,7 @@ void MainWindow::updateSaveFilesFromDir()
 
 	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
-	wdg::updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, /*recursively*/false, /*emptyItem*/false, pathContext,
+	wdg::updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileSuffix; }
 	);
 
@@ -2504,7 +2506,7 @@ void MainWindow::updateDemoFilesFromDir()
 
 	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
-	wdg::updateComboBoxFromDir( demoModel, ui->demoFileCmbBox_replay, demoDir, /*recursively*/false, /*emptyItem*/false, pathContext,
+	wdg::updateComboBoxFromDir( demoModel, ui->demoFileCmbBox_replay, demoDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == demoFileSuffix; }
 	);
 
@@ -3360,12 +3362,12 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
-os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths )
+os::ShellCommand MainWindow::generateLaunchCommand( const QString & outputBaseDir, bool verifyPaths, bool quotePaths )
 {
 	os::ShellCommand cmd;
 
-	// All stored paths are relative to DoomRunner's directory, but we need them relative to baseDir (engine dir or script dir).
-	PathContext base( baseDir, pathContext.baseDir(), pathContext.pathStyle(), quotePaths );
+	// All stored paths are relative to DoomRunner's directory, but we need them relative to outputBaseDir (engine dir or script dir).
+	PathRebaser rebaser( pathConvertor.baseDir(), outputBaseDir, pathConvertor.pathStyle(), quotePaths );
 	PathChecker p( this, verifyPaths );
 
 	//-- engine --------------------------------------------------------------------
@@ -3383,7 +3385,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 		p.checkItemFilePath( selectedEngine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
 		// get the beginning of the launch command based on OS and installation type
-		cmd = os::getRunCommand( selectedEngine.path, base, getDirsToBeAccessed() );
+		cmd = os::getRunCommand( selectedEngine.path, rebaser, getDirsToBeAccessed() );
 	}
 
 	//-- engine's config -----------------------------------------------------------
@@ -3395,7 +3397,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 		QString configPath = fs::getPathFromFileName( selectedEngine.configDir, configModel[ configIdx ].fileName );
 
 		p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
-		cmd.arguments << "-config" << base.rebaseAndQuotePath( configPath );
+		cmd.arguments << "-config" << rebaser.rebaseAndQuotePath( configPath );
 	}
 
 	//-- game data files -----------------------------------------------------------
@@ -3405,7 +3407,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 	if (selectedIwadIdx >= 0)
 	{
 		p.checkItemFilePath( iwadModel[ selectedIwadIdx ], "selected IWAD", "Please select another one." );
-		cmd.arguments << "-iwad" << base.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
+		cmd.arguments << "-iwad" << rebaser.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
 	}
 
 	// Older engines only accept single -file parameter, so we must first collect all the additional files in this list.
@@ -3418,9 +3420,9 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
 		if (suffix == "deh")
-			cmd.arguments << "-deh" << base.rebaseAndQuotePath( mapFilePath );
+			cmd.arguments << "-deh" << rebaser.rebaseAndQuotePath( mapFilePath );
 		else if (suffix == "bex")
-			cmd.arguments << "-bex" << base.rebaseAndQuotePath( mapFilePath );
+			cmd.arguments << "-bex" << rebaser.rebaseAndQuotePath( mapFilePath );
 		else
 			additionalFiles.append( mapFilePath );
 	});
@@ -3434,9 +3436,9 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 
 			QString suffix = QFileInfo( mod.path ).suffix().toLower();
 			if (suffix == "deh")
-				cmd.arguments << "-deh" << base.rebaseAndQuotePath( mod.path );
+				cmd.arguments << "-deh" << rebaser.rebaseAndQuotePath( mod.path );
 			else if (suffix == "bex")
-				cmd.arguments << "-bex" << base.rebaseAndQuotePath( mod.path );
+				cmd.arguments << "-bex" << rebaser.rebaseAndQuotePath( mod.path );
 			else
 				additionalFiles.append( mod.path );
 		}
@@ -3446,7 +3448,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 	if (!additionalFiles.empty())
 		cmd.arguments << "-file";
 	for (const QString & filePath : additionalFiles)
-		cmd.arguments << base.rebaseAndQuotePath( filePath );
+		cmd.arguments << rebaser.rebaseAndQuotePath( filePath );
 
 	//-- alternative directories ---------------------------------------------------
 	// Rather set them before the launch parameters, because some of the parameters
@@ -3455,12 +3457,12 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 	if (!ui->saveDirLine->text().isEmpty())
 	{
 		p.checkNotAFile( ui->saveDirLine->text(), "the save dir", {} );
-		cmd.arguments << engineTraits.saveDirParam() << base.rebaseAndQuotePath( ui->saveDirLine->text() );
+		cmd.arguments << engineTraits.saveDirParam() << rebaser.rebaseAndQuotePath( ui->saveDirLine->text() );
 	}
 	if (!ui->screenshotDirLine->text().isEmpty())
 	{
 		p.checkNotAFile( ui->screenshotDirLine->text(), "the screenshot dir", {} );
-		cmd.arguments << "+screenshot_dir" << base.rebaseAndQuotePath( ui->screenshotDirLine->text() );
+		cmd.arguments << "+screenshot_dir" << rebaser.rebaseAndQuotePath( ui->screenshotDirLine->text() );
 	}
 
 	//-- launch mode and parameters ------------------------------------------------
@@ -3476,16 +3478,16 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 	{
 		// save dir cannot be empty, otherwise the saveFileCmbBox would be empty
 		QString saveBaseDir = getSaveDir();  // ui->saveDirLine or engine.configDir
-		PathContext saveBase( saveBaseDir, pathContext.baseDir(), PathStyle::Relative, quotePaths );
+		PathRebaser saveRebaser( pathConvertor.baseDir(), saveBaseDir, PathStyle::Relative, quotePaths );
 		QString savePath = fs::getPathFromFileName( saveBaseDir, ui->saveFileCmbBox->currentText() );
 		p.checkFilePath( savePath, "the selected save file", "Please select another one." );
-		cmd.arguments << "-loadgame" << saveBase.rebaseAndQuotePath( savePath );
+		cmd.arguments << "-loadgame" << saveRebaser.rebaseAndQuotePath( savePath );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
 		// if demo dir is empty (saveDirLine is empty and engine.configDir is not set)
 		QString demoPath = fs::getPathFromFileName( getDemoDir(), ui->demoFileLine_record->text() );
-		cmd.arguments << "-record" << base.rebaseAndQuotePath( demoPath );
+		cmd.arguments << "-record" << rebaser.rebaseAndQuotePath( demoPath );
 		cmd.arguments << engineTraits.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
@@ -3493,7 +3495,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & baseDir, boo
 		// demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
 		QString demoPath = fs::getPathFromFileName( getDemoDir(), ui->demoFileCmbBox_replay->currentText() );
 		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
-		cmd.arguments << "-playdemo" << base.rebaseAndQuotePath( demoPath );
+		cmd.arguments << "-playdemo" << rebaser.rebaseAndQuotePath( demoPath );
 	}
 
 	//-- gameplay and compatibility options ----------------------------------------

@@ -39,7 +39,7 @@ class SetupDialog : public QDialog, private DialogWithPaths {
 
 	explicit SetupDialog(
 		QWidget * parent,
-		const QDir & baseDir,
+		const PathConvertor & pathConvertor,
 		const EngineSettings & engineSettings, const QList< Engine > & engineList,
 		const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 		const MapSettings & mapSettings, const ModSettings & modSettings,

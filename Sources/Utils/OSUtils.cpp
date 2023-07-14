@@ -177,7 +177,9 @@ inline static QString fixExePath( const QString & exePath )
 	return exePath;
 }
 
-ShellCommand getRunCommand( const QString & executablePath, const PathContext & base, const QStringVec & dirsToBeAccessed )
+ShellCommand getRunCommand(
+	const QString & executablePath, const PathRebaser & currentDirToNewBaseDir, const QStringVec & dirsToBeAccessed
+)
 {
 	ShellCommand cmd;
 	QStringVec cmdParts;
@@ -215,7 +217,7 @@ ShellCommand getRunCommand( const QString & executablePath, const PathContext & 
 		for (const QString & dir : dirsToBeAccessed)
 		{
 			QString fileSystemPermission = "--filesystem=" + fs::getAbsolutePath( dir );
-			cmdParts << base.maybeQuoted( fileSystemPermission );
+			cmdParts << currentDirToNewBaseDir.maybeQuoted( fileSystemPermission );
 			cmd.extraPermissions << fileSystemPermission;
 		}
 		cmdParts << traits.sandboxAppName;
@@ -228,7 +230,7 @@ ShellCommand getRunCommand( const QString & executablePath, const PathContext & 
 	}
 	else
 	{
-		cmdParts << base.maybeQuoted( fixExePath( base.rebasePath( executablePath ) ) );
+		cmdParts << currentDirToNewBaseDir.maybeQuoted( fixExePath( currentDirToNewBaseDir.rebasePath( executablePath ) ) );
 	}
 
 	cmd.executable = cmdParts.takeFirst();

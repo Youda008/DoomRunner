@@ -41,30 +41,25 @@ inline QString quoted( const QString & path )
 
 
 //======================================================================================================================
-/** Helper for calculating relative and absolute paths according to current directory and settings. */
+/** Helper for calculating relative and absolute paths according to current directory and path style settings. */
 
-class PathContext {
+class PathConvertor {
 
 	QDir _baseDir;  ///< directory which relative paths are relative to
-	QDir _prevBaseDir;  ///< original base dir for rebasing paths to another base
 	PathStyle _pathStyle;  ///< whether to store paths to engines, IWADs, maps and mods in absolute or relative form
-	bool _quotePaths;  ///< whether to surround all paths with quotes (needed when generating a batch)
-	                   // !!IMPORTANT!! Never store the quoted paths and pass them back to PathContext, they are output-only.
+
  public:
 
-	PathContext( const QDir & baseDir, bool useAbsolutePaths, bool quotePaths = false )
-		: PathContext( baseDir, useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative, quotePaths ) {}
+	PathConvertor( const QDir & baseDir, PathStyle pathStyle )
+		: _baseDir( baseDir ), _pathStyle( pathStyle ) {}
 
-	PathContext( const QDir & baseDir, PathStyle pathStyle, bool quotePaths = false )
-		: _baseDir( baseDir ), _prevBaseDir(), _pathStyle( pathStyle ), _quotePaths( quotePaths ) {}
+	PathConvertor( const QDir & baseDir, bool useAbsolutePaths )
+		: PathConvertor( baseDir, useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative ) {}
 
-	PathContext( const QDir & baseDir, const QDir & prevBaseDir, PathStyle pathStyle, bool quotePaths = false )
-		: _baseDir( baseDir ), _prevBaseDir( prevBaseDir ), _pathStyle( pathStyle ), _quotePaths( quotePaths ) {}
-
-	PathContext( const PathContext & other ) = default;
-	PathContext( PathContext && other ) = default;
-	PathContext & operator=( const PathContext & other ) = default;
-	PathContext & operator=( PathContext && other ) = default;
+	PathConvertor( const PathConvertor & other ) = default;
+	PathConvertor( PathConvertor && other ) = default;
+	PathConvertor & operator=( const PathConvertor & other ) = default;
+	PathConvertor & operator=( PathConvertor && other ) = default;
 
 	const QDir & baseDir() const                       { return _baseDir; }
 	PathStyle pathStyle() const                        { return _pathStyle; }
@@ -88,13 +83,38 @@ class PathContext {
 		return usingAbsolutePaths() ? getAbsolutePath( path ) : getRelativePath( path );
 	}
 
+};
+
+
+/** Helper that allows rebasing path from one baseDir to another. */
+class PathRebaser {
+
+	QDir _inBaseDir;  ///< base dir for the relative input paths
+	QDir _outBaseDir;  ///< base dir for the relative output paths
+	PathStyle _outPathStyle;  ///< whether the output paths should be relative or absolute
+	bool _quotePaths;  ///< whether to surround all output paths with quotes (needed when generating a batch)
+	                   // !!IMPORTANT!! Never store the quoted paths and pass them back to PathConvertor, they are output-only.
+ public:
+
+	PathRebaser( const QDir & inputBaseDir, const QDir & outputBaseDir, PathStyle pathStyle, bool quotePaths = false )
+		: _inBaseDir( inputBaseDir ), _outBaseDir( outputBaseDir ), _outPathStyle( pathStyle ), _quotePaths( quotePaths ) {}
+
+	PathRebaser( const PathRebaser & other ) = default;
+	PathRebaser( PathRebaser && other ) = default;
+	PathRebaser & operator=( const PathRebaser & other ) = default;
+	PathRebaser & operator=( PathRebaser && other ) = default;
+
+	const QDir & inputBaseDir() const                  { return _inBaseDir; }
+	const QDir & outputBaseDir() const                 { return _outBaseDir; }
+	PathStyle outputPathStyle() const                  { return _outPathStyle; }
+
 	QString rebasePath( const QString & path ) const
 	{
 		if (path.isEmpty())
 			return {};
 
-		QString absPath = QDir::isAbsolutePath( path ) ? path : _prevBaseDir.filePath( path );
-		QString newPath = usingAbsolutePaths() ? absPath : _baseDir.relativeFilePath( absPath );
+		QString absPath = QDir::isAbsolutePath( path ) ? path : _inBaseDir.filePath( path );
+		QString newPath = _outPathStyle == PathStyle::Absolute ? absPath : _outBaseDir.relativeFilePath( absPath );
 
 		return newPath;
 	}
@@ -243,7 +263,7 @@ struct EntryType
 
 void traverseDirectory(
 	const QString & dir, bool recursively, EntryTypes typesToVisit,
-	const PathContext & pathContext, const std::function< void ( const QFileInfo & entry ) > & visitEntry
+	const PathConvertor & pathConvertor, const std::function< void ( const QFileInfo & entry ) > & visitEntry
 );
 
 } // namespace fs

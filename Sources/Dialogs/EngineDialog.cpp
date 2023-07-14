@@ -21,11 +21,11 @@
 
 //======================================================================================================================
 
-EngineDialog::EngineDialog( QWidget * parent, const PathContext & pathContext, const Engine & engine )
+EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConvertor, const Engine & engine )
 :
 	QDialog( parent ),
 	DialogCommon( this ),
-	pathContext( pathContext ),
+	pathConvertor( pathConvertor ),
 	engine( engine )
 {
 	ui = new Ui::EngineDialog;
@@ -205,11 +205,11 @@ void EngineDialog::browseExecutable()
 	EngineFamily guessedFamily = guessEngineFamily( executableTraits.executableBaseName );
 
 	// the paths comming out of the file dialog and suggestions are always absolute
-	if (pathContext.usingRelativePaths())
+	if (pathConvertor.usingRelativePaths())
 	{
-		executablePath = pathContext.getRelativePath( executablePath );
-		suggestedConfigDir = pathContext.getRelativePath( suggestedConfigDir );
-		suggestedDataDir = pathContext.getRelativePath( suggestedDataDir );
+		executablePath = pathConvertor.getRelativePath( executablePath );
+		suggestedConfigDir = pathConvertor.getRelativePath( suggestedConfigDir );
+		suggestedDataDir = pathConvertor.getRelativePath( suggestedDataDir );
 	}
 
 	ui->executableLine->setText( executablePath );
@@ -226,8 +226,8 @@ void EngineDialog::browseConfigDir()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		dirPath = pathContext.getRelativePath( dirPath );
+	if (pathConvertor.usingRelativePaths())
+		dirPath = pathConvertor.getRelativePath( dirPath );
 
 	ui->configDirLine->setText( dirPath );
 }
@@ -239,8 +239,8 @@ void EngineDialog::browseDataDir()
 		return;
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		dirPath = pathContext.getRelativePath( dirPath );
+	if (pathConvertor.usingRelativePaths())
+		dirPath = pathConvertor.getRelativePath( dirPath );
 
 	ui->dataDirLine->setText( dirPath );
 }

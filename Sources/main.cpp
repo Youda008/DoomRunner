@@ -18,7 +18,8 @@ int main( int argc, char * argv [] )
 {
 	QApplication a( argc, argv );
 
-	// current dir needs to be set to the application's dir so that the app finds the user files with relative paths
+	// All stored relative paths are relative to the directory of this application,
+	// launching it from a different current working directory would break it.
 	QDir::setCurrent( QApplication::applicationDirPath() );
 
 	themes::init();

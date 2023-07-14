@@ -11,7 +11,7 @@
 
 #include "Essential.hpp"
 
-#include "Utils/FileSystemUtils.hpp"  // PathContext
+#include "Utils/FileSystemUtils.hpp"  // PathConvertor
 
 #include <QString>
 
@@ -35,11 +35,11 @@ class DialogWithPaths : public DialogCommon {
 
  protected:
 
-	PathContext pathContext;  ///< stores path settings and automatically converts paths to relative or absolute
+	PathConvertor pathConvertor;  ///< stores path settings and automatically converts paths to relative or absolute
 	QString lastUsedDir;  ///< the last directory the user selected via QFileDialog
 
-	DialogWithPaths( QWidget * thisWidget, PathContext pathContext )
-		: DialogCommon( thisWidget ), pathContext( std::move(pathContext) ) {}
+	DialogWithPaths( QWidget * thisWidget, PathConvertor pathConvertor )
+		: DialogCommon( thisWidget ), pathConvertor( std::move(pathConvertor) ) {}
 
 	/// Runs a file-system dialog to let the user select a file and stores the its directory for the next call.
 	QString browseFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );

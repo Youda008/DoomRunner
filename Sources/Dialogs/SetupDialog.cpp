@@ -28,7 +28,7 @@
 
 SetupDialog::SetupDialog(
 	QWidget * parent,
-	const QDir & baseDir,
+	const PathConvertor & pathConv,
 	const EngineSettings & engineSettings, const QList< Engine > & engineList,
 	const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 	const MapSettings & mapSettings, const ModSettings & modSettings,
@@ -37,7 +37,7 @@ SetupDialog::SetupDialog(
 :
 	QDialog( parent ),
 	DialogWithPaths(
-		this, PathContext( baseDir, settings.pathStyle )
+		this, pathConv
 	),
 	engineSettings( engineSettings ),
 	engineModel( engineList,
@@ -146,7 +146,7 @@ void SetupDialog::setupEngineList()
 	ui->engineListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	engineModel.setPathContext( &pathContext );
+	engineModel.setPathContext( &pathConvertor );
 
 	// setup editing
 	engineModel.toggleEditing( false );
@@ -186,7 +186,7 @@ void SetupDialog::setupIWADList()
 	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	iwadModel.setPathContext( &pathContext );
+	iwadModel.setPathContext( &pathConvertor );
 
 	// setup editing
 	iwadModel.toggleEditing( !iwadSettings.updateFromDir );
@@ -279,7 +279,7 @@ void setItemAsDefault( QListView * view, ListModel & model, QAction * setDefault
 
 void SetupDialog::engineAdd()
 {
-	EngineDialog dialog( this, pathContext, {} );
+	EngineDialog dialog( this, pathConvertor, {} );
 
 	int code = dialog.exec();
 
@@ -330,7 +330,7 @@ void SetupDialog::editEngine( const QModelIndex & index )
 {
 	Engine & selectedEngine = engineModel[ index.row() ];
 
-	EngineDialog dialog( this, pathContext, selectedEngine );
+	EngineDialog dialog( this, pathConvertor, selectedEngine );
 
 	int code = dialog.exec();
 
@@ -490,7 +490,7 @@ void SetupDialog::onModDirChanged( const QString & dir )
 
 void SetupDialog::updateIWADsFromDir()
 {
-	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
+	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, isIWAD );
 }
 
 
@@ -541,28 +541,27 @@ void SetupDialog::onLightSchemeChosen()
 void SetupDialog::onAbsolutePathsToggled( bool checked )
 {
 	settings.pathStyle = checked ? PathStyle::Absolute : PathStyle::Relative;
-
-	pathContext.setPathStyle( settings.pathStyle );
+	pathConvertor.setPathStyle( settings.pathStyle );
 
 	for (Engine & engine : engineModel)
 	{
-		engine.path = pathContext.convertPath( engine.path );
-		engine.configDir = pathContext.convertPath( engine.configDir );
+		engine.path = pathConvertor.convertPath( engine.path );
+		engine.configDir = pathConvertor.convertPath( engine.configDir );
 	}
 	engineModel.contentChanged( 0 );
 
-	iwadSettings.dir = pathContext.convertPath( iwadSettings.dir );
+	iwadSettings.dir = pathConvertor.convertPath( iwadSettings.dir );
 	ui->iwadDirLine->setText( iwadSettings.dir );
 	for (IWAD & iwad : iwadModel)
 	{
-		iwad.path = pathContext.convertPath( iwad.path );
+		iwad.path = pathConvertor.convertPath( iwad.path );
 	}
 	iwadModel.contentChanged( 0 );
 
-	mapSettings.dir = pathContext.convertPath( mapSettings.dir );
+	mapSettings.dir = pathConvertor.convertPath( mapSettings.dir );
 	ui->mapDirLine->setText( mapSettings.dir );
 
-	modSettings.dir = pathContext.convertPath( modSettings.dir );
+	modSettings.dir = pathConvertor.convertPath( modSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
 }
 

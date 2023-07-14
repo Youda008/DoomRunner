@@ -643,7 +643,7 @@ bool areSelectionsEqual( const QVector< ItemID > & selection1, const QVector< It
 /// Fills a list with entries found in a directory.
 template< typename ListModel >
 void updateListFromDir( ListModel & model, QListView * view, const QString & dir, bool recursively,
-                        const PathContext & pathContext, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+                        const PathConvertor & pathConvertor, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	using Item = typename ListModel::Item;
 
@@ -667,7 +667,7 @@ void updateListFromDir( ListModel & model, QListView * view, const QString & dir
 	                              // but that's an acceptable drawback, instead of making differential update
 	model.clear();
 
-	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathContext, [&]( const QFileInfo & file )
+	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathConvertor, [&]( const QFileInfo & file )
 	{
 		if (isDesiredFile( file ))
 		{
@@ -726,7 +726,7 @@ bool setCurrentItemByID( QComboBox * view, const ListModel & model, const QStrin
 /// Fills a combo-box with entries found in a directory.
 template< typename ListModel >
 void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString & dir, bool recursively,
-                            bool includeEmptyItem, const PathContext & pathContext,
+                            bool includeEmptyItem, const PathConvertor & pathConvertor,
                             std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	using Item = typename ListModel::Item;
@@ -744,7 +744,7 @@ void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString &
 	if (includeEmptyItem)
 		model.append( QString() );
 
-	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathContext, [&]( const QFileInfo & file )
+	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathConvertor, [&]( const QFileInfo & file )
 	{
 		if (isDesiredFile( file ))
 		{

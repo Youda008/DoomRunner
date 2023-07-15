@@ -83,7 +83,7 @@ struct ShellCommand
 };
 /// Returns a shell command needed to run a specified executable without parameters.
 /** The result may be different based on operating system and where the executable is installed.
-  * \param rebaser path convertor set up to rebase paths from current working dir to a selected new base dir
+  * \param rebaser path convertor set up to rebase relative paths from current working dir to a selected new base dir
   * \param dirsToBeAccessed Directories to which the executable will need a read access.
   *                         Required to setup permissions for a sandbox environment. */
 ShellCommand getRunCommand(

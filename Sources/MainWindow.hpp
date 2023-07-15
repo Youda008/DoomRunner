@@ -162,7 +162,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void autoselectItems();
 
-	void setAltDirsRelativeToConfigs( const QString & dirName );
+	void setAlternativeDirs( const QString & dirName );
 
 	void updateListsFromDirs();
 	void updateIWADsFromDir();
@@ -202,8 +202,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QStringVec getSelectedMapPacks() const;
 
 	QString getConfigDir() const;
+	QString getDataDir() const;
 	QString getSaveDir() const;
 	QString getDemoDir() const;
+
+	QString convertRebasedEngineDataPath( const QString & path );
 
 	LaunchMode getLaunchModeFromUI() const;
 
@@ -239,6 +242,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	bool restoringPresetInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
+
+	PathRebaser engineDataDirRebaser;   ///< path convertor set up to rebase relative paths from current dir to engine's data dir and back
 
 	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
 

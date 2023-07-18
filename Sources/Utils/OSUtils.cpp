@@ -137,31 +137,29 @@ QString getSandboxName( Sandbox sandbox )
 	}
 }
 
-ExecutableTraits getExecutableTraits( const QString & executablePath )
+SandboxInfo getSandboxInfo( const QString & executablePath )
 {
-	ExecutableTraits traits;
-
-	traits.executableBaseName = fs::getFileBasenameFromPath( executablePath );
+	SandboxInfo sandbox;
 
 	static QRegularExpression snapPathRegex("^/snap/");
 	static QRegularExpression flatpakPathRegex("^/var/lib/flatpak/app/([^/]+)/");
 	QRegularExpressionMatch match;
 	if ((match = snapPathRegex.match( executablePath )).hasMatch())
 	{
-		traits.sandboxEnv = Sandbox::Snap;
-		traits.sandboxAppName = fs::getFileNameFromPath( executablePath );
+		sandbox.type = Sandbox::Snap;
+		sandbox.appName = fs::getFileBasenameFromPath( executablePath );
 	}
 	else if ((match = flatpakPathRegex.match( executablePath )).hasMatch())
 	{
-		traits.sandboxEnv = Sandbox::Flatpak;
-		traits.sandboxAppName = match.captured(1);
+		sandbox.type = Sandbox::Flatpak;
+		sandbox.appName = match.captured(1);
 	}
 	else
 	{
-		traits.sandboxEnv = Sandbox::None;
+		sandbox.type = Sandbox::None;
 	}
 
-	return traits;
+	return sandbox;
 }
 
 // On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
@@ -184,7 +182,7 @@ ShellCommand getRunCommand(
 	ShellCommand cmd;
 	QStringVec cmdParts;
 
-	ExecutableTraits traits = getExecutableTraits( executablePath );
+	SandboxInfo traits = getSandboxInfo( executablePath );
 
 	// different installations require different ways to launch the engine executable
  #ifdef FLATPAK_BUILD
@@ -203,14 +201,14 @@ ShellCommand getRunCommand(
 		// prefix added, continue with the rest
 	}
  #endif
-	if (traits.sandboxEnv == Sandbox::Snap)
+	if (traits.type == Sandbox::Snap)
 	{
 		cmdParts << "snap";
 		cmdParts << "run";
 		// TODO: permissions
-		cmdParts << traits.sandboxAppName;
+		cmdParts << traits.appName;
 	}
-	else if (traits.sandboxEnv == Sandbox::Flatpak)
+	else if (traits.type == Sandbox::Flatpak)
 	{
 		cmdParts << "flatpak";
 		cmdParts << "run";
@@ -220,7 +218,7 @@ ShellCommand getRunCommand(
 			cmdParts << currentDirToNewBaseDir.maybeQuoted( fileSystemPermission );
 			cmd.extraPermissions << fileSystemPermission;
 		}
-		cmdParts << traits.sandboxAppName;
+		cmdParts << traits.appName;
 	}
 	else if (isInSearchPath( executablePath ))
 	{

@@ -29,7 +29,7 @@
 SetupDialog::SetupDialog(
 	QWidget * parent,
 	const PathConvertor & pathConv,
-	const EngineSettings & engineSettings, const QList< Engine > & engineList,
+	const EngineSettings & engineSettings, const QList< EngineInfo > & engineList,
 	const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 	const MapSettings & mapSettings, const ModSettings & modSettings,
 	const LauncherSettings & settings
@@ -39,7 +39,7 @@ SetupDialog::SetupDialog(
 	DialogWithPaths( this, pathConv ),
 	engineSettings( engineSettings ),
 	engineModel( engineList,
-		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.path % "]"; }
+		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.executablePath % "]"; }
 	),
 	iwadSettings( iwadSettings ),
 	iwadModel( iwadList,
@@ -326,7 +326,7 @@ void SetupDialog::setEngineAsDefault()
 
 void SetupDialog::editEngine( const QModelIndex & index )
 {
-	Engine & selectedEngine = engineModel[ index.row() ];
+	EngineInfo & selectedEngine = engineModel[ index.row() ];
 
 	EngineDialog dialog( this, pathConvertor, selectedEngine );
 
@@ -543,7 +543,7 @@ void SetupDialog::onAbsolutePathsToggled( bool checked )
 
 	for (Engine & engine : engineModel)
 	{
-		engine.path = pathConvertor.convertPath( engine.path );
+		engine.executablePath = pathConvertor.convertPath( engine.executablePath );
 		engine.configDir = pathConvertor.convertPath( engine.configDir );
 	}
 	engineModel.contentChanged( 0 );

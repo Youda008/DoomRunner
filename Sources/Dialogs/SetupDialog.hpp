@@ -40,7 +40,7 @@ class SetupDialog : public QDialog, private DialogWithPaths {
 	explicit SetupDialog(
 		QWidget * parent,
 		const PathConvertor & pathConvertor,
-		const EngineSettings & engineSettings, const QList< Engine > & engineList,
+		const EngineSettings & engineSettings, const QList< EngineInfo > & engineList,
 		const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 		const MapSettings & mapSettings, const ModSettings & modSettings,
 		const LauncherSettings & settings
@@ -127,7 +127,7 @@ class SetupDialog : public QDialog, private DialogWithPaths {
  public: // return values from this dialog
 
 	EngineSettings engineSettings;
-	EditableDirectListModel< Engine > engineModel;
+	EditableDirectListModel< EngineInfo > engineModel;
 
 	IwadSettings iwadSettings;
 	EditableDirectListModel< IWAD > iwadModel;

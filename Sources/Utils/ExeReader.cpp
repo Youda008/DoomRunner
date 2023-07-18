@@ -9,7 +9,7 @@
 
 #include "LangUtils.hpp"  // atScopeEndDo
 
-//#include <QFile>
+#include <QFile>
 #include <QMessageBox>
 #include <QDebug>
 #include <QStringBuilder>
@@ -21,67 +21,87 @@
 
 
 //======================================================================================================================
+
+namespace os {
+
 #if IS_WINDOWS
 
-/*
-template< typename Struct >
-bool readStructAt( QFile & file, DWORD offset, Struct & dest )
+// I hate you Graph!!!
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  resources
+
+class Resource {
+
+ public:
+
+	Resource() : hResInfo( nullptr ), hResource( nullptr ), lpData( nullptr ), dwSize( 0 ) {}
+	Resource( const Resource & other ) = delete;
+
+	Resource( Resource && other )
+	{
+		hResInfo = other.hResInfo;    other.hResInfo = nullptr;
+		hResource = other.hResource;  other.hResource = nullptr;
+		lpData = other.lpData;        other.lpData = nullptr;
+		dwSize = other.dwSize;        other.dwSize = 0;
+	}
+
+	~Resource()
+	{
+		if (hResource)
+			FreeResource( hResource );
+	}
+
+	operator bool() const   { return lpData != nullptr; }
+
+	auto handle() const     { return hResource; }
+	auto data() const       { return reinterpret_cast< const uint8_t * >( lpData ); }
+	auto size() const       { return dwSize; }
+
+ private:
+
+	friend Resource getResource( const QString & filePath, HMODULE hExeModule, LPWSTR lpType );
+
+	HRSRC hResInfo;
+	HGLOBAL hResource;
+	const void * lpData;
+	DWORD dwSize;
+
+};
+
+Resource getResource( const QString & filePath, HMODULE hExeModule, LPWSTR lpType )
 {
-	if (!file.seek( offset ))
+	Resource res;
+
+	res.hResInfo = FindResource( hExeModule, MAKEINTRESOURCE(1), lpType );
+	if (res.hResInfo == nullptr)
 	{
-		return false;
+		qDebug().nospace() << "Cannot find resource "<<lpType<<" in "<<filePath<<", FindResource() failed with error "<<GetLastError();
+		return {};
 	}
-	if (file.read( reinterpret_cast<char*>(&dest), sizeof(dest) ) < qint64( sizeof(dest) ))
+
+	res.hResource = LoadResource( hExeModule, res.hResInfo );
+	if (res.hResource == nullptr)  // careful: it's nullptr, not INVALID_HANDLE_VALUE
 	{
-		return false;
+		qDebug().nospace() << "Cannot load resource "<<lpType<<" from "<<filePath<<", LoadResource() failed with error "<<GetLastError();
+		return {};
 	}
-	return true;
+
+	res.lpData = LockResource( res.hResource );
+	res.dwSize = SizeofResource( hExeModule, res.hResInfo );
+	if (res.lpData == nullptr || res.dwSize == 0)
+	{
+		qDebug().nospace() << "Cannot read resource "<<lpType<<" from "<<filePath<<", LockResource() failed with error "<<GetLastError();
+		return {};
+	}
+
+	return res;
 }
 
-ExeInfo readExeInfo( const QString & filePath )
-{
-	ExeInfo exeInfo;
 
-	QFile file( filePath );
-	if (!file.open( QIODevice::ReadOnly ))
-	{
-		exeInfo.status = ExeReadStatus::CantOpen;
-		return exeInfo;
-	}
-
-	IMAGE_DOS_HEADER dosHeader;
-	if (!readStructAt( file, 0, dosHeader ))
-	{
-		exeInfo.status = ExeReadStatus::InvalidFormat;
-		return exeInfo;
-	}
-
-	IMAGE_NT_HEADERS NTHeaders;
-	if (!readStructAt( file, DWORD( dosHeader.e_lfanew ), NTHeaders ))
-	{
-		exeInfo.status = ExeReadStatus::InvalidFormat;
-		return exeInfo;
-	}
-
-	IMAGE_DATA_DIRECTORY & resourceDirLocation = NTHeaders.OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_RESOURCE ];
-
-	//IMAGE_RESOURCE_DIRECTORY;
-	//IMAGE_RESOURCE_DIRECTORY_ENTRY;
-	//IMAGE_RESOURCE_DATA_ENTRY;
-
-	IMAGE_RESOURCE_DIRECTORY resourceDir;
-	if (!readStructAt( file, resourceDirLocation.VirtualAddress, resourceDir ))
-	{
-		exeInfo.status = ExeReadStatus::InvalidFormat;
-		return exeInfo;
-	}
-
-	// fuck this
-
-	exeInfo.status = ExeReadStatus::Success;
-	return exeInfo;
-}
-*/
+//----------------------------------------------------------------------------------------------------------------------
+//  version info extraction
 
 static VS_FIXEDFILEINFO * getRawVersionInfo( const void * resData )
 {
@@ -111,16 +131,7 @@ struct LangInfo
 	WORD codePage;
 };
 
-struct LangInfo_span
-{
-	LangInfo * data;
-	size_t size;
-
-	LangInfo * begin() const { return data; }
-	LangInfo * end() const { return data + size; }
-};
-
-static LangInfo_span getLangInfo( const void * resData )
+static span< LangInfo > getLangInfo( const void * resData )
 {
 	LangInfo * lpTranslate;
 	UINT cbTranslate = 0;
@@ -162,10 +173,204 @@ static QString getVerInfoValue( const void * resData, const LangInfo & langInfo,
 		return {};
 	}
 
-	return QString::fromWCharArray( (const wchar_t*)lpBuffer, int(cchLen)-1 );
+	return QString::fromWCharArray( reinterpret_cast< const wchar_t * >( lpBuffer ), int( cchLen ) - 1 );
 }
 
-std::optional< ExeVersionInfo > readExeVersionInfo( const QString & filePath )
+static ExeVersionInfo extractVersionInfo( const Resource & res )
+{
+	ExeVersionInfo verInfo;
+
+	VS_FIXEDFILEINFO * rawVerInfo = getRawVersionInfo( res.data() );
+	if (rawVerInfo)
+	{
+		verInfo.version.major = (rawVerInfo->dwFileVersionMS >> 16) & 0xffff;
+		verInfo.version.minor = (rawVerInfo->dwFileVersionMS >>  0) & 0xffff;
+		verInfo.version.patch = (rawVerInfo->dwFileVersionLS >> 16) & 0xffff;
+		verInfo.version.build = (rawVerInfo->dwFileVersionLS >>  0) & 0xffff;
+	}
+
+	auto languages = getLangInfo( res.data() );
+	if (!languages.empty())
+	{
+		verInfo.appName = getVerInfoValue( res.data(), languages[0], TEXT("ProductName") );
+		verInfo.description = getVerInfoValue( res.data(), languages[0], TEXT("FileDescription") );
+	}
+
+	return verInfo;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  PE file parsing
+
+/*
+class MappedFile {
+
+ public:
+
+	MappedFile() : hFile( INVALID_HANDLE_VALUE ), hMap( INVALID_HANDLE_VALUE ), lpBaseAddr( nullptr ), llSize(0) {}
+	MappedFile( const MappedFile & other ) = delete;
+
+	MappedFile( MappedFile && other )
+	{
+		hFile = other.hFile;            other.hFile = INVALID_HANDLE_VALUE;
+		hMap = other.hMap;              other.hMap = INVALID_HANDLE_VALUE;
+		lpBaseAddr = other.lpBaseAddr;  other.lpBaseAddr = nullptr;
+		llSize = other.llSize;          other.llSize = 0;
+	}
+
+	~MappedFile()
+	{
+		if (lpBaseAddr)
+			UnmapViewOfFile( lpBaseAddr );
+		if (hMap != INVALID_HANDLE_VALUE)
+			CloseHandle( hMap );
+		if (hFile != INVALID_HANDLE_VALUE)
+			CloseHandle( hFile );
+	}
+
+	bool isOpen() const     { return lpBaseAddr != nullptr; }
+
+	auto baseAddr() const   { return reinterpret_cast< uint8_t * >( lpBaseAddr ); }
+	auto size() const       { return size_t( llSize ); }
+	auto begin() const      { return baseAddr(); }
+	auto end() const        { return baseAddr() + size(); }
+
+	template< typename Field >
+	Field * fieldAtOffset( LONGLONG offset )
+	{
+		if (size_t(offset) + sizeof(Field) > size())
+			return nullptr;
+		return reinterpret_cast< Field * >( baseAddr() + offset );
+	}
+
+ private:
+
+	friend MappedFile mapFileToMemory( const QString & filePath );
+
+	HANDLE hFile;
+	HANDLE hMap;
+	void * lpBaseAddr;
+	LONGLONG llSize;
+
+};
+
+MappedFile mapFileToMemory( const QString & filePath )
+{
+	MappedFile m;
+
+	m.hFile = CreateFile( filePath.toStdWString().c_str(),
+		GENERIC_READ,           // dwDesiredAccess
+		0,                      // dwShareMode
+		nullptr,                // lpSecurityAttributes
+		OPEN_EXISTING,          // dwCreationDisposition
+		FILE_ATTRIBUTE_NORMAL,  // dwFlagsAndAttributes
+		nullptr                 // hTemplateFile
+	);
+	if (m.hFile == INVALID_HANDLE_VALUE)
+	{
+		qDebug() << "Cannot map file to memory, CreateFile() failed with error" << GetLastError();
+		return {};
+	}
+
+	LARGE_INTEGER liFileSize;
+	if (!GetFileSizeEx( m.hFile, &liFileSize ))
+	{
+		qDebug() << "Cannot map file to memory, GetFileSize() failed with error" << GetLastError();
+		return {};
+	}
+	m.llSize = liFileSize.QuadPart;
+
+	if (liFileSize.QuadPart == 0)
+	{
+		qDebug() << "Cannot map file to memory, file is empty";
+		return {};
+	}
+
+	m.hMap = CreateFileMapping( m.hFile,
+		nullptr,        // Mapping attributes
+		PAGE_READONLY,  // Protection flags
+		0,              // MaximumSizeHigh
+		0,              // MaximumSizeLow
+		nullptr         // Name
+	);
+	if (m.hMap == INVALID_HANDLE_VALUE)
+	{
+		qDebug() << "Cannot map file to memory, CreateFileMapping() failed with error" << GetLastError();
+		return {};
+	}
+
+	m.lpBaseAddr = MapViewOfFile( m.hMap,
+		FILE_MAP_READ,  // dwDesiredAccess
+		0,              // dwFileOffsetHigh
+		0,              // dwFileOffsetLow
+		0               // dwNumberOfBytesToMap
+	);
+	if (m.lpBaseAddr == nullptr)
+	{
+		qDebug() << "Cannot map file to memory, MapViewOfFile() failed with error" << GetLastError();
+		return {};
+	}
+
+	return m;
+}
+
+// read PE file using manual memory navigation
+optExeVersionInfo readExeVersionInfo( const QString & filePath )
+{
+	MappedFile mappedFile = mapFileToMemory( filePath );
+	if (!mappedFile.isOpen())
+	{
+		return std::nullopt;
+	}
+
+	const auto * dosHeader = mappedFile.fieldAtOffset< IMAGE_DOS_HEADER >( 0 );
+	if (dosHeader == nullptr)
+	{
+		qDebug() << "Cannot read IMAGE_DOS_HEADER";
+		return std::nullopt;
+	}
+
+	const auto * ntHeaders = mappedFile.fieldAtOffset< IMAGE_NT_HEADERS >( dosHeader->e_lfanew );
+	if (ntHeaders == nullptr)
+	{
+		qDebug() << "Cannot read IMAGE_NT_HEADERS at" << Qt::hex << dosHeader->e_lfanew;
+		return std::nullopt;
+	}
+
+	const IMAGE_DATA_DIRECTORY * resourceDirLocation = nullptr;
+	if (ntHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_I386)
+	{
+		auto * ntHeaders32 = reinterpret_cast< const IMAGE_NT_HEADERS32 * >( ntHeaders );
+		resourceDirLocation = &ntHeaders32->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_RESOURCE ];
+	}
+	else if (ntHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_AMD64)
+	{
+		auto * ntHeaders64 = reinterpret_cast< const IMAGE_NT_HEADERS64 * >( ntHeaders );
+		resourceDirLocation = &ntHeaders64->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_RESOURCE ];
+	}
+	else
+	{
+		qDebug() << "Unknown CPU architecture:" << Qt::hex << ntHeaders->FileHeader.Machine;
+		return std::nullopt;
+	}
+
+	const auto * resourceDir = mappedFile.fieldAtOffset< IMAGE_RESOURCE_DIRECTORY >( resourceDirLocation->VirtualAddress );
+	if (resourceDir == nullptr)
+	{
+		qDebug() << "Cannot read IMAGE_RESOURCE_DIRECTORY at" << Qt::hex << resourceDirLocation->VirtualAddress;
+		return std::nullopt;
+	}
+
+	// fuck this shit
+
+	return std::nullopt;
+}
+
+/*/
+
+// read PE file using LoadLibrary and FindResource,LoadResource flow
+optExeVersionInfo readExeVersionInfo( const QString & filePath )
 {
 	HMODULE hExeModule = LoadLibraryEx( filePath.toStdWString().c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE );
 	if (!hExeModule)
@@ -173,52 +378,22 @@ std::optional< ExeVersionInfo > readExeVersionInfo( const QString & filePath )
 		qDebug().nospace() << "Cannot open "<<filePath<<", LoadLibraryEx() failed with error "<<GetLastError();
 		return std::nullopt;
 	}
-	auto moduleGuard = atScopeEndDo( [&](){ FreeLibrary( hExeModule ); } );
+	auto moduleGuard = autoClosable( hExeModule, FreeLibrary );
 
-	HRSRC hResInfo = FindResource( hExeModule, MAKEINTRESOURCE(1), RT_VERSION );
-	if (!hResInfo)
-	{
-		qDebug().nospace() << "Cannot find resource RT_VERSION in "<<filePath<<", FindResource() failed with error "<<GetLastError();
-		return std::nullopt;
-	}
-
-	HGLOBAL hResource = LoadResource( hExeModule, hResInfo );
-	if (!hResource)
-	{
-		qDebug().nospace() << "Cannot load resource RT_VERSION from "<<filePath<<", LoadResource() failed with error "<<GetLastError();
-		return std::nullopt;
-	}
-	auto resGuard = atScopeEndDo( [&](){ FreeResource( hResource ); } );
-
-	const void * resData = LockResource( hResource );
-	DWORD resSize = SizeofResource( hExeModule, hResInfo );
-	if (!resData || resSize == 0)
-	{
-		qDebug().nospace() << "Cannot read resource RT_VERSION from "<<filePath<<", LockResource() failed with error "<<GetLastError();
-		return std::nullopt;
-	}
-
-	ExeVersionInfo verInfo;
-
-	VS_FIXEDFILEINFO * rawVerInfo = getRawVersionInfo( resData );
-	if (!rawVerInfo)
+	Resource resource = getResource( filePath, hExeModule, RT_VERSION );
+	if (!resource)
 	{
 		return std::nullopt;
 	}
-	verInfo.v.major = (rawVerInfo->dwFileVersionMS >> 16) & 0xffff;
-	verInfo.v.minor = (rawVerInfo->dwFileVersionMS >>  0) & 0xffff;
-	verInfo.v.patch = (rawVerInfo->dwFileVersionLS >> 16) & 0xffff;
-	verInfo.v.build = (rawVerInfo->dwFileVersionLS >>  0) & 0xffff;
 
-	auto langInfo_span = getLangInfo( resData );
-	if (!langInfo_span.data || langInfo_span.size == 0)
-	{
-		return std::nullopt;
-	}
-	verInfo.appName = getVerInfoValue( resData, langInfo_span.data[0], TEXT("ProductName") );
-	verInfo.description = getVerInfoValue( resData, langInfo_span.data[0], TEXT("FileDescription") );
+	auto v = extractVersionInfo( resource );
 
-	return { std::move(verInfo) };
+	return { std::move(v) };
 }
 
+/**/
+
 #endif // IS_WINDOWS
+
+
+} // namespace os

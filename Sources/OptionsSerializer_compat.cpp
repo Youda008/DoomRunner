@@ -155,10 +155,10 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 				Engine engine;
 				deserialize( jsEngine, engine );
 
-				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
+				if (engine.executablePath.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				if (!PathChecker::checkFilePath( engine.path, true, "an Engine from the saved options", "Please update it in Menu -> Setup." ))
+				if (!PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Setup." ))
 					highlightInvalidListItem( engine );
 
 				opts.engines.append( std::move( engine ) );

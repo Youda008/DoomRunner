@@ -57,6 +57,7 @@ HEADERS += \
 	Sources/Utils/LangUtils.hpp \
 	Sources/Utils/MiscUtils.hpp \
 	Sources/Utils/OSUtils.hpp \
+	Sources/Utils/TimeStats.hpp \
 	Sources/Utils/WADReader.hpp \
 	Sources/Utils/WidgetUtils.hpp \
 	Sources/Widgets/EditableListView.hpp \

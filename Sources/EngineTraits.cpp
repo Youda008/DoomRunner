@@ -29,7 +29,7 @@ static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd),
 
 static const QHash< QString, EngineFamily > knownEngineFamilies =
 {
-	// the key is an executable name in lower case without the .exe suffix
+	// the key is a normalized application name from EngineTraits
 	{ "zdoom",           EngineFamily::ZDoom },
 	{ "lzdoom",          EngineFamily::ZDoom },
 	{ "gzdoom",          EngineFamily::ZDoom },
@@ -60,7 +60,7 @@ static_assert( std::size(engineFamilyTraits) == std::size(engineFamilyStrings), 
 
 static const QHash< QString, int > startingMonitorIndexes =
 {
-	// the key is an executable name in lower case without the .exe suffix
+	// the key is a normalized application name from EngineTraits
 	{ "zdoom", 1 },
 };
 
@@ -144,9 +144,9 @@ EngineFamily familyFromStr( const QString & familyStr )
 		return EngineFamily::_EnumEnd;
 }
 
-EngineFamily guessEngineFamily( const QString & executableName )
+EngineFamily guessEngineFamily( const QString & appNameNormalized )
 {
-	auto iter = knownEngineFamilies.find( executableName.toLower() );
+	auto iter = knownEngineFamilies.find( appNameNormalized );
 	if (iter != knownEngineFamilies.end())
 		return iter.value();
 	else
@@ -156,21 +156,29 @@ EngineFamily guessEngineFamily( const QString & executableName )
 //----------------------------------------------------------------------------------------------------------------------
 //  EngineTraits
 
-EngineTraits::EngineTraits( const Engine & engine )
-{
-	// initialize all ExecutableTraits members
-	static_cast< ExecutableTraits & >( *this ) = os::getExecutableTraits( engine.path );
+const Version EngineTraits::emptyVersion;
 
-	// initialize all EngineFamilyTraits members
-	if (size_t(engine.family) < std::size(engineFamilyTraits))
-		static_cast< EngineFamilyTraits & >( *this ) = engineFamilyTraits[ size_t(engine.family) ];
-	else
-		static_cast< EngineFamilyTraits & >( *this ) = engineFamilyTraits[ 0 ];  // use ZDoom traits as fallback
+EngineTraits::EngineTraits()
+{
+	_familyTraits = nullptr;
 }
 
-EngineTraits getEngineTraits( const Engine & engine )
+void EngineTraits::loadAppInfo( const QString & executablePath )
 {
-	return EngineTraits( engine );
+	_exePath = executablePath;
+	_exeBaseName = fs::getFileBasenameFromPath( executablePath );
+ #if IS_WINDOWS
+	_exeVersionInfo = os::readExeVersionInfo( executablePath );
+ #endif
+	_appNameNormalized = (_exeVersionInfo ? _exeVersionInfo->appName : _exeBaseName).toLower();
+}
+
+void EngineTraits::assignFamilyTraits( EngineFamily family )
+{
+	if (size_t(family) < std::size(engineFamilyTraits))
+		_familyTraits = &engineFamilyTraits[ size_t(family) ];
+	else
+		_familyTraits = &engineFamilyTraits[ 0 ];  // use ZDoom traits as fallback
 }
 
 QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
@@ -180,7 +188,7 @@ QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 		return {};
 	}
 
-	if (mapParamStyle == MapParamStyle::Map)  // this engine supports +map, we can use the map name directly
+	if (_familyTraits->mapParamStyle == MapParamStyle::Map)  // this engine supports +map, we can use the map name directly
 	{
 		return { "+map", mapName };
 	}
@@ -208,11 +216,11 @@ QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 {
 	// Properly working -compatmode is present only in GZDoom,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
-	if (executableBaseName.toLower() == "gzdoom")
+	if (_appNameNormalized == "gzdoom")
 		return { "-compatmode", QString::number( compatLevel ) };
-	if (compLvlStyle == CompatLevelStyle::ZDoom)
+	else if (_familyTraits->compLvlStyle == CompatLevelStyle::ZDoom)
 		return { "+compatmode", QString::number( compatLevel ) };
-	else if (compLvlStyle == CompatLevelStyle::PrBoom)
+	else if (_familyTraits->compLvlStyle == CompatLevelStyle::PrBoom)
 		return { "-complevel", QString::number( compatLevel ) };
 	else
 		return {};
@@ -221,7 +229,7 @@ QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 QString EngineTraits::getCmdMonitorIndex( int ownIndex ) const
 {
 	int startingMonitorIndex = 0;
-	auto iter = startingMonitorIndexes.find( executableBaseName.toLower() );
+	auto iter = startingMonitorIndexes.find( _appNameNormalized );
 	if (iter != startingMonitorIndexes.end())
 		startingMonitorIndex = iter.value();
 

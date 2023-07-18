@@ -59,6 +59,7 @@ QString getThisAppDataDir();
 /** If true it means the executable can be started directly by using only its name without its path. */
 bool isInSearchPath( const QString & filePath );
 
+/// Type of sandbox environment an application might be installed in
 enum class Sandbox
 {
 	None,
@@ -67,19 +68,18 @@ enum class Sandbox
 };
 QString getSandboxName( Sandbox sandbox );
 
-struct ExecutableTraits
+struct SandboxInfo
 {
-	QString executableBaseName;   ///< executable name without file suffix
-	Sandbox sandboxEnv;
-	QString sandboxAppName;   ///< application name which the sandbox uses to start it
+	Sandbox type;      ///< sandbox type determined from path
+	QString appName;   ///< name which the sandbox uses to identify the application
 };
-ExecutableTraits getExecutableTraits( const QString & executablePath );
+SandboxInfo getSandboxInfo( const QString & executablePath );
 
 struct ShellCommand
 {
 	QString executable;
 	QStringVec arguments;
-	QStringVec extraPermissions;  // extra sandbox permissions needed to run this command
+	QStringVec extraPermissions;  ///< extra sandbox permissions needed to run this command
 };
 /// Returns a shell command needed to run a specified executable without parameters.
 /** The result may be different based on operating system and where the executable is installed.

@@ -67,7 +67,7 @@ static QJsonObject serialize( const Engine & engine )
 	else
 	{
 		jsEngine["name"] = engine.name;
-		jsEngine["path"] = engine.path;
+		jsEngine["path"] = engine.executablePath;
 		jsEngine["config_dir"] = engine.configDir;
 		jsEngine["data_dir"] = engine.dataDir;
 		jsEngine["family"] = familyToStr( engine.family );
@@ -86,12 +86,12 @@ static void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 	else
 	{
 		engine.name = jsEngine.getString( "name", "<missing name>" );
-		engine.path = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
-		engine.configDir = jsEngine.getString( "config_dir", fs::getDirOfFile( engine.path ) );
+		engine.executablePath = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
+		engine.configDir = jsEngine.getString( "config_dir", fs::getDirOfFile( engine.executablePath ) );
 		engine.dataDir = jsEngine.getString( "data_dir", engine.configDir, DontShowError );
 		engine.family = familyFromStr( jsEngine.getString( "family", {}, DontShowError ) );
 		if (engine.family == EngineFamily::_EnumEnd)
-			engine.family = guessEngineFamily( fs::getFileBasenameFromPath( engine.path ) );
+			engine.family = guessEngineFamily( fs::getFileBasenameFromPath( engine.executablePath ) );
 	}
 }
 
@@ -602,7 +602,7 @@ static void serializeOptionsToJson( const OptionsToSave & opts, QJsonObject & js
 		// better keep room for adding some engine settings later, so that we don't have to break compatibility again
 		QJsonObject jsEngines = serialize( opts.engineSettings );
 
-		jsEngines["engine_list"] = serializeList( opts.engines );
+		jsEngines["engine_list"] = serializeList( opts.engines );  // serializes only Engine fields, leaves other EngineInfo fields alone
 
 		jsOpts["engines"] = jsEngines;
 	}
@@ -695,13 +695,13 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 				Engine engine;
 				deserialize( jsEngine, engine );
 
-				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
+				if (engine.executablePath.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				if (!PathChecker::checkFilePath( engine.path, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ))
+				if (!PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ))
 					highlightInvalidListItem( engine );
 
-				opts.engines.append( std::move( engine ) );
+				opts.engines.append( std::move( engine ) );  // populates only Engine fields, leaves other EngineInfo fields empty
 			}
 		}
 	}

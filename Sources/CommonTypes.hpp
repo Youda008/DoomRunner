@@ -14,6 +14,10 @@
 #include <QList>
 
 
+// to be used when we want to pass empty string, but a reference or pointer is required
+extern const QString emptyString;
+
+
 class QStringVec : public QVector< QString >
 {
  public:

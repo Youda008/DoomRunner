@@ -11,9 +11,8 @@
 
 #include "DialogCommon.hpp"
 
-#include "UserData.hpp"  // Engine
+#include "UserData.hpp"  // EngineInfo
 #include "Utils/FileSystemUtils.hpp"  // PathConvertor
-#include "Utils/ExeReader.hpp"        // engine version info
 
 #include <QDialog>
 
@@ -33,7 +32,7 @@ class EngineDialog : public QDialog, private DialogWithPaths {
 
  public:
 
-	explicit EngineDialog( QWidget * parent, const PathConvertor & pathConvertor, const Engine & engine );
+	explicit EngineDialog( QWidget * parent, const PathConvertor & pathConvertor, const EngineInfo & engine );
 	virtual ~EngineDialog() override;
 
  private: // methods
@@ -62,14 +61,13 @@ class EngineDialog : public QDialog, private DialogWithPaths {
 
 	Ui::EngineDialog * ui;
 
-	std::optional< ExeVersionInfo > engineVersionInfo;
 	QString suggestedName;
 	QString suggestedConfigDir;
 	QString suggestedDataDir;
 
  public: // return values from this dialog
 
-	Engine engine;
+	EngineInfo engine;
 
 };
 

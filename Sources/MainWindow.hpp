@@ -158,7 +158,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void togglePathStyle( PathStyle style );
 
-	void updateEngineTraits();
+	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines );
 
 	void autoselectItems();
 
@@ -263,16 +263,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	// You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
 
 	EngineSettings engineSettings;    ///< engine-related preferences (value returned by SetupDialog)
-	ReadOnlyDirectListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
-
-	// We need to store extra information for each engine, but making it a part of Engine struct is not a good idea,
-	// because this extra info is not user-defined and should not be serialized.
-	// Locally extending the Engine struct would mean we would have to strip this info away everytime we would need to
-	// pass it to the SetupDialog or OptionsDeserializer.
-	// Only because the content of the engine list is constant during the loop of this window and only changed in
-	// SetupDialog or OptionsDeserializer, we can afford to do this, otherwise painful manual sychronization between
-	// engineModel and engineTraits would be needed.
-	QList< EngineTraits > engineTraits;   ///< traits of each loaded engine, has same indexes as engineModel
+	ReadOnlyDirectListModel< EngineInfo > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
 
 	struct ConfigFile : public ReadOnlyListModelItem
 	{

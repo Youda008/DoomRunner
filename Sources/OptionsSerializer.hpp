@@ -22,7 +22,7 @@
 struct OptionsToSave
 {
 	// files
-	const QList< Engine > & engines;
+	const QList< EngineInfo > & engines;  // we must accept EngineInfo, but we will serialize only Engine fields
 	const QList< IWAD > & iwads;
 
 	// options
@@ -50,7 +50,7 @@ struct OptionsToSave
 struct OptionsToLoad
 {
 	// files
-	QList< Engine > engines;
+	QList< EngineInfo > engines;  // we must accept EngineInfo, but we will load only Engine fields
 	QList< IWAD > iwads;
 
 	// options

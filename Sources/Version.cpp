@@ -33,18 +33,9 @@ Version::Version( const QString & versionStr )
 
 int64_t Version::compare( const Version & other ) const
 {
-	bool valid1 = this->isValid();
-	bool valid2 = other.isValid();
-
-	// any version is bigger than error, 2 errors are equal
-	if (!valid1 && !valid2)
-		return 0;
-	else if (valid1 && !valid2)
-		return 1;
-	else if (!valid1 && valid2)
-		return -1;
-
-	// the highest bit must not be used but there will never be such high version number
+	// The following will produce intuitive result even for invalid (all-zero) versions,
+	// that is: Any version is bigger than error, 2 errors are equal.
+	// The highest bit must not be used but there will never be such high version number.
 	using u64 = uint64_t; using i64 = int64_t;
 	return
 	  i64(((u64(this->major) << 48) + (u64(this->minor) << 32) + (u64(this->patch) << 16) + u64(this->build)))

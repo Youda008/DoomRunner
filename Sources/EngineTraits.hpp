@@ -12,7 +12,8 @@
 #include "Essential.hpp"
 
 #include "CommonTypes.hpp"
-#include "Utils/OSUtils.hpp"  // ExecutableTraits
+#include "Utils/OSUtils.hpp"    // SandboxInfo
+#include "Utils/ExeReader.hpp"  // ExeVersionInfo
 
 #include <QString>
 #include <QStringList>
@@ -54,11 +55,11 @@ const char * familyToStr( EngineFamily family );
 EngineFamily familyFromStr( const QString & familyStr );
 
 // EngineFamily is user-overridable in EngineDialog, but this is our default automatic detection
-EngineFamily guessEngineFamily( const QString & executableName );
+EngineFamily guessEngineFamily( const QString & appNameNormalized );
 
 //----------------------------------------------------------------------------------------------------------------------
 
-/// traits that are shared among different engines belonging to the same family
+/// Traits that are shared among different engines belonging to the same family.
 struct EngineFamilyTraits
 {
 	MapParamStyle mapParamStyle;
@@ -69,22 +70,51 @@ struct EngineFamilyTraits
 };
 
 /// Properties and capabilities of a particular engine that decide what command-line parameters will be used.
-class EngineTraits : private os::ExecutableTraits, private EngineFamilyTraits
+class EngineTraits
 {
+	// application info
+	QString _exePath;             ///< path of the file from which the application info was constructed
+	QString _exeBaseName;         ///< executable file name without file suffix
+	os::optExeVersionInfo _exeVersionInfo;
+	QString _appNameNormalized;   ///< application name normalized for indexing engine property tables
+	// family traits
+	const EngineFamilyTraits * _familyTraits;
+
+	static const Version emptyVersion;
+
  public:
 
-	EngineTraits( const Engine & engine );
+	// initialization
 
-	os::Sandbox sandboxEnv() const              { return ExecutableTraits::sandboxEnv; }
-	QString sandboxEnvName() const              { return getSandboxName( ExecutableTraits::sandboxEnv ); }
-	const QString & sandboxAppName() const      { return ExecutableTraits::sandboxAppName; }
+	EngineTraits();
 
-	CompatLevelStyle compatLevelStyle() const   { return EngineFamilyTraits::compLvlStyle; }
-	const char * saveDirParam() const           { return EngineFamilyTraits::saveDirParam; }
-	bool hasScreenshotDirParam() const          { return EngineFamilyTraits::hasScreenshotDirParam; }
-	bool hasStdoutParam() const                 { return EngineFamilyTraits::hasStdoutParam; }
+	/// Initializes application info.
+	/** This may open and read the executable file if needed. */
+	void loadAppInfo( const QString & executablePath );
+	bool hasAppInfo() const                     { return !_exePath.isEmpty(); }
 
-	bool supportsCustomMapNames() const  { return mapParamStyle == MapParamStyle::Map; }
+	/// Initializes family traits according to specified engine family.
+	void assignFamilyTraits( EngineFamily family );
+	bool hasFamilyTraits() const                { return _familyTraits != nullptr; }
+
+	// application properties - requires application info to be initialized
+
+	const QString & appInfoSrcExePath() const   { return _exePath; }
+	const QString & exeBaseName() const         { return _exeBaseName; }
+
+	const QString & exeAppName() const          { return _exeVersionInfo ? _exeVersionInfo->appName : emptyString; }
+	const QString & exeDescription() const      { return _exeVersionInfo ? _exeVersionInfo->description : emptyString; }
+	const Version & exeVersion() const          { return _exeVersionInfo ? _exeVersionInfo->version : emptyVersion; }
+
+	const QString & appNameNormalized() const   { return _appNameNormalized; }
+
+	// command line parameters deduction - requires application info and family traits to be initialized
+
+	CompatLevelStyle compatLevelStyle() const   { return _familyTraits->compLvlStyle; }
+	const char * saveDirParam() const           { return _familyTraits->saveDirParam; }
+	bool hasScreenshotDirParam() const          { return _familyTraits->hasScreenshotDirParam; }
+	bool hasStdoutParam() const                 { return _familyTraits->hasStdoutParam; }
+	bool supportsCustomMapNames() const         { return _familyTraits->mapParamStyle == MapParamStyle::Map; }
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
 	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;
@@ -95,8 +125,6 @@ class EngineTraits : private os::ExecutableTraits, private EngineFamilyTraits
 	// some engines index monitors from 1 and others from 0
 	QString getCmdMonitorIndex( int ownIndex ) const;
 };
-
-EngineTraits getEngineTraits( const Engine & engine );
 
 
 #endif // ENGINE_TRAITS_INCLUDED

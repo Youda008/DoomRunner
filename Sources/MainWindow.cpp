@@ -2823,8 +2823,6 @@ bool MainWindow::isCacheDirty() const
 
 bool MainWindow::saveCache( const QString & filePath )
 {
-	qDebug() << "saving cache to" << filePath;
-
 	QJsonObject jsRoot;
 	jsRoot["exe_info"] = os::g_cachedExeInfo.serialize();
 	//jsRoot["wad_info"] = doom::g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
@@ -2835,8 +2833,6 @@ bool MainWindow::saveCache( const QString & filePath )
 
 bool MainWindow::loadCache( const QString & filePath )
 {
-	qDebug() << "loading cache from" << filePath;
-
 	JsonDocumentCtx jsonDoc;
 	if (!readJsonFromFile( jsonDoc, filePath, "cache" ))
 	{

@@ -73,28 +73,28 @@ class FileInfoCache {
 		auto cacheIter = _cache.find( filePath );
 		if (cacheIter == _cache.end())
 		{
-			qDebug() << "cache entry for" << filePath << "not found, reading info from file";
+			//qDebug() << "cache entry for" << filePath << "not found, reading info from file";
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
-		else if (cacheIter->lastModified < fileLastModified)
+		else if (cacheIter->lastModified != fileLastModified)
 		{
-			qDebug() << "cache entry for" << filePath << "is outdated, reading info from file";
+			//qDebug() << "cache entry for" << filePath << "is outdated, reading info from file";
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->fileInfo.status == ReadStatus::CantOpen
 			  || cacheIter->fileInfo.status == ReadStatus::FailedToRead)
 		{
-			qDebug() << "reading file" << filePath << "failed last time, trying again";
+			//qDebug() << "reading file" << filePath << "failed last time, trying again";
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->fileInfo.status == ReadStatus::Uninitialized)
 		{
-			qDebug() << "cache entry for" << filePath << "is corrupted, reading info from file";
+			//qDebug() << "cache entry for" << filePath << "is corrupted, reading info from file";
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else
 		{
-			qDebug() << "using cached info for" << filePath;
+			//qDebug() << "using cached info for" << filePath;
 		}
 
 		return cacheIter->fileInfo;

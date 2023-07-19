@@ -7,7 +7,7 @@
 
 #include "ErrorHandling.hpp"
 
-#include "Utils/WidgetUtils.hpp"  // HYPERLINK
+#include "WidgetUtils.hpp"  // HYPERLINK
 
 #include <QMessageBox>
 #include <QStringBuilder>

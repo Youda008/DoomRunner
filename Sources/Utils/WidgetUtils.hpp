@@ -15,7 +15,7 @@
 #include "LangUtils.hpp"         // findSuch
 #include "FileSystemUtils.hpp"   // fillListFromDir
 #include "Widgets/ListModel.hpp"
-#include "Utils/ErrorHandling.hpp"
+#include "ErrorHandling.hpp"
 
 #include <QAbstractItemView>
 #include <QListView>

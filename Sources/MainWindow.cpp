@@ -2830,7 +2830,7 @@ bool MainWindow::saveCache( const QString & filePath )
 	//jsRoot["wad_info"] = doom::g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
 
 	QJsonDocument jsonDoc( jsRoot );
-	return writeJsonToFile( jsonDoc, filePath );
+	return writeJsonToFile( jsonDoc, filePath, "cache" );
 }
 
 bool MainWindow::loadCache( const QString & filePath )
@@ -2838,7 +2838,7 @@ bool MainWindow::loadCache( const QString & filePath )
 	qDebug() << "loading cache from" << filePath;
 
 	JsonDocumentCtx jsonDoc;
-	if (!readJsonFromFile( jsonDoc, filePath ))
+	if (!readJsonFromFile( jsonDoc, filePath, "cache" ))
 	{
 		return false;
 	}
@@ -3025,7 +3025,6 @@ void MainWindow::restorePreset( int presetIdx )
 
 		ui->engineCmbBox->setCurrentIndex( -1 );
 
-		// TODO: simplify
 		if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
 		{
 			int engineIdx = findSuch( engineModel, [&]( const Engine & engine )

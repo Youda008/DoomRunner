@@ -192,7 +192,7 @@ int deleteSelectedItem( QListView * view, ListModel & model )
 
 	model.startDeleting( selectedIdx );
 
-	model.removeAt( selectedIdx );  // TODO
+	model.removeAt( selectedIdx );
 
 	model.finishDeleting();
 

@@ -417,8 +417,8 @@ void deserializeMap( const JsonObjectCtx & jsMap, QHash< QString, Elem > & map )
 //======================================================================================================================
 //  high-level file I/O helpers
 
-bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath );
-bool readJsonFromFile( JsonDocumentCtx & jsonDoc, const QString & filePath );
+bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, const QString & fileDesc );
+bool readJsonFromFile( JsonDocumentCtx & jsonDoc, const QString & filePath, const QString & fileDesc );
 
 
 #endif // JSON_UTILS_INCLUDED

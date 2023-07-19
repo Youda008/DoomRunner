@@ -831,13 +831,13 @@ bool writeOptionsToFile( const OptionsToSave & opts, const QString & filePath )
 {
 	QJsonDocument jsonDoc = serializeOptionsToJsonDoc( opts );
 
-	return writeJsonToFile( jsonDoc, filePath );
+	return writeJsonToFile( jsonDoc, filePath, "options" );
 }
 
 bool readOptionsFromFile( OptionsToLoad & opts, const QString & filePath )
 {
 	JsonDocumentCtx jsonDoc;
-	if (!readJsonFromFile( jsonDoc, filePath ))
+	if (!readJsonFromFile( jsonDoc, filePath, "options" ))
 	{
 		return false;
 	}

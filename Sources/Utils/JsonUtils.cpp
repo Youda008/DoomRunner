@@ -506,28 +506,27 @@ QString JsonArrayCtx::elemPath( int index ) const
 
 #include "FileSystemUtils.hpp"
 
-bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath )
+bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, const QString & fileDesc )
 {
 	QByteArray bytes = jsonDoc.toJson();
 
 	QString error = fs::updateFileSafely( filePath, bytes );
 	if (!error.isEmpty())
 	{
-		QMessageBox::warning( nullptr, "Error saving options", error );
+		QMessageBox::warning( nullptr, "Error saving "+fileDesc, error );
 		return false;
 	}
 
 	return true;
 }
 
-bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath )
+bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath, const QString & fileDesc )
 {
 	QByteArray bytes;
 	QString readError = fs::readWholeFile( filePath, bytes );
 	if (!readError.isEmpty())
 	{
-		// TODO
-		QMessageBox::warning( nullptr, "Error loading options", readError );
+		QMessageBox::warning( nullptr, "Error loading "+fileDesc, readError );
 		return false;
 	}
 
@@ -535,8 +534,8 @@ bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath )
 	QJsonDocument jsonDoc = QJsonDocument::fromJson( bytes, &parseError );
 	if (jsonDoc.isNull())
 	{
-		QMessageBox::warning( nullptr, "Error loading options",
-			"Failed to parse options.json: "%parseError.errorString()%"\n"
+		QMessageBox::warning( nullptr, "Error loading "+fileDesc,
+			"Failed to parse "%fs::getFileNameFromPath(filePath)%": "%parseError.errorString()%"\n"
 			"You can either open it in notepad and try to repair it, or delete it and start from scratch."
 		);
 		return false;

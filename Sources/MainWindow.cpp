@@ -892,7 +892,7 @@ void MainWindow::updateOptionsGrpBoxTitles( const StorageSettings & storageSetti
 		"stored in preset"
 	};
 
-	static const auto updateGroupBoxTitle = []( QGroupBox * grpBox, OptionsStorage storage )
+	auto updateGroupBoxTitle = []( QGroupBox * grpBox, OptionsStorage storage )
 	{
 		QString newStorageDesc = optsStorageStrings[ storage ] + QStringLiteral(" (configurable)");
 		grpBox->setTitle( replaceStringBetween( grpBox->title(), '[', ']', newStorageDesc ) );
@@ -1466,12 +1466,29 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 //----------------------------------------------------------------------------------------------------------------------
 //  preset list manipulation
 
+static uint getHighestDefaultPresetNameIndex( const QList< Preset > & presetList )
+{
+	uint maxIndex = 0;
+	static QRegularExpression defaultPresetRegex("Preset(\\d+)");
+	for (const Preset & preset : presetList)
+	{
+		auto match = defaultPresetRegex.match( preset.name );
+		if (match.hasMatch())
+		{
+			bool isInt;
+			uint index = match.captured(1).toUInt( &isInt );
+			if (isInt && index > maxIndex)
+				maxIndex = index;
+		}
+	}
+	return maxIndex;
+}
+
 void MainWindow::presetAdd()
 {
-	// TODO: find nearest non-existing number
-  static uint presetNum = 1;
+	uint presetNum = getHighestDefaultPresetNameIndex( presetModel.fullList() ) + 1;
 
-	wdg::appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum++ ) } );
+	wdg::appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum ) } );
 
 	// clear the widgets to represent an empty preset
 	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will clear the prev preset

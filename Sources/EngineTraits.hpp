@@ -66,7 +66,7 @@ struct EngineFamilyTraits
 	CompatLevelStyle compLvlStyle;
 	const char * saveDirParam;
 	bool hasScreenshotDirParam;
-	bool hasStdoutParam;
+	bool needsStdoutParam;
 };
 
 /// Properties and capabilities of a particular engine that decide what command-line parameters will be used.
@@ -113,7 +113,7 @@ class EngineTraits
 	CompatLevelStyle compatLevelStyle() const   { return _familyTraits->compLvlStyle; }
 	const char * saveDirParam() const           { return _familyTraits->saveDirParam; }
 	bool hasScreenshotDirParam() const          { return _familyTraits->hasScreenshotDirParam; }
-	bool hasStdoutParam() const                 { return _familyTraits->hasStdoutParam; }
+	bool needsStdoutParam() const               { return _familyTraits->needsStdoutParam; }
 	bool supportsCustomMapNames() const         { return _familyTraits->mapParamStyle == MapParamStyle::Map; }
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities

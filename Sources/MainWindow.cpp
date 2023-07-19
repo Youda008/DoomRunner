@@ -3704,10 +3704,8 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & outputBaseDi
 
 	// On Windows ZDoom doesn't log its output to stdout by default.
 	// Force it to do so, so that our ProcessOutputWindow displays something.
- #if IS_WINDOWS
-	if (settings.showEngineOutput && engine.hasStdoutParam())
+	if (settings.showEngineOutput && engine.needsStdoutParam())
 		cmd.arguments << "-stdout";
- #endif
 
 	// video options
 	if (ui->monitorCmbBox->currentIndex() > 0)

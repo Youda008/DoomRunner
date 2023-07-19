@@ -50,8 +50,8 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 
 static const EngineFamilyTraits engineFamilyTraits [] =
 {
-	//              -warp or +map        -complevel or +compatmode   savedir param   has +screenshot_dir   has -stdout
-	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom,    "-savedir",     true,                 true },
+	//              -warp or +map        -complevel or +compatmode   savedir param   has +screenshot_dir   needs -stdout
+	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom,    "-savedir",     true,                 IS_WINDOWS },
 	/*PrBoom*/    { MapParamStyle::Warp, CompatLevelStyle::PrBoom,   "-save",        false,                false },
 	/*Chocolate*/ { MapParamStyle::Warp, CompatLevelStyle::None,     "-savedir",     false,                false },
 };

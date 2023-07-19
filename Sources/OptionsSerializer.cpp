@@ -12,48 +12,12 @@
 #include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidListItem
 #include "Version.hpp"
 
-#include <QJsonDocument>
 #include <QFileInfo>
 #include <QMessageBox>
 
 
 //======================================================================================================================
-//  serialization utils
-
-template< typename Elem >
-QJsonArray serializeList( const QList< Elem > & list )
-{
-	QJsonArray jsArray;
-	for (const Elem & elem : list)
-	{
-		jsArray.append( serialize( elem ) );
-	}
-	return jsArray;
-}
-
-QJsonArray serializeStringVec( const QStringVec & vec )
-{
-	QJsonArray jsArray;
-	for (const auto & elem : vec)
-	{
-		jsArray.append( elem );
-	}
-	return jsArray;
-}
-
-void deserializeStringVec( const JsonArrayCtx & jsList, QStringVec & list )
-{
-	for (int i = 0; i < jsList.size(); i++)
-	{
-		QString elem = jsList.getString( i );
-		if (!elem.isEmpty())
-			list.append( std::move(elem) );
-	}
-}
-
-
-//======================================================================================================================
-//  user data serialization
+//  user data sub-sections
 
 static QJsonObject serialize( const Engine & engine )
 {
@@ -465,7 +429,7 @@ static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const 
 
 	if (JsonArrayCtx jsSelectedMapPacks = jsPreset.getArray( "selected_mappacks" ))
 	{
-		deserializeStringVec( jsSelectedMapPacks, preset.selectedMapPacks );
+		preset.selectedMapPacks = deserializeStringVec( jsSelectedMapPacks );
 	}
 
 	if (JsonArrayCtx jsMods = jsPreset.getArray( "mods" ))
@@ -592,9 +556,9 @@ static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & se
 
 
 //======================================================================================================================
-//  options file stucture
+//  top-level JSON stucture
 
-static void serializeOptionsToJson( const OptionsToSave & opts, QJsonObject & jsOpts )
+static void serialize( QJsonObject & jsOpts, const OptionsToSave & opts )
 {
 	// files and related settings
 
@@ -665,7 +629,7 @@ static void serializeOptionsToJson( const OptionsToSave & opts, QJsonObject & js
 	jsOpts["geometry"] = serialize( opts.geometry );
 }
 
-static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCtx & jsOpts )
+static void deserialize( const JsonObjectCtx & jsOpts, OptionsToLoad & opts )
 {
 	// global settings
 
@@ -811,38 +775,24 @@ static void deserializeOptionsFromJson( OptionsToLoad & opts, const JsonObjectCt
 
 
 //======================================================================================================================
-//  JSON and version handling
+//  JSON document and version handling
 
-static QByteArray serializeOptions( const OptionsToSave & opts )
+static QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts )
 {
 	QJsonObject jsRoot;
 
 	// this will be used to detect options created by older versions and supress "missing element" warnings
 	jsRoot["version"] = appVersion;
 
-	serializeOptionsToJson( opts, jsRoot );
+	serialize( jsRoot, opts );
 
-	QJsonDocument jsonDoc( jsRoot );
-
-	return jsonDoc.toJson();
+	return QJsonDocument( jsRoot );
 }
 
-static bool deserializeOptions( OptionsToLoad & opts, const QByteArray & bytes )
+static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDocCtx, OptionsToLoad & opts )
 {
-	QJsonParseError error;
-	QJsonDocument jsonDoc = QJsonDocument::fromJson( bytes, &error );
-	if (jsonDoc.isNull())
-	{
-		QMessageBox::warning( nullptr, "Error loading options",
-			"Failed to parse options.json: "%error.errorString()%"\n"
-			"You can either open it in notepad and try to repair it, or delete it and start from scratch."
-		);
-		return false;
-	}
-
 	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
 	// we want to print a useful error message with information exactly which JSON element is broken.
-	JsonDocumentCtx jsonDocCtx( jsonDoc );
 	const JsonObjectCtx & jsRoot = jsonDocCtx.rootObject();
 
 	QString optsVersionStr = jsRoot.getString( "version", "", DontShowError );
@@ -862,17 +812,15 @@ static bool deserializeOptions( OptionsToLoad & opts, const QByteArray & bytes )
 		jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version
 
 		// try to load as the 1.6.3 format, older versions will have to accept resetting some values to defaults
-		deserializeOptionsFromJson_pre17( opts, jsRoot );
+		deserialize_pre17( opts, jsRoot );
 	}
 	else
 	{
 		if (optsVersion < appVersion)
 			jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version
 
-		deserializeOptionsFromJson( opts, jsRoot );
+		deserialize( jsRoot, opts );
 	}
-
-	return true;
 }
 
 
@@ -881,27 +829,20 @@ static bool deserializeOptions( OptionsToLoad & opts, const QByteArray & bytes )
 
 bool writeOptionsToFile( const OptionsToSave & opts, const QString & filePath )
 {
-	QByteArray bytes = serializeOptions( opts );
+	QJsonDocument jsonDoc = serializeOptionsToJsonDoc( opts );
 
-	QString error = fs::updateFileSafely( filePath, bytes );
-	if (!error.isEmpty())
-	{
-		QMessageBox::warning( nullptr, "Error saving options", error );
-		return false;
-	}
-
-	return true;
+	return writeJsonToFile( jsonDoc, filePath );
 }
 
 bool readOptionsFromFile( OptionsToLoad & opts, const QString & filePath )
 {
-	QByteArray bytes;
-	QString error = fs::readWholeFile( filePath, bytes );
-	if (!error.isEmpty())
+	JsonDocumentCtx jsonDoc;
+	if (!readJsonFromFile( jsonDoc, filePath ))
 	{
-		QMessageBox::warning( nullptr, "Error loading options", error );
 		return false;
 	}
 
-	return deserializeOptions( opts, bytes );
+	deserializeOptionsFromJsonDoc( jsonDoc, opts );
+
+	return true;
 }

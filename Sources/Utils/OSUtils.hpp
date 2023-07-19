@@ -122,7 +122,7 @@ bool openFileLocation( const QString & filePath );
 bool createWindowsShortcut(
 	QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir = {}, QString description = {}
 );
-#endif // IS_WINDOWS
+#endif
 
 
 } // namespace os

@@ -10,52 +10,40 @@
 
 
 #include "Essential.hpp"
+
 #include "Version.hpp"
+#include "FileInfoCache.hpp"
 
 #include <QString>
 
+class QJsonObject;
+class JsonObjectCtx;
 
-//======================================================================================================================
 
 namespace os {
 
 
 /// Executable version information
-struct ExeVersionInfo
+struct ExeVersionInfo_
 {
 	QString appName;
 	QString description;
 	Version version;
+
+	void serialize( QJsonObject & jsExeInfo ) const;
+	void deserialize( const JsonObjectCtx & jsExeInfo );
 };
 
-using optExeVersionInfo = std::optional< ExeVersionInfo >;
-
-#if IS_WINDOWS
-/*
-enum class ExeReadStatus
-{
-	Success,
-	CantOpen,
-	InvalidFormat,
-	ResourceNotFound,
-};
-
-struct ExeInfo
-{
-	ExeReadStatus status = ExeReadStatus::CantOpen;
-	QString manifest;
-};
-
-ExeInfo readExeInfo( const QString & filePath );
-*/
+using ExeVersionInfo = UncertainFileInfo< ExeVersionInfo_ >;
 
 /// Reads executable version info from the file's built-in resource.
-/** If the version info resource is not present in the executable, returns nullopt.
-  * If some field is not present in the version info resource, valid ExeVersionInfo is returned
-  * but that field stays empty or invalid. */
-optExeVersionInfo readExeVersionInfo( const QString & filePath );
+/** Even if status == Success, not all the fields have to be filled. If the version info resource was found,
+  * but some of the expected entries is not present, the corresponding ExeVersionInfo field will remain empty/invalid.
+  * BEWARE that on some systems opening the executable file can take incredibly long, so caching is strongly adviced. */
+ExeVersionInfo readExeVersionInfo( const QString & filePath );
 
-#endif
+
+extern FileInfoCache< ExeVersionInfo_ > g_cachedExeInfo;
 
 
 } // namespace os

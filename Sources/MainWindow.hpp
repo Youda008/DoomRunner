@@ -11,6 +11,10 @@
 
 #include "Dialogs/DialogCommon.hpp"
 
+#include "Utils/ExeReader.hpp"      // ExeVersionInfo
+#include "Utils/WADReader.hpp"      // WadInfo
+#include "Utils/FileInfoCache.hpp"  // cache for exe/wad info
+
 #include "Widgets/ListModel.hpp"
 #include "Widgets/SearchPanel.hpp"
 #include "UserData.hpp"
@@ -179,8 +183,12 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void toggleSkillSubwidgets( bool enabled );
 	void toggleOptionsSubwidgets( bool enabled );
 
-	bool saveOptions( const QString & fileName );
-	bool loadOptions( const QString & fileName );
+	bool saveOptions( const QString & filePath );
+	bool loadOptions( const QString & filePath );
+
+	bool isCacheDirty() const;
+	bool saveCache( const QString & filePath );
+	bool loadCache( const QString & filePath );
 
 	void restoreLoadedOptions( OptionsToLoad && opts );
 	void restorePreset( int index );
@@ -200,6 +208,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
 	QStringVec getSelectedMapPacks() const;
+
+	QStringList getUniqueMapNamesFromWADs( const QVector<QString> & selectedWADs ) const;
 
 	QString getConfigDir() const;
 	QString getDataDir() const;
@@ -233,6 +243,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QDir appDataDir;   ///< directory where this application can store its data
 	QString optionsFilePath;
+	QString cacheFilePath;
 
 	bool optionsNeedUpdate = false;  ///< indicates that the user has made a change and the options file needs to be updated
 	bool optionsCorrupted = false;  ///< true if there was a critical error during parsing of the options file, such content should not be saved

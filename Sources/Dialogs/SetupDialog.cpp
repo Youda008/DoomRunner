@@ -11,7 +11,7 @@
 #include "EngineDialog.hpp"
 
 #include "OwnFileDialog.hpp"
-#include "DoomFileInfo.hpp"
+#include "DoomFiles.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // makeFileFilter, highlightPathIfInvalid
 
@@ -354,8 +354,8 @@ void SetupDialog::editSelectedEngine()
 void SetupDialog::iwadAdd()
 {
 	QString path = DialogWithPaths::browseFile( this, "IWAD", lastUsedDir,
-		  makeFileFilter( "Doom data files", iwadSuffixes )
-		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
+		  makeFileFilter( "Doom data files", doom::iwadSuffixes )
+		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ "All files (*)"
 	);
 	if (path.isEmpty())  // user probably clicked cancel
@@ -488,7 +488,7 @@ void SetupDialog::onModDirChanged( const QString & dir )
 
 void SetupDialog::updateIWADsFromDir()
 {
-	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, isIWAD );
+	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::isIWAD );
 }
 
 

@@ -8,8 +8,11 @@
 #include "ExeReader.hpp"
 
 #include "LangUtils.hpp"  // atScopeEndDo
+#include "JsonUtils.hpp"
 
 #include <QFile>
+#include <QFileInfo>
+#include <QDateTime>
 #include <QMessageBox>
 #include <QDebug>
 #include <QStringBuilder>
@@ -23,8 +26,6 @@
 //======================================================================================================================
 
 namespace os {
-
-#if IS_WINDOWS
 
 // I hate you Graph!!!
 
@@ -176,10 +177,8 @@ static QString getVerInfoValue( const void * resData, const LangInfo & langInfo,
 	return QString::fromWCharArray( reinterpret_cast< const wchar_t * >( lpBuffer ), int( cchLen ) - 1 );
 }
 
-static ExeVersionInfo extractVersionInfo( const Resource & res )
+static void extractVersionInfo( const Resource & res, ExeVersionInfo & verInfo )
 {
-	ExeVersionInfo verInfo;
-
 	VS_FIXEDFILEINFO * rawVerInfo = getRawVersionInfo( res.data() );
 	if (rawVerInfo)
 	{
@@ -195,8 +194,6 @@ static ExeVersionInfo extractVersionInfo( const Resource & res )
 		verInfo.appName = getVerInfoValue( res.data(), languages[0], TEXT("ProductName") );
 		verInfo.description = getVerInfoValue( res.data(), languages[0], TEXT("FileDescription") );
 	}
-
-	return verInfo;
 }
 
 
@@ -259,6 +256,7 @@ MappedFile mapFileToMemory( const QString & filePath )
 {
 	MappedFile m;
 
+	// this can take up to 1 second sometimes, whyyy?! antivirus?
 	m.hFile = CreateFile( filePath.toStdWString().c_str(),
 		GENERIC_READ,           // dwDesiredAccess
 		0,                      // dwShareMode
@@ -316,26 +314,33 @@ MappedFile mapFileToMemory( const QString & filePath )
 }
 
 // read PE file using manual memory navigation
-optExeVersionInfo readExeVersionInfo( const QString & filePath )
+ExeVersionInfo readExeVersionInfo( const QString & filePath )
 {
+	ExeVersionInfo verInfo;
+
+ #if IS_WINDOWS
+
 	MappedFile mappedFile = mapFileToMemory( filePath );
 	if (!mappedFile.isOpen())
 	{
-		return std::nullopt;
+		verInfo.status = ReadStatus::CantOpen;
+		return verInfo;
 	}
 
 	const auto * dosHeader = mappedFile.fieldAtOffset< IMAGE_DOS_HEADER >( 0 );
 	if (dosHeader == nullptr)
 	{
 		qDebug() << "Cannot read IMAGE_DOS_HEADER";
-		return std::nullopt;
+		verInfo.status = ReadStatus::InvalidFormat;
+		return verInfo;
 	}
 
 	const auto * ntHeaders = mappedFile.fieldAtOffset< IMAGE_NT_HEADERS >( dosHeader->e_lfanew );
 	if (ntHeaders == nullptr)
 	{
 		qDebug() << "Cannot read IMAGE_NT_HEADERS at" << Qt::hex << dosHeader->e_lfanew;
-		return std::nullopt;
+		verInfo.status = ReadStatus::InvalidFormat;
+		return verInfo;
 	}
 
 	const IMAGE_DATA_DIRECTORY * resourceDirLocation = nullptr;
@@ -352,48 +357,92 @@ optExeVersionInfo readExeVersionInfo( const QString & filePath )
 	else
 	{
 		qDebug() << "Unknown CPU architecture:" << Qt::hex << ntHeaders->FileHeader.Machine;
-		return std::nullopt;
+		verInfo.status = ReadStatus::InvalidFormat;
+		return verInfo;
 	}
 
 	const auto * resourceDir = mappedFile.fieldAtOffset< IMAGE_RESOURCE_DIRECTORY >( resourceDirLocation->VirtualAddress );
 	if (resourceDir == nullptr)
 	{
 		qDebug() << "Cannot read IMAGE_RESOURCE_DIRECTORY at" << Qt::hex << resourceDirLocation->VirtualAddress;
-		return std::nullopt;
+		verInfo.status = ReadStatus::InvalidFormat;
+		return verInfo;
 	}
 
 	// fuck this shit
 
-	return std::nullopt;
+	verInfo.status = ReadStatus::Uninitialized;
+
+ #else
+
+	verInfo.status = ReadStatus::Uninitialized;
+
+ #endif
+
+	return verInfo;
 }
 
 /*/
 
 // read PE file using LoadLibrary and FindResource,LoadResource flow
-optExeVersionInfo readExeVersionInfo( const QString & filePath )
+ExeVersionInfo readExeVersionInfo( const QString & filePath )
 {
+	ExeVersionInfo verInfo;
+
+ #if IS_WINDOWS
+
+	// this can take up to 1 second sometimes, whyyy?! antivirus?
 	HMODULE hExeModule = LoadLibraryEx( filePath.toStdWString().c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE );
 	if (!hExeModule)
 	{
 		qDebug().nospace() << "Cannot open "<<filePath<<", LoadLibraryEx() failed with error "<<GetLastError();
-		return std::nullopt;
+		verInfo.status = ReadStatus::CantOpen;
+		return verInfo;
 	}
 	auto moduleGuard = autoClosable( hExeModule, FreeLibrary );
 
 	Resource resource = getResource( filePath, hExeModule, RT_VERSION );
 	if (!resource)
 	{
-		return std::nullopt;
+		verInfo.status = ReadStatus::InfoNotPresent;
+		return verInfo;
 	}
 
-	auto v = extractVersionInfo( resource );
+	extractVersionInfo( resource, verInfo );
 
-	return { std::move(v) };
+	verInfo.status = ReadStatus::Success;
+
+ #else
+
+	verInfo.status = ExeReadStatus::Uninitialized;
+
+ #endif
+
+	return verInfo;
 }
 
 /**/
 
-#endif // IS_WINDOWS
+
+FileInfoCache< ExeVersionInfo_ > g_cachedExeInfo( readExeVersionInfo );
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  serialization
+
+void ExeVersionInfo_::serialize( QJsonObject & jsExeInfo ) const
+{
+	jsExeInfo["app_name"] = appName;
+	jsExeInfo["description"] = description;
+	jsExeInfo["version"] = version.toString();
+}
+
+void ExeVersionInfo_::deserialize( const JsonObjectCtx & jsExeInfo )
+{
+	appName = jsExeInfo.getString("app_name");
+	description = jsExeInfo.getString("description");
+	version = Version( jsExeInfo.getString("version") );
+}
 
 
 } // namespace os

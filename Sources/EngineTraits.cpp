@@ -15,7 +15,6 @@
 #include <QRegularExpression>
 
 
-
 //======================================================================================================================
 //  engine definitions - add support for new engines here
 
@@ -110,7 +109,6 @@ static const QStringList prboomCompatLevels =
 static const QStringList noCompatLevels = {};
 
 
-
 //======================================================================================================================
 //  code
 
@@ -167,10 +165,12 @@ void EngineTraits::loadAppInfo( const QString & executablePath )
 {
 	_exePath = executablePath;
 	_exeBaseName = fs::getFileBasenameFromPath( executablePath );
- #if IS_WINDOWS
-	_exeVersionInfo = os::readExeVersionInfo( executablePath );
- #endif
-	_appNameNormalized = (_exeVersionInfo ? _exeVersionInfo->appName : _exeBaseName).toLower();
+
+	// Sometimes opening an executable file takes incredibly long (even > 1 second) for unknown reason (antivirus maybe?).
+	// So we cache the results here so that at least the subsequent calls are fast.
+	_exeVersionInfo = os::g_cachedExeInfo.getFileInfo( executablePath );
+
+	_appNameNormalized = (!_exeVersionInfo.appName.isEmpty() ? _exeVersionInfo.appName : _exeBaseName).toLower();
 }
 
 void EngineTraits::assignFamilyTraits( EngineFamily family )

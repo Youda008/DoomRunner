@@ -75,7 +75,7 @@ class EngineTraits
 	// application info
 	QString _exePath;             ///< path of the file from which the application info was constructed
 	QString _exeBaseName;         ///< executable file name without file suffix
-	os::optExeVersionInfo _exeVersionInfo;
+	os::ExeVersionInfo _exeVersionInfo;
 	QString _appNameNormalized;   ///< application name normalized for indexing engine property tables
 	// family traits
 	const EngineFamilyTraits * _familyTraits;
@@ -102,9 +102,9 @@ class EngineTraits
 	const QString & appInfoSrcExePath() const   { return _exePath; }
 	const QString & exeBaseName() const         { return _exeBaseName; }
 
-	const QString & exeAppName() const          { return _exeVersionInfo ? _exeVersionInfo->appName : emptyString; }
-	const QString & exeDescription() const      { return _exeVersionInfo ? _exeVersionInfo->description : emptyString; }
-	const Version & exeVersion() const          { return _exeVersionInfo ? _exeVersionInfo->version : emptyVersion; }
+	const QString & exeAppName() const          { return _exeVersionInfo.appName; }
+	const QString & exeDescription() const      { return _exeVersionInfo.description; }
+	const Version & exeVersion() const          { return _exeVersionInfo.version; }
 
 	const QString & appNameNormalized() const   { return _appNameNormalized; }
 

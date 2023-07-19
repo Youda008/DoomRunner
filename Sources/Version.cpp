@@ -31,6 +31,11 @@ Version::Version( const QString & versionStr )
 		build = match.captured(4).toUShort();  // optional, will stay 0 if not present
 }
 
+QString Version::toString() const
+{
+	return QStringLiteral("%1.%2.%3.%4").arg( major ).arg( minor ).arg( patch ).arg( build );
+}
+
 int64_t Version::compare( const Version & other ) const
 {
 	// The following will produce intuitive result even for invalid (all-zero) versions,

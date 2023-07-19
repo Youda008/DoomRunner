@@ -54,7 +54,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, 
 
 	if (JsonArrayCtx jsSelectedMapPacks = jsPreset.getArray( "selected_mappacks" ))
 	{
-		deserializeStringVec( jsSelectedMapPacks, preset.selectedMapPacks );
+		preset.selectedMapPacks = deserializeStringVec( jsSelectedMapPacks );
 	}
 
 	if (JsonArrayCtx jsMods = jsPreset.getArray( "mods" ))
@@ -127,7 +127,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsSettings, LauncherSetting
 //======================================================================================================================
 //  options file stucture
 
-static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonObjectCtx & jsOpts )
+static void deserialize_pre17( OptionsToLoad & opts, const JsonObjectCtx & jsOpts )
 {
 	// global settings
 

@@ -12,8 +12,7 @@
 #include "Essential.hpp"
 
 #include <QtGlobal>  // QT_VERSION_STR
-
-class QString;
+#include <QString>
 
 
 //======================================================================================================================
@@ -37,6 +36,8 @@ struct Version
 	Version( const QString & versionStr );
 
 	bool isValid() const { return major != 0; }
+
+	QString toString() const;
 
 	int64_t compare( const Version & other ) const;
 	bool operator==( const Version & other ) const  { return compare( other ) == 0; }

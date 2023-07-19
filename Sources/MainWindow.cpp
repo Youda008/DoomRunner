@@ -22,13 +22,14 @@
 #include "UpdateChecker.hpp"
 #include "Themes.hpp"
 #include "EngineTraits.hpp"
-#include "DoomFileInfo.hpp"
+#include "DoomFiles.hpp"
 
 #include "Utils/LangUtils.hpp"
 #include "Utils/FileSystemUtils.hpp"
 #include "Utils/OSUtils.hpp"
-#include "Utils/WidgetUtils.hpp"
+#include "Utils/ExeReader.hpp"
 #include "Utils/WADReader.hpp"
+#include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // checkPath, highlightPathIfInvalid
 #include "Utils/ErrorHandling.hpp"
 
@@ -56,6 +57,7 @@
 //======================================================================================================================
 
 static const char defaultOptionsFileName [] = "options.json";
+static const char defaultCacheFileName [] = "file_info_cache.json";
 
 #if IS_WINDOWS
 	static const QString scriptFileSuffix = "*.bat";
@@ -96,6 +98,24 @@ QStringVec MainWindow::getSelectedMapPacks() const
 	});
 
 	return selectedMapPacks;
+}
+
+QStringList MainWindow::getUniqueMapNamesFromWADs( const QVector<QString> & selectedWADs ) const
+{
+	QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
+	for (const QString & selectedWAD : selectedWADs)
+	{
+		if (!fs::isValidFile( selectedWAD ))
+			continue;
+
+		const doom::WadInfo & wadInfo = doom::g_cachedWadInfo.getFileInfo( selectedWAD );
+		if (wadInfo.status != ReadStatus::Success)
+			continue;
+
+		for (const QString & mapName : wadInfo.mapNames)
+			uniqueMapNames.insert( mapName.toUpper(), 0 );  // the 0 doesn't matter
+	}
+	return uniqueMapNames.keys();
 }
 
 QString MainWindow::getConfigDir() const
@@ -676,7 +696,7 @@ void MainWindow::setupMapPackList()
 
 	// set item filters
 	mapModel.setFilter( QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot | QDir::NoSymLinks );
-	mapModel.setNameFilters( getModFileSuffixes() );
+	mapModel.setNameFilters( doom::getModFileSuffixes() );
 	mapModel.setNameFilterDisables( false );
 
 	// remove the column names at the top
@@ -812,6 +832,13 @@ void MainWindow::onWindowShown()
 	moveOptionsFromOldDir( os::getThisAppConfigDir(), appDataDir, defaultOptionsFileName );
 
 	optionsFilePath = appDataDir.filePath( defaultOptionsFileName );
+	cacheFilePath = appDataDir.filePath( defaultCacheFileName );
+
+	// cache needs to be loaded first, because loadOptions() already needs it
+	if (fs::isValidFile( cacheFilePath ))
+	{
+		loadCache( cacheFilePath );
+	}
 
 	// try to load last saved state
 	if (fs::isValidFile( optionsFilePath ))
@@ -912,6 +939,11 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 			saveOptions( optionsFilePath );
 			optionsNeedUpdate = false;
 		}
+
+		if (isCacheDirty())
+		{
+			saveCache( cacheFilePath );
+		}
 	}
 }
 
@@ -919,6 +951,9 @@ void MainWindow::closeEvent( QCloseEvent * event )
 {
 	if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
 		saveOptions( optionsFilePath );
+
+	if (isCacheDirty())
+		saveCache( cacheFilePath );
 
  #if IS_WINDOWS
 	themeWatcher.terminate();
@@ -1306,7 +1341,7 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 	{
 		// if there is multiple of them, there isn't really any better solution than to just take the first one
 		QString wadFileName = fs::getFileNameFromPath( selectedMapPacks[0] );
-		QString startingMap = getStartingMap( wadFileName );
+		QString startingMap = doom::getStartingMap( wadFileName );
 		if (!startingMap.isEmpty())
 		{
 			if (ui->mapCmbBox->findText( startingMap ) >= 0)
@@ -1602,8 +1637,8 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 void MainWindow::modAdd()
 {
 	QStringList paths = OwnFileDialog::getOpenFileNames( this, "Locate the mod file", modSettings.dir,
-		  makeFileFilter( "Doom mod files", pwadSuffixes )
-		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
+		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
+		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel
@@ -2482,7 +2517,7 @@ void MainWindow::updateIWADsFromDir()
 	// workaround (read the big comment above)
 	disableSelectionCallbacks = true;
 
-	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, isIWAD );
+	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::isIWAD );
 
 	disableSelectionCallbacks = false;
 
@@ -2512,7 +2547,7 @@ void MainWindow::updateConfigFilesFromDir()
 	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
 	wdg::updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, /*recursively*/false, /*emptyItem*/true, pathConvertor,
-		/*isDesiredFile*/[]( const QFileInfo & file ) { return configFileSuffixes.contains( file.suffix().toLower() ); }
+		/*isDesiredFile*/[]( const QFileInfo & file ) { return doom::configFileSuffixes.contains( file.suffix().toLower() ); }
 	);
 
 	disableSelectionCallbacks = false;
@@ -2535,7 +2570,7 @@ void MainWindow::updateSaveFilesFromDir()
 	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
 	wdg::updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
-		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == saveFileSuffix; }
+		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == doom::saveFileSuffix; }
 	);
 
 	disableSelectionCallbacks = false;
@@ -2558,7 +2593,7 @@ void MainWindow::updateDemoFilesFromDir()
 	disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
 	wdg::updateComboBoxFromDir( demoModel, ui->demoFileCmbBox_replay, demoDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
-		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == demoFileSuffix; }
+		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == doom::demoFileSuffix; }
 	);
 
 	disableSelectionCallbacks = false;
@@ -2644,29 +2679,18 @@ void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringVec > selecte
 		auto selectedWADs = QStringVec{ selectedIwadPath } + *selectedMapPacks;
 
 		// read the map names from the selected files and merge them so that entries are not duplicated
-		// TODO: own function
-		QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
-		for (const QString & selectedWAD : selectedWADs)
-		{
-			if (!fs::isDirectory( selectedWAD ))
-			{
-				const WadInfo & wadInfo = getCachedWadInfo( selectedWAD );
-				if (wadInfo.status == ReadStatus::Success)
-					for (const QString & mapName : wadInfo.mapNames)
-						uniqueMapNames.insert( mapName.toUpper(), 0 );  // the int doesn't matter
-			}
-		}
+		auto uniqueMapNames = getUniqueMapNamesFromWADs( selectedWADs );
 
 		// fill the combox-box
 		if (!uniqueMapNames.isEmpty())
 		{
-			auto mapNames = uniqueMapNames.keys();
+			auto mapNames = uniqueMapNames;
 			ui->mapCmbBox->addItems( mapNames );
 			ui->mapCmbBox_demo->addItems( mapNames );
 		}
 		else  // if we haven't found any map names in the WADs, fallback to the standard names based on IWAD name
 		{
-			auto mapNames = getStandardMapNames( fs::getFileNameFromPath( selectedIwadPath ) );
+			auto mapNames = doom::getStandardMapNames( fs::getFileNameFromPath( selectedIwadPath ) );
 			ui->mapCmbBox->addItems( mapNames );
 			ui->mapCmbBox_demo->addItems( mapNames );
 		}
@@ -2771,6 +2795,43 @@ bool MainWindow::loadOptions( const QString & filePath )
 	restoreLoadedOptions( std::move(opts) );
 
 	optionsCorrupted = false;
+	return true;
+}
+
+bool MainWindow::isCacheDirty() const
+{
+	return os::g_cachedExeInfo.isDirty();
+	//	|| doom::g_cachedWadInfo.isDirty();
+}
+
+bool MainWindow::saveCache( const QString & filePath )
+{
+	qDebug() << "saving cache to" << filePath;
+
+	QJsonObject jsRoot;
+	jsRoot["exe_info"] = os::g_cachedExeInfo.serialize();
+	//jsRoot["wad_info"] = doom::g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
+
+	QJsonDocument jsonDoc( jsRoot );
+	return writeJsonToFile( jsonDoc, filePath );
+}
+
+bool MainWindow::loadCache( const QString & filePath )
+{
+	qDebug() << "loading cache from" << filePath;
+
+	JsonDocumentCtx jsonDoc;
+	if (!readJsonFromFile( jsonDoc, filePath ))
+	{
+		return false;
+	}
+
+	const JsonObjectCtx & jsRoot = jsonDoc.rootObject();
+	if (JsonObjectCtx jsExeCache = jsRoot.getObject("exe_info"))
+		os::g_cachedExeInfo.deserialize( jsExeCache );
+	//if (JsonObjectCtx jsWadCache = jsRoot.getObject("wad_info"))
+	//	doom::g_cachedWadInfo.deserialize( jsWadCache );
+
 	return true;
 }
 

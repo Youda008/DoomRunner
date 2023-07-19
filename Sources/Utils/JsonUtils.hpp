@@ -10,6 +10,7 @@
 
 
 #include "Essential.hpp"
+#include "CommonTypes.hpp"
 
 #include <QString>
 #include <QList>
@@ -185,6 +186,8 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 	JsonObjectCtx( const JsonObjectCtxProxy & proxy )
 		: JsonObjectCtxProxy( proxy ) {}
 
+	auto keys() const { return _wrappedObject->keys(); }
+
 	/// Returns a sub-object at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
 	JsonObjectCtxProxy getObject( const QString & key, bool showError = true ) const;
@@ -206,7 +209,12 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 	uint getUInt( const QString & key, uint defaultVal, bool showError = true ) const;
 
 	/// Returns an uint16_t at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
 	uint16_t getUInt16( const QString & key, uint16_t defaultVal, bool showError = true ) const;
+
+	/// Returns an int64_t at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
+	int64_t getInt64( const QString & key, int64_t defaultVal, bool showError = true ) const;
 
 	/// Returns a double at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
@@ -221,7 +229,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 	template< typename Enum >
 	Enum getEnum( const QString & key, Enum defaultVal, bool showError = true ) const
 	{
-		uint intVal = getUInt( key, defaultVal, showError );
+		uint intVal = getUInt( key, uint(defaultVal), showError );
 		if (intVal <= enumSize< Enum >()) {
 			return Enum( intVal );
 		} else {
@@ -275,6 +283,10 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 	/** If it doesn't exist it shows an error dialog and returns default value. */
 	uint16_t getUInt16( int index, uint16_t defaultVal, bool showError = true ) const;
 
+	/// Returns an int64_t at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns default value. */
+	int64_t getInt64( int index, int64_t defaultVal, bool showError = true ) const;
+
 	/// Returns a double at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
 	double getDouble( int index, double defaultVal, bool showError = true ) const;
@@ -307,21 +319,106 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 
 class JsonDocumentCtx {
 
-	//QJsonDocument & _wrappedDoc;
 	JsonObjectCtx _rootObject;
 
-	_ParsingContext _context;  ///< document-wide data related to an ongoing parsing process, each element has a pointer to this
+	mutable _ParsingContext _context;  ///< document-wide data related to an ongoing parsing process, each element has a pointer to this
 
  public:
 
-	JsonDocumentCtx( QJsonDocument & wrappedDoc )
-		: /*_wrappedDoc( wrappedDoc ),*/ _rootObject( wrappedDoc.object(), &_context ) {}
+	JsonDocumentCtx() {}
+	JsonDocumentCtx( const QJsonDocument & wrappedDoc )
+		: _rootObject( wrappedDoc.object(), &_context ) {}
 
-	JsonObjectCtx & rootObject() { return _rootObject; }
+	const JsonObjectCtx & rootObject() const { return _rootObject; }
 
-	void disableWarnings() { _context.dontShowAgain = false; }
+	void disableWarnings() const { _context.dontShowAgain = false; }
 
 };
+
+
+//======================================================================================================================
+//  generic utils
+
+inline QJsonArray serializeStringVec( const QStringVec & vec )
+{
+	QJsonArray jsArray;
+	for (const auto & elem : vec)
+	{
+		jsArray.append( elem );
+	}
+	return jsArray;
+}
+
+inline QStringVec deserializeStringVec( const JsonArrayCtx & jsVec )
+{
+	QStringVec vec;
+	for (int i = 0; i < jsVec.size(); i++)
+	{
+		QString elem = jsVec.getString( i );
+		if (!elem.isEmpty())
+			vec.append( std::move(elem) );
+	}
+	return vec;
+}
+
+template< typename Elem >
+QJsonArray serializeList( const QList< Elem > & list )
+{
+	QJsonArray jsArray;
+	for (const Elem & elem : list)
+	{
+		jsArray.append( serialize( elem ) );
+	}
+	return jsArray;
+}
+
+template< typename Elem >
+void deserializeList( const JsonArrayCtx & jsList, QList< Elem > & list )
+{
+	for (int i = 0; i < jsList.size(); i++)
+	{
+		JsonObjectCtx jsElem = jsList.getObject( i );
+		if (jsElem)
+		{
+			list.append({});
+			deserialize( jsElem, list.last() );
+		}
+	}
+}
+
+template< typename Elem >
+QJsonObject serializeMap( const QHash< QString, Elem > & map )
+{
+	QJsonObject jsMap;
+	for (auto iter = map.begin(); iter != map.end(); ++iter)
+	{
+		jsMap[ iter.key() ] = serialize( iter.value() );
+	}
+	return jsMap;
+}
+
+template< typename Elem >
+void deserializeMap( const JsonObjectCtx & jsMap, QHash< QString, Elem > & map )
+{
+	auto keys = jsMap.keys();
+	for (const QString & key : keys)
+	{
+		JsonObjectCtx jsElem = jsMap.getObject( key );
+		if (jsElem)
+		{
+			Elem elem;
+			deserialize( jsElem, elem );
+			map.insert( key, elem );
+		}
+	}
+}
+
+
+//======================================================================================================================
+//  high-level file I/O helpers
+
+bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath );
+bool readJsonFromFile( JsonDocumentCtx & jsonDoc, const QString & filePath );
 
 
 #endif // JSON_UTILS_INCLUDED

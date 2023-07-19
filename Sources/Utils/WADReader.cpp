@@ -8,10 +8,12 @@
 #include "WADReader.hpp"
 
 #include "LangUtils.hpp"
-#include "FileSystemUtils.hpp"
+#include "JsonUtils.hpp"
 
 #include <QHash>
 #include <QFile>
+#include <QFileInfo>
+#include <QDateTime>
 #include <QTextStream>
 #include <QRegularExpression>
 #include <QDebug>
@@ -19,10 +21,13 @@
 #include <cctype>
 
 
+namespace doom {
+
+
 //======================================================================================================================
 //  WAD info loading
 
-// https://doomwiki.org/wiki/WAD
+//  https://doomwiki.org/wiki/WAD
 
 /// section that every WAD file begins with
 struct WadHeader
@@ -40,9 +45,20 @@ struct LumpEntry
 	char name [8];  ///< might not be null-terminated when the string takes all 8 bytes
 };
 
+template< size_t N >
+QString charArrayToString( const char (&arr) [N] )
+{
+	// we need to make sure we have a null-terminated string, because the original one isn't when it's 8 chars long
+	char arr0 [N+1];
+	strncpy( arr0, arr, std::min( sizeof(arr0), sizeof(arr) ) );
+	arr0[N] = '\0';
+	return QString( arr0 );
+}
+
 static bool isPrintableAsciiString( const QString & str )
 {
-	for (auto c : str.toLatin1())
+	auto strLatin = str.toLatin1();
+	for (auto c : strLatin)
 		if (!isprint( c ))
 			return false;
 	return true;
@@ -84,19 +100,34 @@ static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QStringVec & ma
 	}
 }
 
-static WadInfo readWadInfoFromFile( const QString & filePath )
+WadInfo readWadInfo( const QString & filePath )
 {
 	WadInfo wadInfo;
 
 	QFile file( filePath );
 	if (!file.open( QIODevice::ReadOnly ))
 	{
+		wadInfo.status = ReadStatus::CantOpen;
+		return wadInfo;
+	}
+
+	const qint64 fileSize = file.size();
+	if (fileSize < 0)
+	{
+		qWarning() << "file size is negative:" << fileSize << ", wtf??";
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
 
+	// read and validate WAD header
+
 	WadHeader header;
-	if (file.read( (char*)&header, sizeof(header) ) < qint64( sizeof(header) ))
+	if (qint64( sizeof(header) ) > fileSize)
+	{
+		wadInfo.status = ReadStatus::InvalidFormat;
+		return wadInfo;
+	}
+	else if (file.read( (char*)&header, sizeof(header) ) < qint64( sizeof(header) ))
 	{
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
@@ -115,22 +146,22 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 		return wadInfo;
 	}
 
-	if (header.lumpDirOffset >= file.size() || header.numLumps < 1 || header.numLumps > 65536)  // some garbage -> not a WAD
+	// read all lumps
+
+	if (header.numLumps < 1 || header.numLumps > 65536)  // some garbage -> not a WAD
 	{
 		wadInfo.status = ReadStatus::InvalidFormat;
 		return wadInfo;
 	}
-
-	if (!file.seek( header.lumpDirOffset ))
+	qint64 lumpDirSize = header.numLumps * sizeof(LumpEntry);
+	if (header.lumpDirOffset + lumpDirSize > fileSize)
 	{
-		wadInfo.status = ReadStatus::FailedToRead;
+		wadInfo.status = ReadStatus::InvalidFormat;
 		return wadInfo;
 	}
-
 	// the lump directory is basically an array of LumpEntry structs, so let's read it all at once
-	qint64 lumpDirSize = header.numLumps * sizeof(LumpEntry);
 	std::unique_ptr< LumpEntry [] > lumpDir( new LumpEntry [header.numLumps] );
-	if (file.read( (char*)lumpDir.get(), lumpDirSize ) < lumpDirSize)
+	if (!file.seek( header.lumpDirOffset ) || file.read( (char*)lumpDir.get(), lumpDirSize ) < lumpDirSize)
 	{
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
@@ -139,14 +170,9 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 	for (uint32_t i = 0; i < header.numLumps; ++i)
 	{
 		LumpEntry & lump = lumpDir[i];
+		QString lumpName = charArrayToString( lump.name );
 
-		// we need to make sure we have a null-terminated string, because the original one isn't when it's 8 chars long
-		char lumpName0 [9];
-		strncpy( lumpName0, lump.name, std::min( sizeof(lumpName0), sizeof(lump.name) ) );
-		lumpName0[8] = '\0';
-		QString lumpName( lumpName0 );
-
-		if (lump.dataOffset > file.size() || !isPrintableAsciiString( lumpName ))  // some garbage -> not a WAD
+		if (lump.dataOffset + lump.size > fileSize || !isPrintableAsciiString( lumpName ))  // some garbage -> not a WAD
 		{
 			wadInfo.status = ReadStatus::InvalidFormat;
 			return wadInfo;
@@ -188,27 +214,25 @@ static WadInfo readWadInfoFromFile( const QString & filePath )
 	return wadInfo;
 }
 
-const WadInfo & getCachedWadInfo( const QString & filePath )
+
+FileInfoCache< WadInfo_ > g_cachedWadInfo( readWadInfo );
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  serialization
+
+void WadInfo_::serialize( QJsonObject & jsWadInfo ) const
 {
-  // Opening and reading from a file is expensive, so we cache the results here so that subsequent calls are fast.
-  // The cache is global for the whole process because why not.
-  static QHash< QString, WadInfo > g_cachedWadTypes;
-
-	auto pos = g_cachedWadTypes.find( filePath );
-	if (pos == g_cachedWadTypes.end() || pos->status == ReadStatus::FailedToRead)  // if it failed previously, try again
-	{
-		WadInfo wadInfo = readWadInfoFromFile( filePath );
-		pos = g_cachedWadTypes.insert( filePath, std::move(wadInfo) );
-	}
-
-	if (pos->status == ReadStatus::FailedToRead)
-	{
-		qWarning() << "failed to read file" << filePath;
-	}
-	else if (pos->status == ReadStatus::InvalidFormat)
-	{
-		//qDebug() << "file" << filePath << "is not a WAD";
-	}
-
-	return pos.value();
+	jsWadInfo["type"] = int( type );
+	jsWadInfo["map_names"] = serializeStringVec( mapNames );
 }
+
+void WadInfo_::deserialize( const JsonObjectCtx & jsWadInfo )
+{
+	type = jsWadInfo.getEnum< doom::WadType >( "type", doom::WadType::Neither );
+	if (JsonArrayCtx jsMapNames = jsWadInfo.getArray( "map_names" ))
+		mapNames = deserializeStringVec( jsMapNames );
+}
+
+
+} // namespace doom

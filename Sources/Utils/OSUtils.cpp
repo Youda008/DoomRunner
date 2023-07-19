@@ -137,12 +137,13 @@ QString getSandboxName( Sandbox sandbox )
 	}
 }
 
+static const QRegularExpression snapPathRegex("^/snap/");
+static const QRegularExpression flatpakPathRegex("^/var/lib/flatpak/app/([^/]+)/");
+
 SandboxInfo getSandboxInfo( const QString & executablePath )
 {
 	SandboxInfo sandbox;
 
-	static QRegularExpression snapPathRegex("^/snap/");
-	static QRegularExpression flatpakPathRegex("^/var/lib/flatpak/app/([^/]+)/");
 	QRegularExpressionMatch match;
 	if ((match = snapPathRegex.match( executablePath )).hasMatch())
 	{

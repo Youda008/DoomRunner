@@ -19,7 +19,6 @@ Version::Version( const QString & versionStr )
 
 	static const QRegularExpression versionRegex("^(\\d+).(\\d+)(?:.(\\d+))?(?:.(\\d+))?$");
 	auto match = versionRegex.match( versionStr );
-
 	if (!match.hasMatch())
 		return;
 

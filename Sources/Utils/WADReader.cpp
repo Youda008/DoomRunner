@@ -64,20 +64,21 @@ static bool isPrintableAsciiString( const QString & str )
 	return true;
 }
 
+static const QSet< QString > blacklistedNames =
+{
+	"SEGS",
+	"SECTORS",
+	"SSECTORS",
+	"LINEDEFS",
+	"SIDEDEFS",
+	"VERTEXES",
+	"NODES",
+	"BLOCKMAP",
+	"REJECT",
+};
+
 static bool isMapMarker( const LumpEntry & lump, const QString & lumpName )
 {
-	static QSet< QString > blacklistedNames =
-	{
-		"SEGS",
-		"SECTORS",
-		"SSECTORS",
-		"LINEDEFS",
-		"SIDEDEFS",
-		"VERTEXES",
-		"NODES",
-		"BLOCKMAP",
-		"REJECT",
-	};
 	return lump.size == 0
 		&& !lumpName.endsWith("_START") && !lumpName.endsWith("_END")
 		&& !lumpName.endsWith("_S") && !lumpName.endsWith("_E")
@@ -88,11 +89,12 @@ static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QStringVec & ma
 {
 	QTextStream lumpText( lumpData, QIODevice::ReadOnly );
 
+	static const QRegularExpression mapDefRegex("map\\s+(\\w+)\\s+\"([^\"]+)\"");
+
 	QString line;
 	while (lumpText.readLineInto( &line ))
 	{
-		static QRegularExpression mapDefRegex("map\\s+(\\w+)\\s+\"([^\"]+)\"");
-		QRegularExpressionMatch match = mapDefRegex.match( line );
+		auto match = mapDefRegex.match( line );
 		if (match.hasMatch())
 		{
 			mapNames.append( match.captured(1) );

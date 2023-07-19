@@ -1469,7 +1469,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 static uint getHighestDefaultPresetNameIndex( const QList< Preset > & presetList )
 {
 	uint maxIndex = 0;
-	static QRegularExpression defaultPresetRegex("Preset(\\d+)");
+	static const QRegularExpression defaultPresetRegex("Preset(\\d+)");
 	for (const Preset & preset : presetList)
 	{
 		auto match = defaultPresetRegex.match( preset.name );

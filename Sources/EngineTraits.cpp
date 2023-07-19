@@ -181,6 +181,9 @@ void EngineTraits::assignFamilyTraits( EngineFamily family )
 		_familyTraits = &engineFamilyTraits[ 0 ];  // use ZDoom traits as fallback
 }
 
+static const QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
+static const QRegularExpression doom2MapNameRegex("MAP(\\d+)");
+
 QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 {
 	if (mapName.isEmpty())
@@ -194,8 +197,6 @@ QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 	}
 	else  // this engine only supports the old -warp, we must deduce map number
 	{
-		static QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
-		static QRegularExpression doom2MapNameRegex("MAP(\\d+)");
 		QRegularExpressionMatch match;
 		if ((match = doom1MapNameRegex.match( mapName )).hasMatch())
 		{

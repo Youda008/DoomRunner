@@ -58,6 +58,8 @@ static QStringList availableStyles;  ///< styles available on this operating sys
 // in a global application style override.
 class TooltipDelayModifier : public QProxyStyle {
 
+	static const QSet< QString > noDelayLabels;
+
  public:
 
 	using QProxyStyle::QProxyStyle;
@@ -68,13 +70,6 @@ class TooltipDelayModifier : public QProxyStyle {
 		{
 			if (dynamic_cast< const QLabel * >( widget ))
 			{
-				static const QSet< QString > noDelayLabels =
-				{
-					"executableLabel",
-					"configDirLabel",
-					"dataDirLabel",
-					"familyLabel",
-				};
 				if (noDelayLabels.contains( widget->objectName() ))
 				{
 					return 50;
@@ -85,6 +80,14 @@ class TooltipDelayModifier : public QProxyStyle {
 		return QProxyStyle::styleHint( hint, option, widget, returnData );
 	}
 
+};
+
+const QSet< QString > TooltipDelayModifier::noDelayLabels =
+{
+	"executableLabel",
+	"configDirLabel",
+	"dataDirLabel",
+	"familyLabel",
 };
 
 static void initStyles()
@@ -646,7 +649,7 @@ QString updateHyperlinkColor( const QString & richText )
 {
 	QString htmlColor = palettes[ size_t( g_currentRealSchemeID ) ].color( QPalette::Link ).name();
 	QString newText( richText );
-	static QRegularExpression regex("color:#[0-9a-fA-F]{6}");
+	static const QRegularExpression regex("color:#[0-9a-fA-F]{6}");
 	newText.replace( regex, "color:"+htmlColor );
 	return newText;
 }

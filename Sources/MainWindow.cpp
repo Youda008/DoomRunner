@@ -2347,9 +2347,17 @@ void MainWindow::onSaveDirChanged( const QString & rebasedDir )
 	// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to current dir
 	QString trueDirPath = engineDataDirRebaser.rebasePathBack( rebasedDir );
 
-	// Unlike the other launch options, here we in fact want to overwrite the stored value even during restoring,
-	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
-	bool storageModified = STORE_TO_CURRENT_PRESET( altPaths.saveDir, rebasedDir );
+	bool storageModified = false;
+	if (globalOpts.usePresetNameAsDir)
+	{
+		// dir is being chosen automatically by the launcher, delete user overrides
+		storageModified = STORE_TO_CURRENT_PRESET( altPaths.saveDir, QString() );
+	}
+	else
+	{
+		// dir is being edited manually by the user, store his value
+		storageModified = STORE_ALT_PATH( saveDir, rebasedDir );
+	}
 
 	highlightDirPathIfFileOrCanBeCreated( ui->saveDirLine, trueDirPath );  // non-existing dir is ok becase it will be created automatically
 
@@ -2364,9 +2372,17 @@ void MainWindow::onScreenshotDirChanged( const QString & rebasedDir )
 	// the path in screenshotDirLine is relative to the engine's data dir by convention, need to rebase it to current dir
 	QString trueDirPath = engineDataDirRebaser.rebasePathBack( rebasedDir );
 
-	// Unlike the other launch options, here we in fact want to overwrite the stored value even during restoring,
-	// because we want the saved option usePresetNameAsDir to have a priority over the saved directories.
-	bool storageModified = STORE_TO_CURRENT_PRESET( altPaths.screenshotDir, rebasedDir );
+	bool storageModified = false;
+	if (globalOpts.usePresetNameAsDir)
+	{
+		// dir is being chosen automatically by the launcher, delete user overrides
+		storageModified = STORE_TO_CURRENT_PRESET( altPaths.screenshotDir, QString() );
+	}
+	else
+	{
+		// dir is being edited manually by the user, store his value
+		storageModified = STORE_ALT_PATH( screenshotDir, rebasedDir );
+	}
 
 	highlightDirPathIfFileOrCanBeCreated( ui->screenshotDirLine, trueDirPath );  // non-existing dir is ok becase it will be created automatically
 

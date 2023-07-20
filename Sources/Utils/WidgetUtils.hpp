@@ -126,7 +126,7 @@ void appendItem( QListView * view, ListModel & model, const typename ListModel::
 
 	model.finishAppending();
 
-	selectAndSetCurrentByIndex( view, model.size() - 1 );
+	selectAndSetCurrentByIndex( view, model.size() - 1 );  // select the appended item
 }
 
 /// Adds an item to the begining of the list and selects it.
@@ -149,7 +149,7 @@ void prependItem( QListView * view, ListModel & model, const typename ListModel:
 
 	model.finishInserting();
 
-	selectAndSetCurrentByIndex( view, 0 );
+	selectAndSetCurrentByIndex( view, 0 );  // select the prepended item
 }
 
 /// Adds an item to the middle of the list and selects it.
@@ -172,7 +172,7 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 
 	model.finishInserting();
 
-	selectAndSetCurrentByIndex( view, index );
+	selectAndSetCurrentByIndex( view, index );  // select the inserted item
 }
 
 /// Deletes a selected item and attempts to select an item following the deleted one.
@@ -270,7 +270,7 @@ QVector<int> deleteSelectedItems( QListView * view, ListModel & model )
 }
 
 /// Creates a copy of a selected item and selects the newly created one.
-/** Returns the index of the selected and cloned (the original) item. Pops up a warning box if nothing is selected. */
+/** Returns the index of the originally selected item to be cloned. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int cloneSelectedItem( QListView * view, ListModel & model )
 {
@@ -304,7 +304,7 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 
 	model.contentChanged( newItemIdx.row() );
 
-	selectAndSetCurrentByIndex( view, model.size() - 1 );
+	selectAndSetCurrentByIndex( view, model.size() - 1 );  // select the new item
 
 	return selectedIdx;
 }
@@ -335,10 +335,7 @@ int moveUpSelectedItem( QListView * view, ListModel & model )
 		return selectedIdx;
 	}
 
-	int currentIdx = getCurrentItemIndex( view );
-
-	unsetCurrentItem( view );
-	deselectItemByIndex( view, selectedIdx );
+	deselectAllAndUnsetCurrent( view );
 
 	model.orderAboutToChange();
 
@@ -346,15 +343,7 @@ int moveUpSelectedItem( QListView * view, ListModel & model )
 
 	model.orderChanged();
 
-	selectAndSetCurrentByIndex( view, selectedIdx - 1 );
-	if (currentIdx >= 1)                                // if the current item was not the first one,
-	{
-		setCurrentItemByIndex( view, currentIdx - 1 );  // set the previous one as current,
-	}
-	else                                                // otherwise
-	{
-		setCurrentItemByIndex( view, 0 );               // set the first one as current
-	}
+	selectAndSetCurrentByIndex( view, selectedIdx - 1 );  // select the new position of the moved item
 
 	return selectedIdx;
 }
@@ -385,10 +374,7 @@ int moveDownSelectedItem( QListView * view, ListModel & model )
 		return selectedIdx;
 	}
 
-	int currentIdx = getCurrentItemIndex( view );
-
-	unsetCurrentItem( view );
-	deselectItemByIndex( view, selectedIdx );
+	deselectAllAndUnsetCurrent( view );
 
 	model.orderAboutToChange();
 
@@ -396,15 +382,7 @@ int moveDownSelectedItem( QListView * view, ListModel & model )
 
 	model.orderChanged();
 
-	selectAndSetCurrentByIndex( view, selectedIdx + 1 );
-	if (currentIdx < model.size() - 1)                    // if the current item was not the last one,
-	{
-		setCurrentItemByIndex( view, currentIdx + 1 );    // set the next one as current,
-	}
-	else                                                  // otherwise
-	{
-		setCurrentItemByIndex( view, model.size() - 1 );  // set the last one as current
-	}
+	selectAndSetCurrentByIndex( view, selectedIdx + 1 );  // select the new position of the moved item
 
 	return selectedIdx;
 }

@@ -29,7 +29,7 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 {
 	ui = new Ui::EngineDialog;
 	ui->setupUi(this);
-	
+
 	DialogWithPaths::lastUsedDir = lastUsedDir;
 
 	// automatically initialize family combox fox from existing engine families
@@ -139,10 +139,12 @@ static QString suggestEngineConfigDir( const EngineInfo & engine )
 
 	// On Windows, engines usually store their config in the directory of its binaries,
 	// with the exception of latest GZDoom (thanks Graph) that started storing it to Documents\My Games\GZDoom
-	if (engine.exeAppName() == "GZDoom" && engine.exeVersion() >= Version(4,9,0))
+	QString dirOfExecutable = fs::getDirOfFile( engine.executablePath );
+	QString portableIniFilePath = fs::getPathFromFileName( dirOfExecutable, "gzdoom_portable.ini" );
+	if (engine.exeAppName() == "GZDoom" && engine.exeVersion() >= Version(4,9,0) && !fs::isValidFile( portableIniFilePath ))
 		return os::getDocumentsDir()%"/My Games/GZDoom";
 	else
-		return fs::getDirOfFile( engine.executablePath );
+		return dirOfExecutable;
 
  #else
 
@@ -161,12 +163,12 @@ static QString suggestEngineDataDir( const EngineInfo & engine )
 {
  #if IS_WINDOWS
 
-	// On Windows, engines usually store their data in the directory of its binaries,
-	// with the exception of latest GZDoom (thanks Graph) that started storing it to Saved Games\GZDoom
-	if (engine.exeAppName() == "GZDoom" && engine.exeVersion() >= Version(4,9,0))
+	QString dirOfExecutable = fs::getDirOfFile( engine.executablePath );
+	QString portableIniFilePath = fs::getPathFromFileName( dirOfExecutable, "gzdoom_portable.ini" );
+	if (engine.exeAppName() == "GZDoom" && engine.exeVersion() >= Version(4,9,0) && !fs::isValidFile( portableIniFilePath ))
 		return os::getSavedGamesDir()%"/GZDoom";
 	else
-		return fs::getDirOfFile( engine.executablePath );
+		return dirOfExecutable;
 
  #else
 

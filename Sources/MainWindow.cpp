@@ -300,6 +300,10 @@ QStringVec MainWindow::getDirsToBeAccessed() const
 // This needs to be called everytime the user make a change that needs to be saved into the options file.
 void MainWindow::scheduleSavingOptions( bool storedOptionsModified )
 {
+	if (storedOptionsModified)
+	{
+		qDebug() << "options need update";
+	}
 	// update the options file at the nearest file-saving cycle
 	optionsNeedUpdate = optionsNeedUpdate || storedOptionsModified;
 }
@@ -2296,8 +2300,8 @@ void MainWindow::onFragLimitChanged( int fragLimit )
 
 void MainWindow::setAlternativeDirs( const QString & dirName )
 {
-	ui->saveDirLine->clear();
-	ui->screenshotDirLine->clear();
+	QString newSaveDir;
+	QString newScreenshotDir;
 
 	const EngineInfo * selectedEngine = getSelectedEngine();
 	if (selectedEngine)
@@ -2305,12 +2309,16 @@ void MainWindow::setAlternativeDirs( const QString & dirName )
 		// the paths in saveDirLine and screenshotDirLine are relative to the engine's data dir by convention,
 		// no need for prepending them with engine data dir.
 
-		ui->saveDirLine->setText( dirName );
+		newSaveDir = dirName;
 		// Do not set screenshot_dir for engines that don't support it,
 		// some of them are bitchy and won't start if you supply them with unknown command line parameter.
 		if (selectedEngine->hasScreenshotDirParam())
-			ui->screenshotDirLine->setText( dirName );
+			newScreenshotDir = dirName;
 	}
+
+	// Don't clear the lines first and then set new text, instead do it in one call and one callback.
+	ui->saveDirLine->setText( newSaveDir );
+	ui->screenshotDirLine->setText( newScreenshotDir );
 }
 
 void MainWindow::onUsePresetNameToggled( bool checked )

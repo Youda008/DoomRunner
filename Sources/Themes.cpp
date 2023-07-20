@@ -479,7 +479,8 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 	optAppsUseLightTheme = readRegistryDWORD( hThemeSettingsKey, nullptr, darkModeValueName );
 	if (!optAppsUseLightTheme)
 	{
-		qWarning() << "cannot read registry value" << darkModeValueName << "(error" << GetLastError() << ")";
+		auto lastError = GetLastError();
+		qWarning() << "cannot read registry value" << darkModeValueName << "(error" << lastError << ")";
 		return;
 	}
 
@@ -504,7 +505,8 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 		optAppsUseLightTheme = readRegistryDWORD( hThemeSettingsKey, nullptr, darkModeValueName );
 		if (!optAppsUseLightTheme)
 		{
-			qWarning() << "cannot read registry value" << darkModeValueName << "(error" << GetLastError() << ")";
+			auto lastError = GetLastError();
+			qWarning() << "cannot read registry value" << darkModeValueName << "(error" << lastError << ")";
 			break;
 		}
 

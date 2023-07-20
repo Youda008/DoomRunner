@@ -73,28 +73,28 @@ class FileInfoCache {
 		auto cacheIter = _cache.find( filePath );
 		if (cacheIter == _cache.end())
 		{
-			//qDebug() << "cache entry for" << filePath << "not found, reading info from file";
+			//qDebug() << "FileInfoCache: entry for" << filePath << "not found, reading info from file";
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->lastModified != fileLastModified)
 		{
-			//qDebug() << "cache entry for" << filePath << "is outdated, reading info from file";
+			//qDebug() << "FileInfoCache: entry for" << filePath << "is outdated, reading info from file";
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->fileInfo.status == ReadStatus::CantOpen
 			  || cacheIter->fileInfo.status == ReadStatus::FailedToRead)
 		{
-			//qDebug() << "reading file" << filePath << "failed last time, trying again";
+			//qDebug() << "FileInfoCache: reading file" << filePath << "failed last time, trying again";
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->fileInfo.status == ReadStatus::Uninitialized)
 		{
-			//qDebug() << "cache entry for" << filePath << "is corrupted, reading info from file";
+			//qDebug() << "FileInfoCache: entry for" << filePath << "is corrupted, reading info from file";
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else
 		{
-			//qDebug() << "using cached info for" << filePath;
+			//qDebug() << "FileInfoCache: using cached info for" << filePath;
 		}
 
 		return cacheIter->fileInfo;
@@ -122,7 +122,7 @@ class FileInfoCache {
 		{
 			if (!fs::isValidFile( filePath ))
 			{
-				qDebug() << "removing entry for" << filePath << ", file no longer exists";
+				qDebug() << "FileInfoCache: removing entry for" << filePath << ", file no longer exists";
 				_dirty = true;
 				continue;
 			}
@@ -130,7 +130,7 @@ class FileInfoCache {
 			JsonObjectCtx jsEntry = jsCache.getObject( filePath );
 			if (!jsEntry)
 			{
-				qDebug() << "removing corrupted entry for" << filePath << ", invalid JSON type";
+				qWarning() << "FileInfoCache: removing corrupted entry for" << filePath << ", invalid JSON type";
 				_dirty = true;
 				continue;
 			}
@@ -139,7 +139,7 @@ class FileInfoCache {
 			deserialize( jsEntry, entry );
 			if (entry.fileInfo.status == ReadStatus::Uninitialized || entry.lastModified == 0)
 			{
-				qDebug() << "removing corrupted entry for" << filePath << ", vital fields missing";
+				qWarning() << "FileInfoCache: removing corrupted entry for" << filePath << ", vital fields missing";
 				_dirty = true;
 				continue;
 			}
@@ -159,11 +159,11 @@ class FileInfoCache {
 
 		if (newEntry.fileInfo.status == ReadStatus::CantOpen)
 		{
-			qInfo() << "can't open file" << filePath;
+			qInfo() << "FileInfoCache: couldn't open file" << filePath;
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::FailedToRead)
 		{
-			qWarning() << "failed to read file" << filePath;
+			qWarning() << "FileInfoCache: failed to read file" << filePath;
 		}
 
 		_dirty = true;

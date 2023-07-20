@@ -168,7 +168,8 @@ void EngineTraits::loadAppInfo( const QString & executablePath )
 
 	// Sometimes opening an executable file takes incredibly long (even > 1 second) for unknown reason (antivirus maybe?).
 	// So we cache the results here so that at least the subsequent calls are fast.
-	_exeVersionInfo = os::g_cachedExeInfo.getFileInfo( executablePath );
+	if (fs::isValidFile( executablePath ))
+		_exeVersionInfo = os::g_cachedExeInfo.getFileInfo( executablePath );
 
 	_appNameNormalized = (!_exeVersionInfo.appName.isEmpty() ? _exeVersionInfo.appName : _exeBaseName).toLower();
 }

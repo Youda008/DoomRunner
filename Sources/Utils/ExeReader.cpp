@@ -78,14 +78,16 @@ Resource getResource( const QString & filePath, HMODULE hExeModule, LPWSTR lpTyp
 	res.hResInfo = FindResource( hExeModule, MAKEINTRESOURCE(1), lpType );
 	if (res.hResInfo == nullptr)
 	{
-		qDebug().nospace() << "Cannot find resource "<<lpType<<" in "<<filePath<<", FindResource() failed with error "<<GetLastError();
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot find resource "<<lpType<<" in "<<filePath<<", FindResource() failed with error "<<lastError;
 		return {};
 	}
 
 	res.hResource = LoadResource( hExeModule, res.hResInfo );
 	if (res.hResource == nullptr)  // careful: it's nullptr, not INVALID_HANDLE_VALUE
 	{
-		qDebug().nospace() << "Cannot load resource "<<lpType<<" from "<<filePath<<", LoadResource() failed with error "<<GetLastError();
+		auto lastError = GetLastError();
+		qWarning().nospace() << "Cannot load resource "<<lpType<<" from "<<filePath<<", LoadResource() failed with error "<<lastError;
 		return {};
 	}
 
@@ -93,7 +95,8 @@ Resource getResource( const QString & filePath, HMODULE hExeModule, LPWSTR lpTyp
 	res.dwSize = SizeofResource( hExeModule, res.hResInfo );
 	if (res.lpData == nullptr || res.dwSize == 0)
 	{
-		qDebug().nospace() << "Cannot read resource "<<lpType<<" from "<<filePath<<", LockResource() failed with error "<<GetLastError();
+		auto lastError = GetLastError();
+		qWarning().nospace() << "Cannot read resource "<<lpType<<" from "<<filePath<<", LockResource() failed with error "<<lastError;
 		return {};
 	}
 
@@ -110,17 +113,18 @@ static VS_FIXEDFILEINFO * getRawVersionInfo( const void * resData )
 	UINT verInfoSize;
 	if (!VerQueryValue( resData, L"\\", (LPVOID*)&verInfo, &verInfoSize ))
 	{
-		qDebug() << "Cannot read version info, VerQueryValue() failed with error" << GetLastError();
+		auto lastError = GetLastError();
+		qDebug() << "Cannot read version info, VerQueryValue(\"\\\") failed with error" << lastError;
 		return nullptr;
 	}
 	else if (verInfo == nullptr || verInfoSize < sizeof(VS_FIXEDFILEINFO))
 	{
-		qDebug() << "Cannot read version info, VerQueryValue() returned" << verInfo << verInfoSize;
+		qWarning() << "Cannot read version info, VerQueryValue(\"\\\") returned" << verInfo << verInfoSize;
 		return nullptr;
 	}
 	else if (verInfo->dwSignature != 0xFEEF04BD)
 	{
-		qDebug() << QStringLiteral("Cannot read version info, VerQueryValue() returned invalid signature").arg( verInfo->dwSignature, 0, 16 );
+		qWarning() << QStringLiteral("Cannot read version info, VerQueryValue() returned invalid signature").arg( verInfo->dwSignature, 0, 16 );
 		return nullptr;
 	}
 	return verInfo;
@@ -138,7 +142,8 @@ static span< LangInfo > getLangInfo( const void * resData )
 	UINT cbTranslate = 0;
 	if (!VerQueryValue( resData, TEXT("\\VarFileInfo\\Translation"), (LPVOID*)&lpTranslate, &cbTranslate ))
 	{
-		qDebug() << "Cannot read version info, VerQueryValue(\"\\VarFileInfo\\Translation\") failed";
+		auto lastError = GetLastError();
+		qDebug() << "Cannot read version info, VerQueryValue(\"\\VarFileInfo\\Translation\") failed with error" << lastError;
 		return { nullptr, 0 };
 	}
 	else if (lpTranslate == nullptr || cbTranslate < sizeof(LangInfo))
@@ -165,7 +170,8 @@ static QString getVerInfoValue( const void * resData, const LangInfo & langInfo,
 	UINT cchLen;  // number of characters
 	if (!VerQueryValue( resData, SubBlock, &lpBuffer, &cchLen ))
 	{
-		qDebug().nospace() << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") failed";
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") failed with error"<<lastError;
 		return {};
 	}
 	else if (lpBuffer == nullptr || cchLen == 0)
@@ -267,14 +273,16 @@ MappedFile mapFileToMemory( const QString & filePath )
 	);
 	if (m.hFile == INVALID_HANDLE_VALUE)
 	{
-		qDebug() << "Cannot map file to memory, CreateFile() failed with error" << GetLastError();
+		auto lastError = GetLastError();
+		qDebug() << "Cannot map file to memory, CreateFile() failed with error" << lastError;
 		return {};
 	}
 
 	LARGE_INTEGER liFileSize;
 	if (!GetFileSizeEx( m.hFile, &liFileSize ))
 	{
-		qDebug() << "Cannot map file to memory, GetFileSize() failed with error" << GetLastError();
+		auto lastError = GetLastError();
+		qWarning() << "Cannot map file to memory, GetFileSize() failed with error" << lastError;
 		return {};
 	}
 	m.llSize = liFileSize.QuadPart;
@@ -294,7 +302,8 @@ MappedFile mapFileToMemory( const QString & filePath )
 	);
 	if (m.hMap == INVALID_HANDLE_VALUE)
 	{
-		qDebug() << "Cannot map file to memory, CreateFileMapping() failed with error" << GetLastError();
+		auto lastError = GetLastError();
+		qWarning() << "Cannot map file to memory, CreateFileMapping() failed with error" << lastError;
 		return {};
 	}
 
@@ -306,7 +315,8 @@ MappedFile mapFileToMemory( const QString & filePath )
 	);
 	if (m.lpBaseAddr == nullptr)
 	{
-		qDebug() << "Cannot map file to memory, MapViewOfFile() failed with error" << GetLastError();
+		auto lastError = GetLastError();
+		qWarning() << "Cannot map file to memory, MapViewOfFile() failed with error" << lastError;
 		return {};
 	}
 
@@ -395,7 +405,8 @@ ExeVersionInfo readExeVersionInfo( const QString & filePath )
 	HMODULE hExeModule = LoadLibraryEx( filePath.toStdWString().c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE );
 	if (!hExeModule)
 	{
-		qDebug().nospace() << "Cannot open "<<filePath<<", LoadLibraryEx() failed with error "<<GetLastError();
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot open "<<filePath<<", LoadLibraryEx() failed with error "<<lastError;
 		verInfo.status = ReadStatus::CantOpen;
 		return verInfo;
 	}

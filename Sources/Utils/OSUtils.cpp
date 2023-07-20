@@ -18,6 +18,8 @@
 #include <QScreen>
 #include <QProcess>
 
+#include <QDebug>
+
 #if IS_WINDOWS
 	#include <windows.h>
 	#include <shlobj.h>
@@ -49,6 +51,8 @@ QString getSavedGamesDir()
 	HRESULT hr = SHGetKnownFolderPath( FOLDERID_SavedGames, KF_FLAG_DONT_UNEXPAND, nullptr, &pszPath );
 	if (FAILED(hr) || !pszPath)
 	{
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot get Saved Games location, SHGetKnownFolderPath() failed with error "<<lastError;
 		return {};
 	}
 	auto dir = QString::fromWCharArray( pszPath );
@@ -342,6 +346,8 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	);
 	if (!SUCCEEDED( hRes ))
 	{
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot create shortcut "<<shortcutFile<<", CoCreateInstance() failed with error "<<lastError;
 		return false;
 	}
 
@@ -361,12 +367,16 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	);
 	if (!SUCCEEDED( hRes ))
 	{
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot create shortcut "<<shortcutFile<<", IShellLink::QueryInterface() failed with error "<<lastError;
 		return false;
 	}
 
 	hRes = pPersistFile->Save( pszLinkfile, TRUE );
 	if (!SUCCEEDED( hRes ))
 	{
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot create shortcut "<<shortcutFile<<", IPersistFile::Save() failed with error "<<lastError;
 		return false;
 	}
 

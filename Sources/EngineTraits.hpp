@@ -18,6 +18,8 @@
 #include <QString>
 #include <QStringList>
 
+#include <cassert>
+
 struct Engine;
 
 
@@ -97,24 +99,24 @@ class EngineTraits
 	void assignFamilyTraits( EngineFamily family );
 	bool hasFamilyTraits() const                { return _familyTraits != nullptr; }
 
-	// application properties - requires application info to be initialized
+	// application properties - requires application info to be loaded
 
-	const QString & appInfoSrcExePath() const   { return _exePath; }
-	const QString & exeBaseName() const         { return _exeBaseName; }
+	const QString & appInfoSrcExePath() const   { assert( hasAppInfo() ); return _exePath; }
+	const QString & exeBaseName() const         { assert( hasAppInfo() ); return _exeBaseName; }
 
-	const QString & exeAppName() const          { return _exeVersionInfo.appName; }
-	const QString & exeDescription() const      { return _exeVersionInfo.description; }
-	const Version & exeVersion() const          { return _exeVersionInfo.version; }
+	const QString & exeAppName() const          { assert( hasAppInfo() ); return _exeVersionInfo.appName; }
+	const QString & exeDescription() const      { assert( hasAppInfo() ); return _exeVersionInfo.description; }
+	const Version & exeVersion() const          { assert( hasAppInfo() ); return _exeVersionInfo.version; }
 
-	const QString & appNameNormalized() const   { return _appNameNormalized; }
+	const QString & appNameNormalized() const   { assert( hasAppInfo() ); return _appNameNormalized; }
 
 	// command line parameters deduction - requires application info and family traits to be initialized
 
-	CompatLevelStyle compatLevelStyle() const   { return _familyTraits->compLvlStyle; }
-	const char * saveDirParam() const           { return _familyTraits->saveDirParam; }
-	bool hasScreenshotDirParam() const          { return _familyTraits->hasScreenshotDirParam; }
-	bool needsStdoutParam() const               { return _familyTraits->needsStdoutParam; }
-	bool supportsCustomMapNames() const         { return _familyTraits->mapParamStyle == MapParamStyle::Map; }
+	CompatLevelStyle compatLevelStyle() const   { assert( hasFamilyTraits() ); return _familyTraits->compLvlStyle; }
+	const char * saveDirParam() const           { assert( hasFamilyTraits() ); return _familyTraits->saveDirParam; }
+	bool hasScreenshotDirParam() const          { assert( hasFamilyTraits() ); return _familyTraits->hasScreenshotDirParam; }
+	bool needsStdoutParam() const               { assert( hasFamilyTraits() ); return _familyTraits->needsStdoutParam; }
+	bool supportsCustomMapNames() const         { assert( hasFamilyTraits() ); return _familyTraits->mapParamStyle == MapParamStyle::Map; }
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
 	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;

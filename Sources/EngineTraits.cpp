@@ -187,6 +187,8 @@ static const QRegularExpression doom2MapNameRegex("MAP(\\d+)");
 
 QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 {
+	assert( hasAppInfo() && hasFamilyTraits() );
+
 	if (mapName.isEmpty())
 	{
 		return {};
@@ -216,6 +218,8 @@ QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 
 QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 {
+	assert( hasAppInfo() && hasFamilyTraits() );
+
 	// Properly working -compatmode is present only in GZDoom,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
 	if (_appNameNormalized == "gzdoom")
@@ -230,6 +234,8 @@ QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 
 QString EngineTraits::getCmdMonitorIndex( int ownIndex ) const
 {
+	assert( hasAppInfo() && hasFamilyTraits() );
+
 	int startingMonitorIndex = 0;
 	auto iter = startingMonitorIndexes.find( _appNameNormalized );
 	if (iter != startingMonitorIndexes.end())

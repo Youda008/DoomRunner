@@ -229,6 +229,17 @@ const Type * optToPtr( const std::optional< Type > & opt )
 	return opt.has_value() ? &opt.value() : nullptr;
 }
 
+template< typename Type >
+Type & unconst( const Type & obj ) noexcept
+{
+	return const_cast< std::remove_const_t< Type > & >( obj );
+}
+template< typename Type >
+Type * unconst( const Type * obj ) noexcept
+{
+	return const_cast< std::remove_const_t< Type > * >( obj );
+}
+
 template< typename Float, std::enable_if_t< std::is_floating_point_v<Float>, int > = 0 >
 bool isFloatEqual( Float a, Float b )
 {

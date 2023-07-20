@@ -201,10 +201,16 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void restoreAudioOptions( const AudioOptions & opts );
 	void restoreGlobalOptions( const GlobalOptions & opts );
 
+	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
+
 	os::ShellCommand generateLaunchCommand( const QString & outputBaseDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand();
 
  private: // MainWindow-specific utils
+
+	Preset * getSelectedPreset() const;
+	EngineInfo * getSelectedEngine() const;
+	IWAD * getSelectedIWAD() const;
 
 	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
 	QStringVec getSelectedMapPacks() const;

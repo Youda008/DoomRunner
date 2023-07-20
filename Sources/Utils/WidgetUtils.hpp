@@ -176,7 +176,7 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 }
 
 /// Deletes a selected item and attempts to select an item following the deleted one.
-/** Pops up a warning box if nothing is selected. */
+/** Returns the index of the selected and deleted item. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int deleteSelectedItem( QListView * view, ListModel & model )
 {
@@ -270,7 +270,7 @@ QVector<int> deleteSelectedItems( QListView * view, ListModel & model )
 }
 
 /// Creates a copy of a selected item and selects the newly created one.
-/** Pops up a warning box if nothing is selected. */
+/** Returns the index of the selected and cloned (the original) item. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int cloneSelectedItem( QListView * view, ListModel & model )
 {
@@ -310,7 +310,7 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 }
 
 /// Moves a selected item up and updates the selection to point to the new position.
-/** Pops up a warning box if nothing is selected. */
+/** Returns index of the originally selected item before moving. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int moveUpSelectedItem( QListView * view, ListModel & model )
 {
@@ -360,7 +360,7 @@ int moveUpSelectedItem( QListView * view, ListModel & model )
 }
 
 /// Moves a selected item down and updates the selection to point to the new position.
-/** Pops up a warning box if nothing is selected. */
+/** Returns index of the originally selected item before moving. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int moveDownSelectedItem( QListView * view, ListModel & model )
 {

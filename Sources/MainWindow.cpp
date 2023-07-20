@@ -73,6 +73,24 @@ static constexpr bool DontVerifyPaths = false;
 //======================================================================================================================
 //  MainWindow-specific utils
 
+Preset * MainWindow::getSelectedPreset() const
+{
+	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
+	return selectedPresetIdx >= 0 ? unconst( &presetModel[ selectedPresetIdx ] ) : nullptr;
+}
+
+EngineInfo * MainWindow::getSelectedEngine() const
+{
+	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
+	return selectedEngineIdx >= 0 ? unconst( &engineModel[ selectedEngineIdx ] ) : nullptr;
+}
+
+IWAD * MainWindow::getSelectedIWAD() const
+{
+	int selectedIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
+	return selectedIwadIdx >= 0 ? unconst( &iwadModel[ selectedIwadIdx ] ) : nullptr;
+}
+
 template< typename Functor >
 void MainWindow::forEachSelectedMapPack( const Functor & loopBody ) const
 {
@@ -203,26 +221,24 @@ LaunchMode MainWindow::getLaunchModeFromUI() const
 template< typename Functor >
 void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 {
-	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
-	if (selectedEngineIdx < 0)
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	if (!selectedEngine)
 	{
 		return;
 	}
-
-	const Engine & selectedEngine = engineModel[ selectedEngineIdx ];
 
 	// dir of config files
 	int configIdx = ui->configCmbBox->currentIndex();
 	if (configIdx > 0)  // at index 0 there is an empty placeholder to allow deselecting config
 	{
-		loopBody( selectedEngine.configDir );  // cannot be empty otherwise configIdx would be 0 or -1
+		loopBody( selectedEngine->configDir );  // cannot be empty otherwise configIdx would be 0 or -1
 	}
 
 	// dir of IWAD
-	int selectedIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
-	if (selectedIwadIdx >= 0)
+	const IWAD * selectedIWAD = getSelectedIWAD();
+	if (selectedIWAD)
 	{
-		loopBody( fs::getDirOfFile( iwadModel[ selectedIwadIdx ].path ) );
+		loopBody( fs::getDirOfFile( selectedIWAD->path ) );
 	}
 
 	// dir of map files
@@ -292,10 +308,10 @@ LaunchOptions & MainWindow::activeLaunchOptions()
 {
 	if (settings.launchOptsStorage == StoreToPreset)
 	{
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		if (selectedPresetIdx >= 0)
+		Preset * selectedPreset = getSelectedPreset();
+		if (selectedPreset)
 		{
-			return presetModel[ selectedPresetIdx ].launchOpts;
+			return selectedPreset->launchOpts;
 		}
 	}
 
@@ -308,10 +324,10 @@ MultiplayerOptions & MainWindow::activeMultiplayerOptions()
 {
 	if (settings.launchOptsStorage == StoreToPreset)
 	{
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		if (selectedPresetIdx >= 0)
+		Preset * selectedPreset = getSelectedPreset();
+		if (selectedPreset)
 		{
-			return presetModel[ selectedPresetIdx ].multOpts;
+			return selectedPreset->multOpts;
 		}
 	}
 
@@ -324,10 +340,10 @@ GameplayOptions & MainWindow::activeGameplayOptions()
 {
 	if (settings.gameOptsStorage == StoreToPreset)
 	{
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		if (selectedPresetIdx >= 0)
+		Preset * selectedPreset = getSelectedPreset();
+		if (selectedPreset)
 		{
-			return presetModel[ selectedPresetIdx ].gameOpts;
+			return selectedPreset->gameOpts;
 		}
 	}
 
@@ -340,10 +356,10 @@ CompatibilityOptions & MainWindow::activeCompatOptions()
 {
 	if (settings.compatOptsStorage == StoreToPreset)
 	{
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		if (selectedPresetIdx >= 0)
+		Preset * selectedPreset = getSelectedPreset();
+		if (selectedPreset)
 		{
-			return presetModel[ selectedPresetIdx ].compatOpts;
+			return selectedPreset->compatOpts;
 		}
 	}
 
@@ -356,10 +372,10 @@ VideoOptions & MainWindow::activeVideoOptions()
 {
 	if (settings.videoOptsStorage == StoreToPreset)
 	{
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		if (selectedPresetIdx >= 0)
+		Preset * selectedPreset = getSelectedPreset();
+		if (selectedPreset)
 		{
-			return presetModel[ selectedPresetIdx ].videoOpts;
+			return selectedPreset->videoOpts;
 		}
 	}
 
@@ -372,10 +388,10 @@ AudioOptions & MainWindow::activeAudioOptions()
 {
 	if (settings.audioOptsStorage == StoreToPreset)
 	{
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		if (selectedPresetIdx >= 0)
+		Preset * selectedPreset = getSelectedPreset();
+		if (selectedPreset)
 		{
-			return presetModel[ selectedPresetIdx ].audioOpts;
+			return selectedPreset->audioOpts;
 		}
 	}
 
@@ -388,11 +404,11 @@ AudioOptions & MainWindow::activeAudioOptions()
 #define STORE_TO_CURRENT_PRESET( presetMember, value ) [&]()\
 {\
 	bool valueChanged = false; \
-	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView ); \
-	if (selectedPresetIdx >= 0) \
+	Preset * selectedPreset = getSelectedPreset(); \
+	if (selectedPreset) \
 	{\
-		valueChanged = (presetModel[ selectedPresetIdx ].presetMember != (value)); \
-		presetModel[ selectedPresetIdx ].presetMember = (value); \
+		valueChanged = selectedPreset->presetMember != (value); \
+		selectedPreset->presetMember = (value); \
 	}\
 	return valueChanged; \
 }()
@@ -405,11 +421,11 @@ AudioOptions & MainWindow::activeAudioOptions()
 	/* otherwise we would overwrite a stored value we want to restore later. */ \
 	if (!restoringPresetInProgress) \
 	{\
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView ); \
-		if (selectedPresetIdx >= 0) \
+		Preset * selectedPreset = getSelectedPreset(); \
+		if (selectedPreset) \
 		{\
-			valueChanged = (presetModel[ selectedPresetIdx ].presetMember != (value)); \
-			presetModel[ selectedPresetIdx ].presetMember = (value); \
+			valueChanged = selectedPreset->presetMember != (value); \
+			selectedPreset->presetMember = (value); \
 		}\
 	}\
 	return valueChanged; \
@@ -1283,8 +1299,8 @@ void MainWindow::onEngineSelected( int index )
 	// automatic alt dirs depend on the engine traits, which has now changed, so this needs to be refreshed
 	if (globalOpts.usePresetNameAsDir)
 	{
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		const QString & presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : emptyString;
+		const Preset * selectedPreset = getSelectedPreset();
+		const QString & presetName = selectedPreset ? selectedPreset->name : emptyString;
 		setAlternativeDirs( fs::sanitizePath( presetName ) );
 	}
 
@@ -1325,8 +1341,8 @@ void MainWindow::onIWADToggled( const QItemSelection & /*selected*/, const QItem
 	if (disableSelectionCallbacks)
 		return;
 
-	int selectedIWADIdx = wdg::getSelectedItemIndex( ui->iwadListView );
-	const QString & iwadPath = selectedIWADIdx >= 0 ? iwadModel[ selectedIWADIdx ].path : emptyString;
+	const IWAD * selectedIWAD = getSelectedIWAD();
+	const QString & iwadPath = selectedIWAD ? selectedIWAD->path : emptyString;
 
 	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedIWAD, iwadPath );
 
@@ -1402,12 +1418,12 @@ void MainWindow::onModDataChanged( const QModelIndex & topLeft, const QModelInde
 	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
 	{
 		// update the current preset
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		if (selectedPresetIdx >= 0 && !restoringPresetInProgress)
+		Preset * selectedPreset = getSelectedPreset();
+		if (selectedPreset && !restoringPresetInProgress)
 		{
 			for (int idx = topModIdx; idx <= bottomModIdx; idx++)
 			{
-				presetModel[ selectedPresetIdx ].mods[ idx ].checked = modModel[ idx ].checked;
+				selectedPreset->mods[ idx ].checked = modModel[ idx ].checked;
 			}
 		}
 	}
@@ -1521,11 +1537,11 @@ void MainWindow::presetAdd()
 
 void MainWindow::presetDelete()
 {
-	int selectedIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedIdx >= 0 && !presetModel[ selectedIdx ].isSeparator)
+	const Preset * selectedPreset = getSelectedPreset();
+	if (selectedPreset && !selectedPreset->isSeparator)
 	{
 		QMessageBox::StandardButton reply = QMessageBox::question( this,
-			"Delete preset?", "Are you sure you want to delete preset " % presetModel[ selectedIdx ].name % "?",
+			"Delete preset?", "Are you sure you want to delete preset "%selectedPreset->name%"?",
 			QMessageBox::Yes | QMessageBox::No
 		);
 		if (reply != QMessageBox::Yes)
@@ -1536,10 +1552,12 @@ void MainWindow::presetDelete()
 	if (deletedIdx < 0)  // no item was selected
 		return;
 
-	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	selectedPreset = nullptr;  // no longer exists
+
+	int nextPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
+	if (nextPresetIdx >= 0)
 	{
-		restorePreset( selectedPresetIdx );  // select the next preset
+		restorePreset( nextPresetIdx );  // select the next preset
 	}
 	else
 	{
@@ -1682,7 +1700,7 @@ void MainWindow::modAdd()
 		for (QString & path : paths)
 			path = pathConvertor.getRelativePath( path );
 
-	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
+	Preset * selectedPreset = getSelectedPreset();
 
 	for (const QString & path : paths)
 	{
@@ -1691,9 +1709,9 @@ void MainWindow::modAdd()
 		wdg::appendItem( ui->modListView, modModel, mod );
 
 		// add it also to the current preset
-		if (selectedPresetIdx >= 0)
+		if (selectedPreset)
 		{
-			presetModel[ selectedPresetIdx ].mods.append( mod );
+			selectedPreset->mods.append( mod );
 		}
 	}
 
@@ -1717,10 +1735,10 @@ void MainWindow::modAddDir()
 	wdg::appendItem( ui->modListView, modModel, mod );
 
 	// add it also to the current preset
-	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	Preset * selectedPreset = getSelectedPreset();
+	if (selectedPreset)
 	{
-		presetModel[ selectedPresetIdx ].mods.append( mod );
+		selectedPreset->mods.append( mod );
 	}
 
 	scheduleSavingOptions();
@@ -1735,13 +1753,13 @@ void MainWindow::modDelete()
 		return;
 
 	// remove it also from the current preset
-	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	Preset * selectedPreset = getSelectedPreset();
+	if (selectedPreset)
 	{
 		int deletedCnt = 0;
 		for (int deletedIdx : deletedIndexes)
 		{
-			presetModel[ selectedPresetIdx ].mods.removeAt( deletedIdx - deletedCnt );
+			selectedPreset->mods.removeAt( deletedIdx - deletedCnt );
 			deletedCnt++;
 		}
 	}
@@ -1762,12 +1780,12 @@ void MainWindow::modMoveUp()
 		return;
 
 	// move it up also in the preset
-	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	Preset * selectedPreset = getSelectedPreset();
+	if (selectedPreset)
 	{
 		for (int movedIdx : movedIndexes)
 		{
-			presetModel[ selectedPresetIdx ].mods.move( movedIdx, movedIdx - 1 );
+			selectedPreset->mods.move( movedIdx, movedIdx - 1 );
 		}
 	}
 
@@ -1787,12 +1805,12 @@ void MainWindow::modMoveDown()
 		return;
 
 	// move it down also in the preset
-	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	Preset * selectedPreset = getSelectedPreset();
+	if (selectedPreset)
 	{
 		for (int movedIdx : movedIndexes)
 		{
-			presetModel[ selectedPresetIdx ].mods.move( movedIdx, movedIdx + 1 );
+			selectedPreset->mods.move( movedIdx, movedIdx + 1 );
 		}
 	}
 
@@ -1812,10 +1830,10 @@ void MainWindow::modInsertSeparator()
 	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );
 
 	// insert it also to the current preset
-	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	Preset * selectedPreset = getSelectedPreset();
+	if (selectedPreset)
 	{
-		presetModel[ selectedPresetIdx ].mods.insert( insertIdx, separator );
+		selectedPreset->mods.insert( insertIdx, separator );
 	}
 
 	// open edit mode so that user can name the preset
@@ -1834,10 +1852,10 @@ void MainWindow::modToggleIcons()
 void MainWindow::onModsDropped( int dropRow, int count )
 {
 	// update the preset
-	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedPresetIdx >= 0)
+	Preset * selectedPreset = getSelectedPreset();
+	if (selectedPreset)
 	{
-		presetModel[ selectedPresetIdx ].mods = modModel.list();  // not the most optimal way, but the size of the list will be always small
+		selectedPreset->mods = modModel.list();  // not the most optimal way, but the size of the list will be always small
 	}
 
 	// if these files were dragged here from the map pack list, deselect them there
@@ -2281,8 +2299,8 @@ void MainWindow::setAlternativeDirs( const QString & dirName )
 	ui->saveDirLine->clear();
 	ui->screenshotDirLine->clear();
 
-	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
-	if (selectedEngineIdx >= 0)
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	if (selectedEngine)
 	{
 		// the paths in saveDirLine and screenshotDirLine are relative to the engine's data dir by convention,
 		// no need for prepending them with engine data dir.
@@ -2290,7 +2308,7 @@ void MainWindow::setAlternativeDirs( const QString & dirName )
 		ui->saveDirLine->setText( dirName );
 		// Do not set screenshot_dir for engines that don't support it,
 		// some of them are bitchy and won't start if you supply them with unknown command line parameter.
-		if (engineModel[ selectedEngineIdx ].hasScreenshotDirParam())
+		if (selectedEngine->hasScreenshotDirParam())
 			ui->screenshotDirLine->setText( dirName );
 	}
 }
@@ -2306,8 +2324,8 @@ void MainWindow::onUsePresetNameToggled( bool checked )
 
 	if (checked)
 	{
-		int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
-		const QString & presetName = selectedPresetIdx >= 0 ? presetModel[ selectedPresetIdx ].name : emptyString;
+		const Preset * selectedPreset = getSelectedPreset();
+		const QString & presetName = selectedPreset ? selectedPreset->name : emptyString;
 
 		// overwrite whatever is currently in the preset or global launch options
 		setAlternativeDirs( fs::sanitizePath( presetName ) );
@@ -2641,10 +2659,8 @@ void MainWindow::updateDemoFilesFromDir( const QString * callersDemoDir )
 /// Updates the compat level combo-box according to the currently selected engine.
 void MainWindow::updateCompatLevels()
 {
-	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
-	CompatLevelStyle currentCompLvlStyle = (selectedEngineIdx >= 0)
-	                                         ? engineModel[ selectedEngineIdx ].compatLevelStyle()
-	                                         : CompatLevelStyle::None;
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	CompatLevelStyle currentCompLvlStyle = selectedEngine ? selectedEngine->compatLevelStyle() : CompatLevelStyle::None;
 
 	if (currentCompLvlStyle != lastCompLvlStyle)
 	{
@@ -2680,8 +2696,8 @@ void MainWindow::updateCompatLevels()
 // this is not called regularly, but only when an IWAD or map WAD is selected or deselected
 void MainWindow::updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks )
 {
-	int selectedIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
-	const QString & selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : emptyString;
+	const IWAD * selectedIWAD = getSelectedIWAD();
+	const QString & selectedIwadPath = selectedIWAD ? selectedIWAD->path : emptyString;
 
 	// optimization: it the caller already has them, use his ones instead of getting them again
 	QStringVec localSelectedMapPacks;
@@ -2708,7 +2724,7 @@ void MainWindow::updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks
 		ui->mapCmbBox->clear();
 		ui->mapCmbBox_demo->clear();
 
-		if (selectedIwadIdx < 0)
+		if (!selectedIWAD)
 		{
 			break;  // if no IWAD is selected, let's leave this empty, it cannot be launched anyway
 		}
@@ -3375,8 +3391,8 @@ void MainWindow::restoreGlobalOptions( const GlobalOptions & opts )
 
 void MainWindow::exportPresetToScript()
 {
-	int selectedIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedIdx < 0)
+	const Preset * selectedPreset = getSelectedPreset();
+	if (!selectedPreset)
 	{
 		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
 		return;
@@ -3413,16 +3429,15 @@ void MainWindow::exportPresetToShortcut()
 {
  #if IS_WINDOWS
 
-	int selectedIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	if (selectedIdx < 0)
+	const Preset * selectedPreset = getSelectedPreset();
+	if (!selectedPreset)
 	{
 		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
-	const Preset & selectedPreset = presetModel[ selectedIdx ];
 
-	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
-	if (selectedEngineIdx < 0)
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	if (!selectedEngine)
 	{
 		QMessageBox::warning( this, "No engine selected", "No Doom engine is selected." );
 		return;  // no sense to generate a command when we don't even know the engine
@@ -3440,7 +3455,7 @@ void MainWindow::exportPresetToShortcut()
 	// because it will be executed with the current directory set to engine's directory,
 	// But the executable itself must be either absolute or relative to the current working dir
 	// so that it is correctly saved to the shortcut.
-	QString enginePath = engineModel[ selectedEngineIdx ].executablePath;
+	QString enginePath = selectedEngine->executablePath;
 	QString workingDir = fs::getAbsoluteDirOfFile( enginePath );
 
 	auto cmd = generateLaunchCommand( workingDir, DontVerifyPaths, QuotePaths );
@@ -3448,7 +3463,7 @@ void MainWindow::exportPresetToShortcut()
 	// Use enginePath (relative to the current working dir of this running application),
 	// not cmd.executable (relative to the workingDir - the engine dir).
 	// Paths in cmd.arguments must be relative to the workingDir.
-	bool success = os::createWindowsShortcut( shortcutPath, enginePath, cmd.arguments, workingDir, selectedPreset.name );
+	bool success = os::createWindowsShortcut( shortcutPath, enginePath, cmd.arguments, workingDir, selectedPreset->name );
 	if (!success)
 	{
 		QMessageBox::warning( this, "Cannot create shortcut", "Failed to create a shortcut. Check permissions." );
@@ -3480,8 +3495,8 @@ void MainWindow::updateLaunchCommand()
 	//static uint callCnt = 1;
 	//qDebug() << "updateLaunchCommand()" << callCnt++;
 
-	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
-	if (selectedEngineIdx < 0)
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	if (!selectedEngine)
 	{
 		ui->commandLine->clear();
 		return;  // no sense to generate a command when we don't even know the engine
@@ -3491,7 +3506,7 @@ void MainWindow::updateLaunchCommand()
 
 	// The command needs to be relative to the engine's directory,
 	// because it will be executed with the current directory set to engine's directory.
-	QString engineDir = fs::getDirOfFile( engineModel[ selectedEngineIdx ].executablePath );
+	QString engineDir = fs::getDirOfFile( selectedEngine->executablePath );
 
 	auto cmd = generateLaunchCommand( engineDir, DontVerifyPaths, QuotePaths );
 
@@ -3517,13 +3532,13 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & outputBaseDi
 
 	//-- engine --------------------------------------------------------------------
 
-	const int selectedEngineIdx = ui->engineCmbBox->currentIndex();
-	if (selectedEngineIdx < 0)
+	EngineInfo * selectedEngine = getSelectedEngine();
+	if (selectedEngine)
 	{
 		return {};  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	EngineInfo & engine = engineModel[ selectedEngineIdx ];  // non-const so that we can change color of invalid paths
+	EngineInfo & engine = *selectedEngine;  // non-const so that we can change color of invalid paths
 
 	{
 		p.checkItemFilePath( engine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
@@ -3547,11 +3562,11 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & outputBaseDi
 	//-- game data files -----------------------------------------------------------
 
 	// IWAD
-	const int selectedIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
-	if (selectedIwadIdx >= 0)
+	IWAD * selectedIWAD = getSelectedIWAD();
+	if (selectedIWAD)
 	{
-		p.checkItemFilePath( iwadModel[ selectedIwadIdx ], "selected IWAD", "Please select another one." );
-		cmd.arguments << "-iwad" << rebaser.rebaseAndQuotePath( iwadModel[ selectedIwadIdx ].path );
+		p.checkItemFilePath( *selectedIWAD, "selected IWAD", "Please select another one." );
+		cmd.arguments << "-iwad" << rebaser.rebaseAndQuotePath( selectedIWAD->path );
 	}
 
 	// Older engines only accept single -file parameter, so we must first collect all the additional files in this list.
@@ -3766,16 +3781,38 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & outputBaseDi
 	return p.gotSomeInvalidPaths() ? os::ShellCommand() : cmd;
 }
 
+int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions )
+{
+	auto engineName = fs::getFileNameFromPath( selectedEngine.executablePath );
+	auto sandboxName = selectedEngine.sandboxEnvName();
+
+	QMessageBox messageBox( QMessageBox::Question, "Extra permissions needed",
+		engineName%" requires extra permissions to be able to access files outside of its "%sandboxName%" environment. "
+		"Are you ok with these permissions to be granted to "%engineName%"?",
+		QMessageBox::Yes | QMessageBox::No,
+		this
+	);
+
+	messageBox.setDetailedText( permissions.join('\n') );
+	messageBox.setCheckBox( new QCheckBox( "don't ask again" ) );
+
+	int answer = messageBox.exec();
+
+	settings.askForSandboxPermissions = !messageBox.checkBox()->isChecked();
+
+	return answer;
+}
+
 void MainWindow::launch()
 {
-	int selectedEngineIdx = ui->engineCmbBox->currentIndex();
-	if (selectedEngineIdx < 0)
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	if (!selectedEngine)
 	{
 		QMessageBox::warning( this, "No engine selected", "No Doom engine is selected." );
 		return;
 	}
 
-	QString engineDir = fs::getAbsoluteDirOfFile( engineModel[ selectedEngineIdx ].executablePath );
+	QString engineDir = fs::getAbsoluteDirOfFile( selectedEngine->executablePath );
 
 	// Re-run the command construction, but display error message and abort when there is invalid path.
 	// When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
@@ -3788,28 +3825,14 @@ void MainWindow::launch()
 	// If extra permissions are needed to run the engine inside its sandbox environment, better ask the user.
 	if (settings.askForSandboxPermissions && !cmd.extraPermissions.isEmpty())
 	{
-		auto engineName = fs::getFileNameFromPath( engineModel[ selectedEngineIdx ].executablePath );
-		auto sandboxName = engineModel[ selectedEngineIdx ].sandboxEnvName();
-
-		QMessageBox messageBox( QMessageBox::Question, "Extra permissions needed",
-			engineName%" requires extra permissions to be able to access files outside of its "%sandboxName%" environment. "
-			"Are you ok with these permissions to be granted to "%engineName%"?",
-			QMessageBox::Yes | QMessageBox::No,
-			this
-		);
-		messageBox.setDetailedText( cmd.extraPermissions.join('\n') );
-		messageBox.setCheckBox( new QCheckBox( "don't ask again" ) );
-
-		int answer = messageBox.exec();
+		int answer = askForExtraPermissions( *selectedEngine, cmd.extraPermissions );
 		if (answer != QMessageBox::Yes)
 		{
 			return;
 		}
-
-		settings.askForSandboxPermissions = !messageBox.checkBox()->isChecked();
 	}
 
-	// make sure the alternative save dir exists, because engine will not create it if demo file path points there
+	// Make sure the alternative save dir exists, because engine will not create it if demo file path points there.
 	QString saveDirLine = ui->saveDirLine->text();
 	if (!saveDirLine.isEmpty())
 	{

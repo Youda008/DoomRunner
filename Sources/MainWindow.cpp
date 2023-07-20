@@ -300,10 +300,6 @@ QStringVec MainWindow::getDirsToBeAccessed() const
 // This needs to be called everytime the user make a change that needs to be saved into the options file.
 void MainWindow::scheduleSavingOptions( bool storedOptionsModified )
 {
-	if (storedOptionsModified)
-	{
-		qDebug() << "options need update";
-	}
 	// update the options file at the nearest file-saving cycle
 	optionsNeedUpdate = optionsNeedUpdate || storedOptionsModified;
 }
@@ -3556,7 +3552,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & outputBaseDi
 	//-- engine --------------------------------------------------------------------
 
 	EngineInfo * selectedEngine = getSelectedEngine();
-	if (selectedEngine)
+	if (!selectedEngine)
 	{
 		return {};  // no point in generating a command if we don't even know the engine, it determines everything
 	}

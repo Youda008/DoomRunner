@@ -57,8 +57,8 @@ struct Engine : public EditableListModelItem
 		: name( file.fileName() ), executablePath( file.filePath() ), configDir( file.dir().path() ), dataDir( configDir ) {}
 
 	// requirements of EditableListModel
-	const QString & getFilePath() const { return executablePath; }
-	QString getID() const { return executablePath; }
+	const QString & getFilePath() const   { return executablePath; }
+	QString getID() const                 { return executablePath; }
 };
 
 struct IWAD : public EditableListModelItem
@@ -70,10 +70,10 @@ struct IWAD : public EditableListModelItem
 	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
 
 	// requirements of EditableListModel
-	const QString & getEditString() const { return name; }
-	void setEditString( const QString & str ) { name = str; }
-	const QString & getFilePath() const { return path; }
-	QString getID() const { return path; }
+	const QString & getEditString() const   { return name; }
+	void setEditString( QString str )       { name = std::move(str); }
+	const QString & getFilePath() const     { return path; }
+	QString getID() const                   { return path; }
 };
 
 struct Mod : public EditableListModelItem
@@ -83,11 +83,11 @@ struct Mod : public EditableListModelItem
 	bool checked = false;   ///< whether this mod is selected to be loaded
 
 	// requirements of EditableListModel
-	const QString & getEditString() const { return fileName; }
-	void setEditString( const QString & str ) { fileName = str; }
-	bool isChecked() const { return checked; }
-	void setChecked( bool checked ) { this->checked = checked; }
-	const QString & getFilePath() const { return path; }
+	const QString & getEditString() const   { return fileName; }
+	void setEditString( QString str )       { fileName = std::move(str); }
+	bool isChecked() const                  { return checked; }
+	void setChecked( bool checked )         { this->checked = checked; }
+	const QString & getFilePath() const     { return path; }
 	const QIcon & getIcon() const;
 
 	Mod() {}
@@ -257,9 +257,9 @@ struct Preset : public EditableListModelItem
 	QString cmdArgs;
 
 	// requirements of EditableListModel
-	const QString & getEditString() const { return name; }
-	void setEditString( const QString & str ) { name = str; }
-	QString getID() const { return name; }
+	const QString & getEditString() const   { return name; }
+	void setEditString( QString str )       { name = std::move(str); }
+	QString getID() const                   { return name; }
 
 	Preset() {}
 	Preset( const QString & name ) : name( name ) {}

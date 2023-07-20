@@ -131,7 +131,7 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 		);
 	}
 
-	void setEditString( const QString & /*str*/ )
+	void setEditString( QString /*str*/ )
 	{
 		throw std::logic_error(
 			"Edit has been requested, but editing this Item is not implemented. "

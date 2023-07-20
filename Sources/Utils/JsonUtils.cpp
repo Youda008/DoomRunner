@@ -209,7 +209,7 @@ double JsonObjectCtx::getDouble( const QString & key, double defaultVal, bool sh
 	return val.toDouble();
 }
 
-QString JsonObjectCtx::getString( const QString & key, const QString & defaultVal, bool showError ) const
+QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
@@ -387,7 +387,7 @@ double JsonArrayCtx::getDouble( int index, double defaultVal, bool showError ) c
 	return val.toDouble();
 }
 
-QString JsonArrayCtx::getString( int index, const QString & defaultVal, bool showError ) const
+QString JsonArrayCtx::getString( int index, QString defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{

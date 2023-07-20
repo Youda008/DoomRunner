@@ -276,7 +276,7 @@ class PathRebaser {
 		return maybeQuoted( rebasePath( path ) );
 	}
 
-	QString maybeQuoted( const QString & path ) const
+	QString maybeQuoted( QString path ) const
 	{
 		if (_quotePaths)
 			return quoted( path );

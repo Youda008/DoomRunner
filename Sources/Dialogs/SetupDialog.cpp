@@ -250,7 +250,7 @@ void setItemAsDefault( QListView * view, ListModel & model, QAction * setDefault
 
 	auto & selectedItem = model[ selectedIdx ];
 
-	QString prevDefaultItemID = defaultItemID;
+	QString prevDefaultItemID = std::move( defaultItemID );
 	defaultItemID = selectedItem.getID();
 
 	// unmark the previous default entry

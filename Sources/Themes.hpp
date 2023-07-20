@@ -81,7 +81,7 @@ const Palette & getCurrentPalette();
 
 // Sometimes hyperlinks in a widget's text specify color in HTML tag, which overrides palette.setColor( QPalette::Link, ... )
 // In such case this needs to be called to update the HTML tag color.
-QString updateHyperlinkColor( const QString & richText );
+QString updateHyperlinkColor( QString richText );
 
 
 } // namespace themes

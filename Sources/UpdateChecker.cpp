@@ -89,7 +89,7 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 	if (!match.hasMatch())
 	{
 		qWarning() << "Version number from github is in invalid format ("%version%"). Fix it!";
-		requestData.callback( InvalidFormat, version, {} );
+		requestData.callback( InvalidFormat, std::move(version), {} );
 		return;
 	}
 	QString availableVersionStr = match.captured(1);
@@ -106,7 +106,7 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 	request.setUrl( changelogUrl );
 	QNetworkReply * reply2 = manager.get( request );
 
-	pendingRequests[ reply2 ] = { Phase::ChangelogRequest, availableVersionStr, std::move(requestData.callback) };
+	pendingRequests[ reply2 ] = { Phase::ChangelogRequest, std::move(availableVersionStr), std::move(requestData.callback) };
 }
 
 // fucking Qt, are you fucking kidding me?
@@ -143,10 +143,10 @@ void UpdateChecker::changelogReceived( QNetworkReply * reply, RequestData & requ
 
 	// get all changes until our current version
 	while ((line = getLine( reply )) != appVersion && !reply->atEnd())
-		versionInfo.append( line );
+		versionInfo.append( std::move(line) );
 
 	// finally, call the user callback with all the data
-	requestData.callback( UpdateAvailable, {}, versionInfo );
+	requestData.callback( UpdateAvailable, {}, std::move(versionInfo) );
 }
 
 

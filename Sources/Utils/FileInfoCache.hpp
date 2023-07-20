@@ -118,7 +118,7 @@ class FileInfoCache {
 	{
 		_dirty = false;
 		auto keys = jsCache.keys();
-		for (const QString & filePath : keys)
+		for (QString & filePath : keys)
 		{
 			if (!fs::isValidFile( filePath ))
 			{
@@ -144,7 +144,7 @@ class FileInfoCache {
 				continue;
 			}
 
-			_cache.insert( filePath, entry );
+			_cache.insert( std::move(filePath), std::move(entry) );
 		}
 	}
 

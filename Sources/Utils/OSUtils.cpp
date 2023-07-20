@@ -164,11 +164,11 @@ SandboxInfo getSandboxInfo( const QString & executablePath )
 }
 
 // On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
-inline static QString fixExePath( const QString & exePath )
+// On Windows this must be prefixed too! Otherwise Windows will prefer executable in the same directory as DoomRunner
+// over executable in the current working directory
+// https://superuser.com/questions/897644/how-does-windows-decide-which-executable-to-run/1683394#1683394
+inline static QString fixExePath( QString exePath )
 {
-	// On Windows this must be prefixed too! Otherwise Windows will prefer executable in the same directory as DoomRunner
-	// over executable in the current working directory
-	// https://superuser.com/questions/897644/how-does-windows-decide-which-executable-to-run/1683394#1683394
 	if (!exePath.contains("/"))  // the file is in the current working directory
 	{
 		return "./" + exePath;
@@ -178,8 +178,7 @@ inline static QString fixExePath( const QString & exePath )
 
 ShellCommand getRunCommand(
 	const QString & executablePath, const PathRebaser & currentDirToNewBaseDir, const QStringVec & dirsToBeAccessed
-)
-{
+){
 	ShellCommand cmd;
 	QStringVec cmdParts;
 
@@ -217,7 +216,7 @@ ShellCommand getRunCommand(
 		{
 			QString fileSystemPermission = "--filesystem=" + fs::getAbsolutePath( dir );
 			cmdParts << currentDirToNewBaseDir.maybeQuoted( fileSystemPermission );
-			cmd.extraPermissions << fileSystemPermission;
+			cmd.extraPermissions << std::move(fileSystemPermission);
 		}
 		cmdParts << traits.appName;
 	}

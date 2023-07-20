@@ -175,7 +175,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
 	void updateCompatLevels();
-	void updateMapsFromSelectedWADs( std::optional< QStringVec > selectedMapPacks = std::nullopt );
+	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
 
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();
@@ -216,7 +216,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QString getSaveDir() const;
 	QString getDemoDir() const;
 
-	QString convertRebasedEngineDataPath( const QString & path );
+	QString convertRebasedEngineDataPath( QString path );
 
 	LaunchMode getLaunchModeFromUI() const;
 

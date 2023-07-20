@@ -147,7 +147,7 @@ QString MainWindow::getDemoDir() const
 }
 
 // converts a path relative to the engine's data dir to absolute path or vice versa
-QString MainWindow::convertRebasedEngineDataPath( const QString & rebasedPath )
+QString MainWindow::convertRebasedEngineDataPath( QString rebasedPath )
 {
 	// These branches are here only as optimization, we could easily just: rebase-back -> convert -> rebase.
 	PathStyle inputStyle = fs::getPathStyle( rebasedPath );
@@ -784,7 +784,7 @@ void MainWindow::loadMonitorInfo( QComboBox * box )
 			descStream << " (primary)";
 
 		descStream.flush();
-		box->addItem( monitorDesc );
+		box->addItem( std::move(monitorDesc) );
 	}
 }
 
@@ -1334,7 +1334,7 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 	for (const QModelIndex & index : selectedRows)
 		wdg::expandParentsOfNode( ui->mapDirView, index );
 
-	updateMapsFromSelectedWADs( selectedMapPacks );
+	updateMapsFromSelectedWADs( &selectedMapPacks );
 
 	// if this is a known map pack, that starts at different level than the first one, automatically select it
 	if (selectedMapPacks.size() >= 1 && !fs::isDirectory( selectedMapPacks[0] ))
@@ -2663,13 +2663,18 @@ void MainWindow::updateCompatLevels()
 }
 
 // this is not called regularly, but only when an IWAD or map WAD is selected or deselected
-void MainWindow::updateMapsFromSelectedWADs( std::optional< QStringVec > selectedMapPacks )
+void MainWindow::updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks )
 {
 	int selectedIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 	const QString & selectedIwadPath = selectedIwadIdx >= 0 ? iwadModel[ selectedIwadIdx ].path : emptyString;
 
-	if (!selectedMapPacks)  // optimization: it the caller already has them, use his ones instead of getting them again
-		selectedMapPacks = getSelectedMapPacks();
+	// optimization: it the caller already has them, use his ones instead of getting them again
+	QStringVec localSelectedMapPacks;
+	if (!selectedMapPacks)
+	{
+		localSelectedMapPacks = getSelectedMapPacks();
+		selectedMapPacks = &localSelectedMapPacks;
+	}
 
 	// note down the currently selected items
 	QString origText = ui->mapCmbBox->currentText();
@@ -3371,9 +3376,9 @@ void MainWindow::exportPresetToScript()
 	QFileInfo scriptFileInfo( scriptFilePath );
 	QString scriptDir = scriptFileInfo.path();
 
-	lastUsedDir = scriptDir;
-
 	auto cmd = generateLaunchCommand( scriptDir, DontVerifyPaths, QuotePaths );
+
+	lastUsedDir = std::move(scriptDir);
 
 	QFile scriptFile( scriptFilePath );
 	if (!scriptFile.open( QIODevice::WriteOnly | QIODevice::Text ))

@@ -318,7 +318,7 @@ void EngineDialog::accept()
 	// We don't have to save the UI data to our struct on every change, doing it once after confirmation is enough.
 	// Some operations like reading executable version info would be too expensive to do in every edit callback call.
 
-	engine.name = nameLineText;
+	engine.name = std::move( nameLineText );
 
 	engine.executablePath = executableLineText;
 	// If the executableLine was edited manually without the browse button where all the auto-detection happens,
@@ -328,8 +328,8 @@ void EngineDialog::accept()
 		engine.loadAppInfo( executableLineText );
 	}
 
-	engine.configDir = configDirLineText;
-	engine.dataDir = dataDirLineText;
+	engine.configDir = std::move( configDirLineText );
+	engine.dataDir = std::move( dataDirLineText );
 
 	int familyIdx = ui->familyCmbBox->currentIndex();
 	if (familyIdx < 0 || familyIdx >= int(EngineFamily::_EnumEnd))

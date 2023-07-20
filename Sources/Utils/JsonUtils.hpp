@@ -222,7 +222,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 
 	/// Returns a string at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	QString getString( const QString & key, const QString & defaultVal = QString(), bool showError = true ) const;
+	QString getString( const QString & key, QString defaultVal = QString(), bool showError = true ) const;
 
 	/// Returns an enum at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
@@ -293,7 +293,7 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 
 	/// Returns a string at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	QString getString( int index, const QString & defaultVal = QString(), bool showError = true ) const;
+	QString getString( int index, QString defaultVal = QString(), bool showError = true ) const;
 
 	/// Returns a sub-object at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */

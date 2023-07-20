@@ -645,10 +645,10 @@ const Palette & getCurrentPalette()
 	return palettes[ size_t(g_currentRealSchemeID) ];
 }
 
-QString updateHyperlinkColor( const QString & richText )
+QString updateHyperlinkColor( QString richText )
 {
 	QString htmlColor = palettes[ size_t( g_currentRealSchemeID ) ].color( QPalette::Link ).name();
-	QString newText( richText );
+	QString newText( std::move(richText) );
 	static const QRegularExpression regex("color:#[0-9a-fA-F]{6}");
 	newText.replace( regex, "color:"+htmlColor );
 	return newText;

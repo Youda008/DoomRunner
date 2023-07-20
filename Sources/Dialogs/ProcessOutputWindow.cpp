@@ -61,7 +61,7 @@ ProcessOutputWindow::ProcessOutputWindow( QWidget * parent )
 	QDialog( parent ),
 	DialogCommon( this )
 {
-	qDebug() << "ProcessOutputWindow()";
+	//qDebug() << "ProcessOutputWindow()";
 
 	ui = new Ui::ProcessOutputWindow;
 	ui->setupUi( this );
@@ -91,12 +91,12 @@ ProcessOutputWindow::ProcessOutputWindow( QWidget * parent )
 
 ProcessOutputWindow::~ProcessOutputWindow()
 {
-	qDebug() << "~ProcessOutputWindow()";
+	//qDebug() << "~ProcessOutputWindow()";
 
 	if (process.state() != QProcess::NotRunning)
 	{
 		// last resort, window is quiting, we cannot let the process continue
-		qDebug() << "    killing process";
+		//qDebug() << "    killing process";
 		this->ownStatus = ProcessStatus::Dying;
 		process.kill();
 	}
@@ -106,7 +106,7 @@ ProcessOutputWindow::~ProcessOutputWindow()
 
 void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & detail )
 {
-	qDebug() << "    setOwnStatus:" << toString( status );
+	//qDebug() << "    setOwnStatus:" << toString( status );
 
 	this->ownStatus = status;
 
@@ -189,7 +189,7 @@ void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & de
 
 ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const QStringVec & arguments )
 {
-	qDebug() << "runProcess:" << executable;
+	//qDebug() << "runProcess:" << executable;
 
 	executableName = fs::getFileNameFromPath( executable );
 	this->setWindowTitle( executableName % " output" );
@@ -224,7 +224,7 @@ ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const
 
 void ProcessOutputWindow::onProcessStarted()
 {
-	qDebug() << "processStarted";
+	//qDebug() << "processStarted";
 
 	setOwnStatus( ProcessStatus::Running );
 }
@@ -264,14 +264,13 @@ void ProcessOutputWindow::onKeyPressed( int key, uint8_t modifiers )
 	if (modifiers == 0 && key > 0 && key <= CHAR_MAX)
 	{
 		char ch = char( key );
-		//qDebug() << "forwarding key press:" << ch;
 		process.write( &ch, 1 );
 	}
 }
 
 void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus exitStatus )
 {
-	qDebug() << "processFinished:" << exitCode << "," << exitStatus;
+	//qDebug() << "processFinished:" << exitCode << "," << exitStatus;
 
 	if (ownStatus == ProcessStatus::ShuttingDown)  // user requested to terminate the process and now it finally shut down
 	{
@@ -317,7 +316,7 @@ void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus 
 
 void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 {
-	qDebug() << "errorOccurred:" << error;
+	//qDebug() << "errorOccurred:" << error;
 
 	// When we kill the process, Qt consideres it crashed, so it calls this function.
 	// But we don't want to report it as crashed because we essentially made it crash on purpose.
@@ -344,19 +343,19 @@ void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 		case QProcess::ReadError:
 			setOwnStatus( ProcessStatus::UnknownError );
 			QMessageBox::warning( this, "Cannot read process output", "Failed to read output of the process." );
-			qDebug() << "    terminating process";
+			//qDebug() << "    terminating process";
 			process.terminate();  // wait for the process to quit, then close dialog
 			break;
 		case QProcess::WriteError:
 			setOwnStatus( ProcessStatus::UnknownError );
 			QMessageBox::warning( this, "Cannot write to process input", "Failed to write to the process input." );
-			qDebug() << "    terminating process";
+			//qDebug() << "    terminating process";
 			process.terminate();  // wait for the process to quit, then close dialog
 			break;
 		default:
 			setOwnStatus( ProcessStatus::UnknownError );
 			QMessageBox::warning( this, "Unknown error", "Unknown error occured while executing command." );
-			qDebug() << "    terminating process";
+			//qDebug() << "    terminating process";
 			process.terminate();  // wait for the process to quit, then close dialog
 			break;
 	}
@@ -364,7 +363,7 @@ void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 
 void ProcessOutputWindow::onAbortClicked( bool )
 {
-	qDebug() << "abortClicked:" << abortBtn->text();
+	//qDebug() << "abortClicked:" << abortBtn->text();
 
 	if (process.state() != QProcess::NotRunning)
 	{
@@ -374,14 +373,14 @@ void ProcessOutputWindow::onAbortClicked( bool )
 			// This should lead to processFinished() being called soon. If it doesn't, this button will transform
 			// into a Kill button, which will then kill the process the hard way.
 			setOwnStatus( ProcessStatus::ShuttingDown );
-			qDebug() << "    terminating process";
+			//qDebug() << "    terminating process";
 			process.terminate();
 		}
 		else
 		{
 			// If the process doesn't listen to terminate signals, we can kill it the hard way.
 			setOwnStatus( ProcessStatus::Dying );
-			qDebug() << "    killing process";
+			//qDebug() << "    killing process";
 			process.kill();
 		}
 	}
@@ -393,12 +392,12 @@ void ProcessOutputWindow::onAbortClicked( bool )
 
 void ProcessOutputWindow::closeDialog( int resultCode )
 {
-	qDebug() << "    closeDialog:" << resultCode;
+	//qDebug() << "    closeDialog:" << resultCode;
 
 	this->done( resultCode );
 }
 
-void ProcessOutputWindow::onDialogClosed( int resultCode )
+void ProcessOutputWindow::onDialogClosed( int /*resultCode*/ )
 {
-	qDebug() << "dialogClosed:" << resultCode;
+	//qDebug() << "dialogClosed:" << resultCode;
 }

@@ -216,7 +216,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QString getSaveDir() const;
 	QString getDemoDir() const;
 
-	QString convertRebasedEngineDataPath( QString path );
+	QString convertRebasedEngineDataPath( QString path ) const;
+	QString rebaseSaveFilePath( const QString & filePath, const PathRebaser & workingDirRebaser, const EngineInfo * engine );
 
 	LaunchMode getLaunchModeFromUI() const;
 
@@ -246,11 +247,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QString cacheFilePath;
 
 	bool optionsNeedUpdate = false;  ///< indicates that the user has made a change and the options file needs to be updated
-	bool optionsCorrupted = false;  ///< true if there was a critical error during parsing of the options file, such content should not be saved
+	bool optionsCorrupted = false;   ///< true if there was a critical error during parsing of the options file, such content should not be saved
 
-	bool disableSelectionCallbacks = false;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
+	bool disableSelectionCallbacks = false;   ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
 	bool restoringOptionsInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
-	bool restoringPresetInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
+	bool restoringPresetInProgress = false;   ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
 

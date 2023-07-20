@@ -147,7 +147,7 @@ QString MainWindow::getDemoDir() const
 }
 
 // converts a path relative to the engine's data dir to absolute path or vice versa
-QString MainWindow::convertRebasedEngineDataPath( QString rebasedPath )
+QString MainWindow::convertRebasedEngineDataPath( QString rebasedPath ) const
 {
 	// These branches are here only as optimization, we could easily just: rebase-back -> convert -> rebase.
 	PathStyle inputStyle = fs::getPathStyle( rebasedPath );
@@ -168,6 +168,20 @@ QString MainWindow::convertRebasedEngineDataPath( QString rebasedPath )
 		return rebasedPath;
 	}
 }
+
+QString MainWindow::rebaseSaveFilePath( const QString & filePath, const PathRebaser & workingDirRebaser, const EngineInfo * engine )
+{
+	// the base dir for the save file parameter depends on the engine and its version
+	if (engine && engine->baseDirStyleForSaveFiles() == EngineTraits::SaveBaseDir::SaveDir)
+	{
+		PathRebaser saveDirRebaser( pathConvertor.baseDir(), getSaveDir(), PathStyle::Relative, workingDirRebaser.quotePaths() );
+		return saveDirRebaser.rebaseAndQuotePath( filePath );
+	}
+	else
+	{
+		return workingDirRebaser.rebaseAndQuotePath( filePath );
+	}
+};
 
 LaunchMode MainWindow::getLaunchModeFromUI() const
 {
@@ -3609,24 +3623,22 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & outputBaseDi
 	}
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
-		// save dir cannot be empty, otherwise the saveFileCmbBox would be empty
-		QString saveBaseDir = getSaveDir();  // ui->saveDirLine or engine.configDir
-		PathRebaser saveDirRebaser( pathConvertor.baseDir(), saveBaseDir, PathStyle::Relative, quotePaths );
-		QString trueSavePath = fs::getPathFromFileName( saveBaseDir, ui->saveFileCmbBox->currentText() );
+		QString saveDir = getSaveDir();  // save dir cannot be empty, otherwise the saveFileCmbBox would be empty
+		QString trueSavePath = fs::getPathFromFileName( saveDir, ui->saveFileCmbBox->currentText() );
 		p.checkFilePath( trueSavePath, "the selected save file", "Please select another one." );
-		cmd.arguments << "-loadgame" << saveDirRebaser.rebaseAndQuotePath( trueSavePath );
+		cmd.arguments << "-loadgame" << rebaseSaveFilePath( trueSavePath, rebaser, &engine );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
-		// if demo dir is empty (saveDirLine is empty and engine.configDir is not set)
-		QString demoPath = fs::getPathFromFileName( getDemoDir(), ui->demoFileLine_record->text() );
+		QString demoDir = getDemoDir();            // if demo dir is empty (saveDirLine is empty and engine.configDir is not set), then
+		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileLine_record->text() );  // the demoFileLine will be used as is
 		cmd.arguments << "-record" << rebaser.rebaseAndQuotePath( demoPath );
 		cmd.arguments << engine.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
-		// demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
-		QString demoPath = fs::getPathFromFileName( getDemoDir(), ui->demoFileCmbBox_replay->currentText() );
+		QString demoDir = getDemoDir();  // demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
+		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileCmbBox_replay->currentText() );
 		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
 		cmd.arguments << "-playdemo" << rebaser.rebaseAndQuotePath( demoPath );
 	}

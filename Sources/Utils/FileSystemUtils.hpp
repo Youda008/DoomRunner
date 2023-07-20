@@ -258,6 +258,7 @@ class PathRebaser {
 	const QDir & outputBaseDir() const                 { return _outBaseDir; }
 	PathStyle outputPathStyle() const                  { return _outPathStyle; }
 	bool outputAbsolutePaths() const                   { return _outPathStyle == PathStyle::Absolute; }
+	bool quotePaths() const                            { return _quotePaths; }
 
 	void setInputBaseDir( const QDir & baseDir )       { _inBaseDir = baseDir; }
 	void setOutputBaseDir( const QDir & baseDir )      { _outBaseDir = baseDir; }

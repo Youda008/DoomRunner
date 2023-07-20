@@ -182,6 +182,16 @@ void EngineTraits::assignFamilyTraits( EngineFamily family )
 		_familyTraits = &engineFamilyTraits[ 0 ];  // use ZDoom traits as fallback
 }
 
+EngineTraits::SaveBaseDir EngineTraits::baseDirStyleForSaveFiles() const
+{
+	assert( hasAppInfo() );
+
+	if (_appNameNormalized == "gzdoom" && _exeVersionInfo.version >= Version(4,9,0))
+		return SaveBaseDir::SaveDir;
+	else
+		return SaveBaseDir::WorkingDir;
+}
+
 static const QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
 static const QRegularExpression doom2MapNameRegex("MAP(\\d+)");
 

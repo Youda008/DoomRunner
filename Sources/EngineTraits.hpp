@@ -72,8 +72,8 @@ struct EngineFamilyTraits
 };
 
 /// Properties and capabilities of a particular engine that decide what command-line parameters will be used.
-class EngineTraits
-{
+class EngineTraits {
+
 	// application info
 	QString _exePath;             ///< path of the file from which the application info was constructed
 	QString _exeBaseName;         ///< executable file name without file suffix
@@ -113,10 +113,19 @@ class EngineTraits
 	// command line parameters deduction - requires application info and family traits to be initialized
 
 	CompatLevelStyle compatLevelStyle() const   { assert( hasFamilyTraits() ); return _familyTraits->compLvlStyle; }
+	bool supportsCustomMapNames() const         { assert( hasFamilyTraits() ); return _familyTraits->mapParamStyle == MapParamStyle::Map; }
+
 	const char * saveDirParam() const           { assert( hasFamilyTraits() ); return _familyTraits->saveDirParam; }
 	bool hasScreenshotDirParam() const          { assert( hasFamilyTraits() ); return _familyTraits->hasScreenshotDirParam; }
+
 	bool needsStdoutParam() const               { assert( hasFamilyTraits() ); return _familyTraits->needsStdoutParam; }
-	bool supportsCustomMapNames() const         { assert( hasFamilyTraits() ); return _familyTraits->mapParamStyle == MapParamStyle::Map; }
+
+	enum class SaveBaseDir
+	{
+		WorkingDir,  ///< path of save file must be relative to the current working directory
+		SaveDir,     ///< path of save file must be relative to the -savedir argument if present or engine's data dir otherwise
+	};
+	SaveBaseDir baseDirStyleForSaveFiles() const;
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
 	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;
@@ -126,6 +135,7 @@ class EngineTraits
 
 	// some engines index monitors from 1 and others from 0
 	QString getCmdMonitorIndex( int ownIndex ) const;
+
 };
 
 

@@ -174,7 +174,8 @@ QString MainWindow::rebaseSaveFilePath( const QString & filePath, const PathReba
 	// the base dir for the save file parameter depends on the engine and its version
 	if (engine && engine->baseDirStyleForSaveFiles() == EngineTraits::SaveBaseDir::SaveDir)
 	{
-		PathRebaser saveDirRebaser( pathConvertor.baseDir(), getSaveDir(), PathStyle::Relative, workingDirRebaser.quotePaths() );
+		QString saveDir = getSaveDir();
+		PathRebaser saveDirRebaser( pathConvertor.baseDir(), saveDir, PathStyle::Relative, workingDirRebaser.quotePaths() );
 		return saveDirRebaser.rebaseAndQuotePath( filePath );
 	}
 	else
@@ -1138,7 +1139,8 @@ void MainWindow::cloneConfig()
 		return;
 	}
 
-	QDir configDir( getConfigDir() );  // config dir cannot be empty, otherwise currentConfigFileName would be empty
+	QString configDirStr = getConfigDir();  // config dir cannot be empty, otherwise currentConfigFileName would be empty
+	QDir configDir( configDirStr );
 	QFileInfo oldConfig( configDir.filePath( currentConfigFileName ) );
 
 	NewConfigDialog dialog( this, oldConfig.completeBaseName() );
@@ -1161,7 +1163,7 @@ void MainWindow::cloneConfig()
 	}
 
 	// regenerate config list so that we can select it
-	updateConfigFilesFromDir();
+	updateConfigFilesFromDir( &configDirStr );
 
 	// select the new file automatically for convenience
 	QString newConfigName = fs::getFileNameFromPath( newConfigPath );
@@ -2325,8 +2327,7 @@ void MainWindow::onSaveDirChanged( const QString & rebasedDir )
 
 	highlightDirPathIfFileOrCanBeCreated( ui->saveDirLine, trueDirPath );  // non-existing dir is ok becase it will be created automatically
 
-	if (fs::isValidDir( trueDirPath ))
-		updateSaveFilesFromDir();
+	updateSaveFilesFromDir();
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2568,9 +2569,9 @@ void MainWindow::refreshMapPacks()
 	ui->mapDirView->setRootIndex( newRootIdx );
 }
 
-void MainWindow::updateConfigFilesFromDir()
+void MainWindow::updateConfigFilesFromDir( const QString * callersConfigDir )
 {
-	QString configDir = getConfigDir();
+	QString configDir = callersConfigDir ? *callersConfigDir : getConfigDir();
 
 	// workaround (read the big comment above)
 	int origConfigIdx = ui->configCmbBox->currentIndex();
@@ -2591,9 +2592,9 @@ void MainWindow::updateConfigFilesFromDir()
 	}
 }
 
-void MainWindow::updateSaveFilesFromDir()
+void MainWindow::updateSaveFilesFromDir( const QString * callersSaveDir )
 {
-	QString saveDir = getSaveDir();
+	QString saveDir = callersSaveDir ? *callersSaveDir : getSaveDir();
 
 	// workaround (read the big comment above)
 	int origSaveIdx = ui->saveFileCmbBox->currentIndex();
@@ -2614,9 +2615,9 @@ void MainWindow::updateSaveFilesFromDir()
 	}
 }
 
-void MainWindow::updateDemoFilesFromDir()
+void MainWindow::updateDemoFilesFromDir( const QString * callersDemoDir )
 {
-	QString demoDir = getDemoDir();
+	QString demoDir = callersDemoDir ? *callersDemoDir : getDemoDir();
 
 	// workaround (read the big comment above)
 	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();

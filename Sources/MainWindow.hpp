@@ -171,9 +171,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateListsFromDirs();
 	void updateIWADsFromDir();
 	void refreshMapPacks();
-	void updateConfigFilesFromDir();
-	void updateSaveFilesFromDir();
-	void updateDemoFilesFromDir();
+	void updateConfigFilesFromDir( const QString * configDir = nullptr );
+	void updateSaveFilesFromDir( const QString * saveDir = nullptr );
+	void updateDemoFilesFromDir( const QString * demoDir = nullptr );
 	void updateCompatLevels();
 	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
 

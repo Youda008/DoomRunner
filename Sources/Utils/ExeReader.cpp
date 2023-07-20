@@ -440,7 +440,7 @@ ExeVersionInfo readExeVersionInfo( [[maybe_unused]] const QString & filePath )
  #if IS_WINDOWS
 	return readVersionInfoUsingWinAPI( filePath );
  #else
-	return {};  // ReadStatus::Uninitialized
+	return { {}, ReadStatus::NotSupported };
  #endif
 }
 

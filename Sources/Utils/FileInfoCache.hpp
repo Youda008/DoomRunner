@@ -28,6 +28,7 @@
 enum class ReadStatus
 {
 	Success,
+	NotSupported,
 	CantOpen,
 	FailedToRead,
 	InvalidFormat,
@@ -89,7 +90,7 @@ class FileInfoCache {
 		}
 		else if (cacheIter->fileInfo.status == ReadStatus::Uninitialized)
 		{
-			//qDebug() << "FileInfoCache: entry for" << filePath << "is corrupted, reading info from file";
+			qWarning() << "FileInfoCache: entry for" << filePath << "is corrupted, reading info from file";
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else
@@ -106,17 +107,27 @@ class FileInfoCache {
 	QJsonObject serialize() const
 	{
 		QJsonObject jsMap;
+		
 		for (auto iter = _cache.begin(); iter != _cache.end(); ++iter)
 		{
+			// don't save invalid or empty entries
+			if (iter->fileInfo.status == ReadStatus::Uninitialized || iter->fileInfo.status == ReadStatus::NotSupported)
+			{
+				continue;
+			}
+			
 			jsMap[ iter.key() ] = serialize( iter.value() );
 		}
+		
 		_dirty = false;
+		
 		return jsMap;
 	}
 
 	void deserialize( const JsonObjectCtx & jsCache )
 	{
 		_dirty = false;
+		
 		auto keys = jsCache.keys();
 		for (QString & filePath : keys)
 		{
@@ -164,6 +175,10 @@ class FileInfoCache {
 		else if (newEntry.fileInfo.status == ReadStatus::FailedToRead)
 		{
 			qWarning() << "FileInfoCache: failed to read file" << filePath;
+		}
+		else if (newEntry.fileInfo.status == ReadStatus::FailedToRead)
+		{
+			//qDebug() << "FileInfoCache: file info for" << filePath << "not implemented";
 		}
 
 		_dirty = true;

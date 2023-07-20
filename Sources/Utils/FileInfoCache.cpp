@@ -13,6 +13,7 @@
 static const char * const ReadStatusStrings [] =
 {
 	"Success",
+	"NotSupported",
 	"CantOpen",
 	"FailedToRead",
 	"InvalidFormat",

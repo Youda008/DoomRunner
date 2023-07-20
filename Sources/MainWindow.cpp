@@ -3344,9 +3344,8 @@ void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts 
 	int compatLevelIdx = opts.compatLevel + 1;  // first item is reserved for indicating no selection
 	if (compatLevelIdx >= ui->compatLevelCmbBox->count())
 	{
-		reportBugToUser( this, "Cannot restore compat level",
-			"Stored compat level is out of bounds of the current combo-box content."
-		);
+		// engine might have been removed, or its family was changed by the user
+		qWarning() << "stored compat level is out of bounds of the current combo-box content";
 		return;
 	}
 	ui->compatLevelCmbBox->setCurrentIndex( compatLevelIdx );

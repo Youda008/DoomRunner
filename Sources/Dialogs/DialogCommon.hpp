@@ -52,6 +52,11 @@ class DialogWithPaths : public DialogCommon {
 
 	/// Convenience wrapper that also stores the result into a text line.
 	void browseDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine );
+	
+ public:
+
+	const QString & getLastUsedDir() const   { return lastUsedDir; }
+	QString takeLastUsedDir() const          { return std::move(lastUsedDir); }
 
 };
 

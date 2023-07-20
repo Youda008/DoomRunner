@@ -29,7 +29,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class SetupDialog : public QDialog, private DialogWithPaths {
+class SetupDialog : public QDialog, public DialogWithPaths {
 
 	Q_OBJECT
 

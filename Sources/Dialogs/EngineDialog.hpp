@@ -23,7 +23,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class EngineDialog : public QDialog, private DialogWithPaths {
+class EngineDialog : public QDialog, public DialogWithPaths {
 
 	Q_OBJECT
 
@@ -32,7 +32,7 @@ class EngineDialog : public QDialog, private DialogWithPaths {
 
  public:
 
-	explicit EngineDialog( QWidget * parent, const PathConvertor & pathConvertor, const EngineInfo & engine );
+	explicit EngineDialog( QWidget * parent, const PathConvertor & pathConvertor, const EngineInfo & engine, QString lastUsedDir );
 	virtual ~EngineDialog() override;
 
  private: // methods

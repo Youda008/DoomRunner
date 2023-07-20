@@ -277,9 +277,11 @@ void setItemAsDefault( QListView * view, ListModel & model, QAction * setDefault
 
 void SetupDialog::engineAdd()
 {
-	EngineDialog dialog( this, pathConvertor, {} );
+	EngineDialog dialog( this, pathConvertor, {}, lastUsedDir );
 
 	int code = dialog.exec();
+	
+	lastUsedDir = dialog.takeLastUsedDir();
 
 	if (code == QDialog::Accepted)
 	{
@@ -328,9 +330,11 @@ void SetupDialog::editEngine( const QModelIndex & index )
 {
 	EngineInfo & selectedEngine = engineModel[ index.row() ];
 
-	EngineDialog dialog( this, pathConvertor, selectedEngine );
+	EngineDialog dialog( this, pathConvertor, selectedEngine, lastUsedDir );
 
 	int code = dialog.exec();
+	
+	lastUsedDir = dialog.takeLastUsedDir();
 
 	if (code == QDialog::Accepted)
 	{

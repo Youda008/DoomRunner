@@ -21,7 +21,7 @@
 
 //======================================================================================================================
 
-EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, const EngineInfo & engine )
+EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, const EngineInfo & engine, QString lastUsedDir )
 :
 	QDialog( parent ),
 	DialogWithPaths( this, pathConv ),
@@ -29,6 +29,8 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 {
 	ui = new Ui::EngineDialog;
 	ui->setupUi(this);
+	
+	DialogWithPaths::lastUsedDir = lastUsedDir;
 
 	// automatically initialize family combox fox from existing engine families
 	for (size_t familyIdx = 0; familyIdx < size_t(EngineFamily::_EnumEnd); ++familyIdx)

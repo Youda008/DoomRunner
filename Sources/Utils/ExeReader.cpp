@@ -23,9 +23,13 @@
 #endif
 
 
-//======================================================================================================================
-
 namespace os {
+
+
+//======================================================================================================================
+//  Windows
+
+#if IS_WINDOWS
 
 // I hate you Graph!!!
 
@@ -324,7 +328,7 @@ MappedFile mapFileToMemory( const QString & filePath )
 }
 
 // read PE file using manual memory navigation
-ExeVersionInfo readExeVersionInfo( const QString & filePath )
+ExeVersionInfo readVersionInfoFromPE( const QString & filePath )
 {
 	ExeVersionInfo verInfo;
 
@@ -395,11 +399,9 @@ ExeVersionInfo readExeVersionInfo( const QString & filePath )
 /*/
 
 // read PE file using LoadLibrary and FindResource,LoadResource flow
-ExeVersionInfo readExeVersionInfo( const QString & filePath )
+ExeVersionInfo readVersionInfoUsingWinAPI( const QString & filePath )
 {
 	ExeVersionInfo verInfo;
-
- #if IS_WINDOWS
 
 	// this can take up to 1 second sometimes, whyyy?! antivirus?
 	HMODULE hExeModule = LoadLibraryEx( filePath.toStdWString().c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE );
@@ -422,17 +424,25 @@ ExeVersionInfo readExeVersionInfo( const QString & filePath )
 	extractVersionInfo( resource, verInfo );
 
 	verInfo.status = ReadStatus::Success;
-
- #else
-
-	verInfo.status = ExeReadStatus::Uninitialized;
-
- #endif
-
 	return verInfo;
 }
 
 /**/
+
+#endif // IS_WINDOWS
+
+
+//======================================================================================================================
+//  public API
+
+ExeVersionInfo readExeVersionInfo( [[maybe_unused]] const QString & filePath )
+{
+ #if IS_WINDOWS
+	return readVersionInfoUsingWinAPI( filePath );
+ #else
+	return {};  // ReadStatus::Uninitialized
+ #endif
+}
 
 
 FileInfoCache< ExeVersionInfo_ > g_cachedExeInfo( readExeVersionInfo );

@@ -30,8 +30,8 @@ QString DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc,
 		return {};
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
+	if (pathConvertor.usingRelativePaths())
+		path = pathConvertor.getRelativePath( path );
 
 	// next time use this dir as the starting dir of the file dialog for convenience
 	lastUsedDir = fs::getDirOfFile( path );
@@ -48,8 +48,8 @@ QString DialogWithPaths::browseDir( QWidget * parent, const QString & dirDesc, Q
 		return {};
 
 	// the path comming out of the file dialog is always absolute
-	if (pathContext.usingRelativePaths())
-		path = pathContext.getRelativePath( path );
+	if (pathConvertor.usingRelativePaths())
+		path = pathConvertor.getRelativePath( path );
 
 	// next time use this dir as the starting dir of the file dialog for convenience
 	lastUsedDir = path;

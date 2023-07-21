@@ -8,57 +8,40 @@
 #include "Version.hpp"
 
 #include <QString>
+#include <QRegularExpression>
 
-#include <QDebug>
 
 Version::Version( const char * versionStr ) : Version( QString( versionStr ) ) {}
 
 Version::Version( const QString & versionStr )
 {
-	major = minor = patch = 0;
+	major = minor = patch = build = 0;
 
-	QStringList substrings = versionStr.split('.');
-	if (substrings.size() < 2)
+	static const QRegularExpression versionRegex("^(\\d+).(\\d+)(?:.(\\d+))?(?:.(\\d+))?$");
+	auto match = versionRegex.match( versionStr );
+	if (!match.hasMatch())
 		return;
 
-	bool success = false;
-
-	ushort major = substrings[0].toUShort( &success );
-	if (!success || major > UINT8_MAX)
-		return;
-
-	this->major = uint8_t( major );
-
-	ushort minor = substrings[1].toUShort( &success );
-	if (!success || minor > UINT8_MAX)
-		return;
-
-	this->minor = uint8_t( minor );
-
-	// this is optional, 0 by default
-	if (substrings.size() > 2)
-	{
-		ushort patch = substrings[2].toUShort( &success );
-		if (!success || patch > UINT8_MAX)
-			return;
-
-		this->patch = uint8_t( patch );
-	}
+	major = match.captured(1).toUShort();
+	minor = match.captured(2).toUShort();
+	if (match.lastCapturedIndex() >= 3)
+		patch = match.captured(3).toUShort();  // optional, will stay 0 if not present
+	if (match.lastCapturedIndex() >= 4)
+		build = match.captured(4).toUShort();  // optional, will stay 0 if not present
 }
 
-int Version::compare( const Version & other ) const
+QString Version::toString() const
 {
-	bool valid1 = this->isValid();
-	bool valid2 = other.isValid();
+	return QStringLiteral("%1.%2.%3.%4").arg( major ).arg( minor ).arg( patch ).arg( build );
+}
 
-	// any version is bigger than error, 2 errors are equal
-	if (!valid1 && !valid2)
-		return 0;
-	else if (valid1 && !valid2)
-		return 1;
-	else if (!valid1 && valid2)
-		return -1;
-
-	return ((this->major << 16) + (this->minor << 8) + (this->patch))
-	     - ((other.major << 16) + (other.minor << 8) + (other.patch));
+int64_t Version::compare( const Version & other ) const
+{
+	// The following will produce intuitive result even for invalid (all-zero) versions,
+	// that is: Any version is bigger than error, 2 errors are equal.
+	// The highest bit must not be used but there will never be such high version number.
+	using u64 = uint64_t; using i64 = int64_t;
+	return
+	  i64(((u64(this->major) << 48) + (u64(this->minor) << 32) + (u64(this->patch) << 16) + u64(this->build)))
+	- i64(((u64(other.major) << 48) + (u64(other.minor) << 32) + (u64(other.patch) << 16) + u64(other.build)));
 }

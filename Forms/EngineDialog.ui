@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>420</width>
-    <height>177</height>
+    <width>450</width>
+    <height>211</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,1">
+    <layout class="QHBoxLayout" name="horizontalLayout_1" stretch="0,1,1">
      <item>
       <widget class="QLabel" name="nameLabel">
        <property name="text">
@@ -49,19 +49,25 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QLabel" name="pathLabel">
+      <widget class="QLabel" name="executableLabel">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Path to the engine's executable file.&lt;/p&gt;&lt;p&gt;If you're trying to add an Flatpak version of the Doom engine, you need to enter the path where the Flatpak installed the executable, usually something like &lt;span style=&quot; color:#606060;&quot;&gt;&amp;quot;/var/lib/flatpak/app/org.zdoom.GZDoom/current/active/files/bin/gzdoom&amp;quot;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Path to the engine's executable file.&lt;/p&gt;&lt;p&gt;If you're trying to add an Flatpak version of the Doom engine, you need to enter the path where the Flatpak installed the executable, usually something like &lt;span style=&quot; color:#606060;&quot;&gt;&amp;quot;/var/lib/flatpak/app/org.zdoom.GZDoom/current/active/files/bin/gzdoom&amp;quot;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="text">
-        <string>Executable path</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Executable path &lt;img src=&quot;:/Help.12.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="pathLine"/>
+      <widget class="QLineEdit" name="executableLine"/>
      </item>
      <item>
-      <widget class="QPushButton" name="browseEngineBtn">
+      <widget class="QPushButton" name="browseExecutableBtn">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -83,8 +89,14 @@
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QLabel" name="configDirLabel">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine's &lt;span style=&quot; color:#686868;&quot;&gt;.ini&lt;/span&gt; files are.&lt;/p&gt;&lt;p&gt;On Windows this will be the same directory where the &lt;span style=&quot; color:#686868;&quot;&gt;.exe&lt;/span&gt; file is, with the exception of the latest GZDoom, which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Documents\My Games\GZDoom&amp;quot;&lt;/span&gt;.&lt;br/&gt;On Linux this will probably be somewhere in your home, commonly &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;~/.config/engine_name&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine's &lt;span style=&quot; color:#686868;&quot;&gt;.ini&lt;/span&gt; files are.&lt;/p&gt;&lt;p&gt;On Windows this will be the same directory where the &lt;span style=&quot; color:#686868;&quot;&gt;.exe&lt;/span&gt; file is, with the exception of the latest GZDoom, which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Documents\My Games\GZDoom&amp;quot;&lt;/span&gt;.&lt;br/&gt;On Linux this will probably be somewhere in your home, commonly &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;~/.config/engine_name&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="text">
-        <string>Config directory</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Config directory &lt;img src=&quot;:/Help.12.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
@@ -92,7 +104,7 @@
       <widget class="QLineEdit" name="configDirLine"/>
      </item>
      <item>
-      <widget class="QPushButton" name="browseConfigsBtn">
+      <widget class="QPushButton" name="browseConfigDirBtn">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -113,9 +125,46 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
-      <widget class="QLabel" name="familyLabel">
+      <widget class="QLabel" name="dataDirLabel">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine stores its data files (&lt;span style=&quot; color:#686868;&quot;&gt;.zds&lt;/span&gt; save files, &lt;span style=&quot; color:#686868;&quot;&gt;.lmp&lt;/span&gt; demo files, ...).&lt;/p&gt;&lt;p&gt;In most cases this will be the same directory as the Config directory.&lt;br/&gt;The only exception is the latest GZDoom on Windows (thanks Graph!) which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Saved Games\GZDoom\iwad_name&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine stores its data files (&lt;span style=&quot; color:#686868;&quot;&gt;.zds&lt;/span&gt; save files, &lt;span style=&quot; color:#686868;&quot;&gt;.lmp&lt;/span&gt; demo files, ...).&lt;/p&gt;&lt;p&gt;In most cases this will be the same directory as the Config directory.&lt;br/&gt;The only exception is the latest GZDoom on Windows (thanks Graph!) which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Saved Games\GZDoom\iwad_name&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="text">
-        <string>Engine family</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data directory &lt;img src=&quot;:/Help.12.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="dataDirLine"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="browseDataDirBtn">
+       <property name="text">
+        <string>Browse</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../Resources/Resources.qrc">
+         <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QLabel" name="familyLabel">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Different engines use different command line parameters. This determines which parameter set will be used.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Different engines use different command line parameters. This determines which parameter set will be used.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Engine family &lt;img src=&quot;:/Help.12.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>

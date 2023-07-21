@@ -19,6 +19,9 @@
 class QFileInfo;
 
 
+namespace doom {
+
+
 //======================================================================================================================
 //  file type recognition
 
@@ -46,6 +49,9 @@ QStringList getStandardMapNames( const QString & iwadFileName );
 // Some WADs (map packs) don't start at the first map of the list defined by IWADs (MAP01, E1M1, ...).
 /// If it's a known WAD and it's known to start from a non-first map, returns that map, otherwise returns empty string.
 QString getStartingMap( const QString & wadFileName );
+
+
+} // namespace doom
 
 
 #endif // DOOM_FILE_INFO_INCLUDED

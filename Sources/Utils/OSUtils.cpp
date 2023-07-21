@@ -18,15 +18,12 @@
 #include <QScreen>
 #include <QProcess>
 
+#include <QDebug>
+
 #if IS_WINDOWS
 	#include <windows.h>
 	#include <shlobj.h>
-	//#include <winnls.h>
-	//#include <shobjidl.h>
-	//#include <objbase.h>
-	//#include <objidl.h>
-	//#include <shlguid.h>
-#endif // IS_WINDOWS
+#endif
 
 
 //======================================================================================================================
@@ -42,9 +39,68 @@ QString getHomeDir()
 	return QStandardPaths::writableLocation( QStandardPaths::HomeLocation );
 }
 
+QString getDocumentsDir()
+{
+	return QStandardPaths::writableLocation( QStandardPaths::DocumentsLocation );
+}
+
+#if IS_WINDOWS
+QString getSavedGamesDir()
+{
+	PWSTR pszPath = nullptr;
+	HRESULT hr = SHGetKnownFolderPath( FOLDERID_SavedGames, KF_FLAG_DONT_UNEXPAND, nullptr, &pszPath );
+	if (FAILED(hr) || !pszPath)
+	{
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot get Saved Games location, SHGetKnownFolderPath() failed with error "<<lastError;
+		return {};
+	}
+	auto dir = QString::fromWCharArray( pszPath );
+	CoTaskMemFree( pszPath );
+	dir.replace('\\', '/');
+	return dir;
+}
+#endif
+
+QString getAppConfigDir()
+{
+ #if !IS_WINDOWS && defined(FLATPAK_BUILD)  // the launcher is a Flatpak installation on Linux
+	// Inside Flatpak environment the GenericConfigLocation points into the Flatpak sandbox of this application.
+	// But we need the system-wide config dir, and that's not available via Qt, so we must do this guessing hack.
+	return getHomeDir()%"/.config";
+ #else
+	return QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
+ #endif
+}
+
+QString getAppDataDir()
+{
+ #if !IS_WINDOWS && defined(FLATPAK_BUILD)  // the launcher is a Flatpak installation on Linux
+	// Inside Flatpak environment the GenericDataLocation points into the Flatpak sandbox of this application.
+	// But we need the system-wide data dir, and that's not available via Qt, so we must do this guessing hack.
+	return getHomeDir()%"/.local/share";
+ #else
+	return QStandardPaths::writableLocation( QStandardPaths::GenericDataLocation );
+ #endif
+}
+
+QString getConfigDirForApp( const QString & executablePath )
+{
+	QString genericConfigDir = getAppConfigDir();
+	QString appName = fs::getFileBasenameFromPath( executablePath );
+	return fs::getPathFromFileName( genericConfigDir, appName );  // -> /home/youda/.config/zdoom
+}
+
+QString getDataDirForApp( const QString & executablePath )
+{
+	QString genericDataDir = getAppDataDir();
+	QString appName = fs::getFileBasenameFromPath( executablePath );
+	return fs::getPathFromFileName( genericDataDir, appName );  // -> /home/youda/.local/share/zdoom
+}
+
 QString getThisAppConfigDir()
 {
-	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.config/DoomRunner in Linux
+	// mimic ZDoom behaviour - save to application's binary dir on Windows, but to /home/user/.config/DoomRunner on Linux
  #if IS_WINDOWS
 	QString thisExeDir = QApplication::applicationDirPath();
 	if (fs::isDirectoryWritable( thisExeDir ))
@@ -58,7 +114,7 @@ QString getThisAppConfigDir()
 
 QString getThisAppDataDir()
 {
-	// mimic ZDoom behaviour - save to application's binary dir in Windows, but to /home/user/.local/share/DoomRunner in Linux
+	// mimic ZDoom behaviour - save to application's binary dir on Windows, but to /home/user/.local/share/DoomRunner on Linux
  #if IS_WINDOWS
 	QString thisExeDir = QApplication::applicationDirPath();
 	if (fs::isDirectoryWritable( thisExeDir ))
@@ -85,39 +141,38 @@ QString getSandboxName( Sandbox sandbox )
 	}
 }
 
-ExecutableTraits getExecutableTraits( const QString & executablePath )
+static const QRegularExpression snapPathRegex("^/snap/");
+static const QRegularExpression flatpakPathRegex("^/var/lib/flatpak/app/([^/]+)/");
+
+SandboxInfo getSandboxInfo( const QString & executablePath )
 {
-	ExecutableTraits traits;
+	SandboxInfo sandbox;
 
-	traits.executableBaseName = fs::getFileBasenameFromPath( executablePath );
-
-	static QRegularExpression snapRegex("^/snap/");
-	static QRegularExpression flatpakRegex("^/var/lib/flatpak/app/([^/]+)/");
 	QRegularExpressionMatch match;
-	if ((match = snapRegex.match( executablePath )).hasMatch())
+	if ((match = snapPathRegex.match( executablePath )).hasMatch())
 	{
-		traits.sandboxEnv = Sandbox::Snap;
-		traits.sandboxAppName = fs::getFileNameFromPath( executablePath );
+		sandbox.type = Sandbox::Snap;
+		sandbox.appName = fs::getFileBasenameFromPath( executablePath );
 	}
-	else if ((match = flatpakRegex.match( executablePath )).hasMatch())
+	else if ((match = flatpakPathRegex.match( executablePath )).hasMatch())
 	{
-		traits.sandboxEnv = Sandbox::Flatpak;
-		traits.sandboxAppName = match.captured(1);
+		sandbox.type = Sandbox::Flatpak;
+		sandbox.appName = match.captured(1);
 	}
 	else
 	{
-		traits.sandboxEnv = Sandbox::None;
+		sandbox.type = Sandbox::None;
 	}
 
-	return traits;
+	return sandbox;
 }
 
 // On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
-inline static QString fixExePath( const QString & exePath )
+// On Windows this must be prefixed too! Otherwise Windows will prefer executable in the same directory as DoomRunner
+// over executable in the current working directory
+// https://superuser.com/questions/897644/how-does-windows-decide-which-executable-to-run/1683394#1683394
+inline static QString fixExePath( QString exePath )
 {
-	// On Windows this must be prefixed too! Otherwise Windows will prefer executable in the same directory as DoomRunner
-	// over executable in the current working directory
-	// https://superuser.com/questions/897644/how-does-windows-decide-which-executable-to-run/1683394#1683394
 	if (!exePath.contains("/"))  // the file is in the current working directory
 	{
 		return "./" + exePath;
@@ -125,12 +180,13 @@ inline static QString fixExePath( const QString & exePath )
 	return exePath;
 }
 
-ShellCommand getRunCommand( const QString & executablePath, const PathContext & base, const QStringVec & dirsToBeAccessed )
-{
+ShellCommand getRunCommand(
+	const QString & executablePath, const PathRebaser & currentDirToNewBaseDir, const QStringVec & dirsToBeAccessed
+){
 	ShellCommand cmd;
 	QStringVec cmdParts;
 
-	ExecutableTraits traits = getExecutableTraits( executablePath );
+	SandboxInfo traits = getSandboxInfo( executablePath );
 
 	// different installations require different ways to launch the engine executable
  #ifdef FLATPAK_BUILD
@@ -149,24 +205,24 @@ ShellCommand getRunCommand( const QString & executablePath, const PathContext & 
 		// prefix added, continue with the rest
 	}
  #endif
-	if (traits.sandboxEnv == Sandbox::Snap)
+	if (traits.type == Sandbox::Snap)
 	{
 		cmdParts << "snap";
 		cmdParts << "run";
 		// TODO: permissions
-		cmdParts << traits.sandboxAppName;
+		cmdParts << traits.appName;
 	}
-	else if (traits.sandboxEnv == Sandbox::Flatpak)
+	else if (traits.type == Sandbox::Flatpak)
 	{
 		cmdParts << "flatpak";
 		cmdParts << "run";
 		for (const QString & dir : dirsToBeAccessed)
 		{
 			QString fileSystemPermission = "--filesystem=" + fs::getAbsolutePath( dir );
-			cmdParts << base.maybeQuoted( fileSystemPermission );
-			cmd.extraPermissions << fileSystemPermission;
+			cmdParts << currentDirToNewBaseDir.maybeQuoted( fileSystemPermission );
+			cmd.extraPermissions << std::move(fileSystemPermission);
 		}
-		cmdParts << traits.sandboxAppName;
+		cmdParts << traits.appName;
 	}
 	else if (isInSearchPath( executablePath ))
 	{
@@ -176,7 +232,7 @@ ShellCommand getRunCommand( const QString & executablePath, const PathContext & 
 	}
 	else
 	{
-		cmdParts << base.maybeQuoted( fixExePath( base.rebasePath( executablePath ) ) );
+		cmdParts << currentDirToNewBaseDir.maybeQuoted( fixExePath( currentDirToNewBaseDir.rebasePath( executablePath ) ) );
 	}
 
 	cmd.executable = cmdParts.takeFirst();
@@ -290,6 +346,8 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	);
 	if (!SUCCEEDED( hRes ))
 	{
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot create shortcut "<<shortcutFile<<", CoCreateInstance() failed with error "<<lastError;
 		return false;
 	}
 
@@ -309,12 +367,16 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	);
 	if (!SUCCEEDED( hRes ))
 	{
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot create shortcut "<<shortcutFile<<", IShellLink::QueryInterface() failed with error "<<lastError;
 		return false;
 	}
 
 	hRes = pPersistFile->Save( pszLinkfile, TRUE );
 	if (!SUCCEEDED( hRes ))
 	{
+		auto lastError = GetLastError();
+		qDebug().nospace() << "Cannot create shortcut "<<shortcutFile<<", IPersistFile::Save() failed with error "<<lastError;
 		return false;
 	}
 

@@ -5,12 +5,15 @@
 // Description: Doom file type recognition and known WAD detection
 //======================================================================================================================
 
-#include "DoomFileInfo.hpp"
+#include "DoomFiles.hpp"
 
 #include <QVector>
 #include <QHash>
 #include <QFileInfo>
 #include <QRegularExpression>
+
+
+namespace doom {
 
 
 //======================================================================================================================
@@ -151,3 +154,6 @@ QString getStartingMap( const QString & wadFileName )
 
 	return {};
 }
+
+
+} // namespace doom

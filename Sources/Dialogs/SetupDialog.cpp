@@ -11,7 +11,7 @@
 #include "EngineDialog.hpp"
 
 #include "OwnFileDialog.hpp"
-#include "DoomFileInfo.hpp"
+#include "DoomFiles.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // makeFileFilter, highlightPathIfInvalid
 
@@ -28,20 +28,18 @@
 
 SetupDialog::SetupDialog(
 	QWidget * parent,
-	const QDir & baseDir,
-	const EngineSettings & engineSettings, const QList< Engine > & engineList,
+	const PathConvertor & pathConv,
+	const EngineSettings & engineSettings, const QList< EngineInfo > & engineList,
 	const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 	const MapSettings & mapSettings, const ModSettings & modSettings,
 	const LauncherSettings & settings
 )
 :
 	QDialog( parent ),
-	DialogWithPaths(
-		this, PathContext( baseDir, settings.pathStyle )
-	),
+	DialogWithPaths( this, pathConv ),
 	engineSettings( engineSettings ),
 	engineModel( engineList,
-		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.path % "]"; }
+		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.executablePath % "]"; }
 	),
 	iwadSettings( iwadSettings ),
 	iwadModel( iwadList,
@@ -146,7 +144,7 @@ void SetupDialog::setupEngineList()
 	ui->engineListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	engineModel.setPathContext( &pathContext );
+	engineModel.setPathContext( &pathConvertor );
 
 	// setup editing
 	engineModel.toggleEditing( false );
@@ -186,7 +184,7 @@ void SetupDialog::setupIWADList()
 	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	iwadModel.setPathContext( &pathContext );
+	iwadModel.setPathContext( &pathConvertor );
 
 	// setup editing
 	iwadModel.toggleEditing( !iwadSettings.updateFromDir );
@@ -252,7 +250,7 @@ void setItemAsDefault( QListView * view, ListModel & model, QAction * setDefault
 
 	auto & selectedItem = model[ selectedIdx ];
 
-	QString prevDefaultItemID = defaultItemID;
+	QString prevDefaultItemID = std::move( defaultItemID );
 	defaultItemID = selectedItem.getID();
 
 	// unmark the previous default entry
@@ -279,9 +277,11 @@ void setItemAsDefault( QListView * view, ListModel & model, QAction * setDefault
 
 void SetupDialog::engineAdd()
 {
-	EngineDialog dialog( this, pathContext, {} );
+	EngineDialog dialog( this, pathConvertor, {}, lastUsedDir );
 
 	int code = dialog.exec();
+	
+	lastUsedDir = dialog.takeLastUsedDir();
 
 	if (code == QDialog::Accepted)
 	{
@@ -328,11 +328,13 @@ void SetupDialog::setEngineAsDefault()
 
 void SetupDialog::editEngine( const QModelIndex & index )
 {
-	Engine & selectedEngine = engineModel[ index.row() ];
+	EngineInfo & selectedEngine = engineModel[ index.row() ];
 
-	EngineDialog dialog( this, pathContext, selectedEngine );
+	EngineDialog dialog( this, pathConvertor, selectedEngine, lastUsedDir );
 
 	int code = dialog.exec();
+	
+	lastUsedDir = dialog.takeLastUsedDir();
 
 	if (code == QDialog::Accepted)
 	{
@@ -355,9 +357,9 @@ void SetupDialog::editSelectedEngine()
 
 void SetupDialog::iwadAdd()
 {
-	QString path = browseFile( this, "IWAD", lastUsedDir,
-		  makeFileFilter( "Doom data files", iwadSuffixes )
-		+ makeFileFilter( "DukeNukem data files", dukeSuffixes )
+	QString path = DialogWithPaths::browseFile( this, "IWAD", lastUsedDir,
+		  makeFileFilter( "Doom data files", doom::iwadSuffixes )
+		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ "All files (*)"
 	);
 	if (path.isEmpty())  // user probably clicked cancel
@@ -451,17 +453,17 @@ void SetupDialog::onIWADSubdirsToggled( bool checked )
 
 void SetupDialog::browseIWADDir()
 {
-	browseDir( this, "with IWADs", ui->iwadDirLine );
+	DialogWithPaths::browseDir( this, "with IWADs", ui->iwadDirLine );
 }
 
 void SetupDialog::browseMapDir()
 {
-	browseDir( this, "with maps", ui->mapDirLine );
+	DialogWithPaths::browseDir( this, "with maps", ui->mapDirLine );
 }
 
 void SetupDialog::browseModDir()
 {
-	browseDir( this, "with mods", ui->modDirLine );
+	DialogWithPaths::browseDir( this, "with mods", ui->modDirLine );
 }
 
 void SetupDialog::onIWADDirChanged( const QString & dir )
@@ -490,7 +492,7 @@ void SetupDialog::onModDirChanged( const QString & dir )
 
 void SetupDialog::updateIWADsFromDir()
 {
-	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathContext, isIWAD );
+	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::isIWAD );
 }
 
 
@@ -541,28 +543,27 @@ void SetupDialog::onLightSchemeChosen()
 void SetupDialog::onAbsolutePathsToggled( bool checked )
 {
 	settings.pathStyle = checked ? PathStyle::Absolute : PathStyle::Relative;
-
-	pathContext.setPathStyle( settings.pathStyle );
+	pathConvertor.setPathStyle( settings.pathStyle );
 
 	for (Engine & engine : engineModel)
 	{
-		engine.path = pathContext.convertPath( engine.path );
-		engine.configDir = pathContext.convertPath( engine.configDir );
+		engine.executablePath = pathConvertor.convertPath( engine.executablePath );
+		engine.configDir = pathConvertor.convertPath( engine.configDir );
 	}
 	engineModel.contentChanged( 0 );
 
-	iwadSettings.dir = pathContext.convertPath( iwadSettings.dir );
+	iwadSettings.dir = pathConvertor.convertPath( iwadSettings.dir );
 	ui->iwadDirLine->setText( iwadSettings.dir );
 	for (IWAD & iwad : iwadModel)
 	{
-		iwad.path = pathContext.convertPath( iwad.path );
+		iwad.path = pathConvertor.convertPath( iwad.path );
 	}
 	iwadModel.contentChanged( 0 );
 
-	mapSettings.dir = pathContext.convertPath( mapSettings.dir );
+	mapSettings.dir = pathConvertor.convertPath( mapSettings.dir );
 	ui->mapDirLine->setText( mapSettings.dir );
 
-	modSettings.dir = pathContext.convertPath( modSettings.dir );
+	modSettings.dir = pathConvertor.convertPath( modSettings.dir );
 	ui->modDirLine->setText( modSettings.dir );
 }
 

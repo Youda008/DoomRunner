@@ -11,6 +11,10 @@
 
 #include "Dialogs/DialogCommon.hpp"
 
+#include "Utils/ExeReader.hpp"      // ExeVersionInfo
+#include "Utils/WADReader.hpp"      // WadInfo
+#include "Utils/FileInfoCache.hpp"  // cache for exe/wad info
+
 #include "Widgets/ListModel.hpp"
 #include "Widgets/SearchPanel.hpp"
 #include "UserData.hpp"
@@ -21,8 +25,6 @@
 #include <QString>
 #include <QFileInfo>
 #include <QFileSystemModel>
-
-#include <optional>
 
 class QItemSelection;
 class QComboBox;
@@ -160,20 +162,20 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void togglePathStyle( PathStyle style );
 
-	void updateEngineTraits();
+	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines );
 
 	void autoselectItems();
 
-	void setAltDirsRelativeToConfigs( const QString & dirName );
+	void setAlternativeDirs( const QString & dirName );
 
 	void updateListsFromDirs();
 	void updateIWADsFromDir();
 	void refreshMapPacks();
-	void updateConfigFilesFromDir();
-	void updateSaveFilesFromDir();
-	void updateDemoFilesFromDir();
+	void updateConfigFilesFromDir( const QString * configDir = nullptr );
+	void updateSaveFilesFromDir( const QString * saveDir = nullptr );
+	void updateDemoFilesFromDir( const QString * demoDir = nullptr );
 	void updateCompatLevels();
-	void updateMapsFromSelectedWADs( std::optional< QStringVec > selectedMapPacks = std::nullopt );
+	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
 
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();
@@ -181,8 +183,12 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void toggleSkillSubwidgets( bool enabled );
 	void toggleOptionsSubwidgets( bool enabled );
 
-	bool saveOptions( const QString & fileName );
-	bool loadOptions( const QString & fileName );
+	bool saveOptions( const QString & filePath );
+	bool loadOptions( const QString & filePath );
+
+	bool isCacheDirty() const;
+	bool saveCache( const QString & filePath );
+	bool loadCache( const QString & filePath );
 
 	void restoreLoadedOptions( OptionsToLoad && opts );
 	void restorePreset( int index );
@@ -195,17 +201,29 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void restoreAudioOptions( const AudioOptions & opts );
 	void restoreGlobalOptions( const GlobalOptions & opts );
 
-	os::ShellCommand generateLaunchCommand( const QString & baseDir, bool verifyPaths, bool quotePaths );
+	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
+
+	os::ShellCommand generateLaunchCommand( const QString & outputBaseDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand();
 
  private: // MainWindow-specific utils
 
+	Preset * getSelectedPreset() const;
+	EngineInfo * getSelectedEngine() const;
+	IWAD * getSelectedIWAD() const;
+
 	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
 	QStringVec getSelectedMapPacks() const;
 
+	QStringList getUniqueMapNamesFromWADs( const QVector<QString> & selectedWADs ) const;
+
 	QString getConfigDir() const;
+	QString getDataDir() const;
 	QString getSaveDir() const;
 	QString getDemoDir() const;
+
+	QString convertRebasedEngineDataPath( QString path ) const;
+	QString rebaseSaveFilePath( const QString & filePath, const PathRebaser & workingDirRebaser, const EngineInfo * engine );
 
 	LaunchMode getLaunchModeFromUI() const;
 
@@ -232,15 +250,18 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QDir appDataDir;   ///< directory where this application can store its data
 	QString optionsFilePath;
+	QString cacheFilePath;
 
 	bool optionsNeedUpdate = false;  ///< indicates that the user has made a change and the options file needs to be updated
-	bool optionsCorrupted = false;  ///< true if there was a critical error during parsing of the options file, such content should not be saved
+	bool optionsCorrupted = false;   ///< true if there was a critical error during parsing of the options file, such content should not be saved
 
-	bool disableSelectionCallbacks = false;  ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
+	bool disableSelectionCallbacks = false;   ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
 	bool restoringOptionsInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
-	bool restoringPresetInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
+	bool restoringPresetInProgress = false;   ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
+
+	PathRebaser engineDataDirRebaser;   ///< path convertor set up to rebase relative paths from current dir to engine's data dir and back
 
 	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
 
@@ -260,16 +281,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	// You can read more about it here: https://doc.qt.io/qt-5/model-view-programming.html#model-subclassing-reference
 
 	EngineSettings engineSettings;    ///< engine-related preferences (value returned by SetupDialog)
-	ReadOnlyDirectListModel< Engine > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
-
-	// We need to store extra information for each engine, but making it a part of Engine struct is not a good idea,
-	// because this extra info is not user-defined and should not be serialized.
-	// Locally extending the Engine struct would mean we would have to strip this info away everytime we would need to
-	// pass it to the SetupDialog or OptionsDeserializer.
-	// Only because the content of the engine list is constant during the loop of this window and only changed in
-	// SetupDialog or OptionsDeserializer, we can afford to do this, otherwise painful manual sychronization between
-	// engineModel and engineTraits would be needed.
-	QList< EngineTraits > engineTraits;   ///< traits of each loaded engine, has same indexes as engineModel
+	ReadOnlyDirectListModel< EngineInfo > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
 
 	struct ConfigFile : public ReadOnlyListModelItem
 	{

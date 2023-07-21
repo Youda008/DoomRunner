@@ -49,7 +49,7 @@ const QIcon & Mod::getIcon() const
 		QSize smallestSize = origIcon.availableSizes().at(0);
 		QPixmap pixmap = origIcon.pixmap( smallestSize );
 
-		iter = g_filesystemIconCache.insert( entryID, QIcon( pixmap ) );
+		iter = g_filesystemIconCache.insert( std::move( entryID ), QIcon( pixmap ) );
 	}
 	return iter.value();
 }

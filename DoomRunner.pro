@@ -49,20 +49,23 @@ HEADERS += \
 	Sources/Dialogs/OwnFileDialog.hpp \
 	Sources/Dialogs/ProcessOutputWindow.hpp \
 	Sources/Dialogs/SetupDialog.hpp \
+	Sources/DoomFiles.hpp \
 	Sources/Utils/ErrorHandling.hpp \
 	Sources/Utils/EventFilters.hpp \
+	Sources/Utils/ExeReader.hpp \
+	Sources/Utils/FileInfoCache.hpp \
 	Sources/Utils/FileSystemUtils.hpp \
 	Sources/Utils/JsonUtils.hpp \
 	Sources/Utils/LangUtils.hpp \
 	Sources/Utils/MiscUtils.hpp \
 	Sources/Utils/OSUtils.hpp \
+	Sources/Utils/TimeStats.hpp \
 	Sources/Utils/WADReader.hpp \
 	Sources/Utils/WidgetUtils.hpp \
 	Sources/Widgets/EditableListView.hpp \
 	Sources/Widgets/ExtendedTreeView.hpp \
 	Sources/Widgets/ListModel.hpp \
 	Sources/CommonTypes.hpp \
-	Sources/DoomFileInfo.hpp \
 	Sources/EngineTraits.hpp \
 	Sources/Essential.hpp \
 	Sources/MainWindow.hpp \
@@ -84,8 +87,11 @@ SOURCES += \
 	Sources/Dialogs/OwnFileDialog.cpp \
 	Sources/Dialogs/ProcessOutputWindow.cpp \
 	Sources/Dialogs/SetupDialog.cpp \
+	Sources/DoomFiles.cpp \
 	Sources/Utils/ErrorHandling.cpp \
 	Sources/Utils/EventFilters.cpp \
+	Sources/Utils/ExeReader.cpp \
+	Sources/Utils/FileInfoCache.cpp \
 	Sources/Utils/FileSystemUtils.cpp \
 	Sources/Utils/LangUtils.cpp \
 	Sources/Utils/JsonUtils.cpp \
@@ -97,7 +103,6 @@ SOURCES += \
 	Sources/Widgets/ExtendedTreeView.cpp \
 	Sources/Widgets/ListModel.cpp \
 	Sources/CommonTypes.cpp \
-	Sources/DoomFileInfo.cpp \
 	Sources/EngineTraits.cpp \
 	Sources/MainWindow.cpp \
 	Sources/OptionsSerializer.cpp \
@@ -129,7 +134,7 @@ win32: RC_ICONS += Resources/DoomRunner.ico
 
 #-- libraries ------------------------------------
 
-win32: LIBS += -lole32 -luuid -ldwmapi
+win32: LIBS += -lole32 -luuid -ldwmapi -lversion
 
 
 #-- user configuration ---------------------------

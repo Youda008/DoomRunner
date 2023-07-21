@@ -143,7 +143,7 @@ uint JsonObjectCtx::getUInt( const QString & key, uint defaultVal, bool showErro
 	double d = val.toDouble();
 	if (d < 0 || d > UINT_MAX)
 	{
-		invalidTypeAtKey( key, "int" );
+		invalidTypeAtKey( key, "uint" );
 		return defaultVal;
 	}
 	return uint(d);
@@ -159,16 +159,38 @@ uint16_t JsonObjectCtx::getUInt16( const QString & key, uint16_t defaultVal, boo
 	QJsonValue val = (*_wrappedObject)[ key ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtKey( key, "uint" );
+		invalidTypeAtKey( key, "uint16" );
 		return defaultVal;
 	}
 	double d = val.toDouble();
 	if (d < 0 || d > UINT16_MAX)
 	{
-		invalidTypeAtKey( key, "int" );
+		invalidTypeAtKey( key, "uint16" );
 		return defaultVal;
 	}
 	return uint16_t(d);
+}
+
+int64_t JsonObjectCtx::getInt64( const QString & key, int64_t defaultVal, bool showError ) const
+{
+	if (!_wrappedObject->contains( key ))
+	{
+		missingKey( key, showError );
+		return defaultVal;
+	}
+	QJsonValue val = (*_wrappedObject)[ key ];
+	if (!val.isDouble())
+	{
+		invalidTypeAtKey( key, "int64" );
+		return defaultVal;
+	}
+	double d = val.toDouble();
+	if (d < (INT64_MIN>>10) || d > (INT64_MAX>>10))
+	{
+		invalidTypeAtKey( key, "int64" );
+		return defaultVal;
+	}
+	return int64_t(d);
 }
 
 double JsonObjectCtx::getDouble( const QString & key, double defaultVal, bool showError ) const
@@ -187,7 +209,7 @@ double JsonObjectCtx::getDouble( const QString & key, double defaultVal, bool sh
 	return val.toDouble();
 }
 
-QString JsonObjectCtx::getString( const QString & key, const QString & defaultVal, bool showError ) const
+QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool showError ) const
 {
 	if (!_wrappedObject->contains( key ))
 	{
@@ -327,6 +349,28 @@ uint16_t JsonArrayCtx::getUInt16( int index, uint16_t defaultVal, bool showError
 	return uint16_t(d);
 }
 
+int64_t JsonArrayCtx::getInt64( int index, int64_t defaultVal, bool showError ) const
+{
+	if (index < 0 || index >= _wrappedArray->size())
+	{
+		indexOutOfBounds( index, showError );
+		return defaultVal;
+	}
+	QJsonValue val = (*_wrappedArray)[ index ];
+	if (!val.isDouble())
+	{
+		invalidTypeAtIdx( index, "int64" );
+		return defaultVal;
+	}
+	double d = val.toDouble();
+	if (d < (INT64_MIN>>10) || d > (INT64_MAX>>10))
+	{
+		invalidTypeAtIdx( index, "int64" );
+		return defaultVal;
+	}
+	return int64_t(d);
+}
+
 double JsonArrayCtx::getDouble( int index, double defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
@@ -343,7 +387,7 @@ double JsonArrayCtx::getDouble( int index, double defaultVal, bool showError ) c
 	return val.toDouble();
 }
 
-QString JsonArrayCtx::getString( int index, const QString & defaultVal, bool showError ) const
+QString JsonArrayCtx::getString( int index, QString defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray->size())
 	{
@@ -454,4 +498,49 @@ QString JsonObjectCtx::elemPath( const QString & elemName ) const
 QString JsonArrayCtx::elemPath( int index ) const
 {
 	return getPath() + "/[" + QString::number( index ) + ']';
+}
+
+
+//======================================================================================================================
+//  file writing helpers
+
+#include "FileSystemUtils.hpp"
+
+bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, const QString & fileDesc )
+{
+	QByteArray bytes = jsonDoc.toJson();
+
+	QString error = fs::updateFileSafely( filePath, bytes );
+	if (!error.isEmpty())
+	{
+		QMessageBox::warning( nullptr, "Error saving "+fileDesc, error );
+		return false;
+	}
+
+	return true;
+}
+
+bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath, const QString & fileDesc )
+{
+	QByteArray bytes;
+	QString readError = fs::readWholeFile( filePath, bytes );
+	if (!readError.isEmpty())
+	{
+		QMessageBox::warning( nullptr, "Error loading "+fileDesc, readError );
+		return false;
+	}
+
+	QJsonParseError parseError;
+	QJsonDocument jsonDoc = QJsonDocument::fromJson( bytes, &parseError );
+	if (jsonDoc.isNull())
+	{
+		QMessageBox::warning( nullptr, "Error loading "+fileDesc,
+			"Failed to parse "%fs::getFileNameFromPath(filePath)%": "%parseError.errorString()%"\n"
+			"You can either open it in notepad and try to repair it, or delete it and start from scratch."
+		);
+		return false;
+	}
+
+	jsonDocCtx = JsonDocumentCtx( jsonDoc );
+	return true;
 }

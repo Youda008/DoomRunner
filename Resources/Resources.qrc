@@ -10,9 +10,11 @@
         <file alias="MoveUp.png">Buttons/MoveUp.png</file>
         <file alias="MoveDown.png">Buttons/MoveDown.png</file>
         <file alias="BrowseDir.png">Buttons/BrowseDir.png</file>
-        <file alias="Checkmark.png">Buttons/Checkmark.png</file>
         <file alias="File.png">Buttons/File.png</file>
         <file alias="Dir.png">Buttons/Dir.png</file>
+        <file alias="Help.12.png">Buttons/Help.12.png</file>
+        <file alias="Help.16.png">Buttons/Help.16.png</file>
+        <file alias="Checkmark.png">Buttons/Checkmark.png</file>
         <file alias="Play.png">Buttons/Play.png</file>
     </qresource>
 </RCC>

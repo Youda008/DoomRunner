@@ -43,9 +43,9 @@ bool isDirectoryWritable( const QString & dirPath )
 
 QString sanitizePath( const QString & path )
 {
-	QString sanitizedPath = path;
 	// Newer engines such as GZDoom 4.x can handle advanced Unicode characters such as emojis,
 	// but the old ones are pretty much limited to ASCII, so it's easier to just stick to aS "safe" white-list.
+	QString sanitizedPath = path;
 	static const QRegularExpression invalidChars("[^a-zA-Z0-9_ !#$&'\\(\\)+,\\-.;=@\\[\\]\\^~]");
 	//sanitizedPath.replace( invalidChars, "#" );
 	sanitizedPath.remove( invalidChars );
@@ -94,7 +94,7 @@ QString updateFileSafely( const QString & filePath, const QByteArray & newConten
 
 void traverseDirectory(
 	const QString & dir, bool recursively, EntryTypes typesToVisit,
-	const PathContext & pathContext, const std::function< void ( const QFileInfo & entry ) > & visitEntry
+	const PathConvertor & pathConvertor, const std::function< void ( const QFileInfo & entry ) > & visitEntry
 )
 {
 	if (dir.isEmpty())
@@ -107,7 +107,7 @@ void traverseDirectory(
 	QDirIterator dirIt( dir_ );
 	while (dirIt.hasNext())
 	{
-		QString entryPath = pathContext.convertPath( dirIt.next() );
+		QString entryPath = pathConvertor.convertPath( dirIt.next() );
 		QFileInfo entry( entryPath );
 		if (entry.isDir())
 		{
@@ -117,7 +117,7 @@ void traverseDirectory(
 				if (typesToVisit.isSet( EntryType::DIR ))
 					visitEntry( entry );
 				if (recursively)
-					traverseDirectory( entry.filePath(), recursively, typesToVisit, pathContext, visitEntry );
+					traverseDirectory( entry.filePath(), recursively, typesToVisit, pathConvertor, visitEntry );
 			}
 		}
 		else

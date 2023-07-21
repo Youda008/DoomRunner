@@ -54,7 +54,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, 
 
 	if (JsonArrayCtx jsSelectedMapPacks = jsPreset.getArray( "selected_mappacks" ))
 	{
-		deserializeStringVec( jsSelectedMapPacks, preset.selectedMapPacks );
+		preset.selectedMapPacks = deserializeStringVec( jsSelectedMapPacks );
 	}
 
 	if (JsonArrayCtx jsMods = jsPreset.getArray( "mods" ))
@@ -127,7 +127,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsSettings, LauncherSetting
 //======================================================================================================================
 //  options file stucture
 
-static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonObjectCtx & jsOpts )
+static void deserialize_pre17( OptionsToLoad & opts, const JsonObjectCtx & jsOpts )
 {
 	// global settings
 
@@ -155,10 +155,10 @@ static void deserializeOptionsFromJson_pre17( OptionsToLoad & opts, const JsonOb
 				Engine engine;
 				deserialize( jsEngine, engine );
 
-				if (engine.path.isEmpty())  // element isn't present in JSON -> skip this entry
+				if (engine.executablePath.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
 
-				if (!PathChecker::checkFilePath( engine.path, true, "an Engine from the saved options", "Please update it in Menu -> Setup." ))
+				if (!PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Setup." ))
 					highlightInvalidListItem( engine );
 
 				opts.engines.append( std::move( engine ) );

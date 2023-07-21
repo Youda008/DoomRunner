@@ -8,6 +8,9 @@
 #include "CommonTypes.hpp"
 
 
+const QString emptyString;
+
+
 QString QStringVec::join( QChar delimiter ) const
 {
 	QString result;

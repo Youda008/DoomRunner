@@ -11,8 +11,8 @@
 
 #include "DialogCommon.hpp"
 
-#include "UserData.hpp"  // Engine
-#include "Utils/FileSystemUtils.hpp"  // PathContext
+#include "UserData.hpp"  // EngineInfo
+#include "Utils/FileSystemUtils.hpp"  // PathConvertor
 
 #include <QDialog>
 
@@ -23,7 +23,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class EngineDialog : public QDialog, private DialogCommon {
+class EngineDialog : public QDialog, public DialogWithPaths {
 
 	Q_OBJECT
 
@@ -32,7 +32,7 @@ class EngineDialog : public QDialog, private DialogCommon {
 
  public:
 
-	explicit EngineDialog( QWidget * parent, const PathContext & pathContext, const Engine & engine );
+	explicit EngineDialog( QWidget * parent, const PathConvertor & pathConvertor, const EngineInfo & engine, QString lastUsedDir );
 	virtual ~EngineDialog() override;
 
  private: // methods
@@ -42,12 +42,14 @@ class EngineDialog : public QDialog, private DialogCommon {
 
  private slots:
 
-	void browseEngine();
+	void browseExecutable();
 	void browseConfigDir();
+	void browseDataDir();
 
 	void onNameChanged( const QString & text );
-	void onPathChanged( const QString & text );
+	void onExecutableChanged( const QString & text );
 	void onConfigDirChanged( const QString & text );
+	void onDataDirChanged( const QString & text );
 	void onFamilySelected( int familyIdx );
 
  public slots: // overridden methods
@@ -59,11 +61,13 @@ class EngineDialog : public QDialog, private DialogCommon {
 
 	Ui::EngineDialog * ui;
 
-	PathContext pathContext;
+	QString suggestedName;
+	QString suggestedConfigDir;
+	QString suggestedDataDir;
 
  public: // return values from this dialog
 
-	Engine engine;
+	EngineInfo engine;
 
 };
 

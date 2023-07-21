@@ -12,7 +12,7 @@
 #include "Essential.hpp"
 
 #include "Utils/LangUtils.hpp"  // PointerIterator
-#include "Utils/FileSystemUtils.hpp"  // PathContext
+#include "Utils/FileSystemUtils.hpp"  // PathConvertor
 #include "Themes.hpp"  // separator colors
 
 #include <QAbstractListModel>
@@ -131,7 +131,7 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 		);
 	}
 
-	void setEditString( const QString & /*str*/ )
+	void setEditString( QString /*str*/ )
 	{
 		throw std::logic_error(
 			"Edit has been requested, but editing this Item is not implemented. "
@@ -578,10 +578,10 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	using Item = typename ListImpl::Item;
 
 	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString )
-		: ListImpl(), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
+		: ListImpl(), DropTarget(), makeDisplayString( makeDisplayString ), pathConvertor( nullptr ) {}
 
 	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
-		: ListImpl( itemList ), DropTarget(), makeDisplayString( makeDisplayString ), pathContext( nullptr ) {}
+		: ListImpl( itemList ), DropTarget(), makeDisplayString( makeDisplayString ), pathConvertor( nullptr ) {}
 
 
 	//-- customization of how data will be represented -----------------------------------------------------------------
@@ -596,7 +596,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	void toggleCheckableItems( bool enabled ) { checkableItems = enabled; }
 
 	/** Must be set before external drag&drop is enabled in the parent widget. */
-	void setPathContext( const PathContext * pathContext ) { this->pathContext = pathContext; }
+	void setPathContext( const PathConvertor * pathConvertor ) { this->pathConvertor = pathConvertor; }
 
 
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
@@ -900,9 +900,9 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	bool dropMimeUrls( QList< QUrl > urls, int row, const QModelIndex & parent )
 	{
-		if (!pathContext)
+		if (!pathConvertor)
 		{
-			qWarning() << "File has been dropped but no PathContext is set. "
+			qWarning() << "File has been dropped but no PathConvertor is set. "
 			              "Either use setPathContext or disable file dropping in the widget.";
 			return false;
 		}
@@ -914,7 +914,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 			QString localPath = droppedUrl.toLocalFile();
 			if (!localPath.isEmpty())
 			{
-				QFileInfo fileInfo( pathContext->convertPath( localPath ) );
+				QFileInfo fileInfo( pathConvertor->convertPath( localPath ) );
 				filesToBeInserted.append( std::move(fileInfo) );
 			}
 		}
@@ -954,7 +954,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	bool checkableItems = false;
 
 	/// optional path helper that will convert paths dropped from directory to absolute or relative
-	const PathContext * pathContext;
+	const PathConvertor * pathConvertor;
 
 };
 

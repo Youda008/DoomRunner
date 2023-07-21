@@ -29,7 +29,7 @@ namespace Ui {
 
 //======================================================================================================================
 
-class SetupDialog : public QDialog, private DialogWithPaths {
+class SetupDialog : public QDialog, public DialogWithPaths {
 
 	Q_OBJECT
 
@@ -39,8 +39,8 @@ class SetupDialog : public QDialog, private DialogWithPaths {
 
 	explicit SetupDialog(
 		QWidget * parent,
-		const QDir & baseDir,
-		const EngineSettings & engineSettings, const QList< Engine > & engineList,
+		const PathConvertor & pathConvertor,
+		const EngineSettings & engineSettings, const QList< EngineInfo > & engineList,
 		const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 		const MapSettings & mapSettings, const ModSettings & modSettings,
 		const LauncherSettings & settings
@@ -127,7 +127,7 @@ class SetupDialog : public QDialog, private DialogWithPaths {
  public: // return values from this dialog
 
 	EngineSettings engineSettings;
-	EditableDirectListModel< Engine > engineModel;
+	EditableDirectListModel< EngineInfo > engineModel;
 
 	IwadSettings iwadSettings;
 	EditableDirectListModel< IWAD > iwadModel;

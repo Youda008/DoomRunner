@@ -84,19 +84,21 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 {
 	QString version( reply->readLine( 16 ) );
 
-	QRegularExpressionMatch match = QRegularExpression("^\"([0-9\\.]+)\"$").match( version );
+	static const QRegularExpression versionFileRegex("^\"([0-9\\.]+)\"$");
+	auto match = versionFileRegex.match( version );
 	if (!match.hasMatch())
 	{
 		qWarning() << "Version number from github is in invalid format ("%version%"). Fix it!";
-		requestData.callback( InvalidFormat, version, {} );
+		requestData.callback( InvalidFormat, std::move(version), {} );
 		return;
 	}
-	QString availableVersion = match.captured(1);
+	QString availableVersionStr = match.captured(1);
+	Version availableVersion( availableVersionStr );
 
-	bool updateAvailable = Version( availableVersion ) > appVersion;
+	bool updateAvailable = availableVersion > appVersion;
 	if (!updateAvailable)
 	{
-		requestData.callback( UpdateNotAvailable, {}, { availableVersion } );
+		requestData.callback( UpdateNotAvailable, {}, { availableVersionStr } );
 		return;
 	}
 
@@ -104,7 +106,7 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 	request.setUrl( changelogUrl );
 	QNetworkReply * reply2 = manager.get( request );
 
-	pendingRequests[ reply2 ] = { Phase::ChangelogRequest, availableVersion, std::move(requestData.callback) };
+	pendingRequests[ reply2 ] = { Phase::ChangelogRequest, std::move(availableVersionStr), std::move(requestData.callback) };
 }
 
 // fucking Qt, are you fucking kidding me?
@@ -141,10 +143,10 @@ void UpdateChecker::changelogReceived( QNetworkReply * reply, RequestData & requ
 
 	// get all changes until our current version
 	while ((line = getLine( reply )) != appVersion && !reply->atEnd())
-		versionInfo.append( line );
+		versionInfo.append( std::move(line) );
 
 	// finally, call the user callback with all the data
-	requestData.callback( UpdateAvailable, {}, versionInfo );
+	requestData.callback( UpdateAvailable, {}, std::move(versionInfo) );
 }
 
 

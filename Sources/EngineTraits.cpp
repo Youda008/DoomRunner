@@ -15,7 +15,6 @@
 #include <QRegularExpression>
 
 
-
 //======================================================================================================================
 //  engine definitions - add support for new engines here
 
@@ -29,7 +28,7 @@ static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd),
 
 static const QHash< QString, EngineFamily > knownEngineFamilies =
 {
-	// the key is an executable name in lower case without the .exe suffix
+	// the key is a normalized application name from EngineTraits
 	{ "zdoom",           EngineFamily::ZDoom },
 	{ "lzdoom",          EngineFamily::ZDoom },
 	{ "gzdoom",          EngineFamily::ZDoom },
@@ -51,8 +50,8 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 
 static const EngineFamilyTraits engineFamilyTraits [] =
 {
-	//              -warp or +map        -complevel or +compatmode   savedir param   has +screenshot_dir   has -stdout
-	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom,    "-savedir",     true,                 true },
+	//              -warp or +map        -complevel or +compatmode   savedir param   has +screenshot_dir   needs -stdout
+	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom,    "-savedir",     true,                 IS_WINDOWS },
 	/*PrBoom*/    { MapParamStyle::Warp, CompatLevelStyle::PrBoom,   "-save",        false,                false },
 	/*Chocolate*/ { MapParamStyle::Warp, CompatLevelStyle::None,     "-savedir",     false,                false },
 };
@@ -60,7 +59,7 @@ static_assert( std::size(engineFamilyTraits) == std::size(engineFamilyStrings), 
 
 static const QHash< QString, int > startingMonitorIndexes =
 {
-	// the key is an executable name in lower case without the .exe suffix
+	// the key is a normalized application name from EngineTraits
 	{ "zdoom", 1 },
 };
 
@@ -110,7 +109,6 @@ static const QStringList prboomCompatLevels =
 static const QStringList noCompatLevels = {};
 
 
-
 //======================================================================================================================
 //  code
 
@@ -144,9 +142,9 @@ EngineFamily familyFromStr( const QString & familyStr )
 		return EngineFamily::_EnumEnd;
 }
 
-EngineFamily guessEngineFamily( const QString & executableName )
+EngineFamily guessEngineFamily( const QString & appNameNormalized )
 {
-	auto iter = knownEngineFamilies.find( executableName.toLower() );
+	auto iter = knownEngineFamilies.find( appNameNormalized );
 	if (iter != knownEngineFamilies.end())
 		return iter.value();
 	else
@@ -156,38 +154,62 @@ EngineFamily guessEngineFamily( const QString & executableName )
 //----------------------------------------------------------------------------------------------------------------------
 //  EngineTraits
 
-EngineTraits::EngineTraits( const Engine & engine )
-{
-	// initialize all ExecutableTraits members
-	static_cast< ExecutableTraits & >( *this ) = os::getExecutableTraits( engine.path );
+const Version EngineTraits::emptyVersion;
 
-	// initialize all EngineFamilyTraits members
-	if (size_t(engine.family) < std::size(engineFamilyTraits))
-		static_cast< EngineFamilyTraits & >( *this ) = engineFamilyTraits[ size_t(engine.family) ];
+EngineTraits::EngineTraits()
+{
+	_familyTraits = nullptr;
+}
+
+void EngineTraits::loadAppInfo( const QString & executablePath )
+{
+	_exePath = executablePath;
+	_exeBaseName = fs::getFileBasenameFromPath( executablePath );
+
+	// Sometimes opening an executable file takes incredibly long (even > 1 second) for unknown reason (antivirus maybe?).
+	// So we cache the results here so that at least the subsequent calls are fast.
+	if (fs::isValidFile( executablePath ))
+		_exeVersionInfo = os::g_cachedExeInfo.getFileInfo( executablePath );
+
+	_appNameNormalized = (!_exeVersionInfo.appName.isEmpty() ? _exeVersionInfo.appName : _exeBaseName).toLower();
+}
+
+void EngineTraits::assignFamilyTraits( EngineFamily family )
+{
+	if (size_t(family) < std::size(engineFamilyTraits))
+		_familyTraits = &engineFamilyTraits[ size_t(family) ];
 	else
-		static_cast< EngineFamilyTraits & >( *this ) = engineFamilyTraits[ 0 ];  // use ZDoom traits as fallback
+		_familyTraits = &engineFamilyTraits[ 0 ];  // use ZDoom traits as fallback
 }
 
-EngineTraits getEngineTraits( const Engine & engine )
+EngineTraits::SaveBaseDir EngineTraits::baseDirStyleForSaveFiles() const
 {
-	return EngineTraits( engine );
+	assert( hasAppInfo() );
+
+	if (_appNameNormalized == "gzdoom" && _exeVersionInfo.version >= Version(4,9,0))
+		return SaveBaseDir::SaveDir;
+	else
+		return SaveBaseDir::WorkingDir;
 }
+
+static const QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
+static const QRegularExpression doom2MapNameRegex("MAP(\\d+)");
 
 QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 {
+	assert( hasAppInfo() && hasFamilyTraits() );
+
 	if (mapName.isEmpty())
 	{
 		return {};
 	}
 
-	if (mapParamStyle == MapParamStyle::Map)  // this engine supports +map, we can use the map name directly
+	if (_familyTraits->mapParamStyle == MapParamStyle::Map)  // this engine supports +map, we can use the map name directly
 	{
 		return { "+map", mapName };
 	}
 	else  // this engine only supports the old -warp, we must deduce map number
 	{
-		static QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
-		static QRegularExpression doom2MapNameRegex("MAP(\\d+)");
 		QRegularExpressionMatch match;
 		if ((match = doom1MapNameRegex.match( mapName )).hasMatch())
 		{
@@ -206,13 +228,15 @@ QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 
 QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 {
+	assert( hasAppInfo() && hasFamilyTraits() );
+
 	// Properly working -compatmode is present only in GZDoom,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
-	if (executableBaseName.toLower() == "gzdoom")
+	if (_appNameNormalized == "gzdoom")
 		return { "-compatmode", QString::number( compatLevel ) };
-	if (compLvlStyle == CompatLevelStyle::ZDoom)
+	else if (_familyTraits->compLvlStyle == CompatLevelStyle::ZDoom)
 		return { "+compatmode", QString::number( compatLevel ) };
-	else if (compLvlStyle == CompatLevelStyle::PrBoom)
+	else if (_familyTraits->compLvlStyle == CompatLevelStyle::PrBoom)
 		return { "-complevel", QString::number( compatLevel ) };
 	else
 		return {};
@@ -220,8 +244,10 @@ QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 
 QString EngineTraits::getCmdMonitorIndex( int ownIndex ) const
 {
+	assert( hasAppInfo() && hasFamilyTraits() );
+
 	int startingMonitorIndex = 0;
-	auto iter = startingMonitorIndexes.find( executableBaseName.toLower() );
+	auto iter = startingMonitorIndexes.find( _appNameNormalized );
 	if (iter != startingMonitorIndexes.end())
 		startingMonitorIndex = iter.value();
 

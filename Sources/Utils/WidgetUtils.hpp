@@ -15,7 +15,7 @@
 #include "LangUtils.hpp"         // findSuch
 #include "FileSystemUtils.hpp"   // fillListFromDir
 #include "Widgets/ListModel.hpp"
-#include "Utils/ErrorHandling.hpp"
+#include "ErrorHandling.hpp"
 
 #include <QAbstractItemView>
 #include <QListView>
@@ -126,7 +126,7 @@ void appendItem( QListView * view, ListModel & model, const typename ListModel::
 
 	model.finishAppending();
 
-	selectAndSetCurrentByIndex( view, model.size() - 1 );
+	selectAndSetCurrentByIndex( view, model.size() - 1 );  // select the appended item
 }
 
 /// Adds an item to the begining of the list and selects it.
@@ -149,7 +149,7 @@ void prependItem( QListView * view, ListModel & model, const typename ListModel:
 
 	model.finishInserting();
 
-	selectAndSetCurrentByIndex( view, 0 );
+	selectAndSetCurrentByIndex( view, 0 );  // select the prepended item
 }
 
 /// Adds an item to the middle of the list and selects it.
@@ -172,11 +172,11 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 
 	model.finishInserting();
 
-	selectAndSetCurrentByIndex( view, index );
+	selectAndSetCurrentByIndex( view, index );  // select the inserted item
 }
 
 /// Deletes a selected item and attempts to select an item following the deleted one.
-/** Pops up a warning box if nothing is selected. */
+/** Returns the index of the selected and deleted item. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int deleteSelectedItem( QListView * view, ListModel & model )
 {
@@ -192,7 +192,7 @@ int deleteSelectedItem( QListView * view, ListModel & model )
 
 	model.startDeleting( selectedIdx );
 
-	model.removeAt( selectedIdx );  // TODO
+	model.removeAt( selectedIdx );
 
 	model.finishDeleting();
 
@@ -270,7 +270,7 @@ QVector<int> deleteSelectedItems( QListView * view, ListModel & model )
 }
 
 /// Creates a copy of a selected item and selects the newly created one.
-/** Pops up a warning box if nothing is selected. */
+/** Returns the index of the originally selected item to be cloned. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int cloneSelectedItem( QListView * view, ListModel & model )
 {
@@ -304,13 +304,13 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 
 	model.contentChanged( newItemIdx.row() );
 
-	selectAndSetCurrentByIndex( view, model.size() - 1 );
+	selectAndSetCurrentByIndex( view, model.size() - 1 );  // select the new item
 
 	return selectedIdx;
 }
 
 /// Moves a selected item up and updates the selection to point to the new position.
-/** Pops up a warning box if nothing is selected. */
+/** Returns index of the originally selected item before moving. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int moveUpSelectedItem( QListView * view, ListModel & model )
 {
@@ -335,10 +335,7 @@ int moveUpSelectedItem( QListView * view, ListModel & model )
 		return selectedIdx;
 	}
 
-	int currentIdx = getCurrentItemIndex( view );
-
-	unsetCurrentItem( view );
-	deselectItemByIndex( view, selectedIdx );
+	deselectAllAndUnsetCurrent( view );
 
 	model.orderAboutToChange();
 
@@ -346,21 +343,13 @@ int moveUpSelectedItem( QListView * view, ListModel & model )
 
 	model.orderChanged();
 
-	selectAndSetCurrentByIndex( view, selectedIdx - 1 );
-	if (currentIdx >= 1)                                // if the current item was not the first one,
-	{
-		setCurrentItemByIndex( view, currentIdx - 1 );  // set the previous one as current,
-	}
-	else                                                // otherwise
-	{
-		setCurrentItemByIndex( view, 0 );               // set the first one as current
-	}
+	selectAndSetCurrentByIndex( view, selectedIdx - 1 );  // select the new position of the moved item
 
 	return selectedIdx;
 }
 
 /// Moves a selected item down and updates the selection to point to the new position.
-/** Pops up a warning box if nothing is selected. */
+/** Returns index of the originally selected item before moving. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int moveDownSelectedItem( QListView * view, ListModel & model )
 {
@@ -385,10 +374,7 @@ int moveDownSelectedItem( QListView * view, ListModel & model )
 		return selectedIdx;
 	}
 
-	int currentIdx = getCurrentItemIndex( view );
-
-	unsetCurrentItem( view );
-	deselectItemByIndex( view, selectedIdx );
+	deselectAllAndUnsetCurrent( view );
 
 	model.orderAboutToChange();
 
@@ -396,15 +382,7 @@ int moveDownSelectedItem( QListView * view, ListModel & model )
 
 	model.orderChanged();
 
-	selectAndSetCurrentByIndex( view, selectedIdx + 1 );
-	if (currentIdx < model.size() - 1)                    // if the current item was not the last one,
-	{
-		setCurrentItemByIndex( view, currentIdx + 1 );    // set the next one as current,
-	}
-	else                                                  // otherwise
-	{
-		setCurrentItemByIndex( view, model.size() - 1 );  // set the last one as current
-	}
+	selectAndSetCurrentByIndex( view, selectedIdx + 1 );  // select the new position of the moved item
 
 	return selectedIdx;
 }
@@ -643,7 +621,7 @@ bool areSelectionsEqual( const QVector< ItemID > & selection1, const QVector< It
 /// Fills a list with entries found in a directory.
 template< typename ListModel >
 void updateListFromDir( ListModel & model, QListView * view, const QString & dir, bool recursively,
-                        const PathContext & pathContext, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+                        const PathConvertor & pathConvertor, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	using Item = typename ListModel::Item;
 
@@ -667,7 +645,7 @@ void updateListFromDir( ListModel & model, QListView * view, const QString & dir
 	                              // but that's an acceptable drawback, instead of making differential update
 	model.clear();
 
-	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathContext, [&]( const QFileInfo & file )
+	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathConvertor, [&]( const QFileInfo & file )
 	{
 		if (isDesiredFile( file ))
 		{
@@ -726,7 +704,7 @@ bool setCurrentItemByID( QComboBox * view, const ListModel & model, const QStrin
 /// Fills a combo-box with entries found in a directory.
 template< typename ListModel >
 void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString & dir, bool recursively,
-                            bool includeEmptyItem, const PathContext & pathContext,
+                            bool includeEmptyItem, const PathConvertor & pathConvertor,
                             std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	using Item = typename ListModel::Item;
@@ -744,7 +722,7 @@ void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString &
 	if (includeEmptyItem)
 		model.append( QString() );
 
-	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathContext, [&]( const QFileInfo & file )
+	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathConvertor, [&]( const QFileInfo & file )
 	{
 		if (isDesiredFile( file ))
 		{

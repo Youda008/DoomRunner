@@ -16,7 +16,7 @@
 #include <QList>
 #include <QVector>
 
-class PathContext;
+class PathRebaser;
 
 
 //======================================================================================================================
@@ -26,18 +26,40 @@ namespace os {
 
 //-- standard directories and installation properties ----------------------------------------------
 
+/// Returns home directory for the current user.
 QString getHomeDir();
 
-/// Returns directory for this application to save its config into.
+/// Returns directory for document files of the current user.
+QString getDocumentsDir();
+
+#if IS_WINDOWS
+/// Returns directory for game saves of the current user.
+QString getSavedGamesDir();
+#endif
+
+/// Returns parent directory where applications should store their config files.
+QString getAppConfigDir();
+
+/// Returns parent directory where applications should store their data files.
+QString getAppDataDir();
+
+/// Returns directory where selected application should store its config files.
+QString getConfigDirForApp( const QString & executablePath );
+
+/// Returns directory where selected application should store its data files.
+QString getDataDirForApp( const QString & executablePath );
+
+/// Returns directory where this application should save its config files.
 QString getThisAppConfigDir();
 
-/// Returns directory for this application to save its data into. This may be the same as the config dir.
+/// Returns directory where this application should save its data files. This may be the same as the config dir.
 QString getThisAppDataDir();
 
 /// Returns whether an executable is inside one of directories where the system will find it.
 /** If true it means the executable can be started directly by using only its name without its path. */
 bool isInSearchPath( const QString & filePath );
 
+/// Type of sandbox environment an application might be installed in
 enum class Sandbox
 {
 	None,
@@ -46,27 +68,26 @@ enum class Sandbox
 };
 QString getSandboxName( Sandbox sandbox );
 
-struct ExecutableTraits
+struct SandboxInfo
 {
-	QString executableBaseName;   ///< executable name without file suffix
-	Sandbox sandboxEnv;
-	QString sandboxAppName;   ///< application name which the sandbox uses to start it
+	Sandbox type;      ///< sandbox type determined from path
+	QString appName;   ///< name which the sandbox uses to identify the application
 };
-ExecutableTraits getExecutableTraits( const QString & executablePath );
+SandboxInfo getSandboxInfo( const QString & executablePath );
 
 struct ShellCommand
 {
 	QString executable;
 	QStringVec arguments;
-	QStringVec extraPermissions;  // extra sandbox permissions needed to run this command
+	QStringVec extraPermissions;  ///< extra sandbox permissions needed to run this command
 };
 /// Returns a shell command needed to run a specified executable without parameters.
 /** The result may be different based on operating system and where the executable is installed.
-  * \param base path options with base directory for relative paths and whether paths should be quoted
+  * \param rebaser path convertor set up to rebase relative paths from current working dir to a selected new base dir
   * \param dirsToBeAccessed Directories to which the executable will need a read access.
   *                         Required to setup permissions for a sandbox environment. */
 ShellCommand getRunCommand(
-	const QString & executablePath, const PathContext & base, const QStringVec & dirsToBeAccessed = {}
+	const QString & executablePath, const PathRebaser & currentDirToNewBaseDir, const QStringVec & dirsToBeAccessed = {}
 );
 
 
@@ -101,7 +122,7 @@ bool openFileLocation( const QString & filePath );
 bool createWindowsShortcut(
 	QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir = {}, QString description = {}
 );
-#endif // IS_WINDOWS
+#endif
 
 
 } // namespace os

@@ -10,35 +10,46 @@
 
 
 #include "Essential.hpp"
+
 #include "CommonTypes.hpp"
+#include "FileInfoCache.hpp"
 
 #include <QString>
 
+class QJsonObject;
+class JsonObjectCtx;
 
-enum class ReadStatus
-{
-	Success,
-	FailedToRead,
-	InvalidFormat,
-};
+
+namespace doom {
+
 
 enum class WadType
 {
+	Neither,
 	IWAD,
 	PWAD,
-	Neither
 };
 
-struct WadInfo
+struct WadInfo_
 {
-	ReadStatus status = ReadStatus::FailedToRead;
 	WadType type = WadType::Neither;
 	QStringVec mapNames;
+
+	void serialize( QJsonObject & jsWadInfo ) const;
+	void deserialize( const JsonObjectCtx & jsWadInfo );
 };
 
-/// Reads required data from a wad file and stores it into a cache.
-/** If the file was already read earlier, it returns the cached info. */
-const WadInfo & getCachedWadInfo( const QString & filePath );
+using WadInfo = UncertainFileInfo< WadInfo_ >;
+
+/// Reads selected information from a WAD file.
+/** BEWARE that on file I/O operations may sometimes be expensive, caching the info is adviced. */
+WadInfo readWadInfo( const QString & filePath );
+
+
+extern FileInfoCache< WadInfo_ > g_cachedWadInfo;
+
+
+} // namespace doom
 
 
 #endif // WAD_READER_INCLUDED

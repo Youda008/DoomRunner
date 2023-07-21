@@ -87,6 +87,31 @@ class PointerIterator
 
 
 //======================================================================================================================
+//  span
+
+template< typename Type >
+class span
+{
+	Type * _begin;
+	Type * _end;
+
+ public:
+
+	span() : _begin( nullptr ), _end( nullptr ) {}
+	span( Type * begin, Type * end ) : _begin( begin ), _end( end ) {}
+	span( Type * data, int size ) : _begin( data ), _end( data + size ) {}
+	span( Type * data, size_t size ) : _begin( data ), _end( data + size ) {}
+
+	Type * begin() const                   { return _begin; }
+	Type * end() const                     { return _end; }
+	Type * data() const                    { return _begin; }
+	size_t size() const                    { return _end - _begin; }
+	bool empty() const                     { return _begin == _end; }
+	Type & operator[]( int index ) const   { return _begin[ index ]; }
+};
+
+
+//======================================================================================================================
 //  scope guards
 
 template< typename EndFunc >
@@ -94,8 +119,7 @@ class ScopeGuard
 {
 	EndFunc _atEnd;
  public:
-	ScopeGuard( const EndFunc & endFunc ) : _atEnd( endFunc ) {}
-	ScopeGuard( EndFunc && endFunc ) : _atEnd( std::move(endFunc) ) {}
+	ScopeGuard( EndFunc endFunc ) : _atEnd( std::move(endFunc) ) {}
 	~ScopeGuard() noexcept { _atEnd(); }
 };
 
@@ -109,6 +133,43 @@ template< typename EndFunc >
 ScopeGuard< EndFunc > atScopeEndDo( EndFunc && endFunc )
 {
 	return ScopeGuard< EndFunc >( std::move(endFunc) );
+}
+
+template< typename Handle, typename CloseFunc >
+class AutoClosable
+{
+	Handle _handle;
+	CloseFunc _closeFunc;
+
+ public:
+
+	AutoClosable( Handle handle, CloseFunc closeFunc ) : _handle( handle ), _closeFunc( closeFunc ) {}
+	AutoClosable( const AutoClosable & other ) = delete;
+
+	void letGo()
+	{
+		_handle = Handle(0);
+		_closeFunc = nullptr;
+	}
+
+	AutoClosable( AutoClosable && other )
+	{
+		_handle = other._handle;
+		_closeFunc = other._closeFunc;
+		other.letGo();
+	}
+
+	~AutoClosable()
+	{
+		if (_closeFunc)
+			_closeFunc( _handle );
+	}
+};
+
+template< typename Handle, typename CloseFunc >
+AutoClosable< Handle, CloseFunc > autoClosable( Handle handle, CloseFunc closeFunc )
+{
+	return AutoClosable< Handle, CloseFunc >( handle, closeFunc );
 }
 
 
@@ -155,6 +216,28 @@ template< typename Type >
 bool isSet( const Type & obj )
 {
 	return static_cast< bool >( obj );
+}
+
+template< typename Type >
+Type * optToPtr( std::optional< Type > & opt )
+{
+	return opt.has_value() ? &opt.value() : nullptr;
+}
+template< typename Type >
+const Type * optToPtr( const std::optional< Type > & opt )
+{
+	return opt.has_value() ? &opt.value() : nullptr;
+}
+
+template< typename Type >
+Type & unconst( const Type & obj ) noexcept
+{
+	return const_cast< std::remove_const_t< Type > & >( obj );
+}
+template< typename Type >
+Type * unconst( const Type * obj ) noexcept
+{
+	return const_cast< std::remove_const_t< Type > * >( obj );
 }
 
 template< typename Float, std::enable_if_t< std::is_floating_point_v<Float>, int > = 0 >

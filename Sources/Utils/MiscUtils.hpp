@@ -218,7 +218,7 @@ QString makeFileFilter( const char * filterName, const QStringVec & suffixes );
 struct Argument
 {
 	QString str;  ///< individual argument trimmed from whitespaces and quotes
-	bool quoted;  ///< whether this argument was originally quoted
+	bool wasQuoted;  ///< whether this argument was originally quoted
 };
 /// Splits a command line string into individual arguments, taking into account quotes.
 /** NOTE: This is simplified, it will not handle the full command line syntax, only the basic cases. */

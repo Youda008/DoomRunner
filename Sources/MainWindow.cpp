@@ -1359,7 +1359,7 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 
 	QStringVec selectedMapPacks = getSelectedMapPacks();
 
-	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedMapPacks, selectedMapPacks );
+	/*bool storageModified =*/ STORE_TO_CURRENT_PRESET_IF_SAFE( selectedMapPacks, selectedMapPacks );
 
 	// expand the parent directory nodes that are collapsed
 	const auto selectedRows = wdg::getSelectedRows( ui->mapDirView );
@@ -1389,7 +1389,7 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 		}
 	}
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -1883,7 +1883,7 @@ void MainWindow::onModsDropped( int dropRow, int count )
 
 void MainWindow::onModeChosen_Default()
 {
-	bool storageModified = STORE_LAUNCH_OPTION( mode, Default );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, Default );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1899,13 +1899,13 @@ void MainWindow::onModeChosen_Default()
 		ui->multRoleCmbBox->setCurrentIndex( Client );   // only client can use default launch mode
 	}
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onModeChosen_LaunchMap()
 {
-	bool storageModified = STORE_LAUNCH_OPTION( mode, LaunchMap );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, LaunchMap );
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1921,13 +1921,13 @@ void MainWindow::onModeChosen_LaunchMap()
 		ui->multRoleCmbBox->setCurrentIndex( Server );   // only server can select a map
 	}
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onModeChosen_SavedGame()
 {
-	bool storageModified = STORE_LAUNCH_OPTION( mode, LoadSave );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, LoadSave );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
@@ -1938,13 +1938,13 @@ void MainWindow::onModeChosen_SavedGame()
 	toggleSkillSubwidgets( false );
 	toggleOptionsSubwidgets( false );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onModeChosen_RecordDemo()
 {
-	bool storageModified = STORE_LAUNCH_OPTION( mode, RecordDemo );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, RecordDemo );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1955,13 +1955,13 @@ void MainWindow::onModeChosen_RecordDemo()
 	toggleSkillSubwidgets( true );
 	toggleOptionsSubwidgets( true );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onModeChosen_ReplayDemo()
 {
-	bool storageModified = STORE_LAUNCH_OPTION( mode, ReplayDemo );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, ReplayDemo );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -1974,7 +1974,7 @@ void MainWindow::onModeChosen_ReplayDemo()
 
 	ui->multiplayerGrpBox->setChecked( false );   // no multiplayer when replaying demo
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2002,9 +2002,9 @@ void MainWindow::onMapChanged( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	bool storageModified = STORE_LAUNCH_OPTION( mapName, mapName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mapName, mapName );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2013,9 +2013,9 @@ void MainWindow::onMapChanged_demo( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	bool storageModified = STORE_LAUNCH_OPTION( mapName_demo, mapName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mapName_demo, mapName );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2026,9 +2026,9 @@ void MainWindow::onSavedGameSelected( int saveIdx )
 
 	const QString & saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : emptyString;
 
-	bool storageModified = STORE_LAUNCH_OPTION( saveFile, saveFileName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( saveFile, saveFileName );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2037,9 +2037,9 @@ void MainWindow::onDemoFileChanged_record( const QString & fileName )
 	if (disableSelectionCallbacks)
 		return;
 
-	bool storageModified = STORE_LAUNCH_OPTION( demoFile_record, fileName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( demoFile_record, fileName );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2050,9 +2050,9 @@ void MainWindow::onDemoFileSelected_replay( int demoIdx )
 
 	const QString & demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : emptyString;
 
-	bool storageModified = STORE_LAUNCH_OPTION( demoFile_replay, demoFileName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( demoFile_replay, demoFileName );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2065,7 +2065,7 @@ void MainWindow::onSkillSelected( int comboBoxIdx )
 	// skillIdx is an index in the combo-box which starts from 0, but Doom skill number actually starts from 1
 	int skillIdx = comboBoxIdx + 1;
 
-	bool storageModified = STORE_GAMEPLAY_OPTION( skillIdx, skillIdx );
+	/*bool storageModified =*/ STORE_GAMEPLAY_OPTION( skillIdx, skillIdx );
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 
@@ -2073,7 +2073,7 @@ void MainWindow::onSkillSelected( int comboBoxIdx )
 	if (skillIdx < Skill::Custom)
 		ui->skillSpinBox->setValue( skillIdx );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2138,7 +2138,7 @@ void MainWindow::onCompatLevelSelected( int compatLevel )
 
 void MainWindow::onMultiplayerToggled( bool checked )
 {
-	bool storageModified = STORE_MULT_OPTION( isMultiplayer, checked );
+	/*bool storageModified =*/ STORE_MULT_OPTION( isMultiplayer, checked );
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -2178,13 +2178,13 @@ void MainWindow::onMultiplayerToggled( bool checked )
 		(launchMode == Default && !checked) || launchMode == LaunchMap || launchMode == RecordDemo
 	);
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onMultRoleSelected( int role )
 {
-	bool storageModified = STORE_MULT_OPTION( multRole, MultRole(role) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( multRole, MultRole(role) );
 
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -2210,37 +2210,37 @@ void MainWindow::onMultRoleSelected( int role )
 		}
 	}
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onHostChanged( const QString & hostName )
 {
-	bool storageModified = STORE_MULT_OPTION( hostName, hostName );
+	/*bool storageModified =*/ STORE_MULT_OPTION( hostName, hostName );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onPortChanged( int port )
 {
-	bool storageModified = STORE_MULT_OPTION( port, uint16_t(port) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( port, uint16_t(port) );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onNetModeSelected( int netMode )
 {
-	bool storageModified = STORE_MULT_OPTION( netMode, NetMode(netMode) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( netMode, NetMode(netMode) );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onGameModeSelected( int gameMode )
 {
-	bool storageModified = STORE_MULT_OPTION( gameMode, GameMode(gameMode) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( gameMode, GameMode(gameMode) );
 
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
@@ -2251,15 +2251,15 @@ void MainWindow::onGameModeSelected( int gameMode )
 	ui->timeLimitSpinBox->setEnabled( multEnabled && multRole == Server && isDeathMatch );
 	ui->fragLimitSpinBox->setEnabled( multEnabled && multRole == Server && isDeathMatch );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onPlayerCountChanged( int count )
 {
-	bool storageModified = STORE_MULT_OPTION( playerCount, uint( count ) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( playerCount, uint( count ) );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2267,26 +2267,26 @@ void MainWindow::onTeamDamageChanged( double damage )
 {
  #pragma GCC diagnostic push
  #pragma GCC diagnostic ignored "-Wfloat-equal"
-	bool storageModified = STORE_MULT_OPTION( teamDamage, damage );
+	/*bool storageModified =*/ STORE_MULT_OPTION( teamDamage, damage );
  #pragma GCC diagnostic pop
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onTimeLimitChanged( int timeLimit )
 {
-	bool storageModified = STORE_MULT_OPTION( timeLimit, uint(timeLimit) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( timeLimit, uint(timeLimit) );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onFragLimitChanged( int fragLimit )
 {
-	bool storageModified = STORE_MULT_OPTION( fragLimit, uint(fragLimit) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( fragLimit, uint(fragLimit) );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2416,9 +2416,9 @@ void MainWindow::browseScreenshotDir()
 
 void MainWindow::onMonitorSelected( int index )
 {
-	bool storageModified = STORE_VIDEO_OPTION( monitorIdx, index );
+	/*bool storageModified =*/ STORE_VIDEO_OPTION( monitorIdx, index );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2452,25 +2452,25 @@ void MainWindow::onShowFpsToggled( bool checked )
 
 void MainWindow::onNoSoundToggled( bool checked )
 {
-	bool storageModified = STORE_AUDIO_OPTION( noSound, checked );
+	/*bool storageModified =*/ STORE_AUDIO_OPTION( noSound, checked );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onNoSFXToggled( bool checked )
 {
-	bool storageModified = STORE_AUDIO_OPTION( noSFX, checked );
+	/*bool storageModified =*/ STORE_AUDIO_OPTION( noSFX, checked );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onNoMusicToggled( bool checked )
 {
-	bool storageModified = STORE_AUDIO_OPTION( noMusic, checked );
+	/*bool storageModified =*/ STORE_AUDIO_OPTION( noMusic, checked );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
@@ -2480,17 +2480,17 @@ void MainWindow::onNoMusicToggled( bool checked )
 
 void MainWindow::onPresetCmdArgsChanged( const QString & text )
 {
-	bool storageModified = STORE_PRESET_OPTION( cmdArgs, text );
+	/*bool storageModified =*/ STORE_PRESET_OPTION( cmdArgs, text );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
 void MainWindow::onGlobalCmdArgsChanged( const QString & text )
 {
-	bool storageModified = STORE_GLOBAL_OPTION( cmdArgs, text );
+	/*bool storageModified =*/ STORE_GLOBAL_OPTION( cmdArgs, text );
 
-	scheduleSavingOptions( storageModified );
+	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 

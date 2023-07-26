@@ -106,8 +106,10 @@ class JsonValueCtx {
 	JsonValueCtx( _ParsingContext * context, const JsonValueCtx * parent, int index )
 		: _context( context ), _parent( parent ), _key( index ) {}
 
-	/// copy constructor
-	JsonValueCtx( const JsonValueCtx & other ) = default;
+	JsonValueCtx( const JsonValueCtx & ) = default;
+	JsonValueCtx( JsonValueCtx && ) = default;
+	JsonValueCtx & operator=( const JsonValueCtx & ) = default;
+	JsonValueCtx & operator=( JsonValueCtx && ) = default;
 
 	/// Builds a path of this element in its JSON document.
 	QString getPath() const;
@@ -139,7 +141,10 @@ class JsonObjectCtxProxy : public JsonValueCtx {
 	JsonObjectCtxProxy( const QJsonObject & wrappedObject, _ParsingContext * context, const JsonValueCtx * parent, int index )
 		: JsonValueCtx( context, parent, index ), _wrappedObject( wrappedObject ) {}
 
-	JsonObjectCtxProxy( const JsonObjectCtxProxy & other ) = default;
+	JsonObjectCtxProxy( const JsonObjectCtxProxy & ) = default;
+	JsonObjectCtxProxy( JsonObjectCtxProxy && ) = default;
+	JsonObjectCtxProxy & operator=( const JsonObjectCtxProxy & ) = default;
+	JsonObjectCtxProxy & operator=( JsonObjectCtxProxy && ) = default;
 
 	operator bool() const { return _wrappedObject.has_value(); }
 
@@ -163,7 +168,10 @@ class JsonArrayCtxProxy : public JsonValueCtx {
 	JsonArrayCtxProxy( const QJsonArray & wrappedArray, _ParsingContext * context, const JsonValueCtx * parent, int index )
 		: JsonValueCtx( context, parent, index ), _wrappedArray( wrappedArray ) {}
 
-	JsonArrayCtxProxy( const JsonArrayCtxProxy & other ) = default;
+	JsonArrayCtxProxy( const JsonArrayCtxProxy & ) = default;
+	JsonArrayCtxProxy( JsonArrayCtxProxy && ) = default;
+	JsonArrayCtxProxy & operator=( const JsonArrayCtxProxy & ) = default;
+	JsonArrayCtxProxy & operator=( JsonArrayCtxProxy && ) = default;
 
 	operator bool() const { return _wrappedArray.has_value(); }
 
@@ -175,8 +183,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
  public:
 
 	/// Constructs invalid JSON object wrapper.
-	JsonObjectCtx()
-		: JsonObjectCtxProxy() {}
+	JsonObjectCtx() : JsonObjectCtxProxy() {}
 
 	/// Constructs a JSON object wrapper with no parent, this should be only used for creating a root element.
 	JsonObjectCtx( const QJsonObject & wrappedObject, _ParsingContext * context )
@@ -325,9 +332,15 @@ class JsonDocumentCtx {
 
  public:
 
-	JsonDocumentCtx() {}
-	JsonDocumentCtx( const QJsonDocument & wrappedDoc )
-		: _rootObject( wrappedDoc.object(), &_context ) {}
+	JsonDocumentCtx() : _rootObject() {}
+	JsonDocumentCtx( const QJsonDocument & wrappedDoc ) : _rootObject( wrappedDoc.object(), &_context ) {}
+	void setWrappedDoc( const QJsonDocument & wrappedDoc ) { _rootObject = JsonObjectCtx( wrappedDoc.object(), &_context ); }
+
+	// _rootObject has ptr to _context, if this gets moved/copied, it will have pointer to a different (possibly temporary) object
+	JsonDocumentCtx( const JsonDocumentCtx & ) = delete;
+	JsonDocumentCtx( JsonDocumentCtx && ) = delete;
+	JsonDocumentCtx & operator=( const JsonDocumentCtx & ) = delete;
+	JsonDocumentCtx & operator=( JsonDocumentCtx && ) = delete;
 
 	const JsonObjectCtx & rootObject() const { return _rootObject; }
 
@@ -361,26 +374,26 @@ inline QStringVec deserializeStringVec( const JsonArrayCtx & jsVec )
 	return vec;
 }
 
-template< typename Elem >
-QJsonArray serializeList( const QList< Elem > & list )
+template< typename List >
+QJsonArray serializeList( const List & list )
 {
 	QJsonArray jsArray;
-	for (const Elem & elem : list)
+	for (const auto & elem : list)
 	{
 		jsArray.append( serialize( elem ) );
 	}
 	return jsArray;
 }
 
-template< typename Elem >
-void deserializeList( const JsonArrayCtx & jsList, QList< Elem > & list )
+template< typename List >
+void deserializeList( const JsonArrayCtx & jsList, List & list )
 {
 	for (int i = 0; i < jsList.size(); i++)
 	{
 		JsonObjectCtx jsElem = jsList.getObject( i );
 		if (jsElem)
 		{
-			list.append({});
+			list.emplace();
 			deserialize( jsElem, list.last() );
 		}
 	}

@@ -17,6 +17,37 @@
 
 
 //======================================================================================================================
+//  custom data types
+
+static QJsonObject serialize( const EnvVars & envVars )
+{
+	QJsonObject jsEnvVars;
+
+	// convert list to a map
+	for (const auto & envVar : envVars)
+	{
+		jsEnvVars[ envVar.name ] = envVar.value;
+	}
+
+	return jsEnvVars;
+}
+
+static void deserialize( const JsonObjectCtx & jsEnvVars, EnvVars & envVars )
+{
+	// convert map to a list
+	auto keys = jsEnvVars.keys();
+	for (auto & varName : keys)
+	{
+		QString value = jsEnvVars.getString( varName, {} );
+		envVars.append({ std::move(varName), std::move(value) });
+	}
+
+	// keep the list sorted
+	std::sort( envVars.begin(), envVars.end(), []( const auto & a, const auto & b ) { return a.name < b.name; });
+}
+
+
+//======================================================================================================================
 //  user data sub-sections
 
 static QJsonObject serialize( const Engine & engine )
@@ -350,6 +381,7 @@ static QJsonObject serialize( const GlobalOptions & opts )
 
 	jsOptions["use_preset_name_as_dir"] = opts.usePresetNameAsDir;
 	jsOptions["additional_args"] = opts.cmdArgs;
+	jsOptions["env_vars"] = serialize( opts.envVars );
 
 	return jsOptions;
 }
@@ -358,6 +390,8 @@ static void deserialize( const JsonObjectCtx & jsOptions, GlobalOptions & opts )
 {
 	opts.usePresetNameAsDir = jsOptions.getBool( "use_preset_name_as_dir", opts.usePresetNameAsDir, DontShowError );
 	opts.cmdArgs = jsOptions.getString( "additional_args" );
+	if (JsonObjectCtx jsEnvVars = jsOptions.getObject( "env_vars" ))
+		deserialize( jsEnvVars, opts.envVars );
 }
 
 static QJsonObject serialize( const Preset & preset, const StorageSettings & settings )
@@ -407,6 +441,7 @@ static QJsonObject serialize( const Preset & preset, const StorageSettings & set
 	// preset-specific args
 
 	jsPreset["additional_args"] = preset.cmdArgs;
+	jsPreset["env_vars"] = serialize( preset.envVars );
 
 	return jsPreset;
 }
@@ -487,6 +522,8 @@ static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const 
 	// preset-specific args
 
 	preset.cmdArgs = jsPreset.getString( "additional_args" );
+	if (JsonObjectCtx jsEnvVars = jsPreset.getObject( "env_vars" ))
+		deserialize( jsEnvVars, preset.envVars );
 }
 
 static QJsonObject serialize( const WindowGeometry & geometry )
@@ -531,7 +568,7 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 
 static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
 {
-	settings.appStyle = jsSettings.getString( "app_style", {} );  // null value means system-default
+	settings.appStyle = jsSettings.getString( "app_style", {}, DontShowError );  // null value means system-default
 	ColorScheme colorScheme = schemeFromString( jsSettings.getString( "color_scheme" ) );
 	if (colorScheme != ColorScheme::_EnumEnd)
 		settings.colorScheme = colorScheme;  // otherwise leave default

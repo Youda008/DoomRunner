@@ -14,6 +14,7 @@
 #include "Widgets/ListModel.hpp"     // ReadOnlyListModelItem, EditableListModelItem
 #include "Utils/JsonUtils.hpp"       // enumName, enumSize
 #include "Utils/FileSystemUtils.hpp" // PathStyle
+#include "Utils/OSUtils.hpp"         // EnvVar
 #include "EngineTraits.hpp"          // EngineFamily
 #include "Themes.hpp"                // Theme
 
@@ -227,10 +228,16 @@ struct AudioOptions
 	bool noMusic = false;
 };
 
+// While storing the environment variables in a map is more logical, in our application we need to have it as
+// a linear list, otherwise it's impossible to update the data structure when the user changes the variable name (key).
+// The list should always be kept sorted.
+using EnvVars = QVector< os::EnvVar >;
+
 struct GlobalOptions
 {
 	bool usePresetNameAsDir = false;
 	QString cmdArgs;
+	EnvVars envVars;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -255,6 +262,8 @@ struct Preset : public EditableListModelItem
 	AlternativePaths altPaths;
 
 	QString cmdArgs;
+
+	EnvVars envVars;
 
 	// requirements of EditableListModel
 	const QString & getEditString() const   { return name; }

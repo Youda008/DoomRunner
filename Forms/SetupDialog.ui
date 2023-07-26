@@ -46,7 +46,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>0</width>
+                <width>26</width>
                 <height>26</height>
                </size>
               </property>
@@ -74,7 +74,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>0</width>
+                <width>26</width>
                 <height>26</height>
                </size>
               </property>
@@ -102,7 +102,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>0</width>
+                <width>26</width>
                 <height>26</height>
                </size>
               </property>
@@ -125,7 +125,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>0</width>
+                <width>26</width>
                 <height>26</height>
                </size>
               </property>
@@ -313,7 +313,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>0</width>
+                <width>26</width>
                 <height>26</height>
                </size>
               </property>
@@ -341,7 +341,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>0</width>
+                <width>26</width>
                 <height>26</height>
                </size>
               </property>
@@ -369,7 +369,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>0</width>
+                <width>26</width>
                 <height>26</height>
                </size>
               </property>
@@ -392,7 +392,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>0</width>
+                <width>26</width>
                 <height>26</height>
                </size>
               </property>

@@ -187,7 +187,7 @@ void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & de
 	}
 }
 
-ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const QStringVec & arguments )
+ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const QStringVec & arguments, const EnvVars & envVars )
 {
 	//qDebug() << "runProcess:" << executable;
 
@@ -197,6 +197,13 @@ ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const
 	process.setProgram( executable );
 	process.setArguments( arguments.toList() );
 	process.setProcessChannelMode( QProcess::MergedChannels );  // merge stdout and stderr
+
+	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+	for (const auto & envVar : envVars)
+	{
+		env.insert( envVar.name, envVar.value );
+	}
+	process.setProcessEnvironment(env);
 
 	connect( &process, &QProcess::started, this, &thisClass::onProcessStarted );
 	connect( &process, &QProcess::readyReadStandardOutput, this, &thisClass::readProcessOutput );

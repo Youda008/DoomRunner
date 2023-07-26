@@ -124,6 +124,12 @@ bool createWindowsShortcut(
 );
 #endif
 
+struct EnvVar
+{
+	QString name;
+	QString value;
+};
+
 
 } // namespace os
 

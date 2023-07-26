@@ -20,6 +20,7 @@
 #include <QAbstractItemView>
 #include <QListView>
 #include <QTreeView>
+#include <QTableView>
 #include <QComboBox>
 #include <QScrollBar>
 #include <QColor>
@@ -27,6 +28,8 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QFileInfo>
+
+class QTableWidget;
 
 #include <functional>
 #include <type_traits>
@@ -100,6 +103,31 @@ void deselectAllAndUnsetCurrent( QTreeView * view );
 void chooseItemByIndex( QTreeView * view, const QModelIndex & index );
 
 
+//----------------------------------------------------------------------------------------------------------------------
+//  row-oriented table view helpers
+
+// current item
+int getCurrentRowIndex( QTableView * view );
+void setCurrentRowByIndex( QTableView * view, int rowIndex );
+void unsetCurrentRow( QTableView * view );
+
+// selected items
+bool isSelectedRow( QTableView * view, int rowIndex );
+bool isSomethingSelected( QTableView * view );
+int getSelectedRowIndex( QTableView * view );  // assumes a single-selection mode, will throw a message box error otherwise
+QVector<int> getSelectedRowIndexes( QTableView * view );
+void selectRowByIndex( QTableView * view, int rowIndex );
+void deselectRowByIndex( QTableView * view, int rowIndex );
+void deselectSelectedRows( QTableView * view );
+
+// high-level control
+void selectAndSetCurrentRowByIndex( QTableView * view, int rowIndex );
+void deselectAllAndUnsetCurrentRow( QTableView * view );
+/// Deselects currently selected rows, selects new one and makes it the current row.
+/** Basically equivalent to left-clicking on an item. */
+void chooseRowByIndex( QTableView * view, int rowIndex );
+
+
 
 
 //======================================================================================================================
@@ -108,14 +136,14 @@ void chooseItemByIndex( QTreeView * view, const QModelIndex & index );
 
 /// Adds an item to the end of the list and selects it.
 template< typename ListModel >
-void appendItem( QListView * view, ListModel & model, const typename ListModel::Item & item )
+int appendItem( QListView * view, ListModel & model, const typename ListModel::Item & item )
 {
 	if (!model.canBeModified())
 	{
 		reportBugToUser( view->parentWidget(), "Model cannot be modified",
 			"Cannot append item because the model is locked for changes."
 		);
-		return;
+		return -1;
 	}
 
 	deselectAllAndUnsetCurrent( view );
@@ -127,6 +155,8 @@ void appendItem( QListView * view, ListModel & model, const typename ListModel::
 	model.finishAppending();
 
 	selectAndSetCurrentByIndex( view, model.size() - 1 );  // select the appended item
+
+	return model.size() - 1;
 }
 
 /// Adds an item to the begining of the list and selects it.
@@ -508,6 +538,25 @@ QVector<int> moveDownSelectedItems( QListView * view, ListModel & model )
 }
 
 bool editItemAtIndex( QListView * view, int index );
+
+
+
+
+//======================================================================================================================
+//  button actions for table widget
+
+
+/// Adds a row to the end of the table and selects it.
+int appendRow( QTableWidget * widget );
+
+/// Deletes a selected row and attempts to select the row following the deleted one.
+/** Returns the index of the selected and deleted row. Pops up a warning box if nothing is selected. */
+int deleteSelectedRow( QTableWidget * widget );
+
+void swapTableRows( QTableWidget * widget, int row1, int row2 );
+
+
+bool editCellAtIndex( QTableView * view, int row, int column );
 
 
 

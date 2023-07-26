@@ -12,6 +12,7 @@
 #include "DialogCommon.hpp"
 
 #include "CommonTypes.hpp"
+#include "UserData.hpp"  // EnvVars
 #include "Utils/EventFilters.hpp"
 
 #include <QDialog>
@@ -66,7 +67,7 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 	/// Starts a process and shows a window displaying its console output until the process finishes.
 	/** The process is started asynchronously, but this dialog will keep running until it quits and this function
 	  * will return when the dialog quits. Any errors with starting the process are handled by this function. */
-	ProcessStatus runProcess( const QString & executable, const QStringVec & arguments );
+	ProcessStatus runProcess( const QString & executable, const QStringVec & arguments, const EnvVars & envVars );
 
  private slots:
 

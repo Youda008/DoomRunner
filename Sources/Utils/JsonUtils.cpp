@@ -541,6 +541,6 @@ bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath, c
 		return false;
 	}
 
-	jsonDocCtx = JsonDocumentCtx( jsonDoc );
+	jsonDocCtx.setWrappedDoc( jsonDoc );
 	return true;
 }

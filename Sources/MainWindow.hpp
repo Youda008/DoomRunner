@@ -26,6 +26,7 @@
 #include <QFileInfo>
 #include <QFileSystemModel>
 
+class QTableWidget;
 class QItemSelection;
 class QComboBox;
 class QLineEdit;
@@ -140,6 +141,14 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onNoSFXToggled( bool checked );
 	void onNoMusicToggled( bool checked );
 
+	void presetEnvVarAdd();
+	void presetEnvVarDelete();
+	void globalEnvVarAdd();
+	void globalEnvVarDelete();
+
+	void onPresetEnvVarDataChanged( int row, int column );
+	void onGlobalEnvVarDataChanged( int row, int column );
+
 	void exportPresetToScript();
 	void exportPresetToShortcut();
 	void importPresetFromScript();
@@ -155,6 +164,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void setupIWADList();
 	void setupMapPackList();
 	void setupModList();
+
+	void setupEnvVarLists();
 
 	void updateOptionsGrpBoxTitles( const StorageSettings & storageSettings );
 
@@ -176,6 +187,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateDemoFilesFromDir( const QString * demoDir = nullptr );
 	void updateCompatLevels();
 	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
+
+	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
 
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();
@@ -201,7 +214,10 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void restoreAudioOptions( const AudioOptions & opts );
 	void restoreGlobalOptions( const GlobalOptions & opts );
 
+	void restoreEnvVars( const EnvVars & envVars, QTableWidget * table );
+
 	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
+	bool startDetached( const QString & executable, const QStringVec & arguments, const EnvVars & envVars );
 
 	os::ShellCommand generateLaunchCommand( const QString & outputBaseDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand();
@@ -256,6 +272,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	bool optionsCorrupted = false;   ///< true if there was a critical error during parsing of the options file, such content should not be saved
 
 	bool disableSelectionCallbacks = false;   ///< flag that temporarily disables callbacks like selectEngine(), selectConfig(), selectIWAD()
+	bool disableEnvVarsCallbacks = false;     ///< flag that temporarily disables environment variable callbacks when the list is manually messed with
 	bool restoringOptionsInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 	bool restoringPresetInProgress = false;   ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 

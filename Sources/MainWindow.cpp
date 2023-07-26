@@ -561,6 +561,7 @@ MainWindow::MainWindow()
 	setupIWADList();
 	setupMapPackList();
 	setupModList();
+	setupEnvVarLists();
 
 	// setup combo-boxes
 
@@ -801,20 +802,33 @@ void MainWindow::setupModList()
 	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::modToggleIcons );
 }
 
+void MainWindow::setupEnvVarLists()
+{
+	// setup buttons
+	connect( ui->presetEnvVarBtnAdd, &QToolButton::clicked, this, &thisClass::presetEnvVarAdd );
+	connect( ui->presetEnvVarBtnDel, &QToolButton::clicked, this, &thisClass::presetEnvVarDelete );
+	connect( ui->globalEnvVarBtnAdd, &QToolButton::clicked, this, &thisClass::globalEnvVarAdd );
+	connect( ui->globalEnvVarBtnDel, &QToolButton::clicked, this, &thisClass::globalEnvVarDelete );
+
+	// setup edit callbacks
+	connect( ui->presetEnvVarTable, &QTableWidget::cellChanged, this, &thisClass::onPresetEnvVarDataChanged );
+	connect( ui->globalEnvVarTable, &QTableWidget::cellChanged, this, &thisClass::onGlobalEnvVarDataChanged );
+}
+
 void MainWindow::loadMonitorInfo( QComboBox * box )
 {
 	const auto monitors = os::listMonitors();
 	for (const os::MonitorInfo & monitor : monitors)
 	{
-		QString monitorDesc;
-		QTextStream descStream( &monitorDesc, QIODevice::WriteOnly );
+		QString monitorDescription;
+		QTextStream descStream( &monitorDescription, QIODevice::WriteOnly );
 
 		descStream << monitor.name << " - " << monitor.width << 'x' << monitor.height;
 		if (monitor.isPrimary)
 			descStream << " (primary)";
 
 		descStream.flush();
-		box->addItem( std::move(monitorDesc) );
+		box->addItem( std::move(monitorDescription) );
 	}
 }
 
@@ -1259,6 +1273,9 @@ void MainWindow::togglePresetSubWidgets( bool enabled )
 	ui->modBtnUp->setEnabled( enabled );
 	ui->modBtnDown->setEnabled( enabled );
 	ui->presetCmdArgsLine->setEnabled( enabled );
+	ui->presetEnvVarTable->setEnabled( enabled );
+	ui->presetEnvVarBtnAdd->setEnabled( enabled );
+	ui->presetEnvVarBtnDel->setEnabled( enabled );
 }
 
 void MainWindow::clearPresetSubWidgets()
@@ -1519,7 +1536,7 @@ void MainWindow::presetAdd()
 {
 	uint presetNum = getHighestDefaultPresetNameIndex( presetModel.fullList() ) + 1;
 
-	wdg::appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum ) } );
+	int appendedIdx = wdg::appendItem( ui->presetListView, presetModel, { "Preset"+QString::number( presetNum ) } );
 
 	// clear the widgets to represent an empty preset
 	// the widgets must be cleared AFTER the new preset is added and selected, otherwise it will clear the prev preset
@@ -1529,7 +1546,7 @@ void MainWindow::presetAdd()
 	autoselectItems();
 
 	// open edit mode so that user can name the preset
-	ui->presetListView->edit( presetModel.index( presetModel.count() - 1, 0 ) );
+	wdg::editItemAtIndex( ui->presetListView, appendedIdx );
 
 	scheduleSavingOptions();
 }
@@ -2475,6 +2492,159 @@ void MainWindow::onNoMusicToggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
+//  environment variables
+
+static constexpr int VarNameColumn = 0;
+static constexpr int VarValueColumn = 1;
+
+void MainWindow::presetEnvVarAdd()
+{
+	disableEnvVarsCallbacks = true;
+	int appendedIdx = wdg::appendRow( ui->presetEnvVarTable );
+	disableEnvVarsCallbacks = false;
+
+	// also add it to the preset
+	Preset * preset = getSelectedPreset();
+	if (preset)
+	{
+		preset->envVars.append( os::EnvVar{} );
+	}
+
+	// open edit mode so that user can start writing the variable name
+	wdg::editCellAtIndex( ui->presetEnvVarTable, appendedIdx, VarNameColumn );
+
+	//scheduleSavingOptions();
+}
+
+void MainWindow::presetEnvVarDelete()
+{
+	disableEnvVarsCallbacks = true;
+	int deletedIdx = wdg::deleteSelectedRow( ui->presetEnvVarTable );
+	disableEnvVarsCallbacks = false;
+	if (deletedIdx < 0)  // no item was selected
+		return;
+
+	// also delete it from the preset
+	Preset * preset = getSelectedPreset();
+	if (preset)
+	{
+		preset->envVars.removeAt( deletedIdx );
+	}
+
+	scheduleSavingOptions();
+}
+
+void MainWindow::globalEnvVarAdd()
+{
+	disableEnvVarsCallbacks = true;
+	int appendedIdx = wdg::appendRow( ui->globalEnvVarTable );
+	disableEnvVarsCallbacks = false;
+
+	// also add it to the global options
+	globalOpts.envVars.append( os::EnvVar{} );
+
+	// open edit mode so that user can start writing the variable name
+	wdg::editCellAtIndex( ui->globalEnvVarTable, appendedIdx, VarNameColumn );
+
+	//scheduleSavingOptions();
+}
+
+void MainWindow::globalEnvVarDelete()
+{
+	disableEnvVarsCallbacks = true;
+	int deletedIdx = wdg::deleteSelectedRow( ui->globalEnvVarTable );
+	disableEnvVarsCallbacks = false;
+	if (deletedIdx < 0)  // no item was selected
+		return;
+
+	// also delete it from the global options
+	globalOpts.envVars.removeAt( deletedIdx );
+
+	scheduleSavingOptions();
+}
+
+static void swapEnvVarTableRows( QTableWidget * table, int row1, int row2 )
+{
+	QTableWidgetItem * nameItem1  = table->takeItem( row1, VarNameColumn );
+	QTableWidgetItem * valueItem1 = table->takeItem( row1, VarValueColumn );
+	QTableWidgetItem * nameItem2  = table->takeItem( row2, VarNameColumn );
+	QTableWidgetItem * valueItem2 = table->takeItem( row2, VarValueColumn );
+	table->setItem( row1, VarNameColumn,  nameItem2 );
+	table->setItem( row1, VarValueColumn, valueItem2 );
+	table->setItem( row2, VarNameColumn,  nameItem1 );
+	table->setItem( row2, VarValueColumn, valueItem1 );
+}
+
+void MainWindow::moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx )
+{
+	QString newVarName = table->item( rowIdx, VarNameColumn )->text();
+
+	// This must be done, otherwise table->takeItem() / table->setItem() will call onPresetEnvVarDataChanged(),
+	// and this function will be recursively called again.
+	disableEnvVarsCallbacks = true;
+
+	wdg::deselectAllAndUnsetCurrentRow( table );
+
+	while (rowIdx > 0 && newVarName < table->item( rowIdx - 1, VarNameColumn )->text())
+	{
+		swapEnvVarTableRows( table, rowIdx, rowIdx - 1 );
+		if (envVars)
+			std::swap( (*envVars)[ rowIdx ], (*envVars)[ rowIdx - 1 ] );
+		rowIdx -= 1;
+	}
+	while (rowIdx < table->rowCount() - 1 && newVarName > table->item( rowIdx + 1, VarNameColumn )->text())
+	{
+		swapEnvVarTableRows( table, rowIdx, rowIdx + 1 );
+		if (envVars)
+			std::swap( (*envVars)[ rowIdx ], (*envVars)[ rowIdx + 1 ] );
+		rowIdx += 1;
+	}
+
+	wdg::selectAndSetCurrentRowByIndex( table, rowIdx );
+
+	disableEnvVarsCallbacks = false;
+}
+
+void MainWindow::onPresetEnvVarDataChanged( int row, int column )
+{
+	if (disableEnvVarsCallbacks)
+		return;
+
+	Preset * preset = getSelectedPreset();
+	if (preset)
+	{
+		if (column == VarNameColumn)
+			preset->envVars[ row ].name = ui->presetEnvVarTable->item( row, column )->text();
+		else if (column == VarValueColumn)
+			preset->envVars[ row ].value = ui->presetEnvVarTable->item( row, column )->text();
+	}
+
+	if (column == VarNameColumn)
+	{
+		// the sort key has changed, move the entry so that the table remains sorted
+		moveEnvVarToKeepTableSorted( ui->presetEnvVarTable, preset ? &preset->envVars : nullptr, row );
+	}
+}
+
+void MainWindow::onGlobalEnvVarDataChanged( int row, int column )
+{
+	if (disableEnvVarsCallbacks)
+		return;
+
+	if (column == VarNameColumn)
+		globalOpts.envVars[ row ].name = ui->globalEnvVarTable->item( row, column )->text();
+	else if (column == VarValueColumn)
+		globalOpts.envVars[ row ].value = ui->globalEnvVarTable->item( row, column )->text();
+
+	if (column == VarNameColumn)
+	{
+		// the sort key has changed, move the entry so that the table remains sorted
+		moveEnvVarToKeepTableSorted( ui->globalEnvVarTable, &globalOpts.envVars, row );
+	}
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
 //  additional command line arguments
 
 void MainWindow::onPresetCmdArgsChanged( const QString & text )
@@ -3264,6 +3434,8 @@ void MainWindow::restorePreset( int presetIdx )
 	// restore additional command line arguments
 	ui->presetCmdArgsLine->setText( preset.cmdArgs );
 
+	restoreEnvVars( preset.envVars, ui->presetEnvVarTable );
+
 	restoringPresetInProgress = false;
 
 	// if "Use preset name as directory" is enabled, overwrite the preset custom directories with its name
@@ -3401,6 +3573,23 @@ void MainWindow::restoreGlobalOptions( const GlobalOptions & opts )
 	ui->usePresetNameChkBox->setChecked( opts.usePresetNameAsDir );
 
 	ui->globalCmdArgsLine->setText( opts.cmdArgs );
+
+	restoreEnvVars( opts.envVars, ui->globalEnvVarTable );
+}
+
+void MainWindow::restoreEnvVars( const EnvVars & envVars, QTableWidget * table )
+{
+	disableEnvVarsCallbacks = true;
+
+	for (const auto & envVar : envVars)
+	{
+		int newRowIdx = table->rowCount();
+		table->insertRow( newRowIdx );
+		table->setItem( newRowIdx, VarNameColumn, new QTableWidgetItem( envVar.name ) );
+		table->setItem( newRowIdx, VarValueColumn, new QTableWidgetItem( envVar.value ) );
+	}
+
+	disableEnvVarsCallbacks = false;
 }
 
 
@@ -3821,6 +4010,23 @@ int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const
 	return answer;
 }
 
+bool MainWindow::startDetached( const QString & executable, const QStringVec & arguments, const EnvVars & envVars )
+{
+	QProcess process;
+
+	process.setProgram( executable );
+	process.setArguments( arguments.toList() );
+
+	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+	for (const auto & envVar : envVars)
+	{
+		env.insert( envVar.name, envVar.value );
+	}
+	process.setProcessEnvironment(env);
+
+	return process.startDetached();
+}
+
 void MainWindow::launch()
 {
 	const EngineInfo * selectedEngine = getSelectedEngine();
@@ -3880,17 +4086,21 @@ void MainWindow::launch()
 		updateListsFromDirs();
 	});
 
+	EnvVars envVars = globalOpts.envVars;
+	if (Preset * preset = getSelectedPreset())
+		envVars += preset->envVars;
+
 	//qDebug() << cmd.executable << cmd.arguments;
 
 	if (settings.showEngineOutput)
 	{
 		ProcessOutputWindow processWindow( this );
-		processWindow.runProcess( cmd.executable, cmd.arguments );
+		processWindow.runProcess( cmd.executable, cmd.arguments, envVars );
 		//int resultCode = processWindow.result();
 	}
 	else
 	{
-		bool success = QProcess::startDetached( cmd.executable, cmd.arguments.toList() );
+		bool success = startDetached( cmd.executable, cmd.arguments, envVars );
 		if (!success)
 		{
 			QMessageBox::warning( this, "Launch error", "Failed to execute launch command." );

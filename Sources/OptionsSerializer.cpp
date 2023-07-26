@@ -52,8 +52,8 @@ static void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 		engine.name = jsEngine.getString( "name", "<missing name>" );
 		engine.executablePath = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
 		engine.configDir = jsEngine.getString( "config_dir", fs::getDirOfFile( engine.executablePath ) );
-		engine.dataDir = jsEngine.getString( "data_dir", engine.configDir, DontShowError );
-		engine.family = familyFromStr( jsEngine.getString( "family", {}, DontShowError ) );
+		engine.dataDir = jsEngine.getString( "data_dir", engine.configDir );
+		engine.family = familyFromStr( jsEngine.getString( "family", {} ) );
 		if (engine.family == EngineFamily::_EnumEnd)
 			engine.family = guessEngineFamily( fs::getFileBasenameFromPath( engine.executablePath ) );
 	}
@@ -287,7 +287,7 @@ static void deserialize( const JsonObjectCtx & jsOptions, CompatibilityOptions &
 {
 	opts.compatflags1 = jsOptions.getInt( "compatflags1", opts.compatflags1 );
 	opts.compatflags2 = jsOptions.getInt( "compatflags2", opts.compatflags2 );
-	opts.compatLevel = jsOptions.getInt( "compat_level", opts.compatLevel, DontShowError );
+	opts.compatLevel = jsOptions.getInt( "compat_level", opts.compatLevel );
 }
 
 static QJsonObject serialize( const AlternativePaths & opts )
@@ -323,7 +323,7 @@ static void deserialize( const JsonObjectCtx & jsOptions, VideoOptions & opts )
 	opts.monitorIdx = jsOptions.getInt( "monitor_idx", opts.monitorIdx );
 	opts.resolutionX = jsOptions.getUInt( "resolution_x", opts.resolutionX );
 	opts.resolutionY = jsOptions.getUInt( "resolution_y", opts.resolutionY );
-	opts.showFPS = jsOptions.getBool( "show_fps", opts.showFPS, DontShowError );
+	opts.showFPS = jsOptions.getBool( "show_fps", opts.showFPS );
 }
 
 static QJsonObject serialize( const AudioOptions & opts )
@@ -531,7 +531,7 @@ static void serialize( QJsonObject & jsSettings, const LauncherSettings & settin
 
 static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
 {
-	settings.appStyle = jsSettings.getString( "app_style", {}, DontShowError );  // null value means system-default
+	settings.appStyle = jsSettings.getString( "app_style", {} );  // null value means system-default
 	ColorScheme colorScheme = schemeFromString( jsSettings.getString( "color_scheme" ) );
 	if (colorScheme != ColorScheme::_EnumEnd)
 		settings.colorScheme = colorScheme;  // otherwise leave default
@@ -795,7 +795,7 @@ static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDocCtx, O
 	// we want to print a useful error message with information exactly which JSON element is broken.
 	const JsonObjectCtx & jsRoot = jsonDocCtx.rootObject();
 
-	QString optsVersionStr = jsRoot.getString( "version", "", DontShowError );
+	QString optsVersionStr = jsRoot.getString( "version", {}, DontShowError );
 	Version optsVersion( optsVersionStr );
 
 	if (!optsVersionStr.isEmpty() && optsVersion > appVersion)  // empty version means pre-1.4 version
@@ -807,7 +807,7 @@ static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDocCtx, O
 	}
 
 	// backward compatibility with older options format
-	if (optsVersionStr.isEmpty() || optsVersion < "1.7")
+	if (optsVersionStr.isEmpty() || optsVersion < Version(1,7))
 	{
 		jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version
 

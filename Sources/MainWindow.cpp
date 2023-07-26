@@ -571,6 +571,7 @@ MainWindow::MainWindow()
 	configModel.append({""});  // always have an empty item, so that index doesn't have to switch between -1 and 0
 	ui->configCmbBox->setModel( &configModel );
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onConfigSelected );
+	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::cloneConfig );
 
 	ui->saveFileCmbBox->setModel( &saveModel );
 	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onSavedGameSelected );
@@ -584,22 +585,6 @@ MainWindow::MainWindow()
 	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::onDemoFileChanged_record );
 
 	ui->compatLevelCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
-
-	// setup buttons
-
-	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::cloneConfig );
-
-	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &thisClass::presetAdd );
-	connect( ui->presetBtnDel, &QToolButton::clicked, this, &thisClass::presetDelete );
-	connect( ui->presetBtnClone, &QToolButton::clicked, this, &thisClass::presetClone );
-	connect( ui->presetBtnUp, &QToolButton::clicked, this, &thisClass::presetMoveUp );
-	connect( ui->presetBtnDown, &QToolButton::clicked, this, &thisClass::presetMoveDown );
-
-	connect( ui->modBtnAdd, &QToolButton::clicked, this, &thisClass::modAdd );
-	connect( ui->modBtnAddDir, &QToolButton::clicked, this, &thisClass::modAddDir );
-	connect( ui->modBtnDel, &QToolButton::clicked, this, &thisClass::modDelete );
-	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
-	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
 	// setup launch options callbacks
 
@@ -698,6 +683,13 @@ void MainWindow::setupPresetList()
 	connect( ui->presetListView->moveItemDownAction, &QAction::triggered, this, &thisClass::presetMoveDown );
 	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::presetInsertSeparator );
 
+	// setup buttons
+	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &thisClass::presetAdd );
+	connect( ui->presetBtnDel, &QToolButton::clicked, this, &thisClass::presetDelete );
+	connect( ui->presetBtnClone, &QToolButton::clicked, this, &thisClass::presetClone );
+	connect( ui->presetBtnUp, &QToolButton::clicked, this, &thisClass::presetMoveUp );
+	connect( ui->presetBtnDown, &QToolButton::clicked, this, &thisClass::presetMoveDown );
+
 	// setup search
 	presetSearchPanel = new SearchPanel( ui->searchShowBtn, ui->searchLine, ui->caseSensitiveChkBox, ui->regexChkBox );
 	ui->presetListView->enableFinding();
@@ -795,6 +787,13 @@ void MainWindow::setupModList()
 	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
 	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
 	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::modInsertSeparator );
+
+	// setup buttons
+	connect( ui->modBtnAdd, &QToolButton::clicked, this, &thisClass::modAdd );
+	connect( ui->modBtnAddDir, &QToolButton::clicked, this, &thisClass::modAddDir );
+	connect( ui->modBtnDel, &QToolButton::clicked, this, &thisClass::modDelete );
+	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
+	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
 	// setup icons
 	ui->modListView->enableTogglingIcons();  // allow the icons to be toggled via context-menu

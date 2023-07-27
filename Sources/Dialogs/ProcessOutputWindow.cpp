@@ -96,12 +96,13 @@ ProcessOutputWindow::~ProcessOutputWindow()
 	if (process.state() != QProcess::NotRunning)
 	{
 		// last resort, window is quiting, we cannot let the process continue
-		//qDebug() << "    killing process";
+		qDebug() << "    killing process";
 		this->ownStatus = ProcessStatus::Dying;
 		process.kill();
 	}
 
 	delete ui;
+	ui = nullptr;
 }
 
 void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & detail )
@@ -281,6 +282,11 @@ void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus 
 {
 	//qDebug() << "processFinished:" << exitCode << "," << exitStatus;
 
+	// This callback can be called even from destructor when destroying QProcess.
+	// In that case, don't do anything and abort because our own data are already destroyed.
+	if (ui == nullptr)
+		return;
+
 	if (ownStatus == ProcessStatus::ShuttingDown)  // user requested to terminate the process and now it finally shut down
 	{
 		setOwnStatus( ProcessStatus::Terminated );
@@ -326,6 +332,11 @@ void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus 
 void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 {
 	//qDebug() << "errorOccurred:" << error;
+
+	// This callback can be called even from destructor when destroying QProcess.
+	// In that case, don't do anything and abort because our own data are already destroyed.
+	if (ui == nullptr)
+		return;
 
 	// When we kill the process, Qt consideres it crashed, so it calls this function.
 	// But we don't want to report it as crashed because we essentially made it crash on purpose.

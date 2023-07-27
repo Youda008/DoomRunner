@@ -15,6 +15,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 //  icons
 
+static const QIcon emptyIcon;
+
 // Not sure how QIcon is implemented and how heavy is its construction and copying,
 // so we better cache it and return references.
 // Especially on Windows the icon loading via QFileIconProvider seems notably slow.
@@ -25,6 +27,11 @@ static std::optional< QFileIconProvider > g_iconProvider;
 
 const QIcon & Mod::getIcon() const
 {
+	if (isCmdArg)
+	{
+		return emptyIcon;
+	}
+
 	if (!g_iconProvider)
 	{
 		g_iconProvider.emplace();

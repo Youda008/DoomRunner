@@ -754,7 +754,7 @@ void MainWindow::setupModList()
 	modModel.toggleCheckableItems( true );
 
 	// setup editing and separators
-	modModel.toggleEditing( false );
+	modModel.toggleEditing( true );
 	ui->modListView->toggleNameEditing( true );
 	ui->modListView->toggleListModifications( true );
 
@@ -772,9 +772,11 @@ void MainWindow::setupModList()
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
+	addCmdArgAction = ui->modListView->addAction( "Add command line argument", {} );
 	ui->modListView->enableInsertSeparator();
 	ui->modListView->enableOpenFileLocation();
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &thisClass::modAdd );
+	connect( addCmdArgAction, &QAction::triggered, this, &thisClass::modAddArg );
 	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &thisClass::modDelete );
 	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
 	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
@@ -783,6 +785,7 @@ void MainWindow::setupModList()
 	// setup buttons
 	connect( ui->modBtnAdd, &QToolButton::clicked, this, &thisClass::modAdd );
 	connect( ui->modBtnAddDir, &QToolButton::clicked, this, &thisClass::modAddDir );
+	connect( ui->modBtnAddArg, &QToolButton::clicked, this, &thisClass::modAddArg );
 	connect( ui->modBtnDel, &QToolButton::clicked, this, &thisClass::modDelete );
 	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
@@ -1414,17 +1417,33 @@ void MainWindow::onModDataChanged( const QModelIndex & topLeft, const QModelInde
 	int topModIdx = topLeft.row();
 	int bottomModIdx = bottomRight.row();
 
-	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
+	auto updateEachModifiedModInPreset = [ this, topModIdx, bottomModIdx ]( const auto & updateMod )
 	{
-		// update the current preset
 		Preset * selectedPreset = getSelectedPreset();
 		if (selectedPreset && !restoringPresetInProgress)
 		{
 			for (int idx = topModIdx; idx <= bottomModIdx; idx++)
 			{
-				selectedPreset->mods[ idx ].checked = modModel[ idx ].checked;
+				updateMod( selectedPreset->mods[ idx ], modModel[ idx ] );
 			}
 		}
+	};
+
+	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
+	{
+		// update the current preset
+		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
+		{
+			presetMod.checked = changedMod.checked;
+		});
+	}
+	else if (roles.contains( Qt::EditRole ))  // name of separator or data of custom cmd argument changed
+	{
+		// update the current preset
+		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
+		{
+			presetMod.fileName = changedMod.fileName;
+		});
 	}
 
 	scheduleSavingOptions( true );  // we can assume options storage was modified, otherwise this callback wouldn't be called
@@ -1743,6 +1762,27 @@ void MainWindow::modAddDir()
 	updateLaunchCommand();
 }
 
+void MainWindow::modAddArg()
+{
+	Mod mod;
+	mod.isCmdArg = true;
+	mod.checked = true;
+
+	int appendedIdx = wdg::appendItem( ui->modListView, modModel, mod );
+
+	// add it also to the current preset
+	if (Preset * selectedPreset = getSelectedPreset())
+	{
+		selectedPreset->mods.append( mod );
+	}
+
+	// open edit mode so that user can enter the command line argument
+	wdg::editItemAtIndex( ui->modListView, appendedIdx );
+
+	scheduleSavingOptions();
+	updateLaunchCommand();
+}
+
 void MainWindow::modDelete()
 {
 	QVector<int> deletedIndexes = wdg::deleteSelectedItems( ui->modListView, modModel );
@@ -1767,7 +1807,7 @@ void MainWindow::modDelete()
 
 void MainWindow::modMoveUp()
 {
-	restoringPresetInProgress = true;  // prevent modDataChanged() from updating our preset too early and incorrectly
+	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
 	QVector<int> movedIndexes = wdg::moveUpSelectedItems( ui->modListView, modModel );
 
@@ -1791,7 +1831,7 @@ void MainWindow::modMoveUp()
 
 void MainWindow::modMoveDown()
 {
-	restoringPresetInProgress = true;  // prevent modDataChanged() from updating our preset too early and incorrectly
+	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
 	QVector<int> movedIndexes = wdg::moveDownSelectedItems( ui->modListView, modModel );
 
@@ -3380,7 +3420,7 @@ void MainWindow::restorePreset( int presetIdx )
 		for (Mod & mod : preset.mods)
 		{
 			modModel.append( mod );
-			if (!mod.isSeparator && !fs::isValidEntry( mod.path ))
+			if ((!mod.isSeparator && !mod.isCmdArg) && !fs::isValidEntry( mod.path ))
 			{
 				// Let's just highlight it now, we will show warning when the user tries to launch it.
 				//QMessageBox::warning( this, "Mod no longer exists",
@@ -3774,21 +3814,34 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		cmd.arguments << "-iwad" << engineDirRebaser.rebaseAndQuotePath( selectedIWAD->path );
 	}
 
-	// Older engines only accept single -file parameter, so we must first collect all the additional files in this list.
-	QStringVec additionalFiles;
+	// This part is tricky.
+	// Older engines only accept single -file parameter, so all the regular map/mod files must be listed together.
+	// But the user is allowed to intersperse the regular files with deh/bex files or custom cmd arguments.
+	// So we must somehow build an ordered sequence of mod files and custom arguments in which all the regular files are
+	// grouped together, and the easiest option seems to be by using a placeholder item.
+
+	QStringVec modArguments;
+	QStringVec fileList;
+
+	auto addFileAccordingToSuffix = [&]( const QString & filePath )
+	{
+		QString suffix = QFileInfo( filePath ).suffix().toLower();
+		if (suffix == "deh") {
+			modArguments << "-deh" << engineDirRebaser.rebaseAndQuotePath( filePath );
+		} else if (suffix == "bex") {
+			modArguments << "-bex" << engineDirRebaser.rebaseAndQuotePath( filePath );
+		} else {
+			if (fileList.isEmpty())
+				modArguments << "-file" << "<file_list>";  // insert placeholder where all the files will be together
+			fileList.append( engineDirRebaser.rebaseAndQuotePath( filePath ) );
+		}
+	};
 
 	// map files
 	forEachSelectedMapPack( [&]( const QString & mapFilePath )
 	{
 		p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
-
-		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
-		if (suffix == "deh")
-			cmd.arguments << "-deh" << engineDirRebaser.rebaseAndQuotePath( mapFilePath );
-		else if (suffix == "bex")
-			cmd.arguments << "-bex" << engineDirRebaser.rebaseAndQuotePath( mapFilePath );
-		else
-			additionalFiles.append( mapFilePath );
+		addFileAccordingToSuffix( mapFilePath );
 	});
 
 	// mod files
@@ -3796,23 +3849,26 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	{
 		if (mod.checked)
 		{
-			p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
-
-			QString suffix = QFileInfo( mod.path ).suffix().toLower();
-			if (suffix == "deh")
-				cmd.arguments << "-deh" << engineDirRebaser.rebaseAndQuotePath( mod.path );
-			else if (suffix == "bex")
-				cmd.arguments << "-bex" << engineDirRebaser.rebaseAndQuotePath( mod.path );
-			else
-				additionalFiles.append( mod.path );
+			if (mod.isCmdArg) {  // this is not a file but a custom command line argument
+				modArguments << mod.fileName;  // the fileName holds the argument value
+			} else {
+				p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
+				addFileAccordingToSuffix( mod.path );
+			}
 		}
 	}
 
-	// combine all additional game files under a single -file parameter
-	if (!additionalFiles.empty())
-		cmd.arguments << "-file";
-	for (const QString & filePath : additionalFiles)
-		cmd.arguments << engineDirRebaser.rebaseAndQuotePath( filePath );
+	// output the final sequence to the cmd.arguments
+	for (QString & modArgument : modArguments)
+	{
+		if (modArgument == "<file_list>") {
+			// replace the placeholder with the actual list
+			for (QString & filePath : fileList)
+				cmd.arguments << std::move(filePath);
+		} else {
+			cmd.arguments << std::move(modArgument);
+		}
+	}
 
 	//-- alternative directories ---------------------------------------------------
 	// Rather set them before the launch parameters, because some of the parameters

@@ -83,9 +83,10 @@ struct Mod : public EditableListModelItem
 	QString path;           ///< path to the mod file
 	QString fileName;       ///< cached last part of path, beware of inconsistencies
 	bool checked = false;   ///< whether this mod is selected to be loaded
+	bool isCmdArg = false;  ///< indicates that this is a special item used to insert a custom command line argument between the mod files
 
 	// requirements of EditableListModel
-	bool isEditable() const                 { return true; }
+	bool isEditable() const                 { return isCmdArg; }
 	const QString & getEditString() const   { return fileName; }
 	void setEditString( QString str )       { fileName = std::move(str); }
 	bool isCheckable() const                { return true; }

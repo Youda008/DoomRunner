@@ -89,6 +89,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void modAdd();
 	void modAddDir();
+	void modAddArg();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
@@ -263,6 +264,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	Ui::MainWindow * ui = nullptr;
 	SearchPanel * presetSearchPanel = nullptr;
+
+	QAction * addCmdArgAction = nullptr;
 
 	uint tickCount = 0;
 

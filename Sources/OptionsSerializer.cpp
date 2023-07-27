@@ -131,6 +131,12 @@ static QJsonObject serialize( const Mod & mod )
 		jsMod["separator"] = true;
 		jsMod["name"] = mod.fileName;
 	}
+	else if (mod.isCmdArg)
+	{
+		jsMod["cmd_argument"] = true;
+		jsMod["value"] = mod.fileName;
+		jsMod["checked"] = mod.checked;
+	}
 	else
 	{
 		jsMod["path"] = mod.path;
@@ -142,10 +148,14 @@ static QJsonObject serialize( const Mod & mod )
 
 static void deserialize( const JsonObjectCtx & jsMod, Mod & mod )
 {
-	mod.isSeparator = jsMod.getBool( "separator", false, DontShowError );
-	if (mod.isSeparator)
+	if ((mod.isSeparator = jsMod.getBool( "separator", false, DontShowError )))
 	{
 		mod.fileName = jsMod.getString( "name", "<missing name>" );
+	}
+	else if ((mod.isCmdArg = jsMod.getBool( "cmd_argument", false, DontShowError )))
+	{
+		mod.fileName = jsMod.getString( "value", "<missing value>" );
+		mod.checked = jsMod.getBool( "checked", mod.checked );
 	}
 	else
 	{
@@ -479,10 +489,13 @@ static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const 
 			Mod mod;
 			deserialize( jsMod, mod );
 
-			if (mod.isSeparator && mod.fileName.isEmpty())  // element isn't present in JSON -> skip this entry
-				continue;
-			else if (!mod.isSeparator && mod.path.isEmpty())  // element isn't present in JSON -> skip this entry
-				continue;
+			if (mod.isSeparator || mod.isCmdArg) {
+				if (mod.fileName.isEmpty())  // vital element is missing in the JSON -> skip this entry
+					continue;
+			} else {
+				if (mod.path.isEmpty())  // vital element is missing in the JSON -> skip this entry
+					continue;
+			}
 
 			// check path or not?
 

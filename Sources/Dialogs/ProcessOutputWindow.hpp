@@ -64,10 +64,22 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 	explicit ProcessOutputWindow( QWidget * parent );
 	virtual ~ProcessOutputWindow() override;
 
-	/// Starts a process and shows a window displaying its console output until the process finishes.
-	/** The process is started asynchronously, but this dialog will keep running until it quits and this function
-	  * will return when the dialog quits. Any errors with starting the process are handled by this function. */
-	ProcessStatus runProcess( const QString & executable, const QStringVec & arguments, const EnvVars & envVars );
+	/// Starts a process and shows a window displaying its standard output until the process finishes.
+	/**
+	  * The process is started asynchronously, but this dialog will keep running until it quits and this function
+	  * will return when the dialog quits.
+	  * Any errors with starting the process are handled by this function.
+	  *
+	  * \param executable Path to the executable file. Must be either absolute or relative to the current working dir.
+	  * \param arguments Program arguments. Any file paths must be either absolute or relative to the workingDir argument.
+	  * \param workingDir Working directory for the started process. All file paths given via arguments must be relative to this.
+	  *                   If not specified, the current working directory is used.
+	  * \param envVars Optional evironment variables to be set for the starting process.
+	  * \return In which state of the process was the dialog closed.
+	  */
+	ProcessStatus runProcess(
+		const QString & executable, const QStringVec & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
+	);
 
  private slots:
 

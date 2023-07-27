@@ -181,14 +181,14 @@ inline static QString fixExePath( QString exePath )
 }
 
 ShellCommand getRunCommand(
-	const QString & executablePath, const PathRebaser & currentDirToNewBaseDir, const QStringVec & dirsToBeAccessed
+	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, const QStringVec & dirsToBeAccessed
 ){
 	ShellCommand cmd;
 	QStringVec cmdParts;
 
 	SandboxInfo traits = getSandboxInfo( executablePath );
 
-	// different installations require different ways to launch the engine executable
+	// different installations require different ways to launch the program executable
  #ifdef FLATPAK_BUILD
 	if (fs::getAbsoluteDirOfFile( executablePath ) == QApplication::applicationDirPath())
 	{
@@ -219,7 +219,7 @@ ShellCommand getRunCommand(
 		for (const QString & dir : dirsToBeAccessed)
 		{
 			QString fileSystemPermission = "--filesystem=" + fs::getAbsolutePath( dir );
-			cmdParts << currentDirToNewBaseDir.maybeQuoted( fileSystemPermission );
+			cmdParts << currentDirToNewWorkingDir.maybeQuoted( fileSystemPermission );
 			cmd.extraPermissions << std::move(fileSystemPermission);
 		}
 		cmdParts << traits.appName;
@@ -232,7 +232,8 @@ ShellCommand getRunCommand(
 	}
 	else
 	{
-		cmdParts << currentDirToNewBaseDir.maybeQuoted( fixExePath( currentDirToNewBaseDir.rebasePath( executablePath ) ) );
+		QString rebasedExePath = fixExePath( currentDirToNewWorkingDir.rebasePath( executablePath ) );
+		cmdParts << currentDirToNewWorkingDir.maybeQuoted( rebasedExePath );
 	}
 
 	cmd.executable = cmdParts.takeFirst();

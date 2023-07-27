@@ -217,9 +217,13 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void restoreEnvVars( const EnvVars & envVars, QTableWidget * table );
 
 	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
-	bool startDetached( const QString & executable, const QStringVec & arguments, const EnvVars & envVars );
+	bool startDetached(
+		const QString & executable, const QStringVec & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
+	);
 
-	os::ShellCommand generateLaunchCommand( const QString & targetWorkingDir, bool verifyPaths, bool quotePaths );
+	os::ShellCommand generateLaunchCommand(
+		const QString & parentWorkingDir, const QString & engineWorkingDir, bool verifyPaths, bool quotePaths
+	);
 	void updateLaunchCommand();
 
  private: // MainWindow-specific utils
@@ -261,8 +265,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	SearchPanel * presetSearchPanel = nullptr;
 
 	uint tickCount = 0;
-
-	bool engineRunning = false;
 
 	QDir appDataDir;   ///< directory where this application can store its data
 	QString optionsFilePath;

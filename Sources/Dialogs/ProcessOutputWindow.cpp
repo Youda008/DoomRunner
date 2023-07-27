@@ -187,8 +187,9 @@ void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & de
 	}
 }
 
-ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const QStringVec & arguments, const EnvVars & envVars )
-{
+ProcessStatus ProcessOutputWindow::runProcess(
+	const QString & executable, const QStringVec & arguments, const QString & workingDir, const EnvVars & envVars
+){
 	//qDebug() << "runProcess:" << executable;
 
 	executableName = fs::getFileNameFromPath( executable );
@@ -196,6 +197,7 @@ ProcessStatus ProcessOutputWindow::runProcess( const QString & executable, const
 
 	process.setProgram( executable );
 	process.setArguments( arguments.toList() );
+	process.setWorkingDirectory( workingDir );
 	process.setProcessChannelMode( QProcess::MergedChannels );  // merge stdout and stderr
 
 	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();

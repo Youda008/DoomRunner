@@ -964,20 +964,12 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 
 	if (tickCount % dirUpdateDelay == 0)
 	{
-		// Because the current dir is now different, the launcher's paths no longer work,
-		// so prevent reloading lists from directories because user would lose selection.
-		if (!engineRunning)
-		{
-			updateListsFromDirs();
-		}
+		updateListsFromDirs();
 	}
 
 	if (tickCount % 10 == 0)
 	{
-		// Because the current dir is now different, the launcher's paths no longer work,
-		// so prevent saving options into unwanted directories.
-		if (!engineRunning
-		 && optionsNeedUpdate  // don't do unnecessary file writes when nothing has changed
+		if (optionsNeedUpdate   // don't do unnecessary file writes when nothing has changed
 		 && !optionsCorrupted)  // don't overwrite existing file with empty data, just because there was a syntax error
 		{
 			saveOptions( optionsFilePath );
@@ -3614,7 +3606,9 @@ void MainWindow::exportPresetToScript()
 	QFileInfo scriptFileInfo( scriptFilePath );
 	QString scriptDir = scriptFileInfo.path();
 
-	auto cmd = generateLaunchCommand( scriptDir, DontVerifyPaths, QuotePaths );
+	// Both the executable and the paths in the arguments need to be relative to the directory of the script file,
+	// because the script will set the working directory to it's own directory.
+	auto cmd = generateLaunchCommand( scriptDir, scriptDir, DontVerifyPaths, QuotePaths );
 
 	lastUsedDir = std::move(scriptDir);
 
@@ -3627,7 +3621,15 @@ void MainWindow::exportPresetToScript()
 
 	QTextStream stream( &scriptFile );
 
-	stream << cmd.executable << " " << cmd.arguments.join(' ') << endl;  // keep endl to maintain compatibility with older Qt
+	// make sure the working directory is set to the script file's directory
+ #if IS_WINDOWS
+	stream << "cd \"%~dp0\"\n";
+ #else
+	stream << "#!/bin/bash\n\n";
+	stream << "cd $(dirname $(readlink -f \"$0\"))\n";
+ #endif
+
+	stream << cmd.executable << " " << cmd.arguments.join(' ') << '\n';
 
 	scriptFile.close();
 }
@@ -3658,19 +3660,16 @@ void MainWindow::exportPresetToShortcut()
 
 	lastUsedDir = fs::getDirOfFile( shortcutPath );
 
-	// The paths in the arguments needs to be relative to the engine's directory
-	// because it will be executed with the working directory set to engine's directory,
+	// The paths in the arguments need to be relative to the engine's directory
+	// because the engine will be executed with the working directory set to engine's directory,
 	// But the executable itself must be either absolute or relative to the current working dir
 	// so that it is correctly saved to the shortcut.
-	QString enginePath = selectedEngine->executablePath;
-	QString engineDir = fs::getAbsoluteDirOfFile( enginePath );
+	QString currentWorkingDir = pathConvertor.workingDir().path();
+	QString engineWorkingDir = fs::getAbsoluteDirOfFile( selectedEngine->executablePath );
 
-	auto cmd = generateLaunchCommand( engineDir, DontVerifyPaths, QuotePaths );
+	auto cmd = generateLaunchCommand( currentWorkingDir, engineWorkingDir, DontVerifyPaths, QuotePaths );
 
-	// Use enginePath (relative to the current working dir of this running application),
-	// not cmd.executable (relative to the engineDir).
-	// Paths in cmd.arguments must be relative to the engineDir.
-	bool success = os::createWindowsShortcut( shortcutPath, enginePath, cmd.arguments, engineDir, selectedPreset->name );
+	bool success = os::createWindowsShortcut( shortcutPath, cmd.executable, cmd.arguments, engineWorkingDir, selectedPreset->name );
 	if (!success)
 	{
 		QMessageBox::warning( this, "Cannot create shortcut", "Failed to create a shortcut. Check permissions." );
@@ -3711,11 +3710,12 @@ void MainWindow::updateLaunchCommand()
 
 	QString curCommand = ui->commandLine->text();
 
-	// The command needs to be relative to the engine's directory,
-	// because it will be executed with the working directory set to engine's directory.
+	// The paths in the arguments need to be relative to the engine's directory,
+	// because the engine will be executed with the working directory set to engine's directory.
+	// The relative path of the executable does not matter, because here it is for displaying only.
 	QString engineDir = fs::getDirOfFile( selectedEngine->executablePath );
 
-	auto cmd = generateLaunchCommand( engineDir, DontVerifyPaths, QuotePaths );
+	auto cmd = generateLaunchCommand( engineDir, engineDir, DontVerifyPaths, QuotePaths );
 
 	QString newCommand = cmd.executable % ' ' % cmd.arguments.join(' ');
 
@@ -3729,12 +3729,27 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
-os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkingDir, bool verifyPaths, bool quotePaths )
-{
+/// Generates a command to be run, displayed or saved to a script file, according to the specified options.
+/**
+  * \param parentWorkingDir Working directory when the command is executed by the parent process.
+  *                         This will determine the relative path of the executable in the command.
+  * \param engineWorkingDir Working directory for the engine process that will be started.
+  *                         This will determine the relative paths of the file or directory arguments passed to the engine.
+  * \param verifyPaths Verify that each path in the command is valid and leads to the correct entry type (file or directory).
+  *                    If invalid path is found, display a message box with an error description.
+  * \param quotePaths Surround each path in the command with quotes.
+  *                   Required for displaying the command or saving it to a script file.
+  */
+os::ShellCommand MainWindow::generateLaunchCommand(
+	const QString & parentWorkingDir, const QString & engineWorkingDir, bool verifyPaths, bool quotePaths
+){
 	os::ShellCommand cmd;
 
-	// All stored paths are relative to DoomRunner's directory, but we need them relative to targetWorkingDir (engine dir or script dir).
-	PathRebaser rebaser( pathConvertor.workingDir(), targetWorkingDir, pathConvertor.pathStyle(), quotePaths );
+	// The stored engine path is relative to DoomRunner's directory, but we need it relative to parentWorkingDir.
+	PathRebaser parentDirRebaser( pathConvertor.workingDir(), parentWorkingDir, pathConvertor.pathStyle(), quotePaths );
+	// All stored paths are relative to DoomRunner's directory, but we need them relative to engineWorkingDir.
+	PathRebaser engineDirRebaser( pathConvertor.workingDir(), engineWorkingDir, pathConvertor.pathStyle(), quotePaths );
+
 	PathChecker p( this, verifyPaths );
 
 	//-- engine --------------------------------------------------------------------
@@ -3751,7 +3766,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkin
 		p.checkItemFilePath( engine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
 		// get the beginning of the launch command based on OS and installation type
-		cmd = os::getRunCommand( engine.executablePath, rebaser, getDirsToBeAccessed() );
+		cmd = os::getRunCommand( engine.executablePath, parentDirRebaser, getDirsToBeAccessed() );
 	}
 
 	//-- engine's config -----------------------------------------------------------
@@ -3763,7 +3778,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkin
 		QString configPath = fs::getPathFromFileName( engine.configDir, configModel[ configIdx ].fileName );
 
 		p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
-		cmd.arguments << "-config" << rebaser.rebaseAndQuotePath( configPath );
+		cmd.arguments << "-config" << engineDirRebaser.rebaseAndQuotePath( configPath );
 	}
 
 	//-- game data files -----------------------------------------------------------
@@ -3773,7 +3788,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkin
 	if (selectedIWAD)
 	{
 		p.checkItemFilePath( *selectedIWAD, "selected IWAD", "Please select another one." );
-		cmd.arguments << "-iwad" << rebaser.rebaseAndQuotePath( selectedIWAD->path );
+		cmd.arguments << "-iwad" << engineDirRebaser.rebaseAndQuotePath( selectedIWAD->path );
 	}
 
 	// Older engines only accept single -file parameter, so we must first collect all the additional files in this list.
@@ -3786,9 +3801,9 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkin
 
 		QString suffix = QFileInfo( mapFilePath ).suffix().toLower();
 		if (suffix == "deh")
-			cmd.arguments << "-deh" << rebaser.rebaseAndQuotePath( mapFilePath );
+			cmd.arguments << "-deh" << engineDirRebaser.rebaseAndQuotePath( mapFilePath );
 		else if (suffix == "bex")
-			cmd.arguments << "-bex" << rebaser.rebaseAndQuotePath( mapFilePath );
+			cmd.arguments << "-bex" << engineDirRebaser.rebaseAndQuotePath( mapFilePath );
 		else
 			additionalFiles.append( mapFilePath );
 	});
@@ -3802,9 +3817,9 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkin
 
 			QString suffix = QFileInfo( mod.path ).suffix().toLower();
 			if (suffix == "deh")
-				cmd.arguments << "-deh" << rebaser.rebaseAndQuotePath( mod.path );
+				cmd.arguments << "-deh" << engineDirRebaser.rebaseAndQuotePath( mod.path );
 			else if (suffix == "bex")
-				cmd.arguments << "-bex" << rebaser.rebaseAndQuotePath( mod.path );
+				cmd.arguments << "-bex" << engineDirRebaser.rebaseAndQuotePath( mod.path );
 			else
 				additionalFiles.append( mod.path );
 		}
@@ -3814,7 +3829,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkin
 	if (!additionalFiles.empty())
 		cmd.arguments << "-file";
 	for (const QString & filePath : additionalFiles)
-		cmd.arguments << rebaser.rebaseAndQuotePath( filePath );
+		cmd.arguments << engineDirRebaser.rebaseAndQuotePath( filePath );
 
 	//-- alternative directories ---------------------------------------------------
 	// Rather set them before the launch parameters, because some of the parameters
@@ -3825,14 +3840,14 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkin
 		// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to the target dir
 		QString trueSaveDirPath = engineDataDirRebaser.rebasePathBack( ui->saveDirLine->text() );
 		p.checkNotAFile( trueSaveDirPath, "the save dir", {} );
-		cmd.arguments << engine.saveDirParam() << rebaser.rebaseAndQuotePath( trueSaveDirPath );
+		cmd.arguments << engine.saveDirParam() << engineDirRebaser.rebaseAndQuotePath( trueSaveDirPath );
 	}
 	if (!ui->screenshotDirLine->text().isEmpty())
 	{
 		// the path in screenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the target dir
 		QString trueScreenshotDirPath = engineDataDirRebaser.rebasePathBack( ui->screenshotDirLine->text() );
 		p.checkNotAFile( trueScreenshotDirPath, "the screenshot dir", {} );
-		cmd.arguments << "+screenshot_dir" << rebaser.rebaseAndQuotePath( trueScreenshotDirPath );
+		cmd.arguments << "+screenshot_dir" << engineDirRebaser.rebaseAndQuotePath( trueScreenshotDirPath );
 	}
 
 	//-- launch mode and parameters ------------------------------------------------
@@ -3849,13 +3864,13 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkin
 		QString saveDir = getSaveDir();  // save dir cannot be empty, otherwise the saveFileCmbBox would be empty
 		QString trueSavePath = fs::getPathFromFileName( saveDir, ui->saveFileCmbBox->currentText() );
 		p.checkFilePath( trueSavePath, "the selected save file", "Please select another one." );
-		cmd.arguments << "-loadgame" << rebaseSaveFilePath( trueSavePath, rebaser, &engine );
+		cmd.arguments << "-loadgame" << rebaseSaveFilePath( trueSavePath, engineDirRebaser, &engine );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
 		QString demoDir = getDemoDir();            // if demo dir is empty (saveDirLine is empty and engine.configDir is not set), then
 		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileLine_record->text() );  // the demoFileLine will be used as is
-		cmd.arguments << "-record" << rebaser.rebaseAndQuotePath( demoPath );
+		cmd.arguments << "-record" << engineDirRebaser.rebaseAndQuotePath( demoPath );
 		cmd.arguments << engine.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
@@ -3863,7 +3878,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkin
 		QString demoDir = getDemoDir();  // demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
 		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileCmbBox_replay->currentText() );
 		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
-		cmd.arguments << "-playdemo" << rebaser.rebaseAndQuotePath( demoPath );
+		cmd.arguments << "-playdemo" << engineDirRebaser.rebaseAndQuotePath( demoPath );
 	}
 
 	//-- gameplay and compatibility options ----------------------------------------
@@ -4010,12 +4025,14 @@ int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const
 	return answer;
 }
 
-bool MainWindow::startDetached( const QString & executable, const QStringVec & arguments, const EnvVars & envVars )
-{
+bool MainWindow::startDetached(
+	const QString & executable, const QStringVec & arguments, const QString & workingDir, const EnvVars & envVars
+){
 	QProcess process;
 
 	process.setProgram( executable );
 	process.setArguments( arguments.toList() );
+	process.setWorkingDirectory( workingDir );
 
 	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 	for (const auto & envVar : envVars)
@@ -4036,16 +4053,19 @@ void MainWindow::launch()
 		return;
 	}
 
-	QString engineDir = fs::getAbsoluteDirOfFile( selectedEngine->executablePath );
+	QString currentWorkingDir = pathConvertor.workingDir().path();
+	QString engineWorkingDir = fs::getAbsoluteDirOfFile( selectedEngine->executablePath );
 
 	// Re-run the command construction, but display error message and abort when there is invalid path.
 	// When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
-	// All paths will be relative to the engine's dir, because current dir will be set to the engine's dir when started.
-	os::ShellCommand cmd = generateLaunchCommand( engineDir, VerifyPaths, DontQuotePaths );
+	// All paths will be relative to the engine's dir, because working dir will be set to the engine's dir when started.
+	auto cmd = generateLaunchCommand( currentWorkingDir, engineWorkingDir, VerifyPaths, DontQuotePaths );
 	if (cmd.executable.isNull())
 	{
 		return;  // errors are already shown during the generation
 	}
+
+	//qDebug() << cmd.executable << cmd.arguments;
 
 	// If extra permissions are needed to run the engine inside its sandbox environment, better ask the user.
 	if (settings.askForSandboxPermissions && !cmd.extraPermissions.isEmpty())
@@ -4070,38 +4090,25 @@ void MainWindow::launch()
 		}
 	}
 
-	// Before we execute the command, we need to switch the current dir to the engine's dir,
-	// because some engines search for their own files in the current dir and would fail if started from elsewhere.
+	// We need to start the process with the working dir set to the engine's dir,
+	// because some engines search for their own files in the working dir and would fail if started from elsewhere.
 	// The command paths are always generated relative to the engine's dir.
-	QString currentDir = QDir::currentPath();
-	QDir::setCurrent( engineDir );
-	// Because the current dir is now different, the launcher's paths no longer work,
-	// so prevent reloading lists from directories because user would lose selection.
-	engineRunning = true;
+	const QString & processWorkingDir = engineWorkingDir;
 
-	// at the end of function restore the previous current dir
-	auto guard = atScopeEndDo( [&]()
-	{
-		QDir::setCurrent( currentDir );
-		engineRunning = false;
-		updateListsFromDirs();
-	});
-
+	// merge optional environment variables defined globally and defined for this preset
 	EnvVars envVars = globalOpts.envVars;
 	if (Preset * preset = getSelectedPreset())
 		envVars += preset->envVars;
 
-	//qDebug() << cmd.executable << cmd.arguments;
-
 	if (settings.showEngineOutput)
 	{
 		ProcessOutputWindow processWindow( this );
-		processWindow.runProcess( cmd.executable, cmd.arguments, envVars );
+		processWindow.runProcess( cmd.executable, cmd.arguments, processWorkingDir, envVars );
 		//int resultCode = processWindow.result();
 	}
 	else
 	{
-		bool success = startDetached( cmd.executable, cmd.arguments, envVars );
+		bool success = startDetached( cmd.executable, cmd.arguments, processWorkingDir, envVars );
 		if (!success)
 		{
 			QMessageBox::warning( this, "Launch error", "Failed to execute launch command." );

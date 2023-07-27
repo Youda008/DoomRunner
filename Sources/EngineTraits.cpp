@@ -186,7 +186,8 @@ EngineTraits::SaveBaseDir EngineTraits::baseDirStyleForSaveFiles() const
 {
 	assert( hasAppInfo() );
 
-	if (_appNameNormalized == "gzdoom" && _exeVersionInfo.version >= Version(4,9,0))
+	// if we can't read the exe info, assume the latest GZDoom
+	if (!_exeVersionInfo.version.isValid() || (_appNameNormalized == "gzdoom" && _exeVersionInfo.version >= Version(4,9,0)))
 		return SaveBaseDir::SaveDir;
 	else
 		return SaveBaseDir::WorkingDir;

@@ -71,6 +71,7 @@ struct IWAD : public EditableListModelItem
 	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
 
 	// requirements of EditableListModel
+	bool isEditable() const                 { return true; }
 	const QString & getEditString() const   { return name; }
 	void setEditString( QString str )       { name = std::move(str); }
 	const QString & getFilePath() const     { return path; }
@@ -84,8 +85,10 @@ struct Mod : public EditableListModelItem
 	bool checked = false;   ///< whether this mod is selected to be loaded
 
 	// requirements of EditableListModel
+	bool isEditable() const                 { return true; }
 	const QString & getEditString() const   { return fileName; }
 	void setEditString( QString str )       { fileName = std::move(str); }
+	bool isCheckable() const                { return true; }
 	bool isChecked() const                  { return checked; }
 	void setChecked( bool checked )         { this->checked = checked; }
 	const QString & getFilePath() const     { return path; }
@@ -266,6 +269,7 @@ struct Preset : public EditableListModelItem
 	EnvVars envVars;
 
 	// requirements of EditableListModel
+	bool isEditable() const                 { return true; }
 	const QString & getEditString() const   { return name; }
 	void setEditString( QString str )       { name = std::move(str); }
 	QString getID() const                   { return name; }

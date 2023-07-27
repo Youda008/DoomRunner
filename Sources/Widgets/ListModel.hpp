@@ -123,6 +123,11 @@ struct ReadOnlyListModelItem
   * The following methods should be overriden to point to the appropriate members. */
 struct EditableListModelItem : public ReadOnlyListModelItem
 {
+	bool isEditable() const
+	{
+		return false;
+	}
+
 	const QString & getEditString() const
 	{
 		throw std::logic_error(
@@ -137,6 +142,11 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 			"Edit has been requested, but editing this Item is not implemented. "
 			"Either re-implement setEditString() or disable editing in the view."
 		);
+	}
+
+	bool isCheckable() const
+	{
+		return false;
 	}
 
 	bool isChecked() const
@@ -599,6 +609,24 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	void setPathContext( const PathConvertor * pathConvertor ) { this->pathConvertor = pathConvertor; }
 
 
+	//-- helpers -------------------------------------------------------------------------------------------------------
+
+	bool canBeEdited( const Item & item ) const
+	{
+		return (editingEnabled && item.isEditable()) || item.isSeparator;
+	}
+
+	bool canBeChecked( const Item & item ) const
+	{
+		return (checkableItems && item.isCheckable()) && !item.isSeparator;
+	}
+
+	bool canHaveIcon( const Item & item ) const
+	{
+		return iconsEnabled && !item.isSeparator;
+	}
+
+
 	//-- implementation of QAbstractItemModel's virtual methods --------------------------------------------------------
 
 	virtual int rowCount( const QModelIndex & = QModelIndex() ) const override
@@ -616,9 +644,9 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		Qt::ItemFlags flags = QAbstractListModel::flags( index );
 
 		flags |= Qt::ItemIsDragEnabled;
-		if (editingEnabled || item.isSeparator)
+		if (canBeEdited( item ))
 			flags |= Qt::ItemIsEditable;
-		if (checkableItems && !item.isSeparator)
+		if (canBeChecked( item ))
 			flags |= Qt::ItemIsUserCheckable;
 
 		return flags;
@@ -639,11 +667,11 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 				// to specify it by a function for each view separately.
 				return makeDisplayString( item );
 			}
-			else if (role == Qt::EditRole && (editingEnabled || item.isSeparator))
+			else if (role == Qt::EditRole && canBeEdited( item ))
 			{
 				return item.getEditString();
 			}
-			else if (role == Qt::CheckStateRole && checkableItems)
+			else if (role == Qt::CheckStateRole && canBeChecked( item ))
 			{
 				return item.isChecked() ? Qt::Checked : Qt::Unchecked;
 			}
@@ -672,7 +700,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 				else
 					return QVariant();  // default
 			}
-			else if (role == Qt::DecorationRole && iconsEnabled && !item.isSeparator)
+			else if (role == Qt::DecorationRole && canHaveIcon( item ))
 			{
 				return item.getIcon();
 			}
@@ -701,13 +729,13 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		try
 		{
-			if (role == Qt::EditRole && (editingEnabled || item.isSeparator))
+			if (role == Qt::EditRole && canBeEdited( item ))
 			{
 				item.setEditString( value.toString() );
 				emit QAbstractListModel::dataChanged( index, index, {Qt::EditRole} );
 				return true;
 			}
-			else if (role == Qt::CheckStateRole && checkableItems)
+			else if (role == Qt::CheckStateRole && canBeChecked( item ))
 			{
 				item.setChecked( value == Qt::Checked ? true : false );
 				emit QAbstractListModel::dataChanged( index, index, {Qt::CheckStateRole} );

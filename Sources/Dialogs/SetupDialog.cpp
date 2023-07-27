@@ -109,16 +109,6 @@ SetupDialog::SetupDialog(
 
 	connect( ui->iwadSubdirs, &QCheckBox::toggled, this, &thisClass::onIWADSubdirsToggled );
 
-	connect( ui->iwadBtnAdd, &QPushButton::clicked, this, &thisClass::iwadAdd );
-	connect( ui->iwadBtnDel, &QPushButton::clicked, this, &thisClass::iwadDelete );
-	connect( ui->iwadBtnUp, &QPushButton::clicked, this, &thisClass::iwadMoveUp );
-	connect( ui->iwadBtnDown, &QPushButton::clicked, this, &thisClass::iwadMoveDown );
-
-	connect( ui->engineBtnAdd, &QPushButton::clicked, this, &thisClass::engineAdd );
-	connect( ui->engineBtnDel, &QPushButton::clicked, this, &thisClass::engineDelete );
-	connect( ui->engineBtnUp, &QPushButton::clicked, this, &thisClass::engineMoveUp );
-	connect( ui->engineBtnDown, &QPushButton::clicked, this, &thisClass::engineMoveDown );
-
 	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::onAbsolutePathsToggled );
 
 	connect( ui->styleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onAppStyleSelected );
@@ -173,6 +163,12 @@ void SetupDialog::setupEngineList()
 	connect( ui->engineListView->moveItemUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
 	connect( ui->engineListView->moveItemDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
 	connect( setDefaultEngineAction, &QAction::triggered, this, &thisClass::setEngineAsDefault );
+
+	// setup buttons
+	connect( ui->engineBtnAdd, &QPushButton::clicked, this, &thisClass::engineAdd );
+	connect( ui->engineBtnDel, &QPushButton::clicked, this, &thisClass::engineDelete );
+	connect( ui->engineBtnUp, &QPushButton::clicked, this, &thisClass::engineMoveUp );
+	connect( ui->engineBtnDown, &QPushButton::clicked, this, &thisClass::engineMoveDown );
 }
 
 void SetupDialog::setupIWADList()
@@ -208,6 +204,12 @@ void SetupDialog::setupIWADList()
 	connect( ui->iwadListView->moveItemUpAction, &QAction::triggered, this, &thisClass::iwadMoveUp );
 	connect( ui->iwadListView->moveItemDownAction, &QAction::triggered, this, &thisClass::iwadMoveDown );
 	connect( setDefaultIWADAction, &QAction::triggered, this, &thisClass::setIWADAsDefault );
+
+	// setup buttons
+	connect( ui->iwadBtnAdd, &QPushButton::clicked, this, &thisClass::iwadAdd );
+	connect( ui->iwadBtnDel, &QPushButton::clicked, this, &thisClass::iwadDelete );
+	connect( ui->iwadBtnUp, &QPushButton::clicked, this, &thisClass::iwadMoveUp );
+	connect( ui->iwadBtnDown, &QPushButton::clicked, this, &thisClass::iwadMoveDown );
 }
 
 void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
@@ -280,7 +282,7 @@ void SetupDialog::engineAdd()
 	EngineDialog dialog( this, pathConvertor, {}, lastUsedDir );
 
 	int code = dialog.exec();
-	
+
 	lastUsedDir = dialog.takeLastUsedDir();
 
 	if (code == QDialog::Accepted)
@@ -333,7 +335,7 @@ void SetupDialog::editEngine( const QModelIndex & index )
 	EngineDialog dialog( this, pathConvertor, selectedEngine, lastUsedDir );
 
 	int code = dialog.exec();
-	
+
 	lastUsedDir = dialog.takeLastUsedDir();
 
 	if (code == QDialog::Accepted)
@@ -422,6 +424,8 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadListView->toggleIntraWidgetDragAndDrop( !enabled );
 	ui->iwadListView->toggleExternalFileDragAndDrop( !enabled );
 
+	iwadModel.toggleEditing( !enabled );
+	ui->iwadListView->toggleNameEditing( !enabled );
 	ui->iwadListView->toggleListModifications( !enabled );
 
 	// populate the list

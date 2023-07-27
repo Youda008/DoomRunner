@@ -150,7 +150,7 @@ QString MainWindow::getDataDir() const
 
 QString MainWindow::getSaveDir() const
 {
-	// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to current dir
+	// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
 	QString saveDirLine = ui->saveDirLine->text();
 	if (!saveDirLine.isEmpty())                                     // if custom save dir is specified
 		return engineDataDirRebaser.rebasePathBack( saveDirLine );  // then use it
@@ -193,7 +193,7 @@ QString MainWindow::rebaseSaveFilePath( const QString & filePath, const PathReba
 	if (engine && engine->baseDirStyleForSaveFiles() == EngineTraits::SaveBaseDir::SaveDir)
 	{
 		QString saveDir = getSaveDir();
-		PathRebaser saveDirRebaser( pathConvertor.baseDir(), saveDir, PathStyle::Relative, workingDirRebaser.quotePaths() );
+		PathRebaser saveDirRebaser( pathConvertor.workingDir(), saveDir, PathStyle::Relative, workingDirRebaser.quotePaths() );
 		return saveDirRebaser.rebaseAndQuotePath( filePath );
 	}
 	else
@@ -500,7 +500,7 @@ MainWindow::MainWindow()
 		// so that all file-system operations instantly work without the need to rebase the paths first.
 		this, PathConvertor( QDir::current(), defaultPathStyle )
 	),
-	engineDataDirRebaser( {}, {}, defaultPathStyle ),  // rebase to current dir (don't rebase at all) until engine is selected
+	engineDataDirRebaser( {}, {}, defaultPathStyle ),  // rebase to current working dir (don't rebase at all) until engine is selected
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
@@ -2356,7 +2356,7 @@ void MainWindow::onUsePresetNameToggled( bool checked )
 
 void MainWindow::onSaveDirChanged( const QString & rebasedDir )
 {
-	// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to current dir
+	// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
 	QString trueDirPath = engineDataDirRebaser.rebasePathBack( rebasedDir );
 
 	bool storageModified = false;
@@ -2381,7 +2381,7 @@ void MainWindow::onSaveDirChanged( const QString & rebasedDir )
 
 void MainWindow::onScreenshotDirChanged( const QString & rebasedDir )
 {
-	// the path in screenshotDirLine is relative to the engine's data dir by convention, need to rebase it to current dir
+	// the path in screenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
 	QString trueDirPath = engineDataDirRebaser.rebasePathBack( rebasedDir );
 
 	bool storageModified = false;
@@ -2404,26 +2404,26 @@ void MainWindow::onScreenshotDirChanged( const QString & rebasedDir )
 
 void MainWindow::browseSaveDir()
 {
-	// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to current dir
-	QString currentDir = engineDataDirRebaser.rebasePathBack( ui->saveDirLine->text() );
+	// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
+	QString currentSaveDir = engineDataDirRebaser.rebasePathBack( ui->saveDirLine->text() );
 
-	QString newDir = DialogWithPaths::browseDir( this, "with saves", currentDir );
-	if (newDir.isEmpty())  // user probably clicked cancel
+	QString newSaveDir = DialogWithPaths::browseDir( this, "with saves", currentSaveDir );
+	if (newSaveDir.isEmpty())  // user probably clicked cancel
 		return;
 
-	ui->saveDirLine->setText( engineDataDirRebaser.rebasePath( newDir ) );
+	ui->saveDirLine->setText( engineDataDirRebaser.rebasePath( newSaveDir ) );
 }
 
 void MainWindow::browseScreenshotDir()
 {
-	// the path in screenshotDirLine is relative to the engine's data dir by convention, need to rebase it to current dir
-	QString currentDir = engineDataDirRebaser.rebasePathBack( ui->screenshotDirLine->text() );
+	// the path in screenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
+	QString currentScreenshotDir = engineDataDirRebaser.rebasePathBack( ui->screenshotDirLine->text() );
 
-	QString newDir = DialogWithPaths::browseDir( this, "for screenshots", currentDir );
-	if (newDir.isEmpty())  // user probably clicked cancel
+	QString newScreenshotDir = DialogWithPaths::browseDir( this, "for screenshots", currentScreenshotDir );
+	if (newScreenshotDir.isEmpty())  // user probably clicked cancel
 		return;
 
-	ui->screenshotDirLine->setText( engineDataDirRebaser.rebasePath( newDir ) );
+	ui->screenshotDirLine->setText( engineDataDirRebaser.rebasePath( newScreenshotDir ) );
 }
 
 
@@ -3659,18 +3659,18 @@ void MainWindow::exportPresetToShortcut()
 	lastUsedDir = fs::getDirOfFile( shortcutPath );
 
 	// The paths in the arguments needs to be relative to the engine's directory
-	// because it will be executed with the current directory set to engine's directory,
+	// because it will be executed with the working directory set to engine's directory,
 	// But the executable itself must be either absolute or relative to the current working dir
 	// so that it is correctly saved to the shortcut.
 	QString enginePath = selectedEngine->executablePath;
-	QString workingDir = fs::getAbsoluteDirOfFile( enginePath );
+	QString engineDir = fs::getAbsoluteDirOfFile( enginePath );
 
-	auto cmd = generateLaunchCommand( workingDir, DontVerifyPaths, QuotePaths );
+	auto cmd = generateLaunchCommand( engineDir, DontVerifyPaths, QuotePaths );
 
 	// Use enginePath (relative to the current working dir of this running application),
-	// not cmd.executable (relative to the workingDir - the engine dir).
-	// Paths in cmd.arguments must be relative to the workingDir.
-	bool success = os::createWindowsShortcut( shortcutPath, enginePath, cmd.arguments, workingDir, selectedPreset->name );
+	// not cmd.executable (relative to the engineDir).
+	// Paths in cmd.arguments must be relative to the engineDir.
+	bool success = os::createWindowsShortcut( shortcutPath, enginePath, cmd.arguments, engineDir, selectedPreset->name );
 	if (!success)
 	{
 		QMessageBox::warning( this, "Cannot create shortcut", "Failed to create a shortcut. Check permissions." );
@@ -3712,7 +3712,7 @@ void MainWindow::updateLaunchCommand()
 	QString curCommand = ui->commandLine->text();
 
 	// The command needs to be relative to the engine's directory,
-	// because it will be executed with the current directory set to engine's directory.
+	// because it will be executed with the working directory set to engine's directory.
 	QString engineDir = fs::getDirOfFile( selectedEngine->executablePath );
 
 	auto cmd = generateLaunchCommand( engineDir, DontVerifyPaths, QuotePaths );
@@ -3729,12 +3729,12 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
-os::ShellCommand MainWindow::generateLaunchCommand( const QString & outputBaseDir, bool verifyPaths, bool quotePaths )
+os::ShellCommand MainWindow::generateLaunchCommand( const QString & targetWorkingDir, bool verifyPaths, bool quotePaths )
 {
 	os::ShellCommand cmd;
 
-	// All stored paths are relative to DoomRunner's directory, but we need them relative to outputBaseDir (engine dir or script dir).
-	PathRebaser rebaser( pathConvertor.baseDir(), outputBaseDir, pathConvertor.pathStyle(), quotePaths );
+	// All stored paths are relative to DoomRunner's directory, but we need them relative to targetWorkingDir (engine dir or script dir).
+	PathRebaser rebaser( pathConvertor.workingDir(), targetWorkingDir, pathConvertor.pathStyle(), quotePaths );
 	PathChecker p( this, verifyPaths );
 
 	//-- engine --------------------------------------------------------------------
@@ -3836,8 +3836,8 @@ os::ShellCommand MainWindow::generateLaunchCommand( const QString & outputBaseDi
 	}
 
 	//-- launch mode and parameters ------------------------------------------------
-	// Beware that while -record and -playdemo are either absolute or relative to the working dir
-	// -loadgame might need to be relative to -savedir, depending on the engine and version
+	// Beware that while -record and -playdemo are either absolute or relative to the current working dir
+	// -loadgame might need to be relative to -savedir, depending on the engine and its version
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 	if (launchMode == LaunchMap)
@@ -4040,6 +4040,7 @@ void MainWindow::launch()
 
 	// Re-run the command construction, but display error message and abort when there is invalid path.
 	// When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
+	// All paths will be relative to the engine's dir, because current dir will be set to the engine's dir when started.
 	os::ShellCommand cmd = generateLaunchCommand( engineDir, VerifyPaths, DontQuotePaths );
 	if (cmd.executable.isNull())
 	{

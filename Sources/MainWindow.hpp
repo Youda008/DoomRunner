@@ -219,7 +219,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
 	bool startDetached( const QString & executable, const QStringVec & arguments, const EnvVars & envVars );
 
-	os::ShellCommand generateLaunchCommand( const QString & outputBaseDir, bool verifyPaths, bool quotePaths );
+	os::ShellCommand generateLaunchCommand( const QString & targetWorkingDir, bool verifyPaths, bool quotePaths );
 	void updateLaunchCommand();
 
  private: // MainWindow-specific utils
@@ -278,7 +278,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
 
-	PathRebaser engineDataDirRebaser;   ///< path convertor set up to rebase relative paths from current dir to engine's data dir and back
+	PathRebaser engineDataDirRebaser;   ///< path convertor set up to rebase relative paths from the current working dir to the engine's data dir and back
 
 	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
 

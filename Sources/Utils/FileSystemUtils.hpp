@@ -191,17 +191,17 @@ void traverseDirectory(
 
 
 //======================================================================================================================
-/** Helper for calculating relative and absolute paths according to current directory and path style settings. */
+/** Helper for calculating relative and absolute paths according to a working directory and path style settings. */
 
 class PathConvertor {
 
-	QDir _baseDir;  ///< directory which relative paths are relative to
+	QDir _workingDir;  ///< directory which relative paths are relative to
 	PathStyle _pathStyle;  ///< whether to store paths to engines, IWADs, maps and mods in absolute or relative form
 
  public:
 
-	PathConvertor( const QDir & baseDir, PathStyle pathStyle )
-		: _baseDir( baseDir ), _pathStyle( pathStyle ) {}
+	PathConvertor( const QDir & workingDir, PathStyle pathStyle )
+		: _workingDir( workingDir ), _pathStyle( pathStyle ) {}
 
 	PathConvertor( const QDir & baseDir, bool useAbsolutePaths )
 		: PathConvertor( baseDir, useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative ) {}
@@ -211,22 +211,22 @@ class PathConvertor {
 	PathConvertor & operator=( const PathConvertor & other ) = default;
 	PathConvertor & operator=( PathConvertor && other ) = default;
 
-	const QDir & baseDir() const                       { return _baseDir; }
+	const QDir & workingDir() const                    { return _workingDir; }
 	PathStyle pathStyle() const                        { return _pathStyle; }
 	bool usingAbsolutePaths() const                    { return _pathStyle == PathStyle::Absolute; }
 	bool usingRelativePaths() const                    { return _pathStyle == PathStyle::Relative; }
 
-	void setBaseDir( const QDir & baseDir )            { _baseDir = baseDir; }
+	void setWorkingDir( const QDir & workingDir )      { _workingDir = workingDir; }
 	void setPathStyle( PathStyle pathStyle )           { _pathStyle = pathStyle; }
 	void toggleAbsolutePaths( bool useAbsolutePaths )  { _pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative; }
 
 	QString getAbsolutePath( const QString & path ) const
 	{
-		return path.isEmpty() ? QString() : QFileInfo( _baseDir, path ).absoluteFilePath();
+		return path.isEmpty() ? QString() : QFileInfo( _workingDir, path ).absoluteFilePath();
 	}
 	QString getRelativePath( const QString & path ) const
 	{
-		return path.isEmpty() ? QString() : _baseDir.relativeFilePath( path );
+		return path.isEmpty() ? QString() : _workingDir.relativeFilePath( path );
 	}
 	QString convertPath( const QString & path ) const
 	{

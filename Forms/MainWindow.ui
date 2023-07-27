@@ -221,6 +221,12 @@
            <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,8,10">
             <item>
              <widget class="QGroupBox" name="engineGrpBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="title">
                <string>2. Select engine</string>
               </property>
@@ -235,6 +241,12 @@
                 <widget class="QComboBox" name="engineCmbBox">
                  <property name="enabled">
                   <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
                 </widget>
                </item>
@@ -316,6 +328,12 @@
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
              <widget class="QGroupBox" name="configGrpBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="title">
                <string>5. Select config (optional)</string>
               </property>
@@ -331,6 +349,12 @@
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -341,14 +365,11 @@
                  <property name="minimumSize">
                   <size>
                    <width>26</width>
-                   <height>0</height>
+                   <height>26</height>
                   </size>
                  </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Create a copy of the selected config with a new name&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>...</string>
                  </property>
                  <property name="icon">
                   <iconset resource="../Resources/Resources.qrc">
@@ -445,9 +466,6 @@
                    </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add a custom command line argument&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="text">
-                    <string>...</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -632,7 +650,7 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -740,7 +758,7 @@
                   <bool>false</bool>
                  </property>
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -1346,12 +1364,6 @@
                        <verstretch>0</verstretch>
                       </sizepolicy>
                      </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>1</width>
-                       <height>0</height>
-                      </size>
-                     </property>
                      <property name="toolTip">
                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                      </property>
@@ -1665,7 +1677,7 @@
                <item>
                 <widget class="QComboBox" name="monitorCmbBox">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>

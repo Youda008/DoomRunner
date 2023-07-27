@@ -216,15 +216,15 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void restoreEnvVars( const EnvVars & envVars, QTableWidget * table );
 
+	void updateLaunchCommand();
+	os::ShellCommand generateLaunchCommand(
+		const QString & parentWorkingDir, const QString & engineWorkingDir, bool verifyPaths, bool quotePaths
+	);
+
 	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
 	bool startDetached(
 		const QString & executable, const QStringVec & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
 	);
-
-	os::ShellCommand generateLaunchCommand(
-		const QString & parentWorkingDir, const QString & engineWorkingDir, bool verifyPaths, bool quotePaths
-	);
-	void updateLaunchCommand();
 
  private: // MainWindow-specific utils
 

@@ -235,8 +235,7 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 	}
 
 	// dir of IWAD
-	const IWAD * selectedIWAD = getSelectedIWAD();
-	if (selectedIWAD)
+	if (const IWAD * selectedIWAD = getSelectedIWAD())
 	{
 		loopBody( fs::getDirOfFile( selectedIWAD->path ) );
 	}
@@ -308,8 +307,7 @@ LaunchOptions & MainWindow::activeLaunchOptions()
 {
 	if (settings.launchOptsStorage == StoreToPreset)
 	{
-		Preset * selectedPreset = getSelectedPreset();
-		if (selectedPreset)
+		if (Preset * selectedPreset = getSelectedPreset())
 		{
 			return selectedPreset->launchOpts;
 		}
@@ -324,8 +322,7 @@ MultiplayerOptions & MainWindow::activeMultiplayerOptions()
 {
 	if (settings.launchOptsStorage == StoreToPreset)
 	{
-		Preset * selectedPreset = getSelectedPreset();
-		if (selectedPreset)
+		if (Preset * selectedPreset = getSelectedPreset())
 		{
 			return selectedPreset->multOpts;
 		}
@@ -340,8 +337,7 @@ GameplayOptions & MainWindow::activeGameplayOptions()
 {
 	if (settings.gameOptsStorage == StoreToPreset)
 	{
-		Preset * selectedPreset = getSelectedPreset();
-		if (selectedPreset)
+		if (Preset * selectedPreset = getSelectedPreset())
 		{
 			return selectedPreset->gameOpts;
 		}
@@ -356,8 +352,7 @@ CompatibilityOptions & MainWindow::activeCompatOptions()
 {
 	if (settings.compatOptsStorage == StoreToPreset)
 	{
-		Preset * selectedPreset = getSelectedPreset();
-		if (selectedPreset)
+		if (Preset * selectedPreset = getSelectedPreset())
 		{
 			return selectedPreset->compatOpts;
 		}
@@ -372,8 +367,7 @@ VideoOptions & MainWindow::activeVideoOptions()
 {
 	if (settings.videoOptsStorage == StoreToPreset)
 	{
-		Preset * selectedPreset = getSelectedPreset();
-		if (selectedPreset)
+		if (Preset * selectedPreset = getSelectedPreset())
 		{
 			return selectedPreset->videoOpts;
 		}
@@ -388,8 +382,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 {
 	if (settings.audioOptsStorage == StoreToPreset)
 	{
-		Preset * selectedPreset = getSelectedPreset();
-		if (selectedPreset)
+		if (Preset * selectedPreset = getSelectedPreset())
 		{
 			return selectedPreset->audioOpts;
 		}
@@ -404,8 +397,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 #define STORE_TO_CURRENT_PRESET( presetMember, value ) [&]()\
 {\
 	bool valueChanged = false; \
-	Preset * selectedPreset = getSelectedPreset(); \
-	if (selectedPreset) \
+	if (Preset * selectedPreset = getSelectedPreset()) \
 	{\
 		valueChanged = selectedPreset->presetMember != (value); \
 		selectedPreset->presetMember = (value); \
@@ -421,8 +413,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 	/* otherwise we would overwrite a stored value we want to restore later. */ \
 	if (!restoringPresetInProgress) \
 	{\
-		Preset * selectedPreset = getSelectedPreset(); \
-		if (selectedPreset) \
+		if (Preset * selectedPreset = getSelectedPreset()) \
 		{\
 			valueChanged = selectedPreset->presetMember != (value); \
 			selectedPreset->presetMember = (value); \
@@ -1743,8 +1734,7 @@ void MainWindow::modAddDir()
 	wdg::appendItem( ui->modListView, modModel, mod );
 
 	// add it also to the current preset
-	Preset * selectedPreset = getSelectedPreset();
-	if (selectedPreset)
+	if (Preset * selectedPreset = getSelectedPreset())
 	{
 		selectedPreset->mods.append( mod );
 	}
@@ -1761,8 +1751,7 @@ void MainWindow::modDelete()
 		return;
 
 	// remove it also from the current preset
-	Preset * selectedPreset = getSelectedPreset();
-	if (selectedPreset)
+	if (Preset * selectedPreset = getSelectedPreset())
 	{
 		int deletedCnt = 0;
 		for (int deletedIdx : deletedIndexes)
@@ -1788,8 +1777,7 @@ void MainWindow::modMoveUp()
 		return;
 
 	// move it up also in the preset
-	Preset * selectedPreset = getSelectedPreset();
-	if (selectedPreset)
+	if (Preset * selectedPreset = getSelectedPreset())
 	{
 		for (int movedIdx : movedIndexes)
 		{
@@ -1813,8 +1801,7 @@ void MainWindow::modMoveDown()
 		return;
 
 	// move it down also in the preset
-	Preset * selectedPreset = getSelectedPreset();
-	if (selectedPreset)
+	if (Preset * selectedPreset = getSelectedPreset())
 	{
 		for (int movedIdx : movedIndexes)
 		{
@@ -1838,8 +1825,7 @@ void MainWindow::modInsertSeparator()
 	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );
 
 	// insert it also to the current preset
-	Preset * selectedPreset = getSelectedPreset();
-	if (selectedPreset)
+	if (Preset * selectedPreset = getSelectedPreset())
 	{
 		selectedPreset->mods.insert( insertIdx, separator );
 	}
@@ -1860,8 +1846,7 @@ void MainWindow::modToggleIcons()
 void MainWindow::onModsDropped( int dropRow, int count )
 {
 	// update the preset
-	Preset * selectedPreset = getSelectedPreset();
-	if (selectedPreset)
+	if (Preset * selectedPreset = getSelectedPreset())
 	{
 		selectedPreset->mods = modModel.list();  // not the most optimal way, but the size of the list will be always small
 	}
@@ -3590,8 +3575,7 @@ void MainWindow::restoreEnvVars( const EnvVars & envVars, QTableWidget * table )
 
 void MainWindow::exportPresetToScript()
 {
-	const Preset * selectedPreset = getSelectedPreset();
-	if (!selectedPreset)
+	if (!wdg::isSomethingSelected( ui->presetListView ))
 	{
 		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
 		return;
@@ -3784,8 +3768,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	//-- game data files -----------------------------------------------------------
 
 	// IWAD
-	IWAD * selectedIWAD = getSelectedIWAD();
-	if (selectedIWAD)
+	if (IWAD * selectedIWAD = getSelectedIWAD())
 	{
 		p.checkItemFilePath( *selectedIWAD, "selected IWAD", "Please select another one." );
 		cmd.arguments << "-iwad" << engineDirRebaser.rebaseAndQuotePath( selectedIWAD->path );

@@ -139,6 +139,16 @@ void unhighlightListItem( ReadOnlyListModelItem & item )
 	item.textColor.reset();
 }
 
+void markItemAsDefault( ReadOnlyListModelItem & item )
+{
+	item.textColor = themes::getCurrentPalette().defaultEntryText;
+}
+
+void unmarkItemAsDefault( ReadOnlyListModelItem & item )
+{
+	item.textColor = themes::getCurrentPalette().color( QPalette::Text );
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  PathChecker

@@ -241,7 +241,7 @@ SetupDialog::~SetupDialog()
 //  local utils
 
 template< typename ListModel >
-void setItemAsDefault( QListView * view, ListModel & model, QAction * setDefaultAction, QString & defaultItemID )
+void setSelectedItemAsDefault( QListView * view, ListModel & model, QAction * setDefaultAction, QString & defaultItemID )
 {
 	int selectedIdx = wdg::getSelectedItemIndex( view );
 	if (selectedIdx < 0)
@@ -258,12 +258,12 @@ void setItemAsDefault( QListView * view, ListModel & model, QAction * setDefault
 	// unmark the previous default entry
 	int prevIdx = findSuch( model, [&]( const auto & item ){ return item.getID() == prevDefaultItemID; } );
 	if (prevIdx >= 0)
-		model[ prevIdx ].textColor = themes::getCurrentPalette().color( QPalette::Text );
+		unmarkItemAsDefault( model[ prevIdx ] );
 
 	if (defaultItemID != prevDefaultItemID)
 	{
 		// mark the new default entry
-		selectedItem.textColor = themes::getCurrentPalette().defaultEntryText;
+		markItemAsDefault( selectedItem );
 		setDefaultAction->setText( "Unset as default" );
 	}
 	else  // already marked, clear the default status
@@ -325,7 +325,7 @@ void SetupDialog::onEngineSelectionChanged( const QItemSelection &, const QItemS
 
 void SetupDialog::setEngineAsDefault()
 {
-	setItemAsDefault( ui->engineListView, engineModel, setDefaultEngineAction, engineSettings.defaultEngine );
+	setSelectedItemAsDefault( ui->engineListView, engineModel, setDefaultEngineAction, engineSettings.defaultEngine );
 }
 
 void SetupDialog::editEngine( const QModelIndex & index )
@@ -404,7 +404,7 @@ void SetupDialog::onIWADSelectionChanged( const QItemSelection &, const QItemSel
 
 void SetupDialog::setIWADAsDefault()
 {
-	setItemAsDefault( ui->iwadListView, iwadModel, setDefaultIWADAction, iwadSettings.defaultIWAD );
+	setSelectedItemAsDefault( ui->iwadListView, iwadModel, setDefaultIWADAction, iwadSettings.defaultIWAD );
 }
 
 void SetupDialog::toggleAutoIWADUpdate( bool enabled )
@@ -497,6 +497,14 @@ void SetupDialog::onModDirChanged( const QString & dir )
 void SetupDialog::updateIWADsFromDir()
 {
 	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::isIWAD );
+
+	if (!iwadSettings.defaultIWAD.isEmpty())
+	{
+		// the default item marking was lost during the update, mark it again
+		int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
+		if (defaultIdx >= 0)
+			markItemAsDefault( iwadModel[ defaultIdx ] );
+	}
 }
 
 

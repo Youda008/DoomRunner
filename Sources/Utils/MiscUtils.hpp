@@ -54,6 +54,13 @@ void highlightInvalidListItem( ReadOnlyListModelItem & item );
 /// Removed the highlighting of this item in its views.
 void unhighlightListItem( ReadOnlyListModelItem & item );
 
+/// Marks this item as the default one.
+void markItemAsDefault( ReadOnlyListModelItem & item );
+
+/// Removes the default item marking.
+void unmarkItemAsDefault( ReadOnlyListModelItem & item );
+
+
 class PathChecker {
 
 	QWidget * parent;

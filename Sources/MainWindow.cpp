@@ -2775,6 +2775,14 @@ void MainWindow::updateIWADsFromDir()
 
 	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::isIWAD );
 
+	if (!iwadSettings.defaultIWAD.isEmpty())
+	{
+		// the default item marking was lost during the update, mark it again
+		int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
+		if (defaultIdx >= 0)
+			markItemAsDefault( iwadModel[ defaultIdx ] );
+	}
+
 	disableSelectionCallbacks = false;
 
 	auto newSelection = wdg::getSelectedItemIDs( ui->iwadListView, iwadModel );
@@ -3128,6 +3136,10 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		engineModel.finishCompleteUpdate();       // if the list is not empty, this changes the engine index from -1 to 0,
 		ui->engineCmbBox->setCurrentIndex( -1 );  // but we need it to stay -1
 
+	for (auto & engine : engineModel)
+	{
+		qDebug() << engine.executablePath << ":" << engine.appNameNormalized();
+	}
 		disableSelectionCallbacks = false;
 
 		// mark the default engine, if chosen

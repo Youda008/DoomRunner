@@ -1,3 +1,18 @@
+1.8.0
+- changed where the data files are stored, old files will be detected and moved automatically
+- added ability to filter presets by partial name or regular expression
+- added ability to select default engine and IWAD
+- added icons to mod list to visually distinguish files from directories
+- added ability to insert custom command-line argument between the files to load
+- added support for Flatpak and Snap installations of Doom engines
+- added ability to specify custom environment variables that will be set for the Doom engine process
+- improved auto-detection of engine's data directories when adding a new one
+- made the -loadgame parameter work correctly for both new and old GZDoom
+- better help text for setting engine data directories
+- implemented persistant caching mechanism for information extracted from Doom files for faster loading
+- options.json file will only be updated when necessary, reducing chance of losing it when the computer is abruptly shut down
+- minor bug-fixes, usability improvements and optimizations
+
 1.7.3
 - save/screenshot dirs will now correctly update when the preset name is edited
 - workaround for unintuitive Windows executable search order (2nd attempt)

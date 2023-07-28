@@ -49,6 +49,7 @@ enum class EngineFamily
 {
 	ZDoom,
 	PrBoom,
+	MBF,  // Marine's Best Friend
 	ChocolateDoom,
 
 	_EnumEnd  ///< indicates an error

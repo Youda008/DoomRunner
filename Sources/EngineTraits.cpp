@@ -22,6 +22,7 @@ static const char * const engineFamilyStrings [] =
 {
 	"ZDoom",
 	"PrBoom",
+	"MBF",
 	"ChocolateDoom",
 };
 static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd), "Please update this table too" );
@@ -29,23 +30,24 @@ static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd),
 static const QHash< QString, EngineFamily > knownEngineFamilies =
 {
 	// the key is a normalized application name from EngineTraits
-	{ "zdoom",           EngineFamily::ZDoom },
-	{ "lzdoom",          EngineFamily::ZDoom },
-	{ "gzdoom",          EngineFamily::ZDoom },
-	{ "qzdoom",          EngineFamily::ZDoom },
-	{ "skulltag",        EngineFamily::ZDoom },
-	{ "zandronum",       EngineFamily::ZDoom },
-	{ "prboom",          EngineFamily::PrBoom },
-	{ "prboom-plus",     EngineFamily::PrBoom },
-	{ "glboom",          EngineFamily::PrBoom },
-	{ "smmu",            EngineFamily::PrBoom },
-	{ "eternity",        EngineFamily::PrBoom },
-	{ "dsda-doom",       EngineFamily::PrBoom },
-	{ "woof",            EngineFamily::PrBoom },
-	{ "chocolate-doom",  EngineFamily::ChocolateDoom },
-	{ "crispy-doom",     EngineFamily::ChocolateDoom },
-	{ "doomretro",       EngineFamily::ChocolateDoom },
-	{ "strife-ve",       EngineFamily::ChocolateDoom },
+	{ "zdoom",                EngineFamily::ZDoom },
+	{ "lzdoom",               EngineFamily::ZDoom },
+	{ "gzdoom",               EngineFamily::ZDoom },
+	{ "qzdoom",               EngineFamily::ZDoom },
+	{ "skulltag",             EngineFamily::ZDoom },
+	{ "zandronum",            EngineFamily::ZDoom },
+	{ "prboom",               EngineFamily::PrBoom },
+	{ "prboom-plus",          EngineFamily::PrBoom },
+	{ "glboom",               EngineFamily::PrBoom },
+	{ "dsda-doom",            EngineFamily::PrBoom },
+	{ "smmu",                 EngineFamily::MBF },
+	{ "the eternity engine",  EngineFamily::MBF },
+	{ "woof",                 EngineFamily::MBF },
+	{ "chocolate doom",       EngineFamily::ChocolateDoom },
+	{ "crispy doom",          EngineFamily::ChocolateDoom },
+	{ "doom retro",           EngineFamily::ChocolateDoom },
+	{ "strife-ve",            EngineFamily::ChocolateDoom },
+	// TODO: add all the EDGE ports
 };
 
 static const EngineFamilyTraits engineFamilyTraits [] =
@@ -53,6 +55,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 	//              -warp or +map        -complevel or +compatmode   savedir param   has +screenshot_dir   needs -stdout
 	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom,    "-savedir",     true,                 IS_WINDOWS },
 	/*PrBoom*/    { MapParamStyle::Warp, CompatLevelStyle::PrBoom,   "-save",        false,                false },
+	/*MBF*/       { MapParamStyle::Warp, CompatLevelStyle::PrBoom,   "-save",        false,                false },
 	/*Chocolate*/ { MapParamStyle::Warp, CompatLevelStyle::None,     "-savedir",     false,                false },
 };
 static_assert( std::size(engineFamilyTraits) == std::size(engineFamilyStrings), "Please update this table too" );

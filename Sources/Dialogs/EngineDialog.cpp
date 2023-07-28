@@ -210,7 +210,7 @@ void EngineDialog::browseExecutable()
 	suggestedName = suggestEngineName( engine );
 	suggestedConfigDir = suggestEngineConfigDir( engine );
 	suggestedDataDir = suggestEngineDataDir( engine );
-	EngineFamily guessedFamily = guessEngineFamily( engine.appNameNormalized() );
+	EngineFamily guessedFamily = guessEngineFamily( engine.exeBaseName() );
 
 	// the suggested paths are always absolute
 	if (pathConvertor.usingRelativePaths())

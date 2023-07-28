@@ -29,24 +29,24 @@ static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd),
 
 static const QHash< QString, EngineFamily > knownEngineFamilies =
 {
-	// the key is a normalized application name from EngineTraits
-	{ "zdoom",                EngineFamily::ZDoom },
-	{ "lzdoom",               EngineFamily::ZDoom },
-	{ "gzdoom",               EngineFamily::ZDoom },
-	{ "qzdoom",               EngineFamily::ZDoom },
-	{ "skulltag",             EngineFamily::ZDoom },
-	{ "zandronum",            EngineFamily::ZDoom },
-	{ "prboom",               EngineFamily::PrBoom },
-	{ "prboom-plus",          EngineFamily::PrBoom },
-	{ "glboom",               EngineFamily::PrBoom },
-	{ "dsda-doom",            EngineFamily::PrBoom },
-	{ "smmu",                 EngineFamily::MBF },
-	{ "the eternity engine",  EngineFamily::MBF },
-	{ "woof",                 EngineFamily::MBF },
-	{ "chocolate doom",       EngineFamily::ChocolateDoom },
-	{ "crispy doom",          EngineFamily::ChocolateDoom },
-	{ "doom retro",           EngineFamily::ChocolateDoom },
-	{ "strife-ve",            EngineFamily::ChocolateDoom },
+	// the key is an executable name in lower case without the .exe suffix
+	{ "zdoom",            EngineFamily::ZDoom },
+	{ "lzdoom",           EngineFamily::ZDoom },
+	{ "gzdoom",           EngineFamily::ZDoom },
+	{ "qzdoom",           EngineFamily::ZDoom },
+	{ "skulltag",         EngineFamily::ZDoom },
+	{ "zandronum",        EngineFamily::ZDoom },
+	{ "prboom",           EngineFamily::PrBoom },
+	{ "prboom-plus",      EngineFamily::PrBoom },
+	{ "glboom",           EngineFamily::PrBoom },
+	{ "dsda-doom",        EngineFamily::PrBoom },
+	{ "smmu",             EngineFamily::MBF },
+	{ "eternity",         EngineFamily::MBF },
+	{ "woof",             EngineFamily::MBF },
+	{ "chocolate-doom",   EngineFamily::ChocolateDoom },
+	{ "crispy-doom",      EngineFamily::ChocolateDoom },
+	{ "doomretro",        EngineFamily::ChocolateDoom },
+	{ "strife-ve",        EngineFamily::ChocolateDoom },
 	// TODO: add all the EDGE ports
 };
 
@@ -62,7 +62,7 @@ static_assert( std::size(engineFamilyTraits) == std::size(engineFamilyStrings), 
 
 static const QHash< QString, int > startingMonitorIndexes =
 {
-	// the key is a normalized application name from EngineTraits
+	// the key is an executable name in lower case without the .exe suffix
 	{ "zdoom", 1 },
 };
 
@@ -145,9 +145,9 @@ EngineFamily familyFromStr( const QString & familyStr )
 		return EngineFamily::_EnumEnd;
 }
 
-EngineFamily guessEngineFamily( const QString & appNameNormalized )
+EngineFamily guessEngineFamily( const QString & executableBaseName )
 {
-	auto iter = knownEngineFamilies.find( appNameNormalized );
+	auto iter = knownEngineFamilies.find( executableBaseName.toLower() );
 	if (iter != knownEngineFamilies.end())
 		return iter.value();
 	else
@@ -236,7 +236,7 @@ QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 
 	// Properly working -compatmode is present only in GZDoom,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
-	if (_appNameNormalized == "gzdoom")
+	if (_exeBaseName == "gzdoom")
 		return { "-compatmode", QString::number( compatLevel ) };
 	else if (_familyTraits->compLvlStyle == CompatLevelStyle::ZDoom)
 		return { "+compatmode", QString::number( compatLevel ) };
@@ -251,7 +251,7 @@ QString EngineTraits::getCmdMonitorIndex( int ownIndex ) const
 	assert( hasAppInfo() && hasFamilyTraits() );
 
 	int startingMonitorIndex = 0;
-	auto iter = startingMonitorIndexes.find( _appNameNormalized );
+	auto iter = startingMonitorIndexes.find( _exeBaseName );
 	if (iter != startingMonitorIndexes.end())
 		startingMonitorIndex = iter.value();
 

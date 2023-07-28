@@ -58,7 +58,7 @@ const char * familyToStr( EngineFamily family );
 EngineFamily familyFromStr( const QString & familyStr );
 
 // EngineFamily is user-overridable in EngineDialog, but this is our default automatic detection
-EngineFamily guessEngineFamily( const QString & appNameNormalized );
+EngineFamily guessEngineFamily( const QString & executableBaseName );
 
 //----------------------------------------------------------------------------------------------------------------------
 

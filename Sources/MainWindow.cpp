@@ -522,11 +522,7 @@ MainWindow::MainWindow()
 
 	// OS-specific initialization
 
- #if IS_WINDOWS
-	// Qt on Windows does not automatically follow OS preferences, so we have to monitor the OS settings for changes
-	// and manually change our theme when it does.
-	themeWatcher.start();
- #else
+ #if !IS_WINDOWS
 	// On Windows the application icon is already set using the Windows resource system, so loading this resource
 	// is unnecessary. But on Linux, we have to do it. See https://doc.qt.io/qt-6/appicon.html
 	this->setWindowIcon( QIcon(":/DoomRunner.ico") );
@@ -890,6 +886,14 @@ void MainWindow::onWindowShown()
 
 	// integrate the loaded storage settings into the titles of options group-boxes
 	updateOptionsGrpBoxTitles( settings );
+
+ #if IS_WINDOWS
+	// Qt on Windows does not automatically follow OS preferences, so we have to monitor the OS settings for changes
+	// and manually change our theme when it does.
+	// Rather set this after loading options, when all potential loading errors have been shown,
+	// so that the error message dialogs don't show in some kind of half-switched state.
+	themeWatcher.start();
+ #endif
 
 	// if the presets are empty, add a default one so that users don't complain that they can't enter anything
 	if (presetModel.isEmpty())
@@ -3104,14 +3108,6 @@ bool MainWindow::loadCache( const QString & filePath )
 
 void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 {
-	if (settings.appStyle != themes::getDefaultAppStyle())
-		themes::setAppStyle( settings.appStyle );
-	if (IS_WINDOWS || settings.colorScheme != ColorScheme::SystemDefault)
-		themes::setAppColorScheme( settings.colorScheme );
-
-	if (opts.geometry.width > 0 && opts.geometry.height > 0)
-		this->resize( opts.geometry.width, opts.geometry.height );
-
 	// Restoring any stored options is tricky.
 	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
 	// causes the corresponding callbacks to be called which in turn might cause some other stored value to be changed.
@@ -3247,6 +3243,16 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	restoreGlobalOptions( globalOpts );
 
 	restoringOptionsInProgress = false;
+
+	// Rather set this in the end after all potential loading errors have been shown,
+	// so that the error message dialogs don't show in some kind of half-switched state.
+	if (settings.appStyle != themes::getDefaultAppStyle())
+		themes::setAppStyle( settings.appStyle );
+	if (IS_WINDOWS || settings.colorScheme != ColorScheme::SystemDefault)
+		themes::setAppColorScheme( settings.colorScheme );
+
+	if (opts.geometry.width > 0 && opts.geometry.height > 0)
+		this->resize( opts.geometry.width, opts.geometry.height );
 
 	updateLaunchCommand();
 }

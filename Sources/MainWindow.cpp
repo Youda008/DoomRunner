@@ -3136,10 +3136,6 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		engineModel.finishCompleteUpdate();       // if the list is not empty, this changes the engine index from -1 to 0,
 		ui->engineCmbBox->setCurrentIndex( -1 );  // but we need it to stay -1
 
-	for (auto & engine : engineModel)
-	{
-		qDebug() << engine.executablePath << ":" << engine.appNameNormalized();
-	}
 		disableSelectionCallbacks = false;
 
 		// mark the default engine, if chosen

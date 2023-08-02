@@ -3851,6 +3851,18 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		}
 	};
 
+	auto appendCustomArguments = [&]( QStringVec & args, const QString & customArgsStr )
+	{
+		auto splitArgs = splitCommandLineArguments( customArgsStr );
+		for (const auto & arg : splitArgs)
+		{
+			if (quotePaths && arg.wasQuoted)
+				args << quoted( arg.str );
+			else
+				args << arg.str;
+		}
+	};
+
 	// map files
 	forEachSelectedMapPack( [&]( const QString & mapFilePath )
 	{
@@ -3864,7 +3876,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		if (mod.checked)
 		{
 			if (mod.isCmdArg) {  // this is not a file but a custom command line argument
-				modArguments << mod.fileName;  // the fileName holds the argument value
+				appendCustomArguments( modArguments, mod.fileName );  // the fileName holds the argument value
 			} else {
 				p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
 				addFileAccordingToSuffix( mod.path );
@@ -4032,18 +4044,6 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		cmd.arguments << "-nomusic";
 
 	//-- additional custom command line arguments ----------------------------------
-
-	auto appendCustomArguments = [&]( QStringVec & args, const QString & customArgsStr )
-	{
-		auto splitArgs = splitCommandLineArguments( customArgsStr );
-		for (const auto & arg : splitArgs)
-		{
-			if (quotePaths && arg.wasQuoted)
-				args << quoted( arg.str );
-			else
-				args << arg.str;
-		}
-	};
 
 	if (!ui->presetCmdArgsLine->text().isEmpty())
 		appendCustomArguments( cmd.arguments, ui->presetCmdArgsLine->text() );

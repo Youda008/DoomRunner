@@ -4111,6 +4111,9 @@ void MainWindow::launch()
 	{
 		return;  // errors are already shown during the generation
 	}
+	// The engine must be launched using absolute path, because some engines cannot handle being started
+	// from another directory with relative executable path (looking at you Crispy Doom, fix your shit!).
+	cmd.executable = fs::getAbsolutePath( cmd.executable );
 
 	//qDebug() << cmd.executable << cmd.arguments;
 

@@ -113,13 +113,14 @@ void EngineDialog::onWindowShown()
 }
 
 #if IS_WINDOWS
-static bool hasVersionInfo( const EngineInfo & engine )
+static bool assumeGZDoom49_orLater( const EngineInfo & engine )
 {
-	return !engine.exeAppName().isEmpty() && engine.exeVersion().isValid();
-}
-static bool isGZDoom49_orLater( const EngineInfo & engine )
-{
-	return engine.exeAppName() == "GZDoom" && engine.exeVersion() >= Version(4,9,0);
+	// If we have version info from the executable file, decide based on the application name and version,
+	// otherwise if the executable file name seems like GZDoom, assume the latest version.
+	if (!engine.exeAppName().isEmpty() && engine.exeVersion().isValid())
+		return engine.exeAppName() == "GZDoom" && engine.exeVersion() >= Version(4,9,0);
+	else
+		return engine.exeBaseName() == "gzdoom";
 }
 #endif
 
@@ -152,8 +153,7 @@ static QString suggestEngineConfigDir( const EngineInfo & engine )
 	// with the exception of latest GZDoom (thanks Graph) that started storing it to Documents\My Games\GZDoom
 	QString dirOfExecutable = fs::getDirOfFile( engine.executablePath );
 	QString portableIniFilePath = fs::getPathFromFileName( dirOfExecutable, "gzdoom_portable.ini" );
-	// if we can't read the exe info, assume the latest GZDoom
-	if ((!hasVersionInfo( engine ) || isGZDoom49_orLater( engine )) && !fs::isValidFile( portableIniFilePath ))
+	if (assumeGZDoom49_orLater( engine ) && !fs::isValidFile( portableIniFilePath ))
 		return os::getDocumentsDir()%"/My Games/GZDoom";
 	else
 		return dirOfExecutable;
@@ -177,8 +177,7 @@ static QString suggestEngineDataDir( const EngineInfo & engine )
 
 	QString dirOfExecutable = fs::getDirOfFile( engine.executablePath );
 	QString portableIniFilePath = fs::getPathFromFileName( dirOfExecutable, "gzdoom_portable.ini" );
-	// if we can't read the exe info, assume the latest GZDoom
-	if ((!hasVersionInfo( engine ) || isGZDoom49_orLater( engine )) && !fs::isValidFile( portableIniFilePath ))
+	if (assumeGZDoom49_orLater( engine ) && !fs::isValidFile( portableIniFilePath ))
 		return os::getSavedGamesDir()%"/GZDoom";
 	else
 		return dirOfExecutable;

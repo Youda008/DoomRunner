@@ -406,6 +406,15 @@ static void initStyles()
 	c_defaultStyleName = currentStyle->objectName();
 	c_availableStyleNames = QStyleFactory::keys();
 	g_currentRealStyleName = c_defaultStyleName;
+	
+#if !IS_WINDOWS
+	// For some retarded reason, on Linux the currentStyle->objectName() has different case than the one
+	// in QStyleFactory::keys(). For example "oxygen" vs "Oxygen".
+	// So we need to convert it to the right case, otherwise it can't be found in the c_availableStyleNames.
+	for (const auto & styleName : c_availableStyleNames)
+		if (c_defaultStyleName.toLower() == styleName.toLower())
+			c_defaultStyleName = styleName;
+#endif
 
 	// this needs to be done here too, so that the tooltip modifications are applied even when no style is set
 	qApp->setStyle( new TooltipDelayModifier( currentStyle ) );

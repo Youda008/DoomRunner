@@ -796,6 +796,9 @@ void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString &
 /// Expands all parent nodes from the selected node up to the root node, so that the selected node is immediately visible.
 void expandParentsOfNode( QTreeView * view, const QModelIndex & index );
 
+/// Sets the scrollbar so that the current item is in the middle of the widget, if possible.
+void scrollToCurrentItem( QAbstractItemView * view );
+
 /// Changes text color of this widget.
 void setTextColor( QWidget * widget, QColor color );
 

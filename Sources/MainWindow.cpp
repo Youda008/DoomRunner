@@ -736,6 +736,11 @@ void MainWindow::setupMapPackList()
 	// set reaction when an item is selected
 	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onMapPackToggled );
 	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
+
+	// QFileSystemModel updates its content asynchronously in a separate thread. For this reason,
+	// when the model is set to display a certain directory, we cannot select items from the view right away,
+	// but must wait until the list is populated.
+	connect( &mapModel, &QFileSystemModel::directoryLoaded, this, &thisClass::onMapDirUpdated );
 }
 
 void MainWindow::setupModList()
@@ -1076,7 +1081,7 @@ void MainWindow::runSetupDialog()
 		// notify the widgets to re-draw their content
 		engineModel.finishCompleteUpdate();
 		iwadModel.finishCompleteUpdate();
-		refreshMapPacks();
+		resetMapDirModelAndView();
 
 		// select back the previously selected items
 		wdg::setCurrentItemByID( ui->engineCmbBox, engineModel, currentEngine );
@@ -1515,6 +1520,28 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	descDialog.move( windowCenterX, windowCenterY - (descDialog.height() / 2) );
 
 	descDialog.exec();
+}
+
+void MainWindow::onMapDirUpdated( const QString & path )
+{
+	// the QFileSystemModel mapModel has finally updated its content from mapSettings.dir
+	if (path == pathConvertor.getAbsolutePath( mapSettings.dir ))
+	{
+		// idiotic workaround, because Qt never stops surprising me with its stupidity.
+		//
+		// The QFileSystemModel::directoryLoaded signal is supposed to indicate the mapModel is fully loaded,
+		// but still when we call mapModel.index( path ), it returns a zeroed-out model index with incorrect row number.
+		// This is a desperate attempt to call restoreSelectedMapPacks() when the mapModel.index( path ) finally starts
+		// returning valid indexes so that we can select the right items in the view.
+		QTimer::singleShot( 0, nullptr, [ this ]()
+		{
+			if (Preset * preset = getSelectedPreset())
+			{
+				// now we can finally select the right items in the map pack view
+				restoreSelectedMapPacks( *preset );
+			}
+		});
+	}
 }
 
 
@@ -2798,7 +2825,9 @@ void MainWindow::updateIWADsFromDir()
 	}
 }
 
-void MainWindow::refreshMapPacks()
+/** NOTE: The content of the model is updated asynchronously (in a separate thread)
+  * so it will most likely not be ready yet when this function returns. */
+void MainWindow::resetMapDirModelAndView()
 {
 	// We use QFileSystemModel which updates the data from directory automatically.
 	// But when the directory is changed, the model and view needs to be reset.
@@ -3180,7 +3209,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	{
 		wdg::deselectAllAndUnsetCurrent( ui->mapDirView );
 
-		refreshMapPacks();  // populates the list from mapSettings.dir
+		resetMapDirModelAndView();  // populates the list from mapSettings.dir (asynchronously)
 	}
 
 	// mods
@@ -3272,179 +3301,15 @@ void MainWindow::restorePreset( int presetIdx )
 
 	Preset & preset = presetModel[ presetIdx ];
 
-	// restore selected engine
-	{
-		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
+	restoreSelectedEngine( preset );
+	restoreSelectedConfig( preset );
+	restoreSelectedIWAD( preset );
+	restoreSelectedMods( preset );
 
-		ui->engineCmbBox->setCurrentIndex( -1 );
-
-		if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
-		{
-			int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
-												   { return engine.executablePath == preset.selectedEnginePath; } );
-			if (engineIdx >= 0)
-			{
-				ui->engineCmbBox->setCurrentIndex( engineIdx );
-
-				if (!fs::isValidFile( preset.selectedEnginePath ))
-				{
-					QMessageBox::warning( this, "Engine no longer exists",
-						"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists. "
-						"Please update its path in Menu -> Initial Setup, or select another one."
-					);
-					highlightInvalidListItem( engineModel[ engineIdx ] );
-				}
-			}
-			else
-			{
-				QMessageBox::warning( this, "Engine no longer exists",
-					"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list. "
-					"Please select another one."
-				);
-				preset.selectedEnginePath.clear();
-			}
-		}
-
-		disableSelectionCallbacks = false;
-
-		// manually notify our class about the change, so that the preset and dependent widgets get updated
-		// This is needed before configs, saves and demos are restored, so that the entries are ready to be selected from.
-		onEngineSelected( ui->engineCmbBox->currentIndex() );
-	}
-
-	// restore selected config
-	{
-		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
-
-		ui->configCmbBox->setCurrentIndex( -1 );
-
-		if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
-		{
-			int configIdx = findSuch( configModel, [&]( const ConfigFile & config )
-												   { return config.fileName == preset.selectedConfig; } );
-			if (configIdx >= 0)
-			{
-				ui->configCmbBox->setCurrentIndex( configIdx );
-
-				// No sense to verify if this config file exists, the configModel has just been updated during
-				// selectEngine( ui->engineCmbBox->currentIndex() ), so there are only existing entries.
-			}
-			else
-			{
-				QMessageBox::warning( this, "Config no longer exists",
-					"Config file selected for this preset ("%preset.selectedConfig%") no longer exists. "
-					"Please select another one."
-				);
-				preset.selectedConfig.clear();
-			}
-		}
-
-		disableSelectionCallbacks = false;
-
-		// manually notify our class about the change, so that the preset and dependent widgets get updated
-		onConfigSelected( ui->configCmbBox->currentIndex() );
-	}
-
-	// restore selected IWAD
-	{
-		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
-
-		wdg::deselectSelectedItems( ui->iwadListView );
-
-		if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
-		{
-			int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
-			if (iwadIdx >= 0)
-			{
-				wdg::selectItemByIndex( ui->iwadListView, iwadIdx );
-
-				if (!fs::isValidFile( preset.selectedIWAD ))
-				{
-					QMessageBox::warning( this, "IWAD no longer exists",
-						"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
-						"Please select another one."
-					);
-					highlightInvalidListItem( iwadModel[ iwadIdx ] );
-				}
-			}
-			else
-			{
-				QMessageBox::warning( this, "IWAD no longer exists",
-					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
-					"Please select another one."
-				);
-				preset.selectedIWAD.clear();
-			}
-		}
-
-		disableSelectionCallbacks = false;
-
-		// manually notify our class about the change, so that the preset and dependent widgets get updated
-		// This is needed before launch options are restored, so that the map names are ready to be selected.
-		onIWADToggled( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
-	}
-
-	// restore selected MapPack
-	{
-		disableSelectionCallbacks = true;  // prevent unnecessary widget updates
-
-		QDir mapRootDir = mapModel.rootDirectory();
-
-		wdg::deselectSelectedItems( ui->mapDirView );
-
-		const QStringVec mapPacksCopy = preset.selectedMapPacks;
-		preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
-		for (const QString & path : mapPacksCopy)
-		{
-			QModelIndex mapIdx = mapModel.index( path );
-			if (mapIdx.isValid() && fs::isInsideDir( path, mapRootDir ))
-			{
-				if (fs::isValidEntry( path ))
-				{
-					preset.selectedMapPacks.append( path );  // put back only items that are valid
-					wdg::selectItemByIndex( ui->mapDirView, mapIdx );
-				}
-				else
-				{
-					QMessageBox::warning( this, "Map file no longer exists",
-						"Map file selected for this preset ("%path%") no longer exists."
-					);
-				}
-			}
-			else
-			{
-				QMessageBox::warning( this, "Map file no longer exists",
-					"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")."
-				);
-			}
-		}
-
-		disableSelectionCallbacks = false;
-
-		// manually notify our class about the change, so that the preset and dependent widgets get updated
-		// Because this updates the preset with selected items, only the valid ones will be stored and invalid removed.
-		onMapPackToggled( ui->mapDirView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
-	}
-
-	// restore list of mods
-	{
-		wdg::deselectSelectedItems( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
-
-		modModel.startCompleteUpdate();
-		modModel.clear();
-		for (Mod & mod : preset.mods)
-		{
-			modModel.append( mod );
-			if ((!mod.isSeparator && !mod.isCmdArg) && !fs::isValidEntry( mod.path ))
-			{
-				// Let's just highlight it now, we will show warning when the user tries to launch it.
-				//QMessageBox::warning( this, "Mod no longer exists",
-				//	"A mod file "%mod.path%" from this preset no longer exists. Please update it." );
-				highlightInvalidListItem( modModel.last() );
-			}
-		}
-		modModel.finishCompleteUpdate();
-	}
+	// Beware that when calling this from restoreLoadedOptions, the mapModel might not have been populated yet,
+	// because it's done asynchronously in a separate thread. In that case this needs to be called again
+	// in a callback connected to QFileSystem event, when the mapModel is finally populated.
+	restoreSelectedMapPacks( preset );
 
 	if (settings.launchOptsStorage == StoreToPreset)
 		restoreLaunchAndMultOptions( preset.launchOpts, preset.multOpts );  // this clears items that are invalid
@@ -3478,6 +3343,179 @@ void MainWindow::restorePreset( int presetIdx )
 	}
 
 	updateLaunchCommand();
+}
+
+void MainWindow::restoreSelectedEngine( Preset & preset )
+{
+	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
+
+	ui->engineCmbBox->setCurrentIndex( -1 );
+
+	if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
+	{
+		int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
+												   { return engine.executablePath == preset.selectedEnginePath; } );
+		if (engineIdx >= 0)
+		{
+			ui->engineCmbBox->setCurrentIndex( engineIdx );
+
+			if (!fs::isValidFile( preset.selectedEnginePath ))
+			{
+				QMessageBox::warning( this, "Engine no longer exists",
+					"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists. "
+					"Please update its path in Menu -> Initial Setup, or select another one."
+				);
+				highlightInvalidListItem( engineModel[ engineIdx ] );
+			}
+		}
+		else
+		{
+			QMessageBox::warning( this, "Engine no longer exists",
+				"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list. "
+				"Please select another one."
+			);
+			preset.selectedEnginePath.clear();
+		}
+	}
+
+	disableSelectionCallbacks = false;
+
+	// manually notify our class about the change, so that the preset and dependent widgets get updated
+	// This is needed before configs, saves and demos are restored, so that the entries are ready to be selected from.
+	onEngineSelected( ui->engineCmbBox->currentIndex() );
+}
+
+void MainWindow::restoreSelectedConfig( Preset & preset )
+{
+	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
+
+	ui->configCmbBox->setCurrentIndex( -1 );
+
+	if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
+	{
+		int configIdx = findSuch( configModel, [&]( const ConfigFile & config )
+												   { return config.fileName == preset.selectedConfig; } );
+		if (configIdx >= 0)
+		{
+			ui->configCmbBox->setCurrentIndex( configIdx );
+
+			// No sense to verify if this config file exists, the configModel has just been updated during
+			// selectEngine( ui->engineCmbBox->currentIndex() ), so there are only existing entries.
+		}
+		else
+		{
+			QMessageBox::warning( this, "Config no longer exists",
+				"Config file selected for this preset ("%preset.selectedConfig%") no longer exists. "
+				"Please select another one."
+			);
+			preset.selectedConfig.clear();
+		}
+	}
+
+	disableSelectionCallbacks = false;
+
+	// manually notify our class about the change, so that the preset and dependent widgets get updated
+	onConfigSelected( ui->configCmbBox->currentIndex() );
+}
+
+void MainWindow::restoreSelectedIWAD( Preset & preset )
+{
+	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
+
+	wdg::deselectAllAndUnsetCurrent( ui->iwadListView );
+
+	if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
+	{
+		int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
+		if (iwadIdx >= 0)
+		{
+			wdg::selectAndSetCurrentByIndex( ui->iwadListView, iwadIdx );
+
+			if (!fs::isValidFile( preset.selectedIWAD ))
+			{
+				QMessageBox::warning( this, "IWAD no longer exists",
+					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
+					"Please select another one."
+				);
+				highlightInvalidListItem( iwadModel[ iwadIdx ] );
+			}
+		}
+		else
+		{
+			QMessageBox::warning( this, "IWAD no longer exists",
+				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
+				"Please select another one."
+			);
+			preset.selectedIWAD.clear();
+		}
+	}
+
+	disableSelectionCallbacks = false;
+
+	// manually notify our class about the change, so that the preset and dependent widgets get updated
+	// This is needed before launch options are restored, so that the map names are ready to be selected.
+	onIWADToggled( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+}
+
+void MainWindow::restoreSelectedMapPacks( Preset & preset )
+{
+	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
+
+	QDir mapRootDir = mapModel.rootDirectory();
+
+	wdg::deselectAllAndUnsetCurrent( ui->mapDirView );
+
+	const QStringVec mapPacksCopy = preset.selectedMapPacks;
+	preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
+	for (const QString & path : mapPacksCopy)
+	{
+		QModelIndex mapIdx = mapModel.index( path );
+		if (mapIdx.isValid() && fs::isInsideDir( path, mapRootDir ))
+		{
+			if (fs::isValidEntry( path ))
+			{
+				preset.selectedMapPacks.append( path );  // put back only items that are valid
+				wdg::selectAndSetCurrentByIndex( ui->mapDirView, mapIdx );
+			}
+			else
+			{
+				QMessageBox::warning( this, "Map file no longer exists",
+					"Map file selected for this preset ("%path%") no longer exists."
+				);
+			}
+		}
+		else
+		{
+			QMessageBox::warning( this, "Map file no longer exists",
+				"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")."
+			);
+		}
+	}
+
+	disableSelectionCallbacks = false;
+
+	// manually notify our class about the change, so that the preset and dependent widgets get updated
+	onMapPackToggled( ui->mapDirView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+}
+
+void MainWindow::restoreSelectedMods( Preset & preset )
+{
+	wdg::deselectAllAndUnsetCurrent( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
+
+	modModel.startCompleteUpdate();
+	modModel.clear();
+	for (Mod & mod : preset.mods)
+	{
+		modModel.append( mod );
+		if ((!mod.isSeparator && !mod.isCmdArg) && !fs::isValidEntry( mod.path ))
+		{
+			// Let's just highlight it now, we will show warning when the user tries to launch it.
+			//QMessageBox::warning( this, "Mod no longer exists",
+			//	"A mod file "%mod.path%" from this preset no longer exists. Please update it." );
+			highlightInvalidListItem( modModel.last() );
+		}
+	}
+	modModel.finishCompleteUpdate();
 }
 
 void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const MultiplayerOptions & multOpts )

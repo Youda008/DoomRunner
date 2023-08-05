@@ -36,6 +36,7 @@ void setCurrentItemByIndex( QListView * view, int index )
 {
 	QModelIndex modelIndex = view->model()->index( index, 0 );
 	view->selectionModel()->setCurrentIndex( modelIndex, QItemSelectionModel::NoUpdate );
+	view->scrollTo( modelIndex, QListView::ScrollHint::PositionAtCenter );
 }
 
 void unsetCurrentItem( QListView * view )
@@ -133,6 +134,7 @@ QModelIndex getCurrentItemIndex( QTreeView * view )
 void setCurrentItemByIndex( QTreeView * view, const QModelIndex & index )
 {
 	view->selectionModel()->setCurrentIndex( index, QItemSelectionModel::NoUpdate );
+	view->scrollTo( index, QListView::ScrollHint::PositionAtCenter );
 }
 
 void unsetCurrentItem( QTreeView * view )
@@ -412,6 +414,12 @@ void expandParentsOfNode( QTreeView * view, const QModelIndex & index )
 	for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
 		if (!view->isExpanded( currentIndex ))
 			view->expand( currentIndex );
+}
+
+void scrollToCurrentItem( QAbstractItemView * view )
+{
+	auto currentIndex = view->currentIndex();
+	view->scrollTo( currentIndex );
 }
 
 void setTextColor( QWidget * widget, QColor color )

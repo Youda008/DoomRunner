@@ -75,6 +75,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void showMapPackDesc( const QModelIndex & index );
 
+	void onMapDirUpdated( const QString & path );
+
 	void cloneConfig();
 
 	void presetAdd();
@@ -182,7 +184,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void updateListsFromDirs();
 	void updateIWADsFromDir();
-	void refreshMapPacks();
+	void resetMapDirModelAndView();
 	void updateConfigFilesFromDir( const QString * configDir = nullptr );
 	void updateSaveFilesFromDir( const QString * saveDir = nullptr );
 	void updateDemoFilesFromDir( const QString * demoDir = nullptr );
@@ -206,6 +208,12 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void restoreLoadedOptions( OptionsToLoad && opts );
 	void restorePreset( int index );
+
+	void restoreSelectedEngine( Preset & preset );
+	void restoreSelectedConfig( Preset & preset );
+	void restoreSelectedIWAD( Preset & preset );
+	void restoreSelectedMapPacks( Preset & preset );
+	void restoreSelectedMods( Preset & preset );
 
 	void restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const MultiplayerOptions & multOpts );
 	void restoreGameplayOptions( const GameplayOptions & opts );

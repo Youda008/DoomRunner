@@ -8,7 +8,7 @@
 #include "UpdateChecker.hpp"
 
 #include "Version.hpp"
-#include "Themes.hpp"
+#include "Themes.hpp"  // updateWindowBorder
 #include "Utils/LangUtils.hpp"  // atScopeEndDo
 #include "Utils/WidgetUtils.hpp"  // HYPERLINK
 

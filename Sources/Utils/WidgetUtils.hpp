@@ -12,8 +12,8 @@
 #include "Essential.hpp"
 
 #include "CommonTypes.hpp"
-#include "LangUtils.hpp"         // findSuch
-#include "FileSystemUtils.hpp"   // fillListFromDir
+#include "ContainerUtils.hpp"    // findSuch
+#include "FileSystemUtils.hpp"   // traverseDirectory
 #include "Widgets/ListModel.hpp"
 #include "ErrorHandling.hpp"
 

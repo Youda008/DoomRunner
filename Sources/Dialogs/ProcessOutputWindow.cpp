@@ -8,9 +8,8 @@
 #include "ProcessOutputWindow.hpp"
 #include "ui_ProcessOutputWindow.h"
 
-#include "Utils/WidgetUtils.hpp"
-#include "Utils/FileSystemUtils.hpp"
-#include "Utils/OSUtils.hpp"
+#include "Utils/WidgetUtils.hpp"  // setTextColor
+#include "Utils/FileSystemUtils.hpp"  // getFileNameFromPath
 
 #include <QTextEdit>
 #include <QFontDatabase>

@@ -7,7 +7,6 @@
 
 #include "WADReader.hpp"
 
-#include "LangUtils.hpp"
 #include "JsonUtils.hpp"
 
 #include <QHash>

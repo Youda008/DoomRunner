@@ -7,8 +7,6 @@
 
 #include "FileSystemUtils.hpp"
 
-#include "OSUtils.hpp"
-
 #include <QDirIterator>
 #include <QFile>
 #include <QSaveFile>

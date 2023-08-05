@@ -8,9 +8,7 @@
 #include "EngineDialog.hpp"
 #include "ui_EngineDialog.h"
 
-#include "OwnFileDialog.hpp"
-#include "Utils/WidgetUtils.hpp"
-#include "Utils/OSUtils.hpp"
+#include "Utils/OSUtils.hpp"  // standard paths
 #include "Utils/MiscUtils.hpp"  // highlightInvalidPath
 #include "Utils/ErrorHandling.hpp"
 
@@ -21,7 +19,7 @@
 
 //======================================================================================================================
 
-EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, const EngineInfo & engine, QString lastUsedDir )
+EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, const EngineInfo & engine, QString lastUsedDir_ )
 :
 	QDialog( parent ),
 	DialogWithPaths( this, pathConv ),
@@ -30,7 +28,7 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 	ui = new Ui::EngineDialog;
 	ui->setupUi(this);
 
-	DialogWithPaths::lastUsedDir = lastUsedDir;
+	DialogWithPaths::lastUsedDir = lastUsedDir_;
 
 	// automatically initialize family combox fox from existing engine families
 	for (size_t familyIdx = 0; familyIdx < size_t(EngineFamily::_EnumEnd); ++familyIdx)

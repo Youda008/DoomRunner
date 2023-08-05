@@ -7,6 +7,7 @@
 
 #include "MiscUtils.hpp"
 
+#include "LangUtils.hpp"  // correspondingValue
 #include "FileSystemUtils.hpp"  // isValidDir, isValidFile
 #include "WidgetUtils.hpp"  // setTextColor
 #include "Themes.hpp"  // getCurrentPalette

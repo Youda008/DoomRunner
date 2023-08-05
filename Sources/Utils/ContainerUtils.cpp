@@ -2,7 +2,7 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: general language-specific helper functions and classes
+// Description: generic container helpers
 //======================================================================================================================
 
-//#include "LangUtils.hpp"
+//#include "ContainerUtils.hpp"

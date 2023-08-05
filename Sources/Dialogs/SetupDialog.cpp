@@ -10,7 +10,6 @@
 
 #include "EngineDialog.hpp"
 
-#include "OwnFileDialog.hpp"
 #include "DoomFiles.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // makeFileFilter, highlightPathIfInvalid

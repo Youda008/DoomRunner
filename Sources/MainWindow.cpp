@@ -25,6 +25,7 @@
 #include "DoomFiles.hpp"
 
 #include "Utils/LangUtils.hpp"
+#include "Utils/ContainerUtils.hpp"
 #include "Utils/FileSystemUtils.hpp"
 #include "Utils/OSUtils.hpp"
 #include "Utils/ExeReader.hpp"

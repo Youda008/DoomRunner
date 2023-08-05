@@ -8,6 +8,7 @@
 #include "ExeReader.hpp"
 
 #include "LangUtils.hpp"  // atScopeEndDo
+#include "ContainerUtils.hpp"  // span
 #include "JsonUtils.hpp"
 
 #include <QFile>

@@ -7,7 +7,8 @@
 
 #include "Themes.hpp"
 
-#include "Utils/LangUtils.hpp"  // find, atScopeEndDo
+#include "Utils/LangUtils.hpp"  // atScopeEndDo
+#include "Utils/ContainerUtils.hpp"  // find
 
 #include <QApplication>
 #include <QWidget>

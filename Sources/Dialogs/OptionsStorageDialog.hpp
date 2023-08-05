@@ -11,7 +11,7 @@
 
 #include "DialogCommon.hpp"
 
-#include "UserData.hpp"  // OptionsStorage
+#include "UserData.hpp"  // StorageSettings
 
 #include <QDialog>
 

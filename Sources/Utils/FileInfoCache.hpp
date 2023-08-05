@@ -12,7 +12,7 @@
 #include "Essential.hpp"
 
 #include "Utils/JsonUtils.hpp"
-#include "Utils/FileSystemUtils.hpp"
+#include "Utils/FileSystemUtils.hpp"  // isValidFile
 
 #include <QString>
 #include <QHash>
@@ -107,7 +107,7 @@ class FileInfoCache {
 	QJsonObject serialize() const
 	{
 		QJsonObject jsMap;
-		
+
 		for (auto iter = _cache.begin(); iter != _cache.end(); ++iter)
 		{
 			// don't save invalid or empty entries
@@ -115,19 +115,19 @@ class FileInfoCache {
 			{
 				continue;
 			}
-			
+
 			jsMap[ iter.key() ] = serialize( iter.value() );
 		}
-		
+
 		_dirty = false;
-		
+
 		return jsMap;
 	}
 
 	void deserialize( const JsonObjectCtx & jsCache )
 	{
 		_dirty = false;
-		
+
 		auto keys = jsCache.keys();
 		for (QString & filePath : keys)
 		{

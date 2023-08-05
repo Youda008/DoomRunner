@@ -50,6 +50,7 @@ HEADERS += \
 	Sources/Dialogs/ProcessOutputWindow.hpp \
 	Sources/Dialogs/SetupDialog.hpp \
 	Sources/DoomFiles.hpp \
+	Sources/Utils/ContainerUtils.hpp \
 	Sources/Utils/ErrorHandling.hpp \
 	Sources/Utils/EventFilters.hpp \
 	Sources/Utils/ExeReader.hpp \
@@ -88,6 +89,7 @@ SOURCES += \
 	Sources/Dialogs/ProcessOutputWindow.cpp \
 	Sources/Dialogs/SetupDialog.cpp \
 	Sources/DoomFiles.cpp \
+	Sources/Utils/ContainerUtils.cpp \
 	Sources/Utils/ErrorHandling.cpp \
 	Sources/Utils/EventFilters.cpp \
 	Sources/Utils/ExeReader.cpp \

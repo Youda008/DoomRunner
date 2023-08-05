@@ -11,10 +11,6 @@
 
 #include "Dialogs/DialogCommon.hpp"
 
-#include "Utils/ExeReader.hpp"      // ExeVersionInfo
-#include "Utils/WADReader.hpp"      // WadInfo
-#include "Utils/FileInfoCache.hpp"  // cache for exe/wad info
-
 #include "Widgets/ListModel.hpp"
 #include "Widgets/SearchPanel.hpp"
 #include "UserData.hpp"

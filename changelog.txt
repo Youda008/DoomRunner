@@ -1,3 +1,9 @@
+1.8.1
+- automatically scroll down to the selected items in map pack list
+- fixed unreadable error message text when using Windows color mode overrides for applications
+- fixed multi-word custom command line arguments in the mod list
+- workaround for Crispy Doom's weird behaviour when launching it with relative executable path
+
 1.8.0
 - changed where the data files are stored, old files will be detected and moved automatically
 - added ability to filter presets by partial name or regular expression

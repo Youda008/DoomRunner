@@ -534,11 +534,14 @@ void SetupDialog::onDarkSchemeChosen()
 
 	themes::setAppColorScheme( settings.colorScheme );
 
-	// The default Windows 10 style doesn't respect the dark colors.
-	if (settings.appStyle.isNull())
+ #if IS_WINDOWS
+	// The default Windows style doesn't work well with dark colors. "Fusion" is the only style where it looks good.
+	// So if someone selects default style while dark mode is enabled in the OS settings, redirect to "Fusion".
+	if (settings.appStyle.isNull() || settings.appStyle == themes::getDefaultAppStyle())
 	{
-		ui->styleCmbBox->setCurrentText("Fusion");
+		ui->styleCmbBox->setCurrentIndex( ui->styleCmbBox->findText("Fusion") );
 	}
+ #endif
 }
 
 void SetupDialog::onLightSchemeChosen()

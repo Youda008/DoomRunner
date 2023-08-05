@@ -46,79 +46,6 @@
 
 
 //======================================================================================================================
-//  App styles
-
-static QString defaultStyle;  ///< style active when application starts, depends on system settings
-static QStringList availableStyles;  ///< styles available on this operating system and graphical environment
-
-// idiotic workaround, because Qt is fucking stupid
-//
-// There is no way to set a tooltip delay, not even a global one, yet for a particular widget.
-// We have to build a list of widget names whose tooltips we want to modify and then check the list
-// in a global application style override.
-class TooltipDelayModifier : public QProxyStyle {
-
-	static const QSet< QString > noDelayLabels;
-
- public:
-
-	using QProxyStyle::QProxyStyle;
-
-	int styleHint( StyleHint hint, const QStyleOption * option, const QWidget * widget, QStyleHintReturn * returnData ) const override
-	{
-		if (hint == QStyle::SH_ToolTip_WakeUpDelay)
-		{
-			if (dynamic_cast< const QLabel * >( widget ))
-			{
-				if (noDelayLabels.contains( widget->objectName() ))
-				{
-					return 50;
-				}
-			}
-		}
-
-		return QProxyStyle::styleHint( hint, option, widget, returnData );
-	}
-
-};
-
-const QSet< QString > TooltipDelayModifier::noDelayLabels =
-{
-	"executableLabel",
-	"configDirLabel",
-	"dataDirLabel",
-	"familyLabel",
-};
-
-static void initStyles()
-{
-	defaultStyle = qApp->style()->objectName();
-	availableStyles = QStyleFactory::keys();
-
-	// this needs to be done here too, so that the tooltip modifications are applied even when no style is set
-	qApp->setStyle( new TooltipDelayModifier( qApp->style() ) );
-}
-
-static void setQtStyle( const QString & styleName )
-{
-	if (styleName.isNull())
-	{
-		qApp->setStyle( new TooltipDelayModifier( QStyleFactory::create( defaultStyle ) ) );
-	}
-	else if (availableStyles.contains( styleName ))
-	{
-		qApp->setStyle( new TooltipDelayModifier( QStyleFactory::create( styleName ) ) );
-	}
-	else
-	{
-		QMessageBox::warning( nullptr, "Unknown style name",
-			"Unable to set application style to \""%styleName%"\". Such style doesn't exist."
-		);
-	}
-}
-
-
-//======================================================================================================================
 //  palette utils
 
 /*
@@ -396,11 +323,16 @@ static void initColorPalettes()
 	*/
 }
 
+static ColorScheme g_currentRealSchemeID = ColorScheme::SystemDefault;  ///< the scheme that was really set after examining system settings
+
 static void setQtColorScheme( ColorScheme schemeID )
 {
-	const QPalette & selectedPalette = palettes[ size_t(schemeID) ];
-
-	qApp->setPalette( selectedPalette );
+	if (schemeID == g_currentRealSchemeID)
+	{
+		return;  // nothing to be done, this scheme is already active
+	}
+	qApp->setPalette( palettes[ size_t(schemeID) ] );
+	g_currentRealSchemeID = schemeID;
 }
 
 const char * schemeToString( ColorScheme scheme )
@@ -418,6 +350,84 @@ ColorScheme schemeFromString( const QString & schemeStr )
 		return ColorScheme( idx );
 	else
 		return ColorScheme::_EnumEnd;
+}
+
+
+//======================================================================================================================
+//  App styles
+
+static QString c_defaultStyleName;  ///< style active when application starts, depends on system settings
+static QStringList c_availableStyleNames;  ///< styles available on this operating system and graphical environment
+static QString g_currentRealStyleName;  ///< the application style that was really set after examining system settings
+
+// idiotic workaround, because Qt is fucking stupid
+//
+// There is no way to set a tooltip delay, not even a global one, yet for a particular widget.
+// We have to build a list of widget names whose tooltips we want to modify and then check the list
+// in a global application style override.
+class TooltipDelayModifier : public QProxyStyle {
+
+	static const QSet< QString > noDelayLabels;
+
+ public:
+
+	using QProxyStyle::QProxyStyle;
+
+	int styleHint( StyleHint hint, const QStyleOption * option, const QWidget * widget, QStyleHintReturn * returnData ) const override
+	{
+		if (hint == QStyle::SH_ToolTip_WakeUpDelay)
+		{
+			if (dynamic_cast< const QLabel * >( widget ))
+			{
+				if (noDelayLabels.contains( widget->objectName() ))
+				{
+					return 50;
+				}
+			}
+		}
+
+		return QProxyStyle::styleHint( hint, option, widget, returnData );
+	}
+
+};
+
+const QSet< QString > TooltipDelayModifier::noDelayLabels =
+{
+	"executableLabel",
+	"configDirLabel",
+	"dataDirLabel",
+	"familyLabel",
+};
+
+static void initStyles()
+{
+	QStyle * currentStyle = qApp->style();
+	c_defaultStyleName = currentStyle->objectName();
+	c_availableStyleNames = QStyleFactory::keys();
+	g_currentRealStyleName = c_defaultStyleName;
+
+	// this needs to be done here too, so that the tooltip modifications are applied even when no style is set
+	qApp->setStyle( new TooltipDelayModifier( currentStyle ) );
+}
+
+static void setQtStyle( const QString & styleName )
+{
+	if (styleName == g_currentRealStyleName)
+	{
+		return;  // nothing to be done, this style is already active
+	}
+
+	if (c_availableStyleNames.contains( styleName ))
+	{
+		qApp->setStyle( new TooltipDelayModifier( QStyleFactory::create( styleName ) ) );
+		g_currentRealStyleName = styleName;
+	}
+	else
+	{
+		QMessageBox::warning( nullptr, "Unknown style name",
+			"Unable to set application style to \""%styleName%"\". Such style doesn't exist."
+		);
+	}
 }
 
 
@@ -476,6 +486,7 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 
 	auto guard = atScopeEndDo( [&]() { RegCloseKey( hThemeSettingsKey ); } );
 
+	// check if we can read the registry value before we enter the infinite loop
 	optAppsUseLightTheme = readRegistryDWORD( hThemeSettingsKey, nullptr, darkModeValueName );
 	if (!optAppsUseLightTheme)
 	{
@@ -548,10 +559,8 @@ static void toggleDarkTitleBars( bool enable )
 //======================================================================================================================
 //  main logic
 
-// make sure these variables are only accessed from the main thread, or make them std::atomic
+static QString g_currentUserStyleName;  ///< the application style the user chose via setAppStyle(), empty name means system-default
 static ColorScheme g_currentUserSchemeID = ColorScheme::SystemDefault;  ///< the scheme user chose via setAppColorScheme()
-static ColorScheme g_currentRealSchemeID = ColorScheme::SystemDefault;  ///< the scheme that was really set after examining system settings
-static QString g_currentStyle;  ///< the application style the user chose via setAppStyle()
 
 namespace themes {
 
@@ -568,29 +577,42 @@ void init()
 	if (isSystemDarkModeEnabled())
 	{
 		setQtColorScheme( ColorScheme::Dark );
+		// The default Windows style doesn't work well with dark colors. "Fusion" is the only style where it looks good.
+		setQtStyle( "Fusion" );
 	}
  #endif
 }
 
 QStringList getAvailableAppStyles()
 {
-	return availableStyles;
+	return c_availableStyleNames;
 }
 
 QString getDefaultAppStyle()
 {
-	return defaultStyle;
+	return c_defaultStyleName;
 }
 
-void setAppStyle( const QString & styleName )
+void setAppStyle( const QString & userStyleName )
 {
-	if (styleName == g_currentStyle)
-	{
-		return;  // nothing to be done, this style is already active
-	}
-	g_currentStyle = styleName;
+	g_currentUserStyleName = userStyleName;
+	QString realStyleName = userStyleName;
 
-	setQtStyle( styleName );
+	if (userStyleName.isNull())  // empty style name means use whatever is default on this system
+	{
+		realStyleName = c_defaultStyleName;
+
+	 #if IS_WINDOWS
+		// The default Windows style doesn't work well with dark colors. "Fusion" is the only style where it looks good.
+		// So if the user chooses default style while dark scheme is active, divert the style to "Fusion".
+		if (g_currentRealSchemeID == ColorScheme::Dark)
+		{
+			realStyleName = "Fusion";
+		}
+	 #endif
+	}
+
+	setQtStyle( realStyleName );
 }
 
 void updateWindowBorder( [[maybe_unused]] QWidget * window )
@@ -608,9 +630,9 @@ void updateWindowBorder( [[maybe_unused]] QWidget * window )
 
 void setAppColorScheme( ColorScheme userSchemeID )
 {
-	ColorScheme realSchemeID = userSchemeID;
 	g_currentUserSchemeID = userSchemeID;
 
+	ColorScheme realSchemeID = userSchemeID;
  #if IS_WINDOWS
 	// Qt on Windows does not automatically follow OS preferences, so we have to check the OS settings
 	// and manually override the user-selected default theme with our dark one in case it's enabled.
@@ -621,23 +643,22 @@ void setAppColorScheme( ColorScheme userSchemeID )
 	}
  #endif
 
-	if (realSchemeID == g_currentRealSchemeID)
-	{
-		return;  // nothing to be done, this scheme is already active
-	}
-	g_currentRealSchemeID = realSchemeID;
-
 	setQtColorScheme( realSchemeID );
 
  #if IS_WINDOWS
 	// On Windows the title bar follows the system preferences and isn't controlled by Qt,
 	// so in case the user requests explicit dark theme we use this hack to make it dark too.
 	toggleDarkTitleBars( realSchemeID == ColorScheme::Dark && !systemDarkModeEnabled );
-	// The dark colors don't work well with the default Windows style.
-	// We have to use "Fusion", that's the only style where it looks good.
-	if (realSchemeID == ColorScheme::Dark)
+
+	// The default Windows style doesn't work well with dark colors. "Fusion" is the only style where it looks good.
+	// So if we're switching to dark scheme and chosen style is system-default (don't care), divert the style to "Fusion".
+	// If "Fusion" is no longer needed (non-dark scheme), revert it back to real default.
+	if (g_currentUserStyleName.isNull())  // empty style name means use system-default
 	{
-		setAppStyle( "Fusion" );
+		if (realSchemeID == ColorScheme::Dark)
+			setQtStyle( "Fusion" );
+		else
+			setQtStyle( c_defaultStyleName );
 	}
  #endif
 }
@@ -666,12 +687,14 @@ QString updateHyperlinkColor( QString richText )
 
 WindowsThemeWatcher::WindowsThemeWatcher()
 {
-	// If this object is constructed in the main thread, this will make the updateTheme be called in the main thread.
+	// If this object is constructed in the main thread, this will make the updateScheme() be called in the main thread.
 	connect( this, &WindowsThemeWatcher::darkModeToggled, this, &WindowsThemeWatcher::updateScheme );
 }
 
 void WindowsThemeWatcher::run()
 {
+	// This will run in a separate thread.
+
 	watchForSystemDarkModeChanges( [this]( bool darkModeEnabled )
 	{
 		emit darkModeToggled( darkModeEnabled );
@@ -681,20 +704,20 @@ void WindowsThemeWatcher::run()
 void WindowsThemeWatcher::updateScheme( [[maybe_unused]] bool darkModeEnabled )
 {
 	// This will be executed in the main thread.
+
 	if (g_currentUserSchemeID == ColorScheme::SystemDefault)
 	{
 		ColorScheme realSchemeID = darkModeEnabled ? ColorScheme::Dark : ColorScheme::SystemDefault;
-		if (realSchemeID == g_currentRealSchemeID)
-		{
-			return;  // nothing to be done, this scheme is already active
-		}
-		g_currentRealSchemeID = realSchemeID;
 
 		setQtColorScheme( realSchemeID );
 		toggleDarkTitleBars( realSchemeID == ColorScheme::Dark && !darkModeEnabled );
-		if (realSchemeID == ColorScheme::Dark)
+
+		if (g_currentUserStyleName.isNull())  // empty style name means use system-default
 		{
-			themes::setAppStyle( "Fusion" );
+			if (realSchemeID == ColorScheme::Dark)
+				setQtStyle( "Fusion" );
+			else
+				setQtStyle( c_defaultStyleName );
 		}
 	}
 }

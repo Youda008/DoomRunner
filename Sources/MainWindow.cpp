@@ -890,8 +890,9 @@ void MainWindow::onWindowShown()
  #if IS_WINDOWS
 	// Qt on Windows does not automatically follow OS preferences, so we have to monitor the OS settings for changes
 	// and manually change our theme when it does.
-	// Rather set this after loading options, when all potential loading errors have been shown,
-	// so that the error message dialogs don't show in some kind of half-switched state.
+	// Rather set this after loading options, because the MainWindow is blocked (is not updating) during the whole
+	// options loading including any potential error messages, which if the theme is switched in the middle
+	// might show in some kind of half-switched state.
 	themeWatcher.start();
  #endif
 
@@ -3246,8 +3247,8 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 
 	// Rather set this in the end after all potential loading errors have been shown,
 	// so that the error message dialogs don't show in some kind of half-switched state.
-	if (settings.appStyle != themes::getDefaultAppStyle())
-		themes::setAppStyle( settings.appStyle );
+	if (!settings.appStyle.isNull())
+		themes::setAppStyle( settings.appStyle );  // set style first, on Windows it may be overriden by color scheme
 	if (IS_WINDOWS || settings.colorScheme != ColorScheme::SystemDefault)
 		themes::setAppColorScheme( settings.colorScheme );
 

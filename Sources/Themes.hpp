@@ -51,6 +51,23 @@ namespace themes {
 void init();
 
 
+// color schemes
+
+/// Sets a color scheme for the whole application.
+/** init() must be called before calling this function. */
+void setAppColorScheme( ColorScheme scheme );
+
+const Palette & getCurrentPalette();
+
+// Sometimes hyperlinks in a widget's text specify color in HTML tag, which overrides palette.setColor( QPalette::Link, ... )
+// In such case this needs to be called to update the HTML tag color.
+QString updateHyperlinkColor( QString richText );
+
+// On Windows this needs to be called everytime a new window (dialog) is created,
+// because the new title bar and window borders are not automatically changed by Qt.
+void updateWindowBorder( QWidget * window );
+
+
 // app styles
 
 /// Returns possible values to the setAppStyle() function.
@@ -66,30 +83,14 @@ QString getDefaultAppStyle();
   * init() must be called before calling this function. */
 void setAppStyle( const QString & styleName );
 
-// On Windows this needs to be called everytime a new window (dialog) is created,
-// because the new title bar and window borders are not automatically changed by Qt.
-void updateWindowBorder( QWidget * window );
-
-
-// color schemes
-
-/// Sets a color scheme for the whole application.
-/** init() must be called before calling this function. */
-void setAppColorScheme( ColorScheme scheme );
-
-const Palette & getCurrentPalette();
-
-// Sometimes hyperlinks in a widget's text specify color in HTML tag, which overrides palette.setColor( QPalette::Link, ... )
-// In such case this needs to be called to update the HTML tag color.
-QString updateHyperlinkColor( QString richText );
-
 
 } // namespace themes
 
 
 //======================================================================================================================
 /// Monitors changes to the theme settings of the operating system.
-/** Qt on Windows does not automatically follow OS preferences, so the OS theme settings have to be manually monitored
+/**
+  * Qt on Windows does not automatically follow OS preferences, so the OS theme settings have to be manually monitored
   * in a background thread, and our theme manually updated whenever it changes.
   * Construct this object in a main thread and call start(), that will ensure the theme update is performed in
   * the main thread even though the monitoring will be done in a background thread.

@@ -3684,9 +3684,13 @@ void MainWindow::exportPresetToScript()
 	QFileInfo scriptFileInfo( scriptFilePath );
 	QString scriptDir = scriptFileInfo.path();
 
+	PathStyle cmdPathStyle = pathConvertor.pathStyle();
+
 	// Both the executable and the paths in the arguments need to be relative to the directory of the script file,
 	// because the script will set the working directory to it's own directory.
-	auto cmd = generateLaunchCommand( scriptDir, scriptDir, DontVerifyPaths, QuotePaths );
+	auto cmd = generateLaunchCommand(
+		scriptDir, cmdPathStyle, scriptDir, cmdPathStyle, QuotePaths, DontVerifyPaths
+	);
 
 	lastUsedDir = std::move(scriptDir);
 
@@ -3738,14 +3742,17 @@ void MainWindow::exportPresetToShortcut()
 
 	lastUsedDir = fs::getDirOfFile( shortcutPath );
 
-	// The paths in the arguments need to be relative to the engine's directory
-	// because the engine will be executed with the working directory set to engine's directory,
-	// But the executable itself must be either absolute or relative to the current working dir
-	// so that it is correctly saved to the shortcut.
 	QString currentWorkingDir = pathConvertor.workingDir().path();
 	QString engineWorkingDir = fs::getAbsoluteDirOfFile( selectedEngine->executablePath );
 
-	auto cmd = generateLaunchCommand( currentWorkingDir, engineWorkingDir, DontVerifyPaths, QuotePaths );
+	// - The paths in the arguments need to be relative to the engine's directory
+	//   because the engine will be executed with the working directory set to engine's directory,
+	// - But the executable itself must be either absolute or relative to the current working dir
+	//   so that it is correctly saved to the shortcut.
+	// - Paths need to be quoted because Windows accepts a single string with all arguments concatenated instead of a list.
+	auto cmd = generateLaunchCommand(
+		currentWorkingDir, PathStyle::Absolute, engineWorkingDir, pathConvertor.pathStyle(), QuotePaths, DontVerifyPaths
+	);
 
 	bool success = os::createWindowsShortcut( shortcutPath, cmd.executable, cmd.arguments, engineWorkingDir, selectedPreset->name );
 	if (!success)
@@ -3786,20 +3793,24 @@ void MainWindow::updateLaunchCommand()
 		return;  // no sense to generate a command when we don't even know the engine
 	}
 
-	QString curCommand = ui->commandLine->text();
+	QString currentCommand = ui->commandLine->text();
+
+	QString engineDir = fs::getDirOfFile( selectedEngine->executablePath );
+
+	PathStyle cmdPathStyle = pathConvertor.pathStyle();
 
 	// The paths in the arguments need to be relative to the engine's directory,
 	// because the engine will be executed with the working directory set to engine's directory.
 	// The relative path of the executable does not matter, because here it is for displaying only.
-	QString engineDir = fs::getDirOfFile( selectedEngine->executablePath );
-
-	auto cmd = generateLaunchCommand( engineDir, engineDir, DontVerifyPaths, QuotePaths );
+	auto cmd = generateLaunchCommand(
+		engineDir, cmdPathStyle, engineDir, cmdPathStyle, QuotePaths, DontVerifyPaths
+	);
 
 	QString newCommand = cmd.executable % ' ' % cmd.arguments.join(' ');
 
 	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
 	// and copy part of the line, by constantly reseting his selection.
-	if (newCommand != curCommand)
+	if (newCommand != currentCommand)
 	{
 		//static int updateCnt = 1;
 		//qDebug() << "    updating " << updateCnt++;
@@ -3810,23 +3821,26 @@ void MainWindow::updateLaunchCommand()
 /// Generates a command to be run, displayed or saved to a script file, according to the specified options.
 /**
   * \param parentWorkingDir Working directory when the command is executed by the parent process.
-  *                         This will determine the relative path of the executable in the command.
+  *                         This will determine the relative path of the engine executable in the command.
   * \param engineWorkingDir Working directory for the engine process that will be started.
   *                         This will determine the relative paths of the file or directory arguments passed to the engine.
-  * \param verifyPaths Verify that each path in the command is valid and leads to the correct entry type (file or directory).
-  *                    If invalid path is found, display a message box with an error description.
+  * \param enginePathStyle Path style to be used for the engine executable.
+  * \param argPathStyle Path style to be used for the paths in the command line arguments.
   * \param quotePaths Surround each path in the command with quotes.
   *                   Required for displaying the command or saving it to a script file.
+  * \param verifyPaths Verify that each path in the command is valid and leads to the correct entry type (file or directory).
+  *                    If invalid path is found, display a message box with an error description.
   */
 os::ShellCommand MainWindow::generateLaunchCommand(
-	const QString & parentWorkingDir, const QString & engineWorkingDir, bool verifyPaths, bool quotePaths
+	const QString & parentWorkingDir, PathStyle enginePathStyle, const QString & engineWorkingDir, PathStyle argPathStyle,
+	bool quotePaths, bool verifyPaths
 ){
 	os::ShellCommand cmd;
 
 	// The stored engine path is relative to DoomRunner's directory, but we need it relative to parentWorkingDir.
-	PathRebaser parentDirRebaser( pathConvertor.workingDir(), parentWorkingDir, pathConvertor.pathStyle(), quotePaths );
+	PathRebaser parentDirRebaser( pathConvertor.workingDir(), parentWorkingDir, enginePathStyle, quotePaths );
 	// All stored paths are relative to DoomRunner's directory, but we need them relative to engineWorkingDir.
-	PathRebaser engineDirRebaser( pathConvertor.workingDir(), engineWorkingDir, pathConvertor.pathStyle(), quotePaths );
+	PathRebaser engineDirRebaser( pathConvertor.workingDir(), engineWorkingDir, argPathStyle, quotePaths );
 
 	PathChecker p( this, verifyPaths );
 
@@ -4122,7 +4136,7 @@ bool MainWindow::startDetached(
 	const QString & executable, const QStringVec & arguments, const QString & workingDir, const EnvVars & envVars
 ){
 	QString executableName = fs::getFileNameFromPath( executable );
-	
+
 	QProcess process;
 
 	process.setProgram( executable );
@@ -4141,7 +4155,7 @@ bool MainWindow::startDetached(
 	{
 		QMessageBox::warning( this, "Process start error", "Failed to start "%executableName%" ("%process.errorString()%")" );
 	}
-	
+
 	return success;
 }
 
@@ -4158,16 +4172,17 @@ void MainWindow::launch()
 	QString engineWorkingDir = fs::getAbsoluteDirOfFile( selectedEngine->executablePath );
 
 	// Re-run the command construction, but display error message and abort when there is invalid path.
-	// When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
-	// All paths will be relative to the engine's dir, because working dir will be set to the engine's dir when started.
-	auto cmd = generateLaunchCommand( currentWorkingDir, engineWorkingDir, VerifyPaths, DontQuotePaths );
+	// - The engine must be launched using absolute path, because some engines cannot handle being started
+	//   from another directory with relative executable path (looking at you Crispy Doom, fix your shit!).
+	// - All paths will be relative to the engine's dir, because working dir will be set to the engine's dir when started.
+	// - When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
+	auto cmd = generateLaunchCommand(
+		currentWorkingDir, PathStyle::Absolute, engineWorkingDir, pathConvertor.pathStyle(), DontQuotePaths, VerifyPaths
+	);
 	if (cmd.executable.isNull())
 	{
 		return;  // errors are already shown during the generation
 	}
-	// The engine must be launched using absolute path, because some engines cannot handle being started
-	// from another directory with relative executable path (looking at you Crispy Doom, fix your shit!).
-	cmd.executable = fs::getAbsolutePath( cmd.executable );
 
 	//qDebug() << cmd.executable << cmd.arguments;
 
@@ -4213,7 +4228,7 @@ void MainWindow::launch()
 	else
 	{
 		bool success = startDetached( cmd.executable, cmd.arguments, processWorkingDir, envVars );
-		
+
 		if (success && settings.closeOnLaunch)
 		{
 			QApplication::quit();

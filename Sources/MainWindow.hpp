@@ -223,7 +223,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void updateLaunchCommand();
 	os::ShellCommand generateLaunchCommand(
-		const QString & parentWorkingDir, const QString & engineWorkingDir, bool verifyPaths, bool quotePaths
+		const QString & parentWorkingDir, PathStyle enginePathStyle, const QString & engineWorkingDir, PathStyle argPathStyle,
+		bool quotePaths, bool verifyPaths
 	);
 
 	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );

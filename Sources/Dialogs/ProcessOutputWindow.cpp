@@ -346,17 +346,17 @@ void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 	{
 		case QProcess::FailedToStart:
 			setOwnStatus( ProcessStatus::FailedToStart );
-			QMessageBox::warning( this, "Process start error", "Failed to start " % executableName % "." );
+			QMessageBox::warning( this, "Process start error", "Failed to start "%executableName%" ("%process.errorString()%")" );
 			closeDialog( QDialog::Accepted );
 			break;
 		case QProcess::Crashed:
 			setOwnStatus( ProcessStatus::Crashed );
-			QMessageBox::warning( this, "Program crashed", executableName % " has crashed." );
+			QMessageBox::warning( this, "Program crashed", executableName%" has crashed." );
 			closeDialog( QDialog::Accepted );
 			break;
 		case QProcess::Timedout:
 			setOwnStatus( ProcessStatus::FailedToStart );
-			QMessageBox::warning( this, "Process start timeout", executableName % " process has timed out while starting." );
+			QMessageBox::warning( this, "Process start timeout", executableName%" process has timed out while starting." );
 			closeDialog( QDialog::Accepted );
 			break;
 		case QProcess::ReadError:
@@ -373,7 +373,7 @@ void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 			break;
 		default:
 			setOwnStatus( ProcessStatus::UnknownError );
-			QMessageBox::warning( this, "Unknown error", "Unknown error occured while executing command." );
+			QMessageBox::warning( this, "Unknown error", "Unknown error occured while executing command: "%process.errorString() );
 			//qDebug() << "    terminating process";
 			process.terminate();  // wait for the process to quit, then close dialog
 			break;

@@ -4121,6 +4121,8 @@ int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const
 bool MainWindow::startDetached(
 	const QString & executable, const QStringVec & arguments, const QString & workingDir, const EnvVars & envVars
 ){
+	QString executableName = fs::getFileNameFromPath( executable );
+	
 	QProcess process;
 
 	process.setProgram( executable );
@@ -4134,7 +4136,13 @@ bool MainWindow::startDetached(
 	}
 	process.setProcessEnvironment(env);
 
-	return process.startDetached();
+	bool success = process.startDetached();
+	if (!success)
+	{
+		QMessageBox::warning( this, "Process start error", "Failed to start "%executableName%" ("%process.errorString()%")" );
+	}
+	
+	return success;
 }
 
 void MainWindow::launch()
@@ -4205,13 +4213,8 @@ void MainWindow::launch()
 	else
 	{
 		bool success = startDetached( cmd.executable, cmd.arguments, processWorkingDir, envVars );
-		if (!success)
-		{
-			QMessageBox::warning( this, "Launch error", "Failed to execute launch command." );
-			return;
-		}
-
-		if (settings.closeOnLaunch)
+		
+		if (success && settings.closeOnLaunch)
 		{
 			QApplication::quit();
 		}

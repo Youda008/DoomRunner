@@ -36,7 +36,7 @@ void setCurrentItemByIndex( QListView * view, int index )
 {
 	QModelIndex modelIndex = view->model()->index( index, 0 );
 	view->selectionModel()->setCurrentIndex( modelIndex, QItemSelectionModel::NoUpdate );
-	view->scrollTo( modelIndex, QListView::ScrollHint::PositionAtCenter );
+	view->scrollTo( modelIndex, QListView::ScrollHint::EnsureVisible );
 }
 
 void unsetCurrentItem( QListView * view )
@@ -134,7 +134,7 @@ QModelIndex getCurrentItemIndex( QTreeView * view )
 void setCurrentItemByIndex( QTreeView * view, const QModelIndex & index )
 {
 	view->selectionModel()->setCurrentIndex( index, QItemSelectionModel::NoUpdate );
-	view->scrollTo( index, QListView::ScrollHint::PositionAtCenter );
+	view->scrollTo( index, QListView::ScrollHint::EnsureVisible );
 }
 
 void unsetCurrentItem( QTreeView * view )
@@ -409,17 +409,28 @@ void swapTableRows( QTableWidget * widget, int row1, int row2 )
 //  miscellaneous
 
 
-void expandParentsOfNode( QTreeView * view, const QModelIndex & index )
+void expandParentsOfNode( QTreeView * view, const QModelIndex & modelIindex )
 {
-	for (QModelIndex currentIndex = index; currentIndex.isValid(); currentIndex = currentIndex.parent())
+	for (QModelIndex currentIndex = modelIindex; currentIndex.isValid(); currentIndex = currentIndex.parent())
 		if (!view->isExpanded( currentIndex ))
 			view->expand( currentIndex );
 }
 
+void scrollToItemAtIndex( QAbstractItemView * view, const QModelIndex & modelIndex )
+{
+	view->scrollTo( modelIndex, QListView::ScrollHint::PositionAtCenter );
+}
+
 void scrollToCurrentItem( QAbstractItemView * view )
 {
-	auto currentIndex = view->currentIndex();
-	view->scrollTo( currentIndex );
+	QModelIndex currentIndex = view->currentIndex();
+	scrollToItemAtIndex( view, currentIndex );
+}
+
+void scrollToItemAtIndex( QListView * view, int index )
+{
+	QModelIndex modelIndex = view->model()->index( index, 0 );
+	scrollToItemAtIndex( view, modelIndex );
 }
 
 void setTextColor( QWidget * widget, QColor color )

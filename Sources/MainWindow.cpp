@@ -3246,6 +3246,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		{
 			// This invokes the callback, which enables the dependent widgets and calls restorePreset(...)
 			wdg::selectAndSetCurrentByIndex( ui->presetListView, selectedPresetIdx );
+			wdg::scrollToItemAtIndex( ui->presetListView, selectedPresetIdx );
 		}
 		else
 		{
@@ -3431,6 +3432,7 @@ void MainWindow::restoreSelectedIWAD( Preset & preset )
 		if (iwadIdx >= 0)
 		{
 			wdg::selectAndSetCurrentByIndex( ui->iwadListView, iwadIdx );
+			wdg::scrollToItemAtIndex( ui->iwadListView, iwadIdx );
 
 			if (!fs::isValidFile( preset.selectedIWAD ))
 			{
@@ -3477,6 +3479,7 @@ void MainWindow::restoreSelectedMapPacks( Preset & preset )
 			{
 				preset.selectedMapPacks.append( path );  // put back only items that are valid
 				wdg::selectAndSetCurrentByIndex( ui->mapDirView, mapIdx );
+				wdg::scrollToItemAtIndex( ui->mapDirView, mapIdx );
 			}
 			else
 			{

@@ -596,7 +596,7 @@
        <attribute name="title">
         <string>More options</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,1">
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
@@ -1653,7 +1653,7 @@
        <attribute name="title">
         <string>Output options</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_31">
+       <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="1,1">
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_13">
           <item>

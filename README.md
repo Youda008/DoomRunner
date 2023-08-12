@@ -108,10 +108,11 @@ The executable was built in Kubuntu 22.04 LTS so there is a chance that it will 
 
 #### Install via Flatpak
 
-Thanks to [Massi aka Ergosum](https://github.com/mbugni), Doom Runner can now be installed via [Flatpak](https://flatpak.org/) from this package TODO: link, using the following commands:
-```
-TODO
-```
+Doom Runner can be installed via [Flatpak](https://flatpak.org/) from this link:
+
+[![Download Doom Runner](https://dl.flathub.org/assets/badges/flathub-badge-en.png 'Download Doom Runner')](https://flathub.org/apps/io.github.Youda008.DoomRunner)
+
+See [Flathub README](https://github.com/flathub/io.github.Youda008.DoomRunner#readme) for more informations.
 
 #### Install from AUR
 

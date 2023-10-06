@@ -21,7 +21,7 @@ extern const QString emptyString;
 class QStringVec : public QVector< QString >
 {
  public:
-	using QVector::QVector;
+	using QVector<QString>::QVector;
 	//QStringVec( const QVector< QString > & other ) : QVector( other ) {}
 	//QStringVec( QVector< QString > & other ) : QVector( std::move(other) ) {}
 	QString join( QChar delimiter ) const;

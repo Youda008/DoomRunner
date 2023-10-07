@@ -132,6 +132,7 @@ RESOURCES += \
 
 # To set an icon for the exe file we need to use the Windows resource system, see https://doc.qt.io/qt-6/appicon.html
 win32: RC_ICONS += Resources/DoomRunner.ico
+macx: ICON = Resources/DoomRunner.icns
 
 
 #-- libraries ------------------------------------

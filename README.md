@@ -234,6 +234,23 @@ make
 ```
 
 
+### macOS
+
+This guide assumes you have Homebrew installed
+
+##### 1. Install Qt
+```
+brew install qt
+```
+
+##### 2. Build the project
+```
+cd <DoomRunner directory>
+mkdir build-dynamic
+cd build-dynamic
+qmake ../DoomRunner.pro -spec macx-g++ "CONFIG+=release"
+make
+```
 
 ## Reporting issues and requesting features
 

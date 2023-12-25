@@ -299,7 +299,7 @@ class PathRebaser {
 		if (path.isEmpty())
 			return {};
 
-		QString absPath = fs::isAbsolutePath( path ) ? path : inputBaseDir.filePath( path );
+		QString absPath = fs::isAbsolutePath( path ) ? path : inputBaseDir.absoluteFilePath( path );
 		QString newPath = outputAbsolutePaths() ? absPath : outputBaseDir.relativeFilePath( absPath );
 
 		return newPath;

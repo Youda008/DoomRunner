@@ -146,7 +146,7 @@ QString MainWindow::getConfigDir() const
 QString MainWindow::getDataDir() const
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
-	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : QString();
+	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].dataDir : QString();
 }
 
 QString MainWindow::getSaveDir() const

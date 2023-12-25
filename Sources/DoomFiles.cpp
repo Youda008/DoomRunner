@@ -133,9 +133,12 @@ static const QHash< QString, QString > startingMapsLookup =
 };
 
 // slow regex search for WADs whose name follows specfic format, for example those with postfixed version number
+inline constexpr auto CaseSensitive   = QRegularExpression::NoPatternOption;
+inline constexpr auto CaseInsensitive = QRegularExpression::CaseInsensitiveOption;
 static const QPair< QRegularExpression, QString > startingMapsRegexes [] =
 {
-	{ QRegularExpression("sigil[^.]*\\.wad"), "E5M1" },  // SIGIL_v1_21.wad
+	{ QRegularExpression("SIGIL_II[^.]*\\.wad", CaseInsensitive), "E6M1" },  // SIGIL_II_V1_0.WAD
+	{ QRegularExpression("SIGIL[^.]*\\.wad",    CaseInsensitive), "E5M1" },  // SIGIL_v1_21.wad
 };
 
 QString getStartingMap( const QString & wadFileName )

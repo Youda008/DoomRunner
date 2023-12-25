@@ -1006,7 +1006,7 @@
                <item>
                 <widget class="QCheckBox" name="allowCheatsChkBox">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+sv_cheats&lt;br/&gt;&lt;/span&gt;When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &amp;quot;disablecheats&amp;quot; property, as well as network games; however, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+sv_cheats&lt;br/&gt;&lt;/span&gt;When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &amp;quot;disablecheats&amp;quot; property, as well as network games.&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Until GZDoom 4.9.0:&lt;/span&gt; However, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Force allow cheats</string>

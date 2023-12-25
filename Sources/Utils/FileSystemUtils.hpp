@@ -131,6 +131,13 @@ inline QString getDirnameOfFile( const QString & filePath )
 	return QFileInfo( filePath ).dir().dirName();
 }
 
+inline QString replaceFileSuffix( const QString & filePath, const QString & newSuffix )
+{
+	QFileInfo fileInfo( filePath );
+	QString newFileName = fileInfo.baseName() % '.' % newSuffix;
+	return fileInfo.dir().filePath( newFileName );
+}
+
 inline bool isInsideDir( const QString & entryPath, const QDir & dir )
 {
 	return QFileInfo( entryPath ).absoluteFilePath().startsWith( dir.absolutePath() );

@@ -1463,8 +1463,7 @@ void MainWindow::onModDataChanged( const QModelIndex & topLeft, const QModelInde
 
 void MainWindow::showMapPackDesc( const QModelIndex & index )
 {
-	QString mapDataFilePath = mapModel.filePath( index );
-	QFileInfo mapDataFileInfo( mapDataFilePath );
+	QFileInfo mapDataFileInfo = mapModel.filePath( index );
 
 	if (!mapDataFileInfo.isFile())  // user could click on a directory
 	{
@@ -1472,29 +1471,32 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	}
 
 	// get the corresponding file with txt suffix
-	QString mapDescFileName = mapDataFileInfo.completeBaseName() + ".txt";
-	QString mapDescFilePath = mapDataFilePath.mid( 0, mapDataFilePath.lastIndexOf('.') ) + ".txt";  // QFileInfo won't help with this
+	QFileInfo mapDescFileInfo = fs::replaceFileSuffix( mapDataFileInfo.filePath(), "txt" );
+	if (!mapDescFileInfo.isFile())
+	{
+		// try TXT in case we are in a case-sensitive file-system such as Linux
+		mapDescFileInfo = fs::replaceFileSuffix( mapDataFileInfo.filePath(), "TXT" );
+		if (!mapDescFileInfo.isFile())
+		{
+			QMessageBox::warning( this, "Cannot open map description",
+				"Map description file \""%mapDescFileInfo.fileName()%"\" does not exist" );
+			return;
+		}
+	}
 
-	if (!fs::isValidFile( mapDescFilePath ))
+	QFile mapDescFile( mapDescFileInfo.filePath() );
+	if (!mapDescFile.open( QIODevice::Text | QIODevice::ReadOnly ))
 	{
 		QMessageBox::warning( this, "Cannot open map description",
-			"Map description file \""%mapDescFileName%"\" does not exist" );
+			"Failed to open description file "%mapDescFileInfo.fileName()%": "%mapDescFile.errorString() );
 		return;
 	}
 
-	QFile descFile( mapDescFilePath );
-	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
-	{
-		QMessageBox::warning( this, "Cannot open map description",
-			"Failed to open description file "%mapDescFileName%": "%descFile.errorString() );
-		return;
-	}
-
-	QByteArray desc = descFile.readAll();
+	QByteArray desc = mapDescFile.readAll();
 
 	QDialog descDialog( this );
 	descDialog.setObjectName( "MapDescription" );
-	descDialog.setWindowTitle( "Map pack description" );
+	descDialog.setWindowTitle( mapDescFileInfo.fileName() );
 	descDialog.setWindowModality( Qt::WindowModal );
 
 	QVBoxLayout * layout = new QVBoxLayout( &descDialog );

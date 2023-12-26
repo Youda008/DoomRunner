@@ -176,7 +176,7 @@ class FileInfoCache {
 		{
 			qWarning() << "FileInfoCache: failed to read file" << filePath;
 		}
-		else if (newEntry.fileInfo.status == ReadStatus::FailedToRead)
+		else if (newEntry.fileInfo.status == ReadStatus::NotSupported)
 		{
 			//qDebug() << "FileInfoCache: file info for" << filePath << "not implemented";
 		}

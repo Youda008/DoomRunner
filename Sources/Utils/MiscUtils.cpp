@@ -130,22 +130,22 @@ bool highlightFilePathIfInvalidOrCanBeCreated( QLineEdit * lineEdit, const QStri
 	}
 }
 
-void highlightInvalidListItem( ReadOnlyListModelItem & item )
+void highlightInvalidListItem( const ReadOnlyListModelItem & item )
 {
 	item.textColor = themes::getCurrentPalette().invalidEntryText;
 }
 
-void unhighlightListItem( ReadOnlyListModelItem & item )
+void unhighlightListItem( const ReadOnlyListModelItem & item )
 {
 	item.textColor.reset();
 }
 
-void markItemAsDefault( ReadOnlyListModelItem & item )
+void markItemAsDefault( const ReadOnlyListModelItem & item )
 {
 	item.textColor = themes::getCurrentPalette().defaultEntryText;
 }
 
-void unmarkItemAsDefault( ReadOnlyListModelItem & item )
+void unmarkItemAsDefault( const ReadOnlyListModelItem & item )
 {
 	item.textColor = themes::getCurrentPalette().color( QPalette::Text );
 }
@@ -181,7 +181,7 @@ bool PathChecker::_checkNonEmptyPath(
 	const QString & path, EntryType expectedType, bool & errorMessageDisplayed,
 	QWidget * parent, QString subjectName, QString errorPostscript
 ){
-	if (!QFileInfo::exists( path ))
+	if (!fs::exists( path ))
 	{
 		QString fileOrDir = correspondingValue( expectedType,
 			corresponds( EntryType::File, "File" ),

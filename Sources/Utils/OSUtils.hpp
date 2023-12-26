@@ -111,6 +111,9 @@ QVector< MonitorInfo > listMonitors();
 
 //-- miscellaneous ---------------------------------------------------------------------------------
 
+/// Opens a selected directory in a new File Explorer window.
+bool openDirectoryWindow( const QString & dirPath );
+
 /// Opens a directory of a file in a new File Explorer window.
 bool openFileLocation( const QString & filePath );
 

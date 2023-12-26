@@ -49,16 +49,16 @@ bool highlightDirPathIfFileOrCanBeCreated( QLineEdit * lineEdit, const QString &
 bool highlightFilePathIfDirOrCanBeCreated( QLineEdit * lineEdit, const QString & path );
 
 /// Makes this item highlighted in its views.
-void highlightInvalidListItem( ReadOnlyListModelItem & item );
+void highlightInvalidListItem( const ReadOnlyListModelItem & item );
 
 /// Removed the highlighting of this item in its views.
-void unhighlightListItem( ReadOnlyListModelItem & item );
+void unhighlightListItem( const ReadOnlyListModelItem & item );
 
 /// Marks this item as the default one.
-void markItemAsDefault( ReadOnlyListModelItem & item );
+void markItemAsDefault( const ReadOnlyListModelItem & item );
 
 /// Removes the default item marking.
-void unmarkItemAsDefault( ReadOnlyListModelItem & item );
+void unmarkItemAsDefault( const ReadOnlyListModelItem & item );
 
 
 class PathChecker {
@@ -112,7 +112,7 @@ class PathChecker {
 		if (!verificationRequired)
 			return true;
 
-		if (path.isEmpty() || !QFileInfo::exists( path ))
+		if (path.isEmpty() || !fs::exists( path ))
 			return true;
 
 		return _checkCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );

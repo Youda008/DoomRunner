@@ -8,6 +8,7 @@
 #include "OSUtils.hpp"
 
 #include "FileSystemUtils.hpp"
+#include "ErrorHandling.hpp"
 
 #include <QStandardPaths>
 #include <QApplication>
@@ -18,6 +19,7 @@
 #include <QScreen>
 #include <QProcess>
 
+#include <QMessageBox>
 #include <QDebug>
 
 #if IS_WINDOWS
@@ -52,7 +54,7 @@ QString getSavedGamesDir()
 	if (FAILED(hr) || !pszPath)
 	{
 		auto lastError = GetLastError();
-		qDebug().nospace() << "Cannot get Saved Games location, SHGetKnownFolderPath() failed with error "<<lastError;
+		qWarning().nospace() << "Cannot get Saved Games location, SHGetKnownFolderPath() failed with error "<<lastError;
 		return {};
 	}
 	auto dir = QString::fromWCharArray( pszPath );
@@ -274,41 +276,99 @@ QVector< MonitorInfo > listMonitors()
 //----------------------------------------------------------------------------------------------------------------------
 //  miscellaneous
 
-bool openFileLocation( const QString & filePath )
+inline constexpr bool OpenTargetDirectory = false;  ///< open directly the selected entry (the entry must be a directory)
+inline constexpr bool OpenParentAndSelect = true;   ///< open the parent directory of the entry and highlight the entry
+
+static bool openEntryInFileBrowser( const QString & entryPath, bool openParentAndSelect )
 {
 	// based on answers at https://stackoverflow.com/questions/3490336/how-to-reveal-in-finder-or-show-in-explorer-with-qt
+	//                 and https://stackoverflow.com/questions/11261516/applescript-open-a-folder-in-finder
 
-	const QFileInfo fileInfo( filePath );
+	QFileInfo entry( entryPath );
 
  #if defined(Q_OS_WIN)
 
 	QStringList args;
-	if (!fileInfo.isDir())
-		args += "/select,";
-	args += QDir::toNativeSeparators( fileInfo.canonicalFilePath() );
+	if (openParentAndSelect)
+		args << "/select,";
+	args << QDir::toNativeSeparators( entry.canonicalFilePath() );
 	return QProcess::startDetached( "explorer.exe", args );
 
  #elif defined(Q_OS_MAC)
 
+	QString command = openParentAndSelect ? "select" ? "open";
 	QStringList args;
-	args << "-e";
-	args << "tell application \"Finder\"";
-	args << "-e";
-	args << "activate";
-	args << "-e";
-	args << "select POSIX file \"" + fileInfo.canonicalFilePath() + "\"";
-	args << "-e";
-	args << "end tell";
-	args << "-e";
-	args << "return";
+	args << "-e" << "tell application \"Finder\"";
+	args << "-e" <<     "activate";
+	args << "-e" <<     command%" (\""%entry.canonicalFilePath()%"\" as POSIX file)";
+	args << "-e" << "end tell";
 	return QProcess::execute( "/usr/bin/osascript", args );
 
  #else
 
-	// We cannot select a file here, because no file browser really supports it.
-	return QDesktopServices::openUrl( QUrl::fromLocalFile( fileInfo.isDir()? fileInfo.filePath() : fileInfo.path() ) );
+	// We cannot select the entry here, because no file browser really supports it.
+	QString pathToOpen = openParentAndSelect ? entry.canonicalPath() : entry.canonicalFilePath();
+	return QDesktopServices::openUrl( QUrl::fromLocalFile( pathToOpen ) );
 
  #endif
+}
+
+bool openDirectoryWindow( const QString & dirPath )
+{
+	if (dirPath.isEmpty())
+	{
+		QMessageBox::warning( nullptr, "Cannot open directory window", "The path is empty." );
+		return false;
+	}
+	else if (!fs::exists( dirPath ))
+	{
+		QMessageBox::warning( nullptr, "Cannot open directory window", dirPath%" does not exist." );
+		return false;
+	}
+	else if (!fs::isDirectory( dirPath ))
+	{
+		QMessageBox::warning( nullptr, "Cannot open directory window", dirPath%" is not a directory." );
+		return false;
+	}
+
+	bool success = openEntryInFileBrowser( dirPath, OpenTargetDirectory );
+
+	if (!success)
+	{
+		QMessageBox::warning( nullptr, "Cannot open directory window", "Opening directory window failed, check permissions." );
+		return false;
+	}
+
+	return true;
+}
+
+bool openFileLocation( const QString & filePath )
+{
+	if (filePath.isEmpty())
+	{
+		QMessageBox::warning( nullptr, "Cannot open file location", "The path is empty." );
+		return false;
+	}
+	else if (!fs::exists( filePath ))
+	{
+		QMessageBox::warning( nullptr, "Cannot open file location", filePath%" does not exist." );
+		return false;
+	}
+	/*else if (!fs::isFile( filePath ))
+	{
+		QMessageBox::warning( nullptr, "Cannot open file location", filePath%" is not a file." );
+		return false;
+	}*/
+
+	bool success = openEntryInFileBrowser( filePath, OpenParentAndSelect );
+
+	if (!success)
+	{
+		QMessageBox::warning( nullptr, "Cannot open file location", "Opening file location failed, check permissions." );
+		return false;
+	}
+
+	return true;
 }
 
 #if IS_WINDOWS
@@ -348,7 +408,7 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	if (!SUCCEEDED( hRes ))
 	{
 		auto lastError = GetLastError();
-		qDebug().nospace() << "Cannot create shortcut "<<shortcutFile<<", CoCreateInstance() failed with error "<<lastError;
+		qWarning().nospace() << "Cannot create shortcut "<<shortcutFile<<", CoCreateInstance() failed with error "<<lastError;
 		return false;
 	}
 
@@ -369,7 +429,7 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	if (!SUCCEEDED( hRes ))
 	{
 		auto lastError = GetLastError();
-		qDebug().nospace() << "Cannot create shortcut "<<shortcutFile<<", IShellLink::QueryInterface() failed with error "<<lastError;
+		qWarning().nospace() << "Cannot create shortcut "<<shortcutFile<<", IShellLink::QueryInterface() failed with error "<<lastError;
 		return false;
 	}
 
@@ -377,7 +437,7 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	if (!SUCCEEDED( hRes ))
 	{
 		auto lastError = GetLastError();
-		qDebug().nospace() << "Cannot create shortcut "<<shortcutFile<<", IPersistFile::Save() failed with error "<<lastError;
+		qWarning().nospace() << "Cannot create shortcut "<<shortcutFile<<", IPersistFile::Save() failed with error "<<lastError;
 		return false;
 	}
 

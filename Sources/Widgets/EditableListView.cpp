@@ -214,10 +214,7 @@ void EditableListView::openCurrentFileLocation()
 
 	QString filePath = userData.toString();
 
-	if (!os::openFileLocation( filePath ))
-	{
-		QMessageBox::warning( this->parentWidget(), "Error opening directory", "Unknown error prevented opening a directory." );
-	}
+	os::openFileLocation( filePath );  // errors are handled inside
 }
 
 bool EditableListView::areIconsEnabled() const

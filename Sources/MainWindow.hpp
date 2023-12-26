@@ -40,6 +40,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	Q_OBJECT
 
 	using thisClass = MainWindow;
+	using superClass = QMainWindow;
 
  public:
 
@@ -48,6 +49,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
  private: // overridden methods
 
+	virtual void showEvent( QShowEvent * event ) override;
 	virtual void timerEvent( QTimerEvent * event ) override;
 	virtual void closeEvent( QCloseEvent * event ) override;
 
@@ -73,6 +75,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void onMapDirUpdated( const QString & path );
 
+	void openEngineDataDir();
 	void cloneConfig();
 
 	void presetAdd();
@@ -159,6 +162,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
  private: // methods
 
+	void adjustUi();
+
 	void setupPresetList();
 	void setupIWADList();
 	void setupMapPackList();
@@ -234,8 +239,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
  private: // MainWindow-specific utils
 
+	struct ConfigFile;
+
 	Preset * getSelectedPreset() const;
 	EngineInfo * getSelectedEngine() const;
+	ConfigFile * getSelectedConfig() const;
 	IWAD * getSelectedIWAD() const;
 
 	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
@@ -246,6 +254,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QString getConfigDir() const;
 	QString getDataDir() const;
 	QString getSaveDir() const;
+	QString getScreenshotDir() const;
 	QString getDemoDir() const;
 
 	QString convertRebasedEngineDataPath( QString path ) const;

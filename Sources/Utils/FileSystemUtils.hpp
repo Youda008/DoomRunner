@@ -61,9 +61,19 @@ inline PathStyle getPathStyle( const QString & path )
 	return isAbsolutePath( path ) ? PathStyle::Absolute : PathStyle::Relative;
 }
 
+inline bool exists( const QString & path )
+{
+	return QFileInfo::exists( path );
+}
+
 inline bool isDirectory( const QString & path )
 {
 	return QFileInfo( path ).isDir();
+}
+
+inline bool isFile( const QString & path )
+{
+	return QFileInfo( path ).isFile();
 }
 
 inline bool isValidDir( const QString & dirPath )

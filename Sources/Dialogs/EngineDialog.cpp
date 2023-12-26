@@ -90,18 +90,24 @@ EngineDialog::~EngineDialog()
 	delete ui;
 }
 
+// This is called when the window layout is initialized and widget sizes calculated,
+// but before the window is physically shown (drawn for the first time).
 void EngineDialog::showEvent( QShowEvent * event )
 {
 	// This can't be called in the constructor, because the widgets still don't have their final sizes there.
+	// Calling it in the onWindowShown() on the other hand, causes the window to briefly appear with the original layout
+	// and then switch to the adjusted layout in the next frame.
 	adjustUi();
 
 	superClass::showEvent( event );
 }
 
+// This is called after the window is fully initialized and physically shown (drawn for the first time).
 void EngineDialog::onWindowShown()
 {
-	// This needs to be called when the window is fully initialized and shown, otherwise it will bug itself in a
-	// half-shown state and not close properly.
+	// This needs to be called when the window is fully initialized and shown,
+	// otherwise calling done() will bug the window in a half-shown state instead of closing it properly.
+	// Even showEvent() is too early for this.
 
 	if (engine.executablePath.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())
 		browseExecutable();

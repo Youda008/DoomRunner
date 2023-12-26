@@ -250,6 +250,20 @@
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QToolButton" name="engineDirBtn">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Open the engine's data directory in a file explorer.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;For portable engines, this is the installation directory.&lt;br/&gt;For GZDoom 4.9.0 or later, it's at %Saved Games%\GZDoom&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../Resources/Resources.qrc">
+                   <normaloff>:/Dir.png</normaloff>:/Dir.png</iconset>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
@@ -361,12 +375,6 @@
                 <widget class="QToolButton" name="configCloneBtn">
                  <property name="enabled">
                   <bool>false</bool>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>26</width>
-                   <height>26</height>
-                  </size>
                  </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Create a copy of the selected config with a new name&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

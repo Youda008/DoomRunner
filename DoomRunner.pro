@@ -60,6 +60,7 @@ HEADERS += \
 	Sources/Utils/LangUtils.hpp \
 	Sources/Utils/MiscUtils.hpp \
 	Sources/Utils/OSUtils.hpp \
+	Sources/Utils/StandardOutput.hpp \
 	Sources/Utils/TimeStats.hpp \
 	Sources/Utils/WADReader.hpp \
 	Sources/Utils/WidgetUtils.hpp \
@@ -99,6 +100,7 @@ SOURCES += \
 	Sources/Utils/JsonUtils.cpp \
 	Sources/Utils/MiscUtils.cpp \
 	Sources/Utils/OSUtils.cpp \
+	Sources/Utils/StandardOutput.cpp \
 	Sources/Utils/WADReader.cpp \
 	Sources/Utils/WidgetUtils.cpp \
 	Sources/Widgets/EditableListView.cpp \
@@ -133,6 +135,21 @@ RESOURCES += \
 # To set an icon for the exe file we need to use the Windows resource system, see https://doc.qt.io/qt-6/appicon.html
 win32: RC_ICONS += Resources/DoomRunner.ico
 macx: ICON = Resources/DoomRunner.icns
+
+
+#-- build type variables -------------------------
+
+debug {
+	DEFINES += IS_DEBUG_BUILD=true
+} else {
+	DEFINES += IS_DEBUG_BUILD=false
+}
+
+win32 {
+	DEFINES += IS_WINDOWS=true
+} else {
+	DEFINES += IS_WINDOWS=false
+}
 
 
 #-- libraries ------------------------------------

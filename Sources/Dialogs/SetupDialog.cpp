@@ -13,6 +13,7 @@
 #include "DoomFiles.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // makeFileFilter, highlightPathIfInvalid
+#include "Utils/ErrorHandling.hpp"
 
 #include <QString>
 #include <QStringBuilder>
@@ -217,7 +218,7 @@ void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
 
 	tickCount++;
 
- #ifdef QT_DEBUG
+ #if IS_DEBUG_BUILD
 	constexpr uint dirUpdateDelay = 8;
  #else
 	constexpr uint dirUpdateDelay = 2;
@@ -245,7 +246,7 @@ void setSelectedItemAsDefault( QListView * view, ListModel & model, QAction * se
 	int selectedIdx = wdg::getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
-		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return;
 	}
 

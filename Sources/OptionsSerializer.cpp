@@ -8,12 +8,12 @@
 #include "OptionsSerializer.hpp"
 
 #include "CommonTypes.hpp"
+#include "Version.hpp"
 #include "Utils/JsonUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidListItem
-#include "Version.hpp"
+#include "Utils/ErrorHandling.hpp"
 
 #include <QFileInfo>
-#include <QMessageBox>
 
 
 //======================================================================================================================
@@ -850,7 +850,7 @@ static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDocCtx, O
 
 	if (!optsVersionStr.isEmpty() && optsVersion > appVersion)  // empty version means pre-1.4 version
 	{
-		QMessageBox::warning( nullptr, "Loading options from newer version",
+		reportRuntimeError( nullptr, "Loading options from newer version",
 			"Detected saved options from newer version of DoomRunner. "
 			"Some settings might not be compatible. Expect errors."
 		);

@@ -198,14 +198,14 @@ void EditableListView::openCurrentFileLocation()
 	QModelIndex currentIdx = selectionModel()->currentIndex();
 	if (!currentIdx.isValid())
 	{
-		QMessageBox::warning( this->parentWidget(), "No item chosen", "You did not click on any file." );
+		reportUserError( this->parentWidget(), "No item chosen", "You did not click on any file." );
 		return;
 	}
 
 	auto userData = model()->data( currentIdx, Qt::UserRole );
 	if (userData.type() != QVariant::Type::String)
 	{
-		reportBugToUser( this->parentWidget(), "Unsupported model",
+		reportLogicError( this->parentWidget(), "Unsupported model",
 			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
 			"otherwise openFileLocation will not work."
 		);
@@ -234,7 +234,7 @@ void EditableListView::toggleIcons()
 	ListModelCommon * model = dynamic_cast< ListModelCommon * >( this->model() );
 	if (!model)
 	{
-		reportBugToUser( this->parentWidget(), "Unsupported model",
+		reportLogicError( this->parentWidget(), "Unsupported model",
 			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
 			"otherwise icons cannot be toggled."
 		);
@@ -384,8 +384,8 @@ void EditableListView::itemsDropped()
 	DropTarget * model = dynamic_cast< DropTarget * >( this->model() );
 	if (!model)
 	{
-		qWarning() << "EditableListView should be used only together with EditableListModel, "
-		              "otherwise drag&drop will not work properly.";
+		logLogicError() << "EditableListView should be used only together with EditableListModel, "
+		                   "otherwise drag&drop will not work properly.";
 		return;
 	}
 

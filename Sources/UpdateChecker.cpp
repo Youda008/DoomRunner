@@ -24,7 +24,6 @@
 #include <QDialogButtonBox>
 #include <QCheckBox>
 #include <QTextBrowser>
-#include <QDebug>
 
 
 //======================================================================================================================
@@ -56,7 +55,7 @@ void UpdateChecker::requestFinished( QNetworkReply * reply )
 	auto requestIter = pendingRequests.find( reply );
 	if (requestIter == pendingRequests.end())
 	{
-		qWarning() << "This reply does not have a registered callback, wtf?";
+		logLogicError() << "This reply does not have a registered callback, wtf?";
 		return;
 	}
 	RequestData & requestData = requestIter.value();
@@ -65,7 +64,7 @@ void UpdateChecker::requestFinished( QNetworkReply * reply )
 
 	if (reply->error())
 	{
-		qWarning() << "HTTP request failed: " << reply->errorString();
+		//logRuntimeError() << "HTTP request failed: " << reply->errorString();  // handled in callback when appropriate
 		requestData.callback( ConnectionFailed, reply->errorString(), {} );
 		return;
 	}
@@ -88,7 +87,7 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 	auto match = versionFileRegex.match( version );
 	if (!match.hasMatch())
 	{
-		qWarning() << "Version number from github is in invalid format ("%version%"). Fix it!";
+		logLogicError() << "Version number from github is in invalid format ("<<version<<"). Fix it!";
 		requestData.callback( InvalidFormat, std::move(version), {} );
 		return;
 	}
@@ -171,7 +170,7 @@ static NewElements reworkLayout( QMessageBox & msgBox )
 	QGridLayout * layout = qobject_cast< QGridLayout * >( msgBox.layout() );
 	if (!layout)
 	{
-		qWarning() << "MessageBox doesn't use grid layout, wtf?";
+		logLogicError() << "MessageBox doesn't use grid layout, wtf?";
 		return newElements;
 	}
 
@@ -196,7 +195,7 @@ static NewElements reworkLayout( QMessageBox & msgBox )
 	QDialogButtonBox * btnBox = msgBox.findChild< QDialogButtonBox * >();
 	if (!btnBox)
 	{
-		qWarning() << "MessageBox doesn't have button box, wtf?";
+		logLogicError() << "MessageBox doesn't have button box, wtf?";
 		return newElements;
 	}
 	layout->removeWidget( btnBox );
@@ -226,7 +225,7 @@ static NewElements reworkLayout( QMessageBox & msgBox )
 	newElements.firstLabel = msgBox.findChild< QLabel * >( "qt_msgbox_label" );
 	if (!newElements.firstLabel)
 	{
-		qWarning() << "MessageBox doesn't have this label, incorrect name?";
+		logLogicError() << "MessageBox doesn't have this label, incorrect name?";
 		return newElements;
 	}
 	int labelRow, labelColumn, labelRowSpan, labelColumnSpan;

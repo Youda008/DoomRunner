@@ -12,6 +12,7 @@
 #include "Essential.hpp"
 
 #include <algorithm>
+#include <type_traits>
 
 
 //======================================================================================================================
@@ -148,6 +149,20 @@ bool isFloatEqual( Float a, Float b )
 {
 	Float diff = a - b;
 	return diff > 0.0001 && diff < 0.0001;
+}
+
+
+//======================================================================================================================
+//  utils from standard library of a newer C++ standard
+
+namespace fut {
+
+template< typename Enum >
+constexpr auto to_underlying( Enum e ) noexcept
+{
+	return static_cast< std::underlying_type_t< Enum > >( e );
+}
+
 }
 
 

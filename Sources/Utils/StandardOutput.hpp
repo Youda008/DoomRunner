@@ -2,27 +2,23 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: essential includes, types and constants
+// Description: Qt stream wrappers around stdout and stderr
 //======================================================================================================================
 
-#ifndef ESSENTIAL_INCLUDED
-#define ESSENTIAL_INCLUDED
+#ifndef STANDARD_OUTPUT_INCLUDED
+#define STANDARD_OUTPUT_INCLUDED
 
 
-#include <memory>
-#include <utility>
-#include <optional>
-#include <cstdint>
-#include <climits>
+#include "Essential.hpp"
 
-using uint = unsigned int;
-using ushort = unsigned short;
-using byte = uint8_t;
-
-using std::move;
-using std::as_const;
-
-//using namespace std;  // we're working with Qt, so not a good idea
+#include <QTextStream>
 
 
-#endif // ESSENTIAL_INCLUDED
+extern QTextStream stdoutStream;
+extern QTextStream stderrStream;
+
+/// Must be called at the beginning of main, before the streams above are used
+void initStdStreams();
+
+
+#endif // STANDARD_OUTPUT_INCLUDED

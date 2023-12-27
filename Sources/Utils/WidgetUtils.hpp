@@ -24,7 +24,6 @@
 #include <QComboBox>
 #include <QScrollBar>
 #include <QColor>
-#include <QMessageBox>
 #include <QDir>
 #include <QDirIterator>
 #include <QFileInfo>
@@ -140,7 +139,7 @@ int appendItem( QListView * view, ListModel & model, const typename ListModel::I
 {
 	if (!model.canBeModified())
 	{
-		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
 			"Cannot append item because the model is locked for changes."
 		);
 		return -1;
@@ -165,7 +164,7 @@ void prependItem( QListView * view, ListModel & model, const typename ListModel:
 {
 	if (!model.canBeModified())
 	{
-		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
 			"Cannot prepend item because the model is locked for changes."
 		);
 		return;
@@ -188,7 +187,7 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 {
 	if (!model.canBeModified())
 	{
-		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
 			"Cannot insert item because the model is locked for changes."
 		);
 		return;
@@ -214,7 +213,7 @@ int deleteSelectedItem( QListView * view, ListModel & model )
 	if (selectedIdx < 0)
 	{
 		if (!model.isEmpty())
-			QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+			reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
 
@@ -249,7 +248,7 @@ QVector<int> deleteSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
 			"Cannot delete selected items because the model is locked for changes."
 		);
 		return {};
@@ -259,7 +258,7 @@ QVector<int> deleteSelectedItems( QListView * view, ListModel & model )
 	if (selectedIndexes.isEmpty())
 	{
 		if (!model.isEmpty())
-			QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+			reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return {};
 	}
 
@@ -306,7 +305,7 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
 			"Cannot clone selected item because the model is locked for changes."
 		);
 		return -1;
@@ -315,7 +314,7 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
-		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
 
@@ -346,7 +345,7 @@ int moveUpSelectedItem( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
 			"Cannot move up selected item because the model is locked for changes."
 		);
 		return -1;
@@ -355,7 +354,7 @@ int moveUpSelectedItem( QListView * view, ListModel & model )
 	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
-		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
 
@@ -385,7 +384,7 @@ int moveDownSelectedItem( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
 			"Cannot move down selected item because the model is locked for changes."
 		);
 		return -1;
@@ -394,7 +393,7 @@ int moveDownSelectedItem( QListView * view, ListModel & model )
 	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
-		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
 
@@ -424,7 +423,7 @@ QVector<int> moveUpSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
 			"Cannot move up selected items because the model is locked for changes."
 		);
 		return {};
@@ -433,7 +432,7 @@ QVector<int> moveUpSelectedItems( QListView * view, ListModel & model )
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty())
 	{
-		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return {};
 	}
 
@@ -484,7 +483,7 @@ QVector<int> moveDownSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportBugToUser( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
 			"Cannot move down selected items because the model is locked for changes."
 		);
 		return {};
@@ -493,7 +492,7 @@ QVector<int> moveDownSelectedItems( QListView * view, ListModel & model )
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty())
 	{
-		QMessageBox::warning( view->parentWidget(), "No item selected", "No item is selected." );
+		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return {};
 	}
 

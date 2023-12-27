@@ -8,6 +8,7 @@
 #include "WADReader.hpp"
 
 #include "JsonUtils.hpp"
+#include "ErrorHandling.hpp"
 
 #include <QHash>
 #include <QFile>
@@ -15,7 +16,6 @@
 #include <QDateTime>
 #include <QTextStream>
 #include <QRegularExpression>
-#include <QDebug>
 
 #include <cctype>
 
@@ -115,7 +115,7 @@ WadInfo readWadInfo( const QString & filePath )
 	const qint64 fileSize = file.size();
 	if (fileSize < 0)
 	{
-		qWarning() << "file size is negative:" << fileSize << ", wtf??";
+		logLogicError() << "file size is negative ("<<fileSize<<"), wtf??";
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}

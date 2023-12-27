@@ -13,6 +13,7 @@
 
 #include "Utils/ContainerUtils.hpp"  // PointerIterator
 #include "Utils/FileSystemUtils.hpp"  // PathConvertor
+#include "Utils/ErrorHandling.hpp"
 #include "Themes.hpp"  // separator colors
 
 #include <QAbstractListModel>
@@ -29,8 +30,6 @@
 #include <optional>
 #include <functional>
 #include <stdexcept>
-
-#include <QDebug>
 
 
 //======================================================================================================================
@@ -379,7 +378,7 @@ class FilteredList {
 	{
 		if (!canBeModified())
 		{
-			qCritical() << "the list cannot be modified when it is filtered";
+			logLogicError() << "the list cannot be modified when it is filtered";
 			throw std::logic_error("the list cannot be modified when it is filtered");
 		}
 	}
@@ -561,7 +560,7 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 		}
 		catch (const std::logic_error & e)
 		{
-			qWarning() << e.what();
+			logLogicError() << e.what();
 			return QVariant();
 		}
 	}
@@ -715,7 +714,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 		catch (const std::logic_error & e)
 		{
-			qWarning() << e.what();
+			logLogicError() << e.what();
 			return QVariant();
 		}
 	}
@@ -748,7 +747,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 		catch (const std::logic_error & e)
 		{
-			qWarning() << e.what();
+			logLogicError() << e.what();
 			return false;
 		}
 	}
@@ -760,7 +759,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (!this->canBeModified())
 		{
-			qWarning() << "Cannot insertRows into this model now. It should have been restricted by the ListView.";
+			logLogicError() << "Cannot insertRows into this model now. It should have been restricted by the ListView.";
 			return false;
 		}
 
@@ -783,7 +782,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (!this->canBeModified())
 		{
-			qWarning() << "Cannot removeRows from this model now. It should have been restricted by the ListView.";
+			logLogicError() << "Cannot removeRows from this model now. It should have been restricted by the ListView.";
 			return false;
 		}
 
@@ -857,7 +856,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (!this->canBeModified())
 		{
-			qWarning() << "Cannot drop into this model now. It should have been restricted by the ListView.";
+			logLogicError() << "Cannot drop into this model now. It should have been restricted by the ListView.";
 			return false;
 		}
 
@@ -871,7 +870,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 		else
 		{
-			qWarning() << "This model doesn't support such drop operation. It should have been restricted by the ListView.";
+			logLogicError() << "This model doesn't support such drop operation. It should have been restricted by the ListView.";
 			return false;
 		}
 	}
@@ -930,8 +929,8 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	{
 		if (!pathConvertor)
 		{
-			qWarning() << "File has been dropped but no PathConvertor is set. "
-			              "Either use setPathContext or disable file dropping in the widget.";
+			logLogicError() << "File has been dropped but no PathConvertor is set. "
+			                   "Either use setPathContext or disable file dropping in the widget.";
 			return false;
 		}
 

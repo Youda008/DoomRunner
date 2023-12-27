@@ -66,7 +66,7 @@ int getSelectedItemIndex( QListView * view )   // this function is for single se
 	}
 	if (selectedIndexes.size() > 1)
 	{
-		reportBugToUser( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
+		reportLogicError( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
 		return -1;
 	}
 	return selectedIndexes[0].row();
@@ -164,7 +164,7 @@ QModelIndex getSelectedItemIndex( QTreeView * view )   // this function is for s
 	}
 	if (selectedIndexes.size() > 1)
 	{
-		reportBugToUser( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
+		reportLogicError( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
 		return {};
 	}
 	return selectedIndexes[0];
@@ -367,7 +367,7 @@ int deleteSelectedRow( QTableWidget * widget )
 	if (selectedIdx < 0)
 	{
 		if (widget->rowCount() > 0)
-			QMessageBox::warning( widget->parentWidget(), "No item selected", "No item is selected." );
+			reportUserError( widget->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
 

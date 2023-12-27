@@ -9,6 +9,7 @@
 
 #include "Utils/LangUtils.hpp"  // atScopeEndDo
 #include "Utils/ContainerUtils.hpp"  // find
+#include "Utils/ErrorHandling.hpp"
 
 #include <QApplication>
 #include <QWidget>
@@ -21,7 +22,6 @@
 #include <QLabel>
 #include <QRegularExpression>
 #include <QStringBuilder>
-#include <QMessageBox>
 #include <QDebug>
 
 #if IS_WINDOWS
@@ -406,7 +406,7 @@ static void initStyles()
 	c_defaultStyleName = currentStyle->objectName();
 	c_availableStyleNames = QStyleFactory::keys();
 	g_currentRealStyleName = c_defaultStyleName;
-	
+
 #if !IS_WINDOWS
 	// For some retarded reason, on Linux the currentStyle->objectName() has different case than the one
 	// in QStyleFactory::keys(). For example "oxygen" vs "Oxygen".
@@ -434,7 +434,7 @@ static void setQtStyle( const QString & styleName )
 	}
 	else
 	{
-		QMessageBox::warning( nullptr, "Unknown style name",
+		reportRuntimeError( nullptr, "Unknown style name",
 			"Unable to set application style to \""%styleName%"\". Such style doesn't exist."
 		);
 	}
@@ -490,7 +490,7 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 	);
 	if (lErrorCode != ERROR_SUCCESS)
 	{
-		qWarning() << "cannot open registry key: HKEY_CURRENT_USER /" << darkModeSubkeyPath;
+		logRuntimeError() << "cannot open registry key: HKEY_CURRENT_USER/" << darkModeSubkeyPath;
 		return;
 	}
 
@@ -501,7 +501,7 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 	if (!optAppsUseLightTheme)
 	{
 		auto lastError = GetLastError();
-		qWarning() << "cannot read registry value" << darkModeValueName << "(error" << lastError << ")";
+		logRuntimeError() << "cannot read registry value " << darkModeValueName << " (error " << lastError << ")";
 		return;
 	}
 
@@ -518,7 +518,7 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 		);
 		if (lErrorCode != ERROR_SUCCESS)
 		{
-			qWarning() << "RegNotifyChangeKeyValue failed";
+			logRuntimeError() << "RegNotifyChangeKeyValue failed";
 			Sleep( 1000 );
 			continue;
 		}
@@ -527,7 +527,7 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 		if (!optAppsUseLightTheme)
 		{
 			auto lastError = GetLastError();
-			qWarning() << "cannot read registry value" << darkModeValueName << "(error" << lastError << ")";
+			logRuntimeError() << "cannot read registry value " << darkModeValueName << " (error " << lastError << ")";
 			break;
 		}
 

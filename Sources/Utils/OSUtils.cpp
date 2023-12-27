@@ -19,9 +19,6 @@
 #include <QScreen>
 #include <QProcess>
 
-#include <QMessageBox>
-#include <QDebug>
-
 #if IS_WINDOWS
 	#include <windows.h>
 	#include <shlobj.h>
@@ -54,7 +51,7 @@ QString getSavedGamesDir()
 	if (FAILED(hr) || !pszPath)
 	{
 		auto lastError = GetLastError();
-		qWarning().nospace() << "Cannot get Saved Games location, SHGetKnownFolderPath() failed with error "<<lastError;
+		logRuntimeError() << "Cannot get Saved Games location, SHGetKnownFolderPath() failed with error "<<lastError;
 		return {};
 	}
 	auto dir = QString::fromWCharArray( pszPath );
@@ -317,17 +314,17 @@ bool openDirectoryWindow( const QString & dirPath )
 {
 	if (dirPath.isEmpty())
 	{
-		QMessageBox::warning( nullptr, "Cannot open directory window", "The path is empty." );
+		reportLogicError( nullptr, "Cannot open directory window", "The path is empty." );
 		return false;
 	}
 	else if (!fs::exists( dirPath ))
 	{
-		QMessageBox::warning( nullptr, "Cannot open directory window", dirPath%" does not exist." );
+		reportRuntimeError( nullptr, "Cannot open directory window", dirPath%" does not exist." );
 		return false;
 	}
 	else if (!fs::isDirectory( dirPath ))
 	{
-		QMessageBox::warning( nullptr, "Cannot open directory window", dirPath%" is not a directory." );
+		reportRuntimeError( nullptr, "Cannot open directory window", dirPath%" is not a directory." );
 		return false;
 	}
 
@@ -335,7 +332,7 @@ bool openDirectoryWindow( const QString & dirPath )
 
 	if (!success)
 	{
-		QMessageBox::warning( nullptr, "Cannot open directory window", "Opening directory window failed, check permissions." );
+		reportRuntimeError( nullptr, "Cannot open directory window", "Opening directory window failed, check permissions." );
 		return false;
 	}
 
@@ -346,17 +343,17 @@ bool openFileLocation( const QString & filePath )
 {
 	if (filePath.isEmpty())
 	{
-		QMessageBox::warning( nullptr, "Cannot open file location", "The path is empty." );
+		reportLogicError( nullptr, "Cannot open file location", "The path is empty." );
 		return false;
 	}
 	else if (!fs::exists( filePath ))
 	{
-		QMessageBox::warning( nullptr, "Cannot open file location", filePath%" does not exist." );
+		reportRuntimeError( nullptr, "Cannot open file location", filePath%" does not exist." );
 		return false;
 	}
 	/*else if (!fs::isFile( filePath ))
 	{
-		QMessageBox::warning( nullptr, "Cannot open file location", filePath%" is not a file." );
+		reportRuntimeError( nullptr, "Cannot open file location", filePath%" is not a file." );
 		return false;
 	}*/
 
@@ -364,7 +361,7 @@ bool openFileLocation( const QString & filePath )
 
 	if (!success)
 	{
-		QMessageBox::warning( nullptr, "Cannot open file location", "Opening file location failed, check permissions." );
+		reportRuntimeError( nullptr, "Cannot open file location", "Opening file location failed, check permissions." );
 		return false;
 	}
 
@@ -408,7 +405,7 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	if (!SUCCEEDED( hRes ))
 	{
 		auto lastError = GetLastError();
-		qWarning().nospace() << "Cannot create shortcut "<<shortcutFile<<", CoCreateInstance() failed with error "<<lastError;
+		logRuntimeError() << "Cannot create shortcut "<<shortcutFile<<", CoCreateInstance() failed with error "<<lastError;
 		return false;
 	}
 
@@ -429,7 +426,7 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	if (!SUCCEEDED( hRes ))
 	{
 		auto lastError = GetLastError();
-		qWarning().nospace() << "Cannot create shortcut "<<shortcutFile<<", IShellLink::QueryInterface() failed with error "<<lastError;
+		logRuntimeError() << "Cannot create shortcut "<<shortcutFile<<", IShellLink::QueryInterface() failed with error "<<lastError;
 		return false;
 	}
 
@@ -437,7 +434,7 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 	if (!SUCCEEDED( hRes ))
 	{
 		auto lastError = GetLastError();
-		qWarning().nospace() << "Cannot create shortcut "<<shortcutFile<<", IPersistFile::Save() failed with error "<<lastError;
+		logRuntimeError() << "Cannot create shortcut "<<shortcutFile<<", IPersistFile::Save() failed with error "<<lastError;
 		return false;
 	}
 

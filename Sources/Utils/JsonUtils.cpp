@@ -7,6 +7,8 @@
 
 #include "JsonUtils.hpp"
 
+#include "Utils/ErrorHandling.hpp"
+
 #include <QStringBuilder>
 #include <QTextStream>
 #include <QMessageBox>
@@ -513,7 +515,7 @@ bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, c
 	QString error = fs::updateFileSafely( filePath, bytes );
 	if (!error.isEmpty())
 	{
-		QMessageBox::warning( nullptr, "Error saving "+fileDesc, error );
+		reportRuntimeError( nullptr, "Error saving "+fileDesc, error );
 		return false;
 	}
 
@@ -526,7 +528,7 @@ bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath, c
 	QString readError = fs::readWholeFile( filePath, bytes );
 	if (!readError.isEmpty())
 	{
-		QMessageBox::warning( nullptr, "Error loading "+fileDesc, readError );
+		reportRuntimeError( nullptr, "Error loading "+fileDesc, readError );
 		return false;
 	}
 
@@ -534,7 +536,7 @@ bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath, c
 	QJsonDocument jsonDoc = QJsonDocument::fromJson( bytes, &parseError );
 	if (jsonDoc.isNull())
 	{
-		QMessageBox::warning( nullptr, "Error loading "+fileDesc,
+		reportRuntimeError( nullptr, "Error loading "+fileDesc,
 			"Failed to parse "%fs::getFileNameFromPath(filePath)%": "%parseError.errorString()%"\n"
 			"You can either open it in notepad and try to repair it, or delete it and start from scratch."
 		);

@@ -7,6 +7,8 @@
 
 #include "CommonTypes.hpp"
 
+#include <QTextStream>
+
 
 const QString emptyString;
 
@@ -32,4 +34,21 @@ QString QStringVec::join( QChar delimiter ) const
 	}
 
 	return result;
+}
+
+QTextStream & operator<<( QTextStream & stream, const QStringVec & vec )
+{
+	stream << "[ ";
+	bool firstWritten = false;
+	for (const auto & str : vec)
+	{
+		if (!firstWritten)
+			firstWritten = true;
+		else
+			stream << ", ";
+		stream << '"' << str << '"';
+	}
+	stream << " ]";
+
+	return stream;
 }

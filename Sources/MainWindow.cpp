@@ -52,8 +52,6 @@
 #include <QPlainTextEdit>
 #include <QFontDatabase>
 
-#include <QDebug>
-
 
 //======================================================================================================================
 
@@ -870,12 +868,12 @@ static void moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir, QStri
 	{
 		QString newOptionsFilePath = newOptionsDir.filePath( optionsFileName );
 
-		QMessageBox::information( nullptr, "Migrating options file",
+		reportInformation( nullptr, "Migrating options file",
 			"DoomRunner changed the location of "%optionsFileName%", where it stores your presets and other options. "
 			%optionsFileName%" has been found in the old data directory \""%oldOptionsDir.path()%"\" "
 			"and will be automatically moved to the new data directory "%newOptionsDir.path()
 		);
-		qInfo().noquote() <<
+		logInfo() <<
 			"NOTICE: Found "%optionsFileName%" in the old data directory \""%oldOptionsDir.path()%"\". "
 			"Moving it to the new data directory "%newOptionsDir.path();
 
@@ -1003,7 +1001,7 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 
 	tickCount++;
 
- #ifdef QT_DEBUG
+ #if IS_DEBUG_BUILD
 	constexpr uint dirUpdateDelay = 8;
  #else
 	constexpr uint dirUpdateDelay = 2;
@@ -1203,7 +1201,7 @@ void MainWindow::openEngineDataDir()
 	const EngineInfo * selectedEngine = getSelectedEngine();
 	if (!selectedEngine)
 	{
-		QMessageBox::warning( this, "No engine selected", "You haven't selected any engine." );
+		reportUserError( this, "No engine selected", "You haven't selected any engine." );
 		return;
 	}
 
@@ -1215,7 +1213,7 @@ void MainWindow::cloneConfig()
 	const ConfigFile * selectedConfig = getSelectedConfig();
 	if (!selectedConfig)
 	{
-		QMessageBox::warning( this, "No config selected", "You haven't selected any config file to be cloned." );
+		reportUserError( this, "No config selected", "You haven't selected any config file to be cloned." );
 		return;
 	}
 
@@ -1225,7 +1223,7 @@ void MainWindow::cloneConfig()
 
 	if (!oldConfig.exists())  // it can't be a directory, because the combox is only filled with files
 	{
-		QMessageBox::warning( this, "Invalid config selected", "This config file no longer exists, please select another one." );
+		reportRuntimeError( this, "Invalid config selected", "This config file no longer exists, please select another one." );
 		return;
 	}
 
@@ -1244,7 +1242,7 @@ void MainWindow::cloneConfig()
 	bool copied = QFile::copy( oldConfigPath, newConfigPath );
 	if (!copied)
 	{
-		QMessageBox::warning( this, "Error copying file", "Couldn't create file "%newConfigPath%". Check permissions." );
+		reportRuntimeError( this, "Error copying file", "Couldn't create file "%newConfigPath%". Check permissions." );
 		return;
 	}
 
@@ -1457,8 +1455,8 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 			}
 			else
 			{
-				QMessageBox::warning( this, "Cannot set starting map",
-					"Starting map "%startingMap%" was not found in the "%wadFileName%". Bug or corrupted file?" );
+				reportRuntimeError( this, "Cannot set starting map",
+					"Starting map "%startingMap%" was not found in the "%wadFileName%"." );
 			}
 		}
 	}
@@ -1539,7 +1537,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 		mapDescFileInfo = fs::replaceFileSuffix( mapDataFileInfo.filePath(), "TXT" );
 		if (!mapDescFileInfo.isFile())
 		{
-			QMessageBox::warning( this, "Cannot open map description",
+			reportRuntimeError( this, "Cannot open map description",
 				"Map description file \""%mapDescFileInfo.fileName()%"\" does not exist" );
 			return;
 		}
@@ -1548,7 +1546,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	QFile mapDescFile( mapDescFileInfo.filePath() );
 	if (!mapDescFile.open( QIODevice::Text | QIODevice::ReadOnly ))
 	{
-		QMessageBox::warning( this, "Cannot open map description",
+		reportRuntimeError( this, "Cannot open map description",
 			"Failed to open description file "%mapDescFileInfo.fileName()%": "%mapDescFile.errorString() );
 		return;
 	}
@@ -3238,7 +3236,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		}
 		else if (!engineSettings.defaultEngine.isEmpty())
 		{
-			QMessageBox::warning( nullptr, "Default engine no longer exists",
+			reportRuntimeError( nullptr, "Default engine no longer exists",
 				"Engine that was marked as default ("%engineSettings.defaultEngine%") no longer exists. Please select another one." );
 		}
 	}
@@ -3266,7 +3264,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		}
 		else if (!iwadSettings.defaultIWAD.isEmpty())
 		{
-			QMessageBox::warning( nullptr, "Default IWAD no longer exists",
+			reportRuntimeError( nullptr, "Default IWAD no longer exists",
 				"IWAD that was marked as default ("%iwadSettings.defaultIWAD%") no longer exists. Please select another one." );
 		}
 	}
@@ -3315,7 +3313,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		}
 		else
 		{
-			QMessageBox::warning( nullptr, "Preset no longer exists",
+			reportRuntimeError( nullptr, "Preset no longer exists",
 				"Preset that was selected last time ("%opts.selectedPreset%") no longer exists. Did you mess up with the options.json?" );
 		}
 	}
@@ -3428,7 +3426,7 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 
 			if (!fs::isValidFile( preset.selectedEnginePath ))
 			{
-				QMessageBox::warning( this, "Engine no longer exists",
+				reportRuntimeError( this, "Engine no longer exists",
 					"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists. "
 					"Please update its path in Menu -> Initial Setup, or select another one."
 				);
@@ -3437,7 +3435,7 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 		}
 		else
 		{
-			QMessageBox::warning( this, "Engine no longer exists",
+			reportRuntimeError( this, "Engine no longer exists",
 				"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list. "
 				"Please select another one."
 			);
@@ -3471,7 +3469,7 @@ void MainWindow::restoreSelectedConfig( Preset & preset )
 		}
 		else
 		{
-			QMessageBox::warning( this, "Config no longer exists",
+			reportRuntimeError( this, "Config no longer exists",
 				"Config file selected for this preset ("%preset.selectedConfig%") no longer exists. "
 				"Please select another one."
 			);
@@ -3501,7 +3499,7 @@ void MainWindow::restoreSelectedIWAD( Preset & preset )
 
 			if (!fs::isValidFile( preset.selectedIWAD ))
 			{
-				QMessageBox::warning( this, "IWAD no longer exists",
+				reportRuntimeError( this, "IWAD no longer exists",
 					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
 					"Please select another one."
 				);
@@ -3510,7 +3508,7 @@ void MainWindow::restoreSelectedIWAD( Preset & preset )
 		}
 		else
 		{
-			QMessageBox::warning( this, "IWAD no longer exists",
+			reportRuntimeError( this, "IWAD no longer exists",
 				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
 				"Please select another one."
 			);
@@ -3548,14 +3546,14 @@ void MainWindow::restoreSelectedMapPacks( Preset & preset )
 			}
 			else
 			{
-				QMessageBox::warning( this, "Map file no longer exists",
+				reportRuntimeError( this, "Map file no longer exists",
 					"Map file selected for this preset ("%path%") no longer exists."
 				);
 			}
 		}
 		else
 		{
-			QMessageBox::warning( this, "Map file no longer exists",
+			reportRuntimeError( this, "Map file no longer exists",
 				"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")."
 			);
 		}
@@ -3579,7 +3577,7 @@ void MainWindow::restoreSelectedMods( Preset & preset )
 		if ((!mod.isSeparator && !mod.isCmdArg) && !fs::isValidEntry( mod.path ))
 		{
 			// Let's just highlight it now, we will show warning when the user tries to launch it.
-			//QMessageBox::warning( this, "Mod no longer exists",
+			//reportRuntimeError( this, "Mod no longer exists",
 			//	"A mod file "%mod.path%" from this preset no longer exists. Please update it." );
 			highlightInvalidListItem( modModel.last() );
 		}
@@ -3619,7 +3617,7 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 
 		if (saveFileIdx < 0)
 		{
-			QMessageBox::warning( this, "Save file no longer exists",
+			reportRuntimeError( this, "Save file no longer exists",
 				"Save file \""%launchOpts.saveFile%"\" no longer exists. Please select another one."
 			);
 			launchOpts.saveFile.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
@@ -3635,7 +3633,7 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 
 		if (demoFileIdx < 0)
 		{
-			QMessageBox::warning( this, "Demo file no longer exists",
+			reportRuntimeError( this, "Demo file no longer exists",
 				"Demo file \""%launchOpts.demoFile_replay%"\" no longer exists. Please select another one."
 			);
 			launchOpts.demoFile_replay.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
@@ -3675,7 +3673,7 @@ void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts 
 	if (compatLevelIdx >= ui->compatLevelCmbBox->count())
 	{
 		// engine might have been removed, or its family was changed by the user
-		qWarning() << "stored compat level is out of bounds of the current combo-box content";
+		logLogicError() << "stored compat level is out of bounds of the current combo-box content";
 		return;
 	}
 	ui->compatLevelCmbBox->setCurrentIndex( compatLevelIdx );
@@ -3739,7 +3737,7 @@ void MainWindow::exportPresetToScript()
 {
 	if (!wdg::isSomethingSelected( ui->presetListView ))
 	{
-		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
+		reportUserError( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
 
@@ -3765,7 +3763,7 @@ void MainWindow::exportPresetToScript()
 	QFile scriptFile( scriptFilePath );
 	if (!scriptFile.open( QIODevice::WriteOnly | QIODevice::Text ))
 	{
-		QMessageBox::warning( this, "Cannot open file", "Cannot open file for writing. Check directory permissions." );
+		reportRuntimeError( this, "Cannot open file", "Cannot open file for writing. Check directory permissions." );
 		return;
 	}
 
@@ -3791,14 +3789,14 @@ void MainWindow::exportPresetToShortcut()
 	const Preset * selectedPreset = getSelectedPreset();
 	if (!selectedPreset)
 	{
-		QMessageBox::warning( this, "No preset selected", "Select a preset from the preset list." );
+		reportUserError( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
 
 	const EngineInfo * selectedEngine = getSelectedEngine();
 	if (!selectedEngine)
 	{
-		QMessageBox::warning( this, "No engine selected", "No Doom engine is selected." );
+		reportUserError( this, "No engine selected", "No Doom engine is selected." );
 		return;  // no sense to generate a command when we don't even know the engine
 	}
 
@@ -3825,20 +3823,20 @@ void MainWindow::exportPresetToShortcut()
 	bool success = os::createWindowsShortcut( shortcutPath, cmd.executable, cmd.arguments, engineWorkingDir, selectedPreset->name );
 	if (!success)
 	{
-		QMessageBox::warning( this, "Cannot create shortcut", "Failed to create a shortcut. Check permissions." );
+		reportRuntimeError( this, "Cannot create shortcut", "Failed to create a shortcut. Check permissions." );
 		return;
 	}
 
  #else
 
-	QMessageBox::warning( this, "Not supported", "This feature only works on Windows." );
+	reportRuntimeError( this, "Not supported", "This feature only works on Windows." );
 
  #endif
 }
 
 void MainWindow::importPresetFromScript()
 {
-	QMessageBox::warning( this, "Not implemented", "Sorry, this feature is not implemented yet." );
+	reportRuntimeError( this, "Not implemented", "Sorry, this feature is not implemented yet." );
 }
 
 
@@ -3852,7 +3850,7 @@ void MainWindow::updateLaunchCommand()
 		return;
 
 	//static uint callCnt = 1;
-	//qDebug() << "updateLaunchCommand()" << callCnt++;
+	//logDebug() << "updateLaunchCommand() " << callCnt++;
 
 	const EngineInfo * selectedEngine = getSelectedEngine();
 	if (!selectedEngine)
@@ -3881,7 +3879,7 @@ void MainWindow::updateLaunchCommand()
 	if (newCommand != currentCommand)
 	{
 		//static int updateCnt = 1;
-		//qDebug() << "    updating " << updateCnt++;
+		//logDebug() << "    updating " << updateCnt++;
 		ui->commandLine->setText( newCommand );
 	}
 }
@@ -4116,7 +4114,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 			 case Cooperative: // default mode, which is started without any param
 				break;
 			 default:
-				reportBugToUser( this, "Invalid game mode index", "The game mode index is out of range." );
+				reportLogicError( this, "Invalid game mode index", "The game mode index is out of range." );
 			}
 			if (ui->teamDmgSpinBox->value() != 0.0)
 				cmd.arguments << "+teamdamage" << QString::number( ui->teamDmgSpinBox->value(), 'f', 2 );
@@ -4130,7 +4128,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 			cmd.arguments << "-join" << ui->hostnameLine->text() % ":" % ui->portSpinBox->text();
 			break;
 		 default:
-			reportBugToUser( this, "Invalid multiplayer role index", "The multiplayer role index is out of range." );
+			reportLogicError( this, "Invalid multiplayer role index", "The multiplayer role index is out of range." );
 		}
 	}
 
@@ -4218,7 +4216,7 @@ bool MainWindow::startDetached(
 	bool success = process.startDetached();
 	if (!success)
 	{
-		QMessageBox::warning( this, "Process start error", "Failed to start "%executableName%" ("%process.errorString()%")" );
+		reportRuntimeError( this, "Process start error", "Failed to start "%executableName%" ("%process.errorString()%")" );
 	}
 
 	return success;
@@ -4229,7 +4227,7 @@ void MainWindow::launch()
 	const EngineInfo * selectedEngine = getSelectedEngine();
 	if (!selectedEngine)
 	{
-		QMessageBox::warning( this, "No engine selected", "No Doom engine is selected." );
+		reportUserError( this, "No engine selected", "No Doom engine is selected." );
 		return;
 	}
 
@@ -4249,7 +4247,7 @@ void MainWindow::launch()
 		return;  // errors are already shown during the generation
 	}
 
-	//qDebug() << cmd.executable << cmd.arguments;
+	logDebug() << cmd.executable << cmd.arguments;
 
 	// If extra permissions are needed to run the engine inside its sandbox environment, better ask the user.
 	if (settings.askForSandboxPermissions && !cmd.extraPermissions.isEmpty())
@@ -4266,7 +4264,7 @@ void MainWindow::launch()
 	bool saveDirExists = fs::createDirIfDoesntExist( saveDirPath );
 	if (!saveDirExists)
 	{
-		QMessageBox::warning( this, "Error creating directory", "Failed to create directory "%saveDirPath );
+		reportRuntimeError( this, "Error creating directory", "Failed to create directory "%saveDirPath );
 		// we can continue without this directory, it will just not save demos
 	}
 

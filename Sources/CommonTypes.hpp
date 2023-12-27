@@ -13,6 +13,8 @@
 #include <QVector>
 #include <QList>
 
+class QTextStream;
+
 
 // to be used when we want to pass empty string, but a reference or pointer is required
 extern const QString emptyString;
@@ -26,6 +28,8 @@ class QStringVec : public QVector< QString >
 	//QStringVec( QVector< QString > & other ) : QVector( std::move(other) ) {}
 	QString join( QChar delimiter ) const;
 };
+
+QTextStream & operator<<( QTextStream & stream, const QStringVec & vec );
 
 
 #endif // COMMON_TYPES_INCLUDED

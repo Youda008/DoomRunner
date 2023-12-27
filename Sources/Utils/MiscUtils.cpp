@@ -10,12 +10,12 @@
 #include "LangUtils.hpp"  // correspondingValue
 #include "FileSystemUtils.hpp"  // isValidDir, isValidFile
 #include "WidgetUtils.hpp"  // setTextColor
+#include "ErrorHandling.hpp"
 #include "Themes.hpp"  // getCurrentPalette
 
 #include <QFileInfo>
 #include <QTextStream>
 #include <QLineEdit>
-#include <QMessageBox>
 #include <QStringBuilder>
 
 
@@ -158,7 +158,7 @@ void PathChecker::_maybeShowError( bool & errorMessageDisplayed, QWidget * paren
 {
 	if (!errorMessageDisplayed)
 	{
-		QMessageBox::warning( parent, title, message );
+		reportRuntimeError( parent, title, message );
 		errorMessageDisplayed = true;  // don't spam too many errors when something goes wrong
 	}
 }

@@ -10,8 +10,8 @@
 
 #include "Version.hpp"
 #include "UpdateChecker.hpp"
+#include "Utils/ErrorHandling.hpp"
 
-#include <QMessageBox>
 #include <QStringBuilder>
 
 
@@ -61,18 +61,18 @@ void AboutDialog::checkForUpdate()
 
 			switch (result) {
 			 case UpdateChecker::ConnectionFailed:
-				QMessageBox::warning( this, "Update check failed",
+				reportRuntimeError( this, "Update check failed",
 					"Failed to connect to the project web page. Is your internet down?"
 					"Details: "%errorDetail
 				);
 				break;
 			 case UpdateChecker::InvalidFormat:
-				QMessageBox::warning( this, "Update check failed",
+				reportLogicError( this, "Update check failed",
 					"Version number from github is in invalid format: "%errorDetail
 				);
 				break;
 			 case UpdateChecker::UpdateNotAvailable:
-				QMessageBox::information( this, "No update available",
+				reportInformation( this, "No update available",
 					"No update is available, you have the newest version."
 				);
 				break;

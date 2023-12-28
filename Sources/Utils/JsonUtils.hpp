@@ -430,8 +430,11 @@ void deserializeMap( const JsonObjectCtx & jsMap, QHash< QString, Elem > & map )
 //======================================================================================================================
 //  high-level file I/O helpers
 
+inline constexpr bool IgnoreEmpty = true;
+inline constexpr bool AllowEmpty = false;
+
 bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, const QString & fileDesc );
-bool readJsonFromFile( JsonDocumentCtx & jsonDoc, const QString & filePath, const QString & fileDesc );
+bool readJsonFromFile( JsonDocumentCtx & jsonDoc, const QString & filePath, const QString & fileDesc, bool ignoreEmpty = false );
 
 
 #endif // JSON_UTILS_INCLUDED

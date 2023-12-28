@@ -522,13 +522,20 @@ bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, c
 	return true;
 }
 
-bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath, const QString & fileDesc )
+bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath, const QString & fileDesc, bool ignoreEmpty )
 {
 	QByteArray bytes;
 	QString readError = fs::readWholeFile( filePath, bytes );
 	if (!readError.isEmpty())
 	{
 		reportRuntimeError( nullptr, "Error loading "+fileDesc, readError );
+		return false;
+	}
+
+	if (bytes.isEmpty())
+	{
+		if (!ignoreEmpty)
+			reportRuntimeError( nullptr, "Error loading "+fileDesc, fileDesc+" file is empty." );
 		return false;
 	}
 

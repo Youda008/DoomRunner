@@ -3176,13 +3176,13 @@ bool MainWindow::saveCache( const QString & filePath )
 	//jsRoot["wad_info"] = doom::g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
 
 	QJsonDocument jsonDoc( jsRoot );
-	return writeJsonToFile( jsonDoc, filePath, "cache" );
+	return writeJsonToFile( jsonDoc, filePath, "file-info cache" );
 }
 
 bool MainWindow::loadCache( const QString & filePath )
 {
 	JsonDocumentCtx jsonDoc;
-	if (!readJsonFromFile( jsonDoc, filePath, "cache" ))
+	if (!readJsonFromFile( jsonDoc, filePath, "file-info cache", IgnoreEmpty ))
 	{
 		return false;
 	}

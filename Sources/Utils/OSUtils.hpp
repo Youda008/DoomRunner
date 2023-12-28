@@ -19,12 +19,11 @@
 class PathRebaser;
 
 
-//======================================================================================================================
-
 namespace os {
 
 
-//-- standard directories and installation properties ----------------------------------------------
+//======================================================================================================================
+//  standard directories and installation properties
 
 /// Returns home directory for the current user.
 QString getHomeDir();
@@ -55,9 +54,30 @@ QString getThisAppConfigDir();
 /// Returns directory where this application should save its data files. This may be the same as the config dir.
 QString getThisAppDataDir();
 
+
+// cached variants of the functions above for standard directories that might expensive to get
+
+const QString & getCachedHomeDir();
+const QString & getCachedDocumentsDir();
+#if IS_WINDOWS
+const QString & getCachedSavedGamesDir();
+#endif
+const QString & getCachedAppConfigDir();
+const QString & getCachedAppDataDir();
+QString getCachedConfigDirForApp( const QString & executablePath );
+QString getCachedDataDirForApp( const QString & executablePath );
+const QString & getCachedThisAppConfigDir();
+const QString & getCachedThisAppDataDir();
+
+
+// other
+
 /// Returns whether an executable is inside one of directories where the system will find it.
 /** If true it means the executable can be started directly by using only its name without its path. */
 bool isInSearchPath( const QString & filePath );
+
+
+// installation properties
 
 /// Type of sandbox environment an application might be installed in
 enum class Sandbox
@@ -93,7 +113,8 @@ ShellCommand getRunCommand(
 );
 
 
-//-- graphical environment -------------------------------------------------------------------------
+//======================================================================================================================
+//  graphical environment
 
 #if !IS_WINDOWS
 const QString & getLinuxDesktopEnv();
@@ -109,7 +130,8 @@ struct MonitorInfo
 QVector< MonitorInfo > listMonitors();
 
 
-//-- miscellaneous ---------------------------------------------------------------------------------
+//======================================================================================================================
+//  miscellaneous
 
 /// Opens a selected directory in a new File Explorer window.
 bool openDirectoryWindow( const QString & dirPath );

@@ -25,13 +25,11 @@
 #endif
 
 
-//======================================================================================================================
-
 namespace os {
 
 
-//----------------------------------------------------------------------------------------------------------------------
-//  standard directories and installation properties
+//======================================================================================================================
+//  standard directories
 
 QString getHomeDir()
 {
@@ -125,10 +123,91 @@ QString getThisAppDataDir()
  #endif
 }
 
+
+//-- cached variants -------------------------------------------------------------------------------
+
+static std::optional< QString > g_homeDir;
+const QString & getCachedHomeDir()
+{
+	if (!g_homeDir)
+		g_homeDir = getHomeDir();
+	return *g_homeDir;
+}
+
+static std::optional< QString > g_documentsDir;
+const QString & getCachedDocumentsDir()
+{
+	if (!g_documentsDir)
+		g_documentsDir = getDocumentsDir();
+	return *g_documentsDir;
+}
+
+#if IS_WINDOWS
+static std::optional< QString > g_savedGamesDir;
+const QString & getCachedSavedGamesDir()
+{
+	if (!g_savedGamesDir)
+		g_savedGamesDir = getSavedGamesDir();
+	return *g_savedGamesDir;
+}
+#endif
+
+static std::optional< QString > g_appConfigDir;
+const QString & getCachedAppConfigDir()
+{
+	if (!g_appConfigDir)
+		g_appConfigDir = getAppConfigDir();
+	return *g_appConfigDir;
+}
+
+static std::optional< QString > g_appDataDir;
+const QString & getCachedAppDataDir()
+{
+	if (!g_appDataDir)
+		g_appDataDir = getAppDataDir();
+	return *g_appDataDir;
+}
+
+QString getCachedConfigDirForApp( const QString & executablePath )
+{
+	const QString & genericConfigDir = getCachedAppConfigDir();
+	QString appName = fs::getFileBasenameFromPath( executablePath );
+	return fs::getPathFromFileName( genericConfigDir, appName );  // -> /home/youda/.config/zdoom
+}
+
+QString getCachedDataDirForApp( const QString & executablePath )
+{
+	const QString & genericDataDir = getCachedAppDataDir();
+	QString appName = fs::getFileBasenameFromPath( executablePath );
+	return fs::getPathFromFileName( genericDataDir, appName );  // -> /home/youda/.local/share/zdoom
+}
+
+static std::optional< QString > g_thisAppConfigDir;
+const QString & getCachedThisAppConfigDir()
+{
+	if (!g_thisAppConfigDir)
+		g_thisAppConfigDir = getThisAppConfigDir();
+	return *g_thisAppConfigDir;
+}
+
+static std::optional< QString > g_thisAppDataDir;
+const QString & getCachedThisAppDataDir()
+{
+	if (!g_thisAppDataDir)
+		g_thisAppDataDir = getThisAppDataDir();
+	return *g_thisAppDataDir;
+}
+
+
+//-- misc ------------------------------------------------------------------------------------------
+
 bool isInSearchPath( const QString & filePath )
 {
 	return QStandardPaths::findExecutable( fs::getFileNameFromPath( filePath ) ) == filePath;
 }
+
+
+//-- installation properties -----------------------------------------------------------------------
 
 QString getSandboxName( Sandbox sandbox )
 {
@@ -241,7 +320,7 @@ ShellCommand getRunCommand(
 }
 
 
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 //  graphical environment
 
 const QString & getLinuxDesktopEnv()
@@ -270,7 +349,7 @@ QVector< MonitorInfo > listMonitors()
 }
 
 
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 //  miscellaneous
 
 inline constexpr bool OpenTargetDirectory = false;  ///< open directly the selected entry (the entry must be a directory)

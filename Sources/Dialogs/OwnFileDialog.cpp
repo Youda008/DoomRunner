@@ -7,6 +7,7 @@
 
 #include "OwnFileDialog.hpp"
 
+#include "CommonTypes.hpp"  // emptyString
 #include "Utils/OSUtils.hpp"  // getLinuxDesktopEnv(), getThisAppDataDir()
 
 
@@ -30,11 +31,10 @@ static const QString & getDefaultStartingDir()
 {
 	// initialize once on first call and then re-use.
  #ifdef FLATPAK_BUILD
-	static const QString defaultStartingDir = os::getThisAppDataDir();  // should return $XDG_DATA_HOME
+	return os::getCachedThisAppDataDir();  // should return $XDG_DATA_HOME
  #else
-	static const QString defaultStartingDir = {};  // let the OS choose one
+	return emptyString;  // let the OS choose one
  #endif
-	return defaultStartingDir;
 }
 
 QString OwnFileDialog::getOpenFileName(

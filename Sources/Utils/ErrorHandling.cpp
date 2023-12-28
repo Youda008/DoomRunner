@@ -80,7 +80,7 @@ static const char * const logFileName = "errors.txt";
 LogStream::LogStream( LogLevel level )
 :
 	_debugStream( debugStreamFromLogLevel( level ) ),
-	_logFile( fs::getPathFromFileName( os::getThisAppDataDir(), logFileName ) ),
+	_logFile( fs::getPathFromFileName( os::getCachedThisAppDataDir(), logFileName ) ),
 	_logLevel( level )
 {
 	_debugStream.noquote().nospace();

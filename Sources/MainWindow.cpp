@@ -908,10 +908,6 @@ void MainWindow::updateOptionsGrpBoxTitles( const StorageSettings & storageSetti
 // but before the window is physically shown (drawn for the first time).
 void MainWindow::showEvent( QShowEvent * event )
 {
-	// This can't be called in the constructor, because the widgets still don't have their final sizes there.
-	// Calling it in the onWindowShown() on the other hand, causes the window to briefly appear with the original layout
-	// and then switch to the adjusted layout in the next frame.
-	adjustUi();
 
 	superClass::showEvent( event );
 }
@@ -952,6 +948,10 @@ void MainWindow::onWindowShown()
 	{
 		runSetupDialog();
 	}
+
+	// This must be called after the options are loaded, because options might change application style,
+	// and that might change widget sizes.
+	adjustUi();
 
 	// integrate the loaded storage settings into the titles of options group-boxes
 	updateOptionsGrpBoxTitles( settings );

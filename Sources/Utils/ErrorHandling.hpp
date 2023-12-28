@@ -49,6 +49,7 @@ enum class LogLevel
 	Failure,
 	Bug,
 };
+const char * logLevelToStr( LogLevel level );
 
 /// Stream wrapper that logs to multiple streams depending on log level and build type
 class LogStream
@@ -60,7 +61,7 @@ class LogStream
 	LogLevel _logLevel;
 	bool _addQuotes = true;
 	//bool _addSpace = true;
-	bool _firstTokenWritten = false;
+	//bool _firstTokenWritten = false;
 
  public:
 

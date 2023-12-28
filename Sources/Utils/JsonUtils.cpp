@@ -442,7 +442,7 @@ void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
 	if (!showError)
 		return;
 	else if (_context->dontShowAgain)
-		qWarning() << message;
+		qWarning().noquote() << message;
 	else
 		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
 }
@@ -457,7 +457,7 @@ void JsonArrayCtx::indexOutOfBounds( int index, bool showError ) const
 	if (!showError)
 		return;
 	else if (_context->dontShowAgain)
-		qWarning() << message;
+		qWarning().noquote() << message;
 	else
 		_context->dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading options file", message );
 }
@@ -472,7 +472,7 @@ void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expec
 	if (!showError)
 		return;
 	else if (_context->dontShowAgain)
-		qWarning() << message;
+		qWarning().noquote() << message;
 	else
 		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
 }
@@ -487,7 +487,7 @@ void JsonArrayCtx::invalidTypeAtIdx( int index, const QString & expectedType, bo
 	if (!showError)
 		return;
 	else if (_context->dontShowAgain)
-		qWarning() << message;
+		qWarning().noquote() << message;
 	else
 		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
 }

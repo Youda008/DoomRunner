@@ -139,7 +139,7 @@ macx: ICON = Resources/DoomRunner.icns
 
 #-- build type variables -------------------------
 
-debug {
+CONFIG(debug, debug|release) {
 	DEFINES += IS_DEBUG_BUILD=true
 } else {
 	DEFINES += IS_DEBUG_BUILD=false

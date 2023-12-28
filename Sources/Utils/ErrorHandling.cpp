@@ -67,7 +67,7 @@ static const char * const LogLevelStrings [] =
 };
 static_assert( std::size(LogLevelStrings) == size_t(LogLevel::Bug) + 1, "Please update this table too" );
 
-static const char * logLevelToStr( LogLevel level )
+const char * logLevelToStr( LogLevel level )
 {
 	if (size_t(level) < std::size(LogLevelStrings))
 		return LogLevelStrings[ size_t(level) ];

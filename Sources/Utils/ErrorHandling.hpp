@@ -143,8 +143,10 @@ class DummyLogStream
 
 	DummyLogStream() {}
 
-	DummyLogStream & space() { return *this; }
-	DummyLogStream & nospace() { return *this; }
+	DummyLogStream & quote() { return *this; }
+	DummyLogStream & noquote() { return *this; }
+	//DummyLogStream & space() { return *this; }
+	//DummyLogStream & nospace() { return *this; }
 
 	template< typename Obj >
 	DummyLogStream & operator<<( const Obj & ) { return *this; }
@@ -158,7 +160,7 @@ class DummyLogStream
 //  top-level logging API
 
 /// Writes a debugging message into stderr (in debug builds only).
-inline auto logDebug( const char * component = nullptr )
+inline auto logDebug( [[maybe_unused]] const char * component = nullptr )
 {
  #if IS_DEBUG_BUILD
 	return impl::LogStream( impl::LogLevel::Debug, component );

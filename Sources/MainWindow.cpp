@@ -3440,6 +3440,7 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 				"Please select another one."
 			);
 			preset.selectedEnginePath.clear();
+			preset.compatOpts.compatLevel = -1;  // compat level is engine-specific so the previous level is no longer valid
 		}
 	}
 

@@ -398,12 +398,12 @@ bool openDirectoryWindow( const QString & dirPath )
 	}
 	else if (!fs::exists( dirPath ))
 	{
-		reportRuntimeError( nullptr, "Cannot open directory window", dirPath%" does not exist." );
+		reportRuntimeError( nullptr, "Cannot open directory window", "\""%dirPath%"\" does not exist." );
 		return false;
 	}
 	else if (!fs::isDirectory( dirPath ))
 	{
-		reportRuntimeError( nullptr, "Cannot open directory window", dirPath%" is not a directory." );
+		reportRuntimeError( nullptr, "Cannot open directory window", "\""%dirPath%"\" is not a directory." );
 		return false;
 	}
 
@@ -411,7 +411,7 @@ bool openDirectoryWindow( const QString & dirPath )
 
 	if (!success)
 	{
-		reportRuntimeError( nullptr, "Cannot open directory window", "Opening directory window failed, check permissions." );
+		reportRuntimeError( nullptr, "Cannot open directory window", "Opening directory window failed." );
 		return false;
 	}
 
@@ -427,12 +427,12 @@ bool openFileLocation( const QString & filePath )
 	}
 	else if (!fs::exists( filePath ))
 	{
-		reportRuntimeError( nullptr, "Cannot open file location", filePath%" does not exist." );
+		reportRuntimeError( nullptr, "Cannot open file location", "\""%filePath%"\" does not exist." );
 		return false;
 	}
 	/*else if (!fs::isFile( filePath ))
 	{
-		reportRuntimeError( nullptr, "Cannot open file location", filePath%" is not a file." );
+		reportRuntimeError( nullptr, "Cannot open file location", "\""%filePath%"\" is not a file." );
 		return false;
 	}*/
 
@@ -440,7 +440,7 @@ bool openFileLocation( const QString & filePath )
 
 	if (!success)
 	{
-		reportRuntimeError( nullptr, "Cannot open file location", "Opening file location failed, check permissions." );
+		reportRuntimeError( nullptr, "Cannot open file location", "Opening file location failed." );
 		return false;
 	}
 

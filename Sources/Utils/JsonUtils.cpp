@@ -544,7 +544,7 @@ bool readJsonFromFile( JsonDocumentCtx & jsonDocCtx, const QString & filePath, c
 	if (jsonDoc.isNull())
 	{
 		reportRuntimeError( nullptr, "Error loading "+fileDesc,
-			"Failed to parse "%fs::getFileNameFromPath(filePath)%": "%parseError.errorString()%"\n"
+			"Failed to parse \""%fs::getFileNameFromPath(filePath)%"\": "%parseError.errorString()%"\n"
 			"You can either open it in notepad and try to repair it, or delete it and start from scratch."
 		);
 		return false;

@@ -55,13 +55,13 @@ QString readWholeFile( const QString & filePath, QByteArray & dest )
 	QFile file( filePath );
 	if (!file.open( QIODevice::ReadOnly ))
 	{
-		return "Could not open file "%filePath%" for reading: "%file.errorString();
+		return "Could not open file "%filePath%" for reading ("%file.errorString()%")";
 	}
 
 	dest = file.readAll();
 	if (file.error() != QFile::NoError)
 	{
-		return "Error occured while reading a file "%filePath%": "%file.errorString();
+		return "Error occured while reading a file "%filePath%" ("%file.errorString()%")";
 	}
 
 	file.close();
@@ -73,18 +73,18 @@ QString updateFileSafely( const QString & filePath, const QByteArray & newConten
 	QSaveFile file( filePath );
 	if (!file.open( QIODevice::WriteOnly ))
 	{
-		return "Could not open file "%filePath%" for writing: "%file.errorString();
+		return "Could not open file "%filePath%" for writing ("%file.errorString()%")";
 	}
 
 	file.write( newContent );
 	if (file.error() != QFile::NoError)
 	{
-		return "Could not write to file "%filePath%": "%file.errorString();
+		return "Could not write to file "%filePath%" ("%file.errorString()%")";
 	}
 
 	if (!file.commit())
 	{
-		return "Could not commit the changes to file "%filePath%": "%file.errorString();
+		return "Could not commit the changes to file "%filePath%" ("%file.errorString()%")";
 	}
 
 	return {};

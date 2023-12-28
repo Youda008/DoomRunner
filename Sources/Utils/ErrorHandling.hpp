@@ -65,7 +65,7 @@ class LogStream
 
  public:
 
-	LogStream( LogLevel level );
+	LogStream( LogLevel level, const char * component );
 	~LogStream();
 
 	LogStream & quote()
@@ -109,7 +109,7 @@ class LogStream
 
 	static QDebug debugStreamFromLogLevel( LogLevel level );
 
-	void writeLineOpening();
+	void writeLineOpening( LogLevel level, const char * component );
 
 	template< typename Obj >
 	void write( const Obj & obj )
@@ -141,7 +141,7 @@ class DummyLogStream
 {
  public:
 
-	DummyLogStream( LogLevel ) {}
+	DummyLogStream() {}
 
 	DummyLogStream & space() { return *this; }
 	DummyLogStream & nospace() { return *this; }
@@ -158,31 +158,31 @@ class DummyLogStream
 //  top-level logging API
 
 /// Writes a debugging message into stderr (in debug builds only).
-inline auto logDebug()
+inline auto logDebug( const char * component = nullptr )
 {
  #if IS_DEBUG_BUILD
-	return impl::LogStream( impl::LogLevel::Debug );
+	return impl::LogStream( impl::LogLevel::Debug, component );
  #else
-	return impl::DummyLogStream( impl::LogLevel::Debug );
+	return impl::DummyLogStream();
  #endif
 }
 
 /// Writes a message about an event that is not necessarily an error, but is worth noting.
-inline auto logInfo()
+inline auto logInfo( const char * component = nullptr )
 {
-	return impl::LogStream( impl::LogLevel::Info );
+	return impl::LogStream( impl::LogLevel::Info, component );
 }
 
 /// Writes a message about a non-critical background error into stderr and an error file.
-inline auto logRuntimeError()
+inline auto logRuntimeError( const char * component = nullptr )
 {
-	return impl::LogStream( impl::LogLevel::Failure );
+	return impl::LogStream( impl::LogLevel::Failure, component );
 }
 
 /// Writes a message about a serious background error into stderr and an error file.
-inline auto logLogicError()
+inline auto logLogicError( const char * component = nullptr )
 {
-	return impl::LogStream( impl::LogLevel::Bug );
+	return impl::LogStream( impl::LogLevel::Bug, component );
 }
 
 

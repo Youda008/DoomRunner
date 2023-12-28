@@ -158,7 +158,7 @@ void PathChecker::_maybeShowError( bool & errorMessageDisplayed, QWidget * paren
 {
 	if (!errorMessageDisplayed)
 	{
-		reportRuntimeError( parent, title, message );
+		reportUserError( parent, title, message );
 		errorMessageDisplayed = true;  // don't spam too many errors when something goes wrong
 	}
 }
@@ -204,13 +204,13 @@ bool PathChecker::_checkCollision(
 	if (expectedType == EntryType::File && !entry.isFile())
 	{
 		_maybeShowError( errorMessageDisplayed, parent, "Path is a directory",
-			capitalize(subjectName)%" "%path%" is a directory, but it should be a file. "%errorPostscript );
+			capitalize(subjectName)%" ("%path%") is a directory, but it should be a file. "%errorPostscript );
 		return false;
 	}
 	if (expectedType == EntryType::Dir && !entry.isDir())
 	{
 		_maybeShowError( errorMessageDisplayed, parent, "Path is a file",
-			capitalize(subjectName)%" "%path%" is a file, but it should be a directory. "%errorPostscript );
+			capitalize(subjectName)%" ("%path%") is a file, but it should be a directory. "%errorPostscript );
 		return false;
 	}
 	return true;

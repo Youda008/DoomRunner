@@ -378,7 +378,7 @@ class FilteredList {
 	{
 		if (!canBeModified())
 		{
-			logLogicError() << "the list cannot be modified when it is filtered";
+			logLogicError("ListModel") << "the list cannot be modified when it is filtered";
 			throw std::logic_error("the list cannot be modified when it is filtered");
 		}
 	}
@@ -560,7 +560,7 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 		}
 		catch (const std::logic_error & e)
 		{
-			logLogicError() << e.what();
+			logLogicError("ListModel") << e.what();
 			return QVariant();
 		}
 	}
@@ -714,7 +714,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 		catch (const std::logic_error & e)
 		{
-			logLogicError() << e.what();
+			logLogicError("ListModel") << e.what();
 			return QVariant();
 		}
 	}
@@ -747,7 +747,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 		catch (const std::logic_error & e)
 		{
-			logLogicError() << e.what();
+			logLogicError("ListModel") << e.what();
 			return false;
 		}
 	}
@@ -759,7 +759,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (!this->canBeModified())
 		{
-			logLogicError() << "Cannot insertRows into this model now. It should have been restricted by the ListView.";
+			logLogicError("ListModel") << "Cannot insertRows into this model now. It should have been restricted by the ListView.";
 			return false;
 		}
 
@@ -782,7 +782,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (!this->canBeModified())
 		{
-			logLogicError() << "Cannot removeRows from this model now. It should have been restricted by the ListView.";
+			logLogicError("ListModel") << "Cannot removeRows from this model now. It should have been restricted by the ListView.";
 			return false;
 		}
 
@@ -856,7 +856,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (!this->canBeModified())
 		{
-			logLogicError() << "Cannot drop into this model now. It should have been restricted by the ListView.";
+			logLogicError("ListModel") << "Cannot drop into this model now. It should have been restricted by the ListView.";
 			return false;
 		}
 
@@ -870,7 +870,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 		else
 		{
-			logLogicError() << "This model doesn't support such drop operation. It should have been restricted by the ListView.";
+			logLogicError("ListModel") << "This model doesn't support such drop operation. It should have been restricted by the ListView.";
 			return false;
 		}
 	}
@@ -929,8 +929,8 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	{
 		if (!pathConvertor)
 		{
-			logLogicError() << "File has been dropped but no PathConvertor is set. "
-			                   "Either use setPathContext or disable file dropping in the widget.";
+			logLogicError("ListModel") << "File has been dropped but no PathConvertor is set. "
+			                              "Either use setPathContext or disable file dropping in the widget.";
 			return false;
 		}
 

@@ -108,6 +108,7 @@ WadInfo readWadInfo( const QString & filePath )
 	QFile file( filePath );
 	if (!file.open( QIODevice::ReadOnly ))
 	{
+		logRuntimeError("WadReader").noquote() << "Cannot open \""<<filePath<<"\": "<<file.errorString();
 		wadInfo.status = ReadStatus::CantOpen;
 		return wadInfo;
 	}
@@ -115,7 +116,7 @@ WadInfo readWadInfo( const QString & filePath )
 	const qint64 fileSize = file.size();
 	if (fileSize < 0)
 	{
-		logLogicError() << "file size is negative ("<<fileSize<<"), wtf??";
+		logLogicError("WadReader") << "file size is negative ("<<fileSize<<"), wtf??";
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
@@ -125,11 +126,13 @@ WadInfo readWadInfo( const QString & filePath )
 	WadHeader header;
 	if (qint64( sizeof(header) ) > fileSize)
 	{
+		logDebug("WadReader") << filePath << " is smaller than WAD header";
 		wadInfo.status = ReadStatus::InvalidFormat;
 		return wadInfo;
 	}
 	else if (file.read( (char*)&header, sizeof(header) ) < qint64( sizeof(header) ))
 	{
+		logDebug("WadReader") << filePath << ": failed to read WAD header";
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
@@ -143,6 +146,7 @@ WadInfo readWadInfo( const QString & filePath )
 
 	if (wadInfo.type == WadType::Neither)  // not a WAD format
 	{
+		logDebug("WadReader") << filePath << ": invalid WAD signature";
 		wadInfo.status = ReadStatus::InvalidFormat;
 		return wadInfo;
 	}
@@ -151,12 +155,14 @@ WadInfo readWadInfo( const QString & filePath )
 
 	if (header.numLumps < 1 || header.numLumps > 65536)  // some garbage -> not a WAD
 	{
+		logDebug("WadReader") << filePath << ": invalid number of lumps";
 		wadInfo.status = ReadStatus::InvalidFormat;
 		return wadInfo;
 	}
 	qint64 lumpDirSize = header.numLumps * sizeof(LumpEntry);
 	if (header.lumpDirOffset + lumpDirSize > fileSize)
 	{
+		logDebug("WadReader") << filePath << ": lump header points beyond the end of file";
 		wadInfo.status = ReadStatus::InvalidFormat;
 		return wadInfo;
 	}
@@ -164,6 +170,7 @@ WadInfo readWadInfo( const QString & filePath )
 	std::unique_ptr< LumpEntry [] > lumpDir( new LumpEntry [header.numLumps] );
 	if (!file.seek( header.lumpDirOffset ) || file.read( (char*)lumpDir.get(), lumpDirSize ) < lumpDirSize)
 	{
+		logDebug("WadReader") << filePath << ": failed to read the lump directory";
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
@@ -175,6 +182,7 @@ WadInfo readWadInfo( const QString & filePath )
 
 		if (lump.dataOffset + lump.size > fileSize || !isPrintableAsciiString( lumpName ))  // some garbage -> not a WAD
 		{
+			logDebug("WadReader") << filePath << ": lump points beyond the end of file";
 			wadInfo.status = ReadStatus::InvalidFormat;
 			return wadInfo;
 		}
@@ -193,6 +201,7 @@ WadInfo readWadInfo( const QString & filePath )
 
 			if (!file.seek( lump.dataOffset ))
 			{
+				logDebug("WadReader") << filePath << ": failed to seek to lump offset";
 				wadInfo.status = ReadStatus::FailedToRead;
 				return wadInfo;
 			}

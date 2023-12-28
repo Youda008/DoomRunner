@@ -73,28 +73,28 @@ class FileInfoCache {
 		auto cacheIter = _cache.find( filePath );
 		if (cacheIter == _cache.end())
 		{
-			logDebug() << "FileInfoCache: entry not found, reading info from file: " << filePath;
+			logDebug("FileInfoCache") << "entry not found, reading info from file: " << filePath;
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->lastModified != fileLastModified)
 		{
-			logDebug() << "FileInfoCache: entry is outdated, reading info from file: " << filePath;
+			logDebug("FileInfoCache") << "entry is outdated, reading info from file: " << filePath;
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->fileInfo.status == ReadStatus::CantOpen
 			  || cacheIter->fileInfo.status == ReadStatus::FailedToRead)
 		{
-			logDebug() << "FileInfoCache: reading file failed last time, trying again: " << filePath;
+			logDebug("FileInfoCache") << "reading file failed last time, trying again: " << filePath;
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->fileInfo.status == ReadStatus::Uninitialized)
 		{
-			logRuntimeError() << "FileInfoCache: entry is corrupted, reading info from file: " << filePath;
+			logRuntimeError("FileInfoCache") << "entry is corrupted, reading info from file: " << filePath;
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else
 		{
-			//logDebug() << "FileInfoCache: using cached info: " << filePath;
+			//logDebug("FileInfoCache") << "using cached info: " << filePath;
 		}
 
 		return cacheIter->fileInfo;
@@ -132,7 +132,7 @@ class FileInfoCache {
 		{
 			if (!fs::isValidFile( filePath ))
 			{
-				logDebug() << "FileInfoCache: removing entry, file no longer exists: " << filePath;
+				logDebug("FileInfoCache") << "removing entry, file no longer exists: " << filePath;
 				_dirty = true;
 				continue;
 			}
@@ -140,7 +140,7 @@ class FileInfoCache {
 			JsonObjectCtx jsEntry = jsCache.getObject( filePath );
 			if (!jsEntry)
 			{
-				logRuntimeError() << "FileInfoCache: removing corrupted entry (invalid JSON type): " << filePath;
+				logRuntimeError("FileInfoCache") << "removing corrupted entry (invalid JSON type): " << filePath;
 				_dirty = true;
 				continue;
 			}
@@ -149,7 +149,7 @@ class FileInfoCache {
 			deserialize( jsEntry, entry );
 			if (entry.fileInfo.status == ReadStatus::Uninitialized || entry.lastModified == 0)
 			{
-				logRuntimeError() << "FileInfoCache: removing corrupted entry (vital fields missing): " << filePath;
+				logRuntimeError("FileInfoCache") << "removing corrupted entry (vital fields missing): " << filePath;
 				_dirty = true;
 				continue;
 			}
@@ -169,15 +169,15 @@ class FileInfoCache {
 
 		if (newEntry.fileInfo.status == ReadStatus::CantOpen)
 		{
-			logInfo() << "FileInfoCache: couldn't open file: " << filePath;
+			logInfo("FileInfoCache") << "couldn't open file: " << filePath;
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::FailedToRead)
 		{
-			logRuntimeError() << "FileInfoCache: failed to read file: " << filePath;
+			logRuntimeError("FileInfoCache") << "failed to read file: " << filePath;
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::NotSupported)
 		{
-			//logDebug() << "FileInfoCache: file info not implemented: " << filePath;
+			//logDebug("FileInfoCache") << "file info not implemented: " << filePath;
 		}
 
 		_dirty = true;

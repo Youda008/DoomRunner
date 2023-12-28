@@ -490,7 +490,7 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 	);
 	if (lErrorCode != ERROR_SUCCESS)
 	{
-		logRuntimeError() << "cannot open registry key: HKEY_CURRENT_USER/" << darkModeSubkeyPath;
+		logRuntimeError("Themes").noquote() << "cannot open registry key: \"HKEY_CURRENT_USER/"<<darkModeSubkeyPath<<"\"";
 		return;
 	}
 
@@ -501,7 +501,7 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 	if (!optAppsUseLightTheme)
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "cannot read registry value " << darkModeValueName << " (error " << lastError << ")";
+		logRuntimeError("Themes").noquote() << "cannot read registry value \""<<darkModeValueName<<"\" (error "<<lastError<<")";
 		return;
 	}
 
@@ -518,7 +518,7 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 		);
 		if (lErrorCode != ERROR_SUCCESS)
 		{
-			logRuntimeError() << "RegNotifyChangeKeyValue failed";
+			logRuntimeError("Themes") << "RegNotifyChangeKeyValue() failed";
 			Sleep( 1000 );
 			continue;
 		}
@@ -527,7 +527,7 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 		if (!optAppsUseLightTheme)
 		{
 			auto lastError = GetLastError();
-			logRuntimeError() << "cannot read registry value " << darkModeValueName << " (error " << lastError << ")";
+			logRuntimeError("Themes").noquote() << "cannot read registry value \""<<darkModeValueName<<"\" (error "<<lastError<<")";
 			break;
 		}
 

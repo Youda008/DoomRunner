@@ -84,7 +84,7 @@ Resource getResource( const QString & filePath, HMODULE hExeModule, LPWSTR lpTyp
 	{
 		// this resource is optional, some exe files don't have it
 		auto lastError = GetLastError();
-		logDebug() << "Cannot find resource "<<lpType<<" in "<<filePath<<", FindResource() failed with error "<<lastError;
+		logDebug("ExeReader") << "Cannot find resource "<<lpType<<" in "<<filePath<<", FindResource() failed with error "<<lastError;
 		return {};
 	}
 
@@ -92,7 +92,7 @@ Resource getResource( const QString & filePath, HMODULE hExeModule, LPWSTR lpTyp
 	if (res.hResource == nullptr)  // careful: it's nullptr, not INVALID_HANDLE_VALUE
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot load resource "<<lpType<<" from "<<filePath<<", LoadResource() failed with error "<<lastError;
+		logRuntimeError("ExeReader") << "Cannot load resource "<<lpType<<" from "<<filePath<<", LoadResource() failed with error "<<lastError;
 		return {};
 	}
 
@@ -101,7 +101,7 @@ Resource getResource( const QString & filePath, HMODULE hExeModule, LPWSTR lpTyp
 	if (res.lpData == nullptr || res.dwSize == 0)
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot read resource "<<lpType<<" from "<<filePath<<", LockResource() failed with error "<<lastError;
+		logRuntimeError("ExeReader") << "Cannot read resource "<<lpType<<" from "<<filePath<<", LockResource() failed with error "<<lastError;
 		return {};
 	}
 
@@ -119,17 +119,17 @@ static VS_FIXEDFILEINFO * getRawVersionInfo( const void * resData )
 	if (!VerQueryValue( resData, L"\\", (LPVOID*)&verInfo, &verInfoSize ))
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot read version info, VerQueryValue(\"\\\") failed with error " << lastError;
+		logRuntimeError("ExeReader") << "Cannot read version info, VerQueryValue(\"\\\") failed with error "<<lastError;
 		return nullptr;
 	}
 	else if (verInfo == nullptr || verInfoSize < sizeof(VS_FIXEDFILEINFO))
 	{
-		logRuntimeError() << "Cannot read version info, VerQueryValue(\"\\\") returned " << verInfo << ',' << verInfoSize;
+		logRuntimeError("ExeReader") << "Cannot read version info, VerQueryValue(\"\\\") returned "<<verInfo<<','<<verInfoSize;
 		return nullptr;
 	}
 	else if (verInfo->dwSignature != 0xFEEF04BD)
 	{
-		logRuntimeError() << QStringLiteral("Cannot read version info, VerQueryValue() returned invalid signature %1").arg( verInfo->dwSignature, 0, 16 );
+		logRuntimeError("ExeReader") << QStringLiteral("Cannot read version info, VerQueryValue() returned invalid signature %1").arg( verInfo->dwSignature, 0, 16 );
 		return nullptr;
 	}
 	return verInfo;
@@ -148,12 +148,12 @@ static span< LangInfo > getLangInfo( const void * resData )
 	if (!VerQueryValue( resData, TEXT("\\VarFileInfo\\Translation"), (LPVOID*)&lpTranslate, &cbTranslate ))
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot read version info, VerQueryValue(\"\\VarFileInfo\\Translation\") failed with error " << lastError;
+		logRuntimeError("ExeReader") << "Cannot read version info, VerQueryValue(\"\\VarFileInfo\\Translation\") failed with error "<<lastError;
 		return { nullptr, 0 };
 	}
 	else if (lpTranslate == nullptr || cbTranslate < sizeof(LangInfo))
 	{
-		logRuntimeError() << "No language section in version info, VerQueryValue(\"\\VarFileInfo\\Translation\") returned " << lpTranslate << ',' << cbTranslate;
+		logRuntimeError("ExeReader") << "No language section in version info, VerQueryValue(\"\\VarFileInfo\\Translation\") returned "<<lpTranslate<<','<<cbTranslate;
 		return { nullptr, 0 };
 	}
 	return { lpTranslate, cbTranslate / sizeof(LangInfo) };
@@ -167,7 +167,7 @@ static QString getVerInfoValue( const void * resData, const LangInfo & langInfo,
 	);
 	if (FAILED(hr))
 	{
-		logRuntimeError() << "StringCchPrintf failed";
+		logRuntimeError("ExeReader") << "StringCchPrintf() failed";
 		return {};
 	}
 
@@ -176,12 +176,12 @@ static QString getVerInfoValue( const void * resData, const LangInfo & langInfo,
 	if (!VerQueryValue( resData, SubBlock, &lpBuffer, &cchLen ))
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") failed with error "<<lastError;
+		logRuntimeError("ExeReader") << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") failed with error "<<lastError;
 		return {};
 	}
 	else if (lpBuffer == nullptr || cchLen == 0)
 	{
-		logRuntimeError() << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") returned " << lpBuffer << ',' << cchLen;
+		logRuntimeError("ExeReader") << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") returned "<<lpBuffer<<','<<cchLen;
 		return {};
 	}
 
@@ -279,7 +279,7 @@ MappedFile mapFileToMemory( const QString & filePath )
 	if (m.hFile == INVALID_HANDLE_VALUE)
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot map file to memory, CreateFile() failed with error " << lastError;
+		logRuntimeError("ExeReader") << "Cannot map file to memory, CreateFile() failed with error " << lastError;
 		return {};
 	}
 
@@ -287,14 +287,14 @@ MappedFile mapFileToMemory( const QString & filePath )
 	if (!GetFileSizeEx( m.hFile, &liFileSize ))
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot map file to memory, GetFileSize() failed with error " << lastError;
+		logRuntimeError("ExeReader") << "Cannot map file to memory, GetFileSize() failed with error " << lastError;
 		return {};
 	}
 	m.llSize = liFileSize.QuadPart;
 
 	if (liFileSize.QuadPart == 0)
 	{
-		logRuntimeError() << "Cannot map file to memory, file is empty";
+		logRuntimeError("ExeReader") << "Cannot map file to memory, file is empty";
 		return {};
 	}
 
@@ -308,7 +308,7 @@ MappedFile mapFileToMemory( const QString & filePath )
 	if (m.hMap == INVALID_HANDLE_VALUE)
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot map file to memory, CreateFileMapping() failed with error " << lastError;
+		logRuntimeError("ExeReader") << "Cannot map file to memory, CreateFileMapping() failed with error " << lastError;
 		return {};
 	}
 
@@ -321,7 +321,7 @@ MappedFile mapFileToMemory( const QString & filePath )
 	if (m.lpBaseAddr == nullptr)
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot map file to memory, MapViewOfFile() failed with error " << lastError;
+		logRuntimeError("ExeReader") << "Cannot map file to memory, MapViewOfFile() failed with error " << lastError;
 		return {};
 	}
 
@@ -345,7 +345,7 @@ ExeVersionInfo readVersionInfoFromPE( const QString & filePath )
 	const auto * dosHeader = mappedFile.fieldAtOffset< IMAGE_DOS_HEADER >( 0 );
 	if (dosHeader == nullptr)
 	{
-		logDebug() << "Cannot read IMAGE_DOS_HEADER";
+		logDebug("ExeReader") << "Cannot read IMAGE_DOS_HEADER";
 		verInfo.status = ReadStatus::InvalidFormat;
 		return verInfo;
 	}
@@ -353,7 +353,7 @@ ExeVersionInfo readVersionInfoFromPE( const QString & filePath )
 	const auto * ntHeaders = mappedFile.fieldAtOffset< IMAGE_NT_HEADERS >( dosHeader->e_lfanew );
 	if (ntHeaders == nullptr)
 	{
-		logDebug() << "Cannot read IMAGE_NT_HEADERS at " << Qt::hex << dosHeader->e_lfanew;
+		logDebug("ExeReader") << "Cannot read IMAGE_NT_HEADERS at " << Qt::hex << dosHeader->e_lfanew;
 		verInfo.status = ReadStatus::InvalidFormat;
 		return verInfo;
 	}
@@ -371,7 +371,7 @@ ExeVersionInfo readVersionInfoFromPE( const QString & filePath )
 	}
 	else
 	{
-		logDebug() << "Unknown CPU architecture: " << Qt::hex << ntHeaders->FileHeader.Machine;
+		logDebug("ExeReader") << "Unknown CPU architecture: " << Qt::hex << ntHeaders->FileHeader.Machine;
 		verInfo.status = ReadStatus::InvalidFormat;
 		return verInfo;
 	}
@@ -379,7 +379,7 @@ ExeVersionInfo readVersionInfoFromPE( const QString & filePath )
 	const auto * resourceDir = mappedFile.fieldAtOffset< IMAGE_RESOURCE_DIRECTORY >( resourceDirLocation->VirtualAddress );
 	if (resourceDir == nullptr)
 	{
-		logDebug() << "Cannot read IMAGE_RESOURCE_DIRECTORY at " << Qt::hex << resourceDirLocation->VirtualAddress;
+		logDebug("ExeReader") << "Cannot read IMAGE_RESOURCE_DIRECTORY at " << Qt::hex << resourceDirLocation->VirtualAddress;
 		verInfo.status = ReadStatus::InvalidFormat;
 		return verInfo;
 	}
@@ -409,7 +409,7 @@ ExeVersionInfo readVersionInfoUsingWinAPI( const QString & filePath )
 	if (!hExeModule)
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot open "<<filePath<<", LoadLibraryEx() failed with error "<<lastError;
+		logRuntimeError("ExeReader") << "Cannot open "<<filePath<<", LoadLibraryEx() failed with error "<<lastError;
 		verInfo.status = ReadStatus::CantOpen;
 		return verInfo;
 	}

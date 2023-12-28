@@ -104,7 +104,7 @@ ProcessOutputWindow::~ProcessOutputWindow()
 
 void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & detail )
 {
-	logDebug() << "    setOwnStatus: " << toString( status );
+	logDebug().noquote() << "    setOwnStatus: " << toString( status );
 
 	this->ownStatus = status;
 
@@ -188,7 +188,7 @@ void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & de
 ProcessStatus ProcessOutputWindow::runProcess(
 	const QString & executable, const QStringVec & arguments, const QString & workingDir, const EnvVars & envVars
 ){
-	logDebug() << "runProcess: " << executable;
+	logDebug() << "ProcessOutputWindow::runProcess: " << executable;
 
 	executableName = fs::getFileNameFromPath( executable );
 	this->setWindowTitle( executableName % " output" );
@@ -231,7 +231,7 @@ ProcessStatus ProcessOutputWindow::runProcess(
 
 void ProcessOutputWindow::onProcessStarted()
 {
-	logDebug() << "processStarted";
+	logDebug() << "ProcessOutputWindow::processStarted";
 
 	setOwnStatus( ProcessStatus::Running );
 }
@@ -277,7 +277,7 @@ void ProcessOutputWindow::onKeyPressed( int key, uint8_t modifiers )
 
 void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus exitStatus )
 {
-	logDebug() << "processFinished: " << exitCode << ", " << exitStatus;
+	logDebug() << "ProcessOutputWindow::processFinished: " << exitCode << ", " << exitStatus;
 
 	// This callback can be called even from destructor when destroying QProcess.
 	// In that case, don't do anything and abort because our own data are already destroyed.
@@ -308,14 +308,14 @@ void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus 
 	else if (exitStatus == QProcess::CrashExit)
 	{
 		setOwnStatus( ProcessStatus::Crashed );
-		reportRuntimeError( this, "Program crashed", executableName % " has crashed." );
+		reportRuntimeError( this, "Program crashed", "\""%executableName%"\" has crashed." );
 		closeDialog( QDialog::Accepted );
 	}
 	else if (exitCode != 0)
 	{
 		setOwnStatus( ProcessStatus::ExitedWithError, QString::number( exitCode ) );
 		//reportRuntimeError( this, "Program exited with error",
-		//	executableName % " has exited with error code " % QString::number( exitCode ) % "." );
+		//	"\""%executableName%"\" has exited with error code "%QString::number( exitCode )%"." );
 		//closeDialog( QDialog::Accepted );
 	}
 	else
@@ -328,7 +328,7 @@ void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus 
 
 void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 {
-	logDebug() << "errorOccurred: " << error;
+	logDebug() << "ProcessOutputWindow::errorOccurred: " << error;
 
 	// This callback can be called even from destructor when destroying QProcess.
 	// In that case, don't do anything and abort because our own data are already destroyed.
@@ -344,17 +344,17 @@ void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 	{
 		case QProcess::FailedToStart:
 			setOwnStatus( ProcessStatus::FailedToStart );
-			reportRuntimeError( this, "Process start error", "Failed to start "%executableName%" ("%process.errorString()%")" );
+			reportRuntimeError( this, "Process start error", "Failed to start \""%executableName%"\" ("%process.errorString()%")" );
 			closeDialog( QDialog::Accepted );
 			break;
 		case QProcess::Crashed:
 			setOwnStatus( ProcessStatus::Crashed );
-			reportRuntimeError( this, "Program crashed", executableName%" has crashed." );
+			reportRuntimeError( this, "Program crashed", "\""%executableName%"\" has crashed." );
 			closeDialog( QDialog::Accepted );
 			break;
 		case QProcess::Timedout:
 			setOwnStatus( ProcessStatus::FailedToStart );
-			reportRuntimeError( this, "Process start timeout", executableName%" process has timed out while starting." );
+			reportRuntimeError( this, "Process start timeout", "\""%executableName%"\" process has timed out while starting." );
 			closeDialog( QDialog::Accepted );
 			break;
 		case QProcess::ReadError:
@@ -380,7 +380,7 @@ void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 
 void ProcessOutputWindow::onAbortClicked( bool )
 {
-	logDebug() << "abortClicked: " << abortBtn->text();
+	logDebug().noquote() << "ProcessOutputWindow::onAbortClicked: " << abortBtn->text();
 
 	if (process.state() != QProcess::NotRunning)
 	{
@@ -416,5 +416,5 @@ void ProcessOutputWindow::closeDialog( int resultCode )
 
 void ProcessOutputWindow::onDialogClosed( int resultCode )
 {
-	logDebug() << "dialogClosed: " << resultCode;
+	logDebug() << "ProcessOutputWindow::onDialogClosed: " << resultCode;
 }

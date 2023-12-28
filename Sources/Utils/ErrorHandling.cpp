@@ -77,7 +77,7 @@ const char * logLevelToStr( LogLevel level )
 
 static const char * const logFileName = "errors.txt";
 
-LogStream::LogStream( LogLevel level )
+LogStream::LogStream( LogLevel level, const char * component )
 :
 	_debugStream( debugStreamFromLogLevel( level ) ),
 	_logFile( fs::getPathFromFileName( os::getCachedThisAppDataDir(), logFileName ) ),
@@ -91,7 +91,7 @@ LogStream::LogStream( LogLevel level )
 			_fileStream.setDevice( &_logFile );
 	}
 
-	writeLineOpening();
+	writeLineOpening( level, component );
 }
 
 LogStream::~LogStream()
@@ -115,20 +115,21 @@ QDebug LogStream::debugStreamFromLogLevel( LogLevel level )
 	return QMessageLogger().critical();
 }
 
-void LogStream::writeLineOpening()
+void LogStream::writeLineOpening( LogLevel level, const char * component )
 {
-	auto logLevelStr = logLevelToStr( _logLevel );
+	auto logLevelStr = logLevelToStr( level );
+	QString componentStr = component ? QStringLiteral("%1: ").arg( component ) : "";
 
 	if (shouldWriteToDebugStream())
 	{
-		_debugStream << QStringLiteral("[%1] ").arg( logLevelStr, -7 );
+		_debugStream << QStringLiteral("[%1] %2").arg( logLevelStr, -7 ).arg( componentStr );
 	}
 
 	if (shouldAndCanWriteToFileStream())
 	{
 		auto currentTime = QDateTime::currentDateTime().toString( Qt::DateFormat::ISODate );
 
-		_fileStream << QStringLiteral("[%1] [%2] ").arg( currentTime ).arg( logLevelStr, -7 );
+		_fileStream << QStringLiteral("[%1] [%2] %3").arg( currentTime ).arg( logLevelStr, -7 ).arg( componentStr );
 	}
 }
 

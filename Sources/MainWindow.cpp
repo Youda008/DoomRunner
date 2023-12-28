@@ -1537,7 +1537,7 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 		mapDescFileInfo = fs::replaceFileSuffix( mapDataFileInfo.filePath(), "TXT" );
 		if (!mapDescFileInfo.isFile())
 		{
-			reportRuntimeError( this, "Cannot open map description",
+			reportUserError( this, "Cannot open map description",
 				"Map description file \""%mapDescFileInfo.fileName()%"\" does not exist" );
 			return;
 		}

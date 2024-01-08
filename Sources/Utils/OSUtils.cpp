@@ -372,7 +372,7 @@ static bool openEntryInFileBrowser( const QString & entryPath, bool openParentAn
 
  #elif defined(Q_OS_MAC)
 
-	QString command = openParentAndSelect ? "select" ? "open";
+	QString command = openParentAndSelect ? "select" : "open";
 	QStringList args;
 	args << "-e" << "tell application \"Finder\"";
 	args << "-e" <<     "activate";

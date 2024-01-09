@@ -1522,7 +1522,7 @@ void MainWindow::onModDataChanged( const QModelIndex & topLeft, const QModelInde
 
 void MainWindow::showMapPackDesc( const QModelIndex & index )
 {
-	QFileInfo mapDataFileInfo = mapModel.filePath( index );
+	QFileInfo mapDataFileInfo( mapModel.filePath( index ) );
 
 	if (!mapDataFileInfo.isFile())  // user could click on a directory
 	{

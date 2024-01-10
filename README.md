@@ -239,16 +239,32 @@ make
 This guide assumes you have Homebrew installed
 
 ##### 1. Install Qt
+
+###### Intel
+
 ```
 brew install qt
 ```
 
-##### 2. Build the project
+###### M1 (Arm)
+
+Building for Qt 6 does not currently work on M1 (Arm) so you need to use Qt 5
+
+```
+brew install qt@5
+export PATH="/opt/homebrew/opt/qt@5/bin:$PATH"
+export LDFLAGS="-L/opt/homebrew/opt/qt@5/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/qt@5/include"
+```
+
+##### 3. Build the project
+
 ```
 cd <DoomRunner directory>
 mkdir build-dynamic
 cd build-dynamic
 qmake ../DoomRunner.pro -spec macx-g++ "CONFIG+=release"
+make clean
 make
 ```
 

@@ -490,7 +490,8 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 	);
 	if (lErrorCode != ERROR_SUCCESS)
 	{
-		logRuntimeError("Themes").noquote() << "cannot open registry key: \"HKEY_CURRENT_USER/"<<darkModeSubkeyPath<<"\"";
+		// This key exists since certain build of Windows 10, older versions don't have it.
+		logInfo("Themes").noquote() << "cannot open registry key: \"HKEY_CURRENT_USER/"<<darkModeSubkeyPath<<"\"";
 		return;
 	}
 

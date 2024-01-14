@@ -1530,11 +1530,11 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	}
 
 	// get the corresponding file with txt suffix
-	QFileInfo mapDescFileInfo = fs::replaceFileSuffix( mapDataFileInfo.filePath(), "txt" );
+	QFileInfo mapDescFileInfo(fs::replaceFileSuffix( mapDataFileInfo.filePath(), "txt" ));
 	if (!mapDescFileInfo.isFile())
 	{
 		// try TXT in case we are in a case-sensitive file-system such as Linux
-		mapDescFileInfo = fs::replaceFileSuffix( mapDataFileInfo.filePath(), "TXT" );
+		mapDescFileInfo = QFileInfo(fs::replaceFileSuffix( mapDataFileInfo.filePath(), "TXT" ));
 		if (!mapDescFileInfo.isFile())
 		{
 			reportUserError( this, "Cannot open map description",

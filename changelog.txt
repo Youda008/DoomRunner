@@ -1,3 +1,13 @@
+1.8.2
+- added button to open engine's data dir in a file browser
+- fixed automatic starting map for SIGIL II
+- fixed config dir sometimes being mistakenly used instead of data dir
+- fixed several problems with relative paths, most noticably in Save dir and Screenshot dir
+- fixed case-sensitivity when opening a map description file on Unix
+- fixed sv_cheats tooltip
+- improved error reporting
+- minor bug-fixes and optimizations
+
 1.8.1
 - automatically scroll down to the selected items in map pack list
 - fixed unreadable error message text when using Windows color mode overrides for applications

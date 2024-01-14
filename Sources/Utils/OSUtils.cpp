@@ -355,7 +355,15 @@ QVector< MonitorInfo > listMonitors()
 inline constexpr bool OpenTargetDirectory = false;  ///< open directly the selected entry (the entry must be a directory)
 inline constexpr bool OpenParentAndSelect = true;   ///< open the parent directory of the entry and highlight the entry
 
-static bool openEntryInFileBrowser( const QString & entryPath, bool openParentAndSelect )
+namespace ProcessStatus
+{
+	inline constexpr int FailedToStart = -2;
+	inline constexpr int Crashed = -1;
+	inline constexpr int Success = 0;
+	// any other value is an exit codes from the executed application
+}
+
+static int openEntryInFileBrowser( const QString & entryPath, bool openParentAndSelect )
 {
 	// based on answers at https://stackoverflow.com/questions/3490336/how-to-reveal-in-finder-or-show-in-explorer-with-qt
 	//                 and https://stackoverflow.com/questions/11261516/applescript-open-a-folder-in-finder
@@ -368,7 +376,7 @@ static bool openEntryInFileBrowser( const QString & entryPath, bool openParentAn
 	if (openParentAndSelect)
 		args << "/select,";
 	args << QDir::toNativeSeparators( entry.canonicalFilePath() );
-	return QProcess::startDetached( "explorer.exe", args );
+	return QProcess::startDetached( "explorer.exe", args ) ? ProcessStatus::Success : ProcessStatus::FailedToStart;
 
  #elif defined(Q_OS_MAC)
 
@@ -378,13 +386,14 @@ static bool openEntryInFileBrowser( const QString & entryPath, bool openParentAn
 	args << "-e" <<     "activate";
 	args << "-e" <<     command%" (\""%entry.canonicalFilePath()%"\" as POSIX file)";
 	args << "-e" << "end tell";
+	// https://doc.qt.io/qt-6/qprocess.html#execute
 	return QProcess::execute( "/usr/bin/osascript", args );
 
  #else
 
 	// We cannot select the entry here, because no file browser really supports it.
 	QString pathToOpen = openParentAndSelect ? entry.canonicalPath() : entry.canonicalFilePath();
-	return QDesktopServices::openUrl( QUrl::fromLocalFile( pathToOpen ) );
+	return QDesktopServices::openUrl( QUrl::fromLocalFile( pathToOpen ) ) ? ProcessStatus::Success : ProcessStatus::FailedToStart;
 
  #endif
 }
@@ -407,11 +416,13 @@ bool openDirectoryWindow( const QString & dirPath )
 		return false;
 	}
 
-	bool success = openEntryInFileBrowser( dirPath, OpenTargetDirectory );
+	int status = openEntryInFileBrowser( dirPath, OpenTargetDirectory );
 
-	if (!success)
+	if (status != ProcessStatus::Success)
 	{
-		reportRuntimeError( nullptr, "Cannot open directory window", "Opening directory window failed." );
+		reportRuntimeError( nullptr, "Cannot open directory window",
+			"Opening directory window failed (error code: "%QString::number(status)%")."
+		);
 		return false;
 	}
 
@@ -436,11 +447,13 @@ bool openFileLocation( const QString & filePath )
 		return false;
 	}*/
 
-	bool success = openEntryInFileBrowser( filePath, OpenParentAndSelect );
+	int status = openEntryInFileBrowser( filePath, OpenParentAndSelect );
 
-	if (!success)
+	if (status != ProcessStatus::Success)
 	{
-		reportRuntimeError( nullptr, "Cannot open file location", "Opening file location failed." );
+		reportRuntimeError( nullptr, "Cannot open file location",
+			"Opening file location failed (error code: "%QString::number(status)%")."
+		);
 		return false;
 	}
 

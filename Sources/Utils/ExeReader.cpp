@@ -179,9 +179,14 @@ static QString getVerInfoValue( const void * resData, const LangInfo & langInfo,
 		logRuntimeError("ExeReader") << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") failed with error "<<lastError;
 		return {};
 	}
-	else if (lpBuffer == nullptr || cchLen == 0)
+	else if (lpBuffer == nullptr)
 	{
-		logRuntimeError("ExeReader") << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") returned "<<lpBuffer<<','<<cchLen;
+		logRuntimeError("ExeReader") << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") returned nullptr";
+		return {};
+	}
+	else if (cchLen == 0)
+	{
+		logDebug("ExeReader") << "Cannot read version value, VerQueryValue("<<QString::fromWCharArray(SubBlock)<<") returned empty string";
 		return {};
 	}
 

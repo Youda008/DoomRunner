@@ -405,9 +405,9 @@ ExeVersionInfo readVersionInfoFromPE( const QString & filePath )
 /*/
 
 // read PE file using LoadLibrary and FindResource,LoadResource flow
-ExeVersionInfo readVersionInfoUsingWinAPI( const QString & filePath )
+UncertainExeVersionInfo readVersionInfoUsingWinAPI( const QString & filePath )
 {
-	ExeVersionInfo verInfo;
+	UncertainExeVersionInfo verInfo;
 
 	// this can take up to 1 second sometimes, whyyy?! antivirus?
 	HMODULE hExeModule = LoadLibraryEx( filePath.toStdWString().c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE );
@@ -441,7 +441,7 @@ ExeVersionInfo readVersionInfoUsingWinAPI( const QString & filePath )
 //======================================================================================================================
 //  public API
 
-ExeVersionInfo readExeVersionInfo( [[maybe_unused]] const QString & filePath )
+UncertainExeVersionInfo readExeVersionInfo( [[maybe_unused]] const QString & filePath )
 {
  #if IS_WINDOWS
 	return readVersionInfoUsingWinAPI( filePath );
@@ -451,20 +451,20 @@ ExeVersionInfo readExeVersionInfo( [[maybe_unused]] const QString & filePath )
 }
 
 
-FileInfoCache< ExeVersionInfo_ > g_cachedExeInfo( readExeVersionInfo );
+FileInfoCache< ExeVersionInfo > g_cachedExeInfo( readExeVersionInfo );
 
 
 //----------------------------------------------------------------------------------------------------------------------
 //  serialization
 
-void ExeVersionInfo_::serialize( QJsonObject & jsExeInfo ) const
+void ExeVersionInfo::serialize( QJsonObject & jsExeInfo ) const
 {
 	jsExeInfo["app_name"] = appName;
 	jsExeInfo["description"] = description;
 	jsExeInfo["version"] = version.toString();
 }
 
-void ExeVersionInfo_::deserialize( const JsonObjectCtx & jsExeInfo )
+void ExeVersionInfo::deserialize( const JsonObjectCtx & jsExeInfo )
 {
 	appName = jsExeInfo.getString("app_name");
 	description = jsExeInfo.getString("description");

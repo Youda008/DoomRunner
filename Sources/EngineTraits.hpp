@@ -78,7 +78,7 @@ class EngineTraits {
 	// application info
 	QString _exePath;             ///< path of the file from which the application info was constructed
 	QString _exeBaseName;         ///< executable file name without file suffix
-	os::ExeVersionInfo _exeVersionInfo;
+	os::UncertainExeVersionInfo _exeVersionInfo;
 	QString _appNameNormalized;   ///< application name normalized for indexing engine property tables
 	// family traits
 	const EngineFamilyTraits * _familyTraits;

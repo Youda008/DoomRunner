@@ -30,7 +30,7 @@ enum class WadType
 	PWAD,
 };
 
-struct WadInfo_
+struct WadInfo
 {
 	WadType type = WadType::Neither;
 	QStringVec mapNames;
@@ -39,14 +39,14 @@ struct WadInfo_
 	void deserialize( const JsonObjectCtx & jsWadInfo );
 };
 
-using WadInfo = UncertainFileInfo< WadInfo_ >;
+using UncertainWadInfo = UncertainFileInfo< WadInfo >;
 
 /// Reads selected information from a WAD file.
 /** BEWARE that on file I/O operations may sometimes be expensive, caching the info is adviced. */
-WadInfo readWadInfo( const QString & filePath );
+UncertainWadInfo readWadInfo( const QString & filePath );
 
 
-extern FileInfoCache< WadInfo_ > g_cachedWadInfo;
+extern FileInfoCache< WadInfo > g_cachedWadInfo;
 
 
 } // namespace doom

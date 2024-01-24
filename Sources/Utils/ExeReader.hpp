@@ -24,7 +24,7 @@ namespace os {
 
 
 /// Executable version information
-struct ExeVersionInfo_
+struct ExeVersionInfo
 {
 	QString appName;
 	QString description;
@@ -34,16 +34,16 @@ struct ExeVersionInfo_
 	void deserialize( const JsonObjectCtx & jsExeInfo );
 };
 
-using ExeVersionInfo = UncertainFileInfo< ExeVersionInfo_ >;
+using UncertainExeVersionInfo = UncertainFileInfo< ExeVersionInfo >;
 
 /// Reads executable version info from the file's built-in resource.
 /** Even if status == Success, not all the fields have to be filled. If the version info resource was found,
   * but some of the expected entries is not present, the corresponding ExeVersionInfo field will remain empty/invalid.
   * BEWARE that on some systems opening the executable file can take incredibly long, so caching is strongly adviced. */
-ExeVersionInfo readExeVersionInfo( const QString & filePath );
+UncertainExeVersionInfo readExeVersionInfo( const QString & filePath );
 
 
-extern FileInfoCache< ExeVersionInfo_ > g_cachedExeInfo;
+extern FileInfoCache< ExeVersionInfo > g_cachedExeInfo;
 
 
 } // namespace os

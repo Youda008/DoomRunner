@@ -101,9 +101,9 @@ static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QStringVec & ma
 	}
 }
 
-WadInfo readWadInfo( const QString & filePath )
+UncertainWadInfo readWadInfo( const QString & filePath )
 {
-	WadInfo wadInfo;
+	UncertainWadInfo wadInfo;
 
 	QFile file( filePath );
 	if (!file.open( QIODevice::ReadOnly ))
@@ -225,19 +225,19 @@ WadInfo readWadInfo( const QString & filePath )
 }
 
 
-FileInfoCache< WadInfo_ > g_cachedWadInfo( readWadInfo );
+FileInfoCache< WadInfo > g_cachedWadInfo( readWadInfo );
 
 
 //----------------------------------------------------------------------------------------------------------------------
 //  serialization
 
-void WadInfo_::serialize( QJsonObject & jsWadInfo ) const
+void WadInfo::serialize( QJsonObject & jsWadInfo ) const
 {
 	jsWadInfo["type"] = int( type );
 	jsWadInfo["map_names"] = serializeStringVec( mapNames );
 }
 
-void WadInfo_::deserialize( const JsonObjectCtx & jsWadInfo )
+void WadInfo::deserialize( const JsonObjectCtx & jsWadInfo )
 {
 	type = jsWadInfo.getEnum< doom::WadType >( "type", doom::WadType::Neither );
 	if (JsonArrayCtx jsMapNames = jsWadInfo.getArray( "map_names" ))

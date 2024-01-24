@@ -132,7 +132,7 @@ QStringList MainWindow::getUniqueMapNamesFromWADs( const QVector<QString> & sele
 		if (!fs::isValidFile( selectedWAD ))
 			continue;
 
-		const doom::WadInfo & wadInfo = doom::g_cachedWadInfo.getFileInfo( selectedWAD );
+		const doom::UncertainWadInfo & wadInfo = doom::g_cachedWadInfo.getFileInfo( selectedWAD );
 		if (wadInfo.status != ReadStatus::Success)
 			continue;
 

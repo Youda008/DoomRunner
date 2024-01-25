@@ -169,11 +169,11 @@ class FileInfoCache : public LoggingComponent {
 
 		if (newEntry.fileInfo.status == ReadStatus::CantOpen)
 		{
-			logInfo() << "couldn't open file: " << filePath;
+			logDebug() << "couldn't open file: " << filePath;
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::FailedToRead)
 		{
-			logRuntimeError() << "failed to read file: " << filePath;
+			logDebug() << "failed to read file: " << filePath;
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::NotSupported)
 		{

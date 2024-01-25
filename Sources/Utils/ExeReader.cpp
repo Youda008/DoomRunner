@@ -246,7 +246,7 @@ QString LoggingExeReader::getVerInfoValue( const Resource & res, const LangInfo 
 	}
 	else if (cchLen == 0)
 	{
-		logDebug() << "Cannot read file info value "<<QStr(valueName)<<" of "<<_filePath<<", VerQueryValue("<<QStr(subBlock)<<") returned empty string";
+		logInfo() << "Cannot read file info value "<<QStr(valueName)<<" of "<<_filePath<<", VerQueryValue("<<QStr(subBlock)<<") returned empty string";
 		return {};
 	}
 

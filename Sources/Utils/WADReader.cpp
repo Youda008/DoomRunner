@@ -151,7 +151,7 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 	}
 	else if (file.read( (char*)&header, sizeof(header) ) < qint64( sizeof(header) ))
 	{
-		logDebug() << _filePath << ": failed to read WAD header";
+		logRuntimeError() << _filePath << ": failed to read WAD header";
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
@@ -189,7 +189,7 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 	std::unique_ptr< LumpEntry [] > lumpDir( new LumpEntry [header.numLumps] );
 	if (!file.seek( header.lumpDirOffset ) || file.read( (char*)lumpDir.get(), lumpDirSize ) < lumpDirSize)
 	{
-		logDebug() << _filePath << ": failed to read the lump directory";
+		logRuntimeError() << _filePath << ": failed to read the lump directory";
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}
@@ -199,9 +199,15 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 		LumpEntry & lump = lumpDir[i];
 		QString lumpName = charArrayToString( lump.name );
 
-		if (lump.dataOffset + lump.size > fileSize || !isPrintableAsciiString( lumpName ))  // some garbage -> not a WAD
+		if (lump.dataOffset + lump.size > fileSize)  // some garbage -> not a WAD
 		{
 			logDebug() << _filePath << ": lump points beyond the end of file";
+			wadInfo.status = ReadStatus::InvalidFormat;
+			return wadInfo;
+		}
+		else if (!isPrintableAsciiString( lumpName ))  // some garbage -> not a WAD
+		{
+			logDebug() << _filePath << ": lump name is not a printable text";
 			wadInfo.status = ReadStatus::InvalidFormat;
 			return wadInfo;
 		}
@@ -220,7 +226,7 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 
 			if (!file.seek( lump.dataOffset ))
 			{
-				logDebug() << _filePath << ": failed to seek to lump offset";
+				logRuntimeError() << _filePath << ": failed to seek to lump offset";
 				wadInfo.status = ReadStatus::FailedToRead;
 				return wadInfo;
 			}

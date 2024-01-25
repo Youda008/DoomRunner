@@ -48,7 +48,10 @@
 
 //======================================================================================================================
 
-EditableListView::EditableListView( QWidget * parent ) : QListView( parent )
+EditableListView::EditableListView( QWidget * parent )
+:
+	QListView( parent ),
+	LoggingComponent("EditableListView")
 {
 	allowEditNames = false;
 	this->setEditTriggers( QAbstractItemView::NoEditTriggers );
@@ -384,8 +387,8 @@ void EditableListView::itemsDropped()
 	DropTarget * model = dynamic_cast< DropTarget * >( this->model() );
 	if (!model)
 	{
-		logLogicError() << "EditableListView should be used only together with EditableListModel, "
-		                   "otherwise drag&drop will not work properly.";
+		// EditableListView should be used only together with EditableListModel, otherwise drag&drop won't work properly
+		logLogicError() << "assigned model is not a DropTarget, drag&drop won't work properly";
 		return;
 	}
 

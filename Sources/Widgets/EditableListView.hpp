@@ -13,6 +13,7 @@
 #include "Essential.hpp"
 
 #include "Utils/EventFilters.hpp"  // ModifierHandler
+#include "Utils/ErrorHandling.hpp"  // LoggingComponent
 
 #include <QListView>
 
@@ -26,7 +27,7 @@ class QString;
 /** List view that supports editing of item names and behaves correctly on both internal and external drag&drop actions.
   * Should be used together with EditableListModel. */
 
-class EditableListView : public QListView {
+class EditableListView : public QListView, protected LoggingComponent {
 
 	Q_OBJECT
 

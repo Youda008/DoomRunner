@@ -11,6 +11,7 @@
 
 #include "Essential.hpp"
 #include "CommonTypes.hpp"
+#include "Utils/ErrorHandling.hpp"  // LoggingComponent
 
 #include <QObject>
 #include <QString>
@@ -24,7 +25,7 @@
 /// Asynchronous update checking tool.
 /** The object must live until a response is received, i.e. it can't be local in a function. */
 
-class UpdateChecker : public QObject {
+class UpdateChecker : public QObject, protected LoggingComponent {
 
 	Q_OBJECT
 

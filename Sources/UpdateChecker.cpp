@@ -35,6 +35,8 @@ static const QString changelogUrl = "https://raw.githubusercontent.com/Youda008/
 
 
 UpdateChecker::UpdateChecker()
+:
+	LoggingComponent("UpdateChecker")
 {
 	QObject::connect( &manager, &QNetworkAccessManager::finished, this, &UpdateChecker::requestFinished );
 }
@@ -55,7 +57,7 @@ void UpdateChecker::requestFinished( QNetworkReply * reply )
 	auto requestIter = pendingRequests.find( reply );
 	if (requestIter == pendingRequests.end())
 	{
-		logLogicError("UpdateChecker") << "This reply does not have a registered callback, wtf?";
+		logLogicError() << "This reply does not have a registered callback, wtf?";
 		return;
 	}
 	RequestData & requestData = requestIter.value();
@@ -64,7 +66,7 @@ void UpdateChecker::requestFinished( QNetworkReply * reply )
 
 	if (reply->error())
 	{
-		//logRuntimeError("UpdateChecker") << "HTTP request failed: " << reply->errorString();  // handled in callback when appropriate
+		//logRuntimeError() << "HTTP request failed: " << reply->errorString();  // handled in callback when appropriate
 		requestData.callback( ConnectionFailed, reply->errorString(), {} );
 		return;
 	}
@@ -87,7 +89,7 @@ void UpdateChecker::versionReceived( QNetworkReply * reply, RequestData & reques
 	auto match = versionFileRegex.match( version );
 	if (!match.hasMatch())
 	{
-		logLogicError("UpdateChecker").noquote() << "Version number from github is in invalid format ("<<version<<"). Fix it!";
+		logLogicError().noquote() << "Version number from github is in invalid format ("<<version<<"). Fix it!";
 		requestData.callback( InvalidFormat, std::move(version), {} );
 		return;
 	}

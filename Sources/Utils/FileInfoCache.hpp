@@ -45,7 +45,7 @@ struct UncertainFileInfo : public FileInfo
 };
 
 template< typename FileInfo >
-class FileInfoCache {
+class FileInfoCache : public LoggingComponent {
 
 	struct Entry
 	{
@@ -61,8 +61,8 @@ class FileInfoCache {
 
  public:
 
-
-	FileInfoCache( ReadFileInfoFunc readFileInfo ) : _readFileInfo( readFileInfo ) {}
+	FileInfoCache( ReadFileInfoFunc readFileInfo )
+		: LoggingComponent("FileInfoCache"), _readFileInfo( readFileInfo ) {}
 
 	/// Reads selected information from a file and stores it into a cache.
 	/** If the file was already read earlier and was not modified since, it returns the cached info. */
@@ -73,28 +73,28 @@ class FileInfoCache {
 		auto cacheIter = _cache.find( filePath );
 		if (cacheIter == _cache.end())
 		{
-			logDebug("FileInfoCache") << "entry not found, reading info from file: " << filePath;
+			logDebug() << "entry not found, reading info from file: " << filePath;
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->lastModified != fileLastModified)
 		{
-			logDebug("FileInfoCache") << "entry is outdated, reading info from file: " << filePath;
+			logDebug() << "entry is outdated, reading info from file: " << filePath;
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->fileInfo.status == ReadStatus::CantOpen
 			  || cacheIter->fileInfo.status == ReadStatus::FailedToRead)
 		{
-			logDebug("FileInfoCache") << "reading file failed last time, trying again: " << filePath;
+			logDebug() << "reading file failed last time, trying again: " << filePath;
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else if (cacheIter->fileInfo.status == ReadStatus::Uninitialized)
 		{
-			logRuntimeError("FileInfoCache") << "entry is corrupted, reading info from file: " << filePath;
+			logRuntimeError() << "entry is corrupted, reading info from file: " << filePath;
 			cacheIter = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else
 		{
-			//logDebug("FileInfoCache") << "using cached info: " << filePath;
+			//logDebug() << "using cached info: " << filePath;
 		}
 
 		return cacheIter->fileInfo;
@@ -132,7 +132,7 @@ class FileInfoCache {
 		{
 			if (!fs::isValidFile( filePath ))
 			{
-				logDebug("FileInfoCache") << "removing entry, file no longer exists: " << filePath;
+				logDebug() << "removing entry, file no longer exists: " << filePath;
 				_dirty = true;
 				continue;
 			}
@@ -140,7 +140,7 @@ class FileInfoCache {
 			JsonObjectCtx jsEntry = jsCache.getObject( filePath );
 			if (!jsEntry)
 			{
-				logRuntimeError("FileInfoCache") << "removing corrupted entry (invalid JSON type): " << filePath;
+				logRuntimeError() << "removing corrupted entry (invalid JSON type): " << filePath;
 				_dirty = true;
 				continue;
 			}
@@ -149,7 +149,7 @@ class FileInfoCache {
 			deserialize( jsEntry, entry );
 			if (entry.fileInfo.status == ReadStatus::Uninitialized || entry.lastModified == 0)
 			{
-				logRuntimeError("FileInfoCache") << "removing corrupted entry (vital fields missing): " << filePath;
+				logRuntimeError() << "removing corrupted entry (vital fields missing): " << filePath;
 				_dirty = true;
 				continue;
 			}
@@ -169,15 +169,15 @@ class FileInfoCache {
 
 		if (newEntry.fileInfo.status == ReadStatus::CantOpen)
 		{
-			logInfo("FileInfoCache") << "couldn't open file: " << filePath;
+			logInfo() << "couldn't open file: " << filePath;
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::FailedToRead)
 		{
-			logRuntimeError("FileInfoCache") << "failed to read file: " << filePath;
+			logRuntimeError() << "failed to read file: " << filePath;
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::NotSupported)
 		{
-			//logDebug("FileInfoCache") << "file info not implemented: " << filePath;
+			//logDebug() << "file info not implemented: " << filePath;
 		}
 
 		_dirty = true;

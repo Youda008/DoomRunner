@@ -65,7 +65,7 @@ class LogStream
 
  public:
 
-	LogStream( LogLevel level, const char * component );
+	LogStream( LogLevel level, const char * componentName );
 	~LogStream();
 
 	LogStream & quote()
@@ -109,7 +109,7 @@ class LogStream
 
 	static QDebug debugStreamFromLogLevel( LogLevel level );
 
-	void writeLineOpening( LogLevel level, const char * component );
+	void writeLineOpening( LogLevel level, const char * componentName );
 
 	template< typename Obj >
 	void write( const Obj & obj )
@@ -160,32 +160,55 @@ class DummyLogStream
 //  top-level logging API
 
 /// Writes a debugging message into stderr (in debug builds only).
-inline auto logDebug( [[maybe_unused]] const char * component = nullptr )
+inline auto logDebug( [[maybe_unused]] const char * componentName = nullptr )
 {
  #if IS_DEBUG_BUILD
-	return impl::LogStream( impl::LogLevel::Debug, component );
+	return impl::LogStream( impl::LogLevel::Debug, componentName );
  #else
 	return impl::DummyLogStream();
  #endif
 }
 
 /// Writes a message about an event that is not necessarily an error, but is worth noting.
-inline auto logInfo( const char * component = nullptr )
+inline auto logInfo( const char * componentName = nullptr )
 {
-	return impl::LogStream( impl::LogLevel::Info, component );
+	return impl::LogStream( impl::LogLevel::Info, componentName );
 }
 
 /// Writes a message about a non-critical background error into stderr and an error file.
-inline auto logRuntimeError( const char * component = nullptr )
+inline auto logRuntimeError( const char * componentName = nullptr )
 {
-	return impl::LogStream( impl::LogLevel::Failure, component );
+	return impl::LogStream( impl::LogLevel::Failure, componentName );
 }
 
 /// Writes a message about a serious background error into stderr and an error file.
-inline auto logLogicError( const char * component = nullptr )
+inline auto logLogicError( const char * componentName = nullptr )
 {
-	return impl::LogStream( impl::LogLevel::Bug, component );
+	return impl::LogStream( impl::LogLevel::Bug, componentName );
 }
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  logging helpers for simplifying logging even further
+
+/// Abstract component that wants to log messages.
+/** Any class that inherits from this will be able to log without having to write component name everytime. */
+class LoggingComponent {
+
+ protected:
+
+	LoggingComponent( const char * componentName ) : _componentName( componentName ) {}
+
+	auto logLogicError() const     { return ::logLogicError( _componentName ); }
+	auto logRuntimeError() const   { return ::logRuntimeError( _componentName ); }
+	auto logInfo() const           { return ::logInfo( _componentName ); }
+	auto logDebug() const          { return ::logDebug( _componentName ); }
+
+ private:
+
+	const char * _componentName;
+
+};
 
 
 #endif // ERROR_HANDLING_INCLUDED

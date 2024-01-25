@@ -378,7 +378,7 @@ class FilteredList {
 	{
 		if (!canBeModified())
 		{
-			logLogicError("ListModel") << "the list cannot be modified when it is filtered";
+			logLogicError("FilteredList") << "the list cannot be modified when it is filtered";
 			throw std::logic_error("the list cannot be modified when it is filtered");
 		}
 	}
@@ -389,9 +389,11 @@ class FilteredList {
 //======================================================================================================================
 /// Common functionality of all our list models.
 
-class ListModelCommon : public QAbstractListModel {
+class ListModelCommon : public QAbstractListModel, protected LoggingComponent {
 
  public:
+
+	ListModelCommon() : LoggingComponent("ListModel") {}
 
 	//-- model configuration -------------------------------------------------------------------------------------------
 
@@ -401,19 +403,7 @@ class ListModelCommon : public QAbstractListModel {
 	//-- data change notifications -------------------------------------------------------------------------------------
 
 	/// Notifies the view that the content of some items has been changed.
-	void contentChanged( int changedRowsBegin, int changedRowsEnd = -1 )
-	{
-		if (changedRowsEnd < 0)
-			changedRowsEnd = this->rowCount();
-
-		const QModelIndex firstChangedIndex = createIndex( changedRowsBegin, /*column*/0 );
-		const QModelIndex lastChangedIndex = createIndex( changedRowsEnd - 1, /*column*/0 );
-
-		emit dataChanged( firstChangedIndex, lastChangedIndex, {
-			Qt::DisplayRole, Qt::EditRole, Qt::CheckStateRole,
-			Qt::ForegroundRole, Qt::BackgroundRole, Qt::TextAlignmentRole
-		});
-	}
+	void contentChanged( int changedRowsBegin, int changedRowsEnd = -1 );
 
 	// One of the following functions must always be called before and after doing any modifications to the list,
 	// otherwise the list might not update correctly or it might even crash trying to access items that no longer exist.
@@ -560,7 +550,7 @@ class ReadOnlyListModel : public ListModelCommon, public ListImpl {
 		}
 		catch (const std::logic_error & e)
 		{
-			logLogicError("ListModel") << e.what();
+			logLogicError() << e.what();
 			return QVariant();
 		}
 	}
@@ -714,7 +704,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 		catch (const std::logic_error & e)
 		{
-			logLogicError("ListModel") << e.what();
+			logLogicError() << e.what();
 			return QVariant();
 		}
 	}
@@ -747,7 +737,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 		catch (const std::logic_error & e)
 		{
-			logLogicError("ListModel") << e.what();
+			logLogicError() << e.what();
 			return false;
 		}
 	}
@@ -759,7 +749,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (!this->canBeModified())
 		{
-			logLogicError("ListModel") << "Cannot insertRows into this model now. It should have been restricted by the ListView.";
+			logLogicError() << "Cannot insertRows into this model now. It should have been restricted by the ListView.";
 			return false;
 		}
 
@@ -782,7 +772,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (!this->canBeModified())
 		{
-			logLogicError("ListModel") << "Cannot removeRows from this model now. It should have been restricted by the ListView.";
+			logLogicError() << "Cannot removeRows from this model now. It should have been restricted by the ListView.";
 			return false;
 		}
 
@@ -856,7 +846,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (!this->canBeModified())
 		{
-			logLogicError("ListModel") << "Cannot drop into this model now. It should have been restricted by the ListView.";
+			logLogicError() << "Cannot drop into this model now. It should have been restricted by the ListView.";
 			return false;
 		}
 
@@ -870,7 +860,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 		else
 		{
-			logLogicError("ListModel") << "This model doesn't support such drop operation. It should have been restricted by the ListView.";
+			logLogicError() << "This model doesn't support such drop operation. It should have been restricted by the ListView.";
 			return false;
 		}
 	}
@@ -929,8 +919,8 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	{
 		if (!pathConvertor)
 		{
-			logLogicError("ListModel") << "File has been dropped but no PathConvertor is set. "
-			                              "Either use setPathContext or disable file dropping in the widget.";
+			logLogicError() << "File has been dropped but no PathConvertor is set. "
+			                   "Either use setPathContext or disable file dropping in the widget.";
 			return false;
 		}
 

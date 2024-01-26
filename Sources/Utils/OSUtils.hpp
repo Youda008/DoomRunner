@@ -55,7 +55,7 @@ QString getThisAppConfigDir();
 QString getThisAppDataDir();
 
 
-// cached variants of the functions above for standard directories that might expensive to get
+// cached variants of the functions above for standard directories that might be expensive to get
 
 const QString & getCachedHomeDir();
 const QString & getCachedDocumentsDir();

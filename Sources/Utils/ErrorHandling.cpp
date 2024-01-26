@@ -77,10 +77,17 @@ const char * logLevelToStr( LogLevel level )
 
 static const char * const logFileName = "errors.txt";
 
+const QString & getCachedErrorFilePath()
+{
+	// local static variables are initialized under a mutex, so it should be save to use from multiple threads.
+	static const QString logFilePath = fs::getPathFromFileName( os::getCachedThisAppDataDir(), logFileName );
+	return logFilePath;
+}
+
 LogStream::LogStream( LogLevel level, const char * component )
 :
 	_debugStream( debugStreamFromLogLevel( level ) ),
-	_logFile( fs::getPathFromFileName( os::getCachedThisAppDataDir(), logFileName ) ),
+	_logFile( getCachedErrorFilePath() ),
 	_logLevel( level )
 {
 	_debugStream.noquote().nospace();

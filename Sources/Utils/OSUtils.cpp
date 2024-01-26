@@ -125,6 +125,8 @@ QString getThisAppDataDir()
 
 
 //-- cached variants -------------------------------------------------------------------------------
+// We don't use local static variables, because those use a mutex to prevent initialization by multiple threads.
+// These functions will however always be used from the main thread only, so mutex is not needed.
 
 static std::optional< QString > g_homeDir;
 const QString & getCachedHomeDir()

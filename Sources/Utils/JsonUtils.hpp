@@ -58,7 +58,10 @@ constexpr bool DontShowError = false;
 /// data related to an ongoing parsing process
 struct _ParsingContext
 {
+	QString filePath;
 	bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
+
+	QString fileName() const;
 };
 
 /// mechanisms common for JSON objects and arrays
@@ -342,7 +345,8 @@ class JsonDocumentCtx {
 	/** This should only be used to indicate a failure. Anything else than isValid() or operator bool() is undefined. */
 	JsonDocumentCtx() : _rootObject() {}
 
-	JsonDocumentCtx( const QJsonDocument & wrappedDoc ) : _rootObject( wrappedDoc.object(), &_context ) {}
+	JsonDocumentCtx( QString filePath, const QJsonDocument & wrappedDoc )
+		: _rootObject( wrappedDoc.object(), &_context )  { _context.filePath = std::move(filePath); }
 
 	// _rootObject has ptr to _context, if this gets moved/copied, it will have pointer to a different (possibly temporary) object
 	JsonDocumentCtx( const JsonDocumentCtx & ) = delete;
@@ -353,6 +357,9 @@ class JsonDocumentCtx {
 	/// If this returns false, this object must not be used.
 	bool isValid() const   { return _rootObject.isValid(); }
 	operator bool() const  { return isValid(); }
+
+	const QString & filePath() const { return _context.filePath; }
+	      QString   fileName() const { return _context.fileName(); }
 
 	const JsonObjectCtx & rootObject() const { return _rootObject; }
 

@@ -8,6 +8,7 @@
 #include "JsonUtils.hpp"
 
 #include "Utils/ErrorHandling.hpp"
+#include "Utils/FileSystemUtils.hpp"  // getFileNameFromPath
 
 #include <QStringBuilder>
 #include <QTextStream>
@@ -430,59 +431,59 @@ static const char * typeStr [] = {
 
 void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
 {
-	QString message = "Element " % elemPath( key ) % " is missing in the options file, using default value.";
+	QString message = "Element "%elemPath( key )%" is missing in "%_context->fileName()%",\nusing default value.";
 
-	if (!showError)
-		return;
-	else if (_context->dontShowAgain)
-		qWarning().noquote() << message;
-	else
-		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
+	if (showError)
+	{
+		if (!_context->dontShowAgain)
+			_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
+		logRuntimeError("JsonValueCtx").noquote() << message;
+	}
 }
 
 void JsonArrayCtx::indexOutOfBounds( int index, bool showError ) const
 {
 	QString message =
-		"JSON array " % getJsonPath() % " does not have index " % QString::number( index ) % ". "
-		"This is a bug. Please make a copy of options.json before clicking Ok, "
+		"JSON array "%getJsonPath()%" does not have index "%QString::number( index )%".\n"
+		"This is a bug. Please make a copy of "%_context->fileName()%" before clicking Ok, "
 		"and then create an issue on Github page with that file attached.";
 
-	if (!showError)
-		return;
-	else if (_context->dontShowAgain)
-		qWarning().noquote() << message;
-	else
-		_context->dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading options file", message );
+	if (showError)
+	{
+		if (!_context->dontShowAgain)
+			_context->dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading JSON file", message );
+		logRuntimeError("JsonValueCtx").noquote() << message;
+	}
 }
 
 void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expectedType, bool showError ) const
 {
 	QString actualType = typeStr[ _wrappedObject[ key ].type() ];
 	QString message =
-		"Element " % elemPath( key ) % " has invalid type, expected " % expectedType % ", but found " % actualType % ". "
-		"Skipping this entry.";
+		"Element "%elemPath( key )%" in "%_context->fileName()%" has invalid type. "
+		"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
 
-	if (!showError)
-		return;
-	else if (_context->dontShowAgain)
-		qWarning().noquote() << message;
-	else
-		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
+	if (showError)
+	{
+		if (!_context->dontShowAgain)
+			_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
+		logRuntimeError("JsonValueCtx").noquote() << message;
+	}
 }
 
 void JsonArrayCtx::invalidTypeAtIdx( int index, const QString & expectedType, bool showError ) const
 {
 	QString actualType = typeStr[ _wrappedArray[ index ].type() ];
 	QString message =
-		"Element " % elemPath( index ) % " has invalid type. Expected " % expectedType % ", but found " % actualType % ". "
-		"Skipping this entry.";
+		"Element "%elemPath( index )%" in "%_context->fileName()%" has invalid type. "
+		"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
 
-	if (!showError)
-		return;
-	else if (_context->dontShowAgain)
-		qWarning().noquote() << message;
-	else
-		_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading options file", message );
+	if (showError)
+	{
+		if (!_context->dontShowAgain)
+			_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
+		logRuntimeError("JsonValueCtx").noquote() << message;
+	}
 }
 
 QString JsonObjectCtx::elemPath( const QString & elemName ) const
@@ -493,6 +494,11 @@ QString JsonObjectCtx::elemPath( const QString & elemName ) const
 QString JsonArrayCtx::elemPath( int index ) const
 {
 	return getJsonPath() + "/[" + QString::number( index ) + ']';
+}
+
+QString _ParsingContext::fileName() const
+{
+	return fs::getFileNameFromPath( filePath );
 }
 
 
@@ -543,5 +549,5 @@ JsonDocumentCtx readJsonFromFile( const QString & filePath, const QString & file
 		return JsonDocumentCtx();
 	}
 
-	return JsonDocumentCtx( jsonDoc );
+	return JsonDocumentCtx( filePath, jsonDoc );
 }

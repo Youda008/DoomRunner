@@ -19,8 +19,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-#include <list>
-
 
 //======================================================================================================================
 //  in order for the getEnum method to work, the author of the enum must specialize the following templates
@@ -73,7 +71,7 @@ class JsonValueCtx {
 	{
 		enum Type
 		{
-			Other = 0,
+			Uninitialized = 0,
 			ObjectKey,
 			ArrayIndex
 		};
@@ -81,7 +79,7 @@ class JsonValueCtx {
 		QString key;
 		int idx;
 
-		Key() : type( Other ), key(), idx( -1 ) {}
+		Key() : type( Uninitialized ), key(), idx( -1 ) {}
 		Key( const QString & key ) : type( ObjectKey ), key( key ), idx( -1 ) {}
 		Key( int idx ) : type( ArrayIndex ), key(), idx( idx ) {}
 	};
@@ -93,8 +91,14 @@ class JsonValueCtx {
 
  public:
 
+	/// Constructs invalid JSON value.
+	/** This should only be used to indicate missing element or failure.
+	  * Anything else than isValid() or operator bool() is undefined. */
+	JsonValueCtx()
+		: _context( nullptr ), _parent( nullptr ), _key() {}
+
 	/// Constructs a JSON value with no parent.
-	/** This should be only used for creating a root element. */
+	/** This should only be used for creating a root element. */
 	JsonValueCtx( _ParsingContext * context )
 		: _context( context ), _parent( nullptr ), _key() {}
 
@@ -111,12 +115,18 @@ class JsonValueCtx {
 	JsonValueCtx & operator=( const JsonValueCtx & ) = default;
 	JsonValueCtx & operator=( JsonValueCtx && ) = default;
 
-	/// Builds a path of this element in its JSON document.
-	QString getPath() const;
+	/// If this returns false, this object must not be used.
+	bool isValid() const   { return _context != nullptr; }
+	operator bool() const  { return isValid(); }
+
+	bool isRoot() const    { return _parent == nullptr; }
+
+	/// Reconstructs a path of this element in its JSON document.
+	QString getJsonPath() const;
 
  protected:
 
-	void prependPath( std::list< QString > & pathList ) const;
+	void constructJsonPathRecursively( QString & path ) const;
 
 };
 
@@ -125,28 +135,26 @@ class JsonObjectCtxProxy : public JsonValueCtx {
 
  protected:
 
-	std::optional< QJsonObject > _wrappedObject;
+	QJsonObject _wrappedObject;
 
  public:
 
 	JsonObjectCtxProxy()
-		: JsonValueCtx( nullptr ), _wrappedObject( std::nullopt ) {}
+		: JsonValueCtx(), _wrappedObject() {}
 
-	JsonObjectCtxProxy( const QJsonObject & wrappedObject, _ParsingContext * context )
-		: JsonValueCtx( context ), _wrappedObject( wrappedObject ) {}
+	JsonObjectCtxProxy( QJsonObject wrappedObject, _ParsingContext * context )
+		: JsonValueCtx( context ), _wrappedObject( std::move(wrappedObject) ) {}
 
-	JsonObjectCtxProxy( const QJsonObject & wrappedObject, _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
-		: JsonValueCtx( context, parent, key ), _wrappedObject( wrappedObject ) {}
+	JsonObjectCtxProxy( QJsonObject wrappedObject, _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+		: JsonValueCtx( context, parent, key ), _wrappedObject( std::move(wrappedObject) ) {}
 
-	JsonObjectCtxProxy( const QJsonObject & wrappedObject, _ParsingContext * context, const JsonValueCtx * parent, int index )
-		: JsonValueCtx( context, parent, index ), _wrappedObject( wrappedObject ) {}
+	JsonObjectCtxProxy( QJsonObject wrappedObject, _ParsingContext * context, const JsonValueCtx * parent, int index )
+		: JsonValueCtx( context, parent, index ), _wrappedObject( std::move(wrappedObject) ) {}
 
 	JsonObjectCtxProxy( const JsonObjectCtxProxy & ) = default;
 	JsonObjectCtxProxy( JsonObjectCtxProxy && ) = default;
 	JsonObjectCtxProxy & operator=( const JsonObjectCtxProxy & ) = default;
 	JsonObjectCtxProxy & operator=( JsonObjectCtxProxy && ) = default;
-
-	operator bool() const { return _wrappedObject.has_value(); }
 
 };
 
@@ -155,25 +163,23 @@ class JsonArrayCtxProxy : public JsonValueCtx {
 
  protected:
 
-	std::optional< QJsonArray > _wrappedArray;
+	QJsonArray _wrappedArray;
 
  public:
 
 	JsonArrayCtxProxy()
-		: JsonValueCtx( nullptr ), _wrappedArray( std::nullopt ) {}
+		: JsonValueCtx(), _wrappedArray() {}
 
-	JsonArrayCtxProxy( const QJsonArray & wrappedArray, _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
-		: JsonValueCtx( context, parent, key ), _wrappedArray( wrappedArray ) {}
+	JsonArrayCtxProxy( QJsonArray wrappedArray, _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+		: JsonValueCtx( context, parent, key ), _wrappedArray( std::move(wrappedArray) ) {}
 
-	JsonArrayCtxProxy( const QJsonArray & wrappedArray, _ParsingContext * context, const JsonValueCtx * parent, int index )
-		: JsonValueCtx( context, parent, index ), _wrappedArray( wrappedArray ) {}
+	JsonArrayCtxProxy( QJsonArray wrappedArray, _ParsingContext * context, const JsonValueCtx * parent, int index )
+		: JsonValueCtx( context, parent, index ), _wrappedArray( std::move(wrappedArray) ) {}
 
 	JsonArrayCtxProxy( const JsonArrayCtxProxy & ) = default;
 	JsonArrayCtxProxy( JsonArrayCtxProxy && ) = default;
 	JsonArrayCtxProxy & operator=( const JsonArrayCtxProxy & ) = default;
 	JsonArrayCtxProxy & operator=( JsonArrayCtxProxy && ) = default;
-
-	operator bool() const { return _wrappedArray.has_value(); }
 
 };
 
@@ -185,15 +191,15 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 	/// Constructs invalid JSON object wrapper.
 	JsonObjectCtx() : JsonObjectCtxProxy() {}
 
-	/// Constructs a JSON object wrapper with no parent, this should be only used for creating a root element.
-	JsonObjectCtx( const QJsonObject & wrappedObject, _ParsingContext * context )
-		: JsonObjectCtxProxy( wrappedObject, context ) {}
+	/// Constructs a JSON object wrapper with no parent, this should only be used for creating a root element.
+	JsonObjectCtx( QJsonObject wrappedObject, _ParsingContext * context )
+		: JsonObjectCtxProxy( std::move(wrappedObject), context ) {}
 
 	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
-	JsonObjectCtx( const JsonObjectCtxProxy & proxy )
-		: JsonObjectCtxProxy( proxy ) {}
+	JsonObjectCtx( JsonObjectCtxProxy proxy )
+		: JsonObjectCtxProxy( std::move(proxy) ) {}
 
-	auto keys() const { return _wrappedObject->keys(); }
+	auto keys() const { return _wrappedObject.keys(); }
 
 	/// Returns a sub-object at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
@@ -262,9 +268,9 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 	JsonArrayCtx() : JsonArrayCtxProxy() {}
 
 	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
-	JsonArrayCtx( const JsonArrayCtxProxy & proxy ) : JsonArrayCtxProxy( proxy ) {}
+	JsonArrayCtx( JsonArrayCtxProxy proxy ) : JsonArrayCtxProxy( std::move(proxy) ) {}
 
-	int size() const { return _wrappedArray->size(); }
+	int size() const { return _wrappedArray.size(); }
 
 	/// Returns a sub-object at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid array. */
@@ -332,15 +338,21 @@ class JsonDocumentCtx {
 
  public:
 
+	/// Constructs invalid JSON document.
+	/** This should only be used to indicate a failure. Anything else than isValid() or operator bool() is undefined. */
 	JsonDocumentCtx() : _rootObject() {}
+
 	JsonDocumentCtx( const QJsonDocument & wrappedDoc ) : _rootObject( wrappedDoc.object(), &_context ) {}
-	void setWrappedDoc( const QJsonDocument & wrappedDoc ) { _rootObject = JsonObjectCtx( wrappedDoc.object(), &_context ); }
 
 	// _rootObject has ptr to _context, if this gets moved/copied, it will have pointer to a different (possibly temporary) object
 	JsonDocumentCtx( const JsonDocumentCtx & ) = delete;
 	JsonDocumentCtx( JsonDocumentCtx && ) = delete;
 	JsonDocumentCtx & operator=( const JsonDocumentCtx & ) = delete;
 	JsonDocumentCtx & operator=( JsonDocumentCtx && ) = delete;
+
+	/// If this returns false, this object must not be used.
+	bool isValid() const   { return _rootObject.isValid(); }
+	operator bool() const  { return isValid(); }
 
 	const JsonObjectCtx & rootObject() const { return _rootObject; }
 
@@ -431,10 +443,10 @@ void deserializeMap( const JsonObjectCtx & jsMap, QHash< QString, Elem > & map )
 //  high-level file I/O helpers
 
 inline constexpr bool IgnoreEmpty = true;
-inline constexpr bool AllowEmpty = false;
+inline constexpr bool CheckIfEmpty = false;
 
 bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, const QString & fileDesc );
-bool readJsonFromFile( JsonDocumentCtx & jsonDoc, const QString & filePath, const QString & fileDesc, bool ignoreEmpty = false );
+JsonDocumentCtx readJsonFromFile( const QString & filePath, const QString & fileDesc, bool ignoreEmpty = false );
 
 
 #endif // JSON_UTILS_INCLUDED

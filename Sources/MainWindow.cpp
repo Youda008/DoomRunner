@@ -3181,8 +3181,8 @@ bool MainWindow::saveCache( const QString & filePath )
 
 bool MainWindow::loadCache( const QString & filePath )
 {
-	JsonDocumentCtx jsonDoc;
-	if (!readJsonFromFile( jsonDoc, filePath, "file-info cache", IgnoreEmpty ))
+	JsonDocumentCtx jsonDoc = readJsonFromFile( filePath, "file-info cache", IgnoreEmpty );
+	if (!jsonDoc)
 	{
 		return false;
 	}
@@ -3191,7 +3191,7 @@ bool MainWindow::loadCache( const QString & filePath )
 	if (JsonObjectCtx jsExeCache = jsRoot.getObject("exe_info"))
 		os::g_cachedExeInfo.deserialize( jsExeCache );
 	//if (JsonObjectCtx jsWadCache = jsRoot.getObject("wad_info"))
-	//	doom::g_cachedWadInfo.deserialize( jsWadCache );
+	//	doom::g_cachedWadInfo.deserialize( jsWadCache );  // not needed, WAD parsing is probably faster than JSON parsing
 
 	return true;
 }

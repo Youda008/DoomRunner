@@ -839,11 +839,11 @@ static QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts )
 	return QJsonDocument( jsRoot );
 }
 
-static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDocCtx, OptionsToLoad & opts )
+static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLoad & opts )
 {
 	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
 	// we want to print a useful error message with information exactly which JSON element is broken.
-	const JsonObjectCtx & jsRoot = jsonDocCtx.rootObject();
+	const JsonObjectCtx & jsRoot = jsonDoc.rootObject();
 
 	QString optsVersionStr = jsRoot.getString( "version", {}, DontShowError );
 	Version optsVersion( optsVersionStr );
@@ -859,7 +859,7 @@ static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDocCtx, O
 	// backward compatibility with older options format
 	if (optsVersionStr.isEmpty() || optsVersion < Version(1,7))
 	{
-		jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version
+		jsonDoc.disableWarnings();  // supress "missing element" warnings when loading older version
 
 		// try to load as the 1.6.3 format, older versions will have to accept resetting some values to defaults
 		deserialize_pre17( opts, jsRoot );
@@ -867,7 +867,7 @@ static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDocCtx, O
 	else
 	{
 		if (optsVersion < appVersion)
-			jsonDocCtx.disableWarnings();  // supress "missing element" warnings when loading older version
+			jsonDoc.disableWarnings();  // supress "missing element" warnings when loading older version
 
 		deserialize( jsRoot, opts );
 	}
@@ -886,8 +886,8 @@ bool writeOptionsToFile( const OptionsToSave & opts, const QString & filePath )
 
 bool readOptionsFromFile( OptionsToLoad & opts, const QString & filePath )
 {
-	JsonDocumentCtx jsonDoc;
-	if (!readJsonFromFile( jsonDoc, filePath, "options" ))
+	JsonDocumentCtx jsonDoc = readJsonFromFile( filePath, "options" );
+	if (!jsonDoc)
 	{
 		return false;
 	}

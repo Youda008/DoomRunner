@@ -431,7 +431,7 @@ static const char * typeStr [] = {
 
 void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
 {
-	QString message = "Element "%elemPath( key )%" is missing in "%_context->fileName()%",\nusing default value.";
+	QString message = "Element "%elemPath( key )%" is missing in "%_context->fileName()%", using default value.";
 
 	if (showError)
 	{

@@ -2864,9 +2864,8 @@ void MainWindow::updateListsFromDirs()
 
 void MainWindow::updateIWADsFromDir()
 {
-	auto origSelection = wdg::getSelectedItemIDs( ui->iwadListView, iwadModel );
-
 	// workaround (read the big comment above)
+	int origIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 	disableSelectionCallbacks = true;
 
 	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::isIWAD );
@@ -2880,12 +2879,12 @@ void MainWindow::updateIWADsFromDir()
 	}
 
 	disableSelectionCallbacks = false;
+	int newIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 
-	auto newSelection = wdg::getSelectedItemIDs( ui->iwadListView, iwadModel );
-	if (!wdg::areSelectionsEqual( newSelection, origSelection ))
+	if (newIwadIdx != origIwadIdx)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		onIWADToggled( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+		onIWADToggled( QItemSelection(), QItemSelection()/*TODO*/ );
 	}
 }
 
@@ -2905,16 +2904,15 @@ void MainWindow::updateConfigFilesFromDir( const QString * callersConfigDir )
 
 	// workaround (read the big comment above)
 	int origConfigIdx = ui->configCmbBox->currentIndex();
-
-	disableSelectionCallbacks = true;  // workaround (read the big comment above)
+	disableSelectionCallbacks = true;
 
 	wdg::updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, /*recursively*/false, /*emptyItem*/true, pathConvertor,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return doom::configFileSuffixes.contains( file.suffix().toLower() ); }
 	);
 
 	disableSelectionCallbacks = false;
-
 	int newConfigIdx = ui->configCmbBox->currentIndex();
+
 	if (newConfigIdx != origConfigIdx)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
@@ -2928,16 +2926,15 @@ void MainWindow::updateSaveFilesFromDir( const QString * callersSaveDir )
 
 	// workaround (read the big comment above)
 	int origSaveIdx = ui->saveFileCmbBox->currentIndex();
-
-	disableSelectionCallbacks = true;  // workaround (read the big comment above)
+	disableSelectionCallbacks = true;
 
 	wdg::updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == doom::saveFileSuffix; }
 	);
 
 	disableSelectionCallbacks = false;
-
 	int newSaveIdx = ui->saveFileCmbBox->currentIndex();
+
 	if (newSaveIdx != origSaveIdx)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
@@ -2951,16 +2948,15 @@ void MainWindow::updateDemoFilesFromDir( const QString * callersDemoDir )
 
 	// workaround (read the big comment above)
 	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
-
-	disableSelectionCallbacks = true;  // workaround (read the big comment above)
+	disableSelectionCallbacks = true;
 
 	wdg::updateComboBoxFromDir( demoModel, ui->demoFileCmbBox_replay, demoDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
 		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == doom::demoFileSuffix; }
 	);
 
 	disableSelectionCallbacks = false;
-
 	int newDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
+
 	if (newDemoIdx != origDemoIdx)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
@@ -3412,6 +3408,7 @@ void MainWindow::restorePreset( int presetIdx )
 
 void MainWindow::restoreSelectedEngine( Preset & preset )
 {
+	int origIdx = ui->engineCmbBox->currentIndex();
 	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
 
 	ui->engineCmbBox->setCurrentIndex( -1 );
@@ -3445,14 +3442,19 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 	}
 
 	disableSelectionCallbacks = false;
+	int newIdx = ui->engineCmbBox->currentIndex();
 
 	// manually notify our class about the change, so that the preset and dependent widgets get updated
 	// This is needed before configs, saves and demos are restored, so that the entries are ready to be selected from.
-	onEngineSelected( ui->engineCmbBox->currentIndex() );
+	if (newIdx != origIdx)
+	{
+		onEngineSelected( newIdx );
+	}
 }
 
 void MainWindow::restoreSelectedConfig( Preset & preset )
 {
+	int origIdx = ui->configCmbBox->currentIndex();
 	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
 
 	ui->configCmbBox->setCurrentIndex( -1 );
@@ -3479,13 +3481,18 @@ void MainWindow::restoreSelectedConfig( Preset & preset )
 	}
 
 	disableSelectionCallbacks = false;
+	int newIdx = ui->configCmbBox->currentIndex();
 
 	// manually notify our class about the change, so that the preset and dependent widgets get updated
-	onConfigSelected( ui->configCmbBox->currentIndex() );
+	if (newIdx != origIdx)
+	{
+		onConfigSelected( newIdx );
+	}
 }
 
 void MainWindow::restoreSelectedIWAD( Preset & preset )
 {
+	int origIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
 
 	wdg::deselectAllAndUnsetCurrent( ui->iwadListView );
@@ -3518,14 +3525,19 @@ void MainWindow::restoreSelectedIWAD( Preset & preset )
 	}
 
 	disableSelectionCallbacks = false;
+	int newIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 
 	// manually notify our class about the change, so that the preset and dependent widgets get updated
 	// This is needed before launch options are restored, so that the map names are ready to be selected.
-	onIWADToggled( ui->iwadListView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+	if (newIwadIdx != origIwadIdx)
+	{
+		onIWADToggled( QItemSelection(), QItemSelection()/*TODO*/ );
+	}
 }
 
 void MainWindow::restoreSelectedMapPacks( Preset & preset )
 {
+	auto origSelection = ui->mapDirView->selectionModel()->selection();
 	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
 
 	QDir mapRootDir = mapModel.rootDirectory();
@@ -3561,9 +3573,13 @@ void MainWindow::restoreSelectedMapPacks( Preset & preset )
 	}
 
 	disableSelectionCallbacks = false;
+	auto newSelection = ui->mapDirView->selectionModel()->selection();
 
 	// manually notify our class about the change, so that the preset and dependent widgets get updated
-	onMapPackToggled( ui->mapDirView->selectionModel()->selection(), QItemSelection()/*TODO*/ );
+	if (newSelection != origSelection)
+	{
+		onMapPackToggled( newSelection, QItemSelection()/*TODO*/ );
+	}
 }
 
 void MainWindow::restoreSelectedMods( Preset & preset )

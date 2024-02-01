@@ -85,6 +85,10 @@ struct Mod : public EditableListModelItem
 	bool checked = true;    ///< whether this mod is selected to be loaded
 	bool isCmdArg = false;  ///< indicates that this is a special item used to insert a custom command line argument between the mod files
 
+	Mod() {}
+	Mod( const QFileInfo & file, bool checked = true )
+		: path( file.filePath() ), fileName( file.fileName() ), checked( checked ) {}
+
 	// requirements of EditableListModel
 	bool isEditable() const                 { return isCmdArg; }
 	const QString & getEditString() const   { return fileName; }
@@ -94,10 +98,6 @@ struct Mod : public EditableListModelItem
 	void setChecked( bool checked )         { this->checked = checked; }
 	const QString & getFilePath() const     { return path; }
 	const QIcon & getIcon() const;
-
-	Mod() {}
-	Mod( const QFileInfo & file, bool checked = true )
-		: path( file.filePath() ), fileName( file.fileName() ), checked( checked ) {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -269,15 +269,15 @@ struct Preset : public EditableListModelItem
 
 	EnvVars envVars;
 
+	Preset() {}
+	Preset( const QString & name ) : name( name ) {}
+	Preset( const QFileInfo & ) {}  // dummy, it's required by the EditableListModel template, but isn't actually used
+
 	// requirements of EditableListModel
 	bool isEditable() const                 { return true; }
 	const QString & getEditString() const   { return name; }
 	void setEditString( QString str )       { name = std::move(str); }
 	QString getID() const                   { return name; }
-
-	Preset() {}
-	Preset( const QString & name ) : name( name ) {}
-	Preset( const QFileInfo & ) {}  // dummy, it's required by the EditableListModel template, but isn't actually used
 };
 
 //----------------------------------------------------------------------------------------------------------------------

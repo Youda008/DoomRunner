@@ -1842,7 +1842,10 @@ void MainWindow::modAddDir()
 	if (pathConvertor.usingRelativePaths())
 		path = pathConvertor.getRelativePath( path );
 
-	Mod mod( QFileInfo( path ), true );
+	Mod mod;
+	mod.path = path;
+	mod.fileName = fs::getFileNameFromPath( path );
+	mod.checked = true;
 
 	wdg::appendItem( ui->modListView, modModel, mod );
 
@@ -4009,7 +4012,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	// mod files
 	for (const Mod & mod : modModel)
 	{
-		if (mod.checked)
+		if (!mod.isSeparator && mod.checked)
 		{
 			if (mod.isCmdArg) {  // this is not a file but a custom command line argument
 				appendCustomArguments( modArguments, mod.fileName );  // the fileName holds the argument value

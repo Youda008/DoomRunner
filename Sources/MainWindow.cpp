@@ -4267,7 +4267,7 @@ void MainWindow::launch()
 		return;  // errors are already shown during the generation
 	}
 
-	logDebug().quote() << cmd.executable << cmd.arguments;
+	logDebug().quote() << cmd.executable << ' ' << cmd.arguments;
 
 	// If extra permissions are needed to run the engine inside its sandbox environment, better ask the user.
 	if (settings.askForSandboxPermissions && !cmd.extraPermissions.isEmpty())

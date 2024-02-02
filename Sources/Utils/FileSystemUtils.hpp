@@ -218,7 +218,7 @@ class PathConvertor {
  public:
 
 	PathConvertor( const QDir & workingDir, PathStyle pathStyle )
-         : _workingDir{ workingDir }, _pathStyle{ pathStyle } {}
+        : _workingDir{ workingDir }, _pathStyle{ pathStyle } {}
 
 	PathConvertor( const QDir & baseDir, bool useAbsolutePaths )
         : PathConvertor{ baseDir, useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative } {}
@@ -264,7 +264,7 @@ class PathRebaser {
  public:
 
 	PathRebaser( const QDir & inputBaseDir, const QDir & outputBaseDir, PathStyle pathStyle, bool quotePaths = false )
-         : _inBaseDir{ inputBaseDir }, _outBaseDir{ outputBaseDir }, _outPathStyle{ pathStyle }, _quotePaths{ quotePaths } {}
+        : _inBaseDir{ inputBaseDir }, _outBaseDir{ outputBaseDir }, _outPathStyle{ pathStyle }, _quotePaths{ quotePaths } {}
 
 	PathRebaser( const PathRebaser & other ) = default;
 	PathRebaser( PathRebaser && other ) = default;

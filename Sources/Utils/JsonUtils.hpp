@@ -98,7 +98,7 @@ class JsonValueCtx {
 	/** This should only be used to indicate missing element or failure.
 	  * Anything else than isValid() or operator bool() is undefined. */
 	JsonValueCtx()
-         : _context{ nullptr }, _parent{ nullptr }, _key{} {}
+        : _context{ nullptr }, _parent{ nullptr }, _key{} {}
 
 	/// Constructs a JSON value with no parent.
 	/** This should only be used for creating a root element. */

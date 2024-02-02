@@ -54,7 +54,7 @@ class DropTarget {
 
  public:
 
-    DropTarget() : _dropped{ false }, _droppedRow{ 0 }, _droppedCount{ 0 } {}
+	DropTarget() : _dropped{ false }, _droppedRow{ 0 }, _droppedCount{ 0 } {}
 
 	bool wasDroppedInto() const { return _dropped; }
 	int droppedRow() const { return _droppedRow; }

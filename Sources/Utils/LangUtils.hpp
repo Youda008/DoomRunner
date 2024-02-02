@@ -23,7 +23,7 @@ class ScopeGuard
 {
 	EndFunc _atEnd;
  public:
-    ScopeGuard( EndFunc endFunc ) : _atEnd{ std::move(endFunc) } {}
+	ScopeGuard( EndFunc endFunc ) : _atEnd{ std::move(endFunc) } {}
 	~ScopeGuard() noexcept { _atEnd(); }
 };
 
@@ -47,7 +47,7 @@ class AutoClosable
 
  public:
 
-    AutoClosable( Handle handle, CloseFunc closeFunc ) : _handle{ handle }, _closeFunc{ closeFunc } {}
+	AutoClosable( Handle handle, CloseFunc closeFunc ) : _handle{ handle }, _closeFunc{ closeFunc } {}
 	AutoClosable( const AutoClosable & other ) = delete;
 
 	void letGo()

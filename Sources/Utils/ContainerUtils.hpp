@@ -76,7 +76,7 @@ class PointerIterator
 {
 	IterType _origIter;
  public:
-    PointerIterator( const IterType & origIter ) : _origIter{ origIter } {}
+	PointerIterator( const IterType & origIter ) : _origIter{ origIter } {}
 	auto operator*() -> decltype( **_origIter ) const { return **_origIter; }
 	auto operator->() -> decltype( *_origIter ) const { return *_origIter; }
 	PointerIterator & operator++() { ++_origIter; return *this; }
@@ -97,10 +97,10 @@ class span
 
  public:
 
-    span() : _begin{ nullptr }, _end{ nullptr } {}
-    span( Type * begin, Type * end ) : _begin{ begin }, _end{ end } {}
-    span( Type * data, int size ) : _begin{ data }, _end{ data + size } {}
-    span( Type * data, size_t size ) : _begin{ data }, _end{ data + size } {}
+	span() : _begin{ nullptr }, _end{ nullptr } {}
+	span( Type * begin, Type * end ) : _begin{ begin }, _end{ end } {}
+	span( Type * data, int size ) : _begin{ data }, _end{ data + size } {}
+	span( Type * data, size_t size ) : _begin{ data }, _end{ data + size } {}
 
 	Type * begin() const                   { return _begin; }
 	Type * end() const                     { return _end; }

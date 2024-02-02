@@ -15,7 +15,7 @@ class TimeStats
 public:
 
 	TimeStats( const QString & fileName )
-        : logFile{ fileName }
+		: logFile{ fileName }
 	{
 		logFile.open( QFile::WriteOnly );
 		reset();

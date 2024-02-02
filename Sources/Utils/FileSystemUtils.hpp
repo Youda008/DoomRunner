@@ -188,7 +188,7 @@ class EntryTypes
 {
 	uint8_t _types;
  public:
-	constexpr EntryTypes( uint8_t types ) : _types( types ) {}
+    constexpr EntryTypes( uint8_t types ) : _types{ types } {}
 	constexpr friend EntryTypes operator|( EntryTypes a, EntryTypes b ) { return EntryTypes( a._types | b._types ); }
 	constexpr bool isSet( EntryTypes types ) const { return (_types & types._types) != 0; }
 };
@@ -218,10 +218,10 @@ class PathConvertor {
  public:
 
 	PathConvertor( const QDir & workingDir, PathStyle pathStyle )
-		: _workingDir( workingDir ), _pathStyle( pathStyle ) {}
+         : _workingDir{ workingDir }, _pathStyle{ pathStyle } {}
 
 	PathConvertor( const QDir & baseDir, bool useAbsolutePaths )
-		: PathConvertor( baseDir, useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative ) {}
+        : PathConvertor{ baseDir, useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative } {}
 
 	PathConvertor( const PathConvertor & other ) = default;
 	PathConvertor( PathConvertor && other ) = default;
@@ -264,7 +264,7 @@ class PathRebaser {
  public:
 
 	PathRebaser( const QDir & inputBaseDir, const QDir & outputBaseDir, PathStyle pathStyle, bool quotePaths = false )
-		: _inBaseDir( inputBaseDir ), _outBaseDir( outputBaseDir ), _outPathStyle( pathStyle ), _quotePaths( quotePaths ) {}
+         : _inBaseDir{ inputBaseDir }, _outBaseDir{ outputBaseDir }, _outPathStyle{ pathStyle }, _quotePaths{ quotePaths } {}
 
 	PathRebaser( const PathRebaser & other ) = default;
 	PathRebaser( PathRebaser && other ) = default;

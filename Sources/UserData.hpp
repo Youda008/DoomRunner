@@ -55,7 +55,7 @@ struct Engine : public EditableListModelItem
 
 	Engine() {}
 	Engine( const QFileInfo & file )
-		: name( file.fileName() ), executablePath( file.filePath() ), configDir( file.dir().path() ), dataDir( configDir ) {}
+        : name{ file.fileName() }, executablePath{ file.filePath() }, configDir{ file.dir().path() }, dataDir{ configDir } {}
 
 	// requirements of EditableListModel
 	const QString & getFilePath() const   { return executablePath; }
@@ -87,7 +87,7 @@ struct Mod : public EditableListModelItem
 
 	Mod() {}
 	Mod( const QFileInfo & file, bool checked = true )
-		: path( file.filePath() ), fileName( file.fileName() ), checked( checked ) {}
+        : path{ file.filePath() }, fileName{ file.fileName() }, checked{ checked } {}
 
 	// requirements of EditableListModel
 	bool isEditable() const                 { return isCmdArg; }
@@ -270,7 +270,7 @@ struct Preset : public EditableListModelItem
 	EnvVars envVars;
 
 	Preset() {}
-	Preset( const QString & name ) : name( name ) {}
+    Preset( const QString & name ) : name{ name } {}
 	Preset( const QFileInfo & ) {}  // dummy, it's required by the EditableListModel template, but isn't actually used
 
 	// requirements of EditableListModel
@@ -345,7 +345,7 @@ struct WindowGeometry
 	int height = 0;
 
 	WindowGeometry() {}
-	WindowGeometry( const QRect & rect ) : width( rect.width() ), height( rect.height() ) {}
+    WindowGeometry( const QRect & rect ) : width{ rect.width() }, height{ rect.height() } {}
 };
 
 

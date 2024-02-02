@@ -82,9 +82,9 @@ class JsonValueCtx {
 		QString key;
 		int idx;
 
-		Key() : type( Uninitialized ), key(), idx( -1 ) {}
-		Key( const QString & key ) : type( ObjectKey ), key( key ), idx( -1 ) {}
-		Key( int idx ) : type( ArrayIndex ), key(), idx( idx ) {}
+        Key() : type{ Uninitialized }, key{}, idx{ -1 } {}
+        Key( const QString & key ) : type{ ObjectKey }, key{ key }, idx{ -1 } {}
+        Key( int idx ) : type{ ArrayIndex }, key{}, idx{ idx } {}
 	};
 
 	_ParsingContext * _context;  ///< document-wide context shared among all elements of that document, the struct is stored in JsonDocumentCtx
@@ -98,20 +98,20 @@ class JsonValueCtx {
 	/** This should only be used to indicate missing element or failure.
 	  * Anything else than isValid() or operator bool() is undefined. */
 	JsonValueCtx()
-		: _context( nullptr ), _parent( nullptr ), _key() {}
+         : _context{ nullptr }, _parent{ nullptr }, _key{} {}
 
 	/// Constructs a JSON value with no parent.
 	/** This should only be used for creating a root element. */
 	JsonValueCtx( _ParsingContext * context )
-		: _context( context ), _parent( nullptr ), _key() {}
+        : _context{ context }, _parent{ nullptr }, _key{} {}
 
 	/// Constructs a JSON value with a parent that is a JSON object.
 	JsonValueCtx( _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
-		: _context( context ), _parent( parent ), _key( key ) {}
+        : _context{ context }, _parent{ parent }, _key{ key } {}
 
 	/// Constructs a JSON value with a parent that is a JSON array.
 	JsonValueCtx( _ParsingContext * context, const JsonValueCtx * parent, int index )
-		: _context( context ), _parent( parent ), _key( index ) {}
+        : _context{ context }, _parent{ parent }, _key{ index } {}
 
 	JsonValueCtx( const JsonValueCtx & ) = default;
 	JsonValueCtx( JsonValueCtx && ) = default;

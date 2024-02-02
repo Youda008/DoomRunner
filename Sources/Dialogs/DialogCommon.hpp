@@ -39,7 +39,7 @@ class DialogWithPaths : public DialogCommon {
 	QString lastUsedDir;  ///< the last directory the user selected via QFileDialog
 
 	DialogWithPaths( QWidget * thisWidget, PathConvertor pathConvertor )
-		: DialogCommon( thisWidget ), pathConvertor( std::move(pathConvertor) ) {}
+        : DialogCommon{ thisWidget }, pathConvertor{ std::move(pathConvertor) } {}
 
 	/// Runs a file-system dialog to let the user select a file and stores the its directory for the next call.
 	QString browseFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );

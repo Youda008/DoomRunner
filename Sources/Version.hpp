@@ -30,7 +30,8 @@ struct Version
 	uint16_t patch;
 	uint16_t build;
 
-	Version() : major(0), minor(0), patch(0), build(0) {}
+	// Standard initialization syntax is not possible here because of major(), minor() macros in sys/types.h in FreeBSD.
+	Version() : major{0}, minor{0}, patch{0}, build{0} {}
 	Version( uint16_t m, uint16_t n, uint16_t p = 0, uint16_t b = 0 ) : major(m), minor(n), patch(p), build(b) {}
 	Version( const char * versionStr );
 	Version( const QString & versionStr );

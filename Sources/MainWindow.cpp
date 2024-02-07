@@ -4310,7 +4310,7 @@ void MainWindow::launch()
 
 		if (success && settings.closeOnLaunch)
 		{
-			QApplication::quit();
+			this->close();
 		}
 	}
 }

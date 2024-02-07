@@ -11,6 +11,8 @@
 
 #include "Essential.hpp"
 
+#include "Utils/ErrorHandling.hpp"  // LoggingComponent
+
 #include <QThread>
 #include <QStringList>
 #include <QPalette>
@@ -96,13 +98,17 @@ void setAppStyle( const QString & styleName );
   * the main thread even though the monitoring will be done in a background thread.
   */
 #ifdef _WIN32
-class WindowsThemeWatcher : public QThread {
+class WindowsThemeWatcher : public QThread, public LoggingComponent {
 
 	Q_OBJECT
 
  public:
 
 	WindowsThemeWatcher();
+	virtual ~WindowsThemeWatcher() override;
+
+	bool start();
+	bool stop( ulong timeout_ms );
 
  protected:
 
@@ -117,6 +123,13 @@ class WindowsThemeWatcher : public QThread {
 
 	/// Automatically called from the thread that constructed this object, whenever dark mode is toggled in the system settings.
 	void updateScheme( bool darkModeEnabled );
+
+ private: // members
+
+	// pimpl idiom
+	// Avoids including Windows headers in this header and poluting the global namespace with problematic macros.
+	struct Members;
+	std::unique_ptr< Members > m;
 
 };
 #endif // _WIN32

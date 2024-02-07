@@ -1037,7 +1037,7 @@ void MainWindow::closeEvent( QCloseEvent * event )
 		saveCache( cacheFilePath );
 
  #if IS_WINDOWS
-	themeWatcher.terminate();
+	themeWatcher.stop(500);
  #endif
 
 	superClass::closeEvent( event );

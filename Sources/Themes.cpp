@@ -32,8 +32,8 @@
 #include <algorithm>
 #include <functional>
 #include <optional>
-#include <thread>
 #include <atomic>
+#include <mutex>
 
 
 // Unfortunatelly, behaviour of Qt on Windows is a lot different than on Linux, so there's gonna be a lot of ifdefs.
@@ -446,11 +446,19 @@ static void setQtStyle( const QString & styleName )
 
 #if IS_WINDOWS
 
-static std::optional< DWORD > readRegistryDWORD( HKEY keyHandle, const char * subkeyPath, const char * valueName )
+static constexpr HKEY INVALID_HKEY = nullptr;
+
+struct OptRegistryDWORD
 {
 	DWORD value;
+	LONG error;
+};
+
+static OptRegistryDWORD readRegistryDWORD( HKEY keyHandle, const char * subkeyPath, const char * valueName )
+{
+	DWORD value = 0;
 	DWORD varLength = DWORD( sizeof(value) );
-	auto res = RegGetValueA(
+	auto error = RegGetValueA(
 		keyHandle, subkeyPath, valueName,
 		RRF_RT_REG_DWORD,  // in: value type filter - only accept DWORD
 		nullptr,           // out: final value type
@@ -458,12 +466,7 @@ static std::optional< DWORD > readRegistryDWORD( HKEY keyHandle, const char * su
 		&varLength         // in/out: size of buffer / number of bytes read
 	);
 
-	if (res != ERROR_SUCCESS)
-	{
-		return std::nullopt;
-	}
-
-	return value;
+	return { value, error };
 }
 
 static const HKEY darkModeRootKey = HKEY_CURRENT_USER;
@@ -474,13 +477,12 @@ static bool isSystemDarkModeEnabled()
 {
 	// based on https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 	auto optAppsUseLightTheme = readRegistryDWORD( darkModeRootKey, darkModeSubkeyPath, darkModeValueName );
-	return optAppsUseLightTheme.has_value() && optAppsUseLightTheme.value() == 0;
+	return optAppsUseLightTheme.error == ERROR_SUCCESS && optAppsUseLightTheme.value == 0;
 }
 
-static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEnabled ) > onChange )
+static HKEY openSystemDarkModeSetting()
 {
-	HKEY hThemeSettingsKey;
-	std::optional< DWORD > optAppsUseLightTheme;
+	HKEY hThemeSettingsKey = INVALID_HKEY;
 
 	LONG lErrorCode = RegOpenKeyExA(
 		darkModeRootKey, darkModeSubkeyPath,
@@ -492,30 +494,48 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 	{
 		// This key exists since certain build of Windows 10, older versions don't have it.
 		logInfo("Themes").noquote() << "cannot open registry key: \"HKEY_CURRENT_USER/"<<darkModeSubkeyPath<<"\"";
-		return;
+		return INVALID_HKEY;
 	}
 
-	auto guard = atScopeEndDo( [&]() { RegCloseKey( hThemeSettingsKey ); } );
-
-	// check if we can read the registry value before we enter the infinite loop
-	optAppsUseLightTheme = readRegistryDWORD( hThemeSettingsKey, nullptr, darkModeValueName );
-	if (!optAppsUseLightTheme)
+	// check if we can read the registry value
+	auto optAppsUseLightTheme = readRegistryDWORD( hThemeSettingsKey, nullptr, darkModeValueName );
+	if (optAppsUseLightTheme.error != ERROR_SUCCESS)
 	{
-		auto lastError = GetLastError();
-		logRuntimeError("Themes").noquote() << "cannot read registry value \""<<darkModeValueName<<"\" (error "<<lastError<<")";
+		logRuntimeError("Themes").noquote() << "cannot read registry value \""<<darkModeValueName<<"\" (error "<<optAppsUseLightTheme.error<<")";
+		RegCloseKey( hThemeSettingsKey );
+		return INVALID_HKEY;
+	}
+
+	return hThemeSettingsKey;
+}
+
+static void closeSystemDarkModeSetting( HKEY hThemeSettingsKey )
+{
+	RegCloseKey( hThemeSettingsKey );
+}
+
+static void watchForSystemDarkModeChanges( HKEY hThemeSettingsKey, std::function< void ( bool darkModeEnabled ) > onChange )
+{
+	auto optAppsUseLightTheme = readRegistryDWORD( hThemeSettingsKey, nullptr, darkModeValueName );
+	if (optAppsUseLightTheme.error != ERROR_SUCCESS)
+	{
+		if (optAppsUseLightTheme.error == ERROR_INVALID_HANDLE)
+			logDebug("Themes") << "the theme registry key has been closed, quitting dark mode watching";
+		else
+			logRuntimeError("Themes").noquote() << "cannot read registry value \""<<darkModeValueName<<"\" (error "<<optAppsUseLightTheme.error<<")";
 		return;
 	}
 
-	DWORD lastAppsUseLightTheme = *optAppsUseLightTheme;
+	DWORD lastAppsUseLightTheme = optAppsUseLightTheme.value;
 
 	while (true)
 	{
-		lErrorCode = RegNotifyChangeKeyValue(
-			hThemeSettingsKey,      // handle to the opened key
-			FALSE,     // monitor subtree
+		LONG lErrorCode = RegNotifyChangeKeyValue(
+			hThemeSettingsKey,           // handle to the opened key
+			FALSE,                       // monitor subtree
 			REG_NOTIFY_CHANGE_LAST_SET,  // notification filter
-			nullptr,   // handle to event object
-			FALSE      // asynchronously
+			nullptr,                     // handle to event object
+			FALSE                        // asynchronously
 		);
 		if (lErrorCode != ERROR_SUCCESS)
 		{
@@ -525,17 +545,19 @@ static void watchForSystemDarkModeChanges( std::function< void ( bool darkModeEn
 		}
 
 		optAppsUseLightTheme = readRegistryDWORD( hThemeSettingsKey, nullptr, darkModeValueName );
-		if (!optAppsUseLightTheme)
+		if (optAppsUseLightTheme.error != ERROR_SUCCESS)
 		{
-			auto lastError = GetLastError();
-			logRuntimeError("Themes").noquote() << "cannot read registry value \""<<darkModeValueName<<"\" (error "<<lastError<<")";
+			if (optAppsUseLightTheme.error == ERROR_INVALID_HANDLE)
+				logDebug("Themes") << "the theme registry key has been closed, quitting dark mode watching";
+			else
+				logRuntimeError("Themes").noquote() << "cannot read registry value \""<<darkModeValueName<<"\" (error "<<optAppsUseLightTheme.error<<")";
 			break;
 		}
 
-		if (*optAppsUseLightTheme != lastAppsUseLightTheme)  // value has changed
+		if (optAppsUseLightTheme.value != lastAppsUseLightTheme)  // value has changed
 		{
-			onChange( *optAppsUseLightTheme == 0 );
-			lastAppsUseLightTheme = *optAppsUseLightTheme;
+			onChange( optAppsUseLightTheme.value == 0 );
+			lastAppsUseLightTheme = optAppsUseLightTheme.value;
 		}
 	}
 }
@@ -696,20 +718,100 @@ QString updateHyperlinkColor( QString richText )
 
 #if IS_WINDOWS
 
-WindowsThemeWatcher::WindowsThemeWatcher()
+struct WindowsThemeWatcher::Members
 {
+	std::atomic< bool > threadStarted = false;
+	std::atomic< HKEY > hThemeSettingsKey = INVALID_HKEY;
+	std::mutex themeSettingMtx;
+};
+
+WindowsThemeWatcher::WindowsThemeWatcher()
+:
+	LoggingComponent("WindowsThemeWatcher")
+{
+	m = std::make_unique< Members >();
+
 	// If this object is constructed in the main thread, this will make the updateScheme() be called in the main thread.
 	connect( this, &WindowsThemeWatcher::darkModeToggled, this, &WindowsThemeWatcher::updateScheme );
+}
+
+bool WindowsThemeWatcher::start()
+{
+	if (QThread::isRunning())
+	{
+		logLogicError() << "attempting to start a watching thread that is already running";
+		return false;
+	}
+
+	m->hThemeSettingsKey = openSystemDarkModeSetting();
+	if (m->hThemeSettingsKey == INVALID_HKEY)
+	{
+		// the dark mode setting cannot be read, no point starting a thread
+		return false;
+	}
+
+	logDebug() << "starting watching thread";
+
+	QThread::start();
+
+	m->threadStarted = true;
+	return true;
+}
+
+bool WindowsThemeWatcher::stop( ulong timeout_ms )
+{
+	if (!QThread::isRunning())
+	{
+		if (!m->threadStarted)  // thread might have exited before this call due to some error
+			logLogicError() << "attempting to stop a watching thread that is not running";
+		return false;
+	}
+
+	logDebug() << "stopping watching thread";
+
+	std::unique_lock< std::mutex > themeSettingLock( m->themeSettingMtx );
+	if (m->hThemeSettingsKey != INVALID_HKEY)
+	{
+		// This should wake up the thread that is waiting in the RegNotifyChangeKeyValue() and make it quit the function.
+		closeSystemDarkModeSetting( m->hThemeSettingsKey );
+		m->hThemeSettingsKey = INVALID_HKEY;
+	}
+	themeSettingLock.unlock();
+
+	bool threadFinished = QThread::wait( timeout_ms );
+
+	if (threadFinished)
+	{
+		logDebug() << "watching thread has stopped";
+		m->threadStarted = false;
+	}
+	else
+	{
+		logRuntimeError() << "watching thread has not stopped in time";
+	}
+
+	return threadFinished;
 }
 
 void WindowsThemeWatcher::run()
 {
 	// This will run in a separate thread.
 
-	watchForSystemDarkModeChanges( [this]( bool darkModeEnabled )
+	watchForSystemDarkModeChanges( m->hThemeSettingsKey, [this]( bool darkModeEnabled )
 	{
 		emit darkModeToggled( darkModeEnabled );
 	});
+
+	// Because the thread is signaled to quit by closing the setting handle, the handle will likely be already closed here.
+	// However it might still be open in case the function bailed out due to a different error.
+	// Locking is needed to prevent this thread from trying to close a handle that is still valid but already closed.
+	std::unique_lock< std::mutex > themeSettingLock( m->themeSettingMtx );
+	if (m->hThemeSettingsKey != INVALID_HKEY)
+	{
+		closeSystemDarkModeSetting( m->hThemeSettingsKey );
+		m->hThemeSettingsKey = INVALID_HKEY;
+	}
+	themeSettingLock.unlock();
 }
 
 void WindowsThemeWatcher::updateScheme( [[maybe_unused]] bool darkModeEnabled )
@@ -729,6 +831,35 @@ void WindowsThemeWatcher::updateScheme( [[maybe_unused]] bool darkModeEnabled )
 				setQtStyle( "Fusion" );
 			else
 				setQtStyle( c_defaultStyleName );
+		}
+	}
+}
+
+WindowsThemeWatcher::~WindowsThemeWatcher()
+{
+	if (QThread::isRunning())
+	{
+		// stop() was not called and the thread is still running while the application is closing.
+		// First try to stop the thread gracefully as we normally would.
+		logLogicError() << "watching thread is still running in destructor, trying to stop it now";
+		bool threadFinished = stop(500);
+
+		if (!threadFinished)
+		{
+			// The thread has not finished in time and leaving it running will cause QThread's destructor
+			// to terminate the whole application. Try to terminate the thread forcefully.
+			logRuntimeError() << "watching thread has not finished in time, trying to terminate it";
+			QThread::terminate();
+			// From QThread documentation: "The thread may or may not be terminated immediately,
+			// depending on the operating system's scheduling policies"
+			// We cannot wait here forever, because the user wants this application closed.
+			// Rather crash the application in QThread's destructor than freezing it here with infinite timeout.
+			threadFinished = QThread::wait(100);
+
+			if (!threadFinished)
+			{
+				logRuntimeError() << "failed to terminate the watching thread";
+			}
 		}
 	}
 }

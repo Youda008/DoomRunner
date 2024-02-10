@@ -462,8 +462,17 @@ bool openFileLocation( const QString & filePath )
 	return true;
 }
 
+
+} // namespace os
+
+
+//======================================================================================================================
+//  Windows-specific
+
 #if IS_WINDOWS
-bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir, QString description )
+namespace win {
+
+bool createShortcut( QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir, QString description )
 {
 	// prepare arguments for WinAPI
 
@@ -538,7 +547,6 @@ bool createWindowsShortcut( QString shortcutFile, QString targetFile, QStringVec
 
 	return true;
 }
+
+} // namespace win
 #endif // IS_WINDOWS
-
-
-} // namespace os

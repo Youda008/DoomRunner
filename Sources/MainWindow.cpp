@@ -962,7 +962,7 @@ void MainWindow::onWindowShown()
 	// Rather set this after loading options, because the MainWindow is blocked (is not updating) during the whole
 	// options loading including any potential error messages, which if the theme is switched in the middle
 	// might show in some kind of half-switched state.
-	themeWatcher.start();
+	systemThemeWatcher.start();
  #endif
 
 	// if the presets are empty, add a default one so that users don't complain that they can't enter anything
@@ -1037,7 +1037,7 @@ void MainWindow::closeEvent( QCloseEvent * event )
 		saveCache( cacheFilePath );
 
  #if IS_WINDOWS
-	themeWatcher.stop(500);
+	systemThemeWatcher.stop(500);
  #endif
 
 	superClass::closeEvent( event );
@@ -3840,7 +3840,7 @@ void MainWindow::exportPresetToShortcut()
 		currentWorkingDir, PathStyle::Absolute, engineWorkingDir, pathConvertor.pathStyle(), QuotePaths, DontVerifyPaths
 	);
 
-	bool success = os::createWindowsShortcut( shortcutPath, cmd.executable, cmd.arguments, engineWorkingDir, selectedPreset->name );
+	bool success = win::createShortcut( shortcutPath, cmd.executable, cmd.arguments, engineWorkingDir, selectedPreset->name );
 	if (!success)
 	{
 		reportRuntimeError( this, "Cannot create shortcut", "Failed to create a shortcut. Check errors.txt for details." );

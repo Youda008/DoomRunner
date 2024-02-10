@@ -15,7 +15,7 @@
 #include "Widgets/SearchPanel.hpp"
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
-#include "Themes.hpp"  // WindowsThemeWatcher
+#include "Themes.hpp"  // SystemThemeWatcher
 
 #include <QMainWindow>
 #include <QString>
@@ -306,7 +306,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	UpdateChecker updateChecker;
 
  #if IS_WINDOWS
-	WindowsThemeWatcher themeWatcher;
+	SystemThemeWatcher systemThemeWatcher;
  #endif
 
  private: // user data

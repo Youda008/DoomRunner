@@ -17,6 +17,8 @@
 #include <QStringList>
 #include <QPalette>
 
+#include <mutex>
+
 class QWidget;
 
 
@@ -90,6 +92,14 @@ void setAppStyle( const QString & styleName );
 
 
 //======================================================================================================================
+//  system theme settings monitoring
+
+enum class SystemTheme
+{
+	Light,
+	Dark,
+};
+
 /// Monitors changes to the theme settings of the operating system.
 /**
   * Qt on Windows does not automatically follow OS preferences, so the OS theme settings have to be manually monitored
@@ -97,42 +107,81 @@ void setAppStyle( const QString & styleName );
   * Construct this object in a main thread and call start(), that will ensure the theme update is performed in
   * the main thread even though the monitoring will be done in a background thread.
   */
-#ifdef _WIN32
-class WindowsThemeWatcher : public QThread, public LoggingComponent {
+class SystemThemeWatcher : public QThread, protected LoggingComponent {
 
 	Q_OBJECT
 
  public:
 
-	WindowsThemeWatcher();
-	virtual ~WindowsThemeWatcher() override;
+	SystemThemeWatcher();
+	virtual ~SystemThemeWatcher() override;
 
+	/// Starts a background thread that monitors the system theme settings and automatically updates Qt theme whenever it changes.
 	bool start();
+
+	/// Signals the background thread to quit and waits timeout_ms milliseconds for it to exit.
+	/** If the thread does not exit in time, false is returned and stop() can be called again.
+	  * If the thread is still running when this object is destroyed, the thread is forcefully teminated. */
 	bool stop( ulong timeout_ms );
 
- protected:
+ private:
 
 	virtual void run() override;
 
  signals:
 
 	/// Emitted whenever dark mode is enabled or disabled in the system settings.
-	void darkModeToggled( bool darkModeEnabled );
+	void systemThemeChanged( SystemTheme newTheme );
 
  private slots:
 
-	/// Automatically called from the thread that constructed this object, whenever dark mode is toggled in the system settings.
-	void updateScheme( bool darkModeEnabled );
+	/// Automatically called from the thread that constructed this object, whenever system theme changes.
+	void updateQtScheme( SystemTheme systemTheme );
+
+ public:
+
+	/// Interface for OS-specific implementation of the theme settings monitoring
+	struct SystemThemeWatcherImpl
+	{
+		virtual ~SystemThemeWatcherImpl() = default;
+
+		/// Opens the system theme settings and prepares them to be monitored.
+		/** Must be called and succeed before calling monitorThemeSettingsChanges(). */
+		virtual bool openThemeSettingsMonitoring() = 0;
+
+		/// Closes the system theme settings and aborts any monitoring currently running.
+		/** Once a thread enters the monitorThemeSettingsChanges(), this is the only way to make the function return. */
+		virtual void closeThemeSettingsMonitoring() = 0;
+
+		/// Whether the system theme settings are still open.
+		virtual bool isThemeSettingsMonitoringOpen() const = 0;
+
+		enum class QuitReason
+		{
+			MonitoringClosed,  ///< function ended due to openThemeSettingsMonitoring() being called from another thread
+			ReadingError,      ///< function ended due to error while trying to read the theme settings
+			MiscError,
+		};
+
+		/// Enters an infinite loop that waits for system theme settings changes and calls a callback when it does.
+		/** This is a blocking function that will return only when error occurs or when monitoring is aborted by calling
+		  * closeThemeSettingsMonitoring() from another thread. It must be run in a thread dedicated only for this job.
+		  * Return value indicates whether the monitoring ended with an error or was externally aborted.
+		  * When the function inadvertently returns due to an error, the theme settings must be closed manually
+		  * by calling closeThemeSettingsMonitoring(). */
+		virtual QuitReason monitorThemeSettingsChanges( std::function< void ( SystemTheme newTheme ) > onThemeChange ) = 0;
+	};
 
  private: // members
 
 	// pimpl idiom
 	// Avoids including Windows headers in this header and poluting the global namespace with problematic macros.
-	struct Members;
-	std::unique_ptr< Members > m;
+	std::unique_ptr< SystemThemeWatcherImpl > _impl;
+
+	bool _started;  ///< indicates only that the start() call suceeded and stop() was not called yet, does NOT indicate that the thread is actually running
+	std::mutex _monitoringMtx;  ///< mutex to protect the state of theme settings monitoring
 
 };
-#endif // _WIN32
 
 
 #endif // THEMES_INCLUDED

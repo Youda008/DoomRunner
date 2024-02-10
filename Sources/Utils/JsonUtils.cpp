@@ -7,8 +7,8 @@
 
 #include "JsonUtils.hpp"
 
-#include "Utils/ErrorHandling.hpp"
-#include "Utils/FileSystemUtils.hpp"  // getFileNameFromPath
+#include "FileSystemUtils.hpp"  // getFileNameFromPath
+#include "ErrorHandling.hpp"
 
 #include <QStringBuilder>
 #include <QTextStream>

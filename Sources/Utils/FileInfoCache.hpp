@@ -11,9 +11,9 @@
 
 #include "Essential.hpp"
 
-#include "Utils/JsonUtils.hpp"
-#include "Utils/FileSystemUtils.hpp"  // isValidFile
-#include "Utils/ErrorHandling.hpp"
+#include "JsonUtils.hpp"
+#include "FileSystemUtils.hpp"  // isValidFile
+#include "ErrorHandling.hpp"
 
 #include <QString>
 #include <QHash>
@@ -45,7 +45,7 @@ struct UncertainFileInfo : public FileInfo
 };
 
 template< typename FileInfo >
-class FileInfoCache : public LoggingComponent {
+class FileInfoCache : protected LoggingComponent {
 
 	struct Entry
 	{

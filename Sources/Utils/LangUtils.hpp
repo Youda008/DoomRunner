@@ -23,20 +23,31 @@ class ScopeGuard
 {
 	EndFunc _atEnd;
  public:
-	ScopeGuard( EndFunc endFunc ) : _atEnd( std::move(endFunc) ) {}
+	ScopeGuard( EndFunc && endFunc ) : _atEnd( std::forward< EndFunc >( endFunc ) ) {}
 	~ScopeGuard() noexcept { _atEnd(); }
 };
 
 template< typename EndFunc >
-ScopeGuard< EndFunc > atScopeEndDo( const EndFunc & endFunc )
+ScopeGuard< EndFunc > atScopeEndDo( EndFunc && endFunc )
 {
-	return ScopeGuard< EndFunc >( endFunc );
+	return ScopeGuard< EndFunc >( std::forward< EndFunc >( endFunc ) );
 }
 
 template< typename EndFunc >
-ScopeGuard< EndFunc > atScopeEndDo( EndFunc && endFunc )
+class DismissableScopeGuard
 {
-	return ScopeGuard< EndFunc >( std::move(endFunc) );
+	EndFunc _atEnd;
+	bool _active;
+ public:
+	DismissableScopeGuard( EndFunc endFunc ) : _atEnd( std::forward< EndFunc >( endFunc ) ), _active( true ) {}
+	void dismiss() { _active = false; }
+	~DismissableScopeGuard() noexcept { if (_active) _atEnd(); }
+};
+
+template< typename EndFunc >
+DismissableScopeGuard< EndFunc > atScopeEndMaybeDo( EndFunc && endFunc )
+{
+	return DismissableScopeGuard< EndFunc >( std::forward< EndFunc >( endFunc ) );
 }
 
 template< typename Handle, typename CloseFunc >
@@ -50,7 +61,7 @@ class AutoClosable
 	AutoClosable( Handle handle, CloseFunc closeFunc ) : _handle( handle ), _closeFunc( closeFunc ) {}
 	AutoClosable( const AutoClosable & other ) = delete;
 
-	void letGo()
+	void dismiss()
 	{
 		_handle = Handle(0);
 		_closeFunc = nullptr;
@@ -60,7 +71,7 @@ class AutoClosable
 	{
 		_handle = other._handle;
 		_closeFunc = other._closeFunc;
-		other.letGo();
+		other.dismiss();
 	}
 
 	~AutoClosable()
@@ -75,6 +86,45 @@ AutoClosable< Handle, CloseFunc > autoClosable( Handle handle, CloseFunc closeFu
 {
 	return AutoClosable< Handle, CloseFunc >( handle, closeFunc );
 }
+
+
+//======================================================================================================================
+//  reporting errors via return values
+
+/// Represents either a return value or an error that prevented returning a valid value.
+/** Basically an enhanced std::optional with details why the value is not present.
+  * Also a substitution for std::expected from C++23. */
+template< typename Value, typename Error, Error successErrorValue = 0 >
+class ValueOrError {
+
+	Value _val;
+	Error _err;
+
+ public:
+
+	ValueOrError( Value val ) : _val( std::move(val) ), _err( successErrorValue ) {}
+	ValueOrError( Error err ) : _val(), _err( std::move(err) ) {}
+	ValueOrError( Value val, Error err ) : _val( std::move(val) ), _err( std::move(err) ) {}
+
+	ValueOrError( const ValueOrError & other ) = default;
+	ValueOrError( ValueOrError && other ) = default;
+	ValueOrError & operator=( const ValueOrError & other ) = default;
+	ValueOrError & operator=( ValueOrError && other ) = default;
+
+	      Value & value()             { return _val; }
+	const Value & value() const       { return _val; }
+	      Error & error()             { return _err; }
+	const Error & error() const       { return _err; }
+
+	bool isSuccess() const            { return _err == successErrorValue; }
+	operator bool() const             { return isSuccess(); }
+
+	      Value & operator*()         { return _val; }
+	const Value & operator*() const   { return _val; }
+	      Value * operator->()        { return &_val; }
+	const Value * operator->() const  { return &_val; }
+
+};
 
 
 //======================================================================================================================

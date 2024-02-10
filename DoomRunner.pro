@@ -64,6 +64,7 @@ HEADERS += \
 	Sources/Utils/TimeStats.hpp \
 	Sources/Utils/WADReader.hpp \
 	Sources/Utils/WidgetUtils.hpp \
+	Sources/Utils/WindowsUtils.hpp \
 	Sources/Widgets/EditableListView.hpp \
 	Sources/Widgets/ExtendedTreeView.hpp \
 	Sources/Widgets/ListModel.hpp \
@@ -103,6 +104,7 @@ SOURCES += \
 	Sources/Utils/StandardOutput.cpp \
 	Sources/Utils/WADReader.cpp \
 	Sources/Utils/WidgetUtils.cpp \
+	Sources/Utils/WindowsUtils.cpp \
 	Sources/Widgets/EditableListView.cpp \
 	Sources/Widgets/ExtendedTreeView.cpp \
 	Sources/Widgets/ListModel.cpp \

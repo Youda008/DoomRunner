@@ -3979,7 +3979,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	auto addFileAccordingToSuffix = [&]( const QString & filePath )
 	{
 		QString suffix = QFileInfo( filePath ).suffix().toLower();
-		if (suffix == "deh") {
+		if (suffix == "deh" || suffix == "hhe") {
 			modArguments << "-deh" << engineDirRebaser.rebaseAndQuotePath( filePath );
 		} else if (suffix == "bex") {
 			modArguments << "-bex" << engineDirRebaser.rebaseAndQuotePath( filePath );

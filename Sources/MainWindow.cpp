@@ -4182,11 +4182,11 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 
 	//-- additional custom command line arguments ----------------------------------
 
-	if (!ui->presetCmdArgsLine->text().isEmpty())
-		appendCustomArguments( cmd.arguments, ui->presetCmdArgsLine->text() );
-
 	if (!ui->globalCmdArgsLine->text().isEmpty())
 		appendCustomArguments( cmd.arguments, ui->globalCmdArgsLine->text() );
+
+	if (!ui->presetCmdArgsLine->text().isEmpty())
+		appendCustomArguments( cmd.arguments, ui->presetCmdArgsLine->text() );
 
 	//------------------------------------------------------------------------------
 

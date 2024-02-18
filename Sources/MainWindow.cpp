@@ -34,23 +34,22 @@
 #include "Utils/MiscUtils.hpp"  // checkPath, highlightPathIfInvalid
 #include "Utils/ErrorHandling.hpp"
 
-#include <QVector>
-#include <QList>
-#include <QMap>
-#include <QString>
-#include <QStringList>
-#include <QStringBuilder>
-#include <QTextStream>
-#include <QFile>
-#include <QDir>
-#include <QFileIconProvider>
-#include <QMessageBox>
-#include <QTimer>
-#include <QProcess>
-
+// showMapPackDesc
 #include <QVBoxLayout>
 #include <QPlainTextEdit>
 #include <QFontDatabase>
+
+#include <QStringBuilder>
+#include <QTextStream>  // exportPresetToScript, loadMonitorInfo
+#include <QFile>
+#include <QDir>
+#include <QFileIconProvider>  // EmptyIconProvider
+#include <QMessageBox>
+#include <QTimer>
+#include <QProcess>  // startDetached
+
+#include <QGuiApplication>
+#include <QScreen>
 
 
 //======================================================================================================================
@@ -3345,6 +3344,9 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	if (IS_WINDOWS || settings.colorScheme != ColorScheme::SystemDefault)
 		themes::setAppColorScheme( settings.colorScheme );
 
+	// window geometry
+	if (areScreenCoordinatesValid( opts.geometry.x, opts.geometry.y ))  // move the window only if the coordinates make sense
+		this->move( opts.geometry.x, opts.geometry.y );
 	if (opts.geometry.width > 0 && opts.geometry.height > 0)
 		this->resize( opts.geometry.width, opts.geometry.height );
 

@@ -543,6 +543,8 @@ static QJsonObject serialize( const WindowGeometry & geometry )
 {
 	QJsonObject jsGeometry;
 
+	jsGeometry["x"] = geometry.x;
+	jsGeometry["y"] = geometry.y;
 	jsGeometry["width"] = geometry.width;
 	jsGeometry["height"] = geometry.height;
 
@@ -551,8 +553,10 @@ static QJsonObject serialize( const WindowGeometry & geometry )
 
 static void deserialize( const JsonObjectCtx & jsGeometry, WindowGeometry & geometry )
 {
-	geometry.width = jsGeometry.getInt( "width", 0 );
-	geometry.height = jsGeometry.getInt( "height", 0 );
+	geometry.x = jsGeometry.getInt( "x", geometry.x, DontShowError );
+	geometry.y = jsGeometry.getInt( "y", geometry.y, DontShowError );
+	geometry.width = jsGeometry.getInt( "width", geometry.width );
+	geometry.height = jsGeometry.getInt( "height", geometry.height );
 }
 
 static void serialize( QJsonObject & jsSettings, const LauncherSettings & settings )

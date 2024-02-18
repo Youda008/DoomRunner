@@ -231,5 +231,7 @@ struct Argument
 /** NOTE: This is simplified, it will not handle the full command line syntax, only the basic cases. */
 QVector< Argument > splitCommandLineArguments( const QString & argsStr );
 
+bool areScreenCoordinatesValid( int x, int y );
+
 
 #endif // MISC_UTILS_INCLUDED

@@ -17,6 +17,8 @@
 #include <QTextStream>
 #include <QLineEdit>
 #include <QStringBuilder>
+#include <QGuiApplication>
+#include <QScreen>
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -308,4 +310,27 @@ QVector< Argument > splitCommandLineArguments( const QString & argsStr )
 	}
 
 	return args;
+}
+
+bool areScreenCoordinatesValid( int x, int y )
+{
+	// our internal marker that the coordinates have not been initialized or read properly
+	if (x == INT_MIN || y == INT_MIN)
+		return false;
+
+	// find if the coordinates belong to any of the currently active virtual screens
+	auto screens = qApp->screens();
+	for (QScreen * screen : screens)
+	{
+		auto availableCoordinates = screen->availableGeometry();
+		if (x >= availableCoordinates.left() && x <= availableCoordinates.right()
+		 && y >= availableCoordinates.top() && y <= availableCoordinates.bottom())
+		{
+			return true;
+		}
+	}
+
+	// found no screen to which these coordinates belong to (secondary monitor might have been disconnected)
+	logInfo() << "invalid coordinates detected ("<<x<<","<<y<<") leaving the window at the default position";
+	return false;
 }

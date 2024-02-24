@@ -172,37 +172,12 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void setupEnvVarLists();
 
-	void updateOptionsGrpBoxTitles( const StorageSettings & storageSettings );
-
 	void loadMonitorInfo( QComboBox * box );
+
+	void updateOptionsGrpBoxTitles( const StorageSettings & storageSettings );
 
 	void initAppDataDir();
 	static void moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir, QString optionsFileName );
-
-	void togglePathStyle( PathStyle style );
-
-	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines );
-
-	void autoselectItems();
-
-	void setAlternativeDirs( const QString & dirName );
-
-	void updateListsFromDirs();
-	void updateIWADsFromDir();
-	void resetMapDirModelAndView();
-	void updateConfigFilesFromDir( const QString * configDir = nullptr );
-	void updateSaveFilesFromDir( const QString * saveDir = nullptr );
-	void updateDemoFilesFromDir( const QString * demoDir = nullptr );
-	void updateCompatLevels();
-	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
-
-	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
-
-	void togglePresetSubWidgets( bool enabled );
-	void clearPresetSubWidgets();
-
-	void toggleSkillSubwidgets( bool enabled );
-	void toggleOptionsSubwidgets( bool enabled );
 
 	bool saveOptions( const QString & filePath );
 	bool reloadOptions( const QString & filePath );
@@ -235,6 +210,31 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void restoreAppearance( const AppearanceSettings & appearance, bool restoreGeometry );
 	void restoreWindowGeometry( const WindowGeometry & geometry );
+
+	void togglePathStyle( PathStyle style );
+
+	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines );
+
+	void autoselectItems();
+
+	void setAlternativeDirs( const QString & dirName );
+
+	void updateListsFromDirs();
+	void updateIWADsFromDir();
+	void resetMapDirModelAndView();
+	void updateConfigFilesFromDir( const QString * configDir = nullptr );
+	void updateSaveFilesFromDir( const QString * saveDir = nullptr );
+	void updateDemoFilesFromDir( const QString * demoDir = nullptr );
+	void updateCompatLevels();
+	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
+
+	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
+
+	void togglePresetSubWidgets( bool enabled );
+	void clearPresetSubWidgets();
+
+	void toggleSkillSubwidgets( bool enabled );
+	void toggleOptionsSubwidgets( bool enabled );
 
 	void updateLaunchCommand();
 	os::ShellCommand generateLaunchCommand(

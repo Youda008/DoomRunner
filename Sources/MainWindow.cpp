@@ -67,6 +67,9 @@ static const char defaultCacheFileName [] = "file_info_cache.json";
 static constexpr bool VerifyPaths = true;
 static constexpr bool DontVerifyPaths = false;
 
+static constexpr int VarNameColumn = 0;
+static constexpr int VarValueColumn = 1;
+
 
 //======================================================================================================================
 //  MainWindow-specific utils
@@ -1077,6 +1080,741 @@ void MainWindow::closeEvent( QCloseEvent * event )
 MainWindow::~MainWindow()
 {
 	delete ui;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  saving and loading user data
+
+bool MainWindow::saveOptions( const QString & filePath )
+{
+	// This memeber is not updated regularly, because it is only needed for saving app state. Update it now.
+	appearance.geometry = this->geometry();
+
+	OptionsToSave opts =
+	{
+		// files
+		engineModel.list(),
+		iwadModel.list(),
+
+		// options
+		launchOpts,
+		multOpts,
+		gameOpts,
+		compatOpts,
+		videoOpts,
+		audioOpts,
+		globalOpts,
+
+		// presets
+		presetModel.fullList(),
+		wdg::getSelectedItemIndex( ui->presetListView ),
+
+		// global settings
+		engineSettings,
+		iwadSettings,
+		mapSettings,
+		modSettings,
+		settings,
+
+		appearance,
+	};
+
+	QJsonDocument jsonDoc = serializeOptionsToJsonDoc( opts );
+
+	return writeJsonToFile( jsonDoc, filePath, "options" );
+}
+
+std::unique_ptr< JsonDocumentCtx > MainWindow::readOptions( const QString & filePath )
+{
+	auto jsonDoc = readJsonFromFile( filePath, "options" );
+	if (fs::isValidFile( filePath ) && (!jsonDoc || !jsonDoc->isValid()))  // file exists but couldn't be read or is not a valid JSON
+	{
+		optionsCorrupted = true;   // don't overwrite it, give user chance to fix it
+	}
+	return jsonDoc;
+}
+
+bool MainWindow::reloadOptions( const QString & filePath )
+{
+	auto jsonDoc = readOptions( filePath );
+	if (!jsonDoc || !jsonDoc->isValid())
+	{
+		return false;
+	}
+
+	// Load appearance as last, so that possible loading errors are still displayed
+	// using the current application style and colors to prevent unreadable error messages.
+
+	loadTheRestOfOptions( *jsonDoc );
+
+	loadAppearance( *jsonDoc, /*loadGeometry*/ false );
+
+	return true;
+}
+
+void MainWindow::loadAppearance( const JsonDocumentCtx & optionsDoc, bool loadGeometry )
+{
+	AppearanceToLoad opts
+	{
+		appearance,
+	};
+
+	deserializeAppearanceFromJsonDoc( optionsDoc, opts, loadGeometry );
+
+	restoreAppearance( opts.appearance, loadGeometry );
+}
+
+void MainWindow::loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc )
+{
+	// Some options can be read directly into the class members using references,
+	// but the models can't, because the UI must be prepared for reseting its models first.
+	OptionsToLoad opts
+	{
+		// files - load into intermediate storage
+		{},  // engines
+		{},  // IWADs
+
+		// options - load directly into this class members
+		launchOpts,
+		multOpts,
+		gameOpts,
+		compatOpts,
+		videoOpts,
+		audioOpts,
+		globalOpts,
+
+		// presets - read into intermediate storage
+		{},  // presets
+		{},  // selected preset
+
+		// global settings - load directly into this class members
+		engineSettings,
+		iwadSettings,
+		mapSettings,
+		modSettings,
+		settings,
+	};
+
+	deserializeOptionsFromJsonDoc( optionsDoc, opts );
+
+	restoreLoadedOptions( std::move(opts) );
+}
+
+bool MainWindow::isCacheDirty() const
+{
+	return os::g_cachedExeInfo.isDirty();
+	//	|| doom::g_cachedWadInfo.isDirty();
+}
+
+bool MainWindow::saveCache( const QString & filePath )
+{
+	QJsonObject jsRoot;
+	jsRoot["exe_info"] = os::g_cachedExeInfo.serialize();
+	//jsRoot["wad_info"] = doom::g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
+
+	QJsonDocument jsonDoc( jsRoot );
+	return writeJsonToFile( jsonDoc, filePath, "file-info cache" );
+}
+
+bool MainWindow::loadCache( const QString & filePath )
+{
+	auto jsonDoc = readJsonFromFile( filePath, "file-info cache", IgnoreEmpty );
+	if (!jsonDoc || !jsonDoc->isValid())
+	{
+		return false;
+	}
+
+	const JsonObjectCtx & jsRoot = jsonDoc->rootObject();
+	if (JsonObjectCtx jsExeCache = jsRoot.getObject("exe_info"))
+		os::g_cachedExeInfo.deserialize( jsExeCache );
+	//if (JsonObjectCtx jsWadCache = jsRoot.getObject("wad_info"))
+	//	doom::g_cachedWadInfo.deserialize( jsWadCache );  // not needed, WAD parsing is probably faster than JSON parsing
+
+	return true;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  restoring stored options into the UI
+
+void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
+{
+	// Restoring any stored options is tricky.
+	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
+	// causes the corresponding callbacks to be called which in turn might cause some other stored value to be changed.
+	// For example  ui->engineCmbBox->setCurrentIndex( idx )  calls  selectEngine( idx )  which might indirectly call
+	// selectConfig( idx )  which will overwrite the stored selected config and we will then restore a wrong one.
+	// The least complicated workaround seems to be simply setting a flag indicating that we are in the middle of
+	// restoring saved options, and then prevent storing values when this flag is set.
+	restoringOptionsInProgress = true;
+
+	// preset must be deselected first, so that the cleared selections don't save in the selected preset
+	wdg::deselectAllAndUnsetCurrent( ui->presetListView );
+
+	// engines
+	{
+		ui->engineCmbBox->setCurrentIndex( -1 );  // if something is selected, this invokes the callback, which updates the dependent widgets
+
+		disableSelectionCallbacks = true;  // prevent updating engine-dependent widgets back and forth
+
+		engineModel.startCompleteUpdate();
+		engineModel.assignList( std::move(opts.engines) );
+		fillDerivedEngineInfo( engineModel );  // fill the derived fields of EngineInfo
+		engineModel.finishCompleteUpdate();       // if the list is not empty, this changes the engine index from -1 to 0,
+		ui->engineCmbBox->setCurrentIndex( -1 );  // but we need it to stay -1
+
+		disableSelectionCallbacks = false;
+
+		// mark the default engine, if chosen
+		int defaultIdx = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
+		if (defaultIdx >= 0)
+		{
+			engineModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
+		}
+		else if (!engineSettings.defaultEngine.isEmpty())
+		{
+			reportUserError( nullptr, "Default engine no longer exists",
+				"Engine that was marked as default ("%engineSettings.defaultEngine%") no longer exists. Please select another one." );
+		}
+	}
+
+	// IWADs
+	{
+		wdg::deselectAllAndUnsetCurrent( ui->iwadListView );  // if something is selected, this invokes the callback, which updates the dependent widgets
+
+		if (iwadSettings.updateFromDir)
+		{
+			updateIWADsFromDir();  // populates the list from iwadSettings.dir
+		}
+		else
+		{
+			iwadModel.startCompleteUpdate();
+			iwadModel.assignList( std::move(opts.iwads) );
+			iwadModel.finishCompleteUpdate();
+		}
+
+		// mark the default IWAD, if chosen
+		int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
+		if (defaultIdx >= 0)
+		{
+			iwadModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
+		}
+		else if (!iwadSettings.defaultIWAD.isEmpty())
+		{
+			reportUserError( nullptr, "Default IWAD no longer exists",
+				"IWAD that was marked as default ("%iwadSettings.defaultIWAD%") no longer exists. Please select another one." );
+		}
+	}
+
+	// maps
+	{
+		wdg::deselectAllAndUnsetCurrent( ui->mapDirView );
+
+		resetMapDirModelAndView();  // populates the list from mapSettings.dir (asynchronously)
+	}
+
+	// mods
+	{
+		wdg::deselectAllAndUnsetCurrent( ui->modListView );
+
+		modModel.startCompleteUpdate();
+		modModel.clear();
+		// mods will be restored to the UI, when a preset is selected
+		modModel.finishCompleteUpdate();
+
+		ui->modListView->toggleIcons( modSettings.showIcons );
+	}
+
+	// presets
+	{
+		wdg::deselectAllAndUnsetCurrent( ui->presetListView );  // this invokes the callback, which disables the dependent widgets
+
+		presetModel.startCompleteUpdate();
+		presetModel.assignList( std::move(opts.presets) );
+		presetModel.finishCompleteUpdate();
+	}
+
+	// make sure all paths loaded from JSON are stored in correct format
+	togglePathStyle( settings.pathStyle );
+
+	// load the last selected preset
+	if (!opts.selectedPreset.isEmpty())
+	{
+		int selectedPresetIdx = findSuch( presetModel, [&]( const Preset & preset )
+		                                               { return preset.name == opts.selectedPreset; } );
+		if (selectedPresetIdx >= 0)
+		{
+			// This invokes the callback, which enables the dependent widgets and calls restorePreset(...)
+			wdg::selectAndSetCurrentByIndex( ui->presetListView, selectedPresetIdx );
+			wdg::scrollToItemAtIndex( ui->presetListView, selectedPresetIdx );
+		}
+		else
+		{
+			reportUserError( nullptr, "Preset no longer exists",
+				"Preset that was selected last time ("%opts.selectedPreset%") no longer exists. Did you mess up with the options.json?" );
+		}
+	}
+
+	// this must be done after the lists are already updated because we want to select existing items in combo boxes,
+	//               and after preset loading because the preset will select engine and IWAD which will fill some combo boxes
+	if (settings.launchOptsStorage == StoreGlobally)
+		restoreLaunchAndMultOptions( launchOpts, multOpts );  // this clears items that are invalid
+
+	if (settings.gameOptsStorage == StoreGlobally)
+		restoreGameplayOptions( gameOpts );
+
+	if (settings.compatOptsStorage == StoreGlobally)
+		restoreCompatibilityOptions( compatOpts );
+
+	if (settings.videoOptsStorage == StoreGlobally)
+		restoreVideoOptions( videoOpts );
+
+	if (settings.audioOptsStorage == StoreGlobally)
+		restoreAudioOptions( audioOpts );
+
+	restoreGlobalOptions( globalOpts );
+
+	restoringOptionsInProgress = false;
+
+	updateLaunchCommand();
+}
+
+void MainWindow::restorePreset( int presetIdx )
+{
+	// Restoring any stored options is tricky.
+	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
+	// causes the corresponding callbacks to be called which in turn might cause some other stored value to be changed.
+	// For example  ui->engineCmbBox->setCurrentIndex( idx )  calls  selectEngine( idx )  which might indirectly call
+	// selectConfig( idx )  which will overwrite the stored selected config and we will then restore a wrong one.
+	// The least complicated workaround seems to be simply setting a flag indicating that we are in the middle of
+	// restoring saved options, and then prevent storing values when this flag is set.
+
+	restoringPresetInProgress = true;
+
+	Preset & preset = presetModel[ presetIdx ];
+
+	restoreSelectedEngine( preset );
+	restoreSelectedConfig( preset );
+	restoreSelectedIWAD( preset );
+	restoreSelectedMods( preset );
+
+	// Beware that when calling this from restoreLoadedOptions, the mapModel might not have been populated yet,
+	// because it's done asynchronously in a separate thread. In that case this needs to be called again
+	// in a callback connected to QFileSystem event, when the mapModel is finally populated.
+	restoreSelectedMapPacks( preset );
+
+	if (settings.launchOptsStorage == StoreToPreset)
+		restoreLaunchAndMultOptions( preset.launchOpts, preset.multOpts );  // this clears items that are invalid
+
+	if (settings.gameOptsStorage == StoreToPreset)
+		restoreGameplayOptions( preset.gameOpts );
+
+	if (settings.compatOptsStorage == StoreToPreset)
+		restoreCompatibilityOptions( preset.compatOpts );
+
+	if (settings.videoOptsStorage == StoreToPreset)
+		restoreVideoOptions( preset.videoOpts );
+
+	if (settings.audioOptsStorage == StoreToPreset)
+		restoreAudioOptions( preset.audioOpts );
+
+	restoreAlternativePaths( preset.altPaths );
+
+	// restore additional command line arguments
+	ui->presetCmdArgsLine->setText( preset.cmdArgs );
+
+	restoreEnvVars( preset.envVars, ui->presetEnvVarTable );
+
+	restoringPresetInProgress = false;
+
+	// if "Use preset name as directory" is enabled, overwrite the preset custom directories with its name
+	// do it with restoringInProgress == false to update the current preset with the new overwriten dirs.
+	if (globalOpts.usePresetNameAsDir)
+	{
+		setAlternativeDirs( fs::sanitizePath( preset.name ) );
+	}
+
+	updateLaunchCommand();
+}
+
+void MainWindow::restoreSelectedEngine( Preset & preset )
+{
+	int origIdx = ui->engineCmbBox->currentIndex();
+	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
+
+	ui->engineCmbBox->setCurrentIndex( -1 );
+
+	if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
+	{
+		int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
+												   { return engine.executablePath == preset.selectedEnginePath; } );
+		if (engineIdx >= 0)
+		{
+			ui->engineCmbBox->setCurrentIndex( engineIdx );
+
+			if (!fs::isValidFile( preset.selectedEnginePath ))
+			{
+				reportUserError( this, "Engine no longer exists",
+					"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists. "
+					"Please update its path in Menu -> Initial Setup, or select another one."
+				);
+				highlightInvalidListItem( engineModel[ engineIdx ] );
+			}
+		}
+		else
+		{
+			reportUserError( this, "Engine no longer exists",
+				"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list. "
+				"Please select another one."
+			);
+			preset.selectedEnginePath.clear();
+			preset.compatOpts.compatLevel = -1;  // compat level is engine-specific so the previous level is no longer valid
+		}
+	}
+
+	disableSelectionCallbacks = false;
+	int newIdx = ui->engineCmbBox->currentIndex();
+
+	// manually notify our class about the change, so that the preset and dependent widgets get updated
+	// This is needed before configs, saves and demos are restored, so that the entries are ready to be selected from.
+	if (newIdx != origIdx)
+	{
+		onEngineSelected( newIdx );
+	}
+}
+
+void MainWindow::restoreSelectedConfig( Preset & preset )
+{
+	int origIdx = ui->configCmbBox->currentIndex();
+	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
+
+	ui->configCmbBox->setCurrentIndex( -1 );
+
+	if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
+	{
+		int configIdx = findSuch( configModel, [&]( const ConfigFile & config )
+												   { return config.fileName == preset.selectedConfig; } );
+		if (configIdx >= 0)
+		{
+			ui->configCmbBox->setCurrentIndex( configIdx );
+
+			// No sense to verify if this config file exists, the configModel has just been updated during
+			// selectEngine( ui->engineCmbBox->currentIndex() ), so there are only existing entries.
+		}
+		else
+		{
+			reportUserError( this, "Config no longer exists",
+				"Config file selected for this preset ("%preset.selectedConfig%") no longer exists. "
+				"Please select another one."
+			);
+			preset.selectedConfig.clear();
+		}
+	}
+
+	disableSelectionCallbacks = false;
+	int newIdx = ui->configCmbBox->currentIndex();
+
+	// manually notify our class about the change, so that the preset and dependent widgets get updated
+	if (newIdx != origIdx)
+	{
+		onConfigSelected( newIdx );
+	}
+}
+
+void MainWindow::restoreSelectedIWAD( Preset & preset )
+{
+	int origIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
+	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
+
+	wdg::deselectAllAndUnsetCurrent( ui->iwadListView );
+
+	if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
+	{
+		int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
+		if (iwadIdx >= 0)
+		{
+			wdg::selectAndSetCurrentByIndex( ui->iwadListView, iwadIdx );
+			wdg::scrollToItemAtIndex( ui->iwadListView, iwadIdx );
+
+			if (!fs::isValidFile( preset.selectedIWAD ))
+			{
+				reportUserError( this, "IWAD no longer exists",
+					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
+					"Please select another one."
+				);
+				highlightInvalidListItem( iwadModel[ iwadIdx ] );
+			}
+		}
+		else
+		{
+			reportUserError( this, "IWAD no longer exists",
+				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
+				"Please select another one."
+			);
+			preset.selectedIWAD.clear();
+		}
+	}
+
+	disableSelectionCallbacks = false;
+	int newIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
+
+	// manually notify our class about the change, so that the preset and dependent widgets get updated
+	// This is needed before launch options are restored, so that the map names are ready to be selected.
+	if (newIwadIdx != origIwadIdx)
+	{
+		onIWADToggled( QItemSelection(), QItemSelection()/*TODO*/ );
+	}
+}
+
+void MainWindow::restoreSelectedMapPacks( Preset & preset )
+{
+	auto origSelection = ui->mapDirView->selectionModel()->selection();
+	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
+
+	QDir mapRootDir = mapModel.rootDirectory();
+
+	wdg::deselectAllAndUnsetCurrent( ui->mapDirView );
+
+	const QStringVec mapPacksCopy = preset.selectedMapPacks;
+	preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
+	for (const QString & path : mapPacksCopy)
+	{
+		QModelIndex mapIdx = mapModel.index( path );
+		if (mapIdx.isValid() && fs::isInsideDir( path, mapRootDir ))
+		{
+			if (fs::isValidEntry( path ))
+			{
+				preset.selectedMapPacks.append( path );  // put back only items that are valid
+				wdg::selectAndSetCurrentByIndex( ui->mapDirView, mapIdx );
+				wdg::scrollToItemAtIndex( ui->mapDirView, mapIdx );
+			}
+			else
+			{
+				reportUserError( this, "Map file no longer exists",
+					"Map file selected for this preset ("%path%") no longer exists."
+				);
+			}
+		}
+		else
+		{
+			reportUserError( this, "Map file no longer exists",
+				"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")."
+			);
+		}
+	}
+
+	disableSelectionCallbacks = false;
+	auto newSelection = ui->mapDirView->selectionModel()->selection();
+
+	// manually notify our class about the change, so that the preset and dependent widgets get updated
+	if (newSelection != origSelection)
+	{
+		onMapPackToggled( newSelection, QItemSelection()/*TODO*/ );
+	}
+}
+
+void MainWindow::restoreSelectedMods( Preset & preset )
+{
+	wdg::deselectAllAndUnsetCurrent( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
+
+	modModel.startCompleteUpdate();
+	modModel.clear();
+	for (Mod & mod : preset.mods)
+	{
+		modModel.append( mod );
+		if ((!mod.isSeparator && !mod.isCmdArg) && !fs::isValidEntry( mod.path ))
+		{
+			// Let's just highlight it now, we will show warning when the user tries to launch it.
+			//reportUserError( this, "Mod no longer exists",
+			//	"A mod file \""%mod.path%"\" from this preset no longer exists. Please update it." );
+			highlightInvalidListItem( modModel.last() );
+		}
+	}
+	modModel.finishCompleteUpdate();
+}
+
+void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const MultiplayerOptions & multOpts )
+{
+	// launch mode
+	switch (launchOpts.mode)
+	{
+	 case LaunchMode::LaunchMap:
+		ui->launchMode_map->click();
+		break;
+	 case LaunchMode::LoadSave:
+		ui->launchMode_savefile->click();
+		break;
+	 case LaunchMode::RecordDemo:
+		ui->launchMode_recordDemo->click();
+		break;
+	 case LaunchMode::ReplayDemo:
+		ui->launchMode_replayDemo->click();
+		break;
+	 default:
+		ui->launchMode_default->click();
+		break;
+	}
+
+	// details of launch mode
+	ui->mapCmbBox->setCurrentIndex( ui->mapCmbBox->findText( launchOpts.mapName ) );
+	if (!launchOpts.saveFile.isEmpty())
+	{
+		int saveFileIdx = findSuch( saveModel, [&]( const SaveFile & save )
+		                                       { return save.fileName == launchOpts.saveFile; } );
+		ui->saveFileCmbBox->setCurrentIndex( saveFileIdx );
+
+		if (saveFileIdx < 0)
+		{
+			reportUserError( this, "Save file no longer exists",
+				"Save file \""%launchOpts.saveFile%"\" no longer exists. Please select another one."
+			);
+			launchOpts.saveFile.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
+		}
+	}
+	ui->mapCmbBox_demo->setCurrentIndex( ui->mapCmbBox_demo->findText( launchOpts.mapName_demo ) );
+	ui->demoFileLine_record->setText( launchOpts.demoFile_record );
+	if (!launchOpts.demoFile_replay.isEmpty())
+	{
+		int demoFileIdx = findSuch( demoModel, [&]( const DemoFile & demo )
+		                                       { return demo.fileName == launchOpts.demoFile_replay; } );
+		ui->demoFileCmbBox_replay->setCurrentIndex( demoFileIdx );
+
+		if (demoFileIdx < 0)
+		{
+			reportUserError( this, "Demo file no longer exists",
+				"Demo file \""%launchOpts.demoFile_replay%"\" no longer exists. Please select another one."
+			);
+			launchOpts.demoFile_replay.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
+		}
+	}
+
+	// multiplayer
+	ui->multiplayerGrpBox->setChecked( multOpts.isMultiplayer );
+	ui->multRoleCmbBox->setCurrentIndex( int( multOpts.multRole ) );
+	ui->hostnameLine->setText( multOpts.hostName );
+	ui->portSpinBox->setValue( multOpts.port );
+	ui->netModeCmbBox->setCurrentIndex( int( multOpts.netMode ) );
+	ui->gameModeCmbBox->setCurrentIndex( int( multOpts.gameMode ) );
+	ui->playerCountSpinBox->setValue( int( multOpts.playerCount ) );
+	ui->teamDmgSpinBox->setValue( multOpts.teamDamage );
+	ui->timeLimitSpinBox->setValue( int( multOpts.timeLimit ) );
+	ui->fragLimitSpinBox->setValue( int( multOpts.fragLimit ) );
+}
+
+void MainWindow::restoreGameplayOptions( const GameplayOptions & opts )
+{
+	ui->skillCmbBox->setCurrentIndex( opts.skillIdx - 1 );
+	if (opts.skillIdx < Skill::Custom)
+		ui->skillSpinBox->setValue( opts.skillIdx );
+	else
+		ui->skillSpinBox->setValue( opts.skillNum );
+
+	ui->noMonstersChkBox->setChecked( opts.noMonsters );
+	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
+	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
+	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
+}
+
+void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts )
+{
+	int compatLevelIdx = opts.compatLevel + 1;  // first item is reserved for indicating no selection
+	if (compatLevelIdx >= ui->compatLevelCmbBox->count())
+	{
+		// engine might have been removed, or its family was changed by the user
+		logLogicError() << "stored compat level ("<<compatLevelIdx<<") is out of bounds of the current combo-box content";
+		return;
+	}
+	ui->compatLevelCmbBox->setCurrentIndex( compatLevelIdx );
+
+	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts );
+}
+
+void MainWindow::restoreAlternativePaths( const AlternativePaths & opts )
+{
+	ui->saveDirLine->setText( opts.saveDir );
+	ui->screenshotDirLine->setText( opts.screenshotDir );
+}
+
+void MainWindow::restoreVideoOptions( const VideoOptions & opts )
+{
+	if (opts.monitorIdx < ui->monitorCmbBox->count())
+		ui->monitorCmbBox->setCurrentIndex( opts.monitorIdx );
+	if (opts.resolutionX > 0)
+		ui->resolutionXLine->setText( QString::number( opts.resolutionX ) );
+	if (opts.resolutionY > 0)
+		ui->resolutionYLine->setText( QString::number( opts.resolutionY ) );
+	ui->showFpsChkBox->setChecked( opts.showFPS );
+}
+
+void MainWindow::restoreAudioOptions( const AudioOptions & opts )
+{
+	ui->noSoundChkBox->setChecked( opts.noSound );
+	ui->noSfxChkBox->setChecked( opts.noSFX );
+	ui->noMusicChkBox->setChecked( opts.noMusic );
+}
+
+void MainWindow::restoreGlobalOptions( const GlobalOptions & opts )
+{
+	ui->usePresetNameChkBox->setChecked( opts.usePresetNameAsDir );
+
+	ui->globalCmdArgsLine->setText( opts.cmdArgs );
+
+	restoreEnvVars( opts.envVars, ui->globalEnvVarTable );
+}
+
+void MainWindow::restoreEnvVars( const EnvVars & envVars, QTableWidget * table )
+{
+	disableEnvVarsCallbacks = true;
+
+	for (const auto & envVar : envVars)
+	{
+		int newRowIdx = table->rowCount();
+		table->insertRow( newRowIdx );
+		table->setItem( newRowIdx, VarNameColumn, new QTableWidgetItem( envVar.name ) );
+		table->setItem( newRowIdx, VarValueColumn, new QTableWidgetItem( envVar.value ) );
+	}
+
+	disableEnvVarsCallbacks = false;
+}
+
+void MainWindow::restoreAppearance( const AppearanceSettings & appearance, bool restoreGeometry )
+{
+	// set style first, on Windows it may be overriden by color scheme
+	if (!appearance.appStyle.isNull())
+		themes::setAppStyle( appearance.appStyle );
+
+	if (IS_WINDOWS || appearance.colorScheme != ColorScheme::SystemDefault)
+		themes::setAppColorScheme( appearance.colorScheme );
+
+	if (restoreGeometry)
+	{
+		restoreWindowGeometry( appearance.geometry );
+	}
+}
+
+void MainWindow::restoreWindowGeometry( const WindowGeometry & geometry )
+{
+	auto newGeometry = this->geometry();  // start with the current geometry and update it with the values we have
+
+	if (geometry.x != INT_MIN && geometry.y != INT_MIN)  // our internal marker that the coordinates have not been read properly
+	{
+		if (areScreenCoordinatesValid( geometry.x, geometry.y ))  // move the window only if the coordinates make sense
+		{
+			newGeometry.moveTo( geometry.x, geometry.y );
+		}
+		else
+		{
+			logInfo() << "invalid coordinates detected ("<<geometry.x<<","<<geometry.y<<") leaving window at the default position";
+		}
+	}
+
+	if (geometry.width > 0 && geometry.height > 0)
+	{
+		newGeometry.setSize({ geometry.width, geometry.height });
+	}
+
+	this->setGeometry( newGeometry );
 }
 
 
@@ -2643,9 +3381,6 @@ void MainWindow::onNoMusicToggled( bool checked )
 //----------------------------------------------------------------------------------------------------------------------
 //  environment variables
 
-static constexpr int VarNameColumn = 0;
-static constexpr int VarValueColumn = 1;
-
 void MainWindow::presetEnvVarAdd()
 {
 	disableEnvVarsCallbacks = true;
@@ -3110,741 +3845,6 @@ void MainWindow::updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks
 		// selection changed while the callbacks were disabled, we need to call them manually
 		onMapChanged_demo( ui->mapCmbBox->currentText() );
 	}
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-//  saving and loading user data
-
-bool MainWindow::saveOptions( const QString & filePath )
-{
-	// This memeber is not updated regularly, because it is only needed for saving app state. Update it now.
-	appearance.geometry = this->geometry();
-
-	OptionsToSave opts =
-	{
-		// files
-		engineModel.list(),
-		iwadModel.list(),
-
-		// options
-		launchOpts,
-		multOpts,
-		gameOpts,
-		compatOpts,
-		videoOpts,
-		audioOpts,
-		globalOpts,
-
-		// presets
-		presetModel.fullList(),
-		wdg::getSelectedItemIndex( ui->presetListView ),
-
-		// global settings
-		engineSettings,
-		iwadSettings,
-		mapSettings,
-		modSettings,
-		settings,
-
-		appearance,
-	};
-
-	QJsonDocument jsonDoc = serializeOptionsToJsonDoc( opts );
-
-	return writeJsonToFile( jsonDoc, filePath, "options" );
-}
-
-std::unique_ptr< JsonDocumentCtx > MainWindow::readOptions( const QString & filePath )
-{
-	auto jsonDoc = readJsonFromFile( filePath, "options" );
-	if (fs::isValidFile( filePath ) && (!jsonDoc || !jsonDoc->isValid()))  // file exists but couldn't be read or is not a valid JSON
-	{
-		optionsCorrupted = true;   // don't overwrite it, give user chance to fix it
-	}
-	return jsonDoc;
-}
-
-bool MainWindow::reloadOptions( const QString & filePath )
-{
-	auto jsonDoc = readOptions( filePath );
-	if (!jsonDoc || !jsonDoc->isValid())
-	{
-		return false;
-	}
-
-	// Load appearance as last, so that possible loading errors are still displayed
-	// using the current application style and colors to prevent unreadable error messages.
-
-	loadTheRestOfOptions( *jsonDoc );
-
-	loadAppearance( *jsonDoc, /*loadGeometry*/ false );
-
-	return true;
-}
-
-void MainWindow::loadAppearance( const JsonDocumentCtx & optionsDoc, bool loadGeometry )
-{
-	AppearanceToLoad opts
-	{
-		appearance,
-	};
-
-	deserializeAppearanceFromJsonDoc( optionsDoc, opts, loadGeometry );
-
-	restoreAppearance( opts.appearance, loadGeometry );
-}
-
-void MainWindow::loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc )
-{
-	// Some options can be read directly into the class members using references,
-	// but the models can't, because the UI must be prepared for reseting its models first.
-	OptionsToLoad opts
-	{
-		// files - load into intermediate storage
-		{},  // engines
-		{},  // IWADs
-
-		// options - load directly into this class members
-		launchOpts,
-		multOpts,
-		gameOpts,
-		compatOpts,
-		videoOpts,
-		audioOpts,
-		globalOpts,
-
-		// presets - read into intermediate storage
-		{},  // presets
-		{},  // selected preset
-
-		// global settings - load directly into this class members
-		engineSettings,
-		iwadSettings,
-		mapSettings,
-		modSettings,
-		settings,
-	};
-
-	deserializeOptionsFromJsonDoc( optionsDoc, opts );
-
-	restoreLoadedOptions( std::move(opts) );
-}
-
-bool MainWindow::isCacheDirty() const
-{
-	return os::g_cachedExeInfo.isDirty();
-	//	|| doom::g_cachedWadInfo.isDirty();
-}
-
-bool MainWindow::saveCache( const QString & filePath )
-{
-	QJsonObject jsRoot;
-	jsRoot["exe_info"] = os::g_cachedExeInfo.serialize();
-	//jsRoot["wad_info"] = doom::g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
-
-	QJsonDocument jsonDoc( jsRoot );
-	return writeJsonToFile( jsonDoc, filePath, "file-info cache" );
-}
-
-bool MainWindow::loadCache( const QString & filePath )
-{
-	auto jsonDoc = readJsonFromFile( filePath, "file-info cache", IgnoreEmpty );
-	if (!jsonDoc || !jsonDoc->isValid())
-	{
-		return false;
-	}
-
-	const JsonObjectCtx & jsRoot = jsonDoc->rootObject();
-	if (JsonObjectCtx jsExeCache = jsRoot.getObject("exe_info"))
-		os::g_cachedExeInfo.deserialize( jsExeCache );
-	//if (JsonObjectCtx jsWadCache = jsRoot.getObject("wad_info"))
-	//	doom::g_cachedWadInfo.deserialize( jsWadCache );  // not needed, WAD parsing is probably faster than JSON parsing
-
-	return true;
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-//  restoring stored options into the UI
-
-void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
-{
-	// Restoring any stored options is tricky.
-	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
-	// causes the corresponding callbacks to be called which in turn might cause some other stored value to be changed.
-	// For example  ui->engineCmbBox->setCurrentIndex( idx )  calls  selectEngine( idx )  which might indirectly call
-	// selectConfig( idx )  which will overwrite the stored selected config and we will then restore a wrong one.
-	// The least complicated workaround seems to be simply setting a flag indicating that we are in the middle of
-	// restoring saved options, and then prevent storing values when this flag is set.
-	restoringOptionsInProgress = true;
-
-	// preset must be deselected first, so that the cleared selections don't save in the selected preset
-	wdg::deselectAllAndUnsetCurrent( ui->presetListView );
-
-	// engines
-	{
-		ui->engineCmbBox->setCurrentIndex( -1 );  // if something is selected, this invokes the callback, which updates the dependent widgets
-
-		disableSelectionCallbacks = true;  // prevent updating engine-dependent widgets back and forth
-
-		engineModel.startCompleteUpdate();
-		engineModel.assignList( std::move(opts.engines) );
-		fillDerivedEngineInfo( engineModel );  // fill the derived fields of EngineInfo
-		engineModel.finishCompleteUpdate();       // if the list is not empty, this changes the engine index from -1 to 0,
-		ui->engineCmbBox->setCurrentIndex( -1 );  // but we need it to stay -1
-
-		disableSelectionCallbacks = false;
-
-		// mark the default engine, if chosen
-		int defaultIdx = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
-		if (defaultIdx >= 0)
-		{
-			engineModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
-		}
-		else if (!engineSettings.defaultEngine.isEmpty())
-		{
-			reportUserError( nullptr, "Default engine no longer exists",
-				"Engine that was marked as default ("%engineSettings.defaultEngine%") no longer exists. Please select another one." );
-		}
-	}
-
-	// IWADs
-	{
-		wdg::deselectAllAndUnsetCurrent( ui->iwadListView );  // if something is selected, this invokes the callback, which updates the dependent widgets
-
-		if (iwadSettings.updateFromDir)
-		{
-			updateIWADsFromDir();  // populates the list from iwadSettings.dir
-		}
-		else
-		{
-			iwadModel.startCompleteUpdate();
-			iwadModel.assignList( std::move(opts.iwads) );
-			iwadModel.finishCompleteUpdate();
-		}
-
-		// mark the default IWAD, if chosen
-		int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
-		if (defaultIdx >= 0)
-		{
-			iwadModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
-		}
-		else if (!iwadSettings.defaultIWAD.isEmpty())
-		{
-			reportUserError( nullptr, "Default IWAD no longer exists",
-				"IWAD that was marked as default ("%iwadSettings.defaultIWAD%") no longer exists. Please select another one." );
-		}
-	}
-
-	// maps
-	{
-		wdg::deselectAllAndUnsetCurrent( ui->mapDirView );
-
-		resetMapDirModelAndView();  // populates the list from mapSettings.dir (asynchronously)
-	}
-
-	// mods
-	{
-		wdg::deselectAllAndUnsetCurrent( ui->modListView );
-
-		modModel.startCompleteUpdate();
-		modModel.clear();
-		// mods will be restored to the UI, when a preset is selected
-		modModel.finishCompleteUpdate();
-
-		ui->modListView->toggleIcons( modSettings.showIcons );
-	}
-
-	// presets
-	{
-		wdg::deselectAllAndUnsetCurrent( ui->presetListView );  // this invokes the callback, which disables the dependent widgets
-
-		presetModel.startCompleteUpdate();
-		presetModel.assignList( std::move(opts.presets) );
-		presetModel.finishCompleteUpdate();
-	}
-
-	// make sure all paths loaded from JSON are stored in correct format
-	togglePathStyle( settings.pathStyle );
-
-	// load the last selected preset
-	if (!opts.selectedPreset.isEmpty())
-	{
-		int selectedPresetIdx = findSuch( presetModel, [&]( const Preset & preset )
-		                                               { return preset.name == opts.selectedPreset; } );
-		if (selectedPresetIdx >= 0)
-		{
-			// This invokes the callback, which enables the dependent widgets and calls restorePreset(...)
-			wdg::selectAndSetCurrentByIndex( ui->presetListView, selectedPresetIdx );
-			wdg::scrollToItemAtIndex( ui->presetListView, selectedPresetIdx );
-		}
-		else
-		{
-			reportUserError( nullptr, "Preset no longer exists",
-				"Preset that was selected last time ("%opts.selectedPreset%") no longer exists. Did you mess up with the options.json?" );
-		}
-	}
-
-	// this must be done after the lists are already updated because we want to select existing items in combo boxes,
-	//               and after preset loading because the preset will select engine and IWAD which will fill some combo boxes
-	if (settings.launchOptsStorage == StoreGlobally)
-		restoreLaunchAndMultOptions( launchOpts, multOpts );  // this clears items that are invalid
-
-	if (settings.gameOptsStorage == StoreGlobally)
-		restoreGameplayOptions( gameOpts );
-
-	if (settings.compatOptsStorage == StoreGlobally)
-		restoreCompatibilityOptions( compatOpts );
-
-	if (settings.videoOptsStorage == StoreGlobally)
-		restoreVideoOptions( videoOpts );
-
-	if (settings.audioOptsStorage == StoreGlobally)
-		restoreAudioOptions( audioOpts );
-
-	restoreGlobalOptions( globalOpts );
-
-	restoringOptionsInProgress = false;
-
-	updateLaunchCommand();
-}
-
-void MainWindow::restorePreset( int presetIdx )
-{
-	// Restoring any stored options is tricky.
-	// Every change of a selection, like  cmbBox->setCurrentIndex( stored.idx )  or  selectItemByIdx( stored.idx )
-	// causes the corresponding callbacks to be called which in turn might cause some other stored value to be changed.
-	// For example  ui->engineCmbBox->setCurrentIndex( idx )  calls  selectEngine( idx )  which might indirectly call
-	// selectConfig( idx )  which will overwrite the stored selected config and we will then restore a wrong one.
-	// The least complicated workaround seems to be simply setting a flag indicating that we are in the middle of
-	// restoring saved options, and then prevent storing values when this flag is set.
-
-	restoringPresetInProgress = true;
-
-	Preset & preset = presetModel[ presetIdx ];
-
-	restoreSelectedEngine( preset );
-	restoreSelectedConfig( preset );
-	restoreSelectedIWAD( preset );
-	restoreSelectedMods( preset );
-
-	// Beware that when calling this from restoreLoadedOptions, the mapModel might not have been populated yet,
-	// because it's done asynchronously in a separate thread. In that case this needs to be called again
-	// in a callback connected to QFileSystem event, when the mapModel is finally populated.
-	restoreSelectedMapPacks( preset );
-
-	if (settings.launchOptsStorage == StoreToPreset)
-		restoreLaunchAndMultOptions( preset.launchOpts, preset.multOpts );  // this clears items that are invalid
-
-	if (settings.gameOptsStorage == StoreToPreset)
-		restoreGameplayOptions( preset.gameOpts );
-
-	if (settings.compatOptsStorage == StoreToPreset)
-		restoreCompatibilityOptions( preset.compatOpts );
-
-	if (settings.videoOptsStorage == StoreToPreset)
-		restoreVideoOptions( preset.videoOpts );
-
-	if (settings.audioOptsStorage == StoreToPreset)
-		restoreAudioOptions( preset.audioOpts );
-
-	restoreAlternativePaths( preset.altPaths );
-
-	// restore additional command line arguments
-	ui->presetCmdArgsLine->setText( preset.cmdArgs );
-
-	restoreEnvVars( preset.envVars, ui->presetEnvVarTable );
-
-	restoringPresetInProgress = false;
-
-	// if "Use preset name as directory" is enabled, overwrite the preset custom directories with its name
-	// do it with restoringInProgress == false to update the current preset with the new overwriten dirs.
-	if (globalOpts.usePresetNameAsDir)
-	{
-		setAlternativeDirs( fs::sanitizePath( preset.name ) );
-	}
-
-	updateLaunchCommand();
-}
-
-void MainWindow::restoreSelectedEngine( Preset & preset )
-{
-	int origIdx = ui->engineCmbBox->currentIndex();
-	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
-
-	ui->engineCmbBox->setCurrentIndex( -1 );
-
-	if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
-	{
-		int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
-												   { return engine.executablePath == preset.selectedEnginePath; } );
-		if (engineIdx >= 0)
-		{
-			ui->engineCmbBox->setCurrentIndex( engineIdx );
-
-			if (!fs::isValidFile( preset.selectedEnginePath ))
-			{
-				reportUserError( this, "Engine no longer exists",
-					"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists. "
-					"Please update its path in Menu -> Initial Setup, or select another one."
-				);
-				highlightInvalidListItem( engineModel[ engineIdx ] );
-			}
-		}
-		else
-		{
-			reportUserError( this, "Engine no longer exists",
-				"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list. "
-				"Please select another one."
-			);
-			preset.selectedEnginePath.clear();
-			preset.compatOpts.compatLevel = -1;  // compat level is engine-specific so the previous level is no longer valid
-		}
-	}
-
-	disableSelectionCallbacks = false;
-	int newIdx = ui->engineCmbBox->currentIndex();
-
-	// manually notify our class about the change, so that the preset and dependent widgets get updated
-	// This is needed before configs, saves and demos are restored, so that the entries are ready to be selected from.
-	if (newIdx != origIdx)
-	{
-		onEngineSelected( newIdx );
-	}
-}
-
-void MainWindow::restoreSelectedConfig( Preset & preset )
-{
-	int origIdx = ui->configCmbBox->currentIndex();
-	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
-
-	ui->configCmbBox->setCurrentIndex( -1 );
-
-	if (!configModel.isEmpty())  // the engine might have not been selected yet so the configs have not been loaded
-	{
-		int configIdx = findSuch( configModel, [&]( const ConfigFile & config )
-												   { return config.fileName == preset.selectedConfig; } );
-		if (configIdx >= 0)
-		{
-			ui->configCmbBox->setCurrentIndex( configIdx );
-
-			// No sense to verify if this config file exists, the configModel has just been updated during
-			// selectEngine( ui->engineCmbBox->currentIndex() ), so there are only existing entries.
-		}
-		else
-		{
-			reportUserError( this, "Config no longer exists",
-				"Config file selected for this preset ("%preset.selectedConfig%") no longer exists. "
-				"Please select another one."
-			);
-			preset.selectedConfig.clear();
-		}
-	}
-
-	disableSelectionCallbacks = false;
-	int newIdx = ui->configCmbBox->currentIndex();
-
-	// manually notify our class about the change, so that the preset and dependent widgets get updated
-	if (newIdx != origIdx)
-	{
-		onConfigSelected( newIdx );
-	}
-}
-
-void MainWindow::restoreSelectedIWAD( Preset & preset )
-{
-	int origIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
-	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
-
-	wdg::deselectAllAndUnsetCurrent( ui->iwadListView );
-
-	if (!preset.selectedIWAD.isEmpty())  // the IWAD may have not been selected when creating this preset
-	{
-		int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
-		if (iwadIdx >= 0)
-		{
-			wdg::selectAndSetCurrentByIndex( ui->iwadListView, iwadIdx );
-			wdg::scrollToItemAtIndex( ui->iwadListView, iwadIdx );
-
-			if (!fs::isValidFile( preset.selectedIWAD ))
-			{
-				reportUserError( this, "IWAD no longer exists",
-					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
-					"Please select another one."
-				);
-				highlightInvalidListItem( iwadModel[ iwadIdx ] );
-			}
-		}
-		else
-		{
-			reportUserError( this, "IWAD no longer exists",
-				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
-				"Please select another one."
-			);
-			preset.selectedIWAD.clear();
-		}
-	}
-
-	disableSelectionCallbacks = false;
-	int newIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
-
-	// manually notify our class about the change, so that the preset and dependent widgets get updated
-	// This is needed before launch options are restored, so that the map names are ready to be selected.
-	if (newIwadIdx != origIwadIdx)
-	{
-		onIWADToggled( QItemSelection(), QItemSelection()/*TODO*/ );
-	}
-}
-
-void MainWindow::restoreSelectedMapPacks( Preset & preset )
-{
-	auto origSelection = ui->mapDirView->selectionModel()->selection();
-	disableSelectionCallbacks = true;  // prevent unnecessary widget updates, they will be done in the end in a single step
-
-	QDir mapRootDir = mapModel.rootDirectory();
-
-	wdg::deselectAllAndUnsetCurrent( ui->mapDirView );
-
-	const QStringVec mapPacksCopy = preset.selectedMapPacks;
-	preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
-	for (const QString & path : mapPacksCopy)
-	{
-		QModelIndex mapIdx = mapModel.index( path );
-		if (mapIdx.isValid() && fs::isInsideDir( path, mapRootDir ))
-		{
-			if (fs::isValidEntry( path ))
-			{
-				preset.selectedMapPacks.append( path );  // put back only items that are valid
-				wdg::selectAndSetCurrentByIndex( ui->mapDirView, mapIdx );
-				wdg::scrollToItemAtIndex( ui->mapDirView, mapIdx );
-			}
-			else
-			{
-				reportUserError( this, "Map file no longer exists",
-					"Map file selected for this preset ("%path%") no longer exists."
-				);
-			}
-		}
-		else
-		{
-			reportUserError( this, "Map file no longer exists",
-				"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")."
-			);
-		}
-	}
-
-	disableSelectionCallbacks = false;
-	auto newSelection = ui->mapDirView->selectionModel()->selection();
-
-	// manually notify our class about the change, so that the preset and dependent widgets get updated
-	if (newSelection != origSelection)
-	{
-		onMapPackToggled( newSelection, QItemSelection()/*TODO*/ );
-	}
-}
-
-void MainWindow::restoreSelectedMods( Preset & preset )
-{
-	wdg::deselectAllAndUnsetCurrent( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
-
-	modModel.startCompleteUpdate();
-	modModel.clear();
-	for (Mod & mod : preset.mods)
-	{
-		modModel.append( mod );
-		if ((!mod.isSeparator && !mod.isCmdArg) && !fs::isValidEntry( mod.path ))
-		{
-			// Let's just highlight it now, we will show warning when the user tries to launch it.
-			//reportUserError( this, "Mod no longer exists",
-			//	"A mod file \""%mod.path%"\" from this preset no longer exists. Please update it." );
-			highlightInvalidListItem( modModel.last() );
-		}
-	}
-	modModel.finishCompleteUpdate();
-}
-
-void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const MultiplayerOptions & multOpts )
-{
-	// launch mode
-	switch (launchOpts.mode)
-	{
-	 case LaunchMode::LaunchMap:
-		ui->launchMode_map->click();
-		break;
-	 case LaunchMode::LoadSave:
-		ui->launchMode_savefile->click();
-		break;
-	 case LaunchMode::RecordDemo:
-		ui->launchMode_recordDemo->click();
-		break;
-	 case LaunchMode::ReplayDemo:
-		ui->launchMode_replayDemo->click();
-		break;
-	 default:
-		ui->launchMode_default->click();
-		break;
-	}
-
-	// details of launch mode
-	ui->mapCmbBox->setCurrentIndex( ui->mapCmbBox->findText( launchOpts.mapName ) );
-	if (!launchOpts.saveFile.isEmpty())
-	{
-		int saveFileIdx = findSuch( saveModel, [&]( const SaveFile & save )
-		                                       { return save.fileName == launchOpts.saveFile; } );
-		ui->saveFileCmbBox->setCurrentIndex( saveFileIdx );
-
-		if (saveFileIdx < 0)
-		{
-			reportUserError( this, "Save file no longer exists",
-				"Save file \""%launchOpts.saveFile%"\" no longer exists. Please select another one."
-			);
-			launchOpts.saveFile.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
-		}
-	}
-	ui->mapCmbBox_demo->setCurrentIndex( ui->mapCmbBox_demo->findText( launchOpts.mapName_demo ) );
-	ui->demoFileLine_record->setText( launchOpts.demoFile_record );
-	if (!launchOpts.demoFile_replay.isEmpty())
-	{
-		int demoFileIdx = findSuch( demoModel, [&]( const DemoFile & demo )
-		                                       { return demo.fileName == launchOpts.demoFile_replay; } );
-		ui->demoFileCmbBox_replay->setCurrentIndex( demoFileIdx );
-
-		if (demoFileIdx < 0)
-		{
-			reportUserError( this, "Demo file no longer exists",
-				"Demo file \""%launchOpts.demoFile_replay%"\" no longer exists. Please select another one."
-			);
-			launchOpts.demoFile_replay.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
-		}
-	}
-
-	// multiplayer
-	ui->multiplayerGrpBox->setChecked( multOpts.isMultiplayer );
-	ui->multRoleCmbBox->setCurrentIndex( int( multOpts.multRole ) );
-	ui->hostnameLine->setText( multOpts.hostName );
-	ui->portSpinBox->setValue( multOpts.port );
-	ui->netModeCmbBox->setCurrentIndex( int( multOpts.netMode ) );
-	ui->gameModeCmbBox->setCurrentIndex( int( multOpts.gameMode ) );
-	ui->playerCountSpinBox->setValue( int( multOpts.playerCount ) );
-	ui->teamDmgSpinBox->setValue( multOpts.teamDamage );
-	ui->timeLimitSpinBox->setValue( int( multOpts.timeLimit ) );
-	ui->fragLimitSpinBox->setValue( int( multOpts.fragLimit ) );
-}
-
-void MainWindow::restoreGameplayOptions( const GameplayOptions & opts )
-{
-	ui->skillCmbBox->setCurrentIndex( opts.skillIdx - 1 );
-	if (opts.skillIdx < Skill::Custom)
-		ui->skillSpinBox->setValue( opts.skillIdx );
-	else
-		ui->skillSpinBox->setValue( opts.skillNum );
-
-	ui->noMonstersChkBox->setChecked( opts.noMonsters );
-	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
-	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
-	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
-}
-
-void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts )
-{
-	int compatLevelIdx = opts.compatLevel + 1;  // first item is reserved for indicating no selection
-	if (compatLevelIdx >= ui->compatLevelCmbBox->count())
-	{
-		// engine might have been removed, or its family was changed by the user
-		logLogicError() << "stored compat level ("<<compatLevelIdx<<") is out of bounds of the current combo-box content";
-		return;
-	}
-	ui->compatLevelCmbBox->setCurrentIndex( compatLevelIdx );
-
-	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts );
-}
-
-void MainWindow::restoreAlternativePaths( const AlternativePaths & opts )
-{
-	ui->saveDirLine->setText( opts.saveDir );
-	ui->screenshotDirLine->setText( opts.screenshotDir );
-}
-
-void MainWindow::restoreVideoOptions( const VideoOptions & opts )
-{
-	if (opts.monitorIdx < ui->monitorCmbBox->count())
-		ui->monitorCmbBox->setCurrentIndex( opts.monitorIdx );
-	if (opts.resolutionX > 0)
-		ui->resolutionXLine->setText( QString::number( opts.resolutionX ) );
-	if (opts.resolutionY > 0)
-		ui->resolutionYLine->setText( QString::number( opts.resolutionY ) );
-	ui->showFpsChkBox->setChecked( opts.showFPS );
-}
-
-void MainWindow::restoreAudioOptions( const AudioOptions & opts )
-{
-	ui->noSoundChkBox->setChecked( opts.noSound );
-	ui->noSfxChkBox->setChecked( opts.noSFX );
-	ui->noMusicChkBox->setChecked( opts.noMusic );
-}
-
-void MainWindow::restoreGlobalOptions( const GlobalOptions & opts )
-{
-	ui->usePresetNameChkBox->setChecked( opts.usePresetNameAsDir );
-
-	ui->globalCmdArgsLine->setText( opts.cmdArgs );
-
-	restoreEnvVars( opts.envVars, ui->globalEnvVarTable );
-}
-
-void MainWindow::restoreEnvVars( const EnvVars & envVars, QTableWidget * table )
-{
-	disableEnvVarsCallbacks = true;
-
-	for (const auto & envVar : envVars)
-	{
-		int newRowIdx = table->rowCount();
-		table->insertRow( newRowIdx );
-		table->setItem( newRowIdx, VarNameColumn, new QTableWidgetItem( envVar.name ) );
-		table->setItem( newRowIdx, VarValueColumn, new QTableWidgetItem( envVar.value ) );
-	}
-
-	disableEnvVarsCallbacks = false;
-}
-
-void MainWindow::restoreAppearance( const AppearanceSettings & appearance, bool restoreGeometry )
-{
-	// set style first, on Windows it may be overriden by color scheme
-	if (!appearance.appStyle.isNull())
-		themes::setAppStyle( appearance.appStyle );
-
-	if (IS_WINDOWS || appearance.colorScheme != ColorScheme::SystemDefault)
-		themes::setAppColorScheme( appearance.colorScheme );
-
-	if (restoreGeometry)
-	{
-		restoreWindowGeometry( appearance.geometry );
-	}
-}
-
-void MainWindow::restoreWindowGeometry( const WindowGeometry & geometry )
-{
-	auto newGeometry = this->geometry();  // start with the current geometry and update it with the values we have
-
-	if (geometry.x != INT_MIN && geometry.y != INT_MIN)  // our internal marker that the coordinates have not been read properly
-	{
-		if (areScreenCoordinatesValid( geometry.x, geometry.y ))  // move the window only if the coordinates make sense
-		{
-			newGeometry.moveTo( geometry.x, geometry.y );
-		}
-		else
-		{
-			logInfo() << "invalid coordinates detected ("<<geometry.x<<","<<geometry.y<<") leaving window at the default position";
-		}
-	}
-
-	if (geometry.width > 0 && geometry.height > 0)
-	{
-		newGeometry.setSize({ geometry.width, geometry.height });
-	}
-
-	this->setGeometry( newGeometry );
 }
 
 

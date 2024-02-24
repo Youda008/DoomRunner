@@ -43,7 +43,8 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 		const EngineSettings & engineSettings, const QList< EngineInfo > & engineList,
 		const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 		const MapSettings & mapSettings, const ModSettings & modSettings,
-		const LauncherSettings & settings
+		const LauncherSettings & settings,
+		const AppearanceSettings & appearance
 	);
 	virtual ~SetupDialog() override;
 
@@ -137,6 +138,8 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 	ModSettings modSettings;
 
 	LauncherSettings settings;
+
+	AppearanceSettings appearance;
 
 };
 

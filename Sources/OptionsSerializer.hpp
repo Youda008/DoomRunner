@@ -12,12 +12,13 @@
 #include "Essential.hpp"
 
 #include "UserData.hpp"
+#include "Utils/JsonUtils.hpp"  // JsonDocumentCtx
 
 #include <QList>
 #include <QString>
 
 
-//======================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------
 
 struct OptionsToSave
 {
@@ -44,8 +45,17 @@ struct OptionsToSave
 	const MapSettings & mapSettings;
 	const ModSettings & modSettings;
 	const LauncherSettings & settings;
-	WindowGeometry geometry;
+
+	const AppearanceSettings & appearance;
 };
+
+QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts );
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// For technical reasons explained at MainWindow initialization we have to separate loading
+// of the appearance settings (visual style, color scheme) and window geometry (position and size)
+// from loading the rest of the options.
 
 struct OptionsToLoad
 {
@@ -72,11 +82,15 @@ struct OptionsToLoad
 	MapSettings & mapSettings;
 	ModSettings & modSettings;
 	LauncherSettings & settings;
-	WindowGeometry geometry;
 };
 
-bool writeOptionsToFile( const OptionsToSave & opts, const QString & filePath );
-bool readOptionsFromFile( OptionsToLoad & opts, const QString & filePath );
+struct AppearanceToLoad
+{
+	AppearanceSettings & appearance;
+};
+
+void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLoad & opts );
+void deserializeAppearanceFromJsonDoc( const JsonDocumentCtx & jsonDoc, AppearanceToLoad & opts, bool loadGeometry );
 
 
 #endif // OPTIONS_INCLUDED

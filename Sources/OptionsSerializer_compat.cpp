@@ -127,17 +127,12 @@ static void deserialize_pre17( const JsonObjectCtx & jsSettings, LauncherSetting
 //======================================================================================================================
 //  options file stucture
 
-static void deserialize_pre17( OptionsToLoad & opts, const JsonObjectCtx & jsOpts )
+static void deserialize_pre17( const JsonObjectCtx & jsOpts, OptionsToLoad & opts )
 {
-	// global settings
+	// global settings - deserialize directly from root, so that we don't have to break compatibility with older options
 
-	// this must be loaded early, because we need to know whether to attempt loading the opts from the presets
+	// This must be loaded early, because we need to know whether to attempt loading the opts from the presets or globally.
 	deserialize_pre17( jsOpts, opts.settings );
-
-	if (JsonObjectCtx jsGeometry = jsOpts.getObject( "geometry" ))
-	{
-		deserialize( jsGeometry, opts.geometry );
-	}
 
 	// files and related settings
 

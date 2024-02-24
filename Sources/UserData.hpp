@@ -234,7 +234,7 @@ struct AudioOptions
 
 // While storing the environment variables in a map is more logical, in our application we need to have it as
 // a linear list, otherwise it's impossible to update the data structure when the user changes the variable name (key).
-// The list should always be kept sorted.
+// The list should also retain the order the user gave it.
 using EnvVars = QVector< os::EnvVar >;
 
 struct GlobalOptions
@@ -325,11 +325,9 @@ struct StorageSettings
 	OptionsStorage audioOptsStorage = StoreGlobally;
 };
 
-/// Additional launcher settings
+/// settings of the launcher's behaviour
 struct LauncherSettings : public StorageSettings  // inherited instead of included to avoid long identifiers
 {
-	QString appStyle;
-	ColorScheme colorScheme = ColorScheme::SystemDefault;
 	PathStyle pathStyle = defaultPathStyle;
 	bool showEngineOutput = showEngineOutputByDefault;
 	bool closeOnLaunch = false;
@@ -348,6 +346,14 @@ struct WindowGeometry
 
 	WindowGeometry() {}
 	WindowGeometry( const QRect & r ) : x( r.x() ), y( r.y() ), width( r.width() ), height( r.height() ) {}
+};
+
+// separated from the LauncherSettings for reasons explained at MainWindow initialization
+struct AppearanceSettings
+{
+	WindowGeometry geometry;
+	QString appStyle;
+	ColorScheme colorScheme = ColorScheme::SystemDefault;
 };
 
 

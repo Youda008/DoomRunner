@@ -10,8 +10,8 @@
 #include "LangUtils.hpp"  // correspondingValue
 #include "FileSystemUtils.hpp"  // isValidDir, isValidFile
 #include "WidgetUtils.hpp"  // setTextColor
-#include "ErrorHandling.hpp"
 #include "Themes.hpp"  // getCurrentPalette
+#include "ErrorHandling.hpp"
 
 #include <QFileInfo>
 #include <QTextStream>
@@ -314,10 +314,6 @@ QVector< Argument > splitCommandLineArguments( const QString & argsStr )
 
 bool areScreenCoordinatesValid( int x, int y )
 {
-	// our internal marker that the coordinates have not been initialized or read properly
-	if (x == INT_MIN || y == INT_MIN)
-		return false;
-
 	// find if the coordinates belong to any of the currently active virtual screens
 	auto screens = qApp->screens();
 	for (QScreen * screen : screens)
@@ -331,6 +327,5 @@ bool areScreenCoordinatesValid( int x, int y )
 	}
 
 	// found no screen to which these coordinates belong to (secondary monitor might have been disconnected)
-	logInfo() << "invalid coordinates detected ("<<x<<","<<y<<") leaving the window at the default position";
 	return false;
 }

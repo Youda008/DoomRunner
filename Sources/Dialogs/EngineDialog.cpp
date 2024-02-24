@@ -13,7 +13,6 @@
 #include "Utils/ErrorHandling.hpp"
 
 #include <QDir>
-#include <QTimer>
 
 
 //======================================================================================================================
@@ -58,9 +57,6 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 	connect( ui->dataDirLine, &QLineEdit::textChanged, this, &thisClass::onDataDirChanged );
 
 	//connect( ui->familyCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onFamilySelected );
-
-	// this will call the function when the window is fully initialized and displayed
-	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
 }
 
 void EngineDialog::adjustUi()
@@ -99,6 +95,9 @@ void EngineDialog::showEvent( QShowEvent * event )
 	adjustUi();
 
 	superClass::showEvent( event );
+
+	// This will be called after the window is fully initialized and physically shown (drawn for the first time).
+	QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection );
 }
 
 // This is called after the window is fully initialized and physically shown (drawn for the first time).

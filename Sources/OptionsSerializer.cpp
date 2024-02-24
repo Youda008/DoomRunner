@@ -83,7 +83,7 @@ static void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 		engine.name = jsEngine.getString( "name", "<missing name>" );
 		engine.executablePath = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
 		engine.configDir = jsEngine.getString( "config_dir", fs::getDirOfFile( engine.executablePath ) );
-		engine.dataDir = jsEngine.getString( "data_dir", engine.configDir, DontShowError );
+		engine.dataDir = jsEngine.getString( "data_dir", engine.configDir );
 		engine.family = familyFromStr( jsEngine.getString( "family", {} ) );
 		if (engine.family == EngineFamily::_EnumEnd)
 			engine.family = guessEngineFamily( fs::getFileBasenameFromPath( engine.executablePath ) );
@@ -226,7 +226,7 @@ static QJsonObject serialize( const ModSettings & modSettings )
 static void deserialize( const JsonObjectCtx & jsMods, ModSettings & modSettings )
 {
 	modSettings.dir = jsMods.getString( "directory" );
-	modSettings.showIcons = jsMods.getBool( "show_icons", modSettings.showIcons, DontShowError );
+	modSettings.showIcons = jsMods.getBool( "show_icons", modSettings.showIcons );
 }
 
 static QJsonObject serialize( const LaunchOptions & opts )
@@ -398,7 +398,7 @@ static QJsonObject serialize( const GlobalOptions & opts )
 
 static void deserialize( const JsonObjectCtx & jsOptions, GlobalOptions & opts )
 {
-	opts.usePresetNameAsDir = jsOptions.getBool( "use_preset_name_as_dir", opts.usePresetNameAsDir, DontShowError );
+	opts.usePresetNameAsDir = jsOptions.getBool( "use_preset_name_as_dir", opts.usePresetNameAsDir );
 	opts.cmdArgs = jsOptions.getString( "additional_args" );
 	if (JsonObjectCtx jsEnvVars = jsOptions.getObject( "env_vars" ))
 		deserialize( jsEnvVars, opts.envVars );
@@ -539,6 +539,55 @@ static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const 
 		deserialize( jsEnvVars, preset.envVars );
 }
 
+static QJsonObject serialize( const StorageSettings & settings )
+{
+	QJsonObject jsSettings;
+
+	jsSettings["launch_opts"] = int( settings.launchOptsStorage );
+	jsSettings["gameplay_opts"] = int( settings.gameOptsStorage );
+	jsSettings["compat_opts"] = int( settings.compatOptsStorage );
+	jsSettings["video_opts"] = int( settings.videoOptsStorage );
+	jsSettings["audio_opts"] = int( settings.audioOptsStorage );
+
+	return jsSettings;
+}
+
+static void deserialize( const JsonObjectCtx & jsSettings, StorageSettings & settings )
+{
+	settings.launchOptsStorage = jsSettings.getEnum< OptionsStorage >( "launch_opts", settings.launchOptsStorage );
+	settings.gameOptsStorage = jsSettings.getEnum< OptionsStorage >( "gameplay_opts", settings.gameOptsStorage );
+	settings.compatOptsStorage = jsSettings.getEnum< OptionsStorage >( "compat_opts", settings.compatOptsStorage );
+	settings.videoOptsStorage = jsSettings.getEnum< OptionsStorage >( "video_opts", settings.videoOptsStorage );
+	settings.audioOptsStorage = jsSettings.getEnum< OptionsStorage >( "audio_opts", settings.audioOptsStorage );
+}
+
+static void serialize( QJsonObject & jsSettings, const LauncherSettings & settings )
+{
+	jsSettings["use_absolute_paths"] = settings.pathStyle == PathStyle::Absolute;
+	jsSettings["show_engine_output"] = settings.showEngineOutput;
+	jsSettings["close_on_launch"] = settings.closeOnLaunch;
+	jsSettings["check_for_updates"] = settings.checkForUpdates;
+	jsSettings["ask_for_sandbox_permissions"] = settings.askForSandboxPermissions;
+
+	jsSettings["options_storage"] = serialize( static_cast< const StorageSettings & >( settings ) );
+}
+
+static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
+{
+	bool useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
+	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
+
+	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
+	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
+	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
+	settings.askForSandboxPermissions = jsSettings.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
+
+	if (JsonObjectCtx jsOptsStorage = jsSettings.getObject( "options_storage" ))
+	{
+		deserialize( jsOptsStorage, static_cast< StorageSettings & >( settings ) );
+	}
+}
+
 static QJsonObject serialize( const WindowGeometry & geometry )
 {
 	QJsonObject jsGeometry;
@@ -553,66 +602,41 @@ static QJsonObject serialize( const WindowGeometry & geometry )
 
 static void deserialize( const JsonObjectCtx & jsGeometry, WindowGeometry & geometry )
 {
-	geometry.x = jsGeometry.getInt( "x", geometry.x, DontShowError );
-	geometry.y = jsGeometry.getInt( "y", geometry.y, DontShowError );
+	geometry.x = jsGeometry.getInt( "x", geometry.x );
+	geometry.y = jsGeometry.getInt( "y", geometry.y );
 	geometry.width = jsGeometry.getInt( "width", geometry.width );
 	geometry.height = jsGeometry.getInt( "height", geometry.height );
 }
 
-static void serialize( QJsonObject & jsSettings, const LauncherSettings & settings )
+static void serialize( QJsonObject & jsAppearance, const AppearanceSettings & appearance )
 {
-	jsSettings["app_style"] = settings.appStyle.isNull() ? QJsonValue( QJsonValue::Null ) : settings.appStyle;
-	jsSettings["color_scheme"] = schemeToString( settings.colorScheme );
-
-	jsSettings["use_absolute_paths"] = settings.pathStyle == PathStyle::Absolute;
-	jsSettings["show_engine_output"] = settings.showEngineOutput;
-	jsSettings["close_on_launch"] = settings.closeOnLaunch;
-	jsSettings["check_for_updates"] = settings.checkForUpdates;
-	jsSettings["ask_for_sandbox_permissions"] = settings.askForSandboxPermissions;
-
-	{
-		QJsonObject jsOptsStorage;
-
-		jsOptsStorage["launch_opts"] = int( settings.launchOptsStorage );
-		jsOptsStorage["gameplay_opts"] = int( settings.gameOptsStorage );
-		jsOptsStorage["compat_opts"] = int( settings.compatOptsStorage );
-		jsOptsStorage["video_opts"] = int( settings.videoOptsStorage );
-		jsOptsStorage["audio_opts"] = int( settings.audioOptsStorage );
-
-		jsSettings["options_storage"] = jsOptsStorage;
-	}
+	jsAppearance["geometry"] = serialize( appearance.geometry );
+	jsAppearance["app_style"] = appearance.appStyle.isNull() ? QJsonValue( QJsonValue::Null ) : appearance.appStyle;
+	jsAppearance["color_scheme"] = schemeToString( appearance.colorScheme );
 }
 
-static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
+static void deserialize( const JsonObjectCtx & jsAppearance, AppearanceSettings & appearance, bool loadGeometry )
 {
-	settings.appStyle = jsSettings.getString( "app_style", {}, DontShowError );  // null value means system-default
-	ColorScheme colorScheme = schemeFromString( jsSettings.getString( "color_scheme" ) );
-	if (colorScheme != ColorScheme::_EnumEnd)
-		settings.colorScheme = colorScheme;  // otherwise leave default
-
-	bool useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
-	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
-
-	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
-	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
-	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
-	settings.askForSandboxPermissions = jsSettings.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
-
-	if (JsonObjectCtx jsOptsStorage = jsSettings.getObject( "options_storage" ))
+	if (loadGeometry)
 	{
-		settings.launchOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "launch_opts", settings.launchOptsStorage );
-		settings.gameOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "gameplay_opts", settings.gameOptsStorage );
-		settings.compatOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "compat_opts", settings.compatOptsStorage );
-		settings.videoOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "video_opts", settings.videoOptsStorage );
-		settings.audioOptsStorage = jsOptsStorage.getEnum< OptionsStorage >( "audio_opts", settings.audioOptsStorage );
+		if (JsonObjectCtx jsGeometry = jsAppearance.getObject( "geometry" ))
+		{
+			deserialize( jsGeometry, appearance.geometry );
+		}
 	}
+
+	appearance.appStyle = jsAppearance.getString( "app_style", {}, DontShowError );  // null value means system-default
+
+	ColorScheme colorScheme = schemeFromString( jsAppearance.getString( "color_scheme" ) );
+	if (colorScheme != ColorScheme::_EnumEnd)
+		appearance.colorScheme = colorScheme;  // otherwise leave default
 }
 
 
 //======================================================================================================================
 //  top-level JSON stucture
 
-static void serialize( QJsonObject & jsOpts, const OptionsToSave & opts )
+static void serialize( QJsonObject & jsRoot, const OptionsToSave & opts )
 {
 	// files and related settings
 
@@ -622,7 +646,7 @@ static void serialize( QJsonObject & jsOpts, const OptionsToSave & opts )
 
 		jsEngines["engine_list"] = serializeList( opts.engines );  // serializes only Engine fields, leaves other EngineInfo fields alone
 
-		jsOpts["engines"] = jsEngines;
+		jsRoot["engines"] = jsEngines;
 	}
 
 	{
@@ -631,34 +655,34 @@ static void serialize( QJsonObject & jsOpts, const OptionsToSave & opts )
 		if (!opts.iwadSettings.updateFromDir)
 			jsIWADs["IWAD_list"] = serializeList( opts.iwads );
 
-		jsOpts["IWADs"] = jsIWADs;
+		jsRoot["IWADs"] = jsIWADs;
 	}
 
-	jsOpts["maps"] = serialize( opts.mapSettings );
+	jsRoot["maps"] = serialize( opts.mapSettings );
 
-	jsOpts["mods"] = serialize( opts.modSettings );
+	jsRoot["mods"] = serialize( opts.modSettings );
 
 	// options
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
-		jsOpts["launch_options"] = serialize( opts.launchOpts );
+		jsRoot["launch_options"] = serialize( opts.launchOpts );
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
-		jsOpts["multiplayer_options"] = serialize( opts.multOpts );
+		jsRoot["multiplayer_options"] = serialize( opts.multOpts );
 
 	if (opts.settings.gameOptsStorage == StoreGlobally)
-		jsOpts["gameplay_options"] = serialize( opts.gameOpts );
+		jsRoot["gameplay_options"] = serialize( opts.gameOpts );
 
 	if (opts.settings.compatOptsStorage == StoreGlobally)
-		jsOpts["compatibility_options"] = serialize( opts.compatOpts );
+		jsRoot["compatibility_options"] = serialize( opts.compatOpts );
 
 	if (opts.settings.videoOptsStorage == StoreGlobally)
-		jsOpts["video_options"] = serialize( opts.videoOpts );
+		jsRoot["video_options"] = serialize( opts.videoOpts );
 
 	if (opts.settings.audioOptsStorage == StoreGlobally)
-		jsOpts["audio_options"] = serialize( opts.audioOpts );
+		jsRoot["audio_options"] = serialize( opts.audioOpts );
 
-	jsOpts["global_options"] = serialize( opts.globalOpts );
+	jsRoot["global_options"] = serialize( opts.globalOpts );
 
 	// presets
 
@@ -671,33 +695,28 @@ static void serialize( QJsonObject & jsOpts, const OptionsToSave & opts )
 			jsPresetArray.append( jsPreset );
 		}
 
-		jsOpts["presets"] = jsPresetArray;
+		jsRoot["presets"] = jsPresetArray;
 	}
 
-	jsOpts["selected_preset"] = opts.selectedPresetIdx >= 0 ? opts.presets[ opts.selectedPresetIdx ].name : QString();
+	jsRoot["selected_preset"] = opts.selectedPresetIdx >= 0 ? opts.presets[ opts.selectedPresetIdx ].name : QString();
 
-	// global settings
+	// global settings - serialize directly to root, so that we don't have to break compatibility with older options
 
-	serialize( jsOpts, opts.settings );
+	serialize( jsRoot, opts.settings );
 
-	jsOpts["geometry"] = serialize( opts.geometry );
+	serialize( jsRoot, opts.appearance );
 }
 
-static void deserialize( const JsonObjectCtx & jsOpts, OptionsToLoad & opts )
+static void deserialize( const JsonObjectCtx & jsRoot, OptionsToLoad & opts )
 {
-	// global settings
+	// global settings - deserialize directly from root, so that we don't have to break compatibility with older options
 
-	// this must be loaded early, because we need to know whether to attempt loading the opts from the presets
-	deserialize( jsOpts, opts.settings );
-
-	if (JsonObjectCtx jsGeometry = jsOpts.getObject( "geometry" ))
-	{
-		deserialize( jsGeometry, opts.geometry );
-	}
+	// This must be loaded early, because we need to know whether to attempt loading the opts from the presets or globally.
+	deserialize( jsRoot, opts.settings );
 
 	// files and related settings
 
-	if (JsonObjectCtx jsEngines = jsOpts.getObject( "engines" ))
+	if (JsonObjectCtx jsEngines = jsRoot.getObject( "engines" ))
 	{
 		deserialize( jsEngines, opts.engineSettings );
 
@@ -724,7 +743,7 @@ static void deserialize( const JsonObjectCtx & jsOpts, OptionsToLoad & opts )
 		}
 	}
 
-	if (JsonObjectCtx jsIWADs = jsOpts.getObject( "IWADs" ))
+	if (JsonObjectCtx jsIWADs = jsRoot.getObject( "IWADs" ))
 	{
 		deserialize( jsIWADs, opts.iwadSettings );
 
@@ -758,14 +777,14 @@ static void deserialize( const JsonObjectCtx & jsOpts, OptionsToLoad & opts )
 		}
 	}
 
-	if (JsonObjectCtx jsMaps = jsOpts.getObject( "maps" ))
+	if (JsonObjectCtx jsMaps = jsRoot.getObject( "maps" ))
 	{
 		deserialize( jsMaps, opts.mapSettings );
 
 		PathChecker::checkNonEmptyDirPath( opts.mapSettings.dir, true, "map directory from the saved options", "Please update it in Menu -> Initial Setup." );
 	}
 
-	if (JsonObjectCtx jsMods = jsOpts.getObject( "mods" ))
+	if (JsonObjectCtx jsMods = jsRoot.getObject( "mods" ))
 	{
 		deserialize( jsMods, opts.modSettings );
 
@@ -775,35 +794,35 @@ static void deserialize( const JsonObjectCtx & jsOpts, OptionsToLoad & opts )
 	// options
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsOpts.getObject( "launch_options" ))
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "launch_options" ))
 			deserialize( jsOptions, opts.launchOpts );
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsOpts.getObject( "multiplayer_options" ))
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "multiplayer_options" ))
 			deserialize( jsOptions, opts.multOpts );
 
 	if (opts.settings.gameOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsOpts.getObject( "gameplay_options" ))
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "gameplay_options" ))
 			deserialize( jsOptions, opts.gameOpts );
 
 	if (opts.settings.compatOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsOpts.getObject( "compatibility_options" ))
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "compatibility_options" ))
 			deserialize( jsOptions, opts.compatOpts );
 
 	if (opts.settings.videoOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsOpts.getObject( "video_options" ))
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "video_options" ))
 			deserialize( jsOptions, opts.videoOpts );
 
 	if (opts.settings.audioOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsOpts.getObject( "audio_options" ))
+		if (JsonObjectCtx jsOptions = jsRoot.getObject( "audio_options" ))
 			deserialize( jsOptions, opts.audioOpts );
 
-	if (JsonObjectCtx jsOptions = jsOpts.getObject( "global_options" ))
+	if (JsonObjectCtx jsOptions = jsRoot.getObject( "global_options" ))
 		deserialize( jsOptions, opts.globalOpts );
 
 	// presets
 
-	if (JsonArrayCtx jsPresetArray = jsOpts.getArray( "presets" ))
+	if (JsonArrayCtx jsPresetArray = jsRoot.getArray( "presets" ))
 	{
 		for (int i = 0; i < jsPresetArray.size(); i++)
 		{
@@ -818,7 +837,7 @@ static void deserialize( const JsonObjectCtx & jsOpts, OptionsToLoad & opts )
 		}
 	}
 
-	opts.selectedPreset = jsOpts.getString( "selected_preset" );
+	opts.selectedPreset = jsRoot.getString( "selected_preset" );
 }
 
 
@@ -829,9 +848,9 @@ static void deserialize( const JsonObjectCtx & jsOpts, OptionsToLoad & opts )
 
 
 //======================================================================================================================
-//  JSON document and version handling
+//  top-level API
 
-static QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts )
+QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts )
 {
 	QJsonObject jsRoot;
 
@@ -843,7 +862,15 @@ static QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts )
 	return QJsonDocument( jsRoot );
 }
 
-static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLoad & opts )
+void deserializeAppearanceFromJsonDoc( const JsonDocumentCtx & jsonDoc, AppearanceToLoad & opts, bool loadGeometry )
+{
+	const JsonObjectCtx & jsRoot = jsonDoc.rootObject();
+
+	// deserialize directly from root, so that we don't have to break compatibility with older options
+	deserialize( jsRoot, opts.appearance, loadGeometry );
+}
+
+void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLoad & opts )
 {
 	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
 	// we want to print a useful error message with information exactly which JSON element is broken.
@@ -866,7 +893,7 @@ static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, Opti
 		jsonDoc.disableWarnings();  // supress "missing element" warnings when loading older version
 
 		// try to load as the 1.6.3 format, older versions will have to accept resetting some values to defaults
-		deserialize_pre17( opts, jsRoot );
+		deserialize_pre17( jsRoot, opts );
 	}
 	else
 	{
@@ -875,28 +902,4 @@ static void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, Opti
 
 		deserialize( jsRoot, opts );
 	}
-}
-
-
-//======================================================================================================================
-//  top-level API
-
-bool writeOptionsToFile( const OptionsToSave & opts, const QString & filePath )
-{
-	QJsonDocument jsonDoc = serializeOptionsToJsonDoc( opts );
-
-	return writeJsonToFile( jsonDoc, filePath, "options" );
-}
-
-bool readOptionsFromFile( OptionsToLoad & opts, const QString & filePath )
-{
-	JsonDocumentCtx jsonDoc = readJsonFromFile( filePath, "options" );
-	if (!jsonDoc)
-	{
-		return false;
-	}
-
-	deserializeOptionsFromJsonDoc( jsonDoc, opts );
-
-	return true;
 }

@@ -521,21 +521,21 @@ bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, c
 	return true;
 }
 
-JsonDocumentCtx readJsonFromFile( const QString & filePath, const QString & fileDesc, bool ignoreEmpty )
+std::unique_ptr< JsonDocumentCtx > readJsonFromFile( const QString & filePath, const QString & fileDesc, bool ignoreEmpty )
 {
 	QByteArray bytes;
 	QString readError = fs::readWholeFile( filePath, bytes );
 	if (!readError.isEmpty())
 	{
 		reportRuntimeError( nullptr, "Error loading "+fileDesc, readError );
-		return JsonDocumentCtx();
+		return nullptr;
 	}
 
 	if (bytes.isEmpty())
 	{
 		if (!ignoreEmpty)
 			reportRuntimeError( nullptr, "Error loading "+fileDesc, fileDesc+" file is empty." );
-		return JsonDocumentCtx();
+		return nullptr;
 	}
 
 	QJsonParseError parseError;
@@ -546,8 +546,8 @@ JsonDocumentCtx readJsonFromFile( const QString & filePath, const QString & file
 			"Failed to parse \""%fs::getFileNameFromPath(filePath)%"\": "%parseError.errorString()%"\n"
 			"You can either open it in notepad and try to repair it, or delete it and start from scratch."
 		);
-		return JsonDocumentCtx();
+		return std::make_unique< JsonDocumentCtx >();  // invalid JsonDocument
 	}
 
-	return JsonDocumentCtx( filePath, jsonDoc );
+	return std::make_unique< JsonDocumentCtx >( filePath, jsonDoc );
 }

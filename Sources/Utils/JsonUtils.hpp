@@ -449,11 +449,14 @@ void deserializeMap( const JsonObjectCtx & jsMap, QHash< QString, Elem > & map )
 //======================================================================================================================
 //  high-level file I/O helpers
 
+bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, const QString & fileDesc );
+
 inline constexpr bool IgnoreEmpty = true;
 inline constexpr bool CheckIfEmpty = false;
 
-bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, const QString & fileDesc );
-JsonDocumentCtx readJsonFromFile( const QString & filePath, const QString & fileDesc, bool ignoreEmpty = false );
+/// Reads a text file and attempts to parse it as a JSON.
+/** Returns nullptr if the file could not be opened or read, or invalid JsonDocument if it could not be parsed. */
+std::unique_ptr< JsonDocumentCtx > readJsonFromFile( const QString & filePath, const QString & fileDesc, bool ignoreEmpty = false );
 
 
 #endif // JSON_UTILS_INCLUDED

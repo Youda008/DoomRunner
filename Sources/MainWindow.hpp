@@ -16,6 +16,7 @@
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
 #include "Themes.hpp"  // SystemThemeWatcher
+#include "Utils/JsonUtils.hpp"  // JsonDocumentCtx
 
 #include <QMainWindow>
 #include <QString>
@@ -175,6 +176,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void loadMonitorInfo( QComboBox * box );
 
+	void initAppDataDir();
+	static void moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir, QString optionsFileName );
+
 	void togglePathStyle( PathStyle style );
 
 	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines );
@@ -201,7 +205,10 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void toggleOptionsSubwidgets( bool enabled );
 
 	bool saveOptions( const QString & filePath );
-	bool loadOptions( const QString & filePath );
+	bool reloadOptions( const QString & filePath );
+	std::unique_ptr< JsonDocumentCtx > readOptions( const QString & filePath );
+	void loadAppearance( const JsonDocumentCtx & optionsDoc, bool loadGeometry );
+	void loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc );
 
 	bool isCacheDirty() const;
 	bool saveCache( const QString & filePath );
@@ -225,6 +232,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void restoreGlobalOptions( const GlobalOptions & opts );
 
 	void restoreEnvVars( const EnvVars & envVars, QTableWidget * table );
+
+	void restoreAppearance( const AppearanceSettings & appearance, bool restoreGeometry );
+	void restoreWindowGeometry( const WindowGeometry & geometry );
 
 	void updateLaunchCommand();
 	os::ShellCommand generateLaunchCommand(
@@ -287,6 +297,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QString optionsFilePath;
 	QString cacheFilePath;
 
+	std::unique_ptr< JsonDocumentCtx > parsedOptionsDoc;  ///< result of first phase of options loading, kept for the second phase
 	bool optionsNeedUpdate = false;  ///< indicates that the user has made a change and the options file needs to be updated
 	bool optionsCorrupted = false;   ///< true if there was a critical error during parsing of the options file, such content should not be saved
 
@@ -366,6 +377,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	GlobalOptions globalOpts;
 
 	LauncherSettings settings;
+	AppearanceSettings appearance;
 
 };
 

@@ -20,7 +20,6 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QAction>
-#include <QTimer>
 
 
 //======================================================================================================================
@@ -32,7 +31,8 @@ SetupDialog::SetupDialog(
 	const EngineSettings & engineSettings, const QList< EngineInfo > & engineList,
 	const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
 	const MapSettings & mapSettings, const ModSettings & modSettings,
-	const LauncherSettings & settings
+	const LauncherSettings & settings,
+	const AppearanceSettings & appearance
 )
 :
 	QDialog( parent ),
@@ -47,7 +47,8 @@ SetupDialog::SetupDialog(
 	),
 	mapSettings( mapSettings ),
 	modSettings( modSettings ),
-	settings( settings )
+	settings( settings ),
+	appearance( appearance )
 {
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
@@ -76,13 +77,13 @@ SetupDialog::SetupDialog(
 
 	ui->styleCmbBox->addItem( "System default" );
 	ui->styleCmbBox->addItems( themes::getAvailableAppStyles() );
-	if (!settings.appStyle.isNull())
+	if (!appearance.appStyle.isNull())
 	{
-		int idx = ui->styleCmbBox->findText( settings.appStyle );
+		int idx = ui->styleCmbBox->findText( appearance.appStyle );
 		ui->styleCmbBox->setCurrentIndex( idx > 0 ? idx : 0 );
 	}
 
-	switch (settings.colorScheme)
+	switch (appearance.colorScheme)
 	{
 		case ColorScheme::Dark:  ui->schemeBtn_dark->click(); break;
 		case ColorScheme::Light: ui->schemeBtn_light->click(); break;
@@ -514,30 +515,30 @@ void SetupDialog::updateIWADsFromDir()
 void SetupDialog::onAppStyleSelected( int index )
 {
 	if (index == 0)
-		settings.appStyle.clear();
+		appearance.appStyle.clear();
 	else
-		settings.appStyle = ui->styleCmbBox->itemText( index );
+		appearance.appStyle = ui->styleCmbBox->itemText( index );
 
-	themes::setAppStyle( settings.appStyle );
+	themes::setAppStyle( appearance.appStyle );
 }
 
 void SetupDialog::onDefaultSchemeChosen()
 {
-	settings.colorScheme = ColorScheme::SystemDefault;
+	appearance.colorScheme = ColorScheme::SystemDefault;
 
-	themes::setAppColorScheme( settings.colorScheme );
+	themes::setAppColorScheme( appearance.colorScheme );
 }
 
 void SetupDialog::onDarkSchemeChosen()
 {
-	settings.colorScheme = ColorScheme::Dark;
+	appearance.colorScheme = ColorScheme::Dark;
 
-	themes::setAppColorScheme( settings.colorScheme );
+	themes::setAppColorScheme( appearance.colorScheme );
 
  #if IS_WINDOWS
 	// The default Windows style doesn't work well with dark colors. "Fusion" is the only style where it looks good.
 	// So if someone selects default style while dark mode is enabled in the OS settings, redirect to "Fusion".
-	if (settings.appStyle.isNull() || settings.appStyle == themes::getDefaultAppStyle())
+	if (appearance.appStyle.isNull() || appearance.appStyle == themes::getDefaultAppStyle())
 	{
 		ui->styleCmbBox->setCurrentIndex( ui->styleCmbBox->findText("Fusion") );
 	}
@@ -546,9 +547,9 @@ void SetupDialog::onDarkSchemeChosen()
 
 void SetupDialog::onLightSchemeChosen()
 {
-	settings.colorScheme = ColorScheme::Light;
+	appearance.colorScheme = ColorScheme::Light;
 
-	themes::setAppColorScheme( settings.colorScheme );
+	themes::setAppColorScheme( appearance.colorScheme );
 }
 
 

@@ -645,11 +645,6 @@ MainWindow::MainWindow()
 	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onPresetCmdArgsChanged );
 	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onGlobalCmdArgsChanged );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
-
-	// this will call the function when the window is fully initialized and displayed
-	// not sure, which one of these 2 options is better
-	//QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection ); // this doesn't work in Qt 5.9
-	QTimer::singleShot( 0, this, &thisClass::onWindowShown );
 }
 
 void MainWindow::adjustUi()
@@ -854,32 +849,6 @@ void MainWindow::loadMonitorInfo( QComboBox * box )
 	}
 }
 
-// Backward compatibility: Older versions stored options file in config dir.
-// We need to look if the options file is in the old directory and if it is, move it to the new one.
-static void moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir, QString optionsFileName )
-{
-	if (newOptionsDir.exists( optionsFileName ))
-	{
-		return;  // always prefer the new one, if it already exists
-	}
-
-	if (oldOptionsDir.exists( optionsFileName ))
-	{
-		QString newOptionsFilePath = newOptionsDir.filePath( optionsFileName );
-
-		reportInformation( nullptr, "Migrating options file",
-			"DoomRunner changed the location of "%optionsFileName%", where it stores your presets and other options. "
-			%optionsFileName%" has been found in the old data directory \""%oldOptionsDir.path()%"\""
-			" and will be automatically moved to the new data directory \""%newOptionsDir.path()%"\""
-		);
-		logInfo() <<
-			"NOTICE: Found "%optionsFileName%" in the old data directory \""%oldOptionsDir.path()%"\". "
-			"Moving it to the new data directory \""%newOptionsDir.path()%"\"";
-
-		oldOptionsDir.rename( optionsFileName, newOptionsFilePath );
-	}
-}
-
 void MainWindow::updateOptionsGrpBoxTitles( const StorageSettings & storageSettings )
 {
 	static const char * const optsStorageStrings [] =
@@ -903,22 +872,34 @@ void MainWindow::updateOptionsGrpBoxTitles( const StorageSettings & storageSetti
 	updateGroupBoxTitle( ui->audioGrpBox, storageSettings.audioOptsStorage );
 }
 
-// This is called when the window layout is initialized and widget sizes calculated,
-// but before the window is physically shown (drawn for the first time).
-void MainWindow::showEvent( QShowEvent * event )
+// Backward compatibility: Older versions stored options file in config dir.
+// We need to look if the options file is in the old directory and if it is, move it to the new one.
+void MainWindow::moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir, QString optionsFileName )
 {
+	if (newOptionsDir.exists( optionsFileName ))
+	{
+		return;  // always prefer the new one, if it already exists
+	}
 
-	superClass::showEvent( event );
+	if (oldOptionsDir.exists( optionsFileName ))
+	{
+		QString newOptionsFilePath = newOptionsDir.filePath( optionsFileName );
+
+		reportInformation( nullptr, "Migrating options file",
+			"DoomRunner changed the location of "%optionsFileName%", where it stores your presets and other options. "
+			%optionsFileName%" has been found in the old data directory \""%oldOptionsDir.path()%"\""
+			" and will be automatically moved to the new data directory \""%newOptionsDir.path()%"\""
+		);
+		logInfo() <<
+			"NOTICE: Found "%optionsFileName%" in the old data directory \""%oldOptionsDir.path()%"\". "
+			"Moving it to the new data directory \""%newOptionsDir.path()%"\"";
+
+		oldOptionsDir.rename( optionsFileName, newOptionsFilePath );
+	}
 }
 
-// This is called after the window is fully initialized and physically shown (drawn for the first time).
-void MainWindow::onWindowShown()
+void MainWindow::initAppDataDir()
 {
-	// Potentially expensive file-system operations are done here,
-	// just to make sure the application doesn't hang without even showing anything.
-	// We should probably do this asynchronously, but there has not been any reported problems with this,
-	// so it's probably fine.
-
 	// create a directory for application data, if it doesn't exist already
 	appDataDir.setPath( os::getThisAppDataDir() );
 	if (!appDataDir.exists())
@@ -929,8 +910,58 @@ void MainWindow::onWindowShown()
 	// backward compatibility
 	moveOptionsFromOldDir( os::getThisAppConfigDir(), appDataDir, defaultOptionsFileName );
 
-	optionsFilePath = appDataDir.filePath( defaultOptionsFileName );
 	cacheFilePath = appDataDir.filePath( defaultCacheFileName );
+	optionsFilePath = appDataDir.filePath( defaultOptionsFileName );
+}
+
+// This is called when the window layout is initialized and widget sizes calculated,
+// but before the window is physically shown (drawn for the first time).
+void MainWindow::showEvent( QShowEvent * event )
+{
+	initAppDataDir();
+
+	// Options loading is now split into two phases.
+	// The reason is that appearance settings and geometry need to be applied before the window is drawn
+	// for the first time (so that the window does not appear white and then changes to dark or is moved/resized),
+	// while the rest of the settings need to be loaded after the appearance settings are already visibly applied
+	// (the window is already drawn with the loaded settings) so that the possible error message boxes are drawn
+	// using the already changed appearance and over already changed main window.
+	// That's why here, before the window appears for the first time, we read and parse the JSON file, extract
+	// the appearance settings and geometry and apply it.
+	// Then we let the window show with the modified settings, and only then load and apply the rest of the options,
+	// and possibly open the initial setup dialog.
+
+	if (fs::isValidFile( optionsFilePath ))
+	{
+		// read and parse the file
+		parsedOptionsDoc = readOptions( optionsFilePath );
+
+		// phase 1 - load app appearance and window geometry
+		if (parsedOptionsDoc && parsedOptionsDoc->isValid())
+		{
+			loadAppearance( *parsedOptionsDoc, /*loadGeometry*/ true );
+		}
+	}
+
+	// This must be called after the appearance settings are already loaded and applied,
+	// because they might change application style, and that might change widget sizes.
+	// Calling it in the onWindowShown() on the other hand, causes the window to briefly appear with the original layout
+	// and then switch to the adjusted layout in the next frame.
+	adjustUi();
+
+	superClass::showEvent( event );
+
+	// This will be called after the window is fully initialized and physically shown (drawn for the first time).
+	QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection );
+}
+
+// This is called after the window is fully initialized and physically shown (drawn for the first time).
+void MainWindow::onWindowShown()
+{
+	// The potentially most expensive file-system operations like reading exe files are done here,
+	// just to make sure the application doesn't hang before even showing anything.
+	// It would be best to do this asynchronously, but there has not been any reported problems with is,
+	// so it's probably fine.
 
 	// cache needs to be loaded first, because loadOptions() already needs it
 	if (fs::isValidFile( cacheFilePath ))
@@ -938,31 +969,32 @@ void MainWindow::onWindowShown()
 		loadCache( cacheFilePath );
 	}
 
-	// try to load last saved state
+	auto optionsDocDeleter = atScopeEndDo( [ this ](){ parsedOptionsDoc.reset(); } );  // delete when no longer needed
+
 	if (fs::isValidFile( optionsFilePath ))
 	{
-		loadOptions( optionsFilePath );
+		// phase 2 - load the rest of options
+		if (parsedOptionsDoc && parsedOptionsDoc->isValid())
+		{
+			loadTheRestOfOptions( *parsedOptionsDoc );
+		}
 	}
 	else  // this is a first run, perform an initial setup
 	{
 		runSetupDialog();
 	}
 
-	// This must be called after the options are loaded, because options might change application style,
-	// and that might change widget sizes.
-	adjustUi();
-
 	// integrate the loaded storage settings into the titles of options group-boxes
 	updateOptionsGrpBoxTitles( settings );
 
- #if IS_WINDOWS
+#if IS_WINDOWS
 	// Qt on Windows does not automatically follow OS preferences, so we have to monitor the OS settings for changes
 	// and manually change our theme when it does.
-	// Rather set this after loading options, because the MainWindow is blocked (is not updating) during the whole
+	// Rather start this after loading options, because the MainWindow is blocked (is not updating) during the whole
 	// options loading including any potential error messages, which if the theme is switched in the middle
 	// might show in some kind of half-switched state.
 	systemThemeWatcher.start();
- #endif
+#endif
 
 	// if the presets are empty, add a default one so that users don't complain that they can't enter anything
 	if (presetModel.isEmpty())
@@ -1029,7 +1061,7 @@ void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 
 void MainWindow::closeEvent( QCloseEvent * event )
 {
-	if (!optionsCorrupted)  // don't overwrite existing file with empty data, when there was just one small syntax error
+	if (!optionsCorrupted)  // don't overwrite existing file with empty data, just because there was a syntax error
 		saveOptions( optionsFilePath );
 
 	if (isCacheDirty())
@@ -1078,7 +1110,8 @@ void MainWindow::runSetupDialog()
 		iwadModel.list(),
 		mapSettings,
 		modSettings,
-		settings
+		settings,
+		appearance
 	);
 
 	int code = dialog.exec();
@@ -1111,6 +1144,7 @@ void MainWindow::runSetupDialog()
 		mapSettings = std::move( dialog.mapSettings );
 		modSettings = std::move( dialog.modSettings );
 		settings = std::move( dialog.settings );
+		appearance = std::move( dialog.appearance );
 
 		// update all stored paths
 		togglePathStyle( settings.pathStyle );
@@ -3084,6 +3118,9 @@ void MainWindow::updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks
 
 bool MainWindow::saveOptions( const QString & filePath )
 {
+	// This memeber is not updated regularly, because it is only needed for saving app state. Update it now.
+	appearance.geometry = this->geometry();
+
 	OptionsToSave opts =
 	{
 		// files
@@ -3109,13 +3146,56 @@ bool MainWindow::saveOptions( const QString & filePath )
 		mapSettings,
 		modSettings,
 		settings,
-		this->geometry()
+
+		appearance,
 	};
 
-	return writeOptionsToFile( opts, filePath );
+	QJsonDocument jsonDoc = serializeOptionsToJsonDoc( opts );
+
+	return writeJsonToFile( jsonDoc, filePath, "options" );
 }
 
-bool MainWindow::loadOptions( const QString & filePath )
+std::unique_ptr< JsonDocumentCtx > MainWindow::readOptions( const QString & filePath )
+{
+	auto jsonDoc = readJsonFromFile( filePath, "options" );
+	if (fs::isValidFile( filePath ) && (!jsonDoc || !jsonDoc->isValid()))  // file exists but couldn't be read or is not a valid JSON
+	{
+		optionsCorrupted = true;   // don't overwrite it, give user chance to fix it
+	}
+	return jsonDoc;
+}
+
+bool MainWindow::reloadOptions( const QString & filePath )
+{
+	auto jsonDoc = readOptions( filePath );
+	if (!jsonDoc || !jsonDoc->isValid())
+	{
+		return false;
+	}
+
+	// Load appearance as last, so that possible loading errors are still displayed
+	// using the current application style and colors to prevent unreadable error messages.
+
+	loadTheRestOfOptions( *jsonDoc );
+
+	loadAppearance( *jsonDoc, /*loadGeometry*/ false );
+
+	return true;
+}
+
+void MainWindow::loadAppearance( const JsonDocumentCtx & optionsDoc, bool loadGeometry )
+{
+	AppearanceToLoad opts
+	{
+		appearance,
+	};
+
+	deserializeAppearanceFromJsonDoc( optionsDoc, opts, loadGeometry );
+
+	restoreAppearance( opts.appearance, loadGeometry );
+}
+
+void MainWindow::loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc )
 {
 	// Some options can be read directly into the class members using references,
 	// but the models can't, because the UI must be prepared for reseting its models first.
@@ -3144,21 +3224,11 @@ bool MainWindow::loadOptions( const QString & filePath )
 		mapSettings,
 		modSettings,
 		settings,
-		{}  // window geometry
 	};
 
-	bool optionsRead = readOptionsFromFile( opts, filePath );
-	if (!optionsRead)
-	{
-		if (fs::exists( filePath ))
-			optionsCorrupted = true;  // file exists but cannot be read, don't overwrite it, give user chance to fix it
-		return false;
-	}
+	deserializeOptionsFromJsonDoc( optionsDoc, opts );
 
 	restoreLoadedOptions( std::move(opts) );
-
-	optionsCorrupted = false;
-	return true;
 }
 
 bool MainWindow::isCacheDirty() const
@@ -3179,13 +3249,13 @@ bool MainWindow::saveCache( const QString & filePath )
 
 bool MainWindow::loadCache( const QString & filePath )
 {
-	JsonDocumentCtx jsonDoc = readJsonFromFile( filePath, "file-info cache", IgnoreEmpty );
-	if (!jsonDoc)
+	auto jsonDoc = readJsonFromFile( filePath, "file-info cache", IgnoreEmpty );
+	if (!jsonDoc || !jsonDoc->isValid())
 	{
 		return false;
 	}
 
-	const JsonObjectCtx & jsRoot = jsonDoc.rootObject();
+	const JsonObjectCtx & jsRoot = jsonDoc->rootObject();
 	if (JsonObjectCtx jsExeCache = jsRoot.getObject("exe_info"))
 		os::g_cachedExeInfo.deserialize( jsExeCache );
 	//if (JsonObjectCtx jsWadCache = jsRoot.getObject("wad_info"))
@@ -3336,19 +3406,6 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	restoreGlobalOptions( globalOpts );
 
 	restoringOptionsInProgress = false;
-
-	// Rather set this in the end after all potential loading errors have been shown,
-	// so that the error message dialogs don't show in some kind of half-switched state.
-	if (!settings.appStyle.isNull())
-		themes::setAppStyle( settings.appStyle );  // set style first, on Windows it may be overriden by color scheme
-	if (IS_WINDOWS || settings.colorScheme != ColorScheme::SystemDefault)
-		themes::setAppColorScheme( settings.colorScheme );
-
-	// window geometry
-	if (areScreenCoordinatesValid( opts.geometry.x, opts.geometry.y ))  // move the window only if the coordinates make sense
-		this->move( opts.geometry.x, opts.geometry.y );
-	if (opts.geometry.width > 0 && opts.geometry.height > 0)
-		this->resize( opts.geometry.width, opts.geometry.height );
 
 	updateLaunchCommand();
 }
@@ -3749,6 +3806,45 @@ void MainWindow::restoreEnvVars( const EnvVars & envVars, QTableWidget * table )
 	}
 
 	disableEnvVarsCallbacks = false;
+}
+
+void MainWindow::restoreAppearance( const AppearanceSettings & appearance, bool restoreGeometry )
+{
+	// set style first, on Windows it may be overriden by color scheme
+	if (!appearance.appStyle.isNull())
+		themes::setAppStyle( appearance.appStyle );
+
+	if (IS_WINDOWS || appearance.colorScheme != ColorScheme::SystemDefault)
+		themes::setAppColorScheme( appearance.colorScheme );
+
+	if (restoreGeometry)
+	{
+		restoreWindowGeometry( appearance.geometry );
+	}
+}
+
+void MainWindow::restoreWindowGeometry( const WindowGeometry & geometry )
+{
+	auto newGeometry = this->geometry();  // start with the current geometry and update it with the values we have
+
+	if (geometry.x != INT_MIN && geometry.y != INT_MIN)  // our internal marker that the coordinates have not been read properly
+	{
+		if (areScreenCoordinatesValid( geometry.x, geometry.y ))  // move the window only if the coordinates make sense
+		{
+			newGeometry.moveTo( geometry.x, geometry.y );
+		}
+		else
+		{
+			logInfo() << "invalid coordinates detected ("<<geometry.x<<","<<geometry.y<<") leaving window at the default position";
+		}
+	}
+
+	if (geometry.width > 0 && geometry.height > 0)
+	{
+		newGeometry.setSize({ geometry.width, geometry.height });
+	}
+
+	this->setGeometry( newGeometry );
 }
 
 

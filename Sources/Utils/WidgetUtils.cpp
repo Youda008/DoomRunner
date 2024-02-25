@@ -411,7 +411,7 @@ void swapTableRows( QTableWidget * widget, int row1, int row2 )
 
 void expandParentsOfNode( QTreeView * view, const QModelIndex & modelIindex )
 {
-	for (QModelIndex currentIndex = modelIindex; currentIndex.isValid(); currentIndex = currentIndex.parent())
+	for (QModelIndex currentIndex = modelIindex.parent(); currentIndex.isValid(); currentIndex = currentIndex.parent())
 		if (!view->isExpanded( currentIndex ))
 			view->expand( currentIndex );
 }

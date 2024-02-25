@@ -542,6 +542,9 @@ MainWindow::MainWindow()
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
 
+	// make sure the correct widgets are enabled/disabled according to the default storage settings, until the settings are loaded
+	togglePresetSubWidgets( false );
+
 	// OS-specific initialization
 
  #if !IS_WINDOWS
@@ -568,7 +571,7 @@ MainWindow::MainWindow()
 
 	addShortcut( { Qt::CTRL + Qt::Key_1 }, [ this ](){ ui->presetListView->setFocus(); } );
 	addShortcut( { Qt::CTRL + Qt::Key_2 }, [ this ](){ ui->engineCmbBox->setFocus(); } );
-	addShortcut( { Qt::CTRL + Qt::Key_3 }, [ this ](){ ui->iwadListView->setFocus(); } );    // shut-up clang, this is the official way to do it by Qt doc
+	addShortcut( { Qt::CTRL + Qt::Key_3 }, [ this ](){ ui->iwadListView->setFocus(); } );     // shut-up clang, this is the official way to do it by Qt doc
 	addShortcut( { Qt::CTRL + Qt::Key_4 }, [ this ](){ ui->mapDirView->setFocus(); } );
 	addShortcut( { Qt::CTRL + Qt::Key_5 }, [ this ](){ ui->configCmbBox->setFocus(); } );
 	addShortcut( { Qt::CTRL + Qt::Key_6 }, [ this ](){ ui->modListView->setFocus(); } );
@@ -1355,6 +1358,9 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	// make sure all paths loaded from JSON are stored in correct format
 	togglePathStyle( settings.pathStyle );
 
+	// make sure the correct widgets are enabled/disabled according to the loaded storage settings, until a preset is selected
+	togglePresetSubWidgets( false );
+
 	// load the last selected preset
 	if (!opts.selectedPreset.isEmpty())
 	{
@@ -1943,8 +1949,18 @@ void MainWindow::runOptsStorageDialog()
 	if (code == QDialog::Accepted)
 	{
 		settings.assign( dialog.storageSettings );
+
 		scheduleSavingOptions();
+
 		updateOptionsGrpBoxTitles( settings );
+
+		bool isPresetSelected = getSelectedPreset() != nullptr;
+		ui->launchModeGrpBox->setEnabled( isPresetSelected || settings.launchOptsStorage != StoreToPreset );
+		ui->gameplayGrpBox->setEnabled( isPresetSelected || settings.gameOptsStorage != StoreToPreset );
+		ui->compatGrpBox->setEnabled( isPresetSelected || settings.compatOptsStorage != StoreToPreset );
+		ui->multiplayerGrpBox->setEnabled( isPresetSelected || settings.launchOptsStorage != StoreToPreset );
+		ui->videoGrpBox->setEnabled( isPresetSelected || settings.videoOptsStorage != StoreToPreset );
+		ui->audioGrpBox->setEnabled( isPresetSelected || settings.audioOptsStorage != StoreToPreset );
 	}
 }
 
@@ -2105,12 +2121,15 @@ void MainWindow::onPresetToggled( const QItemSelection & /*selected*/, const QIt
 void MainWindow::togglePresetSubWidgets( bool enabled )
 {
 	ui->engineCmbBox->setEnabled( enabled );
+	ui->engineDirBtn->setEnabled( enabled );
 	ui->configCmbBox->setEnabled( enabled );
+	ui->configCloneBtn->setEnabled( enabled );
 	ui->iwadListView->setEnabled( enabled );
 	ui->mapDirView->setEnabled( enabled );
 	ui->modListView->setEnabled( enabled );
 	ui->modBtnAdd->setEnabled( enabled );
 	ui->modBtnAddDir->setEnabled( enabled );
+	ui->modBtnAddArg->setEnabled( enabled );
 	ui->modBtnDel->setEnabled( enabled );
 	ui->modBtnUp->setEnabled( enabled );
 	ui->modBtnDown->setEnabled( enabled );
@@ -2118,6 +2137,15 @@ void MainWindow::togglePresetSubWidgets( bool enabled )
 	ui->presetEnvVarTable->setEnabled( enabled );
 	ui->presetEnvVarBtnAdd->setEnabled( enabled );
 	ui->presetEnvVarBtnDel->setEnabled( enabled );
+
+	ui->launchModeGrpBox->setEnabled( enabled || settings.launchOptsStorage != StoreToPreset );
+	ui->gameplayGrpBox->setEnabled( enabled || settings.gameOptsStorage != StoreToPreset);
+	ui->compatGrpBox->setEnabled( enabled || settings.compatOptsStorage != StoreToPreset);
+	ui->multiplayerGrpBox->setEnabled( enabled || settings.launchOptsStorage != StoreToPreset );
+	ui->videoGrpBox->setEnabled( enabled || settings.videoOptsStorage != StoreToPreset);
+	ui->audioGrpBox->setEnabled( enabled || settings.audioOptsStorage != StoreToPreset);
+	ui->altPathsGrpBox->setEnabled( enabled );
+	ui->presetEnvVarsGrpBox->setEnabled( enabled );
 }
 
 void MainWindow::clearPresetSubWidgets()

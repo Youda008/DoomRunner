@@ -45,11 +45,9 @@
 #include <QDir>
 #include <QFileIconProvider>  // EmptyIconProvider
 #include <QMessageBox>
+#include <QShortcut>
 #include <QTimer>
 #include <QProcess>  // startDetached
-
-#include <QGuiApplication>
-#include <QScreen>
 
 
 //======================================================================================================================
@@ -73,6 +71,13 @@ static constexpr int VarValueColumn = 1;
 
 //======================================================================================================================
 //  MainWindow-specific utils
+
+template< typename Func >
+void MainWindow::addShortcut( const QKeySequence & keys, const Func & shortcutAction )
+{
+	QShortcut * shortcut = new QShortcut( keys, this );
+	connect( shortcut, &QShortcut::activated, this, shortcutAction );
+}
 
 Preset * MainWindow::getSelectedPreset() const
 {
@@ -559,6 +564,15 @@ MainWindow::MainWindow()
 	ui->exportPresetToShortcutAction->setEnabled( false );
  #endif
 
+	// setup key shortcuts for switching focus
+
+	addShortcut( { Qt::CTRL + Qt::Key_1 }, [ this ](){ ui->presetListView->setFocus(); } );
+	addShortcut( { Qt::CTRL + Qt::Key_2 }, [ this ](){ ui->engineCmbBox->setFocus(); } );
+	addShortcut( { Qt::CTRL + Qt::Key_3 }, [ this ](){ ui->iwadListView->setFocus(); } );    // shut-up clang, this is the official way to do it by Qt doc
+	addShortcut( { Qt::CTRL + Qt::Key_4 }, [ this ](){ ui->mapDirView->setFocus(); } );
+	addShortcut( { Qt::CTRL + Qt::Key_5 }, [ this ](){ ui->configCmbBox->setFocus(); } );
+	addShortcut( { Qt::CTRL + Qt::Key_6 }, [ this ](){ ui->modListView->setFocus(); } );
+
 	// setup main list views
 
 	setupPresetList();
@@ -798,7 +812,7 @@ void MainWindow::setupModList()
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
-	addCmdArgAction = ui->modListView->addAction( "Add command line argument", {} );
+	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL + Qt::Key_Asterisk } );
 	ui->modListView->enableInsertSeparator();
 	ui->modListView->enableOpenFileLocation();
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &thisClass::modAdd );
@@ -990,15 +1004,6 @@ void MainWindow::onWindowShown()
 	// integrate the loaded storage settings into the titles of options group-boxes
 	updateOptionsGrpBoxTitles( settings );
 
-#if IS_WINDOWS
-	// Qt on Windows does not automatically follow OS preferences, so we have to monitor the OS settings for changes
-	// and manually change our theme when it does.
-	// Rather start this after loading options, because the MainWindow is blocked (is not updating) during the whole
-	// options loading including any potential error messages, which if the theme is switched in the middle
-	// might show in some kind of half-switched state.
-	systemThemeWatcher.start();
-#endif
-
 	// if the presets are empty, add a default one so that users don't complain that they can't enter anything
 	if (presetModel.isEmpty())
 	{
@@ -1010,6 +1015,18 @@ void MainWindow::onWindowShown()
 		// and want to start it as easily as possible with no interest about all the other possibilities.
 		autoselectItems();
 	}
+
+	// make keyboard actions control the preset list by default
+	ui->presetListView->setFocus();
+
+ #if IS_WINDOWS
+	// Qt on Windows does not automatically follow OS preferences, so we have to monitor the OS settings for changes
+	// and manually change our theme when it does.
+	// Rather start this after loading options, because the MainWindow is blocked (is not updating) during the whole
+	// options loading including any potential error messages, which if the theme is switched in the middle
+	// might show in some kind of half-switched state.
+	systemThemeWatcher.start();
+ #endif
 
 	if (settings.checkForUpdates)
 	{

@@ -16,7 +16,6 @@
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
 #include "Themes.hpp"  // SystemThemeWatcher
-#include "Utils/JsonUtils.hpp"  // JsonDocumentCtx
 
 #include <QMainWindow>
 #include <QString>
@@ -27,6 +26,8 @@ class QTableWidget;
 class QItemSelection;
 class QComboBox;
 class QLineEdit;
+class QShortcut;
+class JsonDocumentCtx;
 class OptionsToLoad;
 
 namespace Ui {
@@ -248,6 +249,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	);
 
  private: // MainWindow-specific utils
+
+	template< typename Func >
+	void addShortcut( const QKeySequence & keys, const Func & shortcutAction );
 
 	struct ConfigFile;
 

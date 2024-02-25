@@ -147,7 +147,7 @@ void EditableListView::enableItemCloning()
 
 void EditableListView::enableInsertSeparator()
 {
-	insertSeparatorAction = addAction( "Insert separator", {} );
+	insertSeparatorAction = addAction( "Insert separator", { Qt::CTRL + Qt::Key_Slash } );
 }
 
 void EditableListView::enableFinding()

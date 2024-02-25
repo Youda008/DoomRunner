@@ -55,14 +55,6 @@ bool ModifierHandler::updateModifiers_released( int key )
 	return updateModifiers< KeyState::Released >( key );
 }
 
-bool ModifierHandler::updateModifiers( int key, KeyState state )
-{
-	if (state == KeyState::Pressed)
-		return updateModifiers< KeyState::Pressed >( key );
-	else
-		return updateModifiers< KeyState::Released >( key );
-}
-
 
 //======================================================================================================================
 //  KeyPressEmitter
@@ -73,13 +65,15 @@ bool KeyPressFilter::eventFilter( QObject * obj, QEvent * event )
 	{
 		QKeyEvent * keyEvent = static_cast< QKeyEvent * >( event );
 		int key = keyEvent->key();
-		KeyState state = event->type() == QEvent::KeyPress ? KeyState::Pressed : KeyState::Released;
+		int state = event->type();
 
-		emit keyStateChanged( key, state );
+		emit keyStateChanged( key, state == QEvent::KeyPress ? KeyState::Pressed : KeyState::Released );
 
-		bool isModifier = modifierHandler.updateModifiers( key, state );
+		bool isModifier = (state == QEvent::KeyPress)
+			? modifierHandler.updateModifiers_pressed( key )
+			: modifierHandler.updateModifiers_released( key );
 
-		if (!isModifier && state == KeyState::Pressed)
+		if (!isModifier && state == QEvent::KeyPress)
 			emit keyPressed( key, modifierHandler.pressedModifiers() );
 
 		if (suppressKeyEvents)

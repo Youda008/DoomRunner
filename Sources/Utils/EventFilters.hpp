@@ -40,7 +40,6 @@ class ModifierHandler {
 
 	bool updateModifiers_pressed( int key );
 	bool updateModifiers_released( int key );
-	bool updateModifiers( int key, KeyState state );
 
 	uint8_t pressedModifiers() const { return _pressedModifiers; }
 

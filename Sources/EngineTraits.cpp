@@ -80,6 +80,9 @@ static const QStringList zdoomCompatLevels =
 	                      //   mushroom, mbfmonstermove, noblockfriends, maskedmidtex
 	"6 - Boom (Strict)",  // As Boom above, but also sets these:
 	                      //   corpsegibs, hitscan, invisibility, nopassover, notossdrop, wallrun, maskedmidtex
+    "7 - MBF (Strict)",
+    "8 - MBF 21",
+    "9 - MBF 21 (Strict)",
 };
 
 static const QStringList prboomCompatLevels =
@@ -235,7 +238,7 @@ QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 
 	// Properly working -compatmode is present only in GZDoom,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
-	if (_exeBaseName == "gzdoom")
+	if (_exeBaseName == "gzdoom" || _exeBaseName == "vkdoom")
 		return { "-compatmode", QString::number( compatLevel ) };
 	else if (_familyTraits->compLvlStyle == CompatLevelStyle::ZDoom)
 		return { "+compatmode", QString::number( compatLevel ) };

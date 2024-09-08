@@ -23,8 +23,8 @@ const QStringVec configFileSuffixes = {"ini", "cfg"};
 const QString saveFileSuffix = "zds";
 const QString demoFileSuffix = "lmp";
 
-const QStringVec iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke"};
-const QStringVec pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex", "hhe"};
+const QStringVec iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke", "epk", "vwad"};
+const QStringVec pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex", "hhe", "epk", "vwad"};
 const QStringVec dukeSuffixes = {"grp", "rff"};
 
 // The correct way would be to recognize the type by file header, but there are incorrectly made mods

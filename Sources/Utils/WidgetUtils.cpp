@@ -119,6 +119,14 @@ void chooseItemByIndex( QListView * view, int index )
 	setCurrentItemByIndex( view, index );
 }
 
+void selectSetCurrentAndScrollTo( QListView * view, int index )
+{
+	const auto origHorizontalPos = view->horizontalScrollBar()->value();
+	selectAndSetCurrentByIndex( view, index );
+	scrollToItemAtIndex( view, index );
+	view->horizontalScrollBar()->setValue( origHorizontalPos );
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  tree view helpers
@@ -224,6 +232,14 @@ void chooseItemByIndex( QTreeView * view, const QModelIndex & index )
 	deselectSelectedItems( view );
 	selectItemByIndex( view, index );
 	setCurrentItemByIndex( view, index );
+}
+
+void selectSetCurrentAndScrollTo( QTreeView * view, const QModelIndex & index )
+{
+	const auto origHorizontalPos = view->horizontalScrollBar()->value();
+	selectAndSetCurrentByIndex( view, index );
+	scrollToItemAtIndex( view, index );
+	view->horizontalScrollBar()->setValue( origHorizontalPos );
 }
 
 

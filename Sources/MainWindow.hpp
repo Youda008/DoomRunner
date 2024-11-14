@@ -73,7 +73,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onPresetDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 	void onModDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 
+	void showIWADDesc( const QModelIndex & index );
 	void showMapPackDesc( const QModelIndex & index );
+	void showModDesc( const QModelIndex & index );
 
 	void onMapDirUpdated( const QString & path );
 
@@ -228,6 +230,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateDemoFilesFromDir( const QString * demoDir = nullptr );
 	void updateCompatLevels();
 	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
+
+	void showTxtDescriptionFor( const QString & filePath, const QString & contentType );
 
 	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
 

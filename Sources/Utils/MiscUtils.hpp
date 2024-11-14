@@ -216,6 +216,12 @@ inline QString & capitalize( QString & str )
 	return str;
 }
 
+inline QString capitalize( const QString & str )
+{
+	auto strCopy = str;
+	return capitalize( strCopy );
+}
+
 /// Replaces everything between startingChar and endingChar with replaceWith
 QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith );
 

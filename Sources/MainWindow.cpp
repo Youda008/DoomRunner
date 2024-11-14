@@ -735,8 +735,9 @@ void MainWindow::setupIWADList()
 	// set selection rules
 	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
-	// set reaction when an item is selected
+	// set reaction when an item is clicked or double-clicked
 	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onIWADToggled );
+	connect( ui->iwadListView, &QListView::doubleClicked, this, &thisClass::showIWADDesc );
 }
 
 void MainWindow::setupMapPackList()
@@ -775,7 +776,7 @@ void MainWindow::setupMapPackList()
 	ui->mapDirView->setDragEnabled( true );
 	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
 
-	// set reaction when an item is selected
+	// set reaction when an item is clicked or double-clicked
 	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onMapPackToggled );
 	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
 
@@ -812,6 +813,7 @@ void MainWindow::setupModList()
 
 	// set reaction when an item is checked or unchecked
 	connect( &modModel, &QAbstractListModel::dataChanged, this, &thisClass::onModDataChanged );
+	connect( ui->modListView, &QListView::doubleClicked, this, &thisClass::showModDesc );
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
@@ -2333,42 +2335,42 @@ void MainWindow::onModDataChanged( const QModelIndex & topLeft, const QModelInde
 	updateLaunchCommand();
 }
 
-void MainWindow::showMapPackDesc( const QModelIndex & index )
+void MainWindow::showTxtDescriptionFor( const QString & filePath, const QString & contentType )
 {
-	QFileInfo mapDataFileInfo( mapModel.filePath( index ) );
+	QFileInfo dataFileInfo( filePath );
 
-	if (!mapDataFileInfo.isFile())  // user could click on a directory
+	if (!dataFileInfo.isFile())  // user could click on a directory
 	{
 		return;
 	}
 
 	// get the corresponding file with txt suffix
-	QFileInfo mapDescFileInfo(fs::replaceFileSuffix( mapDataFileInfo.filePath(), "txt" ));
-	if (!mapDescFileInfo.isFile())
+	QFileInfo descFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "txt" ) );
+	if (!descFileInfo.isFile())
 	{
 		// try TXT in case we are in a case-sensitive file-system such as Linux
-		mapDescFileInfo = QFileInfo(fs::replaceFileSuffix( mapDataFileInfo.filePath(), "TXT" ));
-		if (!mapDescFileInfo.isFile())
+		descFileInfo = QFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "TXT" ) );
+		if (!descFileInfo.isFile())
 		{
-			reportUserError( this, "Cannot open map description",
-				"Map description file \""%mapDescFileInfo.fileName()%"\" does not exist" );
+			reportUserError( this, "Cannot open "%contentType,
+				capitalize( contentType )%" file \""%descFileInfo.fileName()%"\" does not exist" );
 			return;
 		}
 	}
 
-	QFile mapDescFile( mapDescFileInfo.filePath() );
-	if (!mapDescFile.open( QIODevice::Text | QIODevice::ReadOnly ))
+	QFile descFile( descFileInfo.filePath() );
+	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
 	{
-		reportRuntimeError( this, "Cannot open map description",
-			"Failed to open map description file \""%mapDescFileInfo.fileName()%"\" ("%mapDescFile.errorString()%")" );
+		reportRuntimeError( this, "Cannot open "%contentType,
+			"Failed to open map "%contentType%" \""%descFileInfo.fileName()%"\" ("%descFile.errorString()%")" );
 		return;
 	}
 
-	QByteArray desc = mapDescFile.readAll();
+	QByteArray desc = descFile.readAll();
 
 	QDialog descDialog( this );
-	descDialog.setObjectName( "MapDescription" );
-	descDialog.setWindowTitle( mapDescFileInfo.fileName() );
+	descDialog.setObjectName( "FileDescription" );
+	descDialog.setWindowTitle( descFileInfo.fileName() );
 	descDialog.setWindowModality( Qt::WindowModal );
 
 	QVBoxLayout * layout = new QVBoxLayout( &descDialog );
@@ -2395,6 +2397,21 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	descDialog.move( windowCenterX, windowCenterY - (descDialog.height() / 2) );
 
 	descDialog.exec();
+}
+
+void MainWindow::showIWADDesc( const QModelIndex & index )
+{
+	showTxtDescriptionFor( iwadModel[ index.row() ].path, "IWAD description" );
+}
+
+void MainWindow::showMapPackDesc( const QModelIndex & index )
+{
+	showTxtDescriptionFor( mapModel.filePath( index ), "map description" );
+}
+
+void MainWindow::showModDesc( const QModelIndex & index )
+{
+	showTxtDescriptionFor( modModel[ index.row() ].path, "mod description" );
 }
 
 void MainWindow::onMapDirUpdated( const QString & path )

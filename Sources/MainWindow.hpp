@@ -119,6 +119,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onNoMonstersToggled( bool checked );
 	void onFastMonstersToggled( bool checked );
 	void onMonstersRespawnToggled( bool checked );
+	void onPistolStartToggled( bool checked );
 	void onAllowCheatsToggled( bool checked );
 	void onCompatLevelSelected( int compatLevel );
 

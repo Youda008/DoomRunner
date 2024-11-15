@@ -191,6 +191,7 @@ struct GameplayOptions : public GameplayDetails  // inherited instead of include
 	bool noMonsters = false;
 	bool fastMonsters = false;
 	bool monstersRespawn = false;
+	bool pistolStart = false;
 	bool allowCheats = false;
 
 	void assign( const GameplayDetails & other ) { static_cast< GameplayDetails & >( *this ) = other; }

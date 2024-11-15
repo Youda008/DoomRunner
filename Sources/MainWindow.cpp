@@ -636,10 +636,11 @@ MainWindow::MainWindow()
 	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &thisClass::onNoMonstersToggled );
 	connect( ui->fastMonstersChkBox, &QCheckBox::toggled, this, &thisClass::onFastMonstersToggled );
 	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::onMonstersRespawnToggled );
+	connect( ui->pistolStartChkBox, &QCheckBox::toggled, this, &thisClass::onPistolStartToggled );
+	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::onAllowCheatsToggled );
 	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runGameOptsDialog );
 	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatOptsDialog );
 	connect( ui->compatLevelCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onCompatLevelSelected );
-	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::onAllowCheatsToggled );
 
 	// alternative paths
 	connect( ui->usePresetNameChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameToggled );
@@ -1737,6 +1738,7 @@ void MainWindow::restoreGameplayOptions( const GameplayOptions & opts )
 	ui->noMonstersChkBox->setChecked( opts.noMonsters );
 	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
 	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
+	ui->pistolStartChkBox->setChecked( opts.pistolStart );
 	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
 }
 
@@ -2953,6 +2955,7 @@ void MainWindow::toggleOptionsSubwidgets( bool enabled )
 	ui->noMonstersChkBox->setEnabled( enabled );
 	ui->fastMonstersChkBox->setEnabled( enabled );
 	ui->monstersRespawnChkBox->setEnabled( enabled );
+	ui->pistolStartChkBox->setEnabled( enabled );
 	ui->gameOptsBtn->setEnabled( enabled );
 	ui->compatOptsBtn->setEnabled( enabled );
 	ui->compatLevelCmbBox->setEnabled( enabled && lastCompLvlStyle != CompatLevelStyle::None );
@@ -3065,6 +3068,14 @@ void MainWindow::onFastMonstersToggled( bool checked )
 void MainWindow::onMonstersRespawnToggled( bool checked )
 {
 	bool storageModified = STORE_GAMEPLAY_OPTION( monstersRespawn, checked );
+
+	scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onPistolStartToggled( bool checked )
+{
+	bool storageModified = STORE_GAMEPLAY_OPTION( pistolStart, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -4253,6 +4264,10 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		cmd.arguments << "-fast";
 	if (ui->monstersRespawnChkBox->isEnabled() && ui->monstersRespawnChkBox->isChecked())
 		cmd.arguments << "-respawn";
+	if (ui->pistolStartChkBox->isChecked())
+		cmd.arguments << "-pistolstart";
+	if (ui->allowCheatsChkBox->isChecked())
+		cmd.arguments << "+sv_cheats" << "1";
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags1 != 0)
 		cmd.arguments << "+dmflags" << QString::number( activeGameOpts.dmflags1 );
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags2 != 0)
@@ -4265,8 +4280,6 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		cmd.arguments << engine.getCompatLevelArgs( activeCompatOpts.compatLevel );
 	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
-	if (ui->allowCheatsChkBox->isChecked())
-		cmd.arguments << "+sv_cheats" << "1";
 
 	//-- multiplayer options -------------------------------------------------------
 

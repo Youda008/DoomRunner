@@ -895,14 +895,17 @@
               </layout>
              </item>
              <item>
-              <widget class="QPushButton" name="gameOptsBtn">
-               <property name="text">
-                <string>Detailed gameplay options</string>
-               </property>
-              </widget>
-             </item>
-             <item>
               <layout class="QHBoxLayout" name="hLayout_miscOpts">
+               <item>
+                <widget class="QCheckBox" name="pistolStartChkBox">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-pistolstart&lt;br/&gt;&lt;/span&gt;Every level is a fresh start, with a pistol only.&lt;br/&gt;(Only works in CrispyDoom, PrBoom+, DSDA Doom, Woof, DoomRetro)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>Pistol start</string>
+                 </property>
+                </widget>
+               </item>
                <item>
                 <widget class="QCheckBox" name="allowCheatsChkBox">
                  <property name="toolTip">
@@ -914,6 +917,16 @@
                 </widget>
                </item>
               </layout>
+             </item>
+             <item>
+              <widget class="QPushButton" name="gameOptsBtn">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Based on ZDoom and GZDoom, might not work in other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Detailed gameplay options</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -2132,7 +2145,7 @@
      <x>0</x>
      <y>0</y>
      <width>760</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuItemMenu">

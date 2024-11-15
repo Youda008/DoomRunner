@@ -294,10 +294,11 @@ static QJsonObject serialize( const GameplayOptions & opts )
 	jsOptions["no_monsters"] = opts.noMonsters;
 	jsOptions["fast_monsters"] = opts.fastMonsters;
 	jsOptions["monsters_respawn"] = opts.monstersRespawn;
+	jsOptions["pistol_start"] = opts.pistolStart;
+	jsOptions["allow_cheats"] = opts.allowCheats;
 	jsOptions["dmflags1"] = qint64( opts.dmflags1 );
 	jsOptions["dmflags2"] = qint64( opts.dmflags2 );
 	jsOptions["dmflags3"] = qint64( opts.dmflags3 );
-	jsOptions["allow_cheats"] = opts.allowCheats;
 
 	return jsOptions;
 }
@@ -309,10 +310,11 @@ static void deserialize( const JsonObjectCtx & jsOptions, GameplayOptions & opts
 	opts.noMonsters = jsOptions.getBool( "no_monsters", opts.noMonsters );
 	opts.fastMonsters = jsOptions.getBool( "fast_monsters", opts.fastMonsters );
 	opts.monstersRespawn = jsOptions.getBool( "monsters_respawn", opts.monstersRespawn );
+	opts.pistolStart = jsOptions.getBool( "pistol_start", opts.pistolStart );
+	opts.allowCheats = jsOptions.getBool( "allow_cheats", opts.allowCheats );
 	opts.dmflags1 = jsOptions.getInt( "dmflags1", opts.dmflags1 );
 	opts.dmflags2 = jsOptions.getInt( "dmflags2", opts.dmflags2 );
 	opts.dmflags3 = jsOptions.getInt( "dmflags3", opts.dmflags3 );
-	opts.allowCheats = jsOptions.getBool( "allow_cheats", opts.allowCheats );
 }
 
 static QJsonObject serialize( const CompatibilityOptions & opts )

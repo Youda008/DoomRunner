@@ -19,6 +19,7 @@ enum class Field
 {
 	DmFlags1 = 1,
 	DmFlags2 = 2,
+	DmFlags3 = 3,
 };
 
 struct DMFlag
@@ -86,6 +87,16 @@ static const DMFlag KEEP_AMMO                    = { Field::DmFlags1, 1 << 29, t
 static const DMFlag LOSE_HALF_AMMO               = { Field::DmFlags1, 1 << 30, false };
 static const DMFlag SPAWN_WHERE_DIED             = { Field::DmFlags2, 1 << 12, false };
 
+// new options added in GZDoom 4.11.0 and later
+static const DMFlag NO_PLAYER_CLIP               = { Field::DmFlags3, 1 << 0, false };  // since 4.11.0
+static const DMFlag COOP_SHARED_KEYS             = { Field::DmFlags3, 1 << 1, false };  // since 4.12.0
+static const DMFlag LOCAL_ITEMS                  = { Field::DmFlags3, 1 << 2, false };  // since 4.12.0
+//static const DMFlag NO_LOCAL_DROPS               = { Field::DmFlags3, 1 << 3, false };  // since 4.12.0
+//static const DMFlag NO_COOP_ITEMS                = { Field::DmFlags3, 1 << 4, false };  // since 4.12.0
+//static const DMFlag NO_COOP_THINGS               = { Field::DmFlags3, 1 << 5, false };  // since 4.12.0
+//static const DMFlag REMEMBER_LAST_WEAPON         = { Field::DmFlags3, 1 << 6, false };  // since 4.12.0
+static const DMFlag PISTOL_START                 = { Field::DmFlags3, 1 << 7, false };  // since 4.12.2
+
 
 //======================================================================================================================
 
@@ -103,6 +114,9 @@ GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayDetails & gamepl
 
 	ui->dmflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->dmflags2_line->setText( QString::number( gameplayDetails.dmflags2 ) );
+
+	ui->dmflags3_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
+	ui->dmflags3_line->setText( QString::number( gameplayDetails.dmflags3 ) );
 
 	updateCheckboxes();
 }
@@ -122,10 +136,15 @@ void GameOptsDialog::setFlag( const DMFlag & flag, bool enabled )
 		flags = &gameplayDetails.dmflags1;
 		line = ui->dmflags1_line;
 	}
-	else
+	else if (flag.field == Field::DmFlags1)
 	{
 		flags = &gameplayDetails.dmflags2;
 		line = ui->dmflags2_line;
+	}
+	else
+	{
+		flags = &gameplayDetails.dmflags3;
+		line = ui->dmflags3_line;
 	}
 
 	if (enabled != flag.defaultVal)
@@ -142,8 +161,10 @@ bool GameOptsDialog::isEnabled( const DMFlag & flag ) const
 
 	if (flag.field == Field::DmFlags1)
 		flags = &gameplayDetails.dmflags1;
-	else
+	else if (flag.field == Field::DmFlags2)
 		flags = &gameplayDetails.dmflags2;
+	else
+		flags = &gameplayDetails.dmflags3;
 
 	if (flag.defaultVal == 0)
 		return (*flags & flag.bit) != 0;
@@ -441,6 +462,26 @@ void GameOptsDialog::on_spawnWhereDied_toggled( bool checked )
 	setFlag( SPAWN_WHERE_DIED, checked );
 }
 
+void GameOptsDialog::on_noPlayerClipping_toggled( bool checked )
+{
+	setFlag( NO_PLAYER_CLIP, checked );
+}
+
+void GameOptsDialog::on_shareKeys_toggled( bool checked )
+{
+	setFlag( COOP_SHARED_KEYS, checked );
+}
+
+void GameOptsDialog::on_localItemPickups_toggled( bool checked )
+{
+	setFlag( LOCAL_ITEMS, checked );
+}
+
+void GameOptsDialog::on_pistolStart_toggled( bool checked )
+{
+	setFlag( PISTOL_START, checked );
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -453,6 +494,12 @@ void GameOptsDialog::on_dmflags1_line_textEdited( const QString & )
 void GameOptsDialog::on_dmflags2_line_textEdited( const QString & )
 {
 	gameplayDetails.dmflags2 = ui->dmflags2_line->text().toInt();
+	updateCheckboxes();
+}
+
+void GameOptsDialog::on_dmflags3_line_textEdited( const QString & )
+{
+	gameplayDetails.dmflags3 = ui->dmflags3_line->text().toInt();
 	updateCheckboxes();
 }
 
@@ -500,6 +547,7 @@ void GameOptsDialog::updateCheckboxes()
 	ui->checkAmmoForWeaponSwitch->setChecked( isEnabled( CHECK_AMMO_FOR_WEAPON_SWITCH ) );
 	ui->iconsDeathKillsItsSpawns->setChecked( isEnabled( ICONS_DEATH_KILLS_ITS_SPAWNS ) );
 	ui->endSectorCountsForKill->setChecked( isEnabled( END_SECTOR_COUNTS_FOR_KILL ) );
+
 	ui->weaponsStay->setChecked( isEnabled( WEAPONS_STAY ) );
 	ui->allowPowerups->setChecked( isEnabled( ALLOW_POWERUPS ) );
 	ui->allowHealth->setChecked( isEnabled( ALLOW_HEALTH ) );
@@ -513,6 +561,7 @@ void GameOptsDialog::updateCheckboxes()
 	ui->loseFragIfFragged->setChecked( isEnabled( LOSE_FRAG_IF_FRAGGED ) );
 	ui->keepFragsGained->setChecked( isEnabled( KEEP_FRAGS_GAINED ) );
 	ui->noTeamSwitching->setChecked( isEnabled( NO_TEAM_SWITCHING ) );
+
 	ui->spawnMultiWeapons->setChecked( isEnabled( SPAWN_MULTI_WEAPONS ) );
 	ui->loseEntireInventory->setChecked( isEnabled( LOSE_ENTIRE_INVENTORY ) );
 	ui->keepKeys->setChecked( isEnabled( KEEP_KEYS ) );
@@ -522,4 +571,9 @@ void GameOptsDialog::updateCheckboxes()
 	ui->keepAmmo->setChecked( isEnabled( KEEP_AMMO ) );
 	ui->loseHalfAmmo->setChecked( isEnabled( LOSE_HALF_AMMO ) );
 	ui->spawnWhereDied->setChecked( isEnabled( SPAWN_WHERE_DIED ) );
+
+	ui->noPlayerClipping->setChecked( isEnabled( NO_PLAYER_CLIP ) );
+	ui->shareKeys->setChecked( isEnabled( COOP_SHARED_KEYS ) );
+	ui->localItemPickups->setChecked( isEnabled( LOCAL_ITEMS ) );
+	ui->pistolStart->setChecked( isEnabled( PISTOL_START ) );
 }

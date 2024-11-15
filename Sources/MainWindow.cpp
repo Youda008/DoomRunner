@@ -4257,6 +4257,8 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		cmd.arguments << "+dmflags" << QString::number( activeGameOpts.dmflags1 );
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags2 != 0)
 		cmd.arguments << "+dmflags2" << QString::number( activeGameOpts.dmflags2 );
+	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags3 != 0)
+		cmd.arguments << "+dmflags3" << QString::number( activeGameOpts.dmflags3 );
 
 	const CompatibilityOptions & activeCompatOpts = activeCompatOptions();
 	if (ui->compatLevelCmbBox->isEnabled() && activeCompatOpts.compatLevel >= 0)

@@ -181,6 +181,7 @@ struct GameplayDetails
 {
 	int32_t dmflags1 = 0;
 	int32_t dmflags2 = 0;
+	int32_t dmflags3 = 0;  // only in GZDoom 4.11.0+
 };
 
 struct GameplayOptions : public GameplayDetails  // inherited instead of included to avoid long identifiers

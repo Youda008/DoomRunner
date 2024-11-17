@@ -12,7 +12,6 @@
 #include "Essential.hpp"
 
 #include "CommonTypes.hpp"
-#include "Utils/OSUtils.hpp"    // SandboxInfo
 #include "Utils/ExeReader.hpp"  // ExeVersionInfo
 
 #include <QString>

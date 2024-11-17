@@ -11,8 +11,6 @@
 
 #include "WindowsUtils.hpp"
 
-#include "ErrorHandling.hpp"
-
 
 namespace win {
 

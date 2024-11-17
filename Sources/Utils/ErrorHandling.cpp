@@ -7,7 +7,6 @@
 
 #include "ErrorHandling.hpp"
 
-#include "LangUtils.hpp"
 #include "WidgetUtils.hpp"  // HYPERLINK
 //#include "StandardOutput.hpp"
 #include "OSUtils.hpp"          // getThisAppDataDir

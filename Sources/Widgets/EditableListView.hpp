@@ -16,7 +16,6 @@
 #include "Utils/ErrorHandling.hpp"  // LoggingComponent
 
 #include <QListView>
-#include <optional>
 
 class QMenu;
 class QAction;

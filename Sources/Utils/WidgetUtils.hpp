@@ -14,7 +14,6 @@
 #include "CommonTypes.hpp"
 #include "ContainerUtils.hpp"    // findSuch
 #include "FileSystemUtils.hpp"   // traverseDirectory
-#include "Widgets/ListModel.hpp"
 #include "ErrorHandling.hpp"
 
 #include <QAbstractItemView>
@@ -31,7 +30,6 @@
 class QTableWidget;
 
 #include <functional>
-#include <type_traits>
 
 
 //======================================================================================================================

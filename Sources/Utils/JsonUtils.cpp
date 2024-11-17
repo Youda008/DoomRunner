@@ -496,7 +496,7 @@ QString JsonArrayCtx::elemPath( int index ) const
 	return getJsonPath() + "/[" + QString::number( index ) + ']';
 }
 
-QString _ParsingContext::fileName() const
+QString impl::ParsingContext::fileName() const
 {
 	return fs::getFileNameFromPath( filePath );
 }

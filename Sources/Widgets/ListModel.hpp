@@ -27,7 +27,6 @@
 #include <QBrush>
 #include <QIcon>
 
-#include <optional>
 #include <functional>
 #include <stdexcept>
 

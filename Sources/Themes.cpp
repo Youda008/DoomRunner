@@ -32,9 +32,8 @@
 	#include <dwmapi.h>
 #endif
 
-#include <algorithm>
 #include <functional>
-#include <optional>
+#include <tuple>  // tie
 #include <atomic>
 #include <mutex>
 

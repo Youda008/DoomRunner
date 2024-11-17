@@ -227,8 +227,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateIWADsFromDir();
 	void resetMapDirModelAndView();
 	void updateConfigFilesFromDir( const QString * configDir = nullptr );
-	void updateSaveFilesFromDir( const QString * saveDir = nullptr );
-	void updateDemoFilesFromDir( const QString * demoDir = nullptr );
+	void updateSaveFilesFromDir();
+	void updateDemoFilesFromDir();
 	void updateCompatLevels();
 	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
 

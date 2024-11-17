@@ -3319,6 +3319,7 @@ void MainWindow::onSaveDirChanged( const QString & rebasedDir )
 	highlightDirPathIfFileOrCanBeCreated( ui->saveDirLine, trueDirPath );  // non-existing dir is ok becase it will be created automatically
 
 	updateSaveFilesFromDir();
+	updateDemoFilesFromDir();
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3751,9 +3752,9 @@ void MainWindow::updateConfigFilesFromDir( const QString * callersConfigDir )
 	}
 }
 
-void MainWindow::updateSaveFilesFromDir( const QString * callersSaveDir )
+void MainWindow::updateSaveFilesFromDir()
 {
-	QString saveDir = callersSaveDir ? *callersSaveDir : getSaveDir();
+	QString saveDir = getSaveDir();
 
 	// workaround (read the big comment above)
 	int origSaveIdx = ui->saveFileCmbBox->currentIndex();
@@ -3773,9 +3774,9 @@ void MainWindow::updateSaveFilesFromDir( const QString * callersSaveDir )
 	}
 }
 
-void MainWindow::updateDemoFilesFromDir( const QString * callersDemoDir )
+void MainWindow::updateDemoFilesFromDir()
 {
-	QString demoDir = callersDemoDir ? *callersDemoDir : getDemoDir();
+	QString demoDir = getDemoDir();
 
 	// workaround (read the big comment above)
 	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
@@ -4207,7 +4208,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	{
 		QString screenshotDirPath = getScreenshotDir();
 		p.checkNotAFile( screenshotDirPath, "the screenshot dir", {} );
-		cmd.arguments << "+screenshot_dir" << engineDirRebaser.rebaseAndQuotePath( screenshotDirPath );
+		cmd.arguments << "-shotdir" << engineDirRebaser.rebaseAndQuotePath( screenshotDirPath );
 	}
 
 	//-- launch mode and parameters ------------------------------------------------
@@ -4354,7 +4355,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions )
 {
 	auto engineName = fs::getFileNameFromPath( selectedEngine.executablePath );
-	auto sandboxName = selectedEngine.sandboxEnv.appName;
+	auto sandboxName = os::getSandboxName( selectedEngine.sandboxEnv.type );
 
 	QMessageBox messageBox( QMessageBox::Question, "Extra permissions needed",
 		engineName%" requires extra permissions to be able to access files outside of its "%sandboxName%" environment. "

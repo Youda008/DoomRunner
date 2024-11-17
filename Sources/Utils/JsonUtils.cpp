@@ -419,7 +419,7 @@ static bool checkableMessageBox( QMessageBox::Icon icon, const QString & title, 
 	return chkBox->isChecked();
 }
 
-static const char * typeStr [] = {
+static const char * JsonTypeStrings [] = {
 	"Null",
 	"Bool",
 	"Double",
@@ -428,6 +428,13 @@ static const char * typeStr [] = {
 	"Object",
 	"Undefined"
 };
+const char * jsonTypeToStr( QJsonValue::Type type )
+{
+	if (size_t(type) < std::size(JsonTypeStrings))
+		return JsonTypeStrings[ size_t(type) ];
+	else
+		return "<invalid>";
+}
 
 void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
 {
@@ -458,7 +465,7 @@ void JsonArrayCtx::indexOutOfBounds( int index, bool showError ) const
 
 void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expectedType, bool showError ) const
 {
-	QString actualType = typeStr[ _wrappedObject[ key ].type() ];
+	QString actualType = jsonTypeToStr( _wrappedObject[ key ].type() );
 	QString message =
 		"Element "%elemPath( key )%" in "%_context->fileName()%" has invalid type. "
 		"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
@@ -473,7 +480,7 @@ void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expec
 
 void JsonArrayCtx::invalidTypeAtIdx( int index, const QString & expectedType, bool showError ) const
 {
-	QString actualType = typeStr[ _wrappedArray[ index ].type() ];
+	QString actualType = jsonTypeToStr( _wrappedArray[ index ].type() );
 	QString message =
 		"Element "%elemPath( index )%" in "%_context->fileName()%" has invalid type. "
 		"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";

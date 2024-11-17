@@ -518,9 +518,9 @@ bool createShortcut( QString shortcutFile, QString targetFile, QStringVec target
 	pShellLink->SetArguments( pszTargetargs );
 	if (!description.isEmpty())
 	{
-		hRes = pShellLink->SetDescription( pszDescription );
+		pShellLink->SetDescription( pszDescription );
 	}
-	hRes = pShellLink->SetWorkingDirectory( pszCurdir );
+	pShellLink->SetWorkingDirectory( pszCurdir );
 
 	/* Use the IPersistFile object to save the shell link */
 	hRes = pShellLink->QueryInterface(

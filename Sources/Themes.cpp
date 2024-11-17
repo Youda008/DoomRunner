@@ -473,7 +473,8 @@ static void toggleDarkTitleBar( HWND hWnd, bool enable )
 static void toggleDarkTitleBars( bool enable )
 {
 	QWindow * focusWindow = qApp->focusWindow();
-	for (QWindow * window : qApp->topLevelWindows())
+	QWindowList topLevelWindows = qApp->topLevelWindows();
+	for (const QWindow * window : topLevelWindows)
 	{
 		HWND hWnd = reinterpret_cast< HWND >( window->winId() );
 		toggleDarkTitleBar( hWnd, enable );
@@ -510,9 +511,9 @@ class WindowsThemeWatcherImpl : public SystemThemeWatcher::SystemThemeWatcherImp
 
 WindowsThemeWatcherImpl::~WindowsThemeWatcherImpl()
 {
-	if (isThemeSettingsMonitoringOpen())
+	if (WindowsThemeWatcherImpl::isThemeSettingsMonitoringOpen())
 	{
-		closeThemeSettingsMonitoring();
+		WindowsThemeWatcherImpl::closeThemeSettingsMonitoring();
 	}
 }
 

@@ -114,11 +114,11 @@ QDebug LogStream::debugStreamFromLogLevel( LogLevel level )
 	switch (level)
 	{
 		case LogLevel::Debug:    return QMessageLogger().debug();
-		case LogLevel::Failure:  return QMessageLogger().warning();
 		case LogLevel::Info:     return QMessageLogger().info();
+		case LogLevel::Failure:  return QMessageLogger().warning();
 		case LogLevel::Bug:      return QMessageLogger().critical();
+		default:                 return QMessageLogger().critical();
 	}
-	return QMessageLogger().critical();
 }
 
 void LogStream::writeLineOpening( LogLevel level, const char * component )

@@ -378,6 +378,7 @@ void EngineDialog::accept()
 	if (familyIdx < 0 || familyIdx >= int( EngineFamily::_EnumEnd ))
 	{
 		reportLogicError( this, "Invalid engine family index", "Family combo-box index is out of bounds." );
+		return;
 	}
 	engine.family = EngineFamily( familyIdx );
 	engine.assignFamilyTraits( engine.family );

@@ -134,11 +134,15 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onTimeLimitChanged( int limit );
 	void onFragLimitChanged( int limit );
 
-	void onUsePresetNameToggled( bool checked );
-	void onSaveDirChanged( const QString & dir );
-	void onScreenshotDirChanged( const QString & dir );
-	void browseSaveDir();
-	void browseScreenshotDir();
+	void onUsePresetNameForConfigsToggled( bool checked );
+	void onUsePresetNameForSavesToggled( bool checked );
+	void onUsePresetNameForScreenshotsToggled( bool checked );
+	void onAltConfigDirChanged( const QString & dir );
+	void onAltSaveDirChanged( const QString & dir );
+	void onAltScreenshotDirChanged( const QString & dir );
+	void browseAltConfigDir();
+	void browseAltSaveDir();
+	void browseAltScreenshotDir();
 
 	void onMonitorSelected( int index );
 	void onResolutionXChanged( const QString & xStr );
@@ -189,6 +193,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	std::unique_ptr< JsonDocumentCtx > readOptions( const QString & filePath );
 	void loadAppearance( const JsonDocumentCtx & optionsDoc, bool loadGeometry );
 	void loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc );
+	int askForEngineInfoRefresh();
 
 	bool isCacheDirty() const;
 	bool saveCache( const QString & filePath );
@@ -218,11 +223,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void togglePathStyle( PathStyle style );
 
-	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines );
+	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines, bool refreshAllAutoEngineInfo );
 
 	void autoselectItems();
 
-	void setAlternativeDirs( const QString & dirName );
+	void updateAlternativeDirs( const Preset * selectedPreset = nullptr );
 
 	void updateListsFromDirs();
 	void updateIWADsFromDir();
@@ -271,14 +276,17 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QStringList getUniqueMapNamesFromWADs( const QVector<QString> & selectedWADs ) const;
 
-	QString getConfigDir() const;
-	QString getDataDir() const;
-	QString getSaveDir() const;
-	QString getScreenshotDir() const;
-	QString getDemoDir() const;
+	QString getEngineConfigDir() const;
+	QString getEngineDataDir() const;
+	QString getActiveConfigDir() const;
+	QString getActiveSaveDir() const;
+	QString getActiveScreenshotDir() const;
+	QString getActiveDemoDir() const;
 
 	QString convertRebasedEngineDataPath( QString path ) const;
-	QString rebaseSaveFilePath( const QString & filePath, const PathRebaser & workingDirRebaser, const EngineInfo * engine );
+	QString rebaseSaveFilePath(
+		const QString & filePath, const EngineInfo * engine, const PathRebaser & workingDirRebaser, const QString & saveDir
+	);
 
 	LaunchMode getLaunchModeFromUI() const;
 
@@ -318,7 +326,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
 
-	PathRebaser engineDataDirRebaser;   ///< path convertor set up to rebase relative paths from the current working dir to the engine's data dir and back
+	QString currentEngineSaveDir;         ///< cached path of the directory when the currently selected engine stores its save files by default
+	QString currentEngineScreenshotDir;   ///< cached path of the directory when the currently selected engine stores its screenshots by default
+
+	PathRebaser engineConfigDirRebaser;   ///< path convertor set up to rebase relative paths from the current working dir to the engine's config dir and back
+	PathRebaser engineDataDirRebaser;     ///< path convertor set up to rebase relative paths from the current working dir to the engine's data dir and back
 
 	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
 

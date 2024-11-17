@@ -7,10 +7,11 @@
 
 #include "WADReader.hpp"
 
+#include "DoomFiles.hpp"  // identifyGame
 #include "JsonUtils.hpp"
 #include "ErrorHandling.hpp"
 
-#include <QHash>
+#include <QSet>
 #include <QFile>
 #include <QFileInfo>
 #include <QDateTime>
@@ -43,7 +44,7 @@ class LoggingWadReader : protected LoggingComponent {
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  WAD info loading
+//  WAD format parsing
 
 //  https://doomwiki.org/wiki/WAD
 
@@ -194,6 +195,8 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 		return wadInfo;
 	}
 
+	QSet< QString > lumpNames;
+
 	for (uint32_t i = 0; i < header.numLumps; ++i)
 	{
 		LumpEntry & lump = lumpDir[i];
@@ -211,6 +214,8 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 			wadInfo.status = ReadStatus::InvalidFormat;
 			return wadInfo;
 		}
+
+		lumpNames.insert( lumpName );
 
 		// try to gather the map names from the marker lumps,
 		// but if we find a MAPINFO lump, let that one override the markers
@@ -241,11 +246,22 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 			wadInfo.mapNames.clear();
 			getMapNamesFromMAPINFO( lumpData, wadInfo.mapNames );
 
-			break;
+			// If it's PWAD, we are done, list of maps is all we need.
+			// If it's IWAD, we need to go through all the lumps, in order to identify the game.
+			if (wadInfo.type != WadType::IWAD)
+			{
+				break;
+			}
 		}
 	}
 
 	wadInfo.status = ReadStatus::Success;
+
+	if (wadInfo.type == WadType::IWAD)
+	{
+		wadInfo.game = identifyGame( lumpNames );
+	}
+
 	return wadInfo;
 }
 
@@ -269,6 +285,7 @@ void WadInfo::serialize( QJsonObject & jsWadInfo ) const
 {
 	jsWadInfo["type"] = int( type );
 	jsWadInfo["map_names"] = serializeStringVec( mapNames );
+	// TODO: game identification
 }
 
 void WadInfo::deserialize( const JsonObjectCtx & jsWadInfo )
@@ -276,6 +293,7 @@ void WadInfo::deserialize( const JsonObjectCtx & jsWadInfo )
 	type = jsWadInfo.getEnum< doom::WadType >( "type", doom::WadType::Neither );
 	if (JsonArrayCtx jsMapNames = jsWadInfo.getArray( "map_names" ))
 		mapNames = deserializeStringVec( jsMapNames );
+	// TODO: game identification
 }
 
 

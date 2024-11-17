@@ -8,7 +8,6 @@
 #include "OptionsSerializer.hpp"
 
 #include "CommonTypes.hpp"
-#include "Version.hpp"
 #include "Utils/JsonUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidListItem
 #include "Utils/ErrorHandling.hpp"
@@ -82,11 +81,9 @@ static void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
 	{
 		engine.name = jsEngine.getString( "name", "<missing name>" );
 		engine.executablePath = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
-		engine.configDir = jsEngine.getString( "config_dir", fs::getDirOfFile( engine.executablePath ) );
+		engine.configDir = jsEngine.getString( "config_dir", fs::getParentDir( engine.executablePath ) );
 		engine.dataDir = jsEngine.getString( "data_dir", engine.configDir );
 		engine.family = familyFromStr( jsEngine.getString( "family", {} ) );
-		if (engine.family == EngineFamily::_EnumEnd)
-			engine.family = guessEngineFamily( fs::getFileBasenameFromPath( engine.executablePath ) );
 	}
 }
 
@@ -339,6 +336,7 @@ static QJsonObject serialize( const AlternativePaths & opts )
 {
 	QJsonObject jsOptions;
 
+	jsOptions["config_dir"] = opts.configDir;
 	jsOptions["save_dir"] = opts.saveDir;
 	jsOptions["screenshot_dir"] = opts.screenshotDir;
 
@@ -347,6 +345,7 @@ static QJsonObject serialize( const AlternativePaths & opts )
 
 static void deserialize( const JsonObjectCtx & jsOptions, AlternativePaths & opts )
 {
+	opts.configDir = jsOptions.getString( "config_dir" );
 	opts.saveDir = jsOptions.getString( "save_dir" );
 	opts.screenshotDir = jsOptions.getString( "screenshot_dir" );
 }
@@ -393,7 +392,9 @@ static QJsonObject serialize( const GlobalOptions & opts )
 {
 	QJsonObject jsOptions;
 
-	jsOptions["use_preset_name_as_dir"] = opts.usePresetNameAsDir;
+	jsOptions["use_preset_name_as_config_dir"] = opts.usePresetNameAsConfigDir;
+	jsOptions["use_preset_name_as_save_dir"] = opts.usePresetNameAsSaveDir;
+	jsOptions["use_preset_name_as_screenshot_dir"] = opts.usePresetNameAsScreenshotDir;
 	jsOptions["additional_args"] = opts.cmdArgs;
 	jsOptions["env_vars"] = serialize( opts.envVars );
 
@@ -402,7 +403,22 @@ static QJsonObject serialize( const GlobalOptions & opts )
 
 static void deserialize( const JsonObjectCtx & jsOptions, GlobalOptions & opts )
 {
-	opts.usePresetNameAsDir = jsOptions.getBool( "use_preset_name_as_dir", opts.usePresetNameAsDir );
+	if (jsOptions.hasMember("use_preset_name_as_dir"))  // old options (older than 1.9.0)
+	{
+		bool usePresetNameAsDir = jsOptions.getBool( "use_preset_name_as_dir", false );
+		// Before 1.9.0 this option controlled saves and screenshots together -> apply it for those.
+		opts.usePresetNameAsSaveDir = usePresetNameAsDir;
+		opts.usePresetNameAsScreenshotDir = usePresetNameAsDir;
+		// However this option did not exist and could cause confusion -> leave at false.
+		opts.usePresetNameAsConfigDir = false;
+	}
+	else  // new options (1.9.0 or newer)
+	{
+		opts.usePresetNameAsConfigDir = jsOptions.getBool( "use_preset_name_as_config_dir", opts.usePresetNameAsConfigDir );
+		opts.usePresetNameAsSaveDir = jsOptions.getBool( "use_preset_name_as_save_dir", opts.usePresetNameAsSaveDir );
+		opts.usePresetNameAsScreenshotDir = jsOptions.getBool( "use_preset_name_as_screenshot_dir", opts.usePresetNameAsScreenshotDir );
+	}
+
 	opts.cmdArgs = jsOptions.getString( "additional_args" );
 	if (JsonObjectCtx jsEnvVars = jsOptions.getObject( "env_vars" ))
 		deserialize( jsEnvVars, opts.envVars );
@@ -881,9 +897,9 @@ void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLo
 	const JsonObjectCtx & jsRoot = jsonDoc.rootObject();
 
 	QString optsVersionStr = jsRoot.getString( "version", {}, DontShowError );
-	Version optsVersion( optsVersionStr );
+	opts.version = Version( optsVersionStr );
 
-	if (!optsVersionStr.isEmpty() && optsVersion > appVersion)  // empty version means pre-1.4 version
+	if (!optsVersionStr.isEmpty() && opts.version > appVersion)  // empty version means pre-1.4 version
 	{
 		reportRuntimeError( nullptr, "Loading options from newer version",
 			"Detected saved options from newer version of DoomRunner. "
@@ -892,7 +908,7 @@ void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLo
 	}
 
 	// backward compatibility with older options format
-	if (optsVersionStr.isEmpty() || optsVersion < Version(1,7))
+	if (optsVersionStr.isEmpty() || opts.version < Version(1,7))
 	{
 		jsonDoc.disableWarnings();  // supress "missing element" warnings when loading older version
 
@@ -901,7 +917,7 @@ void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLo
 	}
 	else
 	{
-		if (optsVersion < appVersion)
+		if (opts.version < appVersion)
 			jsonDoc.disableWarnings();  // supress "missing element" warnings when loading older version
 
 		deserialize( jsRoot, opts );

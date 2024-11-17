@@ -215,6 +215,7 @@ struct CompatibilityOptions : public CompatibilityDetails  // inherited instead 
 
 struct AlternativePaths
 {
+	QString configDir;
 	QString saveDir;
 	QString screenshotDir;
 };
@@ -241,7 +242,9 @@ using EnvVars = QVector< os::EnvVar >;
 
 struct GlobalOptions
 {
-	bool usePresetNameAsDir = false;
+	bool usePresetNameAsConfigDir = false;
+	bool usePresetNameAsSaveDir = false;
+	bool usePresetNameAsScreenshotDir = false;
 	QString cmdArgs;
 	EnvVars envVars;
 };
@@ -369,19 +372,17 @@ struct AppearanceSettings
 // Inheritance is used instead of composition, so that we can write engine.exeAppName() instead of engine.traits.exeAppName().
 struct EngineInfo : public Engine, public EngineTraits
 {
-	os::SandboxEnvInfo sandboxEnv;
-
 	using Engine::Engine;
 	EngineInfo( const Engine & engine ) { static_cast< Engine & >( *this ) = engine; }
 	EngineInfo( Engine && engine )      { static_cast< Engine & >( *this ) = std::move( engine ); }
 
-	void initSandboxEnvInfo( const QString & executablePath_ )
+	QString getDefaultSaveDir( const QString & IWADPath = {} ) const
 	{
-		sandboxEnv = os::getSandboxEnvInfo( executablePath_ );
-	}
-	bool hasSandboxEnvInfo() const
-	{
-		return !sandboxEnv.appName.isNull();
+		QString saveSubdir = EngineTraits::getDefaultSaveSubdir( IWADPath );
+		if (!Engine::dataDir.isEmpty())
+			return QDir( Engine::dataDir ).absoluteFilePath( saveSubdir );
+		else
+			return saveSubdir;
 	}
 };
 

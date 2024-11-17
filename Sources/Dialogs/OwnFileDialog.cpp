@@ -31,7 +31,7 @@ static const QString & getDefaultStartingDir()
 {
 	// initialize once on first call and then re-use.
  #ifdef FLATPAK_BUILD
-	return os::getCachedThisAppDataDir();  // should return $XDG_DATA_HOME
+	return os::getThisLauncherDataDir();
  #else
 	return emptyString;  // let the OS choose one
  #endif

@@ -46,6 +46,23 @@ enum class PathStyle : uint8_t
 
 namespace fs {
 
+template< typename Appendable >
+inline QString appendToPath( const QString & part1, const Appendable & part2 )
+{
+	if (!part1.isEmpty() && !part2.isEmpty())
+		return part1%"/"%part2;
+	else if (!part2.isEmpty())
+		return part2;
+	else // even if part1.isEmpty()
+		return part1;
+}
+
+template< typename Appendable, typename ... Args >
+inline QString appendToPath( const QString & part1, const Appendable & part2, const Args & ... otherParts )
+{
+	return appendToPath( appendToPath( part1, part2 ), otherParts ... );
+}
+
 inline bool isAbsolutePath( const QString & path )
 {
 	return QDir::isAbsolutePath( path );
@@ -61,19 +78,19 @@ inline PathStyle getPathStyle( const QString & path )
 	return isAbsolutePath( path ) ? PathStyle::Absolute : PathStyle::Relative;
 }
 
-inline bool exists( const QString & path )
+inline bool exists( const QString & entryPath )
 {
-	return QFileInfo::exists( path );
+	return QFileInfo::exists( entryPath );
 }
 
-inline bool isDirectory( const QString & path )
+inline bool isDirectory( const QString & entryPath )
 {
-	return QFileInfo( path ).isDir();
+	return QFileInfo( entryPath ).isDir();
 }
 
-inline bool isFile( const QString & path )
+inline bool isFile( const QString & entryPath )
 {
-	return QFileInfo( path ).isFile();
+	return QFileInfo( entryPath ).isFile();
 }
 
 inline bool isValidDir( const QString & dirPath )
@@ -96,14 +113,21 @@ inline bool isInvalidFile( const QString & filePath )
 	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // it exists but it's not a file
 }
 
-inline bool isValidEntry( const QString & path )
+inline bool isValidEntry( const QString & entryPath )
 {
-	return !path.isEmpty() && QFileInfo::exists( path );
+	return !entryPath.isEmpty() && QFileInfo::exists( entryPath );
 }
 
 inline QString getAbsolutePath( const QString & path )
 {
+	// works even if the path is already absolute, also gets rid of any redundant "/./" or "/../" in the middle of the path
 	return QFileInfo( path ).absoluteFilePath();
+}
+
+inline QString getNormalizedPath( const QString & path )
+{
+	// gets rid of any redundant "/./" or "/../" in the middle of the path
+	return QFileInfo( path ).absoluteFilePath();  // canonicalFilePath() doesn't work if the FS entry doesn't exist yet
 }
 
 inline QString getPathFromFileName( const QString & dirPath, const QString & fileName )
@@ -113,6 +137,7 @@ inline QString getPathFromFileName( const QString & dirPath, const QString & fil
 
 inline QString getAbsolutePathFromFileName( const QString & dirPath, const QString & fileName )
 {
+	// gets rid of any redundant "/./" or "/../" in the middle of dirPath
 	return QDir( dirPath ).absoluteFilePath( fileName );
 }
 
@@ -123,32 +148,32 @@ inline QString getFileNameFromPath( const QString & filePath )
 
 inline QString getFileBasenameFromPath( const QString & filePath )
 {
-	return QFileInfo( filePath ).baseName();
+	return QFileInfo( filePath ).completeBaseName();
 }
 
-inline QString getDirOfFile( const QString & filePath )
+inline QString getParentDir( const QString & entryPath )
 {
-	return QFileInfo( filePath ).path();
+	return QFileInfo( entryPath ).path();
 }
 
-inline QString getAbsoluteDirOfFile( const QString & filePath )
+inline QString getAbsoluteParentDir( const QString & entryPath )
 {
-	return QFileInfo( filePath ).absolutePath();
+	return QFileInfo( entryPath ).absolutePath();
 }
 
-inline QString getDirnameOfFile( const QString & filePath )
+inline QString getParentDirName( const QString & entryPath )
 {
-	return QFileInfo( filePath ).dir().dirName();
+	return QFileInfo( entryPath ).dir().dirName();
 }
 
 inline QString replaceFileSuffix( const QString & filePath, const QString & newSuffix )
 {
 	QFileInfo fileInfo( filePath );
-	QString newFileName = fileInfo.baseName() % '.' % newSuffix;
+	QString newFileName = fileInfo.completeBaseName() % '.' % newSuffix;
 	return fileInfo.dir().filePath( newFileName );
 }
 
-inline bool isInsideDir( const QString & entryPath, const QDir & dir )
+inline bool isInsideDir( const QDir & dir, const QString & entryPath )
 {
 	return QFileInfo( entryPath ).absoluteFilePath().startsWith( dir.absolutePath() );
 }
@@ -239,10 +264,15 @@ class PathConvertor {
 
 	QString getAbsolutePath( const QString & path ) const
 	{
-		return path.isEmpty() ? QString() : QFileInfo( _workingDir, path ).absoluteFilePath();
+		// _workingDir.absoluteFilePath( fileName ) only appends path to the absolute path of _workingDir,
+		// QDir::cleanPath() gets rid of any redundant "/./" or "/../" in the middle of the input path.
+		// Works even if path is already absolute.
+		return path.isEmpty() ? QString() : QDir::cleanPath( _workingDir.absoluteFilePath( path ) );
 	}
 	QString getRelativePath( const QString & path ) const
 	{
+		// Gets rid of any redundant "/./" or "/../" in the middle.
+		// Works even if path is already relative.
 		return path.isEmpty() ? QString() : _workingDir.relativeFilePath( path );
 	}
 	QString convertPath( const QString & path ) const
@@ -309,6 +339,7 @@ class PathRebaser {
 		if (path.isEmpty())
 			return {};
 
+		// TODO: allow keeping absolute paths for engine data dirs
 		QString absPath = fs::isAbsolutePath( path ) ? path : inputBaseDir.absoluteFilePath( path );
 		QString newPath = outputAbsolutePaths() ? absPath : outputBaseDir.relativeFilePath( absPath );
 

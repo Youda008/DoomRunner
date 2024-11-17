@@ -34,7 +34,7 @@ QString DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc,
 		path = pathConvertor.getRelativePath( path );
 
 	// next time use this dir as the starting dir of the file dialog for convenience
-	lastUsedDir = fs::getDirOfFile( path );
+	lastUsedDir = fs::getParentDir( path );
 
 	return path;
 }
@@ -57,20 +57,24 @@ QString DialogWithPaths::browseDir( QWidget * parent, const QString & dirDesc, Q
 	return path;
 }
 
-void DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc, QLineEdit * targetLine, const QString & filter )
+bool DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc, QLineEdit * targetLine, const QString & filter )
 {
 	QString path = browseFile( parent, fileDesc, targetLine->text(), filter );
-	if (!path.isEmpty())
+	bool confirmed = !path.isEmpty();  // user may have clicked cancel
+	if (confirmed)
 	{
 		targetLine->setText( path );
 	}
+	return confirmed;
 }
 
-void DialogWithPaths::browseDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine )
+bool DialogWithPaths::browseDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine )
 {
 	QString path = browseDir( parent, dirDesc, targetLine->text() );
-	if (!path.isEmpty())
+	bool confirmed = !path.isEmpty();  // user may have clicked cancel
+	if (confirmed)
 	{
 		targetLine->setText( path );
 	}
+	return confirmed;
 }

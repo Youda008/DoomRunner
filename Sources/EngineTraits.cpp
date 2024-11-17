@@ -7,8 +7,10 @@
 
 #include "EngineTraits.hpp"
 
+#include "Utils/WADReader.hpp"        // g_cachedWadInfo
 #include "Utils/ContainerUtils.hpp"   // find
 #include "Utils/FileSystemUtils.hpp"  // getFileBasenameFromPath
+#include "Utils/OSUtils.hpp"          // getCachedPicturesDir
 
 #include <QHash>
 #include <QRegularExpression>
@@ -29,33 +31,75 @@ static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd),
 static const QHash< QString, EngineFamily > knownEngineFamilies =
 {
 	// the key is an executable name in lower case without the .exe suffix
-	{ "zdoom",            EngineFamily::ZDoom },
-	{ "lzdoom",           EngineFamily::ZDoom },
-	{ "gzdoom",           EngineFamily::ZDoom },
-	{ "qzdoom",           EngineFamily::ZDoom },
-	{ "skulltag",         EngineFamily::ZDoom },
-	{ "zandronum",        EngineFamily::ZDoom },
-	{ "prboom",           EngineFamily::PrBoom },
-	{ "prboom-plus",      EngineFamily::PrBoom },
-	{ "glboom",           EngineFamily::PrBoom },
-	{ "dsda-doom",        EngineFamily::PrBoom },
-	{ "smmu",             EngineFamily::MBF },
-	{ "eternity",         EngineFamily::MBF },
-	{ "woof",             EngineFamily::MBF },
-	{ "chocolate-doom",   EngineFamily::ChocolateDoom },
-	{ "crispy-doom",      EngineFamily::ChocolateDoom },
-	{ "doomretro",        EngineFamily::ChocolateDoom },
-	{ "strife-ve",        EngineFamily::ChocolateDoom },
+	{ "zdoom",             EngineFamily::ZDoom },
+	{ "lzdoom",            EngineFamily::ZDoom },
+	{ "gzdoom",            EngineFamily::ZDoom },
+	{ "qzdoom",            EngineFamily::ZDoom },
+	{ "skulltag",          EngineFamily::ZDoom },
+	{ "zandronum",         EngineFamily::ZDoom },
+	{ "prboom",            EngineFamily::PrBoom },
+	{ "prboom-plus",       EngineFamily::PrBoom },
+	{ "glboom",            EngineFamily::PrBoom },
+	{ "dsda-doom",         EngineFamily::PrBoom },
+	{ "smmu",              EngineFamily::MBF },
+	{ "eternity",          EngineFamily::MBF },
+	{ "woof",              EngineFamily::MBF },
+	{ "chocolate-doom",    EngineFamily::ChocolateDoom },
+	{ "chocolate-heretic", EngineFamily::ChocolateDoom },
+	{ "chocolate-hexen",   EngineFamily::ChocolateDoom },
+	{ "crispy-doom",       EngineFamily::ChocolateDoom },
+	{ "crispy-heretic",    EngineFamily::ChocolateDoom },
+	{ "crispy-hexen",      EngineFamily::ChocolateDoom },
+	{ "doomretro",         EngineFamily::ChocolateDoom },
+	{ "strife-ve",         EngineFamily::ChocolateDoom },
 	// TODO: add all the EDGE ports
 };
 
 static const EngineFamilyTraits engineFamilyTraits [] =
 {
-	//              -warp or +map        -complevel or +compatmode   savedir param   has +screenshot_dir   needs -stdout
-	/*ZDoom*/     { MapParamStyle::Map,  CompatLevelStyle::ZDoom,    "-savedir",     true,                 IS_WINDOWS },
-	/*PrBoom*/    { MapParamStyle::Warp, CompatLevelStyle::PrBoom,   "-save",        false,                false },
-	/*MBF*/       { MapParamStyle::Warp, CompatLevelStyle::PrBoom,   "-save",        false,                false },
-	/*Chocolate*/ { MapParamStyle::Warp, CompatLevelStyle::None,     "-savedir",     false,                false },
+	//ZDoom
+	{
+		.configFileSuffix = "ini",
+		.saveFileSuffix = "zds",
+		.saveDirParam = "-savedir",
+		.mapParamStyle = MapParamStyle::Map,
+		.compLvlStyle = CompatLevelStyle::ZDoom,
+		.hasScreenshotDirParam = true,
+		.needsStdoutParam = IS_WINDOWS,
+	},
+
+	//Chocolate Doom
+	{
+		.configFileSuffix = "cfg",
+		.saveFileSuffix = "dsg",
+		.saveDirParam = "-savedir",
+		.mapParamStyle = MapParamStyle::Warp,
+		.compLvlStyle = CompatLevelStyle::None,
+		.hasScreenshotDirParam = false,
+		.needsStdoutParam = false,
+	},
+
+	//PrBoom
+	{
+		.configFileSuffix = "cfg",
+		.saveFileSuffix = "dsg",
+		.saveDirParam = "-save",
+		.mapParamStyle = MapParamStyle::Warp,
+		.compLvlStyle = CompatLevelStyle::PrBoom,
+		.hasScreenshotDirParam = false,
+		.needsStdoutParam = false,
+	},
+
+	//MBF
+	{
+		.configFileSuffix = "cfg",
+		.saveFileSuffix = "dsg",
+		.saveDirParam = "-save",
+		.mapParamStyle = MapParamStyle::Warp,
+		.compLvlStyle = CompatLevelStyle::PrBoom,
+		.hasScreenshotDirParam = false,
+		.needsStdoutParam = false,
+	},
 };
 static_assert( std::size(engineFamilyTraits) == std::size(engineFamilyStrings), "Please update this table too" );
 
@@ -117,6 +161,9 @@ static const QStringList noCompatLevels = {};
 //======================================================================================================================
 //  code
 
+//----------------------------------------------------------------------------------------------------------------------
+//  compat levels
+
 const QStringList & getCompatLevels( CompatLevelStyle style )
 {
 	if (style == CompatLevelStyle::ZDoom)
@@ -147,63 +194,290 @@ EngineFamily familyFromStr( const QString & familyStr )
 		return EngineFamily::_EnumEnd;
 }
 
-EngineFamily guessEngineFamily( const QString & executableBaseName )
+
+//======================================================================================================================
+//  EngineTraits
+
+//----------------------------------------------------------------------------------------------------------------------
+//  initialization
+
+void EngineTraits::autoDetectTraits( const QString & executablePath )
 {
-	auto iter = knownEngineFamilies.find( executableBaseName.toLower() );
+	_appInfo = os::getAppInfo( executablePath );
+
+	// EngineFamily is user-overridable in EngineDialog, but this is our default automatic detection.
+	EngineFamily family = guessEngineFamily();
+	setFamilyTraits( family );
+}
+
+EngineFamily EngineTraits::guessEngineFamily() const
+{
+	auto iter = knownEngineFamilies.find( normalizedName() );
 	if (iter != knownEngineFamilies.end())
 		return iter.value();
 	else
 		return EngineFamily::ZDoom;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-//  EngineTraits
-
-const Version EngineTraits::emptyVersion;
-
-EngineTraits::EngineTraits()
+void EngineTraits::setFamilyTraits( EngineFamily family )
 {
-	_familyTraits = nullptr;
-}
+	_family = family;
 
-void EngineTraits::loadAppInfo( const QString & executablePath )
-{
-	_exePath = executablePath;
-	_exeBaseName = fs::getFileBasenameFromPath( executablePath );
-
-	// Sometimes opening an executable file takes incredibly long (even > 1 second) for unknown reason (antivirus maybe?).
-	// So we cache the results here so that at least the subsequent calls are fast.
-	if (fs::isValidFile( executablePath ))
-		_exeVersionInfo = os::g_cachedExeInfo.getFileInfo( executablePath );
-
-	_appNameNormalized = (!_exeVersionInfo.appName.isEmpty() ? _exeVersionInfo.appName : _exeBaseName).toLower();
-}
-
-void EngineTraits::assignFamilyTraits( EngineFamily family )
-{
+	// assign family traits
 	if (size_t(family) < std::size(engineFamilyTraits))
 		_familyTraits = &engineFamilyTraits[ size_t(family) ];
 	else
-		_familyTraits = &engineFamilyTraits[ 0 ];  // use ZDoom traits as fallback
+		_familyTraits = &engineFamilyTraits[ size_t(EngineFamily::ZDoom) ];  // use ZDoom traits as fallback
+
+	// pre-compute the common subdirectory for save files, so that we don't have to repeat it on every IWAD change
+	_commonSaveSubdir = getCommonSaveSubdir();
+	_configFileName = getDefaultConfigFileName();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//  default directories and path requirements
+
+Version EngineTraits::getExeVersionOrAssumeLatest() const
+{
+	Version version = exeVersion();
+	// if we can't read the version, assume the latest
+	if (!version.isValid())
+	{
+		version = {255,255,255};
+	}
+	return version;
+}
+
+bool EngineTraits::isBasedOnGZDoomVersionOrLater( Version atLeastVersion ) const
+{
+	const QString & name = normalizedName();
+	Version version = getExeVersionOrAssumeLatest();
+
+	return _family == EngineFamily::ZDoom && (
+		(name == "gzdoom" && version >= atLeastVersion) ||
+		(name == "vkdoom")
+	);
+}
+
+bool EngineTraits::isPortableZDoom() const
+{
+	QString dirOfExecutable = fs::getParentDir( exePath() );
+	QString portableIniFilePath = fs::getPathFromFileName( dirOfExecutable, exeBaseName()+"_portable.ini" );
+	return fs::isValidFile( portableIniFilePath );
+}
+
+QString EngineTraits::getDefaultConfigDir() const
+{
+ #if IS_WINDOWS
+
+	// On Windows, engines usually store their config files in the directory of its binaries,
+	// with the exception of GZDoom that started storing it to Documents\My Games\GZDoom
+	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableZDoom())
+		return os::getDocumentsDir()%"/My Games/"%exeAppName();        // -> C:/Users/Youda/Documents/My Games/GZDoom
+	else
+		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom
+
+ #else
+
+	// On Linux they store them in standard user's app data dir.
+	if (_family == EngineFamily::ZDoom)
+		return os::getConfigDirForApp( exePath() );                    // -> /home/youda/.config/gzdoom
+	else if (_family == EngineFamily::ChocolateDoom)
+		return os::getDataDirForApp( exePath() );                      // -> /home/youda/.local/share/crispy-doom
+	else if (_family == EngineFamily::PrBoom)
+		return os::getHomeDirForApp( exePath() )%"/."%exeBaseName();   // -> /home/youda/.prboom-plus
+	else
+		return os::getConfigDirForApp( exePath() );                    // -> /home/youda/.config/engine_name
+
+ #endif
+}
+
+QString EngineTraits::getDefaultDataDir() const
+{
+ #if IS_WINDOWS
+
+	// On Windows, engines usually store their data (saves, ...) in the directory of its binaries,
+	// with the exception of GZDoom that started storing it to Saved Games\GZDoom
+	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableZDoom())
+		return os::getSavedGamesDir()%"/"%exeAppName();                // -> C:/Users/Youda/Saved Games/GZDoom
+	else
+		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom
+
+ #else
+
+	// On Linux they generally store them in the same dir as the configs.
+	return getDefaultConfigDir();
+
+ #endif
+}
+
+QString EngineTraits::getDefaultScreenshotDir() const
+{
+ #if IS_WINDOWS
+
+	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableZDoom())
+		return os::getPicturesDir()%"/Screenshots/"%exeAppName();      // -> C:/Users/Youda/Pictures/Screenshots/GZDoom
+	else
+		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom
+
+ #else
+
+	QString screenshotDir = getDefaultDataDir();
+
+	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableInstallation())  // only new non-portable GZDoom
+	{
+		screenshotDir += "/screenshots";
+	}
+
+	// this luckily doesn't depend on the selected IWAD
+
+	return screenshotDir;
+
+ #endif
+}
+
+// For some engines the directory for save files consists of 3 parts:
+//   1. the data directory:                        /home/youda/.config/gzdoom
+//   2. the common part of the save subdirectory:  savegames
+//   3. the part that depends on the used IWAD:    doom.id.doom2.commercial
+//   -> full save directory path:                  /home/youda/.config/gzdoom/savegames/doom.id.doom2.commercial
+// This function returns the common part (2.)
+QString EngineTraits::getCommonSaveSubdir() const
+{
+	// engine          OS        version   installation   subdirectory
+	//----------------------------------------------------------------
+	// GZDoom          Windows   <  4.4    any
+	// GZDoom          Windows   >= 4.4    any            Save
+	// GZDoom          Windows   >= 4.9    portable       Save
+	// GZDoom          Windows   >= 4.9    non-portable
+	// GZDoom          Linux     <  4.11   any
+	// GZDoom          Linux     >= 4.11   any            savegames
+	// ChocolateDoom   Windows      any    any
+	// ChocolateDoom   Linux        any    any            savegames
+	// anything else   any          any    any
+
+	// Thank you Graph! You're really making this world better and simpler.
+
+	QString saveSubdirBase;
+
+	if (_family == EngineFamily::ZDoom && normalizedName() == "gzdoom")
+	{
+		Version version = getExeVersionOrAssumeLatest();
+		using v = Version;
+
+		if (IS_WINDOWS)
+		{
+			if (version >= v{4,4,0} && (version < v{4,9,0} || isPortableZDoom()))
+			{
+				saveSubdirBase = "Save";
+			}
+		}
+		else  // Linux, Mac
+		{
+			if (version >= v{4,11,0})
+			{
+				saveSubdirBase = "savegames";
+			}
+		}
+	}
+	else if (_family == EngineFamily::ChocolateDoom)
+	{
+		if (!IS_WINDOWS)
+		{
+			saveSubdirBase = "savegames";
+		}
+	}
+
+	return saveSubdirBase;
+}
+
+QString EngineTraits::getDefaultSaveSubdir( const QString & IWADPath ) const
+{
+	assert( isInitialized() );
+
+	QString saveDir = _commonSaveSubdir;
+
+	// Some engines store their save files in a subdirectory named after the IWAD in use.
+	if (saveDirDependsOnIWAD())
+	{
+		QString gameID;
+		if (!IWADPath.isEmpty())
+		{
+			const auto & iwadInfo = doom::g_cachedWadInfo.getFileInfo( IWADPath );
+			if (iwadInfo.status == ReadStatus::Success)
+			{
+				if (_family == EngineFamily::ChocolateDoom && iwadInfo.game.chocolateID != nullptr)
+					gameID = iwadInfo.game.chocolateID;
+				else if (isBasedOnGZDoomVersionOrLater({4,9,0}) && iwadInfo.game.gzdoomID != nullptr)
+					gameID = iwadInfo.game.gzdoomID;
+			}
+		}
+		if (gameID.isEmpty())
+		{
+			// fallback to Doom2 if the game cannot be identified, it has the best probability of being correct
+			const doom::GameIdentification & defaultGame = doom::game::Doom2;
+			gameID = _family == EngineFamily::ChocolateDoom ? defaultGame.chocolateID : defaultGame.gzdoomID;
+		}
+
+		saveDir = fs::appendToPath( saveDir, gameID );
+	}
+
+	return saveDir;
+}
+
+bool EngineTraits::saveDirDependsOnIWAD() const
+{
+	assert( isInitialized() );
+
+	return isBasedOnGZDoomVersionOrLater({4,9,0}) || (_family == EngineFamily::ChocolateDoom && !IS_WINDOWS);
 }
 
 EngineTraits::SaveBaseDir EngineTraits::baseDirStyleForSaveFiles() const
 {
-	assert( hasAppInfo() );
+	assert( isInitialized() );
 
-	// if we can't read the exe info, assume the latest GZDoom
-	if (!_exeVersionInfo.version.isValid() || (_appNameNormalized == "gzdoom" && _exeVersionInfo.version >= Version(4,9,0)))
-		return SaveBaseDir::SaveDir;
-	else
-		return SaveBaseDir::WorkingDir;
+	return isBasedOnGZDoomVersionOrLater({4,9,0}) ? SaveBaseDir::SaveDir : SaveBaseDir::WorkingDir;
 }
+
+QString EngineTraits::getDefaultConfigFileName() const
+{
+	if (_family == EngineFamily::ZDoom)
+	{
+		// (╯°□°)╯︵ ┻━┻
+
+		const QString & name = normalizedName();
+		Version version = getExeVersionOrAssumeLatest();
+		using v = Version;
+
+		QString firstPart;
+		if (name == "gzdoom" && version < v{2,1,0})
+			firstPart = "zdoom";
+		else
+			firstPart = exeBaseName();
+
+		if ((name == "gzdoom" && version >= v{4,9,0}) || (name == "vkdoom"))
+			if (isPortableZDoom())
+				return firstPart%"_portable.ini";
+			else
+				return firstPart%".ini";
+		else
+			return firstPart%"-"%os::getUserName()%".ini";   // -> gzdoom-Youda.ini
+	}
+	else
+	{
+		return exeBaseName()%".cfg";
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//  command line parameters deduction
 
 static const QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
 static const QRegularExpression doom2MapNameRegex("MAP(\\d+)");
 
 QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 {
-	assert( hasAppInfo() && hasFamilyTraits() );
+	assert( isInitialized() );
 
 	if (mapName.isEmpty())
 	{
@@ -234,11 +508,11 @@ QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 
 QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 {
-	assert( hasAppInfo() && hasFamilyTraits() );
+	assert( isInitialized() );
 
-	// Properly working -compatmode is present only in GZDoom,
+	// Properly working -compatmode is present only in GZDoom 4.8.0+,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
-	if (_exeBaseName == "gzdoom" || _exeBaseName == "vkdoom")
+	if (isBasedOnGZDoomVersionOrLater({4,8,0}))
 		return { "-compatmode", QString::number( compatLevel ) };
 	else if (_familyTraits->compLvlStyle == CompatLevelStyle::ZDoom)
 		return { "+compatmode", QString::number( compatLevel ) };
@@ -250,11 +524,10 @@ QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
 
 QString EngineTraits::getCmdMonitorIndex( int ownIndex ) const
 {
-	assert( hasAppInfo() && hasFamilyTraits() );
+	assert( isInitialized() );
 
 	int startingMonitorIndex = 0;
-	auto iter = startingMonitorIndexes.find( _exeBaseName );
-	if (iter != startingMonitorIndexes.end())
+	if (auto iter = startingMonitorIndexes.find( exeBaseName() ); iter != startingMonitorIndexes.end())
 		startingMonitorIndex = iter.value();
 
 	return QString::number( startingMonitorIndex + ownIndex );

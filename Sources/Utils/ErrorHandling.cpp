@@ -9,7 +9,7 @@
 
 #include "WidgetUtils.hpp"  // HYPERLINK
 //#include "StandardOutput.hpp"
-#include "OSUtils.hpp"          // getThisAppDataDir
+#include "OSUtils.hpp"          // getThisLauncherDataDir
 #include "FileSystemUtils.hpp"  // getPathFromFileName
 
 #include <QStringBuilder>
@@ -78,21 +78,24 @@ static const char * const logFileName = "errors.txt";
 
 const QString & getCachedErrorFilePath()
 {
-	// local static variables are initialized under a mutex, so it should be save to use from multiple threads.
-	static const QString logFilePath = fs::getPathFromFileName( os::getCachedThisAppDataDir(), logFileName );
+	// local static variables are initialized under a mutex, so it should be save to use from multiple threads
+	static const QString logFilePath = fs::getPathFromFileName( os::getThisLauncherDataDir(), logFileName );
 	return logFilePath;
 }
 
-LogStream::LogStream( LogLevel level, const char * component )
+LogStream::LogStream( LogLevel level, const char * component, bool canLogToFile )
 :
 	_debugStream( debugStreamFromLogLevel( level ) ),
-	_logFile( getCachedErrorFilePath() ),
-	_logLevel( level )
+	_logFile(),
+	_fileStream(),
+	_logLevel( level ),
+	_canLogToFile( canLogToFile )
 {
 	_debugStream.noquote().nospace();
 
 	if (shouldWriteToFileStream())
 	{
+		_logFile.setFileName( getCachedErrorFilePath() );
 		if (_logFile.open( QIODevice::Append ))
 			_fileStream.setDevice( &_logFile );
 	}
@@ -128,6 +131,7 @@ void LogStream::writeLineOpening( LogLevel level, const char * component )
 
 	if (shouldWriteToDebugStream())
 	{
+		// with the workaround in initStdStreams(), this should write to stdout even on Windows
 		_debugStream << QStringLiteral("[%1] %2").arg( logLevelStr, -7 ).arg( componentStr );
 	}
 

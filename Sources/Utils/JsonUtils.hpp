@@ -207,6 +207,8 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 
 	auto keys() const { return _wrappedObject.keys(); }
 
+	bool hasMember( const QString & key ) const { return _wrappedObject.contains( key ); }
+
 	/// Returns a sub-object at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
 	JsonObjectCtxProxy getObject( const QString & key, bool showError = true ) const;

@@ -43,6 +43,7 @@ using UncertainExeVersionInfo = UncertainFileInfo< ExeVersionInfo >;
 UncertainExeVersionInfo readExeVersionInfo( const QString & filePath );
 
 
+// cache global for the whole process, because why not
 extern FileInfoCache< ExeVersionInfo > g_cachedExeInfo;
 
 

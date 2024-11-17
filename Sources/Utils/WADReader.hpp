@@ -13,6 +13,7 @@
 
 #include "CommonTypes.hpp"
 #include "FileInfoCache.hpp"
+#include "DoomFiles.hpp"  // GameIdentification
 
 #include <QString>
 
@@ -33,7 +34,8 @@ enum class WadType
 struct WadInfo
 {
 	WadType type = WadType::Neither;
-	QStringVec mapNames;
+	GameIdentification game;   ///< which game it probably is, only present if the type == IWAD
+	QStringVec mapNames;       ///< list of map names usable for the +map command
 
 	void serialize( QJsonObject & jsWadInfo ) const;
 	void deserialize( const JsonObjectCtx & jsWadInfo );
@@ -46,6 +48,7 @@ using UncertainWadInfo = UncertainFileInfo< WadInfo >;
 UncertainWadInfo readWadInfo( const QString & filePath );
 
 
+// cache global for the whole process, because why not
 extern FileInfoCache< WadInfo > g_cachedWadInfo;
 
 

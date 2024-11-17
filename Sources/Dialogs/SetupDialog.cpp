@@ -323,10 +323,8 @@ void SetupDialog::onEnginesDropped( int row, int count, DnDType type )
 	for (int engineIdx = row; engineIdx < row + count; ++engineIdx)
 	{
 		EngineInfo & engine = engineModel[ engineIdx ];
-		if (!engine.hasAppInfo() || !engine.hasSandboxEnvInfo() || !engine.hasFamilyTraits())
-		{
-			engine = EngineDialog::autofillEngineInfo( engine.executablePath, pathConvertor );
-		}
+		// the executablePath is already converted by the ListModel
+		EngineDialog::autofillEngineInfo( engine, engine.executablePath );
 	}
 }
 
@@ -515,7 +513,7 @@ void SetupDialog::onModDirChanged( const QString & dir )
 
 void SetupDialog::updateIWADsFromDir()
 {
-	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::isIWAD );
+	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::canBeIWAD );
 
 	if (!iwadSettings.defaultIWAD.isEmpty())
 	{
@@ -582,7 +580,7 @@ void SetupDialog::onAbsolutePathsToggled( bool checked )
 	for (Engine & engine : engineModel)
 	{
 		engine.executablePath = pathConvertor.convertPath( engine.executablePath );
-		engine.configDir = pathConvertor.convertPath( engine.configDir );
+		// don't convert the config/data dirs, some of them may be better stored as relative, some as absolute
 	}
 	engineModel.contentChanged( 0 );
 

@@ -45,15 +45,17 @@ class DialogWithPaths : public DialogCommon {
 	QString browseDir( QWidget * parent, const QString & dirDesc, QString startingDir = QString() );
 
 	/// Convenience wrapper that also stores the result into a text line.
-	void browseFile( QWidget * parent, const QString & fileDesc, QLineEdit * targetLine, const QString & filter );
+	/** Returns true if the dialog was confirmed or false if it was cancelled. */
+	bool browseFile( QWidget * parent, const QString & fileDesc, QLineEdit * targetLine, const QString & filter );
 
 	/// Convenience wrapper that also stores the result into a text line.
-	void browseDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine );
+	/** Returns true if the dialog was confirmed or false if it was cancelled. */
+	bool browseDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine );
 
  public:
 
 	const QString & getLastUsedDir() const   { return lastUsedDir; }
-	QString takeLastUsedDir() const          { return std::move(lastUsedDir); }
+	QString takeLastUsedDir() const          { return std::move( lastUsedDir ); }
 
  protected:
 

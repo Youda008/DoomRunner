@@ -7,13 +7,20 @@
     <x>0</x>
     <y>0</y>
     <width>303</width>
-    <height>85</height>
+    <height>94</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>New config file</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="infoLabel">
+     <property name="text">
+      <string>Creating a copy of &lt;orig_config_file_name&gt;</string>
+     </property>
+    </widget>
+   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -25,6 +32,13 @@
      </item>
      <item>
       <widget class="QLineEdit" name="configNameLine"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="suffixLabel">
+       <property name="text">
+        <string>.&lt;config_suffix&gt;</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

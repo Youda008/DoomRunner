@@ -13,6 +13,7 @@
 
 #include <QDialog>
 #include <QString>
+#include <QFileInfo>
 
 namespace Ui {
 	class NewConfigDialog;
@@ -29,7 +30,7 @@ class NewConfigDialog : public QDialog, private DialogCommon {
 
  public:
 
-	explicit NewConfigDialog( QWidget * parent, const QString & currentConfigName );
+	explicit NewConfigDialog( QWidget * parent, const QFileInfo & origConfigFile );
 	virtual ~NewConfigDialog() override;
 
 	void confirmed();

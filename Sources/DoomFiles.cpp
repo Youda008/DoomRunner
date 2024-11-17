@@ -9,6 +9,7 @@
 
 #include <QVector>
 #include <QHash>
+#include <QSet>
 #include <QFileInfo>
 #include <QRegularExpression>
 
@@ -19,9 +20,7 @@ namespace doom {
 //======================================================================================================================
 //  file type recognition
 
-const QStringVec configFileSuffixes = {"ini", "cfg"};
-const QString saveFileSuffix = "zds";
-const QString demoFileSuffix = "lmp";
+const QString demoFileSuffix = "lmp";  // this seems to be universal across different engines
 
 const QStringVec iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke", "epk", "vwad"};
 const QStringVec pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex", "hhe", "epk", "vwad"};
@@ -29,13 +28,13 @@ const QStringVec dukeSuffixes = {"grp", "rff"};
 
 // The correct way would be to recognize the type by file header, but there are incorrectly made mods
 // that present themselfs as IWADs, so in order to support those we need to use the file suffix
-bool isIWAD( const QFileInfo & file )
+bool canBeIWAD( const QFileInfo & file )
 {
 	return (iwadSuffixes.contains( file.suffix().toLower() ))
 	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
 }
 
-bool isMapPack( const QFileInfo & file )
+bool canBeMapPack( const QFileInfo & file )
 {
 	return (pwadSuffixes.contains( file.suffix().toLower() ))
 	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
@@ -54,6 +53,459 @@ QStringList getModFileSuffixes()
 
 //======================================================================================================================
 //  known WAD info
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  known games
+
+namespace game {
+
+//-- Doom 1 --------------------------------------------------------------------
+
+static const GameIdentification Doom1_Shareware =
+{
+	.name = "DOOM Shareware",
+	.gzdoomID = "doom.id.doom1.shareware",
+	.chocolateID = "doom1.wad",
+};
+
+static const GameIdentification Doom1_Registered =
+{
+	.name = "DOOM Registered",
+	.gzdoomID = "doom.id.doom1.registered",
+	.chocolateID = "doom.wad",
+};
+
+static const GameIdentification Doom1_Ultimate =
+{
+	.name = "The Ultimate DOOM",
+	.gzdoomID = "doom.id.doom1.ultimate",
+	.chocolateID = "doom.wad",
+};
+
+static const GameIdentification Doom1_Ultimate_XBox =
+{
+	.name = "DOOM: XBox Edition",
+	.gzdoomID = "doom.id.doom1.ultimate.xbox",
+	.chocolateID = "doom.wad",
+};
+
+static const GameIdentification Doom1_BFG =
+{
+	.name = "DOOM: BFG Edition",
+	.gzdoomID = "doom.id.doom1.bfg",
+	.chocolateID = "doom.wad",
+};
+
+static const GameIdentification Doom1_KEX =
+{
+	.name = "DOOM: KEX Edition",
+	.gzdoomID = "doom.id.doom1.kex",
+	.chocolateID = "doom.wad",
+};
+
+static const GameIdentification Doom1_Unity =
+{
+	.name = "DOOM: Unity Edition",
+	.gzdoomID = "doom.id.doom1.unity",
+	.chocolateID = "doom.wad",
+};
+
+//-- Doom 2 --------------------------------------------------------------------
+
+const GameIdentification Doom2 =
+{
+	.name = "DOOM 2: Hell on Earth",
+	.gzdoomID = "doom.id.doom2.commercial",
+	.chocolateID = "doom2.wad",
+};
+
+static const GameIdentification Doom2_XBox =
+{
+	.name = "DOOM 2: XBox Edition",
+	.gzdoomID = "doom.id.doom2.commercial.xbox",
+	.chocolateID = "doom2.wad",
+};
+
+static const GameIdentification Doom2_BFG =
+{
+	.name = "DOOM 2: BFG Edition",
+	.gzdoomID = "doom.id.doom2.bfg",
+	.chocolateID = "doom2.wad",
+};
+
+static const GameIdentification Doom2_KEX =
+{
+	.name = "DOOM 2: KEX Edition",
+	.gzdoomID = "doom.id.doom2.kex",
+	.chocolateID = "doom2.wad",
+};
+
+static const GameIdentification Doom2_Unity =
+{
+	.name = "DOOM 2: Unity Edition",
+	.gzdoomID = "doom.id.doom2.unity",
+	.chocolateID = "doom2.wad",
+};
+
+//-- Final Doom ----------------------------------------------------------------
+
+static const GameIdentification Doom2_TNT =
+{
+	.name = "Final Doom: TNT - Evilution",
+	.gzdoomID = "doom.id.doom2.tnt",
+	.chocolateID = "tnt.wad",
+};
+
+static const GameIdentification Doom2_TNT_KEX =
+{
+	.name = "Final Doom: TNT - Evilution: KEX Edition",
+	.gzdoomID = "doom.id.doom2.tnt.kex",
+	.chocolateID = "tnt.wad",
+};
+
+static const GameIdentification Doom2_TNT_Unity =
+{
+	.name = "Final Doom: TNT - Evilution: Unity Edition",
+	.gzdoomID = "doom.id.doom2.tnt.unity",
+	.chocolateID = "tnt.wad",
+};
+
+static const GameIdentification Doom2_Plutonia =
+{
+	.name = "Final Doom: Plutonia Experiment",
+	.gzdoomID = "doom.id.doom2.plutonia",
+	.chocolateID = "plutonia.wad",
+};
+
+static const GameIdentification Doom2_Plutonia_KEX =
+{
+	.name = "Final Doom: Plutonia Experiment: KEX Edition",
+	.gzdoomID = "doom.id.doom2.plutonia.kex",
+	.chocolateID = "plutonia.wad",
+};
+
+static const GameIdentification Doom2_Plutonia_Unity =
+{
+	.name = "Final Doom: Plutonia Experiment: Unity Edition",
+	.gzdoomID = "doom.id.doom2.plutonia.unity",
+	.chocolateID = "plutonia.wad",
+};
+
+//-- Heretic -------------------------------------------------------------------
+
+static const GameIdentification Heretic_Shareware =
+{
+	.name = "Heretic Shareware",
+	.gzdoomID = "heretic.shareware",
+	.chocolateID = "heretic1.wad",
+};
+
+static const GameIdentification Heretic =
+{
+	.name = "Heretic",
+	.gzdoomID = "heretic.heretic",
+	.chocolateID = "heretic.wad",
+};
+
+//-- Hexen ---------------------------------------------------------------------
+
+static const GameIdentification Hexen_Shareware =
+{
+	.name = "Hexen: Demo Version",
+	.gzdoomID = "hexen.shareware",
+	.chocolateID = "hexen.wad",
+};
+
+static const GameIdentification Hexen =
+{
+	.name = "Hexen: Beyond Heretic",
+	.gzdoomID = "hexen.hexen",
+	.chocolateID = "hexen.wad",
+};
+
+static const GameIdentification Hexen_Deathkings =
+{
+	.name = "Hexen: Deathkings of the Dark Citadel",
+	.gzdoomID = "hexen.deathkings",
+	.chocolateID = "hexen.wad",
+};
+
+//-- FreeDoom and "free Heretic" -----------------------------------------------
+
+static const GameIdentification Freedoom_Demo =
+{
+	.name = "Freedoom: Demo Version",
+	.gzdoomID = "doom.freedoom.demo",
+	.chocolateID = "freedoom1.wad",
+};
+
+static const GameIdentification Freedoom_Phase1 =
+{
+	.name = "Freedoom: Phase 1",
+	.gzdoomID = "doom.freedoom.phase1",
+	.chocolateID = "freedoom1.wad",
+};
+
+static const GameIdentification Freedoom_Phase2 =
+{
+	.name = "Freedoom: Phase 2",
+	.gzdoomID = "doom.freedoom.phase2",
+	.chocolateID = "freedoom2.wad",
+};
+
+static const GameIdentification FreeDM =
+{
+	.name = "FreeDM",
+	.gzdoomID = "doom.freedoom.freedm",
+	.chocolateID = "freedm.wad",
+};
+
+static const GameIdentification Blasphemer =
+{
+	.name = "Blasphemer",
+	.gzdoomID = "blasphemer",
+	.chocolateID = "heretic.wad",
+};
+
+//-- other games ---------------------------------------------------------------
+
+static const GameIdentification Strife =
+{
+	.name = "Strife: Quest for the Sigil",
+	.gzdoomID = "strife.strife",
+	.chocolateID = "strife1.wad",
+};
+
+static const GameIdentification Strife_Veteran =
+{
+	.name = "Strife: Veteran Edition",
+	.gzdoomID = "strife.veteran",
+	.chocolateID = "strife1.wad",
+};
+
+static const GameIdentification Chex_Quest =
+{
+	.name = "Chex(R) Quest",
+	.gzdoomID = "chex.chex1",
+	.chocolateID = "chex.wad",
+};
+
+static const GameIdentification Chex_Quest3 =
+{
+	.name = "Chex(R) Quest 3",
+	.gzdoomID = "chex.chex3",
+	.chocolateID = "chex.wad",
+};
+
+static const GameIdentification Harmony =
+{
+	.name = "Harmony",
+	.gzdoomID = "harmony",
+	.chocolateID = "unknown.wad",
+};
+
+} // namespace game
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  detection of known games from IWAD
+
+template< size_t count >
+static bool containsAllOf( const QSet< QString > & set, const std::array< const char *, count > & elems )
+{
+	for (const char * elem : elems)
+		if (!set.contains( elem ))
+			return false;
+	return true;
+}
+
+GameIdentification identifyGame( const QSet< QString > & lumps )
+{
+	// Hand-crafted decision tree for detecting IWADs based on the lumps they contain.
+	// Based on https://github.com/ZDoom/gzdoom/blob/master/wadsrc_extra/static/iwadinfo.txt
+	//
+	// NOTE: These conditions should be sorted from the least common to the most.
+	// It may be slightly slower, but the other way around we risk misclassifying items with only few specific lumps like:
+	// strife.veteran:  "MAP35", "I_RELB", "FXAA_F"
+
+	if (lumps.contains("I_RELB") && lumps.contains("FXAA_F") && lumps.contains("MAP35"))
+	{
+		return game::Strife_Veteran;
+	}
+	else if (lumps.contains("TITLE"))  // Heretic & Hexen
+	{
+		if (lumps.contains("BLASPHEM"))
+		{
+			return game::Blasphemer;
+		}
+		else if (lumps.contains("MUS_E1M1"))
+		{
+			if (lumps.contains("E2M1"))
+			{
+				return game::Heretic;
+			}
+			else  // only first episode
+			{
+				return game::Heretic_Shareware;
+			}
+		}
+		else if (lumps.contains("MAP60") && lumps.contains("CLUS1MSG"))
+		{
+			return game::Hexen_Deathkings;
+		}
+		else if (lumps.contains("MAP01") && lumps.contains("WINNOWR"))
+		{
+			if (lumps.contains("MAP40"))
+			{
+				return game::Hexen;
+			}
+			else
+			{
+				return game::Hexen_Shareware;
+			}
+		}
+	}
+	else if (lumps.contains("E1M1"))  // Doom1-based games
+	{
+		if (lumps.contains("FREEDOOM"))
+		{
+			if (lumps.contains("E2M1"))
+			{
+				return game::Freedoom_Phase1;
+			}
+			else  // only first episode
+			{
+				return game::Freedoom_Demo;
+			}
+		}
+		else if (lumps.contains("CYCLA1") && lumps.contains("FLMBA1") && lumps.contains("MAPINFO"))
+		{
+			return game::Chex_Quest3;
+		}
+		else if (lumps.contains("W94_1") && lumps.contains("POSSH0M0") && lumps.contains("E4M1"))
+		{
+			return game::Chex_Quest;
+		}
+		else if (containsAllOf<3>( lumps, { "E2M1", "DPHOOF", "BFGGA0" } ))  // full Doom1 variants - can add "E3M1", "HEADA1", "CYBRA1", "SPIDA1D1" for additional verification
+		{
+			if (lumps.contains("E4M2"))  // with 4th episode
+			{
+				if (lumps.contains("E1M10") && lumps.contains("SEWERS"))
+				{
+					return game::Doom1_Ultimate_XBox;
+				}
+				else if (lumps.contains("DMENUPIC"))  // re-releases
+				{
+					if (containsAllOf<4>( lumps, { "M_ACPT", "M_CAN", "M_EXITO", "M_CHG" } ))
+					{
+						return game::Doom1_BFG;
+					}
+					else if (lumps.contains("GAMECONF"))  // KEX
+					{
+						return game::Doom1_KEX;
+					}
+					else
+					{
+						return game::Doom1_Unity;
+					}
+				}
+				else  // original
+				{
+					return game::Doom1_Ultimate;
+				}
+			}
+			else
+			{
+				return game::Doom1_Registered;
+			}
+		}
+		else
+		{
+			return game::Doom1_Shareware;
+		}
+	}
+	else if (lumps.contains("MAP01"))  // Doom2-based games
+	{
+		if (lumps.contains("ENDSTRF") && lumps.contains("MAP33"))
+		{
+			return game::Strife;
+		}
+		else if (lumps.contains("0HAWK01") && lumps.contains("0CARA3") && lumps.contains("0NOSE1"))
+		{
+			return game::Harmony;
+		}
+		else if (lumps.contains("FREEDOOM"))
+		{
+			return game::Freedoom_Phase2;
+		}
+		else if (lumps.contains("FREEDM"))
+		{
+			return game::FreeDM;
+		}
+		else if (lumps.contains("REDTNT2"))  // TNT
+		{
+			if (lumps.contains("GAMECONF"))  // KEX
+			{
+				return game::Doom2_TNT_KEX;
+			}
+			else if (lumps.contains("DMAPINFO"))  // Unity
+			{
+				return game::Doom2_TNT_Unity;
+			}
+			else
+			{
+				return game::Doom2_TNT;
+			}
+		}
+		else if (lumps.contains("CAMO1"))  // Plutonia
+		{
+			if (lumps.contains("GAMECONF"))  // KEX
+			{
+				return game::Doom2_Plutonia_KEX;
+			}
+			else if (lumps.contains("DMAPINFO"))  // Unity
+			{
+				return game::Doom2_Plutonia_Unity;
+			}
+			else
+			{
+				return game::Doom2_Plutonia;
+			}
+		}
+		else  // Doom2 variants
+		{
+			if (lumps.contains("CWILV32") && lumps.contains("MAP33"))
+			{
+				return game::Doom2_XBox;
+			}
+			else if (lumps.contains("DMENUPIC"))  // re-releases
+			{
+				if (containsAllOf<4>( lumps, { "M_ACPT", "M_CAN", "M_EXITO", "M_CHG" } ))
+				{
+					return game::Doom2_BFG;
+				}
+				else if (lumps.contains("GAMECONF"))  // KEX
+				{
+					return game::Doom2_KEX;
+				}
+				else
+				{
+					return game::Doom2_Unity;
+				}
+			}
+			else
+			{
+				return game::Doom2;
+			}
+		}
+	}
+	return { {}, {} };  // it's not any of the games we know
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+//  map names
 
 QStringList getStandardMapNames( const QString & iwadFileName )
 {
@@ -75,6 +527,7 @@ QStringList getStandardMapNames( const QString & iwadFileName )
 
 	return mapNames;
 }
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //  starting maps

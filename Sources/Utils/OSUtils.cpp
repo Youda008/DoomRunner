@@ -15,6 +15,7 @@
 #include <QGuiApplication>
 #include <QDesktopServices>  // fallback for openFileLocation
 #include <QUrl>
+#include <QStringBuilder>
 #include <QRegularExpression>
 #include <QScreen>
 #include <QProcess>
@@ -31,18 +32,167 @@ namespace os {
 //======================================================================================================================
 //  standard directories
 
-QString getHomeDir()
+#if defined(FLATPAK_BUILD) && IS_WINDOWS
+	#error "Flatpak build on Windows is not supported"
+#elif defined(FLATPAK_BUILD) && IS_MACOS
+	#error "Flatpak build on MacOS is not supported"
+#endif
+
+namespace impl {
+
+static QString getUserName()
 {
-	return QStandardPaths::writableLocation( QStandardPaths::HomeLocation );
+	// There is no other way: https://stackoverflow.com/questions/26552517/get-system-username-in-qt/49215652#49215652
+ #if IS_WINDOWS
+	return qEnvironmentVariable("USERNAME");
+ #else
+	return qEnvironmentVariable("USER");
+ #endif
 }
 
-QString getDocumentsDir()
+// Here is where QStandardPaths point to on different platforms:
+// https://docs.google.com/spreadsheets/d/11UJYZAUbFi-B7oIQ9egNYbgC8hsS9PTyyckT5g0uh08/edit?usp=sharing
+
+static QString getCurrentHomeDir()
 {
-	return QStandardPaths::writableLocation( QStandardPaths::DocumentsLocation );
+	return QStandardPaths::writableLocation( QStandardPaths::HomeLocation );
+	// result:
+	// Windows - system-wide:  C:/Users/Youda                                                    - %UserProfile%
+	// Linux - system-wide:    /home/youda                                                       \
+	// Linux - Flatpak:        /home/youda/.var/app/io.github.Youda008.DoomRunner                - $HOME
+	// Linux - Snap:           /home/youda/snap/gzdoom/current                                   /
+	// Mac - system-wide:      /Users/Youda
+}
+
+[[maybe_unused]] static QString getMainHomeDir()
+{
+ #ifdef FLATPAK_BUILD  // this is a Flatpak installation of this launcher
+	// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
+	// But we need the system-wide home dir, and that's not available via Qt, so we must do this hack.
+	return "/home/"%getUserName();
+ #else
+	return getCurrentHomeDir();
+ #endif
+}
+
+static QString getCurrentAppConfigDir()
+{
+ #if IS_WINDOWS
+	// Qt thinks that GenericConfigLocation on Windows belongs to AppData\Local, but imo it belongs to AppData\Roaming.
+	// Unfortunatelly there is no GenericRoamingDataLocation, and the only way to extract that roaming parent directory
+	// is to take the parent directory of AppDataLocation, which already includes this application name.
+	return fs::getParentDir( QStandardPaths::writableLocation( QStandardPaths::AppDataLocation ) );
+ #else // Linux and Mac
+	return QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
+ #endif
+	// result:
+	// Windows - system-wide:  C:/Users/Youda/AppData/Roaming                                    - %AppData%
+	// Linux - system-wide:    /home/youda/.config                                               \
+	// Linux - Flatpak:        /home/youda/.var/app/io.github.Youda008.DoomRunner/.config        - $XDG_CONFIG_HOME
+	// Linux - Snap:           /home/youda/snap/gzdoom/current/.config                           /
+	// Mac - system-wide:      /Users/Youda/Library/Preferences
+}
+
+static QString getAppConfigDirRelativeToHome()
+{
+	// Takes current home dir and "subtracts" it from current config dir.
+	// e.g.: "/home/youda/snap/gzdoom/current/.config" - "/home/youda/snap/gzdoom/current" -> ".config"
+	return QDir( getCurrentHomeDir() ).relativeFilePath( getCurrentAppConfigDir() );
+}
+
+[[maybe_unused]] static QString getMainAppConfigDir()
+{
+ #ifdef FLATPAK_BUILD  // this is a Flatpak installation of this launcher
+	// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
+	// But we need the system-wide config dir, and that's not available via Qt, so we must do this hack.
+	return getMainHomeDir()%"/"%getAppConfigDirRelativeToHome();
+ #else
+	return getCurrentAppConfigDir();
+ #endif
+}
+
+static QString getCurrentAppDataDir()
+{
+ #if IS_WINDOWS
+	// Qt thinks that GenericDataLocation on Windows belongs to AppData\Local, but imo it belongs to AppData\Roaming.
+	// Unfortunatelly there is no GenericRoamingDataLocation, and the only way to extract that roaming parent directory
+	// is to take the parent directory of AppDataLocation, which already includes this application name.
+	return fs::getParentDir( QStandardPaths::writableLocation( QStandardPaths::AppDataLocation ) );
+ #else // Linux and Mac
+	return QStandardPaths::writableLocation( QStandardPaths::GenericDataLocation );
+ #endif
+	// result:
+	// Windows - system-wide:  C:/Users/Youda/AppData/Roaming                                    - %AppData%
+	// Linux - system-wide:    /home/youda/.local/share                                          \
+	// Linux - Flatpak:        /home/youda/.var/app/io.github.Youda008.DoomRunner/.local/share   - $XDG_DATA_HOME
+	// Linux - Snap:           /home/youda/snap/gzdoom/current/.local/share                      /
+	// Mac - system-wide:      /Users/Youda/Library/Application Support
+}
+
+static QString getAppDataDirRelativeToHome()
+{
+	// Takes current home dir and "subtracts" it from current data dir.
+	// e.g.: "/home/youda/snap/gzdoom/current/.local/share" - "/home/youda/snap/gzdoom/current" -> ".local/share"
+	return QDir( getCurrentHomeDir() ).relativeFilePath( getCurrentAppDataDir() );
+}
+
+[[maybe_unused]] static QString getMainAppDataDir()
+{
+ #ifdef FLATPAK_BUILD  // this is a Flatpak installation of this launcher
+	// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
+	// But we need the system-wide data dir, and that's not available via Qt, so we must do this hack.
+	return getMainHomeDir()%"/"%getAppDataDirRelativeToHome();
+ #else
+	return getCurrentAppDataDir();
+ #endif
+}
+
+static QString getCurrentLocalAppDataDir()
+{
+	return QStandardPaths::writableLocation( QStandardPaths::GenericDataLocation );
+	// result:
+	// Windows - system-wide:  C:/Users/Youda/AppData/Local                                      - %LocalAppData%
+	// Linux - system-wide:    /home/youda/.local/share                                          \
+	// Linux - Flatpak:        /home/youda/.var/app/io.github.Youda008.DoomRunner/.local/share   - $XDG_DATA_HOME
+	// Linux - Snap:           /home/youda/snap/gzdoom/current/.local/share                      /
+	// Mac - system-wide:      /Users/Youda/Library/Application Support
+}
+
+static QString getLocalAppDataDirRelativeToHome()
+{
+	// Takes current home dir and "subtracts" it from current data dir.
+	// e.g.: "/home/youda/snap/gzdoom/current/.local/share" - "/home/youda/snap/gzdoom/current" -> ".local/share"
+	return QDir( getCurrentHomeDir() ).relativeFilePath( getCurrentLocalAppDataDir() );
+}
+
+[[maybe_unused]] static QString getMainLocalAppDataDir()
+{
+ #ifdef FLATPAK_BUILD  // this is a Flatpak installation of this launcher
+	// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
+	// But we need the system-wide data dir, and that's not available via Qt, so we must do this hack.
+	return getMainHomeDir()%"/"%getLocalAppDataDirRelativeToHome();
+ #else
+	return getCurrentLocalAppDataDir();
+ #endif
 }
 
 #if IS_WINDOWS
-QString getSavedGamesDir()
+
+static QString getDocumentsDir()
+{
+	return QStandardPaths::writableLocation( QStandardPaths::DocumentsLocation );
+	// result:
+	// Windows - system-wide:  C:/Users/Youda/Documents/ㅤ
+}
+
+static QString getPicturesDir()
+{
+	return QStandardPaths::writableLocation( QStandardPaths::PicturesLocation );
+	// result:
+	// Windows - system-wide:  C:/Users/Youda/Pictures/ㅤ
+}
+
+static QString getSavedGamesDir()
 {
 	PWSTR pszPath = nullptr;
 	HRESULT hr = SHGetKnownFolderPath( FOLDERID_SavedGames, KF_FLAG_DONT_UNEXPAND, nullptr, &pszPath );
@@ -54,150 +204,296 @@ QString getSavedGamesDir()
 	}
 	auto dir = QString::fromWCharArray( pszPath );
 	CoTaskMemFree( pszPath );
-	dir.replace('\\', '/');
+	dir.replace('\\', '/');  // Qt internally uses '/' for all platforms
 	return dir;
+	// result:
+	// Windows - system-wide:  C:/Users/Youda/Saved Gamesㅤ
 }
-#endif
 
-QString getAppConfigDir()
+#endif // IS_WINDOWS
+
+QString getThisLauncherDataDir()
 {
- #if !IS_WINDOWS && defined(FLATPAK_BUILD)  // the launcher is a Flatpak installation on Linux
-	// Inside Flatpak environment the GenericConfigLocation points into the Flatpak sandbox of this application.
-	// But we need the system-wide config dir, and that's not available via Qt, so we must do this guessing hack.
-	return getHomeDir()%"/.config";
+	// mimic ZDoom behaviour - save to application's binary dir on Windows, but to standard data directory on Linux
+
+	QString appDataDir = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
+
+ #if IS_WINDOWS
+
+	QString thisExeDir = QApplication::applicationDirPath();
+	if (fs::isDirectoryWritable( thisExeDir ))
+	{
+		printInfo() << "Saving data (options, cache, errors) into the install directory ("<<thisExeDir<<")";
+		return thisExeDir;
+	}
+	else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%\Roaming
+	{
+		printInfo() << "The install directory ("<<thisExeDir<<") is not writable.";
+		printInfo() << "Saving data (options, cache, errors) into the system standard directory ("<<appDataDir<<")";
+		return appDataDir;
+	}
+
  #else
-	return QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
+
+	printInfo() << "Saving data (options, cache, errors) into the system standard directory ("<<appDataDir<<")";
+	return appDataDir;
+
+ #endif
+
+	// result:
+	// Windows - Program Files:  C:/Users/Youda/AppData/Roaming/DoomRunner                                    - %AppData%
+	// Windows - custom dir:     E:/Youda/Games/Doom/DoomRunner
+	// Linux - system-wide:      /home/youda/.local/share/DoomRunner                                          \
+	// Linux - Flatpak:          /home/youda/.var/app/io.github.Youda008.DoomRunner/.local/share/DoomRunner   - $XDG_DATA_HOME
+	// Linux - Snap:             /home/youda/snap/gzdoom/current/.local/share/DoomRunner                      /
+	// Mac - system-wide:        /Users/Youda/Library/Application Support/DoomRunner
+}
+
+} // namespace impl
+
+
+//-- result caching --------------------------------------------------------------------------------
+// These directories are unlikely to change, so we init them once and then re-use the result.
+// We don't use local static variables, because those use a mutex to prevent initialization by multiple threads.
+// These functions will however always be used from the main thread only, so mutex is not needed.
+
+struct SystemDirectories
+{
+	QString userName;
+
+	QString currentHomeDir;
+	QString currentAppConfigDir;
+	QString currentAppDataDir;
+	QString currentLocalAppDataDir;
+ #ifdef FLATPAK_BUILD
+	QString mainHomeDir;
+	QString mainAppConfigDir;
+	QString mainAppDataDir;
+	QString mainLocalAppDataDir;
+ #endif
+	QString appConfigDirRelativeToHome;
+	QString appDataDirRelativeToHome;
+	QString localAppDataDirRelativeToHome;
+ #if IS_WINDOWS
+	QString documentsDir;
+	QString picturesDir;
+	QString savedGamesDir;
+ #endif
+	QString thisLauncherDataDir;
+};
+
+static std::unique_ptr< SystemDirectories > g_cachedDirs;
+
+static std::unique_ptr< SystemDirectories > getSystemDirectories()
+{
+	auto dirs = std::make_unique< SystemDirectories >();
+
+	dirs->userName                = impl::getUserName();
+
+	dirs->currentHomeDir          = impl::getCurrentHomeDir();
+	dirs->currentAppConfigDir     = impl::getCurrentAppConfigDir();
+	dirs->currentAppDataDir       = impl::getCurrentAppDataDir();
+	dirs->currentLocalAppDataDir  = impl::getCurrentLocalAppDataDir();
+ #ifdef FLATPAK_BUILD
+	dirs->mainHomeDir             = impl::getMainHomeDir();
+	dirs->mainAppConfigDir        = impl::getMainAppConfigDir();
+	dirs->mainAppDataDir          = impl::getMainAppDataDir();
+	dirs->mainLocalAppDataDir     = impl::getMainLocalAppDataDir();
+ #endif
+	dirs->appConfigDirRelativeToHome    = impl::getAppConfigDirRelativeToHome();
+	dirs->appDataDirRelativeToHome      = impl::getAppDataDirRelativeToHome();
+	dirs->localAppDataDirRelativeToHome = impl::getLocalAppDataDirRelativeToHome();
+ #if IS_WINDOWS
+	dirs->documentsDir            = impl::getDocumentsDir();
+	dirs->picturesDir             = impl::getPicturesDir();
+	dirs->savedGamesDir           = impl::getSavedGamesDir();
+ #endif
+	dirs->thisLauncherDataDir     = impl::getThisLauncherDataDir();
+
+	return dirs;
+}
+
+const QString & getUserName()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->userName;
+}
+
+const QString & getCurrentHomeDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->currentHomeDir;
+}
+const QString & getCurrentAppConfigDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->currentAppConfigDir;
+}
+const QString & getCurrentAppDataDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->currentAppDataDir;
+}
+const QString & getCurrentLocalAppDataDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->currentLocalAppDataDir;
+}
+
+const QString & getMainHomeDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+ #ifdef FLATPAK_BUILD
+	return g_cachedDirs->mainHomeDir;
+ #else
+	return g_cachedDirs->currentHomeDir;
+ #endif
+}
+const QString & getMainAppConfigDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+ #ifdef FLATPAK_BUILD
+	return g_cachedDirs->mainAppConfigDir;
+ #else
+	return g_cachedDirs->currentAppConfigDir;
+ #endif
+}
+const QString & getMainAppDataDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+ #ifdef FLATPAK_BUILD
+	return g_cachedDirs->mainAppDataDir;
+ #else
+	return g_cachedDirs->currentAppDataDir;
+ #endif
+}
+const QString & getMainLocalAppDataDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+ #ifdef FLATPAK_BUILD
+	return g_cachedDirs->mainLocalAppDataDir;
+ #else
+	return g_cachedDirs->currentLocalAppDataDir;
  #endif
 }
 
-QString getAppDataDir()
+static const QString & getAppConfigDirRelativeToHome()
 {
- #if !IS_WINDOWS && defined(FLATPAK_BUILD)  // the launcher is a Flatpak installation on Linux
-	// Inside Flatpak environment the GenericDataLocation points into the Flatpak sandbox of this application.
-	// But we need the system-wide data dir, and that's not available via Qt, so we must do this guessing hack.
-	return getHomeDir()%"/.local/share";
- #else
-	return QStandardPaths::writableLocation( QStandardPaths::GenericDataLocation );
- #endif
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->appConfigDirRelativeToHome;
+}
+static const QString & getAppDataDirRelativeToHome()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->appDataDirRelativeToHome;
+}
+
+#if IS_WINDOWS
+
+const QString & getDocumentsDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->documentsDir;
+}
+const QString & getPicturesDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->picturesDir;
+}
+const QString & getSavedGamesDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->savedGamesDir;
+}
+
+#endif // IS_WINDOWS
+
+const QString & getThisLauncherDataDir()
+{
+	if (!g_cachedDirs)
+		g_cachedDirs = getSystemDirectories();
+	return g_cachedDirs->thisLauncherDataDir;
+}
+
+static SandboxEnvInfo getSandboxEnvInfo( const QString & executablePath );
+
+QString getHomeDirForApp( const QString & executablePath )
+{
+	QString homeDir;
+	SandboxEnvInfo sandboxEnv = getSandboxEnvInfo( executablePath );
+	if (sandboxEnv.type != SandboxType::None)
+	{
+		homeDir = sandboxEnv.homeDir;
+	}
+	else
+	{
+		homeDir = getMainHomeDir();
+	}
+	return homeDir;
+	// result:
+	// Windows - system-wide:  C:/Users/Youda
+	// Linux - system-wide:    /home/youda
+	// Linux - Flatpak:        /home/youda/.var/app/org.zdoom.GZDoom
+	// Linux - Snap:           /home/youda/snap/gzdoom/current
+	// Mac - system-wide:      /Users/Youda
 }
 
 QString getConfigDirForApp( const QString & executablePath )
 {
-	QString genericConfigDir = getAppConfigDir();
-	QString appName = fs::getFileBasenameFromPath( executablePath );
-	return fs::getPathFromFileName( genericConfigDir, appName );  // -> /home/youda/.config/zdoom
+	QString exeName = fs::getFileBasenameFromPath( executablePath );
+	QString configDir;
+	SandboxEnvInfo sandboxEnv = getSandboxEnvInfo( executablePath );
+	if (sandboxEnv.type != SandboxType::None)
+	{
+		configDir = sandboxEnv.homeDir%"/"%getAppConfigDirRelativeToHome();
+	}
+	else
+	{
+		configDir = getMainAppConfigDir();
+	}
+	return configDir%"/"%exeName;
+	// result:
+	// Windows - system-wide:  C:/Users/Youda/AppData/Roaming/gzdoom
+	// Linux - system-wide:    /home/youda/.config/gzdoom
+	// Linux - Flatpak:        /home/youda/.var/app/org.zdoom.GZDoom/.config/gzdoom
+	// Linux - Snap:           /home/youda/snap/gzdoom/current/.config/gzdoom
+	// Mac - system-wide:      /Users/Youda/Library/Preferences/gzdoom
 }
 
 QString getDataDirForApp( const QString & executablePath )
 {
-	QString genericDataDir = getAppDataDir();
-	QString appName = fs::getFileBasenameFromPath( executablePath );
-	return fs::getPathFromFileName( genericDataDir, appName );  // -> /home/youda/.local/share/zdoom
-}
-
-QString getThisAppConfigDir()
-{
-	// mimic ZDoom behaviour - save to application's binary dir on Windows, but to /home/user/.config/DoomRunner on Linux
- #if IS_WINDOWS
-	QString thisExeDir = QApplication::applicationDirPath();
-	if (fs::isDirectoryWritable( thisExeDir ))
-		return thisExeDir;
-	else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Local
-		return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
- #else
-	return QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation );
- #endif
-}
-
-QString getThisAppDataDir()
-{
-	// mimic ZDoom behaviour - save to application's binary dir on Windows, but to /home/user/.local/share/DoomRunner on Linux
- #if IS_WINDOWS
-	QString thisExeDir = QApplication::applicationDirPath();
-	if (fs::isDirectoryWritable( thisExeDir ))
-		return thisExeDir;
-	else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%/Roaming
-		return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
- #else
-	return QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
- #endif
-}
-
-
-//-- cached variants -------------------------------------------------------------------------------
-// We don't use local static variables, because those use a mutex to prevent initialization by multiple threads.
-// These functions will however always be used from the main thread only, so mutex is not needed.
-
-static std::optional< QString > g_homeDir;
-const QString & getCachedHomeDir()
-{
-	if (!g_homeDir)
-		g_homeDir = getHomeDir();
-	return *g_homeDir;
-}
-
-static std::optional< QString > g_documentsDir;
-const QString & getCachedDocumentsDir()
-{
-	if (!g_documentsDir)
-		g_documentsDir = getDocumentsDir();
-	return *g_documentsDir;
-}
-
-#if IS_WINDOWS
-static std::optional< QString > g_savedGamesDir;
-const QString & getCachedSavedGamesDir()
-{
-	if (!g_savedGamesDir)
-		g_savedGamesDir = getSavedGamesDir();
-	return *g_savedGamesDir;
-}
-#endif
-
-static std::optional< QString > g_appConfigDir;
-const QString & getCachedAppConfigDir()
-{
-	if (!g_appConfigDir)
-		g_appConfigDir = getAppConfigDir();
-	return *g_appConfigDir;
-}
-
-static std::optional< QString > g_appDataDir;
-const QString & getCachedAppDataDir()
-{
-	if (!g_appDataDir)
-		g_appDataDir = getAppDataDir();
-	return *g_appDataDir;
-}
-
-QString getCachedConfigDirForApp( const QString & executablePath )
-{
-	const QString & genericConfigDir = getCachedAppConfigDir();
-	QString appName = fs::getFileBasenameFromPath( executablePath );
-	return fs::getPathFromFileName( genericConfigDir, appName );  // -> /home/youda/.config/zdoom
-}
-
-QString getCachedDataDirForApp( const QString & executablePath )
-{
-	const QString & genericDataDir = getCachedAppDataDir();
-	QString appName = fs::getFileBasenameFromPath( executablePath );
-	return fs::getPathFromFileName( genericDataDir, appName );  // -> /home/youda/.local/share/zdoom
-}
-
-static std::optional< QString > g_thisAppConfigDir;
-const QString & getCachedThisAppConfigDir()
-{
-	if (!g_thisAppConfigDir)
-		g_thisAppConfigDir = getThisAppConfigDir();
-	return *g_thisAppConfigDir;
-}
-
-static std::optional< QString > g_thisAppDataDir;
-const QString & getCachedThisAppDataDir()
-{
-	if (!g_thisAppDataDir)
-		g_thisAppDataDir = getThisAppDataDir();
-	return *g_thisAppDataDir;
+	QString exeName = fs::getFileBasenameFromPath( executablePath );
+	QString dataDir;
+	SandboxEnvInfo sandboxEnv = getSandboxEnvInfo( executablePath );
+	if (sandboxEnv.type != SandboxType::None)
+	{
+		dataDir = sandboxEnv.homeDir%"/"%getAppDataDirRelativeToHome();
+	}
+	else
+	{
+		dataDir = getMainAppDataDir();
+	}
+	return dataDir%"/"%exeName;
+	// result:
+	// Windows - system-wide:  C:/Users/Youda/AppData/Roaming/gzdoom
+	// Linux - system-wide:    /home/youda/.local/share/gzdoom
+	// Linux - Flatpak:        /home/youda/.var/app/org.zdoom.GZDoom/.local/share/gzdoom
+	// Linux - Snap:           /home/youda/snap/gzdoom/current/.local/share/gzdoom
+	// Mac - system-wide:      /Users/Youda/Library/Application Support/gzdoom
 }
 
 
@@ -211,41 +507,97 @@ bool isInSearchPath( const QString & filePath )
 
 //-- installation properties -----------------------------------------------------------------------
 
-QString getSandboxName( SandboxEnv sandbox )
+QString getSandboxName( SandboxType sandbox )
 {
 	switch (sandbox)
 	{
-		case SandboxEnv::Snap:    return "Snap";
-		case SandboxEnv::Flatpak: return "Flatpak";
-		default:               return "<invalid>";
+		case SandboxType::Snap:    return "Snap";
+		case SandboxType::Flatpak: return "Flatpak";
+		default:                  return "<invalid>";
 	}
 }
 
-static const QRegularExpression snapPathRegex("^/snap/");
+static const QRegularExpression snapPathRegex("^/snap/([^/]+)/");
 static const QRegularExpression flatpakPathRegex("^/var/lib/flatpak/app/([^/]+)/");
 
-SandboxEnvInfo getSandboxEnvInfo( const QString & executablePath )
+static SandboxEnvInfo getSandboxEnvInfo( const QString & executablePath )
 {
 	SandboxEnvInfo sandboxEnv;
 
+	QString absoluteExePath = fs::getAbsolutePath( executablePath );
+
 	QRegularExpressionMatch match;
-	if ((match = snapPathRegex.match( executablePath )).hasMatch())
+	if ((match = snapPathRegex.match( absoluteExePath )).hasMatch())
 	{
-		sandboxEnv.type = SandboxEnv::Snap;
-		sandboxEnv.appName = fs::getFileBasenameFromPath( executablePath );
-	}
-	else if ((match = flatpakPathRegex.match( executablePath )).hasMatch())
-	{
-		sandboxEnv.type = SandboxEnv::Flatpak;
+		sandboxEnv.type = SandboxType::Snap;
 		sandboxEnv.appName = match.captured(1);
+		sandboxEnv.homeDir = getMainHomeDir()%"/snap/"%sandboxEnv.appName%"/current";
+	}
+	else if ((match = flatpakPathRegex.match( absoluteExePath )).hasMatch())
+	{
+		sandboxEnv.type = SandboxType::Flatpak;
+		sandboxEnv.appName = match.captured(1);
+		sandboxEnv.homeDir = getMainHomeDir()%"/.var/app/"%sandboxEnv.appName;
 	}
 	else
 	{
-		sandboxEnv.type = SandboxEnv::None;
-		sandboxEnv.appName = "";  // make QString::isNull() false to indicate the sandbox info has been initialized
+		sandboxEnv.type = SandboxType::None;
 	}
 
 	return sandboxEnv;
+}
+
+static QString getDisplayName( const AppInfo & info )
+{
+ #if IS_WINDOWS
+
+	// On Windows we can use the metadata built into the executable, or the name of its directory.
+	if (!info.versionInfo.appName.isEmpty())
+		return info.versionInfo.appName;  // exe metadata should be most reliable source
+	else
+		return fs::getParentDirName( info.exePath );
+
+ #else
+
+	// On Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
+	if (info.sandboxEnv.type != SandboxType::None)
+		return info.sandboxEnv.appName;
+	else
+		return info.exeBaseName;
+
+ #endif
+}
+
+static QString getNormalizedName( const AppInfo & info )
+{
+	//if (!info.versionInfo.appName.isEmpty())
+	//	return info.versionInfo.appName.toLower();   // "crispy doom" breaks this
+	//else
+		return info.exeBaseName.toLower();
+}
+
+AppInfo getAppInfo( const QString & executablePath )
+{
+	AppInfo info;
+
+	QString absoluteExePath = fs::getAbsolutePath( executablePath );
+
+	info.exePath = executablePath;
+	info.exeBaseName = fs::getFileBasenameFromPath( absoluteExePath );
+
+	info.sandboxEnv = getSandboxEnvInfo( absoluteExePath );
+
+	// Sometimes opening an executable file takes incredibly long (even > 1 second) for unknown reason (antivirus maybe?).
+	// So we cache the results here so that at least the subsequent calls are fast.
+	if (fs::isValidFile( absoluteExePath ))
+		info.versionInfo = g_cachedExeInfo.getFileInfo( absoluteExePath );
+	else
+		info.versionInfo.status = ReadStatus::CantOpen;
+
+	info.displayName = getDisplayName( info );
+	info.normalizedName = getNormalizedName( info );
+
+	return info;
 }
 
 // On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
@@ -264,19 +616,19 @@ inline static QString fixExePath( QString exePath )
 ShellCommand getRunCommand(
 	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, const QStringVec & dirsToBeAccessed
 ){
-	ShellCommand cmd;
-	QStringVec cmdParts;
+	QStringVec cmdParts, extraPermissions;
 
 	SandboxEnvInfo sandboxEnv = getSandboxEnvInfo( executablePath );
+	QDir sandboxAppDir( sandboxEnv.homeDir );
 
 	// different installations require different ways to launch the program executable
  #ifdef FLATPAK_BUILD
-	if (fs::getAbsoluteDirOfFile( executablePath ) == QApplication::applicationDirPath())
+	if (fs::getAbsoluteParentDir( executablePath ) == QApplication::applicationDirPath())
 	{
 		// We are inside a Flatpak package but launching an app inside the same Flatpak package,
 		// no special command or permissions needed.
-		cmd.executable = fs::getFileNameFromPath( executablePath );
-		return cmd;  // this is all we need, skip the rest
+		QString exeFileName = fs::getFileNameFromPath( executablePath );
+		return { .executable = exeFileName, .arguments = {}, .extraPermissions = {} };  // this is all we need, skip the rest
 	}
 	else
 	{
@@ -286,22 +638,25 @@ ShellCommand getRunCommand(
 		// prefix added, continue with the rest
 	}
  #endif
-	if (sandboxEnv.type == SandboxEnv::Snap)
+	if (sandboxEnv.type == SandboxType::Snap)
 	{
 		cmdParts << "snap";
 		cmdParts << "run";
 		// TODO: permissions
 		cmdParts << sandboxEnv.appName;
 	}
-	else if (sandboxEnv.type == SandboxEnv::Flatpak)
+	else if (sandboxEnv.type == SandboxType::Flatpak)
 	{
 		cmdParts << "flatpak";
 		cmdParts << "run";
 		for (const QString & dir : dirsToBeAccessed)
 		{
-			QString fileSystemPermission = "--filesystem=" + fs::getAbsolutePath( dir );
-			cmdParts << currentDirToNewWorkingDir.maybeQuoted( fileSystemPermission );
-			cmd.extraPermissions << std::move(fileSystemPermission);
+			if (!fs::isInsideDir( sandboxAppDir, dir ))
+			{
+				QString fileSystemPermission = "--filesystem=" + quoted( dir );
+				cmdParts << fileSystemPermission;  // add it to the command
+				extraPermissions << std::move( fileSystemPermission );  // add it to a list to be shown to the user
+			}
 		}
 		cmdParts << sandboxEnv.appName;
 	}
@@ -317,8 +672,10 @@ ShellCommand getRunCommand(
 		cmdParts << currentDirToNewWorkingDir.maybeQuoted( rebasedExePath );
 	}
 
+	ShellCommand cmd;
 	cmd.executable = cmdParts.takeFirst();
 	cmd.arguments = std::move( cmdParts );
+	cmd.extraPermissions = std::move( extraPermissions );
 	return cmd;
 }
 
@@ -483,7 +840,7 @@ bool createShortcut( QString shortcutFile, QString targetFile, QStringVec target
 	targetFile = fs::getAbsolutePath( targetFile );
 	QString targetArgsStr = targetArgs.join(' ');
 	if (workingDir.isEmpty())
-		workingDir = fs::getAbsoluteDirOfFile( targetFile );
+		workingDir = fs::getAbsoluteParentDir( targetFile );
 
 	LPCWSTR pszLinkfile = reinterpret_cast< LPCWSTR >( shortcutFile.utf16() );
 	LPCWSTR pszTargetfile = reinterpret_cast< LPCWSTR >( targetFile.utf16() );

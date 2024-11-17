@@ -80,26 +80,26 @@ bool isInSearchPath( const QString & filePath );
 // installation properties
 
 /// Type of sandbox environment an application might be installed in
-enum class Sandbox
+enum class SandboxEnv
 {
 	None,
 	Snap,
 	Flatpak,
 };
-QString getSandboxName( Sandbox sandbox );
+QString getSandboxName( SandboxEnv sandbox );
 
-struct SandboxInfo
+struct SandboxEnvInfo
 {
-	Sandbox type;      ///< sandbox type determined from path
+	SandboxEnv type;   ///< sandbox environment type determined from path
 	QString appName;   ///< name which the sandbox uses to identify the application
 };
-SandboxInfo getSandboxInfo( const QString & executablePath );
+SandboxEnvInfo getSandboxEnvInfo( const QString & executablePath );
 
 struct ShellCommand
 {
 	QString executable;
 	QStringVec arguments;
-	QStringVec extraPermissions;  ///< extra sandbox permissions needed to run this command
+	QStringVec extraPermissions;  ///< extra sandbox environment permissions needed to run this command
 };
 /// Returns a shell command needed to run a specified executable without parameters.
 /** The result may be different based on operating system and where the executable is installed.

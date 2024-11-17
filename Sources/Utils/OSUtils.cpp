@@ -211,12 +211,12 @@ bool isInSearchPath( const QString & filePath )
 
 //-- installation properties -----------------------------------------------------------------------
 
-QString getSandboxName( Sandbox sandbox )
+QString getSandboxName( SandboxEnv sandbox )
 {
 	switch (sandbox)
 	{
-		case Sandbox::Snap:    return "Snap";
-		case Sandbox::Flatpak: return "Flatpak";
+		case SandboxEnv::Snap:    return "Snap";
+		case SandboxEnv::Flatpak: return "Flatpak";
 		default:               return "<invalid>";
 	}
 }
@@ -224,27 +224,28 @@ QString getSandboxName( Sandbox sandbox )
 static const QRegularExpression snapPathRegex("^/snap/");
 static const QRegularExpression flatpakPathRegex("^/var/lib/flatpak/app/([^/]+)/");
 
-SandboxInfo getSandboxInfo( const QString & executablePath )
+SandboxEnvInfo getSandboxEnvInfo( const QString & executablePath )
 {
-	SandboxInfo sandbox;
+	SandboxEnvInfo sandboxEnv;
 
 	QRegularExpressionMatch match;
 	if ((match = snapPathRegex.match( executablePath )).hasMatch())
 	{
-		sandbox.type = Sandbox::Snap;
-		sandbox.appName = fs::getFileBasenameFromPath( executablePath );
+		sandboxEnv.type = SandboxEnv::Snap;
+		sandboxEnv.appName = fs::getFileBasenameFromPath( executablePath );
 	}
 	else if ((match = flatpakPathRegex.match( executablePath )).hasMatch())
 	{
-		sandbox.type = Sandbox::Flatpak;
-		sandbox.appName = match.captured(1);
+		sandboxEnv.type = SandboxEnv::Flatpak;
+		sandboxEnv.appName = match.captured(1);
 	}
 	else
 	{
-		sandbox.type = Sandbox::None;
+		sandboxEnv.type = SandboxEnv::None;
+		sandboxEnv.appName = "";  // make QString::isNull() false to indicate the sandbox info has been initialized
 	}
 
-	return sandbox;
+	return sandboxEnv;
 }
 
 // On Unix, to run an executable file inside current working directory, the relative path needs to be prepended by "./"
@@ -266,7 +267,7 @@ ShellCommand getRunCommand(
 	ShellCommand cmd;
 	QStringVec cmdParts;
 
-	SandboxInfo traits = getSandboxInfo( executablePath );
+	SandboxEnvInfo sandboxEnv = getSandboxEnvInfo( executablePath );
 
 	// different installations require different ways to launch the program executable
  #ifdef FLATPAK_BUILD
@@ -285,14 +286,14 @@ ShellCommand getRunCommand(
 		// prefix added, continue with the rest
 	}
  #endif
-	if (traits.type == Sandbox::Snap)
+	if (sandboxEnv.type == SandboxEnv::Snap)
 	{
 		cmdParts << "snap";
 		cmdParts << "run";
 		// TODO: permissions
-		cmdParts << traits.appName;
+		cmdParts << sandboxEnv.appName;
 	}
-	else if (traits.type == Sandbox::Flatpak)
+	else if (sandboxEnv.type == SandboxEnv::Flatpak)
 	{
 		cmdParts << "flatpak";
 		cmdParts << "run";
@@ -302,7 +303,7 @@ ShellCommand getRunCommand(
 			cmdParts << currentDirToNewWorkingDir.maybeQuoted( fileSystemPermission );
 			cmd.extraPermissions << std::move(fileSystemPermission);
 		}
-		cmdParts << traits.appName;
+		cmdParts << sandboxEnv.appName;
 	}
 	else if (isInSearchPath( executablePath ))
 	{

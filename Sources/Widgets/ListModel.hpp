@@ -805,7 +805,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		QStringList types;
 
 		types << internalMimeType;  // for internal drag&drop reordering
-		types << urlMimeType;  // for drag&drop from directory window
+		types << urlMimeType;  // for drag&drop from a file explorer window
 
 		return types;
 	}

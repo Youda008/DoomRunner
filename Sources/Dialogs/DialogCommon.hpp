@@ -35,9 +35,6 @@ class DialogWithPaths : public DialogCommon {
 
  protected:
 
-	PathConvertor pathConvertor;  ///< stores path settings and automatically converts paths to relative or absolute
-	QString lastUsedDir;  ///< the last directory the user selected via QFileDialog
-
 	DialogWithPaths( QWidget * thisWidget, PathConvertor pathConvertor )
 		: DialogCommon( thisWidget ), pathConvertor( std::move(pathConvertor) ) {}
 
@@ -52,11 +49,16 @@ class DialogWithPaths : public DialogCommon {
 
 	/// Convenience wrapper that also stores the result into a text line.
 	void browseDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine );
-	
+
  public:
 
 	const QString & getLastUsedDir() const   { return lastUsedDir; }
 	QString takeLastUsedDir() const          { return std::move(lastUsedDir); }
+
+ protected:
+
+	PathConvertor pathConvertor;  ///< stores path settings and automatically converts paths to relative or absolute
+	QString lastUsedDir;  ///< the last directory the user selected via QFileDialog
 
 };
 

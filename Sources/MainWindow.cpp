@@ -697,7 +697,7 @@ void MainWindow::setupPresetList()
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
-	connect( ui->presetListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::onPresetsReordered );
+	connect( ui->presetListView, &EditableListView::itemsDropped, this, &thisClass::onPresetsReordered );
 
 	// set reaction when an item is selected
 	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onPresetToggled );
@@ -809,7 +809,7 @@ void MainWindow::setupModList()
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
 	ui->modListView->toggleInterWidgetDragAndDrop( true );
 	ui->modListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::onModsDropped );
+	connect( ui->modListView, &EditableListView::itemsDropped, this, &thisClass::onModsDropped );
 
 	// set reaction when an item is checked or unchecked
 	connect( &modModel, &QAbstractListModel::dataChanged, this, &thisClass::onModDataChanged );
@@ -1282,7 +1282,9 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 
 		engineModel.startCompleteUpdate();
 		engineModel.assignList( std::move(opts.engines) );
-		fillDerivedEngineInfo( engineModel );  // fill the derived fields of EngineInfo
+		// The OptionsSerializer only saves and loads the engine info specified by the user,
+		// the auto-detected properties must be loaded here.
+		fillDerivedEngineInfo( engineModel );
 		engineModel.finishCompleteUpdate();       // if the list is not empty, this changes the engine index from -1 to 0,
 		ui->engineCmbBox->setCurrentIndex( -1 );  // but we need it to stay -1
 
@@ -1897,8 +1899,7 @@ void MainWindow::runSetupDialog()
 
 		// update our data from the dialog
 		engineSettings = std::move( dialog.engineSettings );
-		engineModel.assignList( std::move( dialog.engineModel.list() ) );
-		//fillDerivedEngineInfo( engineModel );  // fill the derived fields of EngineInfo
+		engineModel.assignList( std::move( dialog.engineModel.list() ) );  // SetupDialog guarantees the EngineInfo is fully initialized
 		iwadSettings = std::move( dialog.iwadSettings );
 		iwadModel.assignList( std::move( dialog.iwadModel.list() ) );
 		mapSettings = std::move( dialog.mapSettings );
@@ -2810,7 +2811,7 @@ void MainWindow::modToggleIcons()
 	scheduleSavingOptions();
 }
 
-void MainWindow::onModsDropped( int dropRow, int count )
+void MainWindow::onModsDropped( int dropRow, int count, DnDType )
 {
 	// update the preset
 	if (Preset * selectedPreset = getSelectedPreset())
@@ -4353,7 +4354,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions )
 {
 	auto engineName = fs::getFileNameFromPath( selectedEngine.executablePath );
-	auto sandboxName = selectedEngine.sandboxEnvName();
+	auto sandboxName = selectedEngine.sandboxEnv.appName;
 
 	QMessageBox messageBox( QMessageBox::Question, "Extra permissions needed",
 		engineName%" requires extra permissions to be able to access files outside of its "%sandboxName%" environment. "

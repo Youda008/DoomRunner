@@ -54,8 +54,8 @@ struct Engine : public EditableListModelItem
 	EngineFamily family = EngineFamily::ZDoom;  ///< automatically detected, but user-selectable engine family
 
 	Engine() {}
-	Engine( const QFileInfo & file )
-		: name( file.fileName() ), executablePath( file.filePath() ), configDir( file.dir().path() ), dataDir( configDir ) {}
+	// When file is dropped from a file explorer: The other members have to be auto-detected later by EngineTraits.
+	Engine( const QFileInfo & file ) : executablePath( file.filePath() ) {}
 
 	// requirements of EditableListModel
 	const QString & getFilePath() const   { return executablePath; }
@@ -364,22 +364,23 @@ struct AppearanceSettings
 //  But it is related to the data above and it is used across multiple dialogs, so it is acceptable to be here.
 
 // This combines user-defined and automatically determined engine information under a single struct for simpler processing.
-// Inheritance is used instead of composition to have shorter identifiers.
-struct EngineInfo : public Engine, public EngineTraits, private os::SandboxInfo
+// Inheritance is used instead of composition, so that we can write engine.exeAppName() instead of engine.traits.exeAppName().
+struct EngineInfo : public Engine, public EngineTraits
 {
+	os::SandboxEnvInfo sandboxEnv;
+
 	using Engine::Engine;
 	EngineInfo( const Engine & engine ) { static_cast< Engine & >( *this ) = engine; }
 	EngineInfo( Engine && engine )      { static_cast< Engine & >( *this ) = std::move( engine ); }
 
-	void initSandboxInfo( const QString & executablePath_ )
+	void initSandboxEnvInfo( const QString & executablePath_ )
 	{
-		static_cast< os::SandboxInfo & >( *this ) = os::getSandboxInfo( executablePath_ );
+		sandboxEnv = os::getSandboxEnvInfo( executablePath_ );
 	}
-
-	// SandboxInfo member names are too short and generic to be exposed directly.
-	auto sandboxEnvType() const           { return SandboxInfo::type; }
-	auto sandboxEnvName() const           { return getSandboxName( SandboxInfo::type ); }
-	const auto & sandboxAppName() const   { return SandboxInfo::appName; }
+	bool hasSandboxEnvInfo() const
+	{
+		return !sandboxEnv.appName.isNull();
+	}
 };
 
 

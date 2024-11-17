@@ -13,6 +13,7 @@
 
 #include "UserData.hpp"  // Engine, IWAD
 #include "Widgets/ListModel.hpp"
+#include "Widgets/EditableListView.hpp"  // DnDType
 #include "Utils/EventFilters.hpp"  // ConfirmationFilter
 
 #include <QDialog>
@@ -60,6 +61,7 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 	void engineDelete();
 	void engineMoveUp();
 	void engineMoveDown();
+	void onEnginesDropped( int row, int count, DnDType type );
 
 	void onEngineSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
 	void setEngineAsDefault();

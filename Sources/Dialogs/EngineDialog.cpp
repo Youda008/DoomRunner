@@ -114,6 +114,12 @@ void EngineDialog::onWindowShown()
 		done( QDialog::Rejected );
 }
 
+static void loadDerivedEngineInfo( EngineInfo & engine, const QString & executablePath )
+{
+	engine.initSandboxEnvInfo( executablePath );  // find out whether the engine is installed in a sandbox environment
+	engine.loadAppInfo( executablePath );  // read executable version info and infer application name
+}
+
 #if IS_WINDOWS
 static bool assumeGZDoom49_orLater( const EngineInfo & engine )
 {
@@ -139,8 +145,8 @@ static QString suggestEngineName( const EngineInfo & engine )
  #else
 
 	// On Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
-	if (engine.sandboxEnvType() != os::Sandbox::None)
-		return engine.sandboxAppName();
+	if (engine.sandboxEnv.type != os::SandboxEnv::None)
+		return engine.sandboxEnv.appName;
 	else
 		return engine.exeBaseName();
 
@@ -163,10 +169,10 @@ static QString suggestEngineConfigDir( const EngineInfo & engine )
  #else
 
 	// On Linux they store them in standard user's app config dir (usually something like /home/youda/.config/).
-	if (engine.sandboxEnvType() == os::Sandbox::Snap)
+	if (engine.sandboxEnv.type == os::SandboxEnv::Snap)
 		return os::getHomeDir()%"/snap/"%engine.exeBaseName()%"/current/.config/"%engine.exeBaseName();
-	else if (engine.sandboxEnvType() == os::Sandbox::Flatpak)  // the engine is a Flatpak installation
-		return os::getHomeDir()%"/.var/app/"%engine.sandboxAppName()%"/.config/"%engine.exeBaseName();
+	else if (engine.sandboxEnv.type == os::SandboxEnv::Flatpak)  // the engine is a Flatpak installation
+		return os::getHomeDir()%"/.var/app/"%engine.sandboxEnv.appName%"/.config/"%engine.exeBaseName();
 	else
 		return os::getConfigDirForApp( engine.executablePath );  // -> /home/youda/.config/zdoom
 
@@ -192,6 +198,35 @@ static QString suggestEngineDataDir( const EngineInfo & engine )
  #endif
 }
 
+static void suggestUserEngineInfo( EngineInfo & engine )
+{
+	engine.name = suggestEngineName( engine );
+	engine.configDir = suggestEngineConfigDir( engine );
+	engine.dataDir = suggestEngineDataDir( engine );
+	engine.family = guessEngineFamily( engine.exeBaseName() );
+}
+
+EngineInfo EngineDialog::autofillEngineInfo( const QString & executablePath, const PathConvertor & pathConvertor )
+{
+	EngineInfo engine;
+
+	// load the info that can be determined from the executable path
+	engine.executablePath = pathConvertor.convertPath( executablePath );
+	loadDerivedEngineInfo( engine, executablePath );
+
+	// automatically suggest the most common user-defined paths and options based on the derived engine info
+	suggestUserEngineInfo( engine );
+
+	// assign automatic info that depends on the user-defined info
+	engine.assignFamilyTraits( engine.family );
+
+	// convert the suggested paths to the right format
+	engine.configDir = pathConvertor.convertPath( engine.configDir );
+	engine.dataDir = pathConvertor.convertPath( engine.dataDir );
+
+	return engine;
+}
+
 void EngineDialog::browseExecutable()
 {
 	QString executablePath = DialogWithPaths::browseFile( this, "engine's executable", QString(),
@@ -203,28 +238,18 @@ void EngineDialog::browseExecutable()
 	if (executablePath.isNull())  // user probably clicked cancel
 		return;
 
-	engine.executablePath = executablePath;
-	engine.initSandboxInfo( executablePath );  // find out whether the engine is installed in a sandbox environment
-	engine.loadAppInfo( executablePath );  // read executable version info and infer application name
-	// the Engine fields will be initialized in the line-edit callbacks
+	// fill the initial values with some auto-detected suggestions
+	engine = autofillEngineInfo( executablePath, pathConvertor );
 
-	suggestedName = suggestEngineName( engine );
-	suggestedConfigDir = suggestEngineConfigDir( engine );
-	suggestedDataDir = suggestEngineDataDir( engine );
-	EngineFamily guessedFamily = guessEngineFamily( engine.exeBaseName() );
-
-	// the suggested paths are always absolute
-	if (pathConvertor.usingRelativePaths())
-	{
-		suggestedConfigDir = pathConvertor.getRelativePath( suggestedConfigDir );
-		suggestedDataDir = pathConvertor.getRelativePath( suggestedDataDir );
-	}
+	// store the automatically suggested directories for path highlighting later
+	suggestedConfigDir = engine.configDir;
+	suggestedDataDir = engine.dataDir;
 
 	ui->executableLine->setText( executablePath );
-	ui->nameLine->setText( suggestedName );
-	ui->configDirLine->setText( suggestedConfigDir );
-	ui->dataDirLine->setText( suggestedDataDir );
-	ui->familyCmbBox->setCurrentIndex( int(guessedFamily) );
+	ui->nameLine->setText( engine.name );
+	ui->configDirLine->setText( engine.configDir );
+	ui->dataDirLine->setText( engine.dataDir );
+	ui->familyCmbBox->setCurrentIndex( int( engine.family ) );
 }
 
 void EngineDialog::browseConfigDir()
@@ -249,7 +274,7 @@ void EngineDialog::onExecutableChanged( const QString & text )
 
 void EngineDialog::onConfigDirChanged( const QString & text )
 {
-	if (text == suggestedConfigDir
+	if (pathConvertor.convertPath( text ) == pathConvertor.convertPath( suggestedConfigDir )
 	 && QFileInfo( suggestedDataDir ).dir().exists())  // don't highlight with green if our suggestion is nonsense
 		highlightDirPathIfFileOrCanBeCreated( ui->configDirLine, text );
 	else
@@ -258,7 +283,7 @@ void EngineDialog::onConfigDirChanged( const QString & text )
 
 void EngineDialog::onDataDirChanged( const QString & text )
 {
-	if (text == suggestedDataDir
+	if (pathConvertor.convertPath( text ) == pathConvertor.convertPath( suggestedDataDir )
 	 && QFileInfo( suggestedDataDir ).dir().exists())  // don't highlight with green if our suggestion is nonsense
 		highlightDirPathIfFileOrCanBeCreated( ui->dataDirLine, text );
 	else
@@ -338,19 +363,19 @@ void EngineDialog::accept()
 
 	engine.name = std::move( nameLineText );
 
-	engine.executablePath = executableLineText;
 	// If the executableLine was edited manually without the browse button where all the auto-detection happens,
 	// the engine's application info must be updated.
-	if (engine.appInfoSrcExePath() != executableLineText)  // the app info was constructed from executable that is no longer used
+	if (engine.executablePath != executableLineText)  // the app info was constructed from executable that is no longer used
 	{
-		engine.loadAppInfo( executableLineText );
+		engine.executablePath = pathConvertor.convertPath( executableLineText );
+		loadDerivedEngineInfo( engine, executableLineText );
 	}
 
-	engine.configDir = std::move( configDirLineText );
-	engine.dataDir = std::move( dataDirLineText );
+	engine.configDir = pathConvertor.convertPath( configDirLineText );
+	engine.dataDir = pathConvertor.convertPath( dataDirLineText );
 
 	int familyIdx = ui->familyCmbBox->currentIndex();
-	if (familyIdx < 0 || familyIdx >= int(EngineFamily::_EnumEnd))
+	if (familyIdx < 0 || familyIdx >= int( EngineFamily::_EnumEnd ))
 	{
 		reportLogicError( this, "Invalid engine family index", "Family combo-box index is out of bounds." );
 	}

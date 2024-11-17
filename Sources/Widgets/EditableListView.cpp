@@ -35,14 +35,14 @@
 // When an internal drag&drop for item reordering is performed, Qt doesn't update the selection and leaves selected
 // those items sitting at the old indexes where the drag&drop started and where are now some completely different items.
 //
-// We can't manually update the indexes in dropEvent, because after dropEvent Qt calls model.removeRows on items
+// We can't manually update the indexes in dropEvent, because after dropEvent Qt calls model.removeRows() on items
 // that are CURRENTLY SELECTED, instead of on items that were selected at the beginning of the drag&drop operation.
 // So we must update the selection at some point AFTER the drag&drop operation is finished and the rows removed.
 //
 // The correct place seems to be (despite its confusing name) QAbstractItemView::startDrag. It is a common
-// parent function for Model::dropMimeData and Model::removeRows both of which happen when items are dropped.
+// parent function for Model::dropMimeData() and Model::removeRows() both of which happen when items are dropped.
 // However this is called only when the source of the drag is this application.
-// When you drag files from a directory window, then dropEvent is called from somewhere else. In that case
+// When you drag files from a file explorer window, then dropEvent is called from somewhere else. In that case
 // we update the selection in dropEvent, because there the deletion of the selected items doesn't happen.
 
 
@@ -296,29 +296,24 @@ void EditableListView::toggleExternalFileDragAndDrop( bool enabled )
 
 bool EditableListView::isDropAcceptable( QDragMoveEvent * event )
 {
-	if (isIntraWidgetDnD( event ) && allowIntraWidgetDnD && event->possibleActions() & Qt::MoveAction)
+	if (getDnDType( event ) == DnDType::IntraWidget && allowIntraWidgetDnD && event->possibleActions() & Qt::MoveAction)
 		return true;
-	else if (isInterWidgetDnD( event ) && allowInterWidgetDnD && event->possibleActions() & Qt::MoveAction)
+	else if (getDnDType( event ) == DnDType::InterWidget && allowInterWidgetDnD && event->possibleActions() & Qt::MoveAction)
 		return true;
-	else if (isExternFileDnD( event ) && allowExternFileDnD)
+	else if (getDnDType( event ) == DnDType::ExternalFile && allowExternFileDnD)
 		return true;
 	else
 		return false;
 }
 
-bool EditableListView::isIntraWidgetDnD( QDropEvent * event )
+DnDType EditableListView::getDnDType( QDropEvent * event )
 {
-	return event->source() == this;
-}
-
-bool EditableListView::isInterWidgetDnD( QDropEvent * event )
-{
-	return event->source() != this && !event->mimeData()->hasUrls();
-}
-
-bool EditableListView::isExternFileDnD( QDropEvent * event )
-{
-	return event->source() != this && event->mimeData()->hasUrls();
+	if (event->source() == this)
+		return DnDType::IntraWidget;
+	else if (!event->mimeData()->hasUrls())
+		return DnDType::InterWidget;
+	else
+		return DnDType::ExternalFile;
 }
 
 void EditableListView::dragEnterEvent( QDragEnterEvent * event )
@@ -366,19 +361,26 @@ void EditableListView::dropEvent( QDropEvent * event )
 
 	// announce dropped files now only if it's an external drag&drop
 	// otherwise postpone it because of the issue decribed at the top
-	if (isExternFileDnD( event ))
-		itemsDropped();
+	auto dndType = getDnDType( event );
+	if (dndType == DnDType::ExternalFile)
+		onItemsDropped( DnDType::ExternalFile );
+	else
+		postponedDnDType = dndType;
 }
 
 void EditableListView::startDrag( Qt::DropActions supportedActions )
 {
 	superClass::startDrag( supportedActions );
 
-	// at this point the drag&drop should be finished and source rows removed, so we can safely update the selection
-	itemsDropped();
+	if (postponedDnDType)
+	{
+		// at this point the drag&drop should be finished and source rows removed, so we can safely update the selection
+		onItemsDropped( *postponedDnDType );
+		postponedDnDType.reset();
+	}
 }
 
-void EditableListView::itemsDropped()
+void EditableListView::onItemsDropped( DnDType type )
 {
 	// idiotic workaround because Qt is fucking retarded   (read the comment at the top)
 	//
@@ -406,7 +408,7 @@ void EditableListView::itemsDropped()
 			wdg::selectItemByIndex( this, row + i );
 		wdg::setCurrentItemByIndex( this, row + count - 1 );
 
-		emit itemsDropped( row, count );
+		emit itemsDropped( row, count, type );
 
 		model->resetDropState();
 	}

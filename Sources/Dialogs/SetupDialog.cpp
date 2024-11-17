@@ -146,6 +146,7 @@ void SetupDialog::setupEngineList()
 	ui->engineListView->toggleIntraWidgetDragAndDrop( true );
 	ui->engineListView->toggleInterWidgetDragAndDrop( false );
 	ui->engineListView->toggleExternalFileDragAndDrop( true );
+	connect( ui->engineListView, &EditableListView::itemsDropped, this, &thisClass::onEnginesDropped );
 
 	// set reaction to clicks inside the view
 	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::editEngine );
@@ -310,6 +311,23 @@ void SetupDialog::engineMoveUp()
 void SetupDialog::engineMoveDown()
 {
 	wdg::moveDownSelectedItem( ui->engineListView, engineModel );
+}
+
+void SetupDialog::onEnginesDropped( int row, int count, DnDType type )
+{
+	if (type == DnDType::IntraWidget)  // engines were just moved within the list
+		return;
+
+	// Engine (or more of them) got dragged&dropped from other place,
+	// in that case we only have the executable path, other things must be filled automatically.
+	for (int engineIdx = row; engineIdx < row + count; ++engineIdx)
+	{
+		EngineInfo & engine = engineModel[ engineIdx ];
+		if (!engine.hasAppInfo() || !engine.hasSandboxEnvInfo() || !engine.hasFamilyTraits())
+		{
+			engine = EngineDialog::autofillEngineInfo( engine.executablePath, pathConvertor );
+		}
+	}
 }
 
 void SetupDialog::onEngineSelectionChanged( const QItemSelection &, const QItemSelection & )

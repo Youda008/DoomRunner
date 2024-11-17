@@ -102,7 +102,6 @@ class EngineTraits {
 
 	// application properties - requires application info to be loaded
 
-	const QString & appInfoSrcExePath() const   { assert( hasAppInfo() ); return _exePath; }
 	const QString & exeBaseName() const         { assert( hasAppInfo() ); return _exeBaseName; }
 
 	const QString & exeAppName() const          { assert( hasAppInfo() ); return _exeVersionInfo.appName; }

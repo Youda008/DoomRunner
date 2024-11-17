@@ -12,6 +12,7 @@
 #include "Dialogs/DialogCommon.hpp"
 
 #include "Widgets/ListModel.hpp"
+#include "Widgets/EditableListView.hpp"  // DnDType
 #include "Widgets/SearchPanel.hpp"
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
@@ -100,7 +101,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modMoveDown();
 	void modInsertSeparator();
 	void modToggleIcons();
-	void onModsDropped( int row, int count );
+	void onModsDropped( int row, int count, DnDType type );
 
 	void onModeChosen_Default();
 	void onModeChosen_LaunchMap();

@@ -16,11 +16,22 @@
 #include "Utils/ErrorHandling.hpp"  // LoggingComponent
 
 #include <QListView>
+#include <optional>
 
 class QMenu;
 class QAction;
 class QKeySequence;
 class QString;
+
+//======================================================================================================================
+
+// We support 3 kinds of drag&drop operations, that can be separately enabled/disabled:
+enum class DnDType
+{
+	IntraWidget,   // drag&drop from inside this widget for manual reordering of items on the list
+	InterWidget,   // drag&drop from another widget for moving items between different widgets
+	ExternalFile,  // drag&drop from a file explorer window for inserting file paths into the list
+};
 
 
 //======================================================================================================================
@@ -81,10 +92,6 @@ class EditableListView : public QListView, protected LoggingComponent {
 	QAction * addAction( const QString & text, const QKeySequence & shortcut );
 
 	// drag&drop
-	// We support 3 kinds of drag&drop operations, that can be separately enabled/disabled:
-	// 1. intra-widget d&d - drag&drop from inside this widget for manual reordering of items on the list
-	// 2. inter-widget d&d - drag&drop from another widget for moving items between different widgets
-	// 3. external file d&d - drag&drop from directory window for inserting file paths into the list
 
 	/// internal drag&drop for reordering items inside this widget, enabled by default
 	void toggleIntraWidgetDragAndDrop( bool enabled );
@@ -92,7 +99,7 @@ class EditableListView : public QListView, protected LoggingComponent {
 	/// internal drag&drop for moving items from other widgets, disabled by default
 	void toggleInterWidgetDragAndDrop( bool enabled );
 
-	/// external drag&drop for moving files from directory window, disabled by default
+	/// external drag&drop for moving files from a file explorer window, disabled by default
 	void toggleExternalFileDragAndDrop( bool enabled );
 
  public slots:
@@ -108,7 +115,7 @@ class EditableListView : public QListView, protected LoggingComponent {
  signals:
 
 	/// emitted either when items are dropped to this view from another widget or just moved within this view itself
-	void itemsDropped( int row, int count );
+	void itemsDropped( int row, int count, DnDType type );
 
  public: // actions (context menu entries with shortcuts)
 
@@ -142,12 +149,10 @@ class EditableListView : public QListView, protected LoggingComponent {
 	/// Does proposed drop operation comply with our settings?
 	bool isDropAcceptable( QDragMoveEvent * event );
 
-	bool isIntraWidgetDnD( QDropEvent * event );
-	bool isInterWidgetDnD( QDropEvent * event );
-	bool isExternFileDnD( QDropEvent * event );
+	DnDType getDnDType( QDropEvent * event );
 
 	/// Retrieves drop indexes, updates selection and emits a signal.
-	void itemsDropped();
+	void onItemsDropped( DnDType type );
 
 	// keyboard control
 
@@ -162,6 +167,7 @@ class EditableListView : public QListView, protected LoggingComponent {
 
 	QMenu * contextMenu;
 	ModifierHandler modifierHandler;
+	std::optional< DnDType > postponedDnDType;
 
  protected: // configuration
 

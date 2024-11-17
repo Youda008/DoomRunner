@@ -36,6 +36,8 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 	explicit EngineDialog( QWidget * parent, const PathConvertor & pathConvertor, const EngineInfo & engine, QString lastUsedDir );
 	virtual ~EngineDialog() override;
 
+	static EngineInfo autofillEngineInfo( const QString & executablePath, const PathConvertor & pathConvertor );
+
  private: // methods
 
 	void adjustUi();
@@ -62,7 +64,6 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 
 	Ui::EngineDialog * ui;
 
-	QString suggestedName;
 	QString suggestedConfigDir;
 	QString suggestedDataDir;
 

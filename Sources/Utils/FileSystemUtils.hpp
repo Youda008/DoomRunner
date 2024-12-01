@@ -26,9 +26,6 @@ class PathConvertor;
 //======================================================================================================================
 //  general
 
-constexpr bool QuotePaths = true;
-constexpr bool DontQuotePaths = false;
-
 inline QString quoted( const QString & path )
 {
 	return '"' % path % '"';

@@ -249,10 +249,31 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void toggleOptionsSubwidgets( bool enabled );
 
 	void updateLaunchCommand();
-	os::ShellCommand generateLaunchCommand(
-		const QString & parentWorkingDir, PathStyle enginePathStyle, const QString & engineWorkingDir, PathStyle argPathStyle,
-		bool quotePaths, bool verifyPaths
-	);
+
+	struct LaunchCommandOptions
+	{
+		/// Path style to be used for the engine executable.
+		PathStyle exePathStyle;
+
+		// Path style for the arguments is determined case by case.
+
+		/// Working directory of the parent process (this process) when executing the command.
+		/** This determines the relative path of the engine executable in the command. */
+		const QString & parentWorkingDir;
+
+		/// Working directory for the engine process that will be started.
+		/** This determines the relative paths of the file or directory arguments passed to the engine. */
+		const QString & engineWorkingDir;
+
+		/// Surround each path in the command with quotes.
+		/** Required for displaying the command or saving it to a script file. */
+		bool quotePaths;
+
+		/// Verify that each path in the command is valid and leads to the correct entry type (file or directory).
+		/** If invalid path is found, display a message box with an error description. */
+		bool verifyPaths;
+	};
+	os::ShellCommand generateLaunchCommand( LaunchCommandOptions cmdOpts );
 
 	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
 	bool startDetached(

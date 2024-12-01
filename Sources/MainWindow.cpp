@@ -56,9 +56,6 @@
 static const char defaultOptionsFileName [] = "options.json";
 static const char defaultCacheFileName [] = "file_info_cache.json";
 
-static constexpr bool VerifyPaths = true;
-static constexpr bool DontVerifyPaths = false;
-
 static constexpr int VarNameColumn = 0;
 static constexpr int VarValueColumn = 1;
 
@@ -4109,7 +4106,8 @@ void MainWindow::exportPresetToScript()
 		return;
 	}
 
-	if (!getSelectedEngine())
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	if (!selectedEngine)
 	{
 		reportUserError( this, "No engine selected", "No Doom engine is selected." );
 		return;  // no sense to generate a command when we don't even know the engine
@@ -4121,18 +4119,19 @@ void MainWindow::exportPresetToScript()
 		return;
 	}
 
-	QFileInfo scriptFileInfo( scriptFilePath );
-	QString scriptDir = scriptFileInfo.path();
+	lastUsedDir = fs::getParentDir( scriptFilePath );
 
-	PathStyle cmdPathStyle = pathConvertor.pathStyle();
+	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
-	// Both the executable and the paths in the arguments need to be relative to the directory of the script file,
-	// because the script will set the working directory to it's own directory.
-	auto cmd = generateLaunchCommand(
-		scriptDir, cmdPathStyle, scriptDir, cmdPathStyle, QuotePaths, DontVerifyPaths
-	);
-
-	lastUsedDir = std::move(scriptDir);
+	// All relative paths need to be relative to the engine's executable directory,
+	// because the working dir must be set to the engine's executable directory.
+	auto cmd = generateLaunchCommand({
+		.exePathStyle = PathStyle::Relative,
+		.parentWorkingDir = engineExeDir,
+		.engineWorkingDir = engineExeDir,
+		.quotePaths = true,
+		.verifyPaths = false,
+	});
 
 	QFile scriptFile( scriptFilePath );
 	if (!scriptFile.open( QIODevice::WriteOnly | QIODevice::Text ))
@@ -4143,12 +4142,13 @@ void MainWindow::exportPresetToScript()
 
 	QTextStream stream( &scriptFile );
 
-	// make sure the working directory is set to the script file's directory
+	// Make sure the working directory is set to the engine's executable directory,
+	// because some engines refuse to start or don't work properly when the working dir is not their executable dir.
  #if IS_WINDOWS
-	stream << "cd \"%~dp0\"\n";
+	stream << "cd \""%fs::toNativePath( engineExeDir )%"\"" << '\n';
  #else
 	stream << "#!/bin/bash\n\n";
-	stream << "cd $(dirname $(readlink -f \"$0\"))\n";
+	stream << "cd '"%fs::toNativePath( engineExeDir )%"'" << '\n';
  #endif
 
 	stream << cmd.executable << " " << cmd.arguments.join(' ') << '\n';
@@ -4183,18 +4183,22 @@ void MainWindow::exportPresetToShortcut()
 	lastUsedDir = fs::getParentDir( shortcutPath );
 
 	QString currentWorkingDir = pathConvertor.workingDir().path();
-	QString engineWorkingDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
+	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
 	// - The paths in the arguments need to be relative to the engine's directory
 	//   because the engine will be executed with the working directory set to engine's directory,
 	// - But the executable itself must be either absolute or relative to the current working dir
 	//   so that it is correctly saved to the shortcut.
 	// - Paths need to be quoted because Windows accepts a single string with all arguments concatenated instead of a list.
-	auto cmd = generateLaunchCommand(
-		currentWorkingDir, PathStyle::Absolute, engineWorkingDir, pathConvertor.pathStyle(), QuotePaths, DontVerifyPaths
-	);
+	auto cmd = generateLaunchCommand({
+		.exePathStyle = PathStyle::Absolute,
+		.parentWorkingDir = currentWorkingDir,
+		.engineWorkingDir = engineExeDir,
+		.quotePaths = true,
+		.verifyPaths = false,
+	});
 
-	bool success = win::createShortcut( shortcutPath, cmd.executable, cmd.arguments, engineWorkingDir, selectedPreset->name );
+	bool success = win::createShortcut( shortcutPath, cmd.executable, cmd.arguments, engineExeDir, selectedPreset->name );
 	if (!success)
 	{
 		reportRuntimeError( this, "Cannot create shortcut", "Failed to create a shortcut. Check errors.txt for details." );
@@ -4235,16 +4239,20 @@ void MainWindow::updateLaunchCommand()
 
 	QString currentCommand = ui->commandLine->text();
 
-	QString engineDir = fs::getParentDir( selectedEngine->executablePath );
+	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
-	PathStyle cmdPathStyle = pathConvertor.pathStyle();
+	// because some engines refuse to start or don't work properly when the working dir is not their executable dir.
 
-	// The paths in the arguments need to be relative to the engine's directory,
-	// because the engine will be executed with the working directory set to engine's directory.
+	// The relative paths in the arguments need to be relative to the engine's executable directory,
+	// because the engine must be started with the working directory set to its executable directory.
 	// The relative path of the executable does not matter, because here it is for displaying only.
-	auto cmd = generateLaunchCommand(
-		engineDir, cmdPathStyle, engineDir, cmdPathStyle, QuotePaths, DontVerifyPaths
-	);
+	auto cmd = generateLaunchCommand({
+		.exePathStyle = PathStyle::Relative,
+		.parentWorkingDir = engineExeDir,
+		.engineWorkingDir = engineExeDir,
+		.quotePaths = true,
+		.verifyPaths = false,
+	});
 
 	QString newCommand = cmd.executable % ' ' % cmd.arguments.join(' ');
 
@@ -4258,31 +4266,17 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
-/// Generates a command to be run, displayed or saved to a script file, according to the specified options.
-/**
-  * \param parentWorkingDir Working directory when the command is executed by the parent process.
-  *                         This will determine the relative path of the engine executable in the command.
-  * \param engineWorkingDir Working directory for the engine process that will be started.
-  *                         This will determine the relative paths of the file or directory arguments passed to the engine.
-  * \param enginePathStyle Path style to be used for the engine executable.
-  * \param argPathStyle Path style to be used for the paths in the command line arguments.
-  * \param quotePaths Surround each path in the command with quotes.
-  *                   Required for displaying the command or saving it to a script file.
-  * \param verifyPaths Verify that each path in the command is valid and leads to the correct entry type (file or directory).
-  *                    If invalid path is found, display a message box with an error description.
-  */
-os::ShellCommand MainWindow::generateLaunchCommand(
-	const QString & parentWorkingDir, PathStyle enginePathStyle, const QString & engineWorkingDir, PathStyle argPathStyle,
-	bool quotePaths, bool verifyPaths
-){
+os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
+{
 	os::ShellCommand cmd;
 
+	const QDir & currentWorkingDir = pathConvertor.workingDir();
 	// The stored engine path is relative to DoomRunner's directory, but we need it relative to parentWorkingDir.
-	PathRebaser parentDirRebaser( pathConvertor.workingDir(), parentWorkingDir, enginePathStyle, quotePaths );
+	PathRebaser parentDirRebaser( currentWorkingDir, opts.parentWorkingDir, opts.exePathStyle, opts.quotePaths );
 	// All stored paths are relative to DoomRunner's directory, but we need them relative to engineWorkingDir.
-	PathRebaser engineDirRebaser( pathConvertor.workingDir(), engineWorkingDir, argPathStyle, quotePaths );
-
-	PathChecker p( this, verifyPaths );
+	PathRebaser engineDirRebaser( currentWorkingDir, opts.engineWorkingDir, opts.exePathStyle /*not used*/, opts.quotePaths );
+	// Checks if the required files or directories exist and displays error message if requested.
+	PathChecker p( this, opts.verifyPaths );
 
 	//-- engine --------------------------------------------------------------------
 
@@ -4349,7 +4343,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		auto splitArgs = splitCommandLineArguments( customArgsStr );
 		for (const auto & arg : splitArgs)
 		{
-			if (quotePaths && arg.wasQuoted)
+			if (opts.quotePaths && arg.wasQuoted)
 				args << quoted( arg.str );
 			else
 				args << arg.str;
@@ -4610,16 +4604,21 @@ void MainWindow::launch()
 	}
 
 	QString currentWorkingDir = pathConvertor.workingDir().path();
-	QString engineWorkingDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
+	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
 	// Re-run the command construction, but display error message and abort when there is invalid path.
 	// - The engine must be launched using absolute path, because some engines cannot handle being started
 	//   from another directory with relative executable path (looking at you Crispy Doom, fix your shit!).
 	// - All paths will be relative to the engine's dir, because working dir will be set to the engine's dir when started.
 	// - When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
-	auto cmd = generateLaunchCommand(
-		currentWorkingDir, PathStyle::Absolute, engineWorkingDir, pathConvertor.pathStyle(), DontQuotePaths, VerifyPaths
-	);
+	auto cmd = generateLaunchCommand({
+		.exePathStyle = PathStyle::Absolute,
+		.parentWorkingDir = currentWorkingDir,
+		.engineWorkingDir = engineExeDir,
+		.quotePaths = false,
+		.verifyPaths = true,
+	});
+
 	if (cmd.executable.isNull())
 	{
 		return;  // errors are already shown during the generation
@@ -4649,7 +4648,7 @@ void MainWindow::launch()
 	// We need to start the process with the working dir set to the engine's dir,
 	// because some engines search for their own files in the working dir and would fail if started from elsewhere.
 	// The command paths are always generated relative to the engine's dir.
-	const QString & processWorkingDir = engineWorkingDir;
+	const QString & processWorkingDir = engineExeDir;
 
 	// merge optional environment variables defined globally and defined for this preset
 	EnvVars envVars = globalOpts.envVars;

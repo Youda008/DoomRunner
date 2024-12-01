@@ -679,7 +679,7 @@ ShellCommand getRunCommand(
 	}
 	else
 	{
-		QString rebasedExePath = currentDirToNewWorkingDir.rebaseAndConvert( executablePath );
+		QString rebasedExePath = currentDirToNewWorkingDir.rebaseAndConvert( executablePath );  // respect configured path style
 		cmdParts << currentDirToNewWorkingDir.makeCmdPath( fixExePath( rebasedExePath ) );
 	}
 

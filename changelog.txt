@@ -1,3 +1,14 @@
+1.8.3
+- added support for .hhe dehacked files
+- added keyboard shortcuts for switching focus between the main lists + better button tooltips
+- additional preset command line arguments are appended after the global ones
+- restore previous app window position when the app is started
+- made multiplayer options disabled on first start
+- fixed crash when the "Close on launch" option is used
+- fixed crash after engine is dragged&dropped from a file manager window
+- fixed separators being wrongly added as empty mod file paths
+- minor bug-fixes and improvements
+
 1.8.2
 - added button to open engine's data dir in a file browser
 - fixed automatic starting map for SIGIL II

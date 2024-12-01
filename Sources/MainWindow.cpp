@@ -56,13 +56,6 @@
 static const char defaultOptionsFileName [] = "options.json";
 static const char defaultCacheFileName [] = "file_info_cache.json";
 
-#if IS_WINDOWS
-	static const QString scriptFileSuffix = "*.bat";
-	static const QString shortcutFileSuffix = "*.lnk";
-#else
-	static const QString scriptFileSuffix = "*.sh";
-#endif
-
 static constexpr bool VerifyPaths = true;
 static constexpr bool DontVerifyPaths = false;
 
@@ -4122,7 +4115,7 @@ void MainWindow::exportPresetToScript()
 		return;  // no sense to generate a command when we don't even know the engine
 	}
 
-	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, scriptFileSuffix );
+	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, os::scriptFileSuffix );
 	if (scriptFilePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
@@ -4181,7 +4174,7 @@ void MainWindow::exportPresetToShortcut()
 		return;  // no sense to generate a command when we don't even know the engine
 	}
 
-	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, shortcutFileSuffix );
+	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, os::shortcutFileSuffix );
 	if (shortcutPath.isEmpty())  // user probably clicked cancel
 	{
 		return;

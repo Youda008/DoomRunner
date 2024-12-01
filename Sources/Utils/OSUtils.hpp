@@ -25,6 +25,16 @@ namespace os {
 
 
 //======================================================================================================================
+//  file types
+
+extern const QString scriptFileSuffix;
+
+#if IS_WINDOWS
+extern const QString shortcutFileSuffix;
+#endif
+
+
+//======================================================================================================================
 //  standard directories and installation properties
 
 /// Returns the name of the OS user who started this process.

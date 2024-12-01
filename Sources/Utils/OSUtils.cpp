@@ -30,6 +30,17 @@ namespace os {
 
 
 //======================================================================================================================
+//  file types
+
+#if IS_WINDOWS
+	const QString scriptFileSuffix = "*.bat";
+	const QString shortcutFileSuffix = "*.lnk";
+#else
+	const QString scriptFileSuffix = "*.sh";
+#endif
+
+
+//======================================================================================================================
 //  standard directories
 
 #if defined(FLATPAK_BUILD) && IS_WINDOWS

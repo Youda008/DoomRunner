@@ -299,9 +299,9 @@ ShellCommand getRunCommand(
 		cmdParts << "run";
 		for (const QString & dir : dirsToBeAccessed)
 		{
-			QString fileSystemPermission = "--filesystem=" + fs::getAbsolutePath( dir );
-			cmdParts << currentDirToNewWorkingDir.maybeQuoted( fileSystemPermission );
-			cmd.extraPermissions << std::move(fileSystemPermission);
+			QString fileSystemPermission = "--filesystem=" + quoted( dir );
+			cmdParts << fileSystemPermission;  // add it to the command
+			cmd.extraPermissions << std::move( fileSystemPermission );  // add it to a list to be shown to the user
 		}
 		cmdParts << sandboxEnv.appName;
 	}

@@ -250,12 +250,6 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 		return;
 	}
 
-	// dir of config files
-	if (const ConfigFile * selectedConfig = getSelectedConfig())
-	{
-		loopBody( selectedEngine->configDir );  // cannot be empty otherwise config would not be selected
-	}
-
 	// dir of IWAD
 	if (const IWAD * selectedIWAD = getSelectedIWAD())
 	{
@@ -276,46 +270,71 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 		if (!mod.checked)
 			continue;
 
-		if (fs::isInsideDir( mod.path, modDir ))  // aggregate all mods inside the configured mod dir under single dir path
+		if (fs::isInsideDir( mod.path, modDir ))
 		{
-			if (!modDirUsed)  // use it only once
+			// Aggregate all mods inside the configured mod dir under single dir path.
+			if (!modDirUsed)
 			{
 				loopBody( modSettings.dir );
-				modDirUsed = true;
+				modDirUsed = true;  // use it only once
 			}
 		}
-		else  // but still add directories outside of the configured mod dir, because mod dir is only a hint
+		else
 		{
+			// But still add directories outside of the configured mod dir, because mod dir is only a hint.
 			loopBody( fs::getDirOfFile( mod.path ) );
 		}
 	}
 
-	// dir of saves and demo files
-	LaunchMode launchMode = getLaunchModeFromUI();
-	if ((launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
-	 || (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty()))
+	// dir of engine config files
+	if (QString configDir = getConfigDir(); !configDir.isEmpty())
 	{
-		loopBody( getSaveDir() );
+		loopBody( configDir );
+	}
+
+	// dir of engine data files
+	const QString & dataDir = selectedEngine->dataDir;
+	if (!dataDir.isEmpty())
+	{
+		loopBody( dataDir );
+	}
+
+	// dir of saves files (in all launch modes the save file either needs to be read or written to)
+	if (QString saveDir = getSaveDir(); !saveDir.isEmpty() && !fs::isInsideDir( saveDir, dataDir ))
+	{
+		loopBody( saveDir );
+	}
+
+	// dir of demo files
+	LaunchMode launchMode = getLaunchModeFromUI();
+	if (launchMode == RecordDemo || launchMode == ReplayDemo)
+	{
+		if (QString demoDir = getDemoDir(); !demoDir.isEmpty() && !fs::isInsideDir( demoDir, dataDir ))
+		{
+			loopBody( demoDir );
+		}
 	}
 
 	// dir of screenshots
-	if (!ui->screenshotDirLine->text().isEmpty())
+	// Add it in every case, because the user may want to save a screenshot anytime.
+	if (QString screenshotDir = getScreenshotDir(); !screenshotDir.isEmpty() && !fs::isInsideDir( screenshotDir, dataDir ))
 	{
-		loopBody( ui->screenshotDirLine->text() );
+		loopBody( screenshotDir );
 	}
 }
 
-// Gets (deduplicated) directories which the engine will need to access (either for reading or writing).
+// Gets directories (unique absolute paths) which the engine will need to access (either for reading or writing).
 QStringVec MainWindow::getDirsToBeAccessed() const
 {
-	QSet< QString > dirSet;  // de-duplicate the paths
+	QSet< QString > normDirPaths;  // de-duplicate the paths
 
 	forEachDirToBeAccessed( [&]( const QString & dir )
 	{
-		dirSet.insert( dir );
+		// insert the paths in a normalized form to deduplicate equivalent paths written in a different way
+		normDirPaths.insert( fs::getNormalizedPath( dir ) );
 	});
 
-	return QStringVec( dirSet.begin(), dirSet.end() );
+	return QStringVec( normDirPaths.begin(), normDirPaths.end() );
 }
 
 // This needs to be called everytime the user make a change that needs to be saved into the options file.

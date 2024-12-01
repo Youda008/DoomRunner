@@ -215,6 +215,7 @@ struct CompatibilityOptions : public CompatibilityDetails  // inherited instead 
 
 struct AlternativePaths
 {
+	// these are always relative either to Engine::configDir or Engine::dataDir
 	QString configDir;
 	QString saveDir;
 	QString screenshotDir;
@@ -380,7 +381,7 @@ struct EngineInfo : public Engine, public EngineTraits
 	{
 		QString saveSubdir = EngineTraits::getDefaultSaveSubdir( IWADPath );
 		if (!Engine::dataDir.isEmpty())
-			return QDir( Engine::dataDir ).absoluteFilePath( saveSubdir );
+			return QDir( Engine::dataDir ).filePath( saveSubdir );
 		else
 			return saveSubdir;
 	}

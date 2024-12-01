@@ -275,7 +275,7 @@ QString EngineTraits::getDefaultConfigDir() const
 	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableZDoom())
 		return os::getDocumentsDir()%"/My Games/"%exeAppName();        // -> C:/Users/Youda/Documents/My Games/GZDoom
 	else
-		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom
+		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom  (may be relative - based on exePath)
 
  #else
 
@@ -301,7 +301,7 @@ QString EngineTraits::getDefaultDataDir() const
 	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableZDoom())
 		return os::getSavedGamesDir()%"/"%exeAppName();                // -> C:/Users/Youda/Saved Games/GZDoom
 	else
-		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom
+		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom  (may be relative - based on exePath)
 
  #else
 
@@ -318,7 +318,7 @@ QString EngineTraits::getDefaultScreenshotDir() const
 	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableZDoom())
 		return os::getPicturesDir()%"/Screenshots/"%exeAppName();      // -> C:/Users/Youda/Pictures/Screenshots/GZDoom
 	else
-		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom
+		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom  (may be relative - based on exePath)
 
  #else
 

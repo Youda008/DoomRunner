@@ -653,7 +653,7 @@ ShellCommand getRunCommand(
 		{
 			if (!fs::isInsideDir( sandboxAppDir, dir ))
 			{
-				QString fileSystemPermission = "--filesystem=" + quoted( dir );
+				QString fileSystemPermission = "--filesystem=" + currentDirToNewWorkingDir.makeQuotedCmdPath( dir );
 				cmdParts << fileSystemPermission;  // add it to the command
 				extraPermissions << std::move( fileSystemPermission );  // add it to a list to be shown to the user
 			}
@@ -668,8 +668,8 @@ ShellCommand getRunCommand(
 	}
 	else
 	{
-		QString rebasedExePath = fixExePath( currentDirToNewWorkingDir.rebasePath( executablePath ) );
-		cmdParts << currentDirToNewWorkingDir.maybeQuoted( rebasedExePath );
+		QString rebasedExePath = currentDirToNewWorkingDir.rebaseAndConvert( executablePath );
+		cmdParts << currentDirToNewWorkingDir.makeCmdPath( fixExePath( rebasedExePath ) );
 	}
 
 	ShellCommand cmd;

@@ -173,11 +173,11 @@ QString MainWindow::getActiveConfigDir() const
 	QString configDirLine = ui->altConfigDirLine->text();
 	if (!configDirLine.isEmpty())                                     // if custom config dir is specified
 	{
-		return engineDataDirRebaser.rebasePathBack( configDirLine );  // then use it
+		return engineDataDirRebaser.rebaseBack( configDirLine );      // then use it
 	}
-	else                                                              // otherwise use engine's default config dir
+	else                                                              // otherwise
 	{
-		return getEngineConfigDir();
+		return getEngineConfigDir();                                  // use engine's default config dir
 	}
 }
 
@@ -186,11 +186,11 @@ QString MainWindow::getActiveSaveDir() const
 {
 	// the path in altSaveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
 	QString saveDirLine = ui->altSaveDirLine->text();
-	if (!saveDirLine.isEmpty())                                     // if custom save dir is specified
+	if (!saveDirLine.isEmpty())                                       // if custom save dir is specified
 	{
-		return engineDataDirRebaser.rebasePathBack( saveDirLine );  // then use it
+		return engineDataDirRebaser.rebaseBack( saveDirLine );        // then use it
 	}
-	else                                                            // otherwise use engine's default save dir
+	else                                                              // otherwise use engine's default save dir
 	{
 		return currentEngineSaveDir;  // return the cached value, because calculating it every time would be wasteful
 	}
@@ -201,11 +201,11 @@ QString MainWindow::getActiveScreenshotDir() const
 {
 	// the path in altScreenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
 	QString screenshotDirLine = ui->altScreenshotDirLine->text();
-	if (!screenshotDirLine.isEmpty())                                     // if custom save dir is specified
+	if (!screenshotDirLine.isEmpty())                                  // if custom save dir is specified
 	{
-		return engineDataDirRebaser.rebasePathBack( screenshotDirLine );  // then use it
+		return engineDataDirRebaser.rebaseBack( screenshotDirLine );   // then use it
 	}
-	else                                                                  // otherwise use engine's default screenshot dir
+	else                                                               // otherwise use engine's default screenshot dir
 	{
 		return currentEngineScreenshotDir;  // return the cached value, because calculating it every time would be wasteful
 	}
@@ -218,6 +218,7 @@ QString MainWindow::getActiveDemoDir() const
 }
 
 // converts a path relative to the engine's data dir to absolute path or vice versa
+// TODO: do we need this?
 QString MainWindow::convertRebasedEngineDataPath( QString rebasedPath ) const
 {
 	// These branches are here only as optimization, we could easily just: rebase-back -> convert -> rebase.
@@ -225,13 +226,13 @@ QString MainWindow::convertRebasedEngineDataPath( QString rebasedPath ) const
 	PathStyle launcherStyle = pathConvertor.pathStyle();
 	if (inputStyle == PathStyle::Relative && launcherStyle == PathStyle::Absolute)
 	{
-		QString trueRelativePath = engineDataDirRebaser.rebasePathBack( rebasedPath );
-		return pathConvertor.getAbsolutePath( trueRelativePath );
+		// we need an absolute path, but we know the input path is relative to the target base directory
+		return engineDataDirRebaser.targetBaseDir().absoluteFilePath( rebasedPath );
 	}
 	else if (inputStyle == PathStyle::Absolute && launcherStyle == PathStyle::Relative)
 	{
-		QString trueRelativePath = pathConvertor.getRelativePath( rebasedPath );
-		return engineDataDirRebaser.rebasePath( trueRelativePath );
+		// input path is already absolute, just make a path relative to the target base directory
+		return engineDataDirRebaser.targetBaseDir().relativeFilePath( rebasedPath );
 	}
 	else
 	{
@@ -240,18 +241,20 @@ QString MainWindow::convertRebasedEngineDataPath( QString rebasedPath ) const
 	}
 }
 
-QString MainWindow::rebaseSaveFilePath(
+QString MainWindow::makeCmdSaveFilePath(
 	const QString & filePath, const EngineInfo * engine, const PathRebaser & workingDirRebaser, const QString & saveDir
 ){
 	// the base dir for the save file parameter depends on the engine and its version
 	if (engine && engine->baseDirStyleForSaveFiles() == EngineTraits::SaveBaseDir::SaveDir)
 	{
+		// this path must be always relative, absolute path would just get appended to the -savedir path
 		PathRebaser saveDirRebaser( pathConvertor.workingDir(), saveDir, PathStyle::Relative, workingDirRebaser.quotePaths() );
-		return saveDirRebaser.rebaseAndQuotePath( filePath );
+		return saveDirRebaser.makeRebasedRelativeCmdPath( filePath );
 	}
 	else
 	{
-		return workingDirRebaser.rebaseAndQuotePath( filePath );
+		// respect the path style of the workingDirRebaser
+		return workingDirRebaser.makeRebasedCmdPath( filePath );
 	}
 };
 
@@ -2102,7 +2105,7 @@ void MainWindow::openEngineDataDir()
 void MainWindow::cloneConfig()
 {
 	QString configDirStr = getActiveConfigDir();
-	QDir configDir( configDirStr ); configDir.makeAbsolute();
+	QDir configDir( configDirStr );
 	QFileInfo oldConfig;
 
 	if (const ConfigFile * selectedConfig = getSelectedConfig())
@@ -2275,8 +2278,8 @@ void MainWindow::onEngineSelected( int index )
 	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedEnginePath, enginePath );
 
 	// engine's data dir has changed -> from now on rebase engine config/data paths to the new dir, if empty it will rebase to "."
-	engineConfigDirRebaser.setOutputBaseDir( selectedEngine ? selectedEngine->configDir : emptyString );
-	engineDataDirRebaser.setOutputBaseDir( selectedEngine ? selectedEngine->dataDir : emptyString );
+	engineConfigDirRebaser.setTargetBaseDir( selectedEngine ? selectedEngine->configDir : emptyString );
+	engineDataDirRebaser.setTargetBaseDir( selectedEngine ? selectedEngine->dataDir : emptyString );
 
 	if (selectedEngine)
 	{
@@ -3459,8 +3462,9 @@ void MainWindow::onUsePresetNameForScreenshotsToggled( bool checked )
 
 void MainWindow::onAltConfigDirChanged( const QString & rebasedDir )
 {
-	// the path in altConfigDirLine is relative to the engine's config dir by convention, need to rebase it to the current working dir
-	QString trueDirPath = engineConfigDirRebaser.rebasePathBack( rebasedDir );
+	// the path in altConfigDirLine is relative to the engine's config dir by convention,
+	// need to make it absolute or rebase it to the current working dir
+	QString absDirPath = engineConfigDirRebaser.rebaseBackAndMakeAbsolute( rebasedDir );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsConfigDir)
@@ -3474,7 +3478,7 @@ void MainWindow::onAltConfigDirChanged( const QString & rebasedDir )
 		storageModified = STORE_ALT_PATH( configDir, rebasedDir );
 	}
 
-	highlightDirPathIfFileOrCanBeCreated( ui->altConfigDirLine, trueDirPath );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->altConfigDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
 
 	updateConfigFilesFromDir();
 
@@ -3484,8 +3488,9 @@ void MainWindow::onAltConfigDirChanged( const QString & rebasedDir )
 
 void MainWindow::onAltSaveDirChanged( const QString & rebasedDir )
 {
-	// the path in altSaveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	QString trueDirPath = engineDataDirRebaser.rebasePathBack( rebasedDir );
+	// the path in altSaveDirLine is relative to the engine's data dir by convention,
+	// need to make it absolute or rebase it to the current working dir
+	QString absDirPath = engineDataDirRebaser.rebaseBackAndMakeAbsolute( rebasedDir );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsSaveDir)
@@ -3499,7 +3504,7 @@ void MainWindow::onAltSaveDirChanged( const QString & rebasedDir )
 		storageModified = STORE_ALT_PATH( saveDir, rebasedDir );
 	}
 
-	highlightDirPathIfFileOrCanBeCreated( ui->altSaveDirLine, trueDirPath );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->altSaveDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
 
 	updateSaveFilesFromDir();
 	updateDemoFilesFromDir();
@@ -3510,8 +3515,9 @@ void MainWindow::onAltSaveDirChanged( const QString & rebasedDir )
 
 void MainWindow::onAltScreenshotDirChanged( const QString & rebasedDir )
 {
-	// the path in altScreenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	QString trueDirPath = engineDataDirRebaser.rebasePathBack( rebasedDir );
+	// the path in altScreenshotDirLine is relative to the engine's data dir by convention,
+	// need to make it absolute or rebase it to the current working dir
+	QString absDirPath = engineDataDirRebaser.rebaseBackAndMakeAbsolute( rebasedDir );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsScreenshotDir)
@@ -3525,7 +3531,7 @@ void MainWindow::onAltScreenshotDirChanged( const QString & rebasedDir )
 		storageModified = STORE_ALT_PATH( screenshotDir, rebasedDir );
 	}
 
-	highlightDirPathIfFileOrCanBeCreated( ui->altScreenshotDirLine, trueDirPath );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->altScreenshotDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3541,7 +3547,7 @@ void MainWindow::browseAltConfigDir()
 
 	// the path in altConfigDirLine is relative to the engine's config dir by convention,
 	// but the path from the file dialog is relative to the current working dir -> need to rebase it
-	ui->altConfigDirLine->setText( engineConfigDirRebaser.rebasePath( newConfigDir ) );
+	ui->altConfigDirLine->setText( engineConfigDirRebaser.rebaseAndMakeRelative( newConfigDir ) );  // TODO
 }
 
 void MainWindow::browseAltSaveDir()
@@ -3554,7 +3560,7 @@ void MainWindow::browseAltSaveDir()
 
 	// the path in altSaveDirLine is relative to the engine's data dir by convention,
 	// but the path from the file dialog is relative to the current working dir -> need to rebase it
-	ui->altSaveDirLine->setText( engineDataDirRebaser.rebasePath( newSaveDir ) );
+	ui->altSaveDirLine->setText( engineDataDirRebaser.rebaseAndMakeRelative( newSaveDir ) );
 }
 
 void MainWindow::browseAltScreenshotDir()
@@ -3567,7 +3573,7 @@ void MainWindow::browseAltScreenshotDir()
 
 	// the path in altScreenshotDirLine is relative to the engine's data dir by convention,
 	// but the path from the file dialog is relative to the current working dir -> need to rebase it
-	ui->altScreenshotDirLine->setText( engineDataDirRebaser.rebasePath( newScreenshotDir ) );
+	ui->altScreenshotDirLine->setText( engineDataDirRebaser.rebaseAndMakeRelative( newScreenshotDir ) );
 }
 
 
@@ -3813,11 +3819,13 @@ void MainWindow::togglePathStyle( PathStyle style )
 	bool styleChanged = style != pathConvertor.pathStyle();
 
 	pathConvertor.setPathStyle( style );
+	engineConfigDirRebaser.setOutputPathStyle( style );
+	engineDataDirRebaser.setOutputPathStyle( style );
 
 	for (Engine & engine : engineModel)
 	{
 		engine.executablePath = pathConvertor.convertPath( engine.executablePath );
-		engine.configDir = pathConvertor.convertPath( engine.configDir );
+		// don't convert the config/data dirs, some of them may be better stored as relative, some as absolute
 	}
 
 	iwadSettings.dir = pathConvertor.convertPath( iwadSettings.dir );
@@ -4332,7 +4340,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		QString configPath = fs::getPathFromFileName( engine.configDir, selectedConfig->fileName );
 
 		p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
-		cmd.arguments << "-config" << engineDirRebaser.rebaseAndQuotePath( configPath );
+		cmd.arguments << "-config" << engineDirRebaser.makeRebasedCmdPath( configPath );
 	}
 
 	//-- game data files -----------------------------------------------------------
@@ -4341,7 +4349,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	if (const IWAD * selectedIWAD = getSelectedIWAD())
 	{
 		p.checkItemFilePath( *selectedIWAD, "selected IWAD", "Please select another one." );
-		cmd.arguments << "-iwad" << engineDirRebaser.rebaseAndQuotePath( selectedIWAD->path );
+		cmd.arguments << "-iwad" << engineDirRebaser.makeRebasedCmdPath( selectedIWAD->path );
 	}
 
 	// This part is tricky.
@@ -4357,13 +4365,13 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	{
 		QString suffix = QFileInfo( filePath ).suffix().toLower();
 		if (suffix == "deh" || suffix == "hhe") {
-			modArguments << "-deh" << engineDirRebaser.rebaseAndQuotePath( filePath );
+			modArguments << "-deh" << engineDirRebaser.makeRebasedCmdPath( filePath );
 		} else if (suffix == "bex") {
-			modArguments << "-bex" << engineDirRebaser.rebaseAndQuotePath( filePath );
+			modArguments << "-bex" << engineDirRebaser.makeRebasedCmdPath( filePath );
 		} else {
 			if (fileList.isEmpty())
 				modArguments << "-file" << "<file_list>";  // insert placeholder where all the files will be together
-			fileList.append( engineDirRebaser.rebaseAndQuotePath( filePath ) );
+			fileList.append( engineDirRebaser.makeRebasedCmdPath( filePath ) );
 		}
 	};
 
@@ -4420,13 +4428,13 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	{
 		QString saveDirPath = getActiveSaveDir();  // rebased altSaveDirLine
 		p.checkNotAFile( saveDirPath, "the save dir", {} );
-		cmd.arguments << engine.saveDirParam() << engineDirRebaser.rebaseAndQuotePath( saveDirPath );
+		cmd.arguments << engine.saveDirParam() << engineDirRebaser.makeRebasedCmdPath( saveDirPath );
 	}
 	if (!ui->altScreenshotDirLine->text().isEmpty())
 	{
 		QString screenshotDirPath = getActiveScreenshotDir();  // rebased altScreenshotDirLine
 		p.checkNotAFile( screenshotDirPath, "the screenshot dir", {} );
-		cmd.arguments << "-shotdir" << engineDirRebaser.rebaseAndQuotePath( screenshotDirPath );
+		cmd.arguments << "-shotdir" << engineDirRebaser.makeRebasedCmdPath( screenshotDirPath );
 	}
 
 	//-- launch mode and parameters ------------------------------------------------
@@ -4441,15 +4449,15 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
 		QString saveDir = getActiveSaveDir();  // save dir cannot be empty, otherwise the saveFileCmbBox would be empty
-		QString trueSavePath = fs::getPathFromFileName( saveDir, ui->saveFileCmbBox->currentText() );
-		p.checkFilePath( trueSavePath, "the selected save file", "Please select another one." );
-		cmd.arguments << "-loadgame" << rebaseSaveFilePath( trueSavePath, &engine, engineDirRebaser, saveDir );
+		QString savePath = fs::getPathFromFileName( saveDir, ui->saveFileCmbBox->currentText() );
+		p.checkFilePath( savePath, "the selected save file", "Please select another one." );
+		cmd.arguments << "-loadgame" << makeCmdSaveFilePath( savePath, &engine, engineDirRebaser, saveDir );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
 		QString demoDir = getActiveDemoDir();  // if demo dir is empty (saveDirLine is empty and engine.configDir is not set), then
 		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileLine_record->text() );  // the demoFileLine will be used as is
-		cmd.arguments << "-record" << engineDirRebaser.rebaseAndQuotePath( demoPath );
+		cmd.arguments << "-record" << engineDirRebaser.makeRebasedCmdPath( demoPath );
 		cmd.arguments << engine.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
@@ -4457,7 +4465,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		QString demoDir = getActiveDemoDir();  // demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
 		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileCmbBox_replay->currentText() );
 		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
-		cmd.arguments << "-playdemo" << engineDirRebaser.rebaseAndQuotePath( demoPath );
+		cmd.arguments << "-playdemo" << engineDirRebaser.makeRebasedCmdPath( demoPath );
 	}
 
 	//-- gameplay and compatibility options ----------------------------------------

@@ -283,7 +283,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QString getActiveScreenshotDir() const;
 	QString getActiveDemoDir() const;
 
-	QString convertRebasedEngineDataPath( QString path ) const;
 	QString makeCmdSaveFilePath(
 		const QString & filePath, const EngineInfo * engine, const PathRebaser & workingDirRebaser, const QString & saveDir
 	);

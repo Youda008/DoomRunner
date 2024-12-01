@@ -217,30 +217,6 @@ QString MainWindow::getActiveDemoDir() const
 	return getActiveSaveDir();
 }
 
-// converts a path relative to the engine's data dir to absolute path or vice versa
-// TODO: do we need this?
-QString MainWindow::convertRebasedEngineDataPath( QString rebasedPath ) const
-{
-	// These branches are here only as optimization, we could easily just: rebase-back -> convert -> rebase.
-	PathStyle inputStyle = fs::getPathStyle( rebasedPath );
-	PathStyle launcherStyle = pathConvertor.pathStyle();
-	if (inputStyle == PathStyle::Relative && launcherStyle == PathStyle::Absolute)
-	{
-		// we need an absolute path, but we know the input path is relative to the target base directory
-		return engineDataDirRebaser.targetBaseDir().absoluteFilePath( rebasedPath );
-	}
-	else if (inputStyle == PathStyle::Absolute && launcherStyle == PathStyle::Relative)
-	{
-		// input path is already absolute, just make a path relative to the target base directory
-		return engineDataDirRebaser.targetBaseDir().relativeFilePath( rebasedPath );
-	}
-	else
-	{
-		// nothing to be done, path is already in the right form
-		return rebasedPath;
-	}
-}
-
 QString MainWindow::makeCmdSaveFilePath(
 	const QString & filePath, const EngineInfo * engine, const PathRebaser & workingDirRebaser, const QString & saveDir
 ){

@@ -439,8 +439,8 @@ AudioOptions & MainWindow::activeAudioOptions()
 	bool valueChanged = false; \
 	if (Preset * selectedPreset = getSelectedPreset()) \
 	{\
-		valueChanged = selectedPreset->presetMember != (value); \
-		selectedPreset->presetMember = (value); \
+		valueChanged = (*selectedPreset)presetMember != (value); \
+		(*selectedPreset)presetMember = (value); \
 	}\
 	return valueChanged; \
 }()
@@ -455,8 +455,8 @@ AudioOptions & MainWindow::activeAudioOptions()
 	{\
 		if (Preset * selectedPreset = getSelectedPreset()) \
 		{\
-			valueChanged = selectedPreset->presetMember != (value); \
-			selectedPreset->presetMember = (value); \
+			valueChanged = (*selectedPreset)presetMember != (value); \
+			(*selectedPreset)presetMember = (value); \
 		}\
 	}\
 	return valueChanged; \
@@ -486,8 +486,8 @@ AudioOptions & MainWindow::activeAudioOptions()
 	                  || (storageSetting == StoreToPreset && restoringPresetInProgress); \
 	if (!preventSaving) \
 	{\
-		valueChanged = (activeStorage.structMember != (value)); \
-		activeStorage.structMember = (value); \
+		valueChanged = (activeStorage)structMember != (value); \
+		(activeStorage)structMember = (value); \
 	}\
 	return valueChanged; \
 }()
@@ -505,7 +505,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.compatOptsStorage, activeCompatOptions(), structMember, value )
 
 #define STORE_ALT_PATH( structMember, value ) \
-	STORE_TO_CURRENT_PRESET_IF_SAFE( altPaths.structMember, value )
+	STORE_TO_CURRENT_PRESET_IF_SAFE( .altPaths structMember, value )
 
 #define STORE_VIDEO_OPTION( structMember, value ) \
 	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.videoOptsStorage, activeVideoOptions(), structMember, value )
@@ -517,7 +517,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 	STORE_TO_CURRENT_PRESET_IF_SAFE( structMember, value )
 
 #define STORE_GLOBAL_OPTION( structMember, value ) \
-	STORE_TO_GLOBAL_STORAGE_IF_SAFE( globalOpts.structMember, value )
+	STORE_TO_GLOBAL_STORAGE_IF_SAFE( (globalOpts)structMember, value )
 
 
 //======================================================================================================================
@@ -2247,7 +2247,7 @@ void MainWindow::onEngineSelected( int index )
 	const EngineInfo * selectedEngine = index >= 0 ? &engineModel[ index ] : nullptr;
 	const QString & enginePath = selectedEngine ? selectedEngine->executablePath : emptyString;
 
-	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedEnginePath, enginePath );
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedEnginePath, enginePath );
 
 	// engine's data dir has changed -> from now on rebase engine config/data paths to the new dir, if empty it will rebase to "."
 	engineConfigDirRebaser.setTargetBaseDir( selectedEngine ? selectedEngine->configDir : emptyString );
@@ -2296,7 +2296,7 @@ void MainWindow::onConfigSelected( int index )
 	const ConfigFile * selectedConfig = index > 0 ? &configModel[ index ] : nullptr;  // at index 0 there is an empty placeholder to allow deselecting config
 	const QString & configFileName = selectedConfig ? selectedConfig->fileName : emptyString;
 
-	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedConfig, configFileName );
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedConfig, configFileName );
 
 	/*if (selectedConfig)
 	{
@@ -2315,7 +2315,7 @@ void MainWindow::onIWADToggled( const QItemSelection & /*selected*/, const QItem
 	const IWAD * selectedIWAD = getSelectedIWAD();
 	const QString & iwadPath = selectedIWAD ? selectedIWAD->path : emptyString;
 
-	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedIWAD, iwadPath );
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedIWAD, iwadPath );
 
 	if (selectedIWAD)
 	{
@@ -2340,7 +2340,7 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 
 	QStringVec selectedMapPacks = getSelectedMapPacks();
 
-	/*bool storageModified =*/ STORE_TO_CURRENT_PRESET_IF_SAFE( selectedMapPacks, selectedMapPacks );
+	/*bool storageModified =*/ STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedMapPacks, selectedMapPacks );
 
 	// expand the parent directory nodes that are collapsed
 	const auto selectedRows = wdg::getSelectedRows( ui->mapDirView );
@@ -2936,7 +2936,7 @@ void MainWindow::onModsDropped( int dropRow, int count, DnDType )
 
 void MainWindow::onModeChosen_Default()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, Default );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, Default );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -2958,7 +2958,7 @@ void MainWindow::onModeChosen_Default()
 
 void MainWindow::onModeChosen_LaunchMap()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, LaunchMap );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, LaunchMap );
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -2980,7 +2980,7 @@ void MainWindow::onModeChosen_LaunchMap()
 
 void MainWindow::onModeChosen_SavedGame()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, LoadSave );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, LoadSave );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
@@ -2997,7 +2997,7 @@ void MainWindow::onModeChosen_SavedGame()
 
 void MainWindow::onModeChosen_RecordDemo()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, RecordDemo );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, RecordDemo );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -3014,7 +3014,7 @@ void MainWindow::onModeChosen_RecordDemo()
 
 void MainWindow::onModeChosen_ReplayDemo()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, ReplayDemo );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, ReplayDemo );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -3056,7 +3056,7 @@ void MainWindow::onMapChanged( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mapName, mapName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mapName, mapName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3067,7 +3067,7 @@ void MainWindow::onMapChanged_demo( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mapName_demo, mapName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mapName_demo, mapName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3080,7 +3080,7 @@ void MainWindow::onSavedGameSelected( int saveIdx )
 
 	const QString & saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : emptyString;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( saveFile, saveFileName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .saveFile, saveFileName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3091,7 +3091,7 @@ void MainWindow::onDemoFileChanged_record( const QString & fileName )
 	if (disableSelectionCallbacks)
 		return;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( demoFile_record, fileName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .demoFile_record, fileName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3104,7 +3104,7 @@ void MainWindow::onDemoFileSelected_replay( int demoIdx )
 
 	const QString & demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : emptyString;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( demoFile_replay, demoFileName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .demoFile_replay, demoFileName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3119,7 +3119,7 @@ void MainWindow::onSkillSelected( int comboBoxIdx )
 	// skillIdx is an index in the combo-box which starts from 0, but Doom skill number actually starts from 1
 	int skillIdx = comboBoxIdx + 1;
 
-	/*bool storageModified =*/ STORE_GAMEPLAY_OPTION( skillIdx, skillIdx );
+	/*bool storageModified =*/ STORE_GAMEPLAY_OPTION( .skillIdx, skillIdx );
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 
@@ -3133,7 +3133,7 @@ void MainWindow::onSkillSelected( int comboBoxIdx )
 
 void MainWindow::onSkillNumChanged( int skillNum )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( skillNum, skillNum );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .skillNum, skillNum );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3141,7 +3141,7 @@ void MainWindow::onSkillNumChanged( int skillNum )
 
 void MainWindow::onNoMonstersToggled( bool checked )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( noMonsters, checked );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .noMonsters, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3149,7 +3149,7 @@ void MainWindow::onNoMonstersToggled( bool checked )
 
 void MainWindow::onFastMonstersToggled( bool checked )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( fastMonsters, checked );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .fastMonsters, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3157,7 +3157,7 @@ void MainWindow::onFastMonstersToggled( bool checked )
 
 void MainWindow::onMonstersRespawnToggled( bool checked )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( monstersRespawn, checked );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .monstersRespawn, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3165,7 +3165,7 @@ void MainWindow::onMonstersRespawnToggled( bool checked )
 
 void MainWindow::onPistolStartToggled( bool checked )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( pistolStart, checked );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .pistolStart, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3173,7 +3173,7 @@ void MainWindow::onPistolStartToggled( bool checked )
 
 void MainWindow::onAllowCheatsToggled( bool checked )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( allowCheats, checked );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .allowCheats, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3188,7 +3188,7 @@ void MainWindow::onCompatLevelSelected( int compatLevel )
 	if (disableSelectionCallbacks)
 		return;
 
-	bool storageModified = STORE_COMPAT_OPTION( compatLevel, compatLevel - 1 );  // first item is reserved for indicating no selection
+	bool storageModified = STORE_COMPAT_OPTION( .compatLevel, compatLevel - 1 );  // first item is reserved for indicating no selection
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3200,7 +3200,7 @@ void MainWindow::onCompatLevelSelected( int compatLevel )
 
 void MainWindow::onMultiplayerToggled( bool checked )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( isMultiplayer, checked );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .isMultiplayer, checked );
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -3246,7 +3246,7 @@ void MainWindow::onMultiplayerToggled( bool checked )
 
 void MainWindow::onMultRoleSelected( int role )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( multRole, MultRole(role) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .multRole, MultRole(role) );
 
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -3278,7 +3278,7 @@ void MainWindow::onMultRoleSelected( int role )
 
 void MainWindow::onHostChanged( const QString & hostName )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( hostName, hostName );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .hostName, hostName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3286,7 +3286,7 @@ void MainWindow::onHostChanged( const QString & hostName )
 
 void MainWindow::onPortChanged( int port )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( port, uint16_t(port) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .port, uint16_t(port) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3294,7 +3294,7 @@ void MainWindow::onPortChanged( int port )
 
 void MainWindow::onNetModeSelected( int netMode )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( netMode, NetMode(netMode) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .netMode, NetMode(netMode) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3302,7 +3302,7 @@ void MainWindow::onNetModeSelected( int netMode )
 
 void MainWindow::onGameModeSelected( int gameMode )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( gameMode, GameMode(gameMode) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .gameMode, GameMode(gameMode) );
 
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
@@ -3319,7 +3319,7 @@ void MainWindow::onGameModeSelected( int gameMode )
 
 void MainWindow::onPlayerCountChanged( int count )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( playerCount, uint( count ) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .playerCount, uint( count ) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3329,7 +3329,7 @@ void MainWindow::onTeamDamageChanged( double damage )
 {
  #pragma GCC diagnostic push
  #pragma GCC diagnostic ignored "-Wfloat-equal"
-	/*bool storageModified =*/ STORE_MULT_OPTION( teamDamage, damage );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .teamDamage, damage );
  #pragma GCC diagnostic pop
 
 	//scheduleSavingOptions( storageModified );
@@ -3338,7 +3338,7 @@ void MainWindow::onTeamDamageChanged( double damage )
 
 void MainWindow::onTimeLimitChanged( int timeLimit )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( timeLimit, uint(timeLimit) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .timeLimit, uint(timeLimit) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3346,7 +3346,7 @@ void MainWindow::onTimeLimitChanged( int timeLimit )
 
 void MainWindow::onFragLimitChanged( int fragLimit )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( fragLimit, uint(fragLimit) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .fragLimit, uint(fragLimit) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3386,7 +3386,7 @@ void MainWindow::updateAlternativeDirs( const Preset * selectedPreset )
 
 void MainWindow::onUsePresetNameForConfigsToggled( bool checked )
 {
-	bool storageModified = STORE_GLOBAL_OPTION( usePresetNameAsConfigDir, checked );
+	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsConfigDir, checked );
 
 	ui->altConfigDirLine->setEnabled( !checked );
 	ui->altConfigDirBtn->setEnabled( !checked );
@@ -3402,7 +3402,7 @@ void MainWindow::onUsePresetNameForConfigsToggled( bool checked )
 
 void MainWindow::onUsePresetNameForSavesToggled( bool checked )
 {
-	bool storageModified = STORE_GLOBAL_OPTION( usePresetNameAsSaveDir, checked );
+	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsSaveDir, checked );
 
 	ui->altSaveDirLine->setEnabled( !checked );
 	ui->altSaveDirBtn->setEnabled( !checked );
@@ -3418,7 +3418,7 @@ void MainWindow::onUsePresetNameForSavesToggled( bool checked )
 
 void MainWindow::onUsePresetNameForScreenshotsToggled( bool checked )
 {
-	bool storageModified = STORE_GLOBAL_OPTION( usePresetNameAsScreenshotDir, checked );
+	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsScreenshotDir, checked );
 
 	ui->altScreenshotDirLine->setEnabled( !checked );
 	ui->altScreenshotDirBtn->setEnabled( !checked );
@@ -3442,12 +3442,12 @@ void MainWindow::onAltConfigDirChanged( const QString & rebasedDir )
 	if (globalOpts.usePresetNameAsConfigDir)
 	{
 		// dir is being chosen automatically by the launcher, delete user overrides
-		storageModified = STORE_TO_CURRENT_PRESET( altPaths.configDir, QString() );
+		storageModified = STORE_TO_CURRENT_PRESET( .altPaths.configDir, QString() );
 	}
 	else
 	{
 		// dir is being edited manually by the user, store his value
-		storageModified = STORE_ALT_PATH( configDir, rebasedDir );
+		storageModified = STORE_ALT_PATH( .configDir, rebasedDir );
 	}
 
 	highlightDirPathIfFileOrCanBeCreated( ui->altConfigDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
@@ -3468,12 +3468,12 @@ void MainWindow::onAltSaveDirChanged( const QString & rebasedDir )
 	if (globalOpts.usePresetNameAsSaveDir)
 	{
 		// dir is being chosen automatically by the launcher, delete user overrides
-		storageModified = STORE_TO_CURRENT_PRESET( altPaths.saveDir, QString() );
+		storageModified = STORE_TO_CURRENT_PRESET( .altPaths.saveDir, QString() );
 	}
 	else
 	{
 		// dir is being edited manually by the user, store his value
-		storageModified = STORE_ALT_PATH( saveDir, rebasedDir );
+		storageModified = STORE_ALT_PATH( .saveDir, rebasedDir );
 	}
 
 	highlightDirPathIfFileOrCanBeCreated( ui->altSaveDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
@@ -3495,12 +3495,12 @@ void MainWindow::onAltScreenshotDirChanged( const QString & rebasedDir )
 	if (globalOpts.usePresetNameAsScreenshotDir)
 	{
 		// dir is being chosen automatically by the launcher, delete user overrides
-		storageModified = STORE_TO_CURRENT_PRESET( altPaths.screenshotDir, QString() );
+		storageModified = STORE_TO_CURRENT_PRESET( .altPaths.screenshotDir, QString() );
 	}
 	else
 	{
 		// dir is being edited manually by the user, store his value
-		storageModified = STORE_ALT_PATH( screenshotDir, rebasedDir );
+		storageModified = STORE_ALT_PATH( .screenshotDir, rebasedDir );
 	}
 
 	highlightDirPathIfFileOrCanBeCreated( ui->altScreenshotDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
@@ -3554,7 +3554,7 @@ void MainWindow::browseAltScreenshotDir()
 
 void MainWindow::onMonitorSelected( int index )
 {
-	/*bool storageModified =*/ STORE_VIDEO_OPTION( monitorIdx, index );
+	/*bool storageModified =*/ STORE_VIDEO_OPTION( .monitorIdx, index );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3562,7 +3562,7 @@ void MainWindow::onMonitorSelected( int index )
 
 void MainWindow::onResolutionXChanged( const QString & xStr )
 {
-	bool storageModified = STORE_VIDEO_OPTION( resolutionX, xStr.toUInt() );
+	bool storageModified = STORE_VIDEO_OPTION( .resolutionX, xStr.toUInt() );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3570,7 +3570,7 @@ void MainWindow::onResolutionXChanged( const QString & xStr )
 
 void MainWindow::onResolutionYChanged( const QString & yStr )
 {
-	bool storageModified = STORE_VIDEO_OPTION( resolutionY, yStr.toUInt() );
+	bool storageModified = STORE_VIDEO_OPTION( .resolutionY, yStr.toUInt() );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3578,7 +3578,7 @@ void MainWindow::onResolutionYChanged( const QString & yStr )
 
 void MainWindow::onShowFpsToggled( bool checked )
 {
-	bool storageModified = STORE_VIDEO_OPTION( showFPS, checked );
+	bool storageModified = STORE_VIDEO_OPTION( .showFPS, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3590,7 +3590,7 @@ void MainWindow::onShowFpsToggled( bool checked )
 
 void MainWindow::onNoSoundToggled( bool checked )
 {
-	/*bool storageModified =*/ STORE_AUDIO_OPTION( noSound, checked );
+	/*bool storageModified =*/ STORE_AUDIO_OPTION( .noSound, checked );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3598,7 +3598,7 @@ void MainWindow::onNoSoundToggled( bool checked )
 
 void MainWindow::onNoSFXToggled( bool checked )
 {
-	/*bool storageModified =*/ STORE_AUDIO_OPTION( noSFX, checked );
+	/*bool storageModified =*/ STORE_AUDIO_OPTION( .noSFX, checked );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3606,7 +3606,7 @@ void MainWindow::onNoSFXToggled( bool checked )
 
 void MainWindow::onNoMusicToggled( bool checked )
 {
-	/*bool storageModified =*/ STORE_AUDIO_OPTION( noMusic, checked );
+	/*bool storageModified =*/ STORE_AUDIO_OPTION( .noMusic, checked );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3768,7 +3768,7 @@ void MainWindow::onGlobalEnvVarDataChanged( int row, int column )
 
 void MainWindow::onPresetCmdArgsChanged( const QString & text )
 {
-	/*bool storageModified =*/ STORE_PRESET_OPTION( cmdArgs, text );
+	/*bool storageModified =*/ STORE_PRESET_OPTION( .cmdArgs, text );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3776,7 +3776,7 @@ void MainWindow::onPresetCmdArgsChanged( const QString & text )
 
 void MainWindow::onGlobalCmdArgsChanged( const QString & text )
 {
-	/*bool storageModified =*/ STORE_GLOBAL_OPTION( cmdArgs, text );
+	/*bool storageModified =*/ STORE_GLOBAL_OPTION( .cmdArgs, text );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();

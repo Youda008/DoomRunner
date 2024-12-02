@@ -628,6 +628,12 @@ MainWindow::MainWindow()
 
 	ui->compatLevelCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
 
+	// setup alternative path validators
+
+	setPathValidator( ui->altConfigDirLine );
+	setPathValidator( ui->altSaveDirLine );
+	setPathValidator( ui->altScreenshotDirLine );
+
 	// setup launch options callbacks
 
 	// launch mode
@@ -3354,7 +3360,7 @@ void MainWindow::updateAlternativeDirs( const Preset * selectedPreset )
 {
 	if (!selectedPreset)  // optimization
 		selectedPreset = getSelectedPreset();
-	QString subdirName = selectedPreset ? fs::sanitizePath( selectedPreset->name ) : QString();
+	QString subdirName = selectedPreset ? fs::sanitizePath_strict( selectedPreset->name ) : QString();
 
 	if (globalOpts.usePresetNameAsConfigDir)
 	{
@@ -3430,7 +3436,7 @@ void MainWindow::onAltConfigDirChanged( const QString & rebasedDir )
 {
 	// the path in altConfigDirLine is relative to the engine's config dir by convention,
 	// need to make it absolute or rebase it to the current working dir
-	QString absDirPath = engineConfigDirRebaser.rebaseBackAndMakeAbsolute( rebasedDir );
+	QString absDirPath = engineConfigDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsConfigDir)
@@ -3456,7 +3462,7 @@ void MainWindow::onAltSaveDirChanged( const QString & rebasedDir )
 {
 	// the path in altSaveDirLine is relative to the engine's data dir by convention,
 	// need to make it absolute or rebase it to the current working dir
-	QString absDirPath = engineDataDirRebaser.rebaseBackAndMakeAbsolute( rebasedDir );
+	QString absDirPath = engineDataDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsSaveDir)
@@ -3483,7 +3489,7 @@ void MainWindow::onAltScreenshotDirChanged( const QString & rebasedDir )
 {
 	// the path in altScreenshotDirLine is relative to the engine's data dir by convention,
 	// need to make it absolute or rebase it to the current working dir
-	QString absDirPath = engineDataDirRebaser.rebaseBackAndMakeAbsolute( rebasedDir );
+	QString absDirPath = engineDataDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsScreenshotDir)

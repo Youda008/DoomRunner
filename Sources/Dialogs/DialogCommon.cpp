@@ -11,6 +11,7 @@
 #include "OwnFileDialog.hpp"
 
 #include <QLineEdit>
+#include <QRegularExpressionValidator>
 
 
 //======================================================================================================================
@@ -77,4 +78,14 @@ bool DialogWithPaths::browseDir( QWidget * parent, const QString & dirDesc, QLin
 		targetLine->setText( path );
 	}
 	return confirmed;
+}
+
+void DialogWithPaths::setPathValidator( QLineEdit * pathLine )
+{
+	pathLine->setValidator( new QRegularExpressionValidator( fs::getPathRegex(), pathLine ) );
+}
+
+QString DialogWithPaths::sanitizeInputPath( const QString & path )
+{
+	return fs::fromNativePath( fs::sanitizePath( path ) );
 }

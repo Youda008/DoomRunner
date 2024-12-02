@@ -55,6 +55,12 @@ SetupDialog::SetupDialog(
 
 	lastUsedDir = iwadSettings.dir;
 
+	// setup input path validators
+
+	setPathValidator( ui->iwadDirLine );
+	setPathValidator( ui->mapDirLine );
+	setPathValidator( ui->modDirLine );
+
 	// setup list views
 
 	setupEngineList();
@@ -489,9 +495,9 @@ void SetupDialog::browseModDir()
 
 void SetupDialog::onIWADDirChanged( const QString & dir )
 {
-	iwadSettings.dir = dir;
+	iwadSettings.dir = sanitizeInputPath( dir );
 
-	highlightDirPathIfInvalid( ui->iwadDirLine, dir );
+	highlightDirPathIfInvalid( ui->iwadDirLine, iwadSettings.dir );
 
 	if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))
 		updateIWADsFromDir();
@@ -499,16 +505,16 @@ void SetupDialog::onIWADDirChanged( const QString & dir )
 
 void SetupDialog::onMapDirChanged( const QString & dir )
 {
-	mapSettings.dir = dir;
+	mapSettings.dir = sanitizeInputPath( dir );
 
-	highlightDirPathIfInvalid( ui->mapDirLine, dir );
+	highlightDirPathIfInvalid( ui->mapDirLine, mapSettings.dir );
 }
 
 void SetupDialog::onModDirChanged( const QString & dir )
 {
-	modSettings.dir = dir;
+	modSettings.dir = sanitizeInputPath( dir );
 
-	highlightDirPathIfInvalid( ui->modDirLine, dir );
+	highlightDirPathIfInvalid( ui->modDirLine, modSettings.dir );
 }
 
 void SetupDialog::updateIWADsFromDir()

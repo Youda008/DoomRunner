@@ -47,15 +47,33 @@ bool isDirectoryWritable( const QString & dirPath )
 	return isWritable;
 }
 
+#define DISALLOWED_PATH_SYMBOLS ":*?\"<>|"
+
+const QRegularExpression & getPathRegex()
+{
+	static const QRegularExpression pathRegex("^[^" DISALLOWED_PATH_SYMBOLS "]*$");
+	return pathRegex;
+}
+
+static QString sanitizePath_impl( const QString & path, const QRegularExpression & invalidChars )
+{
+	QString sanitizedPath = path;
+	sanitizedPath.remove( invalidChars );
+	return sanitizedPath;
+}
+
 QString sanitizePath( const QString & path )
+{
+	static const QRegularExpression invalidChars("[" DISALLOWED_PATH_SYMBOLS "]");
+	return sanitizePath_impl( path, invalidChars );
+}
+
+QString sanitizePath_strict( const QString & path )
 {
 	// Newer engines such as GZDoom 4.x can handle advanced Unicode characters such as emojis,
 	// but the old ones are pretty much limited to ASCII, so it's easier to just stick to a "safe" white-list.
-	QString sanitizedPath = path;
 	static const QRegularExpression invalidChars("[^a-zA-Z0-9_ !#$&'\\(\\)+,\\-.;=@\\[\\]\\^~]");
-	//sanitizedPath.replace( invalidChars, "#" );
-	sanitizedPath.remove( invalidChars );
-	return sanitizedPath;
+	return sanitizePath_impl( path, invalidChars );
 }
 
 QString readWholeFile( const QString & filePath, QByteArray & dest )

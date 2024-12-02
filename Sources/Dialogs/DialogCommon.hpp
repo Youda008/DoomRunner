@@ -54,6 +54,12 @@ class DialogWithPaths : public DialogCommon {
 
  public:
 
+	/// Configures the provided QLineEdit to accept only valid file-system paths.
+	static void setPathValidator( QLineEdit * pathLine );
+
+	/// Takes a path entered by the user, cleans it from disallowed characters and converts it to the internal Qt form.
+	static QString sanitizeInputPath( const QString & path );
+
 	const QString & getLastUsedDir() const   { return lastUsedDir; }
 	QString takeLastUsedDir() const          { return std::move( lastUsedDir ); }
 

@@ -8,6 +8,7 @@
 #include "EngineDialog.hpp"
 #include "ui_EngineDialog.h"
 
+#include "Utils/FileSystemUtils.hpp"  // getPathRegex
 #include "Utils/MiscUtils.hpp"  // highlightInvalidPath
 #include "Utils/ErrorHandling.hpp"
 
@@ -26,6 +27,11 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 	ui->setupUi(this);
 
 	DialogWithPaths::lastUsedDir = lastUsedDir_;
+
+	// setup input path validators
+	setPathValidator( ui->executableLine );
+	setPathValidator( ui->configDirLine );
+	setPathValidator( ui->dataDirLine );
 
 	// automatically initialize family combox fox from existing engine families
 	for (size_t familyIdx = 0; familyIdx < size_t(EngineFamily::_EnumEnd); ++familyIdx)
@@ -229,15 +235,15 @@ void EngineDialog::accept()
 		return;  // refuse the user's confirmation
 	}
 
-	QString executableLineText = ui->executableLine->text();
-	if (executableLineText.isEmpty())
+	QString executablePath = sanitizeInputPath( ui->executableLine->text() );
+	if (executablePath.isEmpty())
 	{
 		reportUserError( this, "Executable path cannot be empty",
 			"Please specify the engine's executable path."
 		);
 		return;  // refuse the user's confirmation
 	}
-	else if (fs::isInvalidFile( executableLineText ))
+	else if (fs::isInvalidFile( executablePath ))
 	{
 		reportUserError( this, "Executable doesn't exist",
 			"Please fix the engine's executable path, such file doesn't exist."
@@ -245,15 +251,15 @@ void EngineDialog::accept()
 		return;  // refuse the user's confirmation
 	}
 
-	QString configDirLineText = ui->configDirLine->text();
-	if (configDirLineText.isEmpty())
+	QString configDirPath = sanitizeInputPath( ui->configDirLine->text() );
+	if (configDirPath.isEmpty())
 	{
 		reportUserError( this, "Config dir cannot be empty",
 			"Please specify the engine's config directory, this launcher cannot operate without it."
 		);
 		return;  // refuse the user's confirmation
 	}
-	else if (configDirLineText != suggestedConfigDir && fs::isInvalidDir( configDirLineText ))
+	else if (configDirPath != suggestedConfigDir && fs::isInvalidDir( configDirPath ))
 	{
 		reportUserError( this, "Config dir doesn't exist",
 			"Please fix the engine's config directory, such directory doesn't exist."
@@ -288,13 +294,13 @@ void EngineDialog::accept()
 
 	// If the executableLine was edited manually without the browse button where all the auto-detection happens,
 	// the engine's application info must be updated.
-	if (engine.executablePath != executableLineText)  // the app info was constructed from executable that is no longer used
+	if (engine.executablePath != executablePath)  // the app info was constructed from executable that is no longer used
 	{
-		engine.executablePath = pathConvertor.convertPath( executableLineText );
-		engine.autoDetectTraits( executableLineText );
+		engine.executablePath = pathConvertor.convertPath( executablePath );
+		engine.autoDetectTraits( executablePath );
 	}
 
-	engine.configDir = std::move( configDirLineText );
+	engine.configDir = std::move( configDirPath );
 	engine.dataDir = std::move( dataDirLineText );
 
 	int familyIdx = ui->familyCmbBox->currentIndex();

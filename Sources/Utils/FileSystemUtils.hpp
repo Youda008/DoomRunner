@@ -197,8 +197,14 @@ inline bool createDirIfDoesntExist( const QString & dirPath )
 /// Returns if it's possible to write files into a directory.
 bool isDirectoryWritable( const QString & dirPath );
 
-/// Replaces any disallowed path characters from a string.
+/// Returns a regular expression that can be used to validate file-system paths entered by the user.
+const QRegularExpression & getPathRegex();
+
+/// Removes any disallowed path characters from a string.
 QString sanitizePath( const QString & path );
+
+/// Removes anything but a strict set of safe characters.
+QString sanitizePath_strict( const QString & path );
 
 /// Reads the whole content of a file into a byte array.
 /** Returns description of an error that might potentially happen, or empty string on success. */

@@ -22,7 +22,7 @@
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  path highlighting
+// path highlighting
 
 bool highlightDirPathIfInvalid( QLineEdit * lineEdit, const QString & path )
 {
@@ -154,7 +154,7 @@ void unmarkItemAsDefault( const ReadOnlyListModelItem & item )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  PathChecker
+// PathChecker
 
 void PathChecker::_maybeShowError( bool & errorMessageDisplayed, QWidget * parent, QString title, QString message )
 {
@@ -220,7 +220,7 @@ bool PathChecker::_checkCollision(
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  other
+// other
 
 QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith )
 {

@@ -21,7 +21,7 @@
 
 
 //======================================================================================================================
-//  in order for the getEnum method to work, the author of the enum must specialize the following templates
+// in order for the getEnum method to work, the author of the enum must specialize the following templates
 
 template< typename Enum >
 const char * enumName() { return "unknown"; }
@@ -374,7 +374,7 @@ class JsonDocumentCtx {
 
 
 //======================================================================================================================
-//  generic utils
+// generic utils
 
 inline QJsonArray serializeStringVec( const QStringVec & vec )
 {
@@ -452,7 +452,7 @@ void deserializeMap( const JsonObjectCtx & jsMap, QHash< QString, Elem > & map )
 
 
 //======================================================================================================================
-//  high-level file I/O helpers
+// high-level file I/O helpers
 
 bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, const QString & fileDesc );
 

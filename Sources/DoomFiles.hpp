@@ -23,7 +23,7 @@ namespace doom {
 
 
 //======================================================================================================================
-//  file type recognition
+// file type recognition
 
 extern const QString demoFileSuffix;
 
@@ -40,7 +40,7 @@ QStringList getModFileSuffixes();
 
 
 //======================================================================================================================
-//  known WAD info
+// known WAD info
 
 struct GameIdentification
 {

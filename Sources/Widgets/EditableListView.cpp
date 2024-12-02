@@ -90,7 +90,7 @@ EditableListView::~EditableListView()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  editing
+// editing
 
 void EditableListView::toggleNameEditing( bool enabled )
 {
@@ -133,7 +133,7 @@ void EditableListView::toggleListModifications( bool enabled )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  right-click menu
+// right-click menu
 
 void EditableListView::toggleContextMenu( bool enabled )
 {
@@ -259,7 +259,7 @@ void EditableListView::toggleIcons( bool enabled )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  drag&drop
+// drag&drop
 
 void EditableListView::updateDragDropMode()
 {
@@ -416,7 +416,7 @@ void EditableListView::onItemsDropped( DnDType type )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  keyboard control
+// keyboard control
 
 static inline bool isArrowKey( int key )
 {

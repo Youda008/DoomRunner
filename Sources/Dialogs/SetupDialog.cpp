@@ -23,7 +23,7 @@
 
 
 //======================================================================================================================
-//  SetupDialog
+// SetupDialog
 
 SetupDialog::SetupDialog(
 	QWidget * parent,
@@ -246,7 +246,7 @@ SetupDialog::~SetupDialog()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  local utils
+// local utils
 
 template< typename ListModel >
 void setSelectedItemAsDefault( QListView * view, ListModel & model, QAction * setDefaultAction, QString & defaultItemID )
@@ -283,7 +283,7 @@ void setSelectedItemAsDefault( QListView * view, ListModel & model, QAction * se
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  engines
+// engines
 
 void SetupDialog::engineAdd()
 {
@@ -378,7 +378,7 @@ void SetupDialog::editSelectedEngine()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  IWADs
+// IWADs
 
 void SetupDialog::iwadAdd()
 {
@@ -476,7 +476,7 @@ void SetupDialog::onIWADSubdirsToggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  game file directories
+// game file directories
 
 void SetupDialog::browseIWADDir()
 {
@@ -532,7 +532,7 @@ void SetupDialog::updateIWADsFromDir()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  theme options
+// theme options
 
 void SetupDialog::onAppStyleSelected( int index )
 {
@@ -576,7 +576,7 @@ void SetupDialog::onLightSchemeChosen()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  other
+// other
 
 void SetupDialog::onAbsolutePathsToggled( bool checked )
 {

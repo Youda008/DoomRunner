@@ -16,7 +16,7 @@
 
 
 //======================================================================================================================
-//  custom data types
+// custom data types
 
 static QJsonObject serialize( const EnvVars & envVars )
 {
@@ -47,7 +47,7 @@ static void deserialize( const JsonObjectCtx & jsEnvVars, EnvVars & envVars )
 
 
 //======================================================================================================================
-//  user data sub-sections
+// user data sub-sections
 
 static QJsonObject serialize( const Engine & engine )
 {
@@ -654,7 +654,7 @@ static void deserialize( const JsonObjectCtx & jsAppearance, AppearanceSettings 
 
 
 //======================================================================================================================
-//  top-level JSON stucture
+// top-level JSON stucture
 
 static void serialize( QJsonObject & jsRoot, const OptionsToSave & opts )
 {
@@ -862,13 +862,13 @@ static void deserialize( const JsonObjectCtx & jsRoot, OptionsToLoad & opts )
 
 
 //======================================================================================================================
-//  backward compatibility - loading user data from older options format
+// backward compatibility - loading user data from older options format
 
 #include "OptionsSerializer_compat.cpp"  // hack, but it's ok in this case
 
 
 //======================================================================================================================
-//  top-level API
+// top-level API
 
 QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts )
 {

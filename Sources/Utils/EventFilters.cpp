@@ -12,7 +12,7 @@
 
 
 //======================================================================================================================
-//  ModifierHandler
+// ModifierHandler
 
 template< KeyState state >
 static inline uint8_t toggleModifiers( uint8_t currentModifiers, uint8_t newModifiers )
@@ -57,7 +57,7 @@ bool ModifierHandler::updateModifiers_released( int key )
 
 
 //======================================================================================================================
-//  KeyPressEmitter
+// KeyPressEmitter
 
 bool KeyPressFilter::eventFilter( QObject * obj, QEvent * event )
 {
@@ -85,7 +85,7 @@ bool KeyPressFilter::eventFilter( QObject * obj, QEvent * event )
 
 
 //======================================================================================================================
-//  EnterPressEmitter
+// EnterPressEmitter
 
 bool ConfirmationFilter::eventFilter( QObject * obj, QEvent * event )
 {

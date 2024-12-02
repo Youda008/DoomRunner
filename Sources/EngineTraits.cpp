@@ -17,7 +17,7 @@
 
 
 //======================================================================================================================
-//  engine definitions - add support for new engines here
+// engine definitions - add support for new engines here
 
 static const char * const engineFamilyStrings [] =
 {
@@ -159,10 +159,10 @@ static const QStringList noCompatLevels = {};
 
 
 //======================================================================================================================
-//  code
+// code
 
 //----------------------------------------------------------------------------------------------------------------------
-//  compat levels
+// compat levels
 
 const QStringList & getCompatLevels( CompatLevelStyle style )
 {
@@ -175,7 +175,7 @@ const QStringList & getCompatLevels( CompatLevelStyle style )
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-//  EngineFamily
+// EngineFamily
 
 const char * familyToStr( EngineFamily family )
 {
@@ -196,10 +196,10 @@ EngineFamily familyFromStr( const QString & familyStr )
 
 
 //======================================================================================================================
-//  EngineTraits
+// EngineTraits
 
 //----------------------------------------------------------------------------------------------------------------------
-//  initialization
+// initialization
 
 void EngineTraits::autoDetectTraits( const QString & executablePath )
 {
@@ -235,7 +235,7 @@ void EngineTraits::setFamilyTraits( EngineFamily family )
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-//  default directories and path requirements
+// default directories and path requirements
 
 Version EngineTraits::getExeVersionOrAssumeLatest() const
 {
@@ -470,7 +470,7 @@ QString EngineTraits::getDefaultConfigFileName() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-//  command line parameters deduction
+// command line parameters deduction
 
 static const QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
 static const QRegularExpression doom2MapNameRegex("MAP(\\d+)");

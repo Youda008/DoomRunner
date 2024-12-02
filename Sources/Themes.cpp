@@ -49,7 +49,7 @@
 
 
 //======================================================================================================================
-//  palette utils
+// palette utils
 
 /*
 static void printColorForRole( QDebug d, const QPalette & palette, QPalette::ColorRole role )
@@ -142,7 +142,7 @@ static std::pair< QColor, QColor > deriveSeparatorColors( const QPalette & palet
 
 
 //======================================================================================================================
-//  color schemes
+// color schemes
 
 static const char * const schemeStrings [] =
 {
@@ -357,7 +357,7 @@ ColorScheme schemeFromString( const QString & schemeStr )
 
 
 //======================================================================================================================
-//  App styles
+// App styles
 
 static QString c_defaultStyleName;  ///< style active when application starts, depends on system settings
 static QStringList c_availableStyleNames;  ///< styles available on this operating system and graphical environment
@@ -444,7 +444,7 @@ static void setQtStyle( const QString & styleName )
 
 
 //======================================================================================================================
-//  Windows utils
+// Windows utils
 
 #if IS_WINDOWS
 
@@ -622,7 +622,7 @@ SystemThemeWatcher::SystemThemeWatcherImpl::QuitReason WindowsThemeWatcherImpl::
 
 
 //======================================================================================================================
-//  main logic
+// main logic
 
 static QString g_currentUserStyleName;  ///< the application style the user chose via setAppStyle(), empty name means system-default
 static ColorScheme g_currentUserSchemeID = ColorScheme::SystemDefault;  ///< the scheme user chose via setAppColorScheme()
@@ -747,7 +747,7 @@ QString updateHyperlinkColor( QString richText )
 
 
 //======================================================================================================================
-//  SystemThemeWatcher - only the OS-independent code should be here
+// SystemThemeWatcher - only the OS-independent code should be here
 
 // without this we cannot use our own types as parameters of functions passed to connect()
 Q_DECLARE_METATYPE( SystemTheme )

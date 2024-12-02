@@ -15,7 +15,7 @@
 
 
 //======================================================================================================================
-//  common types
+// common types
 
 enum class KeyState
 {
@@ -32,7 +32,7 @@ enum Modifier : uint8_t
 
 
 //======================================================================================================================
-//  this is extracted into a separate class so it can be used inside individual widgets
+// this is extracted into a separate class so it can be used inside individual widgets
 
 class ModifierHandler {
 

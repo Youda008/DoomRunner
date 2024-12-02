@@ -16,7 +16,7 @@ namespace win {
 
 
 //======================================================================================================================
-//  registry
+// registry
 
 OptRegistryKey openRegistryKey( HKEY parentKeyHandle, const char * subKeyPath )
 {

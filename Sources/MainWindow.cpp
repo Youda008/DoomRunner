@@ -61,7 +61,7 @@ static constexpr int VarValueColumn = 1;
 
 
 //======================================================================================================================
-//  MainWindow-specific utils
+// MainWindow-specific utils
 
 template< typename Func >
 void MainWindow::addShortcut( const QKeySequence & keys, const Func & shortcutAction )
@@ -521,7 +521,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 
 
 //======================================================================================================================
-//  MainWindow
+// MainWindow
 
 MainWindow::MainWindow()
 :
@@ -1140,7 +1140,7 @@ MainWindow::~MainWindow()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  saving and loading user data
+// saving and loading user data
 
 bool MainWindow::saveOptions( const QString & filePath )
 {
@@ -1311,7 +1311,7 @@ bool MainWindow::loadCache( const QString & filePath )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  restoring stored options into the UI
+// restoring stored options into the UI
 
 void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 {
@@ -1905,7 +1905,7 @@ void MainWindow::restoreWindowGeometry( const WindowGeometry & geometry )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  dialogs
+// dialogs
 
 void MainWindow::runAboutDialog()
 {
@@ -2139,7 +2139,7 @@ void MainWindow::cloneConfig()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  item selection
+// item selection
 
 /// Automatically selects essential items (like engine of IWAD) marked as default, or those that are alone in their list.
 void MainWindow::autoselectItems()
@@ -2531,7 +2531,7 @@ void MainWindow::onMapDirUpdated( const QString & path )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  preset list manipulation
+// preset list manipulation
 
 static uint getHighestDefaultPresetNameIndex( const QList< Preset > & presetList )
 {
@@ -2718,7 +2718,7 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  mod list manipulation
+// mod list manipulation
 
 void MainWindow::modAdd()
 {
@@ -2932,7 +2932,7 @@ void MainWindow::onModsDropped( int dropRow, int count, DnDType )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  launch mode
+// launch mode
 
 void MainWindow::onModeChosen_Default()
 {
@@ -3112,7 +3112,7 @@ void MainWindow::onDemoFileSelected_replay( int demoIdx )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  gameplay options
+// gameplay options
 
 void MainWindow::onSkillSelected( int comboBoxIdx )
 {
@@ -3181,7 +3181,7 @@ void MainWindow::onAllowCheatsToggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  compatibility
+// compatibility
 
 void MainWindow::onCompatLevelSelected( int compatLevel )
 {
@@ -3196,7 +3196,7 @@ void MainWindow::onCompatLevelSelected( int compatLevel )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  multiplayer
+// multiplayer
 
 void MainWindow::onMultiplayerToggled( bool checked )
 {
@@ -3354,7 +3354,7 @@ void MainWindow::onFragLimitChanged( int fragLimit )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  alternative paths
+// alternative paths
 
 void MainWindow::updateAlternativeDirs( const Preset * selectedPreset )
 {
@@ -3550,7 +3550,7 @@ void MainWindow::browseAltScreenshotDir()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  video options
+// video options
 
 void MainWindow::onMonitorSelected( int index )
 {
@@ -3586,7 +3586,7 @@ void MainWindow::onShowFpsToggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  audio options
+// audio options
 
 void MainWindow::onNoSoundToggled( bool checked )
 {
@@ -3614,7 +3614,7 @@ void MainWindow::onNoMusicToggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  environment variables
+// environment variables
 
 void MainWindow::presetEnvVarAdd()
 {
@@ -3764,7 +3764,7 @@ void MainWindow::onGlobalEnvVarDataChanged( int row, int column )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  additional command line arguments
+// additional command line arguments
 
 void MainWindow::onPresetCmdArgsChanged( const QString & text )
 {
@@ -3784,7 +3784,7 @@ void MainWindow::onGlobalCmdArgsChanged( const QString & text )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  miscellaneous
+// miscellaneous
 
 void MainWindow::togglePathStyle( PathStyle style )
 {
@@ -3851,7 +3851,7 @@ void MainWindow::fillDerivedEngineInfo( DirectList< EngineInfo > & engines, bool
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  automatic list updates according to directory content
+// automatic list updates according to directory content
 
 // All lists must be updated with special care. In some widgets, when a selection is reset it calls our "item selected"
 // callback and that causes the command to regenerate. Which means on every update tick the command is changed back and
@@ -4102,7 +4102,7 @@ void MainWindow::updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  command export
+// command export
 
 void MainWindow::exportPresetToScript()
 {
@@ -4225,7 +4225,7 @@ void MainWindow::importPresetFromScript()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  launch command generation
+// launch command generation
 
 void MainWindow::updateLaunchCommand()
 {

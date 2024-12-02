@@ -27,7 +27,7 @@ namespace os {
 
 
 //======================================================================================================================
-//  Windows
+// Windows
 
 // I hate you Graph!!!
 
@@ -35,7 +35,7 @@ namespace os {
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  resources
+// resources
 
 class Resource {
 
@@ -140,7 +140,7 @@ struct LangInfo
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  logging helper
+// logging helper
 
 class LoggingExeReader : protected LoggingComponent {
 
@@ -169,7 +169,7 @@ class LoggingExeReader : protected LoggingComponent {
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  version info extraction
+// version info extraction
 
 Resource LoggingExeReader::getResource( HMODULE hExeModule, LPWSTR lpType )
 {
@@ -305,7 +305,7 @@ UncertainExeVersionInfo LoggingExeReader::readVersionInfo()
 
 
 //======================================================================================================================
-//  public API
+// public API
 
 UncertainExeVersionInfo readExeVersionInfo( [[maybe_unused]] const QString & filePath )
 {
@@ -321,7 +321,7 @@ FileInfoCache< ExeVersionInfo > g_cachedExeInfo( readExeVersionInfo );
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  serialization
+// serialization
 
 void ExeVersionInfo::serialize( QJsonObject & jsExeInfo ) const
 {

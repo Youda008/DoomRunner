@@ -18,7 +18,7 @@ namespace doom {
 
 
 //======================================================================================================================
-//  file type recognition
+// file type recognition
 
 const QString demoFileSuffix = "lmp";  // this seems to be universal across different engines
 
@@ -52,11 +52,11 @@ QStringList getModFileSuffixes()
 
 
 //======================================================================================================================
-//  known WAD info
+// known WAD info
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  known games
+// known games
 
 namespace game {
 
@@ -309,7 +309,7 @@ static const GameIdentification Harmony =
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  detection of known games from IWAD
+// detection of known games from IWAD
 
 template< size_t count >
 static bool containsAllOf( const QSet< QString > & set, const std::array< const char *, count > & elems )
@@ -505,7 +505,7 @@ GameIdentification identifyGame( const QSet< QString > & lumps )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  map names
+// map names
 
 QStringList getStandardMapNames( const QString & iwadFileName )
 {
@@ -530,7 +530,7 @@ QStringList getStandardMapNames( const QString & iwadFileName )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  starting maps
+// starting maps
 
 // fast lookup table that can be used for WADs whose name can be matched exactly
 static const QHash< QString, QString > startingMapsLookup =

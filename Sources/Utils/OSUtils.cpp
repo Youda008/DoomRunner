@@ -30,7 +30,7 @@ namespace os {
 
 
 //======================================================================================================================
-//  file types
+// file types
 
 #if IS_WINDOWS
 	const QString scriptFileSuffix = "*.bat";
@@ -41,7 +41,7 @@ namespace os {
 
 
 //======================================================================================================================
-//  standard directories
+// standard directories
 
 #if defined(FLATPAK_BUILD) && IS_WINDOWS
 	#error "Flatpak build on Windows is not supported"
@@ -692,7 +692,7 @@ ShellCommand getRunCommand(
 
 
 //======================================================================================================================
-//  graphical environment
+// graphical environment
 
 const QString & getLinuxDesktopEnv()
 {
@@ -721,7 +721,7 @@ QVector< MonitorInfo > listMonitors()
 
 
 //======================================================================================================================
-//  miscellaneous
+// miscellaneous
 
 inline constexpr bool OpenTargetDirectory = false;  ///< open directly the selected entry (the entry must be a directory)
 inline constexpr bool OpenParentAndSelect = true;   ///< open the parent directory of the entry and highlight the entry
@@ -836,7 +836,7 @@ bool openFileLocation( const QString & filePath )
 
 
 //======================================================================================================================
-//  Windows-specific
+// Windows-specific
 
 #if IS_WINDOWS
 namespace win {

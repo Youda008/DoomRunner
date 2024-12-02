@@ -12,7 +12,7 @@
 
 
 //======================================================================================================================
-//  static file dialog wrappers
+// static file dialog wrappers
 
 // workaround for some issues with less common Linux graphical environments
 static const QFileDialog::Options disableNativeDialogOnLinux( QFileDialog::Options options )

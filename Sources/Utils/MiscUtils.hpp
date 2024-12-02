@@ -22,7 +22,7 @@ class QLineEdit;
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  path verification
+// path verification
 
 /// Highlights a directory path in a QLineEdit if such directory doesn't exist.
 /** Returns true if the text was highlighted. */
@@ -207,7 +207,7 @@ class PathChecker {
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  other
+// other
 
 /// Makes the first letter of a string capital.
 inline QString & capitalize( QString & str )

@@ -19,7 +19,7 @@
 
 
 //======================================================================================================================
-//  displaying foreground errors
+// displaying foreground errors
 
 static const QString issuePageUrl = "https://github.com/Youda008/DoomRunner/issues";
 
@@ -53,7 +53,7 @@ void reportLogicError( QWidget * parent, const QString & title, const QString & 
 
 
 //======================================================================================================================
-//  logging background errors
+// logging background errors
 
 namespace impl {
 

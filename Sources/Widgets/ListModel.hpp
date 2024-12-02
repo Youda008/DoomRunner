@@ -85,7 +85,7 @@ class DropTarget {
 
 
 //======================================================================================================================
-//  support structs
+// support structs
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"  // std::optional sometimes makes false positive warnings
@@ -976,7 +976,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 
 //======================================================================================================================
-//  aliases
+// aliases
 
 template< typename Item > using ReadOnlyDirectListModel   = ReadOnlyListModel< DirectList< Item > >;
 template< typename Item > using ReadOnlyFilteredListModel = ReadOnlyListModel< FilteredList< Item > >;

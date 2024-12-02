@@ -25,7 +25,7 @@ namespace os {
 
 
 //======================================================================================================================
-//  file types
+// file types
 
 extern const QString scriptFileSuffix;
 
@@ -35,7 +35,7 @@ extern const QString shortcutFileSuffix;
 
 
 //======================================================================================================================
-//  standard directories and installation properties
+// standard directories and installation properties
 
 /// Returns the name of the OS user who started this process.
 const QString & getUserName();
@@ -156,7 +156,7 @@ ShellCommand getRunCommand(
 
 
 //======================================================================================================================
-//  graphical environment
+// graphical environment
 
 #if !IS_WINDOWS
 const QString & getLinuxDesktopEnv();
@@ -173,7 +173,7 @@ QVector< MonitorInfo > listMonitors();
 
 
 //======================================================================================================================
-//  miscellaneous
+// miscellaneous
 
 /// Opens a selected directory in a new File Explorer window.
 bool openDirectoryWindow( const QString & dirPath );
@@ -192,7 +192,7 @@ struct EnvVar
 
 
 //======================================================================================================================
-//  Windows-specific
+// Windows-specific
 
 #if IS_WINDOWS
 namespace win {

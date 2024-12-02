@@ -23,7 +23,7 @@
 
 
 //======================================================================================================================
-//  templates for arbitrary file info cache
+// templates for arbitrary file info cache
 
 enum class ReadStatus
 {

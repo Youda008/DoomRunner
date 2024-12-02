@@ -24,7 +24,7 @@
 
 
 //======================================================================================================================
-//  OS-specific defaults
+// OS-specific defaults
 
 #if IS_WINDOWS
 	constexpr PathStyle defaultPathStyle = PathStyle::Relative;
@@ -36,13 +36,13 @@
 
 
 //======================================================================================================================
-//  user data definition
+// user data definition
 
 // Constructors from QFileInfo are used in automatic list updates for initializing an element from a file-system entry.
 // getID() methods are used in automatic list updates for ensuring the same items remain selected.
 
 //----------------------------------------------------------------------------------------------------------------------
-//  files
+// files
 
 /// a ported Doom engine (source port) located somewhere on the disc
 struct Engine : public EditableListModelItem
@@ -101,7 +101,7 @@ struct Mod : public EditableListModelItem
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//  gameplay/compatibility options
+// gameplay/compatibility options
 
 enum LaunchMode
 {
@@ -211,7 +211,7 @@ struct CompatibilityOptions : public CompatibilityDetails  // inherited instead 
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//  other options
+// other options
 
 struct AlternativePaths
 {
@@ -251,7 +251,7 @@ struct GlobalOptions
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//  preset
+// preset
 
 struct Preset : public EditableListModelItem
 {
@@ -287,7 +287,7 @@ struct Preset : public EditableListModelItem
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//  global settings
+// global settings
 
 struct EngineSettings
 {
@@ -364,10 +364,10 @@ struct AppearanceSettings
 
 
 //======================================================================================================================
-//  derived data
+// derived data
 //
-//  Strictly-speaking, this does not belong here because this data is not user-specified but automatically determined.
-//  But it is related to the data above and it is used across multiple dialogs, so it is acceptable to be here.
+// Strictly-speaking, this does not belong here because this data is not user-specified but automatically determined.
+// But it is related to the data above and it is used across multiple dialogs, so it is acceptable to be here.
 
 // This combines user-defined and automatically determined engine information under a single struct for simpler processing.
 // Inheritance is used instead of composition, so that we can write engine.exeAppName() instead of engine.traits.exeAppName().

@@ -22,7 +22,7 @@ class QWidget;
 
 
 //======================================================================================================================
-//  displaying foreground errors that directly thwart features requested by the user
+// displaying foreground errors that directly thwart features requested by the user
 
 /// Reports an event that is not necessarily an error, but is worth noting. (example: no update available)
 void reportInformation( QWidget * parent, const QString & title, const QString & message );
@@ -38,7 +38,7 @@ void reportLogicError( QWidget * parent, const QString & title, const QString & 
 
 
 //======================================================================================================================
-//  logging background errors that don't directly impact features requested by the user
+// logging background errors that don't directly impact features requested by the user
 
 namespace impl {
 
@@ -158,7 +158,7 @@ class DummyLogStream
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  top-level logging API
+// top-level logging API
 
 /// Logs a debugging message into stderr (in debug builds only).
 inline auto logDebug( [[maybe_unused]] const char * componentName = nullptr )
@@ -214,7 +214,7 @@ inline auto printLogicError( const char * componentName = nullptr )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  logging helpers for simplifying logging even further
+// logging helpers for simplifying logging even further
 
 /// Abstract component that wants to log messages.
 /** Any class that inherits from this will be able to log without having to write component name everytime. */

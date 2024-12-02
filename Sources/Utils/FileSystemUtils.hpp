@@ -24,7 +24,7 @@ class PathConvertor;
 
 
 //======================================================================================================================
-//  general
+// general
 
 inline QString quoted( const QString & path )
 {
@@ -39,7 +39,7 @@ enum class PathStyle : uint8_t
 
 
 //======================================================================================================================
-//  general helper functions
+// general helper functions
 
 namespace fs {
 
@@ -219,7 +219,7 @@ QString updateFileSafely( const QString & filePath, const QByteArray & newConten
 
 
 //======================================================================================================================
-//  traversing directory content
+// traversing directory content
 
 namespace fs {
 

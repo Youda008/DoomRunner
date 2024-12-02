@@ -17,14 +17,14 @@ namespace wdg {
 
 
 //======================================================================================================================
-//  selection manipulation
+// selection manipulation
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  1D list view helpers
+// 1D list view helpers
 
 
-//  current item
+// current item
 
 int getCurrentItemIndex( QListView * view )
 {
@@ -45,7 +45,7 @@ void unsetCurrentItem( QListView * view )
 }
 
 
-//  selected items
+// selected items
 
 bool isSelectedIndex( QListView * view, int index )
 {
@@ -98,7 +98,7 @@ void deselectSelectedItems( QListView * view )
 }
 
 
-//  high-level control
+// high-level control
 
 void selectAndSetCurrentByIndex( QListView * view, int index )
 {
@@ -129,10 +129,10 @@ void selectSetCurrentAndScrollTo( QListView * view, int index )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  tree view helpers
+// tree view helpers
 
 
-//  current item
+// current item
 
 QModelIndex getCurrentItemIndex( QTreeView * view )
 {
@@ -151,7 +151,7 @@ void unsetCurrentItem( QTreeView * view )
 }
 
 
-//  selected items
+// selected items
 
 bool isSelectedIndex( QTreeView * view, const QModelIndex & index )
 {
@@ -213,7 +213,7 @@ void deselectSelectedItems( QTreeView * view )
 }
 
 
-//  high-level control
+// high-level control
 
 void selectAndSetCurrentByIndex( QTreeView * view, const QModelIndex & index )
 {
@@ -244,10 +244,10 @@ void selectSetCurrentAndScrollTo( QTreeView * view, const QModelIndex & index )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  row-oriented table view helpers
+// row-oriented table view helpers
 
 
-//  current item
+// current item
 
 int getCurrentRowIndex( QTableView * view )
 {
@@ -267,7 +267,7 @@ void unsetCurrentRow( QTableView * view )
 }
 
 
-//  selected items
+// selected items
 
 bool isSelectedRow( QTableView * view, int rowIndex )
 {
@@ -318,7 +318,7 @@ void deselectSelectedRows( QTableView * view )
 }
 
 
-//  high-level control
+// high-level control
 
 void selectAndSetCurrentRowByIndex( QTableView * view, int rowIndex )
 {
@@ -343,7 +343,7 @@ void chooseItemByIndex( QTableView * view, int index )
 
 
 //======================================================================================================================
-//  button actions
+// button actions
 
 
 bool editItemAtIndex( QListView * view, int index )
@@ -422,7 +422,7 @@ void swapTableRows( QTableWidget * widget, int row1, int row2 )
 
 
 //======================================================================================================================
-//  miscellaneous
+// miscellaneous
 
 
 void expandParentsOfNode( QTreeView * view, const QModelIndex & modelIindex )

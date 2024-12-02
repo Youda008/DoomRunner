@@ -18,7 +18,7 @@
 
 
 //======================================================================================================================
-//  JsonValueContext
+// JsonValueContext
 
 void JsonValueCtx::constructJsonPathRecursively( QString & path ) const
 {
@@ -50,7 +50,7 @@ QString JsonValueCtx::getJsonPath() const
 
 
 //======================================================================================================================
-//  JsonObjectCtx
+// JsonObjectCtx
 
 JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool showError ) const
 {
@@ -228,7 +228,7 @@ QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool 
 
 
 //======================================================================================================================
-//  JsonArrayCtx
+// JsonArrayCtx
 
 JsonObjectCtxProxy JsonArrayCtx::getObject( int index, bool showError ) const
 {
@@ -406,7 +406,7 @@ QString JsonArrayCtx::getString( int index, QString defaultVal, bool showError )
 
 
 //======================================================================================================================
-//  error handling
+// error handling
 
 static bool checkableMessageBox( QMessageBox::Icon icon, const QString & title, const QString & message )
 {
@@ -510,7 +510,7 @@ QString impl::ParsingContext::fileName() const
 
 
 //======================================================================================================================
-//  file writing helpers
+// file writing helpers
 
 #include "FileSystemUtils.hpp"
 

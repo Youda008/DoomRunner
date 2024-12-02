@@ -15,7 +15,7 @@
 
 
 //======================================================================================================================
-//  utils for Qt containers
+// utils for Qt containers
 
 template< typename Container1, typename Container2 >
 bool equal( const Container1 & cont1, const Container2 & cont2 )
@@ -87,7 +87,7 @@ class PointerIterator
 
 
 //======================================================================================================================
-//  span
+// span
 
 template< typename Type >
 class span

@@ -25,7 +25,7 @@ namespace doom {
 
 
 //======================================================================================================================
-//  implementation
+// implementation
 
 // logging helper
 class LoggingWadReader : protected LoggingComponent {
@@ -44,9 +44,9 @@ class LoggingWadReader : protected LoggingComponent {
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  WAD format parsing
+// WAD format parsing
 
-//  https://doomwiki.org/wiki/WAD
+// https://doomwiki.org/wiki/WAD
 
 /// section that every WAD file begins with
 struct WadHeader
@@ -267,7 +267,7 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 
 
 //======================================================================================================================
-//  public API
+// public API
 
 UncertainWadInfo readWadInfo( const QString & filePath )
 {
@@ -279,7 +279,7 @@ FileInfoCache< WadInfo > g_cachedWadInfo( readWadInfo );
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  serialization
+// serialization
 
 void WadInfo::serialize( QJsonObject & jsWadInfo ) const
 {

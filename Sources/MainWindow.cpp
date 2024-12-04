@@ -626,7 +626,7 @@ MainWindow::MainWindow()
 
 	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::onDemoFileChanged_record );
 
-	ui->compatLevelCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
+	ui->compatModeCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
 
 	// setup alternative path validators
 
@@ -665,7 +665,7 @@ MainWindow::MainWindow()
 	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::onAllowCheatsToggled );
 	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runGameOptsDialog );
 	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatOptsDialog );
-	connect( ui->compatLevelCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onCompatLevelSelected );
+	connect( ui->compatModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onCompatModeSelected );
 
 	// alternative paths
 	connect( ui->altConfigDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForConfigsToggled );
@@ -1553,7 +1553,7 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 				"Please select another one."
 			);
 			preset.selectedEnginePath.clear();
-			preset.compatOpts.compatLevel = -1;  // compat level is engine-specific so the previous level is no longer valid
+			preset.compatOpts.compatMode = -1;  // compat mode is engine-specific so the previous mode is no longer valid
 		}
 	}
 
@@ -1801,14 +1801,14 @@ void MainWindow::restoreGameplayOptions( const GameplayOptions & opts )
 
 void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts )
 {
-	int compatLevelIdx = opts.compatLevel + 1;  // first item is reserved for indicating no selection
-	if (compatLevelIdx >= ui->compatLevelCmbBox->count())
+	int compatModeIdx = opts.compatMode + 1;  // first item is reserved for indicating no selection
+	if (compatModeIdx >= ui->compatModeCmbBox->count())
 	{
 		// engine might have been removed, or its family was changed by the user
-		logLogicError() << "stored compat level ("<<compatLevelIdx<<") is out of bounds of the current combo-box content";
+		logLogicError() << "stored compat mode ("<<compatModeIdx<<") is out of bounds of the current combo-box content";
 		return;
 	}
-	ui->compatLevelCmbBox->setCurrentIndex( compatLevelIdx );
+	ui->compatModeCmbBox->setCurrentIndex( compatModeIdx );
 
 	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts );
 }
@@ -2282,7 +2282,7 @@ void MainWindow::onEngineSelected( int index )
 	updateConfigFilesFromDir();
 	updateSaveFilesFromDir();
 	updateDemoFilesFromDir();
-	updateCompatLevels();
+	updateCompatModes();
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3048,7 +3048,7 @@ void MainWindow::toggleOptionsSubwidgets( bool enabled )
 	ui->pistolStartChkBox->setEnabled( enabled );
 	ui->gameOptsBtn->setEnabled( enabled );
 	ui->compatOptsBtn->setEnabled( enabled );
-	ui->compatLevelCmbBox->setEnabled( enabled && lastCompLvlStyle != CompatLevelStyle::None );
+	ui->compatModeCmbBox->setEnabled( enabled && lastCompLvlStyle != CompatModeStyle::None );
 }
 
 void MainWindow::onMapChanged( const QString & mapName )
@@ -3183,12 +3183,12 @@ void MainWindow::onAllowCheatsToggled( bool checked )
 //----------------------------------------------------------------------------------------------------------------------
 // compatibility
 
-void MainWindow::onCompatLevelSelected( int compatLevel )
+void MainWindow::onCompatModeSelected( int compatMode )
 {
 	if (disableSelectionCallbacks)
 		return;
 
-	bool storageModified = STORE_COMPAT_OPTION( .compatLevel, compatLevel - 1 );  // first item is reserved for indicating no selection
+	bool storageModified = STORE_COMPAT_OPTION( .compatMode, compatMode - 1 );  // first item is reserved for indicating no selection
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3988,37 +3988,37 @@ void MainWindow::updateDemoFilesFromDir()
 	}
 }
 
-/// Updates the compat level combo-box according to the currently selected engine.
-void MainWindow::updateCompatLevels()
+/// Updates the compat mode combo-box according to the currently selected engine.
+void MainWindow::updateCompatModes()
 {
 	const EngineInfo * selectedEngine = getSelectedEngine();
-	CompatLevelStyle currentCompLvlStyle = selectedEngine ? selectedEngine->compatLevelStyle() : CompatLevelStyle::None;
+	CompatModeStyle currentCompLvlStyle = selectedEngine ? selectedEngine->compatModeStyle() : CompatModeStyle::None;
 
 	if (currentCompLvlStyle != lastCompLvlStyle)
 	{
 		disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
-		ui->compatLevelCmbBox->setCurrentIndex( -1 );
+		ui->compatModeCmbBox->setCurrentIndex( -1 );
 
-		// automatically initialize compat level combox fox according to the selected engine (its compat level options)
-		ui->compatLevelCmbBox->clear();
-		ui->compatLevelCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
-		if (currentCompLvlStyle != CompatLevelStyle::None)
+		// automatically initialize compat mode combox fox according to the selected engine (its compat mode options)
+		ui->compatModeCmbBox->clear();
+		ui->compatModeCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
+		if (currentCompLvlStyle != CompatModeStyle::None)
 		{
-			ui->compatLevelCmbBox->addItems( getCompatLevels( currentCompLvlStyle ) );
+			ui->compatModeCmbBox->addItems( getCompatModes( currentCompLvlStyle ) );
 		}
 
-		ui->compatLevelCmbBox->setCurrentIndex( 0 );
+		ui->compatModeCmbBox->setCurrentIndex( 0 );
 
 		disableSelectionCallbacks = false;
 
-		// available compat levels changed -> reset the compat level index, because the previous one is no longer valid
-		onCompatLevelSelected( 0 );
+		// available compat modes changed -> reset the compat mode index, because the previous one is no longer valid
+		onCompatModeSelected( 0 );
 
 		// keep the widget enabled only if the engine supports compatibility levels
 		LaunchMode launchMode = getLaunchModeFromUI();
-		ui->compatLevelCmbBox->setEnabled(
-			currentCompLvlStyle != CompatLevelStyle::None && launchMode != LoadSave && launchMode != ReplayDemo
+		ui->compatModeCmbBox->setEnabled(
+			currentCompLvlStyle != CompatModeStyle::None && launchMode != LoadSave && launchMode != ReplayDemo
 		);
 
 		lastCompLvlStyle = currentCompLvlStyle;
@@ -4460,8 +4460,8 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		cmd.arguments << "+dmflags3" << QString::number( activeGameOpts.dmflags3 );
 
 	const CompatibilityOptions & activeCompatOpts = activeCompatOptions();
-	if (ui->compatLevelCmbBox->isEnabled() && activeCompatOpts.compatLevel >= 0)
-		cmd.arguments << engine.getCompatLevelArgs( activeCompatOpts.compatLevel );
+	if (ui->compatModeCmbBox->isEnabled() && activeCompatOpts.compatMode >= 0)
+		cmd.arguments << engine.getCompatModeArgs( activeCompatOpts.compatMode );
 	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
 

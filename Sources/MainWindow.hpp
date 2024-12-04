@@ -121,7 +121,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onMonstersRespawnToggled( bool checked );
 	void onPistolStartToggled( bool checked );
 	void onAllowCheatsToggled( bool checked );
-	void onCompatLevelSelected( int compatLevel );
+	void onCompatModeSelected( int compatMode );
 
 	void onMultiplayerToggled( bool checked );
 	void onMultRoleSelected( int role );
@@ -235,7 +235,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateConfigFilesFromDir( const QString * configDir = nullptr );
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
-	void updateCompatLevels();
+	void updateCompatModes();
 	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
 
 	void showTxtDescriptionFor( const QString & filePath, const QString & contentType );
@@ -352,7 +352,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	PathRebaser engineConfigDirRebaser;   ///< path convertor set up to rebase relative paths from the current working dir to the engine's config dir and back
 	PathRebaser engineDataDirRebaser;     ///< path convertor set up to rebase relative paths from the current working dir to the engine's data dir and back
 
-	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
+	CompatModeStyle lastCompLvlStyle = CompatModeStyle::None;  ///< compat mode style of the engine that was selected the last time
 
 	QStringVec compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 

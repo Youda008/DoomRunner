@@ -205,7 +205,7 @@ struct CompatibilityDetails
 
 struct CompatibilityOptions : public CompatibilityDetails  // inherited instead of included to avoid long identifiers
 {
-	int compatLevel = -1;
+	int compatMode = -1;
 
 	void assign( const CompatibilityDetails & other ) { static_cast< CompatibilityDetails & >( *this ) = other; }
 };

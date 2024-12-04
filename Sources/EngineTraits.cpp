@@ -63,7 +63,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.saveFileSuffix = "zds",
 		.saveDirParam = "-savedir",
 		.mapParamStyle = MapParamStyle::Map,
-		.compLvlStyle = CompatLevelStyle::ZDoom,
+		.compModeStyle = CompatModeStyle::ZDoom,
 		.hasScreenshotDirParam = true,
 		.needsStdoutParam = IS_WINDOWS,
 	},
@@ -74,7 +74,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.saveFileSuffix = "dsg",
 		.saveDirParam = "-savedir",
 		.mapParamStyle = MapParamStyle::Warp,
-		.compLvlStyle = CompatLevelStyle::None,
+		.compModeStyle = CompatModeStyle::None,
 		.hasScreenshotDirParam = false,
 		.needsStdoutParam = false,
 	},
@@ -85,7 +85,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.saveFileSuffix = "dsg",
 		.saveDirParam = "-save",
 		.mapParamStyle = MapParamStyle::Warp,
-		.compLvlStyle = CompatLevelStyle::PrBoom,
+		.compModeStyle = CompatModeStyle::PrBoom,
 		.hasScreenshotDirParam = false,
 		.needsStdoutParam = false,
 	},
@@ -96,7 +96,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.saveFileSuffix = "dsg",
 		.saveDirParam = "-save",
 		.mapParamStyle = MapParamStyle::Warp,
-		.compLvlStyle = CompatLevelStyle::PrBoom,
+		.compModeStyle = CompatModeStyle::PrBoom,
 		.hasScreenshotDirParam = false,
 		.needsStdoutParam = false,
 	},
@@ -109,7 +109,7 @@ static const QHash< QString, int > startingMonitorIndexes =
 	{ "zdoom", 1 },
 };
 
-static const QStringList zdoomCompatLevels =
+static const QStringList zdoomCompatModes =
 {
 	"0 - Default",        // All compatibility options are turned off.
 	"1 - Doom",           // Enables a set of options that should allow nearly all maps made for vanilla Doom to work in ZDoom:
@@ -155,23 +155,23 @@ static const QStringList prboomCompatLevels =
 	"21 - MBF21",
 };
 
-static const QStringList noCompatLevels = {};
+static const QStringList noCompatModes = {};
 
 
 //======================================================================================================================
 // code
 
 //----------------------------------------------------------------------------------------------------------------------
-// compat levels
+// compat modes/levels
 
-const QStringList & getCompatLevels( CompatLevelStyle style )
+const QStringList & getCompatModes( CompatModeStyle style )
 {
-	if (style == CompatLevelStyle::ZDoom)
-		return zdoomCompatLevels;
-	else if (style == CompatLevelStyle::PrBoom)
+	if (style == CompatModeStyle::ZDoom)
+		return zdoomCompatModes;
+	else if (style == CompatModeStyle::PrBoom)
 		return prboomCompatLevels;
 	else
-		return noCompatLevels;
+		return noCompatModes;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -506,18 +506,18 @@ QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 	}
 }
 
-QStringVec EngineTraits::getCompatLevelArgs( int compatLevel ) const
+QStringVec EngineTraits::getCompatModeArgs( int compatMode ) const
 {
 	assert( isInitialized() );
 
 	// Properly working -compatmode is present only in GZDoom 4.8.0+,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
 	if (isBasedOnGZDoomVersionOrLater({4,8,0}))
-		return { "-compatmode", QString::number( compatLevel ) };
-	else if (_familyTraits->compLvlStyle == CompatLevelStyle::ZDoom)
-		return { "+compatmode", QString::number( compatLevel ) };
-	else if (_familyTraits->compLvlStyle == CompatLevelStyle::PrBoom)
-		return { "-complevel", QString::number( compatLevel ) };
+		return { "-compatmode", QString::number( compatMode ) };
+	else if (_familyTraits->compModeStyle == CompatModeStyle::ZDoom)
+		return { "+compatmode", QString::number( compatMode ) };
+	else if (_familyTraits->compModeStyle == CompatModeStyle::PrBoom)
+		return { "-complevel", QString::number( compatMode ) };
 	else
 		return {};
 }

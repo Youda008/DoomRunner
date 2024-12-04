@@ -32,14 +32,14 @@ enum class MapParamStyle
 
 //----------------------------------------------------------------------------------------------------------------------
 
-enum class CompatLevelStyle
+enum class CompatModeStyle
 {
 	None,
 	ZDoom,   // +compatmode  https://zdoom.org/wiki/CVARs:Configuration#compatmode
 	PrBoom,  // -complevel   https://doom.fandom.com/wiki/PrBoom#Compatibility_modes_and_settings
 };
 
-const QStringList & getCompatLevels( CompatLevelStyle style );
+const QStringList & getCompatModes( CompatModeStyle style );
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ struct EngineFamilyTraits
 	const char * saveFileSuffix;    ///< which file name suffix the engine uses for its save files
 	const char * saveDirParam;      ///< which command line parameter is used for overriding the save directory
 	MapParamStyle mapParamStyle;    ///< which command line parameter is used for choosing the starting map
-	CompatLevelStyle compLvlStyle;  ///< which command line parameter is used for choosing the compatibility mode
+	CompatModeStyle compModeStyle;  ///< which command line parameter is used for choosing the compatibility mode
 	bool hasScreenshotDirParam;     ///< whether the screenshot directory override parameter +screenshot_dir is supported
 	bool needsStdoutParam;          ///< whether the engine needs -stdout option to send its output to stdout where it can be read by this launcher
 };
@@ -143,7 +143,7 @@ class EngineTraits {
 	bool hasScreenshotDirParam() const          { assert( _familyTraits ); return _familyTraits->hasScreenshotDirParam; }
 
 	bool supportsCustomMapNames() const         { assert( _familyTraits ); return _familyTraits->mapParamStyle == MapParamStyle::Map; }
-	CompatLevelStyle compatLevelStyle() const   { assert( _familyTraits ); return _familyTraits->compLvlStyle; }
+	CompatModeStyle compatModeStyle() const     { assert( _familyTraits ); return _familyTraits->compModeStyle; }
 
 	bool needsStdoutParam() const               { assert( _familyTraits ); return _familyTraits->needsStdoutParam; }
 
@@ -151,7 +151,7 @@ class EngineTraits {
 	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;
 
 	// generates either "-complevel x" or "+compatmode x" depending on the engine capabilities
-	QStringVec getCompatLevelArgs( int compatLevel ) const;
+	QStringVec getCompatModeArgs( int compatMode ) const;
 
 	// some engines index monitors from 1 and others from 0
 	QString getCmdMonitorIndex( int ownIndex ) const;

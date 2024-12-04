@@ -1376,7 +1376,7 @@
                <item>
                 <layout class="QHBoxLayout" name="hLayout_compatLevel">
                  <item>
-                  <widget class="QLabel" name="compatLevelLabel">
+                  <widget class="QLabel" name="compatModeLabel">
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;either &lt;span style=&quot; font-weight:600;&quot;&gt;-complevel&lt;/span&gt; or &lt;span style=&quot; font-weight:600;&quot;&gt;+compatmode&lt;/span&gt; depending on the engine&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
@@ -1386,7 +1386,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="compatLevelCmbBox">
+                  <widget class="QComboBox" name="compatModeCmbBox">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>

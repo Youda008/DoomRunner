@@ -374,8 +374,8 @@ struct AppearanceSettings
 struct EngineInfo : public Engine, public EngineTraits
 {
 	using Engine::Engine;
-	EngineInfo( const Engine & engine ) { static_cast< Engine & >( *this ) = engine; }
-	EngineInfo( Engine && engine )      { static_cast< Engine & >( *this ) = std::move( engine ); }
+	EngineInfo( const Engine & engine )       { static_cast< Engine & >( *this ) = engine; }
+	EngineInfo( Engine && engine ) noexcept   { static_cast< Engine & >( *this ) = std::move( engine ); }
 
 	QString getDefaultSaveDir( const QString & IWADPath = {} ) const
 	{

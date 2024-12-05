@@ -563,14 +563,11 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-            <property name="minimumSize">
-             <size>
-              <width>171</width>
-              <height>17</height>
-             </size>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Additional command line arguments for this preset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Additional command line arguments [preset]</string>
+             <string>Additional arguments [preset]</string>
             </property>
            </widget>
           </item>
@@ -2097,19 +2094,29 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>171</width>
-          <height>17</height>
-         </size>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Additional command line arguments&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Additional command line arguments [global]</string>
+         <string>Additional arguments [global]</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QLineEdit" name="globalCmdArgsLine"/>
+      </item>
+      <item>
+       <widget class="QLabel" name="cmdPrefixLabel">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Prepend the launch command with this.&lt;/p&gt;&lt;p&gt;Intended for launching from various sandbox environments or application managers.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Prepend with</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="cmdPrefixLine"/>
       </item>
      </layout>
     </item>
@@ -2122,12 +2129,6 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>110</width>
-          <height>17</height>
-         </size>
         </property>
         <property name="text">
          <string>Final launch command</string>

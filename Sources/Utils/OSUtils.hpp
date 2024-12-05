@@ -151,7 +151,8 @@ struct ShellCommand
   * \param dirsToBeAccessed Directories to which the executable will need a read access.
   *                         Required to setup permissions for a sandbox environment. */
 ShellCommand getRunCommand(
-	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, const QStringVec & dirsToBeAccessed = {}
+	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, bool forceExeName,
+	const QStringVec & dirsToBeAccessed = {}
 );
 
 

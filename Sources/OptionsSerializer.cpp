@@ -399,6 +399,7 @@ static QJsonObject serialize( const GlobalOptions & opts )
 	optsJs["use_preset_name_as_save_dir"] = opts.usePresetNameAsSaveDir;
 	optsJs["use_preset_name_as_screenshot_dir"] = opts.usePresetNameAsScreenshotDir;
 	optsJs["additional_args"] = opts.cmdArgs;
+	optsJs["cmd_prefix"] = opts.cmdPrefix;
 	optsJs["env_vars"] = serialize( opts.envVars );
 
 	return optsJs;
@@ -423,6 +424,7 @@ static void deserialize( const JsonObjectCtx & optsJs, GlobalOptions & opts )
 	}
 
 	opts.cmdArgs = optsJs.getString( "additional_args" );
+	opts.cmdPrefix = optsJs.getString( "cmd_prefix" );
 	if (JsonObjectCtx jsEnvVars = optsJs.getObject( "env_vars" ))
 		deserialize( jsEnvVars, opts.envVars );
 }

@@ -694,6 +694,7 @@ MainWindow::MainWindow()
 
 	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onPresetCmdArgsChanged );
 	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onGlobalCmdArgsChanged );
+	connect( ui->cmdPrefixLine, &QLineEdit::textChanged, this, &thisClass::onCmdPrefixChanged );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
 }
 
@@ -1845,6 +1846,7 @@ void MainWindow::restoreGlobalOptions( const GlobalOptions & opts )
 	ui->altScreenshotDirPresetChkBox->setChecked( opts.usePresetNameAsScreenshotDir );
 
 	ui->globalCmdArgsLine->setText( opts.cmdArgs );
+	ui->cmdPrefixLine->setText( opts.cmdPrefix );
 
 	restoreEnvVars( opts.envVars, ui->globalEnvVarTable );
 }
@@ -3782,6 +3784,14 @@ void MainWindow::onGlobalCmdArgsChanged( const QString & text )
 	updateLaunchCommand();
 }
 
+void MainWindow::onCmdPrefixChanged( const QString & text )
+{
+	/*bool storageModified =*/ STORE_GLOBAL_OPTION( .cmdPrefix, text );
+
+	//scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 // miscellaneous
@@ -4272,6 +4282,29 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
+static void appendCustomArguments( QStringVec & args, const QString & customArgsStr, bool quotePaths )
+{
+	auto splitArgs = splitCommandLineArguments( customArgsStr );
+	for (auto & arg : splitArgs)
+	{
+		if (quotePaths && arg.wasQuoted)
+			args << quoted( arg.str );
+		else
+			args << std::move( arg.str );
+	}
+};
+
+static void prependCommandWith( os::ShellCommand & cmd, const QString & cmdPrefix, bool quotePaths )
+{
+	QStringVec cmdParts;
+	appendCustomArguments( cmdParts, cmdPrefix, quotePaths );
+	cmdParts << std::move( cmd.executable );
+	cmdParts << std::move( cmd.arguments );
+
+	cmd.executable = cmdParts.takeFirst();
+	cmd.arguments = std::move( cmdParts );
+}
+
 os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 {
 	os::ShellCommand cmd;
@@ -4284,6 +4317,8 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	// Checks if the required files or directories exist and displays error message if requested.
 	PathChecker p( this, opts.verifyPaths );
 
+	QString cmdPrefixStr = ui->cmdPrefixLine->text();
+
 	//-- engine --------------------------------------------------------------------
 
 	const EngineInfo * selectedEngine = getSelectedEngine();
@@ -4294,11 +4329,16 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 	const EngineInfo & engine = *selectedEngine;  // non-const so that we can change color of invalid paths
 
-	{
-		p.checkItemFilePath( engine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
+	p.checkItemFilePath( engine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
-		// get the beginning of the launch command based on OS and installation type
-		cmd = os::getRunCommand( engine.executablePath, parentDirRebaser, getDirsToBeAccessed() );
+	// get the beginning of the launch command based on OS and installation type
+	cmd = os::getRunCommand( engine.executablePath, parentDirRebaser, !cmdPrefixStr.isEmpty(), getDirsToBeAccessed() );
+
+	//-- command prefix ------------------------------------------------------------
+
+	if (!cmdPrefixStr.isEmpty())
+	{
+		prependCommandWith( cmd, cmdPrefixStr, opts.quotePaths );
 	}
 
 	//-- engine's config -----------------------------------------------------------
@@ -4344,18 +4384,6 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		}
 	};
 
-	auto appendCustomArguments = [&]( QStringVec & args, const QString & customArgsStr )
-	{
-		auto splitArgs = splitCommandLineArguments( customArgsStr );
-		for (const auto & arg : splitArgs)
-		{
-			if (opts.quotePaths && arg.wasQuoted)
-				args << quoted( arg.str );
-			else
-				args << arg.str;
-		}
-	};
-
 	// map files
 	forEachSelectedMapPack( [&]( const QString & mapFilePath )
 	{
@@ -4369,7 +4397,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		if (!mod.isSeparator && mod.checked)
 		{
 			if (mod.isCmdArg) {  // this is not a file but a custom command line argument
-				appendCustomArguments( modArguments, mod.fileName );  // the fileName holds the argument value
+				appendCustomArguments( modArguments, mod.fileName, opts.quotePaths );  // the fileName holds the argument value
 			} else {
 				p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
 				addFileAccordingToSuffix( mod.path );
@@ -4541,10 +4569,10 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	//-- additional custom command line arguments ----------------------------------
 
 	if (!ui->globalCmdArgsLine->text().isEmpty())
-		appendCustomArguments( cmd.arguments, ui->globalCmdArgsLine->text() );
+		appendCustomArguments( cmd.arguments, ui->globalCmdArgsLine->text(), opts.quotePaths );
 
 	if (!ui->presetCmdArgsLine->text().isEmpty())
-		appendCustomArguments( cmd.arguments, ui->presetCmdArgsLine->text() );
+		appendCustomArguments( cmd.arguments, ui->presetCmdArgsLine->text(), opts.quotePaths );
 
 	//------------------------------------------------------------------------------
 

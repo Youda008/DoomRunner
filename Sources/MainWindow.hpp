@@ -167,6 +167,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void onPresetCmdArgsChanged( const QString & text );
 	void onGlobalCmdArgsChanged( const QString & text );
+	void onCmdPrefixChanged( const QString & text );
 
 	void launch();
 

@@ -247,6 +247,7 @@ struct GlobalOptions
 	bool usePresetNameAsSaveDir = false;
 	bool usePresetNameAsScreenshotDir = false;
 	QString cmdArgs;
+	QString cmdPrefix;
 	EnvVars envVars;
 };
 

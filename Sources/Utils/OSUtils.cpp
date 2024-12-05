@@ -625,7 +625,8 @@ inline static QString fixExePath( QString exePath )
 }
 
 ShellCommand getRunCommand(
-	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, const QStringVec & dirsToBeAccessed
+	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, bool forceExeName,
+	const QStringVec & dirsToBeAccessed
 ){
 	QStringVec cmdParts, extraPermissions;
 
@@ -671,7 +672,7 @@ ShellCommand getRunCommand(
 		}
 		cmdParts << sandboxEnv.appName;
 	}
-	else if (isInSearchPath( executablePath ))
+	else if (forceExeName || isInSearchPath( executablePath ))
 	{
 		// If it's in a search path (C:\Windows\System32, /usr/bin, ...)
 		// it should be (and sometimes must be) started directly by using only its name.

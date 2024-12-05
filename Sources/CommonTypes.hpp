@@ -29,6 +29,16 @@ class QStringVec : public QVector< QString >
 	QString join( QChar delimiter ) const;
 };
 
+// there is no overload for QVector && in Qt
+template< typename Elem >
+QVector< Elem > & operator<<( QVector< Elem > & destVec, QVector< Elem > && vecToAppend )
+{
+	for (auto & elem : vecToAppend)
+	{
+		destVec.append( std::move(elem) );
+	}
+}
+
 QTextStream & operator<<( QTextStream & stream, const QStringVec & vec );
 
 

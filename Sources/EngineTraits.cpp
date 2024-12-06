@@ -25,6 +25,7 @@ static const char * const engineFamilyStrings [] =
 	"PrBoom",
 	"MBF",
 	"ChocolateDoom",
+	"EDGE",
 };
 static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd), "Please update this table too" );
 
@@ -52,7 +53,9 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 	{ "crispy-hexen",      EngineFamily::ChocolateDoom },
 	{ "doomretro",         EngineFamily::ChocolateDoom },
 	{ "strife-ve",         EngineFamily::ChocolateDoom },
-	// TODO: add all the EDGE ports
+	{ "edge",              EngineFamily::EDGE },
+	{ "3dge",              EngineFamily::EDGE },
+	{ "edge-classic",      EngineFamily::EDGE },
 };
 
 static const EngineFamilyTraits engineFamilyTraits [] =
@@ -97,6 +100,17 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.saveDirParam = "-save",
 		.mapParamStyle = MapParamStyle::Warp,
 		.compModeStyle = CompatModeStyle::PrBoom,
+		.hasScreenshotDirParam = false,
+		.needsStdoutParam = false,
+	},
+
+	//EDGE
+	{
+		.configFileSuffix = "cfg",
+		.saveFileSuffix = "esg",  // EDGE stores saves completely differently than all the other engines, but screw it
+		.saveDirParam = "-savedir",  // not tested, probably doesn't work
+		.mapParamStyle = MapParamStyle::Warp,
+		.compModeStyle = CompatModeStyle::None,
 		.hasScreenshotDirParam = false,
 		.needsStdoutParam = false,
 	},
@@ -215,6 +229,10 @@ EngineFamily EngineTraits::guessEngineFamily() const
 	auto iter = knownEngineFamilies.find( normalizedName() );
 	if (iter != knownEngineFamilies.end())
 		return iter.value();
+	// Of course there has to be an exception that does it differently than everybody else for no reason.
+	// Who the hell thinks that adding version number to the executable file name is a good idea?!
+	else if (normalizedName().startsWith("edge"))  // example: "edge135"
+		return EngineFamily::EDGE;
 	else
 		return EngineFamily::ZDoom;
 }
@@ -386,6 +404,10 @@ QString EngineTraits::getCommonSaveSubdir() const
 		{
 			saveSubdirBase = "savegames";
 		}
+	}
+	else if (_family == EngineFamily::EDGE)
+	{
+		saveSubdirBase = "savegame";
 	}
 
 	return saveSubdirBase;

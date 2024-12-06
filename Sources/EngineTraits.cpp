@@ -43,7 +43,11 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 	{ "eternity",         EngineFamily::MBF },
 	{ "woof",             EngineFamily::MBF },
 	{ "chocolate-doom",   EngineFamily::ChocolateDoom },
+	{ "chocolate-heretic",EngineFamily::ChocolateDoom },
+	{ "chocolate-hexen",  EngineFamily::ChocolateDoom },
 	{ "crispy-doom",      EngineFamily::ChocolateDoom },
+	{ "crispy-heretic",   EngineFamily::ChocolateDoom },
+	{ "crispy-hexen",     EngineFamily::ChocolateDoom },
 	{ "doomretro",        EngineFamily::ChocolateDoom },
 	{ "strife-ve",        EngineFamily::ChocolateDoom },
 	// TODO: add all the EDGE ports

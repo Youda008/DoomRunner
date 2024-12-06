@@ -451,6 +451,8 @@ static QJsonObject serialize( const Preset & preset, const StorageSettings & set
 
 	presetJs["mods"] = serializeList( preset.mods );
 
+	presetJs["load_maps_after_mods"] = preset.loadMapsAfterMods;
+
 	// options
 
 	if (settings.launchOptsStorage == StoreToPreset)
@@ -527,6 +529,8 @@ static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const 
 			preset.mods.append( std::move( mod ) );
 		}
 	}
+
+	preset.loadMapsAfterMods = presetJs.getBool( "load_maps_after_mods", preset.loadMapsAfterMods );
 
 	// options
 

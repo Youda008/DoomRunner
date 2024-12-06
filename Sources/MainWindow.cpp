@@ -866,10 +866,12 @@ void MainWindow::setupModList()
 	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
+	connect( ui->mapsAfterModsChkBox, &QCheckBox::toggled, this, &thisClass::onMapsAfterModsToggled );
+
 	// setup icons
 	ui->modListView->enableTogglingIcons();  // allow the icons to be toggled via context-menu
 	ui->modListView->toggleIcons( true );  // we need to do this instead of modModel.toggleIcons() in order to update the action text
-	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::modToggleIcons );
+	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::onModIconsToggled );
 }
 
 void MainWindow::setupEnvVarLists()
@@ -1491,6 +1493,8 @@ void MainWindow::restorePreset( int presetIdx )
 	// because it's done asynchronously in a separate thread. In that case this needs to be called again
 	// in a callback connected to QFileSystem event, when the mapModel is finally populated.
 	restoreSelectedMapPacks( preset );
+
+	ui->mapsAfterModsChkBox->setChecked( preset.loadMapsAfterMods );
 
 	if (settings.launchOptsStorage == StoreToPreset)
 		restoreLaunchAndMultOptions( preset.launchOpts, preset.multOpts );  // this clears items that are invalid
@@ -2898,7 +2902,15 @@ void MainWindow::modInsertSeparator()
 	scheduleSavingOptions();
 }
 
-void MainWindow::modToggleIcons()
+void MainWindow::onMapsAfterModsToggled( bool checked )
+{
+	bool storageModified = STORE_PRESET_OPTION( .loadMapsAfterMods, checked );
+
+	scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onModIconsToggled()
 {
 	modSettings.showIcons = modModel.areIconsEnabled();
 
@@ -4366,54 +4378,65 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	// But the user is allowed to intersperse the regular files with deh/bex files or custom cmd arguments.
 	// So we must somehow build an ordered sequence of mod files and custom arguments in which all the regular files are
 	// grouped together, and the easiest option seems to be by using a placeholder item.
-
-	QStringVec modArguments;
-	QStringVec fileList;
-
-	auto addFileAccordingToSuffix = [&]( const QString & filePath )
 	{
-		QString suffix = QFileInfo( filePath ).suffix().toLower();
-		if (suffix == "deh" || suffix == "hhe") {
-			modArguments << "-deh" << engineDirRebaser.makeRebasedCmdPath( filePath );
-		} else if (suffix == "bex") {
-			modArguments << "-bex" << engineDirRebaser.makeRebasedCmdPath( filePath );
-		} else {
-			if (fileList.isEmpty())
-				modArguments << "-file" << "<file_list>";  // insert placeholder where all the files will be together
-			fileList.append( engineDirRebaser.makeRebasedCmdPath( filePath ) );
-		}
-	};
+		QStringVec fileArgs;
+		bool placeholderPlaced = false;
 
-	// map files
-	forEachSelectedMapPack( [&]( const QString & mapFilePath )
-	{
-		p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
-		addFileAccordingToSuffix( mapFilePath );
-	});
-
-	// mod files
-	for (const Mod & mod : modModel)
-	{
-		if (!mod.isSeparator && mod.checked)
+		auto addFileAccordingToSuffix = [&]( QStringVec & fileList, const QString & filePath )
 		{
-			if (mod.isCmdArg) {  // this is not a file but a custom command line argument
-				appendCustomArguments( modArguments, mod.fileName, opts.quotePaths );  // the fileName holds the argument value
+			QString suffix = QFileInfo( filePath ).suffix().toLower();
+			if (suffix == "deh" || suffix == "hhe") {
+				fileArgs << "-deh" << engineDirRebaser.makeRebasedCmdPath( filePath );
+			} else if (suffix == "bex") {
+				fileArgs << "-bex" << engineDirRebaser.makeRebasedCmdPath( filePath );
 			} else {
-				p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
-				addFileAccordingToSuffix( mod.path );
+				if (!placeholderPlaced) {
+					fileArgs << "-file" << "<files>";  // insert placeholder where all the files will be together
+					placeholderPlaced = true;
+				}
+				fileList.append( engineDirRebaser.makeRebasedCmdPath( filePath ) );
+			}
+		};
+
+		QStringVec mapFiles;
+		forEachSelectedMapPack( [&]( const QString & mapFilePath )
+		{
+			p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
+			addFileAccordingToSuffix( mapFiles, mapFilePath );
+		});
+
+		QStringVec modFiles;
+		for (const Mod & mod : modModel)
+		{
+			if (!mod.isSeparator && mod.checked)
+			{
+				if (mod.isCmdArg) {  // this is not a file but a custom command line argument
+					appendCustomArguments( fileArgs, mod.fileName, opts.quotePaths );  // the fileName holds the argument value
+				} else {
+					p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
+					addFileAccordingToSuffix( modFiles, mod.path );
+				}
 			}
 		}
-	}
 
-	// output the final sequence to the cmd.arguments
-	for (QString & modArgument : modArguments)
-	{
-		if (modArgument == "<file_list>") {
-			// replace the placeholder with the actual list
-			for (QString & filePath : fileList)
-				cmd.arguments << std::move(filePath);
-		} else {
-			cmd.arguments << std::move(modArgument);
+		// output the final sequence to the cmd.arguments
+		for (QString & argument : fileArgs)
+		{
+			if (argument == "<files>")
+			{
+				// replace the placeholder with the actual list
+				if (ui->mapsAfterModsChkBox->isChecked()) {
+					cmd.arguments << std::move( modFiles );
+					cmd.arguments << std::move( mapFiles );
+				} else {
+					cmd.arguments << std::move( mapFiles );
+					cmd.arguments << std::move( modFiles );
+				}
+			}
+			else
+			{
+				cmd.arguments << std::move( argument );
+			}
 		}
 	}
 

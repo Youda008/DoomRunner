@@ -263,6 +263,7 @@ struct Preset : public EditableListModelItem
 	QString selectedIWAD;   // we store the IWAD by path instead of index, so that it doesn't break when user reorders them
 	QStringVec selectedMapPacks;
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
+	bool loadMapsAfterMods = false;
 
 	LaunchOptions launchOpts;
 	MultiplayerOptions multOpts;

@@ -100,7 +100,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modMoveUp();
 	void modMoveDown();
 	void modInsertSeparator();
-	void modToggleIcons();
+	void onMapsAfterModsToggled( bool checked );
+	void onModIconsToggled();
 	void onModsDropped( int row, int count, DnDType type );
 
 	void onModeChosen_Default();

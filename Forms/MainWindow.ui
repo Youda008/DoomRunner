@@ -390,6 +390,13 @@
                 </widget>
                </item>
                <item>
+                <widget class="QCheckBox" name="mapsAfterModsChkBox">
+                 <property name="text">
+                  <string>load map files after mod files</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <layout class="QHBoxLayout" name="hLayout_modButtons">
                  <item>
                   <widget class="QToolButton" name="modBtnAdd">

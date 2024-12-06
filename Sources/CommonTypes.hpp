@@ -37,6 +37,7 @@ QVector< Elem > & operator<<( QVector< Elem > & destVec, QVector< Elem > && vecT
 	{
 		destVec.append( std::move(elem) );
 	}
+	return destVec;
 }
 
 QTextStream & operator<<( QTextStream & stream, const QStringVec & vec );

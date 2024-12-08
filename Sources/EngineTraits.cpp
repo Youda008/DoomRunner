@@ -342,7 +342,7 @@ QString EngineTraits::getDefaultScreenshotDir() const
 
 	QString screenshotDir = getDefaultDataDir();
 
-	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableInstallation())  // only new non-portable GZDoom
+	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableZDoom())  // only new non-portable GZDoom
 	{
 		screenshotDir += "/screenshots";
 	}

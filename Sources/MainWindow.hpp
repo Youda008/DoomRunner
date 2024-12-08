@@ -28,8 +28,9 @@ class QItemSelection;
 class QComboBox;
 class QLineEdit;
 class QShortcut;
+
 class JsonDocumentCtx;
-class OptionsToLoad;
+struct OptionsToLoad;
 
 namespace Ui {
 	class MainWindow;

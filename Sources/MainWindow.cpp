@@ -2728,7 +2728,7 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 
 void MainWindow::modAdd()
 {
-	QStringList paths = DialogWithPaths::browseFiles( this, "mod file", modSettings.dir,
+	QStringList paths = DialogWithPaths::browseFiles( this, "mod file", lastUsedDir,
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ "All files (*)"
@@ -2757,7 +2757,7 @@ void MainWindow::modAdd()
 
 void MainWindow::modAddDir()
 {
-	QString path = DialogWithPaths::browseDir( this, "of the mod", modSettings.dir );
+	QString path = DialogWithPaths::browseDir( this, "of the mod", lastUsedDir );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 

@@ -767,7 +767,7 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 				if (!PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ))
 					highlightInvalidListItem( engine );
 
-				opts.engines.append( std::move( engine ) );  // populates only Engine fields, leaves other EngineInfo fields empty
+				opts.engines.append( EngineInfo( std::move(engine) ) );  // populates only Engine fields, leaves other EngineInfo fields empty
 			}
 		}
 	}

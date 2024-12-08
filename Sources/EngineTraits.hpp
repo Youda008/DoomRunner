@@ -82,6 +82,19 @@ class EngineTraits {
 
  public:
 
+ #ifdef __GNUC__
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"  // std::optional sometimes makes false positive warnings
+ #endif
+	EngineTraits() = default;
+	EngineTraits( const EngineTraits & ) = default;
+	EngineTraits( EngineTraits && ) = default;
+	EngineTraits & operator=( const EngineTraits & ) = default;
+	EngineTraits & operator=( EngineTraits && ) = default;
+ #ifdef __GNUC__
+  #pragma GCC diagnostic pop
+ #endif
+
 	// initialization
 
 	/// Attempts to auto-detect engine traits from a given executable.

@@ -156,7 +156,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsOpts, OptionsToLoad & opt
 				if (!PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Setup." ))
 					highlightInvalidListItem( engine );
 
-				opts.engines.append( std::move( engine ) );
+				opts.engines.append( EngineInfo( std::move(engine) ) );
 			}
 		}
 	}

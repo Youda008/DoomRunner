@@ -7,3 +7,4 @@ Type=Application
 Categories=Game
 X-Desktop-File-Install-Version=0.26
 Keywords=first;person;shooter;launcher;
+StartupNotify=true

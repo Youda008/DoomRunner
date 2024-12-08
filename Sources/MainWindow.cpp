@@ -3331,10 +3331,14 @@ void MainWindow::onPlayerCountChanged( int count )
 
 void MainWindow::onTeamDamageChanged( double damage )
 {
- #pragma GCC diagnostic push
- #pragma GCC diagnostic ignored "-Wfloat-equal"
+ #ifdef __GNUC__
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wfloat-equal"
+ #endif
 	/*bool storageModified =*/ STORE_MULT_OPTION( .teamDamage, damage );
- #pragma GCC diagnostic pop
+ #ifdef __GNUC__
+  #pragma GCC diagnostic pop
+ #endif
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();

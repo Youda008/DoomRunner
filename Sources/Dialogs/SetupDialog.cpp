@@ -23,7 +23,7 @@
 
 
 //======================================================================================================================
-//  SetupDialog
+// SetupDialog
 
 SetupDialog::SetupDialog(
 	QWidget * parent,
@@ -54,6 +54,12 @@ SetupDialog::SetupDialog(
 	ui->setupUi( this );
 
 	lastUsedDir = iwadSettings.dir;
+
+	// setup input path validators
+
+	setPathValidator( ui->iwadDirLine );
+	setPathValidator( ui->mapDirLine );
+	setPathValidator( ui->modDirLine );
 
 	// setup list views
 
@@ -146,6 +152,7 @@ void SetupDialog::setupEngineList()
 	ui->engineListView->toggleIntraWidgetDragAndDrop( true );
 	ui->engineListView->toggleInterWidgetDragAndDrop( false );
 	ui->engineListView->toggleExternalFileDragAndDrop( true );
+	connect( ui->engineListView, &EditableListView::itemsDropped, this, &thisClass::onEnginesDropped );
 
 	// set reaction to clicks inside the view
 	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::editEngine );
@@ -239,7 +246,7 @@ SetupDialog::~SetupDialog()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  local utils
+// local utils
 
 template< typename ListModel >
 void setSelectedItemAsDefault( QListView * view, ListModel & model, QAction * setDefaultAction, QString & defaultItemID )
@@ -276,7 +283,7 @@ void setSelectedItemAsDefault( QListView * view, ListModel & model, QAction * se
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  engines
+// engines
 
 void SetupDialog::engineAdd()
 {
@@ -310,6 +317,21 @@ void SetupDialog::engineMoveUp()
 void SetupDialog::engineMoveDown()
 {
 	wdg::moveDownSelectedItem( ui->engineListView, engineModel );
+}
+
+void SetupDialog::onEnginesDropped( int row, int count, DnDType type )
+{
+	if (type == DnDType::IntraWidget)  // engines were just moved within the list
+		return;
+
+	// Engine (or more of them) got dragged&dropped from other place,
+	// in that case we only have the executable path, other things must be filled automatically.
+	for (int engineIdx = row; engineIdx < row + count; ++engineIdx)
+	{
+		EngineInfo & engine = engineModel[ engineIdx ];
+		// the executablePath is already converted by the ListModel
+		EngineDialog::autofillEngineInfo( engine, engine.executablePath );
+	}
 }
 
 void SetupDialog::onEngineSelectionChanged( const QItemSelection &, const QItemSelection & )
@@ -356,7 +378,7 @@ void SetupDialog::editSelectedEngine()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  IWADs
+// IWADs
 
 void SetupDialog::iwadAdd()
 {
@@ -454,7 +476,7 @@ void SetupDialog::onIWADSubdirsToggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  game file directories
+// game file directories
 
 void SetupDialog::browseIWADDir()
 {
@@ -473,9 +495,9 @@ void SetupDialog::browseModDir()
 
 void SetupDialog::onIWADDirChanged( const QString & dir )
 {
-	iwadSettings.dir = dir;
+	iwadSettings.dir = sanitizeInputPath( dir );
 
-	highlightDirPathIfInvalid( ui->iwadDirLine, dir );
+	highlightDirPathIfInvalid( ui->iwadDirLine, iwadSettings.dir );
 
 	if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))
 		updateIWADsFromDir();
@@ -483,21 +505,21 @@ void SetupDialog::onIWADDirChanged( const QString & dir )
 
 void SetupDialog::onMapDirChanged( const QString & dir )
 {
-	mapSettings.dir = dir;
+	mapSettings.dir = sanitizeInputPath( dir );
 
-	highlightDirPathIfInvalid( ui->mapDirLine, dir );
+	highlightDirPathIfInvalid( ui->mapDirLine, mapSettings.dir );
 }
 
 void SetupDialog::onModDirChanged( const QString & dir )
 {
-	modSettings.dir = dir;
+	modSettings.dir = sanitizeInputPath( dir );
 
-	highlightDirPathIfInvalid( ui->modDirLine, dir );
+	highlightDirPathIfInvalid( ui->modDirLine, modSettings.dir );
 }
 
 void SetupDialog::updateIWADsFromDir()
 {
-	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::isIWAD );
+	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::canBeIWAD );
 
 	if (!iwadSettings.defaultIWAD.isEmpty())
 	{
@@ -510,7 +532,7 @@ void SetupDialog::updateIWADsFromDir()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  theme options
+// theme options
 
 void SetupDialog::onAppStyleSelected( int index )
 {
@@ -554,7 +576,7 @@ void SetupDialog::onLightSchemeChosen()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  other
+// other
 
 void SetupDialog::onAbsolutePathsToggled( bool checked )
 {
@@ -564,7 +586,7 @@ void SetupDialog::onAbsolutePathsToggled( bool checked )
 	for (Engine & engine : engineModel)
 	{
 		engine.executablePath = pathConvertor.convertPath( engine.executablePath );
-		engine.configDir = pathConvertor.convertPath( engine.configDir );
+		// don't convert the config/data dirs, some of them may be better stored as relative, some as absolute
 	}
 	engineModel.contentChanged( 0 );
 

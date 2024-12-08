@@ -14,7 +14,6 @@
 #include "CommonTypes.hpp"
 #include "ContainerUtils.hpp"    // findSuch
 #include "FileSystemUtils.hpp"   // traverseDirectory
-#include "Widgets/ListModel.hpp"
 #include "ErrorHandling.hpp"
 
 #include <QAbstractItemView>
@@ -31,7 +30,6 @@
 class QTableWidget;
 
 #include <functional>
-#include <type_traits>
 
 
 //======================================================================================================================
@@ -48,11 +46,11 @@ namespace wdg {
 
 
 //======================================================================================================================
-//  selection manipulation
+// selection manipulation
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  list view helpers
+// list view helpers
 
 // current item
 int getCurrentItemIndex( QListView * view );
@@ -74,10 +72,12 @@ void deselectAllAndUnsetCurrent( QListView * view );
 /// Deselects currently selected items, selects new one and makes it the current item.
 /** Basically equivalent to left-clicking on an item. */
 void chooseItemByIndex( QListView * view, int index );
+/// Selects an item, sets it as current, and moves the scrollbar so that the item is visible.
+void selectSetCurrentAndScrollTo( QListView * view, int index );
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  tree view helpers
+// tree view helpers
 
 // current item
 QModelIndex getCurrentItemIndex( QTreeView * view );
@@ -100,10 +100,12 @@ void deselectAllAndUnsetCurrent( QTreeView * view );
 /// Deselects currently selected items, selects new one and makes it the current item.
 /** Basically equivalent to left-clicking on an item. */
 void chooseItemByIndex( QTreeView * view, const QModelIndex & index );
+/// Selects an item, sets it as current, and moves the scrollbar so that the item is visible.
+void selectSetCurrentAndScrollTo( QTreeView * view, const QModelIndex & index );
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  row-oriented table view helpers
+// row-oriented table view helpers
 
 // current item
 int getCurrentRowIndex( QTableView * view );
@@ -130,7 +132,7 @@ void chooseRowByIndex( QTableView * view, int rowIndex );
 
 
 //======================================================================================================================
-//  button actions - all of these function assume a 1-dimensional non-recursive list view/widget
+// button actions - all of these function assume a 1-dimensional non-recursive list view/widget
 
 
 /// Adds an item to the end of the list and selects it.
@@ -542,7 +544,7 @@ bool editItemAtIndex( QListView * view, int index );
 
 
 //======================================================================================================================
-//  button actions for table widget
+// button actions for table widget
 
 
 /// Adds a row to the end of the table and selects it.
@@ -561,7 +563,7 @@ bool editCellAtIndex( QTableView * view, int row, int column );
 
 
 //======================================================================================================================
-//  complete update helpers for list-view
+// complete update helpers for list-view
 
 
 /// Gets a persistent item ID of the current item that survives node shifting, adding or removal.
@@ -717,7 +719,7 @@ void updateListFromDir( ListModel & model, QListView * view, const QString & dir
 
 
 //======================================================================================================================
-//  complete update helpers for combo-box
+// complete update helpers for combo-box
 
 
 /// Gets a persistent item ID that survives node shifting, adding or removal.
@@ -789,7 +791,7 @@ void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString &
 
 
 //======================================================================================================================
-//  miscellaneous
+// miscellaneous
 
 
 /// Expands all parent nodes from the selected node up to the root node, so that the selected node is immediately visible.

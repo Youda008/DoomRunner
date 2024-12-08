@@ -21,7 +21,7 @@
 
 
 //======================================================================================================================
-//  in order for the getEnum method to work, the author of the enum must specialize the following templates
+// in order for the getEnum method to work, the author of the enum must specialize the following templates
 
 template< typename Enum >
 const char * enumName() { return "unknown"; }
@@ -55,14 +55,17 @@ uint enumSize() { return 0; }
 constexpr bool ShowError = true;
 constexpr bool DontShowError = false;
 
-/// data related to an ongoing parsing process
-struct _ParsingContext
+namespace impl
 {
-	QString filePath;
-	bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
+	/// data related to an ongoing parsing process
+	struct ParsingContext
+	{
+		QString filePath;
+		bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
 
-	QString fileName() const;
-};
+		QString fileName() const;
+	};
+}
 
 /// mechanisms common for JSON objects and arrays
 class JsonValueCtx {
@@ -87,7 +90,7 @@ class JsonValueCtx {
 		Key( int idx ) : type( ArrayIndex ), key(), idx( idx ) {}
 	};
 
-	_ParsingContext * _context;  ///< document-wide context shared among all elements of that document, the struct is stored in JsonDocumentCtx
+	impl::ParsingContext * _context;  ///< document-wide context shared among all elements of that document, the struct is stored in JsonDocumentCtx
 
 	const JsonValueCtx * _parent;  ///< JSON element that contains this element
 	Key _key;  ///< key or index that this element has in its parent element
@@ -102,15 +105,15 @@ class JsonValueCtx {
 
 	/// Constructs a JSON value with no parent.
 	/** This should only be used for creating a root element. */
-	JsonValueCtx( _ParsingContext * context )
+	JsonValueCtx( impl::ParsingContext * context )
 		: _context( context ), _parent( nullptr ), _key() {}
 
 	/// Constructs a JSON value with a parent that is a JSON object.
-	JsonValueCtx( _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+	JsonValueCtx( impl::ParsingContext * context, const JsonValueCtx * parent, const QString & key )
 		: _context( context ), _parent( parent ), _key( key ) {}
 
 	/// Constructs a JSON value with a parent that is a JSON array.
-	JsonValueCtx( _ParsingContext * context, const JsonValueCtx * parent, int index )
+	JsonValueCtx( impl::ParsingContext * context, const JsonValueCtx * parent, int index )
 		: _context( context ), _parent( parent ), _key( index ) {}
 
 	JsonValueCtx( const JsonValueCtx & ) = default;
@@ -145,13 +148,13 @@ class JsonObjectCtxProxy : public JsonValueCtx {
 	JsonObjectCtxProxy()
 		: JsonValueCtx(), _wrappedObject() {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, _ParsingContext * context )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, impl::ParsingContext * context )
 		: JsonValueCtx( context ), _wrappedObject( std::move(wrappedObject) ) {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, impl::ParsingContext * context, const JsonValueCtx * parent, const QString & key )
 		: JsonValueCtx( context, parent, key ), _wrappedObject( std::move(wrappedObject) ) {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, _ParsingContext * context, const JsonValueCtx * parent, int index )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, impl::ParsingContext * context, const JsonValueCtx * parent, int index )
 		: JsonValueCtx( context, parent, index ), _wrappedObject( std::move(wrappedObject) ) {}
 
 	JsonObjectCtxProxy( const JsonObjectCtxProxy & ) = default;
@@ -173,10 +176,10 @@ class JsonArrayCtxProxy : public JsonValueCtx {
 	JsonArrayCtxProxy()
 		: JsonValueCtx(), _wrappedArray() {}
 
-	JsonArrayCtxProxy( QJsonArray wrappedArray, _ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+	JsonArrayCtxProxy( QJsonArray wrappedArray, impl::ParsingContext * context, const JsonValueCtx * parent, const QString & key )
 		: JsonValueCtx( context, parent, key ), _wrappedArray( std::move(wrappedArray) ) {}
 
-	JsonArrayCtxProxy( QJsonArray wrappedArray, _ParsingContext * context, const JsonValueCtx * parent, int index )
+	JsonArrayCtxProxy( QJsonArray wrappedArray, impl::ParsingContext * context, const JsonValueCtx * parent, int index )
 		: JsonValueCtx( context, parent, index ), _wrappedArray( std::move(wrappedArray) ) {}
 
 	JsonArrayCtxProxy( const JsonArrayCtxProxy & ) = default;
@@ -195,7 +198,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 	JsonObjectCtx() : JsonObjectCtxProxy() {}
 
 	/// Constructs a JSON object wrapper with no parent, this should only be used for creating a root element.
-	JsonObjectCtx( QJsonObject wrappedObject, _ParsingContext * context )
+	JsonObjectCtx( QJsonObject wrappedObject, impl::ParsingContext * context )
 		: JsonObjectCtxProxy( std::move(wrappedObject), context ) {}
 
 	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
@@ -203,6 +206,8 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 		: JsonObjectCtxProxy( std::move(proxy) ) {}
 
 	auto keys() const { return _wrappedObject.keys(); }
+
+	bool hasMember( const QString & key ) const { return _wrappedObject.contains( key ); }
 
 	/// Returns a sub-object at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
@@ -337,7 +342,7 @@ class JsonDocumentCtx {
 
 	JsonObjectCtx _rootObject;
 
-	mutable _ParsingContext _context;  ///< document-wide data related to an ongoing parsing process, each element has a pointer to this
+	mutable impl::ParsingContext _context;  ///< document-wide data related to an ongoing parsing process, each element has a pointer to this
 
  public:
 
@@ -369,7 +374,7 @@ class JsonDocumentCtx {
 
 
 //======================================================================================================================
-//  generic utils
+// generic utils
 
 inline QJsonArray serializeStringVec( const QStringVec & vec )
 {
@@ -447,7 +452,7 @@ void deserializeMap( const JsonObjectCtx & jsMap, QHash< QString, Elem > & map )
 
 
 //======================================================================================================================
-//  high-level file I/O helpers
+// high-level file I/O helpers
 
 bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, const QString & fileDesc );
 

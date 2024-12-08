@@ -24,10 +24,7 @@ class PathConvertor;
 
 
 //======================================================================================================================
-//  general
-
-constexpr bool QuotePaths = true;
-constexpr bool DontQuotePaths = false;
+// general
 
 inline QString quoted( const QString & path )
 {
@@ -42,9 +39,26 @@ enum class PathStyle : uint8_t
 
 
 //======================================================================================================================
-//  general helper functions
+// general helper functions
 
 namespace fs {
+
+template< typename Appendable >
+inline QString appendToPath( const QString & part1, const Appendable & part2 )
+{
+	if (!part1.isEmpty() && !part2.isEmpty())
+		return part1%"/"%part2;
+	else if (!part2.isEmpty())
+		return part2;
+	else // even if part1.isEmpty()
+		return part1;
+}
+
+template< typename Appendable, typename ... Args >
+inline QString appendToPath( const QString & part1, const Appendable & part2, const Args & ... otherParts )
+{
+	return appendToPath( appendToPath( part1, part2 ), otherParts ... );
+}
 
 inline bool isAbsolutePath( const QString & path )
 {
@@ -61,19 +75,19 @@ inline PathStyle getPathStyle( const QString & path )
 	return isAbsolutePath( path ) ? PathStyle::Absolute : PathStyle::Relative;
 }
 
-inline bool exists( const QString & path )
+inline bool exists( const QString & entryPath )
 {
-	return QFileInfo::exists( path );
+	return QFileInfo::exists( entryPath );
 }
 
-inline bool isDirectory( const QString & path )
+inline bool isDirectory( const QString & entryPath )
 {
-	return QFileInfo( path ).isDir();
+	return QFileInfo( entryPath ).isDir();
 }
 
-inline bool isFile( const QString & path )
+inline bool isFile( const QString & entryPath )
 {
-	return QFileInfo( path ).isFile();
+	return QFileInfo( entryPath ).isFile();
 }
 
 inline bool isValidDir( const QString & dirPath )
@@ -96,14 +110,21 @@ inline bool isInvalidFile( const QString & filePath )
 	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // it exists but it's not a file
 }
 
-inline bool isValidEntry( const QString & path )
+inline bool isValidEntry( const QString & entryPath )
 {
-	return !path.isEmpty() && QFileInfo::exists( path );
+	return !entryPath.isEmpty() && QFileInfo::exists( entryPath );
 }
 
 inline QString getAbsolutePath( const QString & path )
 {
+	// works even if the path is already absolute, also gets rid of any redundant "/./" or "/../" in the middle of the path
 	return QFileInfo( path ).absoluteFilePath();
+}
+
+inline QString getNormalizedPath( const QString & path )
+{
+	// gets rid of any redundant "/./" or "/../" in the middle of the path
+	return QFileInfo( path ).absoluteFilePath();  // canonicalFilePath() doesn't work if the FS entry doesn't exist yet
 }
 
 inline QString getPathFromFileName( const QString & dirPath, const QString & fileName )
@@ -113,6 +134,7 @@ inline QString getPathFromFileName( const QString & dirPath, const QString & fil
 
 inline QString getAbsolutePathFromFileName( const QString & dirPath, const QString & fileName )
 {
+	// gets rid of any redundant "/./" or "/../" in the middle of dirPath
 	return QDir( dirPath ).absoluteFilePath( fileName );
 }
 
@@ -123,34 +145,47 @@ inline QString getFileNameFromPath( const QString & filePath )
 
 inline QString getFileBasenameFromPath( const QString & filePath )
 {
-	return QFileInfo( filePath ).baseName();
+	return QFileInfo( filePath ).completeBaseName();
 }
 
-inline QString getDirOfFile( const QString & filePath )
+inline QString getParentDir( const QString & entryPath )
 {
-	return QFileInfo( filePath ).path();
+	return QFileInfo( entryPath ).path();
 }
 
-inline QString getAbsoluteDirOfFile( const QString & filePath )
+inline QString getAbsoluteParentDir( const QString & entryPath )
 {
-	return QFileInfo( filePath ).absolutePath();
+	return QFileInfo( entryPath ).absolutePath();
 }
 
-inline QString getDirnameOfFile( const QString & filePath )
+inline QString getParentDirName( const QString & entryPath )
 {
-	return QFileInfo( filePath ).dir().dirName();
+	return QFileInfo( entryPath ).dir().dirName();
 }
 
 inline QString replaceFileSuffix( const QString & filePath, const QString & newSuffix )
 {
 	QFileInfo fileInfo( filePath );
-	QString newFileName = fileInfo.baseName() % '.' % newSuffix;
+	QString newFileName = fileInfo.completeBaseName() % '.' % newSuffix;
 	return fileInfo.dir().filePath( newFileName );
 }
 
-inline bool isInsideDir( const QString & entryPath, const QDir & dir )
+inline bool isInsideDir( const QDir & dir, const QString & entryPath )
 {
 	return QFileInfo( entryPath ).absoluteFilePath().startsWith( dir.absolutePath() );
+}
+
+/// Takes a path native to the current OS and converts it to a Qt internal path.
+/** Works even if the path is already in Qt format. */
+inline QString fromNativePath( const QString & path )
+{
+	return QDir::fromNativeSeparators( path );
+}
+
+/// Takes a Qt internal path and converts it to a path native to the current OS.
+inline QString toNativePath( const QString & path )
+{
+	return QDir::toNativeSeparators( path );
 }
 
 /// Creates directory if it doesn't exist already, returns false if it doesn't exist and cannot be created.
@@ -162,8 +197,14 @@ inline bool createDirIfDoesntExist( const QString & dirPath )
 /// Returns if it's possible to write files into a directory.
 bool isDirectoryWritable( const QString & dirPath );
 
-/// Replaces any disallowed path characters from a string.
+/// Returns a regular expression that can be used to validate file-system paths entered by the user.
+const QRegularExpression & getPathRegex();
+
+/// Removes any disallowed path characters from a string.
 QString sanitizePath( const QString & path );
+
+/// Removes anything but a strict set of safe characters.
+QString sanitizePath_strict( const QString & path );
 
 /// Reads the whole content of a file into a byte array.
 /** Returns description of an error that might potentially happen, or empty string on success. */
@@ -178,7 +219,7 @@ QString updateFileSafely( const QString & filePath, const QByteArray & newConten
 
 
 //======================================================================================================================
-//  traversing directory content
+// traversing directory content
 
 namespace fs {
 
@@ -239,10 +280,15 @@ class PathConvertor {
 
 	QString getAbsolutePath( const QString & path ) const
 	{
-		return path.isEmpty() ? QString() : QFileInfo( _workingDir, path ).absoluteFilePath();
+		// _workingDir.absoluteFilePath( fileName ) only appends path to the absolute path of _workingDir,
+		// QDir::cleanPath() gets rid of any redundant "/./" or "/../" in the middle of the input path.
+		// Works even if path is already absolute.
+		return path.isEmpty() ? QString() : QDir::cleanPath( _workingDir.absoluteFilePath( path ) );
 	}
 	QString getRelativePath( const QString & path ) const
 	{
+		// Gets rid of any redundant "/./" or "/../" in the middle.
+		// Works even if path is already relative.
 		return path.isEmpty() ? QString() : _workingDir.relativeFilePath( path );
 	}
 	QString convertPath( const QString & path ) const
@@ -253,58 +299,116 @@ class PathConvertor {
 };
 
 
-/** Helper that allows rebasing path from one baseDir to another. */
+/** Helper that allows rebasing paths from one base directory to another. */
 class PathRebaser {
 
-	QDir _inBaseDir;  ///< base dir for the relative input paths
-	QDir _outBaseDir;  ///< base dir for the relative output paths
-	PathStyle _outPathStyle;  ///< whether the output paths should be relative or absolute
+	QDir _origBaseDir;    ///< original base dir for the relative input paths
+	QDir _targetBaseDir;   ///< target base dir for the relative output paths
+	PathStyle _outPathStyle;   ///< whether the output paths should be relative or absolute
 	bool _quotePaths;  ///< whether to surround all output paths with quotes (needed when generating a batch)
 	                   // !!IMPORTANT!! Never store the quoted paths and pass them back to PathConvertor, they are output-only.
  public:
 
-	PathRebaser( const QDir & inputBaseDir, const QDir & outputBaseDir, PathStyle pathStyle, bool quotePaths = false )
-		: _inBaseDir( inputBaseDir ), _outBaseDir( outputBaseDir ), _outPathStyle( pathStyle ), _quotePaths( quotePaths ) {}
+	PathRebaser( const QDir & origBaseDir, const QDir & targetBaseDir, PathStyle outPathStyle, bool quotePaths = false )
+		: _origBaseDir( origBaseDir ), _targetBaseDir( targetBaseDir ), _outPathStyle( outPathStyle ), _quotePaths( quotePaths ) {}
 
 	PathRebaser( const PathRebaser & other ) = default;
 	PathRebaser( PathRebaser && other ) = default;
 	PathRebaser & operator=( const PathRebaser & other ) = default;
 	PathRebaser & operator=( PathRebaser && other ) = default;
 
-	const QDir & inputBaseDir() const                  { return _inBaseDir; }
-	const QDir & outputBaseDir() const                 { return _outBaseDir; }
+	const QDir & origBaseDir() const                   { return _origBaseDir; }
+	const QDir & targetBaseDir() const                 { return _targetBaseDir; }
 	PathStyle outputPathStyle() const                  { return _outPathStyle; }
 	bool outputAbsolutePaths() const                   { return _outPathStyle == PathStyle::Absolute; }
 	bool quotePaths() const                            { return _quotePaths; }
 
-	void setInputBaseDir( const QDir & baseDir )       { _inBaseDir = baseDir; }
-	void setOutputBaseDir( const QDir & baseDir )      { _outBaseDir = baseDir; }
+	void setOrigBaseDir( const QDir & baseDir )        { _origBaseDir = baseDir; }
+	void setTargetBaseDir( const QDir & baseDir )      { _targetBaseDir = baseDir; }
+	void setOutputPathStyle( PathStyle pathStyle )     { _outPathStyle = pathStyle; }
 
-	QString rebasePath( const QString & path ) const
+	/// Rebases a path relative to the original base directory to be relative to the target base directory,
+	/// absolute path is kept as is.
+	QString rebase( const QString & path ) const
 	{
-		return rebasePathFromTo( path, _inBaseDir, _outBaseDir );
-	}
-	QString rebasePathBack( const QString & path ) const
-	{
-		return rebasePathFromTo( path, _outBaseDir, _inBaseDir );
-	}
-
-	QString rebaseAndQuotePath( const QString & path ) const
-	{
-		return maybeQuoted( rebasePath( path ) );
+		return rebaseFromTo( path, _origBaseDir, _targetBaseDir );
 	}
 
-	QString maybeQuoted( QString path ) const
+	/// Rebases a path relative to the target base directory back to relative to the original base directory,
+	/// absolute path is kept as is.
+	QString rebaseBack( const QString & path ) const
 	{
-		if (_quotePaths)
-			return quoted( path );
+		return rebaseFromTo( path, _targetBaseDir, _origBaseDir );
+	}
+
+	/// Converts a path that is either absolute or relative to the original base directory
+	/// to a path either absolute or relative to the target base directory (based on the output path style).
+	QString rebaseAndConvert( const QString & path ) const
+	{
+		return convertAndRebaseFromTo( path, _origBaseDir, _targetBaseDir );
+	}
+
+	/// Converts a path that is either absolute or relative to the target base directory
+	/// to a path either absolute or relative to the original base directory (based on the output path style).
+	QString rebaseBackAndConvert( const QString & path ) const
+	{
+		return convertAndRebaseFromTo( path, _targetBaseDir, _origBaseDir );
+	}
+
+	/// Converts a path to a path relative to the target base directory.
+	QString rebaseAndMakeRelative( const QString & path ) const
+	{
+		if (fs::isAbsolutePath( path ))
+			return _targetBaseDir.relativeFilePath( path );
 		else
-			return path;
+			return rebase( path );
+	}
+
+	/// Converts a path relative to the target base directory to an absolute path.
+	QString rebaseBackAndMakeAbsolute( const QString & rebasedPath ) const
+	{
+		return !rebasedPath.isEmpty() ? _targetBaseDir.absoluteFilePath( rebasedPath ) : QString();
+	}
+
+	/// Takes a Qt internal path and outputs a path suitable for an OS shell command.
+	QString makeCmdPath( const QString & path ) const
+	{
+		return maybeQuoted( fs::toNativePath( path ) );
+	}
+
+	/// Takes a Qt internal path and outputs an always quoted path suitable for an OS shell command.
+	QString makeQuotedCmdPath( const QString & path ) const
+	{
+		return quoted( fs::toNativePath( path ) );
+	}
+
+	/// Takes a Qt internal path and outputs a rebased path suitable for an OS shell command.
+	/** If the path is relative, it is rebased to the target base dir, otherwise it's kept absolute. */
+	QString makeRebasedCmdPath( const QString & path ) const
+	{
+		return maybeQuoted( fs::toNativePath( rebase( path ) ) );
+	}
+
+	/// Takes a Qt internal path and outputs a rebased relative path suitable for an OS shell command.
+	QString makeRebasedRelativeCmdPath( const QString & path ) const
+	{
+		return maybeQuoted( fs::toNativePath( rebaseAndMakeRelative( path ) ) );
 	}
 
  private:
 
-	QString rebasePathFromTo( const QString & path, const QDir & inputBaseDir, const QDir & outputBaseDir ) const
+	QString rebaseFromTo( const QString & path, const QDir & inputBaseDir, const QDir & outputBaseDir ) const
+	{
+		if (path.isEmpty() || fs::isAbsolutePath( path ))
+			return path;
+
+		QString absPath = inputBaseDir.absoluteFilePath( path );
+		QString newPath = outputBaseDir.relativeFilePath( absPath );
+
+		return newPath;
+	}
+
+	QString convertAndRebaseFromTo( const QString & path, const QDir & inputBaseDir, const QDir & outputBaseDir ) const
 	{
 		if (path.isEmpty())
 			return {};
@@ -313,6 +417,11 @@ class PathRebaser {
 		QString newPath = outputAbsolutePaths() ? absPath : outputBaseDir.relativeFilePath( absPath );
 
 		return newPath;
+	}
+
+	QString maybeQuoted( const QString & path ) const
+	{
+		return _quotePaths ? quoted( path ) : path;
 	}
 
 };

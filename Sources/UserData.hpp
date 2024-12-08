@@ -24,7 +24,7 @@
 
 
 //======================================================================================================================
-//  OS-specific defaults
+// OS-specific defaults
 
 #if IS_WINDOWS
 	constexpr PathStyle defaultPathStyle = PathStyle::Relative;
@@ -36,13 +36,13 @@
 
 
 //======================================================================================================================
-//  user data definition
+// user data definition
 
 // Constructors from QFileInfo are used in automatic list updates for initializing an element from a file-system entry.
 // getID() methods are used in automatic list updates for ensuring the same items remain selected.
 
 //----------------------------------------------------------------------------------------------------------------------
-//  files
+// files
 
 /// a ported Doom engine (source port) located somewhere on the disc
 struct Engine : public EditableListModelItem
@@ -54,8 +54,8 @@ struct Engine : public EditableListModelItem
 	EngineFamily family = EngineFamily::ZDoom;  ///< automatically detected, but user-selectable engine family
 
 	Engine() {}
-	Engine( const QFileInfo & file )
-		: name( file.fileName() ), executablePath( file.filePath() ), configDir( file.dir().path() ), dataDir( configDir ) {}
+	// When file is dropped from a file explorer: The other members have to be auto-detected later by EngineTraits.
+	Engine( const QFileInfo & file ) : executablePath( file.filePath() ) {}
 
 	// requirements of EditableListModel
 	const QString & getFilePath() const   { return executablePath; }
@@ -101,7 +101,7 @@ struct Mod : public EditableListModelItem
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//  gameplay/compatibility options
+// gameplay/compatibility options
 
 enum LaunchMode
 {
@@ -181,6 +181,7 @@ struct GameplayDetails
 {
 	int32_t dmflags1 = 0;
 	int32_t dmflags2 = 0;
+	int32_t dmflags3 = 0;  // only in GZDoom 4.11.0+
 };
 
 struct GameplayOptions : public GameplayDetails  // inherited instead of included to avoid long identifiers
@@ -190,6 +191,7 @@ struct GameplayOptions : public GameplayDetails  // inherited instead of include
 	bool noMonsters = false;
 	bool fastMonsters = false;
 	bool monstersRespawn = false;
+	bool pistolStart = false;
 	bool allowCheats = false;
 
 	void assign( const GameplayDetails & other ) { static_cast< GameplayDetails & >( *this ) = other; }
@@ -203,16 +205,18 @@ struct CompatibilityDetails
 
 struct CompatibilityOptions : public CompatibilityDetails  // inherited instead of included to avoid long identifiers
 {
-	int compatLevel = -1;
+	int compatMode = -1;
 
 	void assign( const CompatibilityDetails & other ) { static_cast< CompatibilityDetails & >( *this ) = other; }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//  other options
+// other options
 
 struct AlternativePaths
 {
+	// these are always relative either to Engine::configDir or Engine::dataDir
+	QString configDir;
 	QString saveDir;
 	QString screenshotDir;
 };
@@ -239,13 +243,16 @@ using EnvVars = QVector< os::EnvVar >;
 
 struct GlobalOptions
 {
-	bool usePresetNameAsDir = false;
+	bool usePresetNameAsConfigDir = false;
+	bool usePresetNameAsSaveDir = false;
+	bool usePresetNameAsScreenshotDir = false;
 	QString cmdArgs;
+	QString cmdPrefix;
 	EnvVars envVars;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//  preset
+// preset
 
 struct Preset : public EditableListModelItem
 {
@@ -256,6 +263,7 @@ struct Preset : public EditableListModelItem
 	QString selectedIWAD;   // we store the IWAD by path instead of index, so that it doesn't break when user reorders them
 	QStringVec selectedMapPacks;
 	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
+	bool loadMapsAfterMods = false;
 
 	LaunchOptions launchOpts;
 	MultiplayerOptions multOpts;
@@ -281,7 +289,7 @@ struct Preset : public EditableListModelItem
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//  global settings
+// global settings
 
 struct EngineSettings
 {
@@ -358,28 +366,27 @@ struct AppearanceSettings
 
 
 //======================================================================================================================
-//  derived data
+// derived data
 //
-//  Strictly-speaking, this does not belong here because this data is not user-specified but automatically determined.
-//  But it is related to the data above and it is used across multiple dialogs, so it is acceptable to be here.
+// Strictly-speaking, this does not belong here because this data is not user-specified but automatically determined.
+// But it is related to the data above and it is used across multiple dialogs, so it is acceptable to be here.
 
 // This combines user-defined and automatically determined engine information under a single struct for simpler processing.
-// Inheritance is used instead of composition to have shorter identifiers.
-struct EngineInfo : public Engine, public EngineTraits, private os::SandboxInfo
+// Inheritance is used instead of composition, so that we can write engine.exeAppName() instead of engine.traits.exeAppName().
+struct EngineInfo : public Engine, public EngineTraits
 {
 	using Engine::Engine;
-	EngineInfo( const Engine & engine ) { static_cast< Engine & >( *this ) = engine; }
-	EngineInfo( Engine && engine )      { static_cast< Engine & >( *this ) = std::move( engine ); }
+	EngineInfo( const Engine & engine )       { static_cast< Engine & >( *this ) = engine; }
+	EngineInfo( Engine && engine ) noexcept   { static_cast< Engine & >( *this ) = std::move( engine ); }
 
-	void initSandboxInfo( const QString & executablePath_ )
+	QString getDefaultSaveDir( const QString & IWADPath = {} ) const
 	{
-		static_cast< os::SandboxInfo & >( *this ) = os::getSandboxInfo( executablePath_ );
+		QString saveSubdir = EngineTraits::getDefaultSaveSubdir( IWADPath );
+		if (!Engine::dataDir.isEmpty())
+			return QDir( Engine::dataDir ).filePath( saveSubdir );
+		else
+			return saveSubdir;
 	}
-
-	// SandboxInfo member names are too short and generic to be exposed directly.
-	auto sandboxEnvType() const           { return SandboxInfo::type; }
-	auto sandboxEnvName() const           { return getSandboxName( SandboxInfo::type ); }
-	const auto & sandboxAppName() const   { return SandboxInfo::appName; }
 };
 
 

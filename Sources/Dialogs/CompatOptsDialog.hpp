@@ -13,7 +13,6 @@
 
 #include "CommonTypes.hpp"
 #include "UserData.hpp"  // CompatibilityOptions
-#include "EngineTraits.hpp"  // CompatLevelStyle
 
 #include <QDialog>
 

@@ -27,7 +27,6 @@
 #include <QBrush>
 #include <QIcon>
 
-#include <optional>
 #include <functional>
 #include <stdexcept>
 
@@ -86,10 +85,12 @@ class DropTarget {
 
 
 //======================================================================================================================
-//  support structs
+// support structs
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"  // std::optional sometimes makes false positive warnings
+#ifdef __GNUC__
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"  // std::optional sometimes makes false positive warnings
+#endif
 
 /** Each item of ReadOnlyListModel must inherit from this struct to satisfy the requirements of the model.
   * The following methods should be overriden to point to the appropriate members. */
@@ -116,7 +117,9 @@ struct ReadOnlyListModelItem
 	}
 };
 
-#pragma GCC diagnostic pop
+#ifdef __GNUC__
+ #pragma GCC diagnostic pop
+#endif
 
 /** Each item of EditableListModel must inherit from this struct to satisfy the requirements of the model.
   * The following methods should be overriden to point to the appropriate members. */
@@ -805,7 +808,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		QStringList types;
 
 		types << internalMimeType;  // for internal drag&drop reordering
-		types << urlMimeType;  // for drag&drop from directory window
+		types << urlMimeType;  // for drag&drop from a file explorer window
 
 		return types;
 	}
@@ -977,7 +980,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 
 //======================================================================================================================
-//  aliases
+// aliases
 
 template< typename Item > using ReadOnlyDirectListModel   = ReadOnlyListModel< DirectList< Item > >;
 template< typename Item > using ReadOnlyFilteredListModel = ReadOnlyListModel< FilteredList< Item > >;

@@ -92,7 +92,7 @@ void setAppStyle( const QString & styleName );
 
 
 //======================================================================================================================
-//  system theme settings monitoring
+// system theme settings monitoring
 
 enum class SystemTheme
 {

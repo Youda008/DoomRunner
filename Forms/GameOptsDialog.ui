@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>699</width>
-    <height>400</height>
+    <width>826</width>
+    <height>528</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -322,6 +322,16 @@
           </property>
          </widget>
         </item>
+        <item row="13" column="0">
+         <widget class="QCheckBox" name="pistolStart">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(Since GZDoom 4.12.2) Every level is a fresh start, with a pistol only.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Pistol start</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </item>
@@ -337,23 +347,23 @@
         <string>Cooperative options</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="0">
-         <widget class="QCheckBox" name="spawnMultiWeapons">
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="keepKeys">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Weapons that are flagged to appear only in multiplayer are not spawned when playing in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A respawning player's keys are reset to normal starting conditions in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>Spawn multi. weapons</string>
+           <string>Keep keys</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="keepPowerups">
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="loseHalfAmmo">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A respawning player's powerups are reset to normal starting conditions in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Players respawn with half the ammo they had when they died (but not less than the normal starting amount).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>Keep powerups</string>
+           <string>Lose half ammo</string>
           </property>
          </widget>
         </item>
@@ -377,23 +387,23 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
-         <widget class="QCheckBox" name="keepKeys">
+        <item row="3" column="1">
+         <widget class="QCheckBox" name="spawnWhereDied">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A respawning player's keys are reset to normal starting conditions in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A player respawns at the place of death (unless it was in an instant-death sector) instead of at the player start.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>Keep keys</string>
+           <string>Spawn where died</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QCheckBox" name="loseHalfAmmo">
+        <item row="4" column="1">
+         <widget class="QCheckBox" name="noPlayerClipping">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Players respawn with half the ammo they had when they died (but not less than the normal starting amount).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(Since GZDoom 4.11.0) Players can walk through and shoot through each other.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>Lose half ammo</string>
+           <string>No player clipping</string>
           </property>
          </widget>
         </item>
@@ -407,13 +417,23 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QCheckBox" name="spawnWhereDied">
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="keepPowerups">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A player respawns at the place of death (unless it was in an instant-death sector) instead of at the player start.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A respawning player's powerups are reset to normal starting conditions in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>Spawn where died</string>
+           <string>Keep powerups</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="spawnMultiWeapons">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Weapons that are flagged to appear only in multiplayer are not spawned when playing in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Spawn multi. weapons</string>
           </property>
          </widget>
         </item>
@@ -424,6 +444,26 @@
           </property>
           <property name="text">
            <string>Keep armor</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QCheckBox" name="shareKeys">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(Since GZDoom 4.12.0) Picking up a key in cooperative mode will distribute it to all players.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Share keys</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QCheckBox" name="localItemPickups">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(Since GZDoom 4.12.0) Items are picked up client-side rather than fully taken by the client who picked it up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Pick up items locally</string>
           </property>
          </widget>
         </item>
@@ -582,7 +622,7 @@
      <item>
       <widget class="QLabel" name="dmflags1_label">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -595,16 +635,10 @@
      <item>
       <widget class="QLineEdit" name="dmflags1_line">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>75</width>
-         <height>20</height>
-        </size>
        </property>
        <property name="text">
         <string/>
@@ -617,7 +651,7 @@
      <item>
       <widget class="QLabel" name="dmflags2_label">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -630,22 +664,39 @@
      <item>
       <widget class="QLineEdit" name="dmflags2_line">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>75</width>
-         <height>20</height>
-        </size>
        </property>
        <property name="text">
         <string/>
        </property>
        <property name="maxLength">
         <number>128</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="dmflags3_label">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>dmflags3</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="dmflags3_line">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
       </widget>
      </item>

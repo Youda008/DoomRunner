@@ -91,8 +91,14 @@ class GameOptsDialog : public QDialog, private DialogCommon {
 	void on_loseHalfAmmo_toggled( bool checked );
 	void on_spawnWhereDied_toggled( bool checked );
 
+	void on_noPlayerClipping_toggled( bool checked );
+	void on_shareKeys_toggled( bool checked );
+	void on_localItemPickups_toggled( bool checked );
+	void on_pistolStart_toggled( bool checked );
+
 	void on_dmflags1_line_textEdited( const QString & arg1 );
 	void on_dmflags2_line_textEdited( const QString & arg1 );
+	void on_dmflags3_line_textEdited( const QString & arg1 );
 
  private: // methods
 

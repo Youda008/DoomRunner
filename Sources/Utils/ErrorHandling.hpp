@@ -22,7 +22,7 @@ class QWidget;
 
 
 //======================================================================================================================
-//  displaying foreground errors that directly thwart features requested by the user
+// displaying foreground errors that directly thwart features requested by the user
 
 /// Reports an event that is not necessarily an error, but is worth noting. (example: no update available)
 void reportInformation( QWidget * parent, const QString & title, const QString & message );
@@ -38,7 +38,7 @@ void reportLogicError( QWidget * parent, const QString & title, const QString & 
 
 
 //======================================================================================================================
-//  logging background errors that don't directly impact features requested by the user
+// logging background errors that don't directly impact features requested by the user
 
 namespace impl {
 
@@ -59,13 +59,14 @@ class LogStream
 	QTextStream _fileStream;
 
 	LogLevel _logLevel;
+	bool _canLogToFile;
 	bool _addQuotes = true;
 	//bool _addSpace = true;
 	//bool _firstTokenWritten = false;
 
  public:
 
-	LogStream( LogLevel level, const char * componentName );
+	LogStream( LogLevel level, const char * componentName, bool canLogToFile = true );
 	~LogStream();
 
 	LogStream & quote()
@@ -122,12 +123,12 @@ class LogStream
 
 	inline constexpr bool shouldWriteToDebugStream() const
 	{
-		return fut::to_underlying( _logLevel ) >= fut::to_underlying( LogLevel::Info ) || IS_DEBUG_BUILD;
+		return IS_DEBUG_BUILD || fut::to_underlying( _logLevel ) >= fut::to_underlying( LogLevel::Info );
 	}
 
 	inline constexpr bool shouldWriteToFileStream() const
 	{
-		return fut::to_underlying( _logLevel ) >= fut::to_underlying( LogLevel::Failure );
+		return _canLogToFile && fut::to_underlying( _logLevel ) >= fut::to_underlying( LogLevel::Failure );
 	}
 
 	inline bool shouldAndCanWriteToFileStream() const
@@ -157,9 +158,9 @@ class DummyLogStream
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  top-level logging API
+// top-level logging API
 
-/// Writes a debugging message into stderr (in debug builds only).
+/// Logs a debugging message into stderr (in debug builds only).
 inline auto logDebug( [[maybe_unused]] const char * componentName = nullptr )
 {
  #if IS_DEBUG_BUILD
@@ -169,27 +170,51 @@ inline auto logDebug( [[maybe_unused]] const char * componentName = nullptr )
  #endif
 }
 
-/// Writes a message about an event that is not necessarily an error, but is worth noting.
+/// Logs a message about an event that is not necessarily an error, but is worth noting.
 inline auto logInfo( const char * componentName = nullptr )
 {
 	return impl::LogStream( impl::LogLevel::Info, componentName );
 }
 
-/// Writes a message about a non-critical background error into stderr and an error file.
+/// Logs a message about a non-critical background error into stderr and an error file.
 inline auto logRuntimeError( const char * componentName = nullptr )
 {
 	return impl::LogStream( impl::LogLevel::Failure, componentName );
 }
 
-/// Writes a message about a serious background error into stderr and an error file.
+/// Logs a message about a serious background error into stderr and an error file.
 inline auto logLogicError( const char * componentName = nullptr )
 {
 	return impl::LogStream( impl::LogLevel::Bug, componentName );
 }
 
+// Workaround that only prints the messages to console and doesn't write it the log file,
+// in case a messages needs to be logged before the log file is successfully open.
+
+inline auto printDebug( [[maybe_unused]] const char * componentName = nullptr )
+{
+ #if IS_DEBUG_BUILD
+	return impl::LogStream( impl::LogLevel::Debug, componentName, /*canLogToFile*/ false );
+ #else
+	return impl::DummyLogStream();
+ #endif
+}
+inline auto printInfo( const char * componentName = nullptr )
+{
+	return impl::LogStream( impl::LogLevel::Info, componentName, /*canLogToFile*/ false );
+}
+inline auto printRuntimeError( const char * componentName = nullptr )
+{
+	return impl::LogStream( impl::LogLevel::Failure, componentName, /*canLogToFile*/ false );
+}
+inline auto printLogicError( const char * componentName = nullptr )
+{
+	return impl::LogStream( impl::LogLevel::Bug, componentName, /*canLogToFile*/ false );
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
-//  logging helpers for simplifying logging even further
+// logging helpers for simplifying logging even further
 
 /// Abstract component that wants to log messages.
 /** Any class that inherits from this will be able to log without having to write component name everytime. */

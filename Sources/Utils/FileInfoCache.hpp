@@ -19,10 +19,11 @@
 #include <QHash>
 #include <QFileInfo>
 #include <QDateTime>
+#include <QElapsedTimer>
 
 
 //======================================================================================================================
-//  templates for arbitrary file info cache
+// templates for arbitrary file info cache
 
 enum class ReadStatus
 {
@@ -58,6 +59,8 @@ class FileInfoCache : protected LoggingComponent {
 	QHash< QString, Entry > _cache;
 	ReadFileInfoFunc _readFileInfo;
 	mutable bool _dirty = false;
+
+	QElapsedTimer _timer;
 
  public:
 
@@ -164,23 +167,29 @@ class FileInfoCache : protected LoggingComponent {
 	{
 		Entry newEntry;
 
+		_timer.restart();
 		newEntry.fileInfo = _readFileInfo( filePath );
-		newEntry.lastModified = fileModifiedTimestamp;
+		auto elapsed = _timer.elapsed();
 
+		if (newEntry.fileInfo.status == ReadStatus::Success)
+		{
+			logDebug() << " -> success (took "<<elapsed<<"ms)";
+		}
 		if (newEntry.fileInfo.status == ReadStatus::CantOpen)
 		{
-			logDebug() << "couldn't open file: " << filePath;
+			logDebug() << " -> couldn't open file";
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::FailedToRead)
 		{
-			logDebug() << "failed to read file: " << filePath;
+			logDebug() << " -> failed to read file";
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::NotSupported)
 		{
-			//logDebug() << "file info not implemented: " << filePath;
+			//logDebug() << " -> file info not implemented";
 		}
 
 		_dirty = true;
+		newEntry.lastModified = fileModifiedTimestamp;
 		return _cache.insert( filePath, std::move(newEntry) );
 	}
 

@@ -8,7 +8,6 @@
 #include "OptionsSerializer.hpp"
 
 #include "CommonTypes.hpp"
-#include "Version.hpp"
 #include "Utils/JsonUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidListItem
 #include "Utils/ErrorHandling.hpp"
@@ -17,28 +16,28 @@
 
 
 //======================================================================================================================
-//  custom data types
+// custom data types
 
 static QJsonObject serialize( const EnvVars & envVars )
 {
-	QJsonObject jsEnvVars;
+	QJsonObject envVarsJs;
 
 	// convert list to a map
 	for (const auto & envVar : envVars)
 	{
-		jsEnvVars[ envVar.name ] = envVar.value;
+		envVarsJs[ envVar.name ] = envVar.value;
 	}
 
-	return jsEnvVars;
+	return envVarsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsEnvVars, EnvVars & envVars )
+static void deserialize( const JsonObjectCtx & envVarsJs, EnvVars & envVars )
 {
 	// convert map to a list
-	auto keys = jsEnvVars.keys();
+	auto keys = envVarsJs.keys();
 	for (auto & varName : keys)
 	{
-		QString value = jsEnvVars.getString( varName, {} );
+		QString value = envVarsJs.getString( varName, {} );
 		envVars.append({ std::move(varName), std::move(value) });
 	}
 
@@ -48,419 +47,447 @@ static void deserialize( const JsonObjectCtx & jsEnvVars, EnvVars & envVars )
 
 
 //======================================================================================================================
-//  user data sub-sections
+// user data sub-sections
 
 static QJsonObject serialize( const Engine & engine )
 {
-	QJsonObject jsEngine;
+	QJsonObject engineJs;
 
 	if (engine.isSeparator)
 	{
-		jsEngine["separator"] = true;
-		jsEngine["name"] = engine.name;
+		engineJs["separator"] = true;
+		engineJs["name"] = engine.name;
 	}
 	else
 	{
-		jsEngine["name"] = engine.name;
-		jsEngine["path"] = engine.executablePath;
-		jsEngine["config_dir"] = engine.configDir;
-		jsEngine["data_dir"] = engine.dataDir;
-		jsEngine["family"] = familyToStr( engine.family );
+		engineJs["name"] = engine.name;
+		engineJs["path"] = engine.executablePath;
+		engineJs["config_dir"] = engine.configDir;
+		engineJs["data_dir"] = engine.dataDir;
+		engineJs["family"] = familyToStr( engine.family );
 	}
 
-	return jsEngine;
+	return engineJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsEngine, Engine & engine )
+static void deserialize( const JsonObjectCtx & engineJs, Engine & engine )
 {
-	engine.isSeparator = jsEngine.getBool( "separator", false, DontShowError );
+	engine.isSeparator = engineJs.getBool( "separator", false, DontShowError );
 	if (engine.isSeparator)
 	{
-		engine.name = jsEngine.getString( "name", "<missing name>" );
+		engine.name = engineJs.getString( "name", "<missing name>" );
 	}
 	else
 	{
-		engine.name = jsEngine.getString( "name", "<missing name>" );
-		engine.executablePath = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
-		engine.configDir = jsEngine.getString( "config_dir", fs::getDirOfFile( engine.executablePath ) );
-		engine.dataDir = jsEngine.getString( "data_dir", engine.configDir );
-		engine.family = familyFromStr( jsEngine.getString( "family", {} ) );
-		if (engine.family == EngineFamily::_EnumEnd)
-			engine.family = guessEngineFamily( fs::getFileBasenameFromPath( engine.executablePath ) );
+		engine.name = engineJs.getString( "name", "<missing name>" );
+		engine.executablePath = engineJs.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
+		engine.configDir = engineJs.getString( "config_dir", fs::getParentDir( engine.executablePath ) );
+		engine.dataDir = engineJs.getString( "data_dir", engine.configDir );
+		engine.family = familyFromStr( engineJs.getString( "family", {} ) );
 	}
 }
 
 static QJsonObject serialize( const IWAD & iwad )
 {
-	QJsonObject jsIWAD;
+	QJsonObject iwadJs;
 
 	if (iwad.isSeparator)
 	{
-		jsIWAD["separator"] = true;
-		jsIWAD["name"] = iwad.name;
+		iwadJs["separator"] = true;
+		iwadJs["name"] = iwad.name;
 	}
 	else
 	{
-		jsIWAD["name"] = iwad.name;
-		jsIWAD["path"] = iwad.path;
+		iwadJs["name"] = iwad.name;
+		iwadJs["path"] = iwad.path;
 	}
 
-	return jsIWAD;
+	return iwadJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsEngine, IWAD & iwad )
+static void deserialize( const JsonObjectCtx & engineJs, IWAD & iwad )
 {
-	iwad.isSeparator = jsEngine.getBool( "separator", false, DontShowError );
+	iwad.isSeparator = engineJs.getBool( "separator", false, DontShowError );
 	if (iwad.isSeparator)
 	{
-		iwad.name = jsEngine.getString( "name", "<missing name>" );
+		iwad.name = engineJs.getString( "name", "<missing name>" );
 	}
 	else
 	{
-		iwad.path = jsEngine.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
-		iwad.name = jsEngine.getString( "name", QFileInfo( iwad.path ).fileName() );
+		iwad.path = engineJs.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
+		iwad.name = engineJs.getString( "name", QFileInfo( iwad.path ).fileName() );
 	}
 }
 
 static QJsonObject serialize( const Mod & mod )
 {
-	QJsonObject jsMod;
+	QJsonObject modJs;
 
 	if (mod.isSeparator)
 	{
-		jsMod["separator"] = true;
-		jsMod["name"] = mod.fileName;
+		modJs["separator"] = true;
+		modJs["name"] = mod.fileName;
 	}
 	else if (mod.isCmdArg)
 	{
-		jsMod["cmd_argument"] = true;
-		jsMod["value"] = mod.fileName;
-		jsMod["checked"] = mod.checked;
+		modJs["cmd_argument"] = true;
+		modJs["value"] = mod.fileName;
+		modJs["checked"] = mod.checked;
 	}
 	else
 	{
-		jsMod["path"] = mod.path;
-		jsMod["checked"] = mod.checked;
+		modJs["path"] = mod.path;
+		modJs["checked"] = mod.checked;
 	}
 
-	return jsMod;
+	return modJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsMod, Mod & mod )
+static void deserialize( const JsonObjectCtx & modJs, Mod & mod )
 {
-	if ((mod.isSeparator = jsMod.getBool( "separator", false, DontShowError )))
+	if ((mod.isSeparator = modJs.getBool( "separator", false, DontShowError )))
 	{
-		mod.fileName = jsMod.getString( "name", "<missing name>" );
+		mod.fileName = modJs.getString( "name", "<missing name>" );
 	}
-	else if ((mod.isCmdArg = jsMod.getBool( "cmd_argument", false, DontShowError )))
+	else if ((mod.isCmdArg = modJs.getBool( "cmd_argument", false, DontShowError )))
 	{
-		mod.fileName = jsMod.getString( "value", "<missing value>" );
-		mod.checked = jsMod.getBool( "checked", mod.checked );
+		mod.fileName = modJs.getString( "value", "<missing value>" );
+		mod.checked = modJs.getBool( "checked", mod.checked );
 	}
 	else
 	{
-		mod.path = jsMod.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
+		mod.path = modJs.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
 		mod.fileName = QFileInfo( mod.path ).fileName();
-		mod.checked = jsMod.getBool( "checked", mod.checked );
+		mod.checked = modJs.getBool( "checked", mod.checked );
 	}
 }
 
 static QJsonObject serialize( const EngineSettings & engineSettings )
 {
-	QJsonObject jsEngines;
+	QJsonObject engineSettingsJs;
 
-	jsEngines["default_engine"] = engineSettings.defaultEngine;
+	engineSettingsJs["default_engine"] = engineSettings.defaultEngine;
 
-	return jsEngines;
+	return engineSettingsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsEngines, EngineSettings & engineSettings )
+static void deserialize( const JsonObjectCtx & enginesJs, EngineSettings & engineSettings )
 {
-	engineSettings.defaultEngine = jsEngines.getString( "default_engine", {}, DontShowError );
+	engineSettings.defaultEngine = enginesJs.getString( "default_engine", {}, DontShowError );
 }
 
 static QJsonObject serialize( const IwadSettings & iwadSettings )
 {
-	QJsonObject jsIWADs;
+	QJsonObject iwadSettingsJs;
 
-	jsIWADs["auto_update"] = iwadSettings.updateFromDir;
-	jsIWADs["directory"] = iwadSettings.dir;
-	jsIWADs["search_subdirs"] = iwadSettings.searchSubdirs;
-	jsIWADs["default_iwad"] = iwadSettings.defaultIWAD;
+	iwadSettingsJs["auto_update"] = iwadSettings.updateFromDir;
+	iwadSettingsJs["directory"] = iwadSettings.dir;
+	iwadSettingsJs["search_subdirs"] = iwadSettings.searchSubdirs;
+	iwadSettingsJs["default_iwad"] = iwadSettings.defaultIWAD;
 
-	return jsIWADs;
+	return iwadSettingsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsIWADs, IwadSettings & iwadSettings )
+static void deserialize( const JsonObjectCtx & iwadSettingsJs, IwadSettings & iwadSettings )
 {
-	iwadSettings.updateFromDir = jsIWADs.getBool( "auto_update", iwadSettings.updateFromDir );
-	iwadSettings.dir = jsIWADs.getString( "directory" );
-	iwadSettings.searchSubdirs = jsIWADs.getBool( "search_subdirs", iwadSettings.searchSubdirs );
-	iwadSettings.defaultIWAD = jsIWADs.getString( "default_iwad", {}, DontShowError );
+	iwadSettings.updateFromDir = iwadSettingsJs.getBool( "auto_update", iwadSettings.updateFromDir );
+	iwadSettings.dir = iwadSettingsJs.getString( "directory" );
+	iwadSettings.searchSubdirs = iwadSettingsJs.getBool( "search_subdirs", iwadSettings.searchSubdirs );
+	iwadSettings.defaultIWAD = iwadSettingsJs.getString( "default_iwad", {}, DontShowError );
 }
 
 static QJsonObject serialize( const MapSettings & mapSettings )
 {
-	QJsonObject jsMaps;
+	QJsonObject mapsJs;
 
-	jsMaps["directory"] = mapSettings.dir;
+	mapsJs["directory"] = mapSettings.dir;
 
-	return jsMaps;
+	return mapsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsMaps, MapSettings & mapSettings )
+static void deserialize( const JsonObjectCtx & mapSettingsJs, MapSettings & mapSettings )
 {
-	mapSettings.dir = jsMaps.getString( "directory" );
+	mapSettings.dir = mapSettingsJs.getString( "directory" );
 }
 
 static QJsonObject serialize( const ModSettings & modSettings )
 {
-	QJsonObject jsMods;
+	QJsonObject modsJs;
 
-	jsMods["directory"] = modSettings.dir;
-	jsMods["show_icons"] = modSettings.showIcons;
+	modsJs["directory"] = modSettings.dir;
+	modsJs["show_icons"] = modSettings.showIcons;
 
-	return jsMods;
+	return modsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsMods, ModSettings & modSettings )
+static void deserialize( const JsonObjectCtx & modsJs, ModSettings & modSettings )
 {
-	modSettings.dir = jsMods.getString( "directory" );
-	modSettings.showIcons = jsMods.getBool( "show_icons", modSettings.showIcons );
+	modSettings.dir = modsJs.getString( "directory" );
+	modSettings.showIcons = modsJs.getBool( "show_icons", modSettings.showIcons );
 }
 
 static QJsonObject serialize( const LaunchOptions & opts )
 {
-	QJsonObject jsOptions;
+	QJsonObject optsJs;
 
-	jsOptions["launch_mode"] = int( opts.mode );
-	jsOptions["map_name"] = opts.mapName;
-	jsOptions["save_file"] = opts.saveFile;
-	jsOptions["map_name_demo"] = opts.mapName_demo;
-	jsOptions["demo_file_record"] = opts.demoFile_record;
-	jsOptions["demo_file_replay"] = opts.demoFile_replay;
+	optsJs["launch_mode"] = int( opts.mode );
+	optsJs["map_name"] = opts.mapName;
+	optsJs["save_file"] = opts.saveFile;
+	optsJs["map_name_demo"] = opts.mapName_demo;
+	optsJs["demo_file_record"] = opts.demoFile_record;
+	optsJs["demo_file_replay"] = opts.demoFile_replay;
 
-	return jsOptions;
+	return optsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsOptions, LaunchOptions & opts )
+static void deserialize( const JsonObjectCtx & optsJs, LaunchOptions & opts )
 {
-	opts.mode = jsOptions.getEnum< LaunchMode >( "launch_mode", opts.mode );
-	opts.mapName = jsOptions.getString( "map_name" );
-	opts.saveFile = jsOptions.getString( "save_file" );
-	opts.mapName_demo = jsOptions.getString( "map_name_demo" );
-	opts.demoFile_record = jsOptions.getString( "demo_file_record" );
-	opts.demoFile_replay = jsOptions.getString( "demo_file_replay" );
+	opts.mode = optsJs.getEnum< LaunchMode >( "launch_mode", opts.mode );
+	opts.mapName = optsJs.getString( "map_name" );
+	opts.saveFile = optsJs.getString( "save_file" );
+	opts.mapName_demo = optsJs.getString( "map_name_demo" );
+	opts.demoFile_record = optsJs.getString( "demo_file_record" );
+	opts.demoFile_replay = optsJs.getString( "demo_file_replay" );
 }
 
 static QJsonObject serialize( const MultiplayerOptions & opts )
 {
-	QJsonObject jsOptions;
+	QJsonObject optsJs;
 
-	jsOptions["is_multiplayer"] = opts.isMultiplayer;
-	jsOptions["mult_role"] = int( opts.multRole );
-	jsOptions["host_name"] = opts.hostName;
-	jsOptions["port"] = int( opts.port );
-	jsOptions["net_mode"] = int( opts.netMode );
-	jsOptions["game_mode"] = int( opts.gameMode );
-	jsOptions["player_count"] = int( opts.playerCount );
-	jsOptions["team_damage"] = opts.teamDamage;
-	jsOptions["time_limit"] = int( opts.timeLimit );
-	jsOptions["frag_limit"] = int( opts.fragLimit );
+	optsJs["is_multiplayer"] = opts.isMultiplayer;
+	optsJs["mult_role"] = int( opts.multRole );
+	optsJs["host_name"] = opts.hostName;
+	optsJs["port"] = int( opts.port );
+	optsJs["net_mode"] = int( opts.netMode );
+	optsJs["game_mode"] = int( opts.gameMode );
+	optsJs["player_count"] = int( opts.playerCount );
+	optsJs["team_damage"] = opts.teamDamage;
+	optsJs["time_limit"] = int( opts.timeLimit );
+	optsJs["frag_limit"] = int( opts.fragLimit );
 
-	return jsOptions;
+	return optsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsOptions, MultiplayerOptions & opts )
+static void deserialize( const JsonObjectCtx & optsJs, MultiplayerOptions & opts )
 {
-	opts.isMultiplayer = jsOptions.getBool( "is_multiplayer", opts.isMultiplayer );
-	opts.multRole = jsOptions.getEnum< MultRole >( "mult_role", opts.multRole );
-	opts.hostName = jsOptions.getString( "host_name" );
-	opts.port = jsOptions.getUInt16( "port", opts.port );
-	opts.netMode = jsOptions.getEnum< NetMode >( "net_mode", opts.netMode );
-	opts.gameMode = jsOptions.getEnum< GameMode >( "game_mode", opts.gameMode );
-	opts.playerCount = jsOptions.getUInt( "player_count", opts.playerCount );
-	opts.teamDamage = jsOptions.getDouble( "team_damage", opts.teamDamage );
-	opts.timeLimit = jsOptions.getUInt( "time_limit", opts.timeLimit );
-	opts.fragLimit = jsOptions.getUInt( "frag_limit", opts.fragLimit );
+	opts.isMultiplayer = optsJs.getBool( "is_multiplayer", opts.isMultiplayer );
+	opts.multRole = optsJs.getEnum< MultRole >( "mult_role", opts.multRole );
+	opts.hostName = optsJs.getString( "host_name" );
+	opts.port = optsJs.getUInt16( "port", opts.port );
+	opts.netMode = optsJs.getEnum< NetMode >( "net_mode", opts.netMode );
+	opts.gameMode = optsJs.getEnum< GameMode >( "game_mode", opts.gameMode );
+	opts.playerCount = optsJs.getUInt( "player_count", opts.playerCount );
+	opts.teamDamage = optsJs.getDouble( "team_damage", opts.teamDamage );
+	opts.timeLimit = optsJs.getUInt( "time_limit", opts.timeLimit );
+	opts.fragLimit = optsJs.getUInt( "frag_limit", opts.fragLimit );
 }
 
 static QJsonObject serialize( const GameplayOptions & opts )
 {
-	QJsonObject jsOptions;
+	QJsonObject optsJs;
 
-	jsOptions["skill_idx"] = int( opts.skillIdx );
-	jsOptions["skill_num"] = int( opts.skillNum );
-	jsOptions["no_monsters"] = opts.noMonsters;
-	jsOptions["fast_monsters"] = opts.fastMonsters;
-	jsOptions["monsters_respawn"] = opts.monstersRespawn;
-	jsOptions["dmflags1"] = qint64( opts.dmflags1 );
-	jsOptions["dmflags2"] = qint64( opts.dmflags2 );
-	jsOptions["allow_cheats"] = opts.allowCheats;
+	optsJs["skill_idx"] = int( opts.skillIdx );
+	optsJs["skill_num"] = int( opts.skillNum );
+	optsJs["no_monsters"] = opts.noMonsters;
+	optsJs["fast_monsters"] = opts.fastMonsters;
+	optsJs["monsters_respawn"] = opts.monstersRespawn;
+	optsJs["pistol_start"] = opts.pistolStart;
+	optsJs["allow_cheats"] = opts.allowCheats;
+	optsJs["dmflags1"] = qint64( opts.dmflags1 );
+	optsJs["dmflags2"] = qint64( opts.dmflags2 );
+	optsJs["dmflags3"] = qint64( opts.dmflags3 );
 
-	return jsOptions;
+	return optsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsOptions, GameplayOptions & opts )
+static void deserialize( const JsonObjectCtx & optsJs, GameplayOptions & opts )
 {
-	opts.skillIdx = jsOptions.getInt( "skill_idx", opts.skillIdx );
-	opts.skillNum = jsOptions.getInt( "skill_num", opts.skillNum );
-	opts.noMonsters = jsOptions.getBool( "no_monsters", opts.noMonsters );
-	opts.fastMonsters = jsOptions.getBool( "fast_monsters", opts.fastMonsters );
-	opts.monstersRespawn = jsOptions.getBool( "monsters_respawn", opts.monstersRespawn );
-	opts.dmflags1 = jsOptions.getInt( "dmflags1", opts.dmflags1 );
-	opts.dmflags2 = jsOptions.getInt( "dmflags2", opts.dmflags2 );
-	opts.allowCheats = jsOptions.getBool( "allow_cheats", opts.allowCheats );
+	opts.skillIdx = optsJs.getInt( "skill_idx", opts.skillIdx );
+	opts.skillNum = optsJs.getInt( "skill_num", opts.skillNum );
+	opts.noMonsters = optsJs.getBool( "no_monsters", opts.noMonsters );
+	opts.fastMonsters = optsJs.getBool( "fast_monsters", opts.fastMonsters );
+	opts.monstersRespawn = optsJs.getBool( "monsters_respawn", opts.monstersRespawn );
+	opts.pistolStart = optsJs.getBool( "pistol_start", opts.pistolStart );
+	opts.allowCheats = optsJs.getBool( "allow_cheats", opts.allowCheats );
+	opts.dmflags1 = optsJs.getInt( "dmflags1", opts.dmflags1 );
+	opts.dmflags2 = optsJs.getInt( "dmflags2", opts.dmflags2 );
+	opts.dmflags3 = optsJs.getInt( "dmflags3", opts.dmflags3 );
 }
 
 static QJsonObject serialize( const CompatibilityOptions & opts )
 {
-	QJsonObject jsOptions;
+	QJsonObject optsJs;
 
-	jsOptions["compat_level"] = opts.compatLevel;
-	jsOptions["compatflags1"] = qint64( opts.compatflags1 );
-	jsOptions["compatflags2"] = qint64( opts.compatflags2 );
+	optsJs["compat_mode"] = opts.compatMode;
+	optsJs["compatflags1"] = qint64( opts.compatflags1 );
+	optsJs["compatflags2"] = qint64( opts.compatflags2 );
 
-	return jsOptions;
+	return optsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsOptions, CompatibilityOptions & opts )
+static void deserialize( const JsonObjectCtx & optsJs, CompatibilityOptions & opts )
 {
-	opts.compatflags1 = jsOptions.getInt( "compatflags1", opts.compatflags1 );
-	opts.compatflags2 = jsOptions.getInt( "compatflags2", opts.compatflags2 );
-	opts.compatLevel = jsOptions.getInt( "compat_level", opts.compatLevel );
+	opts.compatflags1 = optsJs.getInt( "compatflags1", opts.compatflags1 );
+	opts.compatflags2 = optsJs.getInt( "compatflags2", opts.compatflags2 );
+	if (optsJs.hasMember("compat_level"))
+		opts.compatMode = optsJs.getInt( "compat_level", opts.compatMode );
+	else
+		opts.compatMode = optsJs.getInt( "compat_mode", opts.compatMode );
 }
 
 static QJsonObject serialize( const AlternativePaths & opts )
 {
-	QJsonObject jsOptions;
+	QJsonObject optsJs;
 
-	jsOptions["save_dir"] = opts.saveDir;
-	jsOptions["screenshot_dir"] = opts.screenshotDir;
+	optsJs["config_dir"] = opts.configDir;
+	optsJs["save_dir"] = opts.saveDir;
+	optsJs["screenshot_dir"] = opts.screenshotDir;
 
-	return jsOptions;
+	return optsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsOptions, AlternativePaths & opts )
+static void deserialize( const JsonObjectCtx & optsJs, AlternativePaths & opts )
 {
-	opts.saveDir = jsOptions.getString( "save_dir" );
-	opts.screenshotDir = jsOptions.getString( "screenshot_dir" );
+	opts.configDir = optsJs.getString( "config_dir" );
+	opts.saveDir = optsJs.getString( "save_dir" );
+	opts.screenshotDir = optsJs.getString( "screenshot_dir" );
 }
 
 static QJsonObject serialize( const VideoOptions & opts )
 {
-	QJsonObject jsOptions;
+	QJsonObject optsJs;
 
-	jsOptions["monitor_idx"] = opts.monitorIdx;
-	jsOptions["resolution_x"] = qint64( opts.resolutionX );
-	jsOptions["resolution_y"] = qint64( opts.resolutionY );
-	jsOptions["show_fps"] = opts.showFPS;
+	optsJs["monitor_idx"] = opts.monitorIdx;
+	optsJs["resolution_x"] = qint64( opts.resolutionX );
+	optsJs["resolution_y"] = qint64( opts.resolutionY );
+	optsJs["show_fps"] = opts.showFPS;
 
-	return jsOptions;
+	return optsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsOptions, VideoOptions & opts )
+static void deserialize( const JsonObjectCtx & optsJs, VideoOptions & opts )
 {
-	opts.monitorIdx = jsOptions.getInt( "monitor_idx", opts.monitorIdx );
-	opts.resolutionX = jsOptions.getUInt( "resolution_x", opts.resolutionX );
-	opts.resolutionY = jsOptions.getUInt( "resolution_y", opts.resolutionY );
-	opts.showFPS = jsOptions.getBool( "show_fps", opts.showFPS );
+	opts.monitorIdx = optsJs.getInt( "monitor_idx", opts.monitorIdx );
+	opts.resolutionX = optsJs.getUInt( "resolution_x", opts.resolutionX );
+	opts.resolutionY = optsJs.getUInt( "resolution_y", opts.resolutionY );
+	opts.showFPS = optsJs.getBool( "show_fps", opts.showFPS );
 }
 
 static QJsonObject serialize( const AudioOptions & opts )
 {
-	QJsonObject jsOptions;
+	QJsonObject optsJs;
 
-	jsOptions["no_sound"] = opts.noSound;
-	jsOptions["no_sfx"] = opts.noSFX;
-	jsOptions["no_music"] = opts.noMusic;
+	optsJs["no_sound"] = opts.noSound;
+	optsJs["no_sfx"] = opts.noSFX;
+	optsJs["no_music"] = opts.noMusic;
 
-	return jsOptions;
+	return optsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsOptions, AudioOptions & opts )
+static void deserialize( const JsonObjectCtx & optsJs, AudioOptions & opts )
 {
-	opts.noSound = jsOptions.getBool( "no_sound", opts.noSound );
-	opts.noSFX = jsOptions.getBool( "no_sfx", opts.noSFX );
-	opts.noMusic = jsOptions.getBool( "no_music", opts.noMusic );
+	opts.noSound = optsJs.getBool( "no_sound", opts.noSound );
+	opts.noSFX = optsJs.getBool( "no_sfx", opts.noSFX );
+	opts.noMusic = optsJs.getBool( "no_music", opts.noMusic );
 }
 
 static QJsonObject serialize( const GlobalOptions & opts )
 {
-	QJsonObject jsOptions;
+	QJsonObject optsJs;
 
-	jsOptions["use_preset_name_as_dir"] = opts.usePresetNameAsDir;
-	jsOptions["additional_args"] = opts.cmdArgs;
-	jsOptions["env_vars"] = serialize( opts.envVars );
+	optsJs["use_preset_name_as_config_dir"] = opts.usePresetNameAsConfigDir;
+	optsJs["use_preset_name_as_save_dir"] = opts.usePresetNameAsSaveDir;
+	optsJs["use_preset_name_as_screenshot_dir"] = opts.usePresetNameAsScreenshotDir;
+	optsJs["additional_args"] = opts.cmdArgs;
+	optsJs["cmd_prefix"] = opts.cmdPrefix;
+	optsJs["env_vars"] = serialize( opts.envVars );
 
-	return jsOptions;
+	return optsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsOptions, GlobalOptions & opts )
+static void deserialize( const JsonObjectCtx & optsJs, GlobalOptions & opts )
 {
-	opts.usePresetNameAsDir = jsOptions.getBool( "use_preset_name_as_dir", opts.usePresetNameAsDir );
-	opts.cmdArgs = jsOptions.getString( "additional_args" );
-	if (JsonObjectCtx jsEnvVars = jsOptions.getObject( "env_vars" ))
+	if (optsJs.hasMember("use_preset_name_as_dir"))  // old options (older than 1.9.0)
+	{
+		bool usePresetNameAsDir = optsJs.getBool( "use_preset_name_as_dir", false );
+		// Before 1.9.0 this option controlled saves and screenshots together -> apply it for those.
+		opts.usePresetNameAsSaveDir = usePresetNameAsDir;
+		opts.usePresetNameAsScreenshotDir = usePresetNameAsDir;
+		// However this option did not exist and could cause confusion -> leave at false.
+		opts.usePresetNameAsConfigDir = false;
+	}
+	else  // new options (1.9.0 or newer)
+	{
+		opts.usePresetNameAsConfigDir = optsJs.getBool( "use_preset_name_as_config_dir", opts.usePresetNameAsConfigDir );
+		opts.usePresetNameAsSaveDir = optsJs.getBool( "use_preset_name_as_save_dir", opts.usePresetNameAsSaveDir );
+		opts.usePresetNameAsScreenshotDir = optsJs.getBool( "use_preset_name_as_screenshot_dir", opts.usePresetNameAsScreenshotDir );
+	}
+
+	opts.cmdArgs = optsJs.getString( "additional_args" );
+	opts.cmdPrefix = optsJs.getString( "cmd_prefix" );
+	if (JsonObjectCtx jsEnvVars = optsJs.getObject( "env_vars" ))
 		deserialize( jsEnvVars, opts.envVars );
 }
 
 static QJsonObject serialize( const Preset & preset, const StorageSettings & settings )
 {
-	QJsonObject jsPreset;
+	QJsonObject presetJs;
 
-	jsPreset["name"] = preset.name;
+	presetJs["name"] = preset.name;
 
 	if (preset.isSeparator)
 	{
-		jsPreset["separator"] = true;
-		return jsPreset;
+		presetJs["separator"] = true;
+		return presetJs;
 	}
 
 	// files
 
-	jsPreset["selected_engine"] = preset.selectedEnginePath;
-	jsPreset["selected_config"] = preset.selectedConfig;
-	jsPreset["selected_IWAD"] = preset.selectedIWAD;
+	presetJs["selected_engine"] = preset.selectedEnginePath;
+	presetJs["selected_config"] = preset.selectedConfig;
+	presetJs["selected_IWAD"] = preset.selectedIWAD;
 
-	jsPreset["selected_mappacks"] = serializeStringVec( preset.selectedMapPacks );
+	presetJs["selected_mappacks"] = serializeStringVec( preset.selectedMapPacks );
 
-	jsPreset["mods"] = serializeList( preset.mods );
+	presetJs["mods"] = serializeList( preset.mods );
+
+	presetJs["load_maps_after_mods"] = preset.loadMapsAfterMods;
 
 	// options
 
 	if (settings.launchOptsStorage == StoreToPreset)
-		jsPreset["launch_options"] = serialize( preset.launchOpts );
+		presetJs["launch_options"] = serialize( preset.launchOpts );
 
 	if (settings.launchOptsStorage == StoreToPreset)
-		jsPreset["multiplayer_options"] = serialize( preset.multOpts );
+		presetJs["multiplayer_options"] = serialize( preset.multOpts );
 
 	if (settings.gameOptsStorage == StoreToPreset)
-		jsPreset["gameplay_options"] = serialize( preset.gameOpts );
+		presetJs["gameplay_options"] = serialize( preset.gameOpts );
 
 	if (settings.compatOptsStorage == StoreToPreset)
-		jsPreset["compatibility_options"] = serialize( preset.compatOpts );
+		presetJs["compatibility_options"] = serialize( preset.compatOpts );
 
 	if (settings.videoOptsStorage == StoreToPreset)
-		jsPreset["video_options"] = serialize( preset.videoOpts );
+		presetJs["video_options"] = serialize( preset.videoOpts );
 
 	if (settings.audioOptsStorage == StoreToPreset)
-		jsPreset["audio_options"] = serialize( preset.audioOpts );
+		presetJs["audio_options"] = serialize( preset.audioOpts );
 
-	jsPreset["alternative_paths"] = serialize( preset.altPaths );
+	presetJs["alternative_paths"] = serialize( preset.altPaths );
 
 	// preset-specific args
 
-	jsPreset["additional_args"] = preset.cmdArgs;
-	jsPreset["env_vars"] = serialize( preset.envVars );
+	presetJs["additional_args"] = preset.cmdArgs;
+	presetJs["env_vars"] = serialize( preset.envVars );
 
-	return jsPreset;
+	return presetJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const StorageSettings & settings )
+static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const StorageSettings & settings )
 {
-	preset.name = jsPreset.getString( "name", "<missing name>" );
+	preset.name = presetJs.getString( "name", "<missing name>" );
 
-	preset.isSeparator = jsPreset.getBool( "separator", false, DontShowError );
+	preset.isSeparator = presetJs.getBool( "separator", false, DontShowError );
 	if (preset.isSeparator)
 	{
 		return;
@@ -468,26 +495,26 @@ static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const 
 
 	// files
 
-	preset.selectedEnginePath = jsPreset.getString( "selected_engine" );
-	preset.selectedConfig = jsPreset.getString( "selected_config" );
-	preset.selectedIWAD = jsPreset.getString( "selected_IWAD" );
+	preset.selectedEnginePath = presetJs.getString( "selected_engine" );
+	preset.selectedConfig = presetJs.getString( "selected_config" );
+	preset.selectedIWAD = presetJs.getString( "selected_IWAD" );
 
-	if (JsonArrayCtx jsSelectedMapPacks = jsPreset.getArray( "selected_mappacks" ))
+	if (JsonArrayCtx selectedMapPacksJs = presetJs.getArray( "selected_mappacks" ))
 	{
-		preset.selectedMapPacks = deserializeStringVec( jsSelectedMapPacks );
+		preset.selectedMapPacks = deserializeStringVec( selectedMapPacksJs );
 	}
 
-	if (JsonArrayCtx jsMods = jsPreset.getArray( "mods" ))
+	if (JsonArrayCtx modsJs = presetJs.getArray( "mods" ))
 	{
 		// iterate manually, so that we can filter-out invalid items
-		for (int i = 0; i < jsMods.size(); i++)
+		for (int i = 0; i < modsJs.size(); i++)
 		{
-			JsonObjectCtx jsMod = jsMods.getObject( i );
-			if (!jsMod)  // wrong type on position i - skip this entry
+			JsonObjectCtx modJs = modsJs.getObject( i );
+			if (!modJs)  // wrong type on position i - skip this entry
 				continue;
 
 			Mod mod;
-			deserialize( jsMod, mod );
+			deserialize( modJs, mod );
 
 			if (mod.isSeparator || mod.isCmdArg) {
 				if (mod.fileName.isEmpty())  // vital element is missing in the JSON -> skip this entry
@@ -503,234 +530,236 @@ static void deserialize( const JsonObjectCtx & jsPreset, Preset & preset, const 
 		}
 	}
 
+	preset.loadMapsAfterMods = presetJs.getBool( "load_maps_after_mods", preset.loadMapsAfterMods );
+
 	// options
 
 	if (settings.launchOptsStorage == StoreToPreset)
-		if (JsonObjectCtx jsOptions = jsPreset.getObject( "launch_options" ))
-			deserialize( jsOptions, preset.launchOpts );
+		if (JsonObjectCtx optsJs = presetJs.getObject( "launch_options" ))
+			deserialize( optsJs, preset.launchOpts );
 
 	if (settings.launchOptsStorage == StoreToPreset)
-		if (JsonObjectCtx jsOptions = jsPreset.getObject( "multiplayer_options" ))
-			deserialize( jsOptions, preset.multOpts );
+		if (JsonObjectCtx optsJs = presetJs.getObject( "multiplayer_options" ))
+			deserialize( optsJs, preset.multOpts );
 
 	if (settings.gameOptsStorage == StoreToPreset)
-		if (JsonObjectCtx jsOptions = jsPreset.getObject( "gameplay_options" ))
-			deserialize( jsOptions, preset.gameOpts );
+		if (JsonObjectCtx optsJs = presetJs.getObject( "gameplay_options" ))
+			deserialize( optsJs, preset.gameOpts );
 
 	if (settings.compatOptsStorage == StoreToPreset)
-		if (JsonObjectCtx jsOptions = jsPreset.getObject( "compatibility_options" ))
-			deserialize( jsOptions, preset.compatOpts );
+		if (JsonObjectCtx optsJs = presetJs.getObject( "compatibility_options" ))
+			deserialize( optsJs, preset.compatOpts );
 
 	if (settings.videoOptsStorage == StoreToPreset)
-		if (JsonObjectCtx jsOptions = jsPreset.getObject( "video_options" ))
-			deserialize( jsOptions, preset.videoOpts );
+		if (JsonObjectCtx optsJs = presetJs.getObject( "video_options" ))
+			deserialize( optsJs, preset.videoOpts );
 
 	if (settings.audioOptsStorage == StoreToPreset)
-		if (JsonObjectCtx jsOptions = jsPreset.getObject( "audio_options" ))
-			deserialize( jsOptions, preset.audioOpts );
+		if (JsonObjectCtx optsJs = presetJs.getObject( "audio_options" ))
+			deserialize( optsJs, preset.audioOpts );
 
-	if (JsonObjectCtx jsOptions = jsPreset.getObject( "alternative_paths" ))
-		deserialize( jsOptions, preset.altPaths );
+	if (JsonObjectCtx optsJs = presetJs.getObject( "alternative_paths" ))
+		deserialize( optsJs, preset.altPaths );
 
 	// preset-specific args
 
-	preset.cmdArgs = jsPreset.getString( "additional_args" );
-	if (JsonObjectCtx jsEnvVars = jsPreset.getObject( "env_vars" ))
-		deserialize( jsEnvVars, preset.envVars );
+	preset.cmdArgs = presetJs.getString( "additional_args" );
+	if (JsonObjectCtx envVarsJs = presetJs.getObject( "env_vars" ))
+		deserialize( envVarsJs, preset.envVars );
 }
 
 static QJsonObject serialize( const StorageSettings & settings )
 {
-	QJsonObject jsSettings;
+	QJsonObject settingsJs;
 
-	jsSettings["launch_opts"] = int( settings.launchOptsStorage );
-	jsSettings["gameplay_opts"] = int( settings.gameOptsStorage );
-	jsSettings["compat_opts"] = int( settings.compatOptsStorage );
-	jsSettings["video_opts"] = int( settings.videoOptsStorage );
-	jsSettings["audio_opts"] = int( settings.audioOptsStorage );
+	settingsJs["launch_opts"] = int( settings.launchOptsStorage );
+	settingsJs["gameplay_opts"] = int( settings.gameOptsStorage );
+	settingsJs["compat_opts"] = int( settings.compatOptsStorage );
+	settingsJs["video_opts"] = int( settings.videoOptsStorage );
+	settingsJs["audio_opts"] = int( settings.audioOptsStorage );
 
-	return jsSettings;
+	return settingsJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsSettings, StorageSettings & settings )
+static void deserialize( const JsonObjectCtx & settingsJs, StorageSettings & settings )
 {
-	settings.launchOptsStorage = jsSettings.getEnum< OptionsStorage >( "launch_opts", settings.launchOptsStorage );
-	settings.gameOptsStorage = jsSettings.getEnum< OptionsStorage >( "gameplay_opts", settings.gameOptsStorage );
-	settings.compatOptsStorage = jsSettings.getEnum< OptionsStorage >( "compat_opts", settings.compatOptsStorage );
-	settings.videoOptsStorage = jsSettings.getEnum< OptionsStorage >( "video_opts", settings.videoOptsStorage );
-	settings.audioOptsStorage = jsSettings.getEnum< OptionsStorage >( "audio_opts", settings.audioOptsStorage );
+	settings.launchOptsStorage = settingsJs.getEnum< OptionsStorage >( "launch_opts", settings.launchOptsStorage );
+	settings.gameOptsStorage = settingsJs.getEnum< OptionsStorage >( "gameplay_opts", settings.gameOptsStorage );
+	settings.compatOptsStorage = settingsJs.getEnum< OptionsStorage >( "compat_opts", settings.compatOptsStorage );
+	settings.videoOptsStorage = settingsJs.getEnum< OptionsStorage >( "video_opts", settings.videoOptsStorage );
+	settings.audioOptsStorage = settingsJs.getEnum< OptionsStorage >( "audio_opts", settings.audioOptsStorage );
 }
 
-static void serialize( QJsonObject & jsSettings, const LauncherSettings & settings )
+static void serialize( QJsonObject & settingsJs, const LauncherSettings & settings )
 {
-	jsSettings["use_absolute_paths"] = settings.pathStyle == PathStyle::Absolute;
-	jsSettings["show_engine_output"] = settings.showEngineOutput;
-	jsSettings["close_on_launch"] = settings.closeOnLaunch;
-	jsSettings["check_for_updates"] = settings.checkForUpdates;
-	jsSettings["ask_for_sandbox_permissions"] = settings.askForSandboxPermissions;
+	settingsJs["use_absolute_paths"] = settings.pathStyle == PathStyle::Absolute;
+	settingsJs["show_engine_output"] = settings.showEngineOutput;
+	settingsJs["close_on_launch"] = settings.closeOnLaunch;
+	settingsJs["check_for_updates"] = settings.checkForUpdates;
+	settingsJs["ask_for_sandbox_permissions"] = settings.askForSandboxPermissions;
 
-	jsSettings["options_storage"] = serialize( static_cast< const StorageSettings & >( settings ) );
+	settingsJs["options_storage"] = serialize( static_cast< const StorageSettings & >( settings ) );
 }
 
-static void deserialize( const JsonObjectCtx & jsSettings, LauncherSettings & settings )
+static void deserialize( const JsonObjectCtx & settingsJs, LauncherSettings & settings )
 {
-	bool useAbsolutePaths = jsSettings.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
+	bool useAbsolutePaths = settingsJs.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
 	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
 
-	settings.showEngineOutput = jsSettings.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
-	settings.closeOnLaunch = jsSettings.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
-	settings.checkForUpdates = jsSettings.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
-	settings.askForSandboxPermissions = jsSettings.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
+	settings.showEngineOutput = settingsJs.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
+	settings.closeOnLaunch = settingsJs.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
+	settings.checkForUpdates = settingsJs.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
+	settings.askForSandboxPermissions = settingsJs.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
 
-	if (JsonObjectCtx jsOptsStorage = jsSettings.getObject( "options_storage" ))
+	if (JsonObjectCtx optsStorageJs = settingsJs.getObject( "options_storage" ))
 	{
-		deserialize( jsOptsStorage, static_cast< StorageSettings & >( settings ) );
+		deserialize( optsStorageJs, static_cast< StorageSettings & >( settings ) );
 	}
 }
 
 static QJsonObject serialize( const WindowGeometry & geometry )
 {
-	QJsonObject jsGeometry;
+	QJsonObject geometryJs;
 
-	jsGeometry["x"] = geometry.x;
-	jsGeometry["y"] = geometry.y;
-	jsGeometry["width"] = geometry.width;
-	jsGeometry["height"] = geometry.height;
+	geometryJs["x"] = geometry.x;
+	geometryJs["y"] = geometry.y;
+	geometryJs["width"] = geometry.width;
+	geometryJs["height"] = geometry.height;
 
-	return jsGeometry;
+	return geometryJs;
 }
 
-static void deserialize( const JsonObjectCtx & jsGeometry, WindowGeometry & geometry )
+static void deserialize( const JsonObjectCtx & geometryJs, WindowGeometry & geometry )
 {
-	geometry.x = jsGeometry.getInt( "x", geometry.x );
-	geometry.y = jsGeometry.getInt( "y", geometry.y );
-	geometry.width = jsGeometry.getInt( "width", geometry.width );
-	geometry.height = jsGeometry.getInt( "height", geometry.height );
+	geometry.x = geometryJs.getInt( "x", geometry.x );
+	geometry.y = geometryJs.getInt( "y", geometry.y );
+	geometry.width = geometryJs.getInt( "width", geometry.width );
+	geometry.height = geometryJs.getInt( "height", geometry.height );
 }
 
-static void serialize( QJsonObject & jsAppearance, const AppearanceSettings & appearance )
+static void serialize( QJsonObject & appearanceJs, const AppearanceSettings & appearance )
 {
-	jsAppearance["geometry"] = serialize( appearance.geometry );
-	jsAppearance["app_style"] = appearance.appStyle.isNull() ? QJsonValue( QJsonValue::Null ) : appearance.appStyle;
-	jsAppearance["color_scheme"] = schemeToString( appearance.colorScheme );
+	appearanceJs["geometry"] = serialize( appearance.geometry );
+	appearanceJs["app_style"] = appearance.appStyle.isNull() ? QJsonValue( QJsonValue::Null ) : appearance.appStyle;
+	appearanceJs["color_scheme"] = schemeToString( appearance.colorScheme );
 }
 
-static void deserialize( const JsonObjectCtx & jsAppearance, AppearanceSettings & appearance, bool loadGeometry )
+static void deserialize( const JsonObjectCtx & appearanceJs, AppearanceSettings & appearance, bool loadGeometry )
 {
 	if (loadGeometry)
 	{
-		if (JsonObjectCtx jsGeometry = jsAppearance.getObject( "geometry" ))
+		if (JsonObjectCtx geometryJs = appearanceJs.getObject( "geometry" ))
 		{
-			deserialize( jsGeometry, appearance.geometry );
+			deserialize( geometryJs, appearance.geometry );
 		}
 	}
 
-	appearance.appStyle = jsAppearance.getString( "app_style", {}, DontShowError );  // null value means system-default
+	appearance.appStyle = appearanceJs.getString( "app_style", {}, DontShowError );  // null value means system-default
 
-	ColorScheme colorScheme = schemeFromString( jsAppearance.getString( "color_scheme" ) );
+	ColorScheme colorScheme = schemeFromString( appearanceJs.getString( "color_scheme" ) );
 	if (colorScheme != ColorScheme::_EnumEnd)
 		appearance.colorScheme = colorScheme;  // otherwise leave default
 }
 
 
 //======================================================================================================================
-//  top-level JSON stucture
+// top-level JSON stucture
 
-static void serialize( QJsonObject & jsRoot, const OptionsToSave & opts )
+static void serialize( QJsonObject & rootJs, const OptionsToSave & opts )
 {
 	// files and related settings
 
 	{
 		// better keep room for adding some engine settings later, so that we don't have to break compatibility again
-		QJsonObject jsEngines = serialize( opts.engineSettings );
+		QJsonObject enginesJs = serialize( opts.engineSettings );
 
-		jsEngines["engine_list"] = serializeList( opts.engines );  // serializes only Engine fields, leaves other EngineInfo fields alone
+		enginesJs["engine_list"] = serializeList( opts.engines );  // serializes only Engine fields, leaves other EngineInfo fields alone
 
-		jsRoot["engines"] = jsEngines;
+		rootJs["engines"] = enginesJs;
 	}
 
 	{
-		QJsonObject jsIWADs = serialize( opts.iwadSettings );
+		QJsonObject iwadsJs = serialize( opts.iwadSettings );
 
 		if (!opts.iwadSettings.updateFromDir)
-			jsIWADs["IWAD_list"] = serializeList( opts.iwads );
+			iwadsJs["IWAD_list"] = serializeList( opts.iwads );
 
-		jsRoot["IWADs"] = jsIWADs;
+		rootJs["IWADs"] = iwadsJs;
 	}
 
-	jsRoot["maps"] = serialize( opts.mapSettings );
+	rootJs["maps"] = serialize( opts.mapSettings );
 
-	jsRoot["mods"] = serialize( opts.modSettings );
+	rootJs["mods"] = serialize( opts.modSettings );
 
 	// options
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
-		jsRoot["launch_options"] = serialize( opts.launchOpts );
+		rootJs["launch_options"] = serialize( opts.launchOpts );
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
-		jsRoot["multiplayer_options"] = serialize( opts.multOpts );
+		rootJs["multiplayer_options"] = serialize( opts.multOpts );
 
 	if (opts.settings.gameOptsStorage == StoreGlobally)
-		jsRoot["gameplay_options"] = serialize( opts.gameOpts );
+		rootJs["gameplay_options"] = serialize( opts.gameOpts );
 
 	if (opts.settings.compatOptsStorage == StoreGlobally)
-		jsRoot["compatibility_options"] = serialize( opts.compatOpts );
+		rootJs["compatibility_options"] = serialize( opts.compatOpts );
 
 	if (opts.settings.videoOptsStorage == StoreGlobally)
-		jsRoot["video_options"] = serialize( opts.videoOpts );
+		rootJs["video_options"] = serialize( opts.videoOpts );
 
 	if (opts.settings.audioOptsStorage == StoreGlobally)
-		jsRoot["audio_options"] = serialize( opts.audioOpts );
+		rootJs["audio_options"] = serialize( opts.audioOpts );
 
-	jsRoot["global_options"] = serialize( opts.globalOpts );
+	rootJs["global_options"] = serialize( opts.globalOpts );
 
 	// presets
 
 	{
-		QJsonArray jsPresetArray;
+		QJsonArray presetArrayJs;
 
 		for (const Preset & preset : opts.presets)
 		{
-			QJsonObject jsPreset = serialize( preset, opts.settings );
-			jsPresetArray.append( jsPreset );
+			QJsonObject presetJs = serialize( preset, opts.settings );
+			presetArrayJs.append( presetJs );
 		}
 
-		jsRoot["presets"] = jsPresetArray;
+		rootJs["presets"] = presetArrayJs;
 	}
 
-	jsRoot["selected_preset"] = opts.selectedPresetIdx >= 0 ? opts.presets[ opts.selectedPresetIdx ].name : QString();
+	rootJs["selected_preset"] = opts.selectedPresetIdx >= 0 ? opts.presets[ opts.selectedPresetIdx ].name : QString();
 
 	// global settings - serialize directly to root, so that we don't have to break compatibility with older options
 
-	serialize( jsRoot, opts.settings );
+	serialize( rootJs, opts.settings );
 
-	serialize( jsRoot, opts.appearance );
+	serialize( rootJs, opts.appearance );
 }
 
-static void deserialize( const JsonObjectCtx & jsRoot, OptionsToLoad & opts )
+static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 {
 	// global settings - deserialize directly from root, so that we don't have to break compatibility with older options
 
 	// This must be loaded early, because we need to know whether to attempt loading the opts from the presets or globally.
-	deserialize( jsRoot, opts.settings );
+	deserialize( rootJs, opts.settings );
 
 	// files and related settings
 
-	if (JsonObjectCtx jsEngines = jsRoot.getObject( "engines" ))
+	if (JsonObjectCtx enginesJs = rootJs.getObject( "engines" ))
 	{
-		deserialize( jsEngines, opts.engineSettings );
+		deserialize( enginesJs, opts.engineSettings );
 
-		if (JsonArrayCtx jsEngineArray = jsEngines.getArray( "engine_list" ))
+		if (JsonArrayCtx engineArrayJs = enginesJs.getArray( "engine_list" ))
 		{
 			// iterate manually, so that we can filter-out invalid items
-			for (int i = 0; i < jsEngineArray.size(); i++)
+			for (int i = 0; i < engineArrayJs.size(); i++)
 			{
-				JsonObjectCtx jsEngine = jsEngineArray.getObject( i );
-				if (!jsEngine)  // wrong type on position i -> skip this entry
+				JsonObjectCtx engineJs = engineArrayJs.getObject( i );
+				if (!engineJs)  // wrong type on position i -> skip this entry
 					continue;
 
 				Engine engine;
-				deserialize( jsEngine, engine );
+				deserialize( engineJs, engine );
 
 				if (engine.executablePath.isEmpty())  // element isn't present in JSON -> skip this entry
 					continue;
@@ -743,9 +772,9 @@ static void deserialize( const JsonObjectCtx & jsRoot, OptionsToLoad & opts )
 		}
 	}
 
-	if (JsonObjectCtx jsIWADs = jsRoot.getObject( "IWADs" ))
+	if (JsonObjectCtx iwadsJs = rootJs.getObject( "IWADs" ))
 	{
-		deserialize( jsIWADs, opts.iwadSettings );
+		deserialize( iwadsJs, opts.iwadSettings );
 
 		if (opts.iwadSettings.updateFromDir)
 		{
@@ -753,17 +782,17 @@ static void deserialize( const JsonObjectCtx & jsRoot, OptionsToLoad & opts )
 		}
 		else
 		{
-			if (JsonArrayCtx jsIWADArray = jsIWADs.getArray( "IWAD_list" ))
+			if (JsonArrayCtx iwadArrayJs = iwadsJs.getArray( "IWAD_list" ))
 			{
 				// iterate manually, so that we can filter-out invalid items
-				for (int i = 0; i < jsIWADArray.size(); i++)
+				for (int i = 0; i < iwadArrayJs.size(); i++)
 				{
-					JsonObjectCtx jsIWAD = jsIWADArray.getObject( i );
-					if (!jsIWAD)  // wrong type on position i - skip this entry
+					JsonObjectCtx iwadJs = iwadArrayJs.getObject( i );
+					if (!iwadJs)  // wrong type on position i - skip this entry
 						continue;
 
 					IWAD iwad;
-					deserialize( jsIWAD, iwad );
+					deserialize( iwadJs, iwad );
 
 					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
 						continue;
@@ -777,16 +806,16 @@ static void deserialize( const JsonObjectCtx & jsRoot, OptionsToLoad & opts )
 		}
 	}
 
-	if (JsonObjectCtx jsMaps = jsRoot.getObject( "maps" ))
+	if (JsonObjectCtx mapsJs = rootJs.getObject( "maps" ))
 	{
-		deserialize( jsMaps, opts.mapSettings );
+		deserialize( mapsJs, opts.mapSettings );
 
 		PathChecker::checkNonEmptyDirPath( opts.mapSettings.dir, true, "map directory from the saved options", "Please update it in Menu -> Initial Setup." );
 	}
 
-	if (JsonObjectCtx jsMods = jsRoot.getObject( "mods" ))
+	if (JsonObjectCtx modsJs = rootJs.getObject( "mods" ))
 	{
-		deserialize( jsMods, opts.modSettings );
+		deserialize( modsJs, opts.modSettings );
 
 		PathChecker::checkNonEmptyDirPath( opts.modSettings.dir, true, "mod directory from the saved options", "Please update it in Menu -> Initial Setup." );
 	}
@@ -794,92 +823,92 @@ static void deserialize( const JsonObjectCtx & jsRoot, OptionsToLoad & opts )
 	// options
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "launch_options" ))
-			deserialize( jsOptions, opts.launchOpts );
+		if (JsonObjectCtx optsJs = rootJs.getObject( "launch_options" ))
+			deserialize( optsJs, opts.launchOpts );
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "multiplayer_options" ))
-			deserialize( jsOptions, opts.multOpts );
+		if (JsonObjectCtx optsJs = rootJs.getObject( "multiplayer_options" ))
+			deserialize( optsJs, opts.multOpts );
 
 	if (opts.settings.gameOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "gameplay_options" ))
-			deserialize( jsOptions, opts.gameOpts );
+		if (JsonObjectCtx optsJs = rootJs.getObject( "gameplay_options" ))
+			deserialize( optsJs, opts.gameOpts );
 
 	if (opts.settings.compatOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "compatibility_options" ))
-			deserialize( jsOptions, opts.compatOpts );
+		if (JsonObjectCtx optsJs = rootJs.getObject( "compatibility_options" ))
+			deserialize( optsJs, opts.compatOpts );
 
 	if (opts.settings.videoOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "video_options" ))
-			deserialize( jsOptions, opts.videoOpts );
+		if (JsonObjectCtx optsJs = rootJs.getObject( "video_options" ))
+			deserialize( optsJs, opts.videoOpts );
 
 	if (opts.settings.audioOptsStorage == StoreGlobally)
-		if (JsonObjectCtx jsOptions = jsRoot.getObject( "audio_options" ))
-			deserialize( jsOptions, opts.audioOpts );
+		if (JsonObjectCtx optsJs = rootJs.getObject( "audio_options" ))
+			deserialize( optsJs, opts.audioOpts );
 
-	if (JsonObjectCtx jsOptions = jsRoot.getObject( "global_options" ))
-		deserialize( jsOptions, opts.globalOpts );
+	if (JsonObjectCtx optsJs = rootJs.getObject( "global_options" ))
+		deserialize( optsJs, opts.globalOpts );
 
 	// presets
 
-	if (JsonArrayCtx jsPresetArray = jsRoot.getArray( "presets" ))
+	if (JsonArrayCtx presetArrayJs = rootJs.getArray( "presets" ))
 	{
-		for (int i = 0; i < jsPresetArray.size(); i++)
+		for (int i = 0; i < presetArrayJs.size(); i++)
 		{
-			JsonObjectCtx jsPreset = jsPresetArray.getObject( i );
-			if (!jsPreset)  // wrong type on position i - skip this entry
+			JsonObjectCtx presetJs = presetArrayJs.getObject( i );
+			if (!presetJs)  // wrong type on position i - skip this entry
 				continue;
 
 			Preset preset;
-			deserialize( jsPreset, preset, opts.settings );
+			deserialize( presetJs, preset, opts.settings );
 
 			opts.presets.append( std::move( preset ) );
 		}
 	}
 
-	opts.selectedPreset = jsRoot.getString( "selected_preset" );
+	opts.selectedPreset = rootJs.getString( "selected_preset" );
 }
 
 
 //======================================================================================================================
-//  backward compatibility - loading user data from older options format
+// backward compatibility - loading user data from older options format
 
 #include "OptionsSerializer_compat.cpp"  // hack, but it's ok in this case
 
 
 //======================================================================================================================
-//  top-level API
+// top-level API
 
 QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts )
 {
-	QJsonObject jsRoot;
+	QJsonObject rootJs;
 
 	// this will be used to detect options created by older versions and supress "missing element" warnings
-	jsRoot["version"] = appVersion;
+	rootJs["version"] = appVersion;
 
-	serialize( jsRoot, opts );
+	serialize( rootJs, opts );
 
-	return QJsonDocument( jsRoot );
+	return QJsonDocument( rootJs );
 }
 
 void deserializeAppearanceFromJsonDoc( const JsonDocumentCtx & jsonDoc, AppearanceToLoad & opts, bool loadGeometry )
 {
-	const JsonObjectCtx & jsRoot = jsonDoc.rootObject();
+	const JsonObjectCtx & rootJs = jsonDoc.rootObject();
 
 	// deserialize directly from root, so that we don't have to break compatibility with older options
-	deserialize( jsRoot, opts.appearance, loadGeometry );
+	deserialize( rootJs, opts.appearance, loadGeometry );
 }
 
 void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLoad & opts )
 {
 	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
 	// we want to print a useful error message with information exactly which JSON element is broken.
-	const JsonObjectCtx & jsRoot = jsonDoc.rootObject();
+	const JsonObjectCtx & rootJs = jsonDoc.rootObject();
 
-	QString optsVersionStr = jsRoot.getString( "version", {}, DontShowError );
-	Version optsVersion( optsVersionStr );
+	QString optsVersionStr = rootJs.getString( "version", {}, DontShowError );
+	opts.version = Version( optsVersionStr );
 
-	if (!optsVersionStr.isEmpty() && optsVersion > appVersion)  // empty version means pre-1.4 version
+	if (!optsVersionStr.isEmpty() && opts.version > appVersion)  // empty version means pre-1.4 version
 	{
 		reportRuntimeError( nullptr, "Loading options from newer version",
 			"Detected saved options from newer version of DoomRunner. "
@@ -888,18 +917,18 @@ void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLo
 	}
 
 	// backward compatibility with older options format
-	if (optsVersionStr.isEmpty() || optsVersion < Version(1,7))
+	if (optsVersionStr.isEmpty() || opts.version < Version(1,7))
 	{
 		jsonDoc.disableWarnings();  // supress "missing element" warnings when loading older version
 
 		// try to load as the 1.6.3 format, older versions will have to accept resetting some values to defaults
-		deserialize_pre17( jsRoot, opts );
+		deserialize_pre17( rootJs, opts );
 	}
 	else
 	{
-		if (optsVersion < appVersion)
+		if (opts.version < appVersion)
 			jsonDoc.disableWarnings();  // supress "missing element" warnings when loading older version
 
-		deserialize( jsRoot, opts );
+		deserialize( rootJs, opts );
 	}
 }

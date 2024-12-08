@@ -7,10 +7,9 @@
 
 #include "ErrorHandling.hpp"
 
-#include "LangUtils.hpp"
 #include "WidgetUtils.hpp"  // HYPERLINK
 //#include "StandardOutput.hpp"
-#include "OSUtils.hpp"          // getThisAppDataDir
+#include "OSUtils.hpp"          // getThisLauncherDataDir
 #include "FileSystemUtils.hpp"  // getPathFromFileName
 
 #include <QStringBuilder>
@@ -20,7 +19,7 @@
 
 
 //======================================================================================================================
-//  displaying foreground errors
+// displaying foreground errors
 
 static const QString issuePageUrl = "https://github.com/Youda008/DoomRunner/issues";
 
@@ -54,7 +53,7 @@ void reportLogicError( QWidget * parent, const QString & title, const QString & 
 
 
 //======================================================================================================================
-//  logging background errors
+// logging background errors
 
 namespace impl {
 
@@ -79,21 +78,24 @@ static const char * const logFileName = "errors.txt";
 
 const QString & getCachedErrorFilePath()
 {
-	// local static variables are initialized under a mutex, so it should be save to use from multiple threads.
-	static const QString logFilePath = fs::getPathFromFileName( os::getCachedThisAppDataDir(), logFileName );
+	// local static variables are initialized under a mutex, so it should be save to use from multiple threads
+	static const QString logFilePath = fs::getPathFromFileName( os::getThisLauncherDataDir(), logFileName );
 	return logFilePath;
 }
 
-LogStream::LogStream( LogLevel level, const char * component )
+LogStream::LogStream( LogLevel level, const char * component, bool canLogToFile )
 :
 	_debugStream( debugStreamFromLogLevel( level ) ),
-	_logFile( getCachedErrorFilePath() ),
-	_logLevel( level )
+	_logFile(),
+	_fileStream(),
+	_logLevel( level ),
+	_canLogToFile( canLogToFile )
 {
 	_debugStream.noquote().nospace();
 
 	if (shouldWriteToFileStream())
 	{
+		_logFile.setFileName( getCachedErrorFilePath() );
 		if (_logFile.open( QIODevice::Append ))
 			_fileStream.setDevice( &_logFile );
 	}
@@ -115,11 +117,11 @@ QDebug LogStream::debugStreamFromLogLevel( LogLevel level )
 	switch (level)
 	{
 		case LogLevel::Debug:    return QMessageLogger().debug();
-		case LogLevel::Failure:  return QMessageLogger().warning();
 		case LogLevel::Info:     return QMessageLogger().info();
+		case LogLevel::Failure:  return QMessageLogger().warning();
 		case LogLevel::Bug:      return QMessageLogger().critical();
+		default:                 return QMessageLogger().critical();
 	}
-	return QMessageLogger().critical();
 }
 
 void LogStream::writeLineOpening( LogLevel level, const char * component )
@@ -129,6 +131,7 @@ void LogStream::writeLineOpening( LogLevel level, const char * component )
 
 	if (shouldWriteToDebugStream())
 	{
+		// with the workaround in initStdStreams(), this should write to stdout even on Windows
 		_debugStream << QStringLiteral("[%1] %2").arg( logLevelStr, -7 ).arg( componentStr );
 	}
 

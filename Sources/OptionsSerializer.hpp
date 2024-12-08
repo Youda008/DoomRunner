@@ -12,6 +12,7 @@
 #include "Essential.hpp"
 
 #include "UserData.hpp"
+#include "Version.hpp"
 #include "Utils/JsonUtils.hpp"  // JsonDocumentCtx
 
 #include <QList>
@@ -59,6 +60,8 @@ QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts );
 
 struct OptionsToLoad
 {
+	Version version;  ///< version of the options format that was loaded
+
 	// files
 	QList< EngineInfo > engines;  // we must accept EngineInfo, but we will load only Engine fields
 	QList< IWAD > iwads;

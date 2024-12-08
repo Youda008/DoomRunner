@@ -142,15 +142,22 @@ macx: ICON = Resources/DoomRunner.icns
 #-- build type variables -------------------------
 
 CONFIG(debug, debug|release) {
+	DEFINES += DEBUG
 	DEFINES += IS_DEBUG_BUILD=true
 } else {
+	DEFINES += NDEBUG  # to disable asserts
 	DEFINES += IS_DEBUG_BUILD=false
 }
 
 win32 {
 	DEFINES += IS_WINDOWS=true
+	DEFINES += IS_MACOS=false
+} else: macx {
+	DEFINES += IS_WINDOWS=false
+	DEFINES += IS_MACOS=true
 } else {
 	DEFINES += IS_WINDOWS=false
+	DEFINES += IS_MACOS=false
 }
 
 

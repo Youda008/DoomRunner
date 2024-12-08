@@ -27,7 +27,7 @@
 
 
 //======================================================================================================================
-//  UpdateChecker
+// UpdateChecker
 
 static const QString availableVersionUrl = "https://raw.githubusercontent.com/Youda008/DoomRunner/master/version.txt";
 static const QString releasePageUrl = "https://github.com/Youda008/DoomRunner/releases";
@@ -152,7 +152,7 @@ void UpdateChecker::changelogReceived( QNetworkReply * reply, RequestData & requ
 
 
 //======================================================================================================================
-//  common result reactions
+// common result reactions
 
 struct NewElements
 {

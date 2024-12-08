@@ -11,7 +11,7 @@
 
 //======================================================================================================================
 
-NewConfigDialog::NewConfigDialog( QWidget * parent, const QString & currentConfigName )
+NewConfigDialog::NewConfigDialog( QWidget * parent, const QFileInfo & origConfigFile )
 :
 	QDialog( parent ),
 	DialogCommon( this )
@@ -19,14 +19,18 @@ NewConfigDialog::NewConfigDialog( QWidget * parent, const QString & currentConfi
 	ui = new Ui::NewConfigDialog;
 	ui->setupUi(this);
 
-	ui->configNameLine->setText( currentConfigName );
+	DialogWithPaths::setPathValidator( ui->configNameLine );
+
+	ui->infoLabel->setText( ui->infoLabel->text().replace( "<orig_config_file_name>", origConfigFile.fileName() ) );
+	ui->suffixLabel->setText( ui->suffixLabel->text().replace( "<config_suffix>", origConfigFile.suffix() ) );
+	ui->configNameLine->setText( origConfigFile.completeBaseName() );
 
 	connect( this, &QDialog::accepted, this, &thisClass::confirmed );
 }
 
 void NewConfigDialog::confirmed()
 {
-	newConfigName = ui->configNameLine->text();
+	newConfigName = DialogWithPaths::sanitizeInputPath( ui->configNameLine->text() );
 }
 
 NewConfigDialog::~NewConfigDialog()

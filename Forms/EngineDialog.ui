@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>450</width>
-    <height>211</height>
+    <height>200</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -90,10 +90,10 @@
      <item>
       <widget class="QLabel" name="configDirLabel">
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine's &lt;span style=&quot; color:#686868;&quot;&gt;.ini&lt;/span&gt; files are.&lt;/p&gt;&lt;p&gt;On Windows this will be the same directory where the &lt;span style=&quot; color:#686868;&quot;&gt;.exe&lt;/span&gt; file is, with the exception of the latest GZDoom, which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Documents\My Games\GZDoom&amp;quot;&lt;/span&gt;.&lt;br/&gt;On Linux this will probably be somewhere in your home, commonly &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;~/.config/engine_name&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine's &lt;span style=&quot; color:#686868;&quot;&gt;.ini&lt;/span&gt; or &lt;span style=&quot; color:#686868;&quot;&gt;.cfg&lt;/span&gt; files are.&lt;/p&gt;&lt;p&gt;On Windows this will be the same directory where the &lt;span style=&quot; color:#686868;&quot;&gt;.exe&lt;/span&gt; file is.&lt;br/&gt;The only exception is the latest GZDoom (thanks Graph!), which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Documents\My Games\GZDoom&amp;quot;&lt;/span&gt;.&lt;br/&gt;On Linux this will probably be somewhere in your home, commonly &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;~/.config/engine_name&amp;quot;&lt;/span&gt; or &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;~/.local/share/engine_name&amp;quot;.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="whatsThis">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine's &lt;span style=&quot; color:#686868;&quot;&gt;.ini&lt;/span&gt; files are.&lt;/p&gt;&lt;p&gt;On Windows this will be the same directory where the &lt;span style=&quot; color:#686868;&quot;&gt;.exe&lt;/span&gt; file is, with the exception of the latest GZDoom, which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Documents\My Games\GZDoom&amp;quot;&lt;/span&gt;.&lt;br/&gt;On Linux this will probably be somewhere in your home, commonly &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;~/.config/engine_name&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine's &lt;span style=&quot; color:#686868;&quot;&gt;.ini&lt;/span&gt; or &lt;span style=&quot; color:#686868;&quot;&gt;.cfg&lt;/span&gt; files are.&lt;/p&gt;&lt;p&gt;On Windows this will be the same directory where the &lt;span style=&quot; color:#686868;&quot;&gt;.exe&lt;/span&gt; file is.&lt;br/&gt;The only exception is the latest GZDoom (thanks Graph!), which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Documents\My Games\GZDoom&amp;quot;&lt;/span&gt;.&lt;br/&gt;On Linux this will probably be somewhere in your home, commonly &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;~/.config/engine_name&amp;quot;&lt;/span&gt; or &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;~/.local/share/engine_name&amp;quot;.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="text">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Config directory &lt;img src=&quot;:/Help.12.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -127,10 +127,10 @@
      <item>
       <widget class="QLabel" name="dataDirLabel">
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine stores its data files (&lt;span style=&quot; color:#686868;&quot;&gt;.zds&lt;/span&gt; save files, &lt;span style=&quot; color:#686868;&quot;&gt;.lmp&lt;/span&gt; demo files, ...).&lt;/p&gt;&lt;p&gt;In most cases this will be the same directory as the Config directory.&lt;br/&gt;The only exception is the latest GZDoom on Windows (thanks Graph!) which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Saved Games\GZDoom\iwad_name&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine stores its data files (save files, demo files, screenshots, ...).&lt;/p&gt;&lt;p&gt;In most cases this will be the same directory as the Config directory,&lt;br/&gt;with the exception of the latest GZDoom on Windows which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Saved Games\GZDoom&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;NOTE: On Linux this is the parent directory of all the data files, not a specific subdirectory like &lt;span style=&quot; color:#686868;&quot;&gt;savefiles&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="whatsThis">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine stores its data files (&lt;span style=&quot; color:#686868;&quot;&gt;.zds&lt;/span&gt; save files, &lt;span style=&quot; color:#686868;&quot;&gt;.lmp&lt;/span&gt; demo files, ...).&lt;/p&gt;&lt;p&gt;In most cases this will be the same directory as the Config directory.&lt;br/&gt;The only exception is the latest GZDoom on Windows (thanks Graph!) which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Saved Games\GZDoom\iwad_name&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directory where the engine stores its data files (save files, demo files, screenshots, ...).&lt;/p&gt;&lt;p&gt;In most cases this will be the same directory as the Config directory,&lt;br/&gt;with the exception of the latest GZDoom on Windows which stores them in &lt;span style=&quot; color:#686868;&quot;&gt;&amp;quot;Saved Games\GZDoom&amp;quot;&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;NOTE: On Linux this is the parent directory of all the data files, not a specific subdirectory like &lt;span style=&quot; color:#686868;&quot;&gt;savefiles&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will probably be created by the engine on the first start.&lt;/p&gt;&lt;p&gt;If you are not sure, leave it at the auto-detected value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="text">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data directory &lt;img src=&quot;:/Help.12.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -194,14 +194,31 @@
     </layout>
    </item>
    <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="autoDetectBtn">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempt to automatically detect the paths and properties from the currently set Executable path.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="whatsThis">
+        <string>Attempt to automatically detect the paths and properties from the currently set Executable path.</string>
+       </property>
+       <property name="text">
+        <string>  Auto-detect  </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

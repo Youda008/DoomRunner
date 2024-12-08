@@ -25,9 +25,10 @@ static QFile stderrFile;
 void initStdStreams()
 {
  #if IS_WINDOWS
-	// On Windows, graphical applications have their standard output streams closed, even when started from a command line.
-	// We need to manually re-attach it to the console of the parent process (cmd.exe) in order to display our output.
-	if (AttachConsole( ATTACH_PARENT_PROCESS ))
+	// On Windows, graphical applications have their standard output streams closed, even when started from a console.
+	// If we have been started from a console (cmd.exe, PowerShell, ...) we need to manually re-attach to that console
+	// and re-open the standard output streams in order to display our debug output.
+	if (AttachConsole( ATTACH_PARENT_PROCESS ))  // attach to the console of the parent process, don't open new console
 	{
 		freopen( "CONOUT$", "w", stdout );
 		freopen( "CONOUT$", "w", stderr );

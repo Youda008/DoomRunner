@@ -11,14 +11,12 @@
 
 #include "WindowsUtils.hpp"
 
-#include "ErrorHandling.hpp"
-
 
 namespace win {
 
 
 //======================================================================================================================
-//  registry
+// registry
 
 OptRegistryKey openRegistryKey( HKEY parentKeyHandle, const char * subKeyPath )
 {

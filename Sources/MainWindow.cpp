@@ -43,6 +43,7 @@
 #include <QTextStream>  // exportPresetToScript, loadMonitorInfo
 #include <QFile>
 #include <QDir>
+#include <QStandardPaths>
 #include <QFileIconProvider>  // EmptyIconProvider
 #include <QMessageBox>
 #include <QShortcut>
@@ -55,22 +56,12 @@
 static const char defaultOptionsFileName [] = "options.json";
 static const char defaultCacheFileName [] = "file_info_cache.json";
 
-#if IS_WINDOWS
-	static const QString scriptFileSuffix = "*.bat";
-	static const QString shortcutFileSuffix = "*.lnk";
-#else
-	static const QString scriptFileSuffix = "*.sh";
-#endif
-
-static constexpr bool VerifyPaths = true;
-static constexpr bool DontVerifyPaths = false;
-
 static constexpr int VarNameColumn = 0;
 static constexpr int VarValueColumn = 1;
 
 
 //======================================================================================================================
-//  MainWindow-specific utils
+// MainWindow-specific utils
 
 template< typename Func >
 void MainWindow::addShortcut( const QKeySequence & keys, const Func & shortcutAction )
@@ -149,79 +140,87 @@ QStringList MainWindow::getUniqueMapNamesFromWADs( const QVector<QString> & sele
 	return uniqueMapNames.keys();
 }
 
-QString MainWindow::getConfigDir() const
+// returns config dir configured for the current engine, or empty string if engine is not selected
+// Used as a base directory for config dir override or directly for searching config files.
+QString MainWindow::getEngineConfigDir() const
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
 	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : QString();
 }
 
-QString MainWindow::getDataDir() const
+// returns data dir configured for the current engine, or empty string if engine is not selected
+// Only serves as a base directory for save dir and screenshot dir overrides. This launcher doesn't read anything directly from it.
+QString MainWindow::getEngineDataDir() const
 {
 	int currentEngineIdx = ui->engineCmbBox->currentIndex();
 	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].dataDir : QString();
 }
 
-QString MainWindow::getSaveDir() const
+// returns the directory this launcher will use for config files under the current launcher options
+QString MainWindow::getActiveConfigDir() const
 {
-	// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	QString saveDirLine = ui->saveDirLine->text();
-	if (!saveDirLine.isEmpty())                                     // if custom save dir is specified
-		return engineDataDirRebaser.rebasePathBack( saveDirLine );  // then use it
-	else                                                            // otherwise
-		return getDataDir();                                        // use engine's data dir
+	// the path in altConfigDirLine is relative to the engine's config dir by convention, need to rebase it to the current working dir
+	QString configDirLine = ui->altConfigDirLine->text();
+	if (!configDirLine.isEmpty())                                     // if custom config dir is specified
+	{
+		return engineDataDirRebaser.rebaseBack( configDirLine );      // then use it
+	}
+	else                                                              // otherwise
+	{
+		return getEngineConfigDir();                                  // use engine's default config dir
+	}
 }
 
-QString MainWindow::getScreenshotDir() const
+// returns the directory the engine will use for save files under the current launcher options
+QString MainWindow::getActiveSaveDir() const
 {
-	// the path in screenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	QString screenshotDirLine = ui->screenshotDirLine->text();
-	if (!screenshotDirLine.isEmpty())                                     // if custom save dir is specified
-		return engineDataDirRebaser.rebasePathBack( screenshotDirLine );  // then use it
-	else                                                                  // otherwise
-		return getDataDir();                                              // use engine's data dir
+	// the path in altSaveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
+	QString saveDirLine = ui->altSaveDirLine->text();
+	if (!saveDirLine.isEmpty())                                       // if custom save dir is specified
+	{
+		return engineDataDirRebaser.rebaseBack( saveDirLine );        // then use it
+	}
+	else                                                              // otherwise use engine's default save dir
+	{
+		return currentEngineSaveDir;  // return the cached value, because calculating it every time would be wasteful
+	}
 }
 
-QString MainWindow::getDemoDir() const
+// returns the directory where the engine will save screenshots under the current launcher options
+QString MainWindow::getActiveScreenshotDir() const
+{
+	// the path in altScreenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
+	QString screenshotDirLine = ui->altScreenshotDirLine->text();
+	if (!screenshotDirLine.isEmpty())                                  // if custom save dir is specified
+	{
+		return engineDataDirRebaser.rebaseBack( screenshotDirLine );   // then use it
+	}
+	else                                                               // otherwise use engine's default screenshot dir
+	{
+		return currentEngineScreenshotDir;  // return the cached value, because calculating it every time would be wasteful
+	}
+}
+
+QString MainWindow::getActiveDemoDir() const
 {
 	// let's not complicate things and treat save dir and demo dir as one
-	return getSaveDir();
+	return getActiveSaveDir();
 }
 
-// converts a path relative to the engine's data dir to absolute path or vice versa
-QString MainWindow::convertRebasedEngineDataPath( QString rebasedPath ) const
-{
-	// These branches are here only as optimization, we could easily just: rebase-back -> convert -> rebase.
-	PathStyle inputStyle = fs::getPathStyle( rebasedPath );
-	PathStyle launcherStyle = pathConvertor.pathStyle();
-	if (inputStyle == PathStyle::Relative && launcherStyle == PathStyle::Absolute)
-	{
-		QString trueRelativePath = engineDataDirRebaser.rebasePathBack( rebasedPath );
-		return pathConvertor.getAbsolutePath( trueRelativePath );
-	}
-	else if (inputStyle == PathStyle::Absolute && launcherStyle == PathStyle::Relative)
-	{
-		QString trueRelativePath = pathConvertor.getRelativePath( rebasedPath );
-		return engineDataDirRebaser.rebasePath( trueRelativePath );
-	}
-	else
-	{
-		// nothing to be done, path is already in the right form
-		return rebasedPath;
-	}
-}
-
-QString MainWindow::rebaseSaveFilePath( const QString & filePath, const PathRebaser & workingDirRebaser, const EngineInfo * engine )
-{
+QString MainWindow::makeCmdSaveFilePath(
+	const QString & filePath, const EngineInfo * engine, const PathRebaser & workingDirRebaser, const QString & saveDir
+){
 	// the base dir for the save file parameter depends on the engine and its version
 	if (engine && engine->baseDirStyleForSaveFiles() == EngineTraits::SaveBaseDir::SaveDir)
 	{
-		QString saveDir = getSaveDir();
+		// this path must be always relative, absolute path would just get appended to the -savedir path
 		PathRebaser saveDirRebaser( pathConvertor.workingDir(), saveDir, PathStyle::Relative, workingDirRebaser.quotePaths() );
-		return saveDirRebaser.rebaseAndQuotePath( filePath );
+		return saveDirRebaser.makeRebasedRelativeCmdPath( filePath );
 	}
 	else
 	{
-		return workingDirRebaser.rebaseAndQuotePath( filePath );
+		// respect the path style of the workingDirRebaser
+		return workingDirRebaser.makeRebasedCmdPath( filePath );
 	}
 };
 
@@ -250,16 +249,10 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 		return;
 	}
 
-	// dir of config files
-	if (const ConfigFile * selectedConfig = getSelectedConfig())
-	{
-		loopBody( selectedEngine->configDir );  // cannot be empty otherwise config would not be selected
-	}
-
 	// dir of IWAD
 	if (const IWAD * selectedIWAD = getSelectedIWAD())
 	{
-		loopBody( fs::getDirOfFile( selectedIWAD->path ) );
+		loopBody( fs::getParentDir( selectedIWAD->path ) );
 	}
 
 	// dir of map files
@@ -276,46 +269,71 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 		if (!mod.checked)
 			continue;
 
-		if (fs::isInsideDir( mod.path, modDir ))  // aggregate all mods inside the configured mod dir under single dir path
+		if (fs::isInsideDir( modDir, mod.path ))
 		{
-			if (!modDirUsed)  // use it only once
+			// Aggregate all mods inside the configured mod dir under single dir path.
+			if (!modDirUsed)
 			{
 				loopBody( modSettings.dir );
-				modDirUsed = true;
+				modDirUsed = true;  // use it only once
 			}
 		}
-		else  // but still add directories outside of the configured mod dir, because mod dir is only a hint
+		else
 		{
-			loopBody( fs::getDirOfFile( mod.path ) );
+			// But still add directories outside of the configured mod dir, because mod dir is only a hint.
+			loopBody( fs::getParentDir( mod.path ) );
 		}
 	}
 
-	// dir of saves and demo files
-	LaunchMode launchMode = getLaunchModeFromUI();
-	if ((launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
-	 || (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty()))
+	// dir of engine config files
+	if (QString configDir = getActiveConfigDir(); !configDir.isEmpty())
 	{
-		loopBody( getSaveDir() );
+		loopBody( configDir );
+	}
+
+	// dir of engine data files
+	const QString & dataDir = selectedEngine->dataDir;
+	if (!dataDir.isEmpty())
+	{
+		loopBody( dataDir );
+	}
+
+	// dir of saves files (in all launch modes the save file either needs to be read or written to)
+	if (QString saveDir = getActiveSaveDir(); !saveDir.isEmpty() && !fs::isInsideDir( dataDir, saveDir ))
+	{
+		loopBody( saveDir );
+	}
+
+	// dir of demo files
+	LaunchMode launchMode = getLaunchModeFromUI();
+	if (launchMode == RecordDemo || launchMode == ReplayDemo)
+	{
+		if (QString demoDir = getActiveDemoDir(); !demoDir.isEmpty() && !fs::isInsideDir( dataDir, demoDir ))
+		{
+			loopBody( demoDir );
+		}
 	}
 
 	// dir of screenshots
-	if (!ui->screenshotDirLine->text().isEmpty())
+	// Add it in every case, because the user may want to save a screenshot anytime.
+	if (QString screenshotDir = getActiveScreenshotDir(); !screenshotDir.isEmpty() && !fs::isInsideDir( dataDir, screenshotDir ))
 	{
-		loopBody( ui->screenshotDirLine->text() );
+		loopBody( screenshotDir );
 	}
 }
 
-// Gets (deduplicated) directories which the engine will need to access (either for reading or writing).
+// Gets directories (unique absolute paths) which the engine will need to access (either for reading or writing).
 QStringVec MainWindow::getDirsToBeAccessed() const
 {
-	QSet< QString > dirSet;  // de-duplicate the paths
+	QSet< QString > normDirPaths;  // de-duplicate the paths
 
 	forEachDirToBeAccessed( [&]( const QString & dir )
 	{
-		dirSet.insert( dir );
+		// insert the paths in a normalized form to deduplicate equivalent paths written in a different way
+		normDirPaths.insert( fs::getNormalizedPath( dir ) );
 	});
 
-	return QStringVec( dirSet.begin(), dirSet.end() );
+	return QStringVec( normDirPaths.begin(), normDirPaths.end() );
 }
 
 // This needs to be called everytime the user make a change that needs to be saved into the options file.
@@ -421,8 +439,8 @@ AudioOptions & MainWindow::activeAudioOptions()
 	bool valueChanged = false; \
 	if (Preset * selectedPreset = getSelectedPreset()) \
 	{\
-		valueChanged = selectedPreset->presetMember != (value); \
-		selectedPreset->presetMember = (value); \
+		valueChanged = (*selectedPreset)presetMember != (value); \
+		(*selectedPreset)presetMember = (value); \
 	}\
 	return valueChanged; \
 }()
@@ -437,8 +455,8 @@ AudioOptions & MainWindow::activeAudioOptions()
 	{\
 		if (Preset * selectedPreset = getSelectedPreset()) \
 		{\
-			valueChanged = selectedPreset->presetMember != (value); \
-			selectedPreset->presetMember = (value); \
+			valueChanged = (*selectedPreset)presetMember != (value); \
+			(*selectedPreset)presetMember = (value); \
 		}\
 	}\
 	return valueChanged; \
@@ -468,8 +486,8 @@ AudioOptions & MainWindow::activeAudioOptions()
 	                  || (storageSetting == StoreToPreset && restoringPresetInProgress); \
 	if (!preventSaving) \
 	{\
-		valueChanged = (activeStorage.structMember != (value)); \
-		activeStorage.structMember = (value); \
+		valueChanged = (activeStorage)structMember != (value); \
+		(activeStorage)structMember = (value); \
 	}\
 	return valueChanged; \
 }()
@@ -487,7 +505,7 @@ AudioOptions & MainWindow::activeAudioOptions()
 	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.compatOptsStorage, activeCompatOptions(), structMember, value )
 
 #define STORE_ALT_PATH( structMember, value ) \
-	STORE_TO_CURRENT_PRESET_IF_SAFE( altPaths.structMember, value )
+	STORE_TO_CURRENT_PRESET_IF_SAFE( .altPaths structMember, value )
 
 #define STORE_VIDEO_OPTION( structMember, value ) \
 	STORE_TO_DYNAMIC_STORAGE_IF_SAFE( settings.videoOptsStorage, activeVideoOptions(), structMember, value )
@@ -499,11 +517,11 @@ AudioOptions & MainWindow::activeAudioOptions()
 	STORE_TO_CURRENT_PRESET_IF_SAFE( structMember, value )
 
 #define STORE_GLOBAL_OPTION( structMember, value ) \
-	STORE_TO_GLOBAL_STORAGE_IF_SAFE( globalOpts.structMember, value )
+	STORE_TO_GLOBAL_STORAGE_IF_SAFE( (globalOpts)structMember, value )
 
 
 //======================================================================================================================
-//  MainWindow
+// MainWindow
 
 MainWindow::MainWindow()
 :
@@ -513,6 +531,7 @@ MainWindow::MainWindow()
 		// so that all file-system operations instantly work without the need to rebase the paths first.
 		this, PathConvertor( QDir::current(), defaultPathStyle )
 	),
+	engineConfigDirRebaser( {}, {}, defaultPathStyle ),
 	engineDataDirRebaser( {}, {}, defaultPathStyle ),  // rebase to current working dir (don't rebase at all) until engine is selected
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
@@ -607,7 +626,13 @@ MainWindow::MainWindow()
 
 	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::onDemoFileChanged_record );
 
-	ui->compatLevelCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
+	ui->compatModeCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
+
+	// setup alternative path validators
+
+	setPathValidator( ui->altConfigDirLine );
+	setPathValidator( ui->altSaveDirLine );
+	setPathValidator( ui->altScreenshotDirLine );
 
 	// setup launch options callbacks
 
@@ -636,17 +661,22 @@ MainWindow::MainWindow()
 	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &thisClass::onNoMonstersToggled );
 	connect( ui->fastMonstersChkBox, &QCheckBox::toggled, this, &thisClass::onFastMonstersToggled );
 	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::onMonstersRespawnToggled );
+	connect( ui->pistolStartChkBox, &QCheckBox::toggled, this, &thisClass::onPistolStartToggled );
+	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::onAllowCheatsToggled );
 	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runGameOptsDialog );
 	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatOptsDialog );
-	connect( ui->compatLevelCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onCompatLevelSelected );
-	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::onAllowCheatsToggled );
+	connect( ui->compatModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onCompatModeSelected );
 
 	// alternative paths
-	connect( ui->usePresetNameChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameToggled );
-	connect( ui->saveDirLine, &QLineEdit::textChanged, this, &thisClass::onSaveDirChanged );
-	connect( ui->screenshotDirLine, &QLineEdit::textChanged, this, &thisClass::onScreenshotDirChanged );
-	connect( ui->saveDirBtn, &QPushButton::clicked, this, &thisClass::browseSaveDir );
-	connect( ui->screenshotDirBtn, &QPushButton::clicked, this, &thisClass::browseScreenshotDir );
+	connect( ui->altConfigDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForConfigsToggled );
+	connect( ui->altSaveDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForSavesToggled );
+	connect( ui->altScreenshotDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForScreenshotsToggled );
+	connect( ui->altConfigDirLine, &QLineEdit::textChanged, this, &thisClass::onAltConfigDirChanged );
+	connect( ui->altSaveDirLine, &QLineEdit::textChanged, this, &thisClass::onAltSaveDirChanged );
+	connect( ui->altScreenshotDirLine, &QLineEdit::textChanged, this, &thisClass::onAltScreenshotDirChanged );
+	connect( ui->altSaveDirBtn, &QPushButton::clicked, this, &thisClass::browseAltConfigDir );
+	connect( ui->altSaveDirBtn, &QPushButton::clicked, this, &thisClass::browseAltSaveDir );
+	connect( ui->altScreenshotDirBtn, &QPushButton::clicked, this, &thisClass::browseAltScreenshotDir );
 
 	// video
 	loadMonitorInfo( ui->monitorCmbBox );
@@ -664,6 +694,7 @@ MainWindow::MainWindow()
 
 	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onPresetCmdArgsChanged );
 	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onGlobalCmdArgsChanged );
+	connect( ui->cmdPrefixLine, &QLineEdit::textChanged, this, &thisClass::onCmdPrefixChanged );
 	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
 }
 
@@ -697,7 +728,7 @@ void MainWindow::setupPresetList()
 	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
 	ui->presetListView->toggleInterWidgetDragAndDrop( false );
 	ui->presetListView->toggleExternalFileDragAndDrop( false );
-	connect( ui->presetListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::onPresetsReordered );
+	connect( ui->presetListView, &EditableListView::itemsDropped, this, &thisClass::onPresetsReordered );
 
 	// set reaction when an item is selected
 	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onPresetToggled );
@@ -735,8 +766,9 @@ void MainWindow::setupIWADList()
 	// set selection rules
 	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
-	// set reaction when an item is selected
+	// set reaction when an item is clicked or double-clicked
 	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onIWADToggled );
+	connect( ui->iwadListView, &QListView::doubleClicked, this, &thisClass::showIWADDesc );
 }
 
 void MainWindow::setupMapPackList()
@@ -775,7 +807,7 @@ void MainWindow::setupMapPackList()
 	ui->mapDirView->setDragEnabled( true );
 	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
 
-	// set reaction when an item is selected
+	// set reaction when an item is clicked or double-clicked
 	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onMapPackToggled );
 	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
 
@@ -808,10 +840,11 @@ void MainWindow::setupModList()
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );
 	ui->modListView->toggleInterWidgetDragAndDrop( true );
 	ui->modListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->modListView, QOverload< int, int >::of( &EditableListView::itemsDropped ), this, &thisClass::onModsDropped );
+	connect( ui->modListView, &EditableListView::itemsDropped, this, &thisClass::onModsDropped );
 
 	// set reaction when an item is checked or unchecked
 	connect( &modModel, &QAbstractListModel::dataChanged, this, &thisClass::onModDataChanged );
+	connect( ui->modListView, &QListView::doubleClicked, this, &thisClass::showModDesc );
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
@@ -833,10 +866,12 @@ void MainWindow::setupModList()
 	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
+	connect( ui->mapsAfterModsChkBox, &QCheckBox::toggled, this, &thisClass::onMapsAfterModsToggled );
+
 	// setup icons
 	ui->modListView->enableTogglingIcons();  // allow the icons to be toggled via context-menu
 	ui->modListView->toggleIcons( true );  // we need to do this instead of modModel.toggleIcons() in order to update the action text
-	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::modToggleIcons );
+	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::onModIconsToggled );
 }
 
 void MainWindow::setupEnvVarLists()
@@ -921,14 +956,18 @@ void MainWindow::moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir, 
 void MainWindow::initAppDataDir()
 {
 	// create a directory for application data, if it doesn't exist already
-	appDataDir.setPath( os::getThisAppDataDir() );
+	appDataDir.setPath( os::getThisLauncherDataDir() );
 	if (!appDataDir.exists())
 	{
 		appDataDir.mkpath(".");
 	}
 
 	// backward compatibility
-	moveOptionsFromOldDir( os::getThisAppConfigDir(), appDataDir, defaultOptionsFileName );
+ #define STANDARD_DIR( QtName ) QStandardPaths::writableLocation( QStandardPaths::QtName )
+	moveOptionsFromOldDir( STANDARD_DIR( GenericDataLocation ),  appDataDir, defaultOptionsFileName );
+	moveOptionsFromOldDir( STANDARD_DIR( AppConfigLocation ),    appDataDir, defaultOptionsFileName );
+	moveOptionsFromOldDir( STANDARD_DIR( AppLocalDataLocation ), appDataDir, defaultOptionsFileName );
+ #undef STANDARD_DIR
 
 	cacheFilePath = appDataDir.filePath( defaultCacheFileName );
 	optionsFilePath = appDataDir.filePath( defaultOptionsFileName );
@@ -1104,7 +1143,7 @@ MainWindow::~MainWindow()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  saving and loading user data
+// saving and loading user data
 
 bool MainWindow::saveOptions( const QString & filePath )
 {
@@ -1191,6 +1230,8 @@ void MainWindow::loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc )
 	// but the models can't, because the UI must be prepared for reseting its models first.
 	OptionsToLoad opts
 	{
+		{},  // version
+
 		// files - load into intermediate storage
 		{},  // engines
 		{},  // IWADs
@@ -1219,6 +1260,23 @@ void MainWindow::loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc )
 	deserializeOptionsFromJsonDoc( optionsDoc, opts );
 
 	restoreLoadedOptions( std::move(opts) );
+}
+
+int MainWindow::askForEngineInfoRefresh()
+{
+	QMessageBox messageBox( QMessageBox::Question, "Refresh engine properties",
+		"In the previous version there were bugs in the auto-detection of the engine properties (config dir, data dir, family). "
+		"Do you wish to automatically refresh these properties for all your engines?",
+		QMessageBox::Yes | QMessageBox::No,
+		this
+	);
+
+	messageBox.button( QMessageBox::Yes )->setText("Yes, auto-detect everything again");
+	messageBox.button( QMessageBox::No )->setText("No, keep my own settings");
+
+	int answer = messageBox.exec();
+
+	return answer;
 }
 
 bool MainWindow::isCacheDirty() const
@@ -1256,7 +1314,7 @@ bool MainWindow::loadCache( const QString & filePath )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  restoring stored options into the UI
+// restoring stored options into the UI
 
 void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 {
@@ -1278,9 +1336,19 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 
 		disableSelectionCallbacks = true;  // prevent updating engine-dependent widgets back and forth
 
+		// The previous versions auto-detected some engine info incorrectly and now it's persistently stored
+		// inside the user's options. Ask him, if he wants to to re-detect all the previously auto-detected info.
+		bool refreshAllAutoEngineInfo = false;
+		if (opts.version < Version{1,9,0})
+		{
+			refreshAllAutoEngineInfo = askForEngineInfoRefresh() == QMessageBox::Yes;
+		}
+
 		engineModel.startCompleteUpdate();
 		engineModel.assignList( std::move(opts.engines) );
-		fillDerivedEngineInfo( engineModel );  // fill the derived fields of EngineInfo
+		// The OptionsSerializer only saves and loads the engine info specified by the user,
+		// the auto-detected properties must be loaded here.
+		fillDerivedEngineInfo( engineModel, refreshAllAutoEngineInfo );
 		engineModel.finishCompleteUpdate();       // if the list is not empty, this changes the engine index from -1 to 0,
 		ui->engineCmbBox->setCurrentIndex( -1 );  // but we need it to stay -1
 
@@ -1369,8 +1437,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		if (selectedPresetIdx >= 0)
 		{
 			// This invokes the callback, which enables the dependent widgets and calls restorePreset(...)
-			wdg::selectAndSetCurrentByIndex( ui->presetListView, selectedPresetIdx );
-			wdg::scrollToItemAtIndex( ui->presetListView, selectedPresetIdx );
+			wdg::selectSetCurrentAndScrollTo( ui->presetListView, selectedPresetIdx );
 		}
 		else
 		{
@@ -1427,6 +1494,8 @@ void MainWindow::restorePreset( int presetIdx )
 	// in a callback connected to QFileSystem event, when the mapModel is finally populated.
 	restoreSelectedMapPacks( preset );
 
+	ui->mapsAfterModsChkBox->setChecked( preset.loadMapsAfterMods );
+
 	if (settings.launchOptsStorage == StoreToPreset)
 		restoreLaunchAndMultOptions( preset.launchOpts, preset.multOpts );  // this clears items that are invalid
 
@@ -1451,12 +1520,9 @@ void MainWindow::restorePreset( int presetIdx )
 
 	restoringPresetInProgress = false;
 
-	// if "Use preset name as directory" is enabled, overwrite the preset custom directories with its name
-	// do it with restoringInProgress == false to update the current preset with the new overwriten dirs.
-	if (globalOpts.usePresetNameAsDir)
-	{
-		setAlternativeDirs( fs::sanitizePath( preset.name ) );
-	}
+	// If "Use preset name" is enabled, overwrite the preset custom directories with its name.
+	// Do it with restoringInProgress == false to update the current preset with the new overwriten dirs.
+	updateAlternativeDirs();
 
 	updateLaunchCommand();
 }
@@ -1492,7 +1558,7 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 				"Please select another one."
 			);
 			preset.selectedEnginePath.clear();
-			preset.compatOpts.compatLevel = -1;  // compat level is engine-specific so the previous level is no longer valid
+			preset.compatOpts.compatMode = -1;  // compat mode is engine-specific so the previous mode is no longer valid
 		}
 	}
 
@@ -1557,8 +1623,7 @@ void MainWindow::restoreSelectedIWAD( Preset & preset )
 		int iwadIdx = findSuch( iwadModel, [&]( const IWAD & iwad ) { return iwad.path == preset.selectedIWAD; } );
 		if (iwadIdx >= 0)
 		{
-			wdg::selectAndSetCurrentByIndex( ui->iwadListView, iwadIdx );
-			wdg::scrollToItemAtIndex( ui->iwadListView, iwadIdx );
+			wdg::selectSetCurrentAndScrollTo( ui->iwadListView, iwadIdx );
 
 			if (!fs::isValidFile( preset.selectedIWAD ))
 			{
@@ -1604,13 +1669,12 @@ void MainWindow::restoreSelectedMapPacks( Preset & preset )
 	for (const QString & path : mapPacksCopy)
 	{
 		QModelIndex mapIdx = mapModel.index( path );
-		if (mapIdx.isValid() && fs::isInsideDir( path, mapRootDir ))
+		if (mapIdx.isValid() && fs::isInsideDir( mapRootDir, path ))
 		{
 			if (fs::isValidEntry( path ))
 			{
 				preset.selectedMapPacks.append( path );  // put back only items that are valid
-				wdg::selectAndSetCurrentByIndex( ui->mapDirView, mapIdx );
-				wdg::scrollToItemAtIndex( ui->mapDirView, mapIdx );
+				wdg::selectSetCurrentAndScrollTo( ui->mapDirView, mapIdx );
 			}
 			else
 			{
@@ -1736,27 +1800,29 @@ void MainWindow::restoreGameplayOptions( const GameplayOptions & opts )
 	ui->noMonstersChkBox->setChecked( opts.noMonsters );
 	ui->fastMonstersChkBox->setChecked( opts.fastMonsters );
 	ui->monstersRespawnChkBox->setChecked( opts.monstersRespawn );
+	ui->pistolStartChkBox->setChecked( opts.pistolStart );
 	ui->allowCheatsChkBox->setChecked( opts.allowCheats );
 }
 
 void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts )
 {
-	int compatLevelIdx = opts.compatLevel + 1;  // first item is reserved for indicating no selection
-	if (compatLevelIdx >= ui->compatLevelCmbBox->count())
+	int compatModeIdx = opts.compatMode + 1;  // first item is reserved for indicating no selection
+	if (compatModeIdx >= ui->compatModeCmbBox->count())
 	{
 		// engine might have been removed, or its family was changed by the user
-		logLogicError() << "stored compat level ("<<compatLevelIdx<<") is out of bounds of the current combo-box content";
+		logLogicError() << "stored compat mode ("<<compatModeIdx<<") is out of bounds of the current combo-box content";
 		return;
 	}
-	ui->compatLevelCmbBox->setCurrentIndex( compatLevelIdx );
+	ui->compatModeCmbBox->setCurrentIndex( compatModeIdx );
 
 	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts );
 }
 
 void MainWindow::restoreAlternativePaths( const AlternativePaths & opts )
 {
-	ui->saveDirLine->setText( opts.saveDir );
-	ui->screenshotDirLine->setText( opts.screenshotDir );
+	ui->altConfigDirLine->setText( opts.configDir );
+	ui->altSaveDirLine->setText( opts.saveDir );
+	ui->altScreenshotDirLine->setText( opts.screenshotDir );
 }
 
 void MainWindow::restoreVideoOptions( const VideoOptions & opts )
@@ -1779,9 +1845,12 @@ void MainWindow::restoreAudioOptions( const AudioOptions & opts )
 
 void MainWindow::restoreGlobalOptions( const GlobalOptions & opts )
 {
-	ui->usePresetNameChkBox->setChecked( opts.usePresetNameAsDir );
+	ui->altConfigDirPresetChkBox->setChecked( opts.usePresetNameAsConfigDir );
+	ui->altSaveDirPresetChkBox->setChecked( opts.usePresetNameAsSaveDir );
+	ui->altScreenshotDirPresetChkBox->setChecked( opts.usePresetNameAsScreenshotDir );
 
 	ui->globalCmdArgsLine->setText( opts.cmdArgs );
+	ui->cmdPrefixLine->setText( opts.cmdPrefix );
 
 	restoreEnvVars( opts.envVars, ui->globalEnvVarTable );
 }
@@ -1842,7 +1911,7 @@ void MainWindow::restoreWindowGeometry( const WindowGeometry & geometry )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  dialogs
+// dialogs
 
 void MainWindow::runAboutDialog()
 {
@@ -1898,8 +1967,7 @@ void MainWindow::runSetupDialog()
 
 		// update our data from the dialog
 		engineSettings = std::move( dialog.engineSettings );
-		engineModel.assignList( std::move( dialog.engineModel.list() ) );
-		//fillDerivedEngineInfo( engineModel );  // fill the derived fields of EngineInfo
+		engineModel.assignList( std::move( dialog.engineModel.list() ) );  // SetupDialog guarantees the EngineInfo is fully initialized
 		iwadSettings = std::move( dialog.iwadSettings );
 		iwadModel.assignList( std::move( dialog.iwadModel.list() ) );
 		mapSettings = std::move( dialog.mapSettings );
@@ -2014,16 +2082,25 @@ void MainWindow::openEngineDataDir()
 
 void MainWindow::cloneConfig()
 {
-	const ConfigFile * selectedConfig = getSelectedConfig();
-	if (!selectedConfig)
-	{
-		reportUserError( this, "No config selected", "You haven't selected any config file to be cloned." );
-		return;
-	}
-
-	QString configDirStr = getConfigDir();  // config dir cannot be empty, otherwise currentConfigFileName would be empty
+	QString configDirStr = getActiveConfigDir();
 	QDir configDir( configDirStr );
-	QFileInfo oldConfig( configDir.filePath( selectedConfig->fileName ) );
+	QFileInfo oldConfig;
+
+	if (const ConfigFile * selectedConfig = getSelectedConfig())
+	{
+		// use the selected config file as the original
+		oldConfig.setFile( configDir.filePath( selectedConfig->fileName ) );
+	}
+	else if (const EngineInfo * selectedEngine = getSelectedEngine())
+	{
+		// use the engine's default config file as the original
+		QDir defaultConfigDir( selectedEngine->configDir ); defaultConfigDir.makeAbsolute();
+		oldConfig.setFile( defaultConfigDir.filePath( selectedEngine->defaultConfigFileName() ) );
+	}
+	else
+	{
+		reportLogicError( this, "No config or engine selected", "This button should be disabled without config and engine." );
+	}
 
 	if (!oldConfig.exists())  // it can't be a directory, because the combox is only filled with files
 	{
@@ -2031,7 +2108,7 @@ void MainWindow::cloneConfig()
 		return;
 	}
 
-	NewConfigDialog dialog( this, oldConfig.completeBaseName() );
+	NewConfigDialog dialog( this, oldConfig );
 
 	int code = dialog.exec();
 
@@ -2043,8 +2120,12 @@ void MainWindow::cloneConfig()
 
 	QString oldConfigPath = oldConfig.filePath();
 	QString newConfigPath = configDir.filePath( dialog.newConfigName + '.' + oldConfig.suffix() );
-	bool copied = QFile::copy( oldConfigPath, newConfigPath );
-	if (!copied)
+	if (!configDir.exists() && !configDir.mkdir("."))
+	{
+		reportRuntimeError( this, "Error creating directory", "Couldn't create directory \""%configDir.path()%"\". Check permissions." );
+		return;
+	}
+	if (!QFile::copy( oldConfigPath, newConfigPath ))
 	{
 		reportRuntimeError( this, "Error copying file", "Couldn't create file \""%newConfigPath%"\". Check permissions." );
 		return;
@@ -2064,7 +2145,7 @@ void MainWindow::cloneConfig()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  item selection
+// item selection
 
 /// Automatically selects essential items (like engine of IWAD) marked as default, or those that are alone in their list.
 void MainWindow::autoselectItems()
@@ -2172,31 +2253,42 @@ void MainWindow::onEngineSelected( int index )
 	const EngineInfo * selectedEngine = index >= 0 ? &engineModel[ index ] : nullptr;
 	const QString & enginePath = selectedEngine ? selectedEngine->executablePath : emptyString;
 
-	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedEnginePath, enginePath );
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedEnginePath, enginePath );
 
-	// engine's data dir has changed -> from now on rebase engine data paths to the new dir, if empty it will rebase to "."
-	engineDataDirRebaser.setOutputBaseDir( selectedEngine ? selectedEngine->dataDir : emptyString );
+	// engine's data dir has changed -> from now on rebase engine config/data paths to the new dir, if empty it will rebase to "."
+	engineConfigDirRebaser.setTargetBaseDir( selectedEngine ? selectedEngine->configDir : emptyString );
+	engineDataDirRebaser.setTargetBaseDir( selectedEngine ? selectedEngine->dataDir : emptyString );
+
+	if (selectedEngine)
+	{
+		IWAD * selectedIWAD;
+		if (selectedEngine->saveDirDependsOnIWAD() && (selectedIWAD = getSelectedIWAD()))
+		{
+			currentEngineSaveDir = selectedEngine->getDefaultSaveDir( selectedIWAD->path );
+		}
+		else
+		{
+			currentEngineSaveDir = selectedEngine->getDefaultSaveDir();
+		}
+		currentEngineScreenshotDir = selectedEngine->getDefaultScreenshotDir();
+	}
 
 	// only allow editing, if the engine supports specifying map by its name
 	bool supportsCustomMapNames = selectedEngine ? selectedEngine->supportsCustomMapNames() : false;
 	ui->mapCmbBox->setEditable( supportsCustomMapNames );
 	ui->mapCmbBox_demo->setEditable( supportsCustomMapNames );
 
-	// automatic alt dirs depend on the engine traits, which has now changed, so this needs to be refreshed
-	if (globalOpts.usePresetNameAsDir)
-	{
-		const Preset * selectedPreset = getSelectedPreset();
-		const QString & presetName = selectedPreset ? selectedPreset->name : emptyString;
-		setAlternativeDirs( fs::sanitizePath( presetName ) );
-	}
-
 	// update related UI elements
 	ui->engineDirBtn->setEnabled( selectedEngine != nullptr );
+	ui->configCloneBtn->setEnabled( selectedEngine != nullptr );
+	// automatic alt dirs depend on the engine traits, which has now changed, so this needs to be refreshed
+	updateAlternativeDirs();
 
+	// these depend of the alternative dirs
 	updateConfigFilesFromDir();
 	updateSaveFilesFromDir();
 	updateDemoFilesFromDir();
-	updateCompatLevels();
+	updateCompatModes();
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2210,15 +2302,12 @@ void MainWindow::onConfigSelected( int index )
 	const ConfigFile * selectedConfig = index > 0 ? &configModel[ index ] : nullptr;  // at index 0 there is an empty placeholder to allow deselecting config
 	const QString & configFileName = selectedConfig ? selectedConfig->fileName : emptyString;
 
-	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedConfig, configFileName );
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedConfig, configFileName );
 
 	/*if (selectedConfig)
 	{
 		QString configPath = fs::getPathFromFileName( getConfigDir(), configFileName );
 	}*/
-
-	// update related UI elements
-	ui->configCloneBtn->setEnabled( selectedConfig != nullptr );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2232,9 +2321,19 @@ void MainWindow::onIWADToggled( const QItemSelection & /*selected*/, const QItem
 	const IWAD * selectedIWAD = getSelectedIWAD();
 	const QString & iwadPath = selectedIWAD ? selectedIWAD->path : emptyString;
 
-	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( selectedIWAD, iwadPath );
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedIWAD, iwadPath );
 
-	updateMapsFromSelectedWADs();
+	if (selectedIWAD)
+	{
+		if (EngineInfo * selectedEngine = getSelectedEngine(); selectedEngine && selectedEngine->saveDirDependsOnIWAD())
+		{
+			currentEngineSaveDir = selectedEngine->getDefaultSaveDir( selectedIWAD->path );
+		}
+	}
+
+	updateMapsFromSelectedWADs();   // IWAD determines the maps we can choose from
+	updateSaveFilesFromDir();       // IWAD determines the directory in which the save files and demo files are stored
+	updateDemoFilesFromDir();
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2247,7 +2346,7 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 
 	QStringVec selectedMapPacks = getSelectedMapPacks();
 
-	/*bool storageModified =*/ STORE_TO_CURRENT_PRESET_IF_SAFE( selectedMapPacks, selectedMapPacks );
+	/*bool storageModified =*/ STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedMapPacks, selectedMapPacks );
 
 	// expand the parent directory nodes that are collapsed
 	const auto selectedRows = wdg::getSelectedRows( ui->mapDirView );
@@ -2287,11 +2386,10 @@ void MainWindow::onPresetDataChanged( const QModelIndex & topLeft, const QModelI
 
 	if (roles.contains( Qt::EditRole ))
 	{
-		// automatic alt dirs are derived from preset name, which has now changed, so this needs to be refreshed
-		if (globalOpts.usePresetNameAsDir && wdg::isSelectedIndex( ui->presetListView, editedIdx ))
+		if (wdg::isSelectedIndex( ui->presetListView, editedIdx ))
 		{
-			const QString & presetName = presetModel[ editedIdx ].name;
-			setAlternativeDirs( fs::sanitizePath( presetName ) );
+			// automatic alt dirs are derived from preset name, which has now changed, so this needs to be refreshed
+			updateAlternativeDirs( &presetModel[ editedIdx ] );
 		}
 	}
 
@@ -2336,42 +2434,42 @@ void MainWindow::onModDataChanged( const QModelIndex & topLeft, const QModelInde
 	updateLaunchCommand();
 }
 
-void MainWindow::showMapPackDesc( const QModelIndex & index )
+void MainWindow::showTxtDescriptionFor( const QString & filePath, const QString & contentType )
 {
-	QFileInfo mapDataFileInfo( mapModel.filePath( index ) );
+	QFileInfo dataFileInfo( filePath );
 
-	if (!mapDataFileInfo.isFile())  // user could click on a directory
+	if (!dataFileInfo.isFile())  // user could click on a directory
 	{
 		return;
 	}
 
 	// get the corresponding file with txt suffix
-	QFileInfo mapDescFileInfo(fs::replaceFileSuffix( mapDataFileInfo.filePath(), "txt" ));
-	if (!mapDescFileInfo.isFile())
+	QFileInfo descFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "txt" ) );
+	if (!descFileInfo.isFile())
 	{
 		// try TXT in case we are in a case-sensitive file-system such as Linux
-		mapDescFileInfo = QFileInfo(fs::replaceFileSuffix( mapDataFileInfo.filePath(), "TXT" ));
-		if (!mapDescFileInfo.isFile())
+		descFileInfo = QFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "TXT" ) );
+		if (!descFileInfo.isFile())
 		{
-			reportUserError( this, "Cannot open map description",
-				"Map description file \""%mapDescFileInfo.fileName()%"\" does not exist" );
+			reportUserError( this, "Cannot open "%contentType,
+				capitalize( contentType )%" file \""%descFileInfo.fileName()%"\" does not exist" );
 			return;
 		}
 	}
 
-	QFile mapDescFile( mapDescFileInfo.filePath() );
-	if (!mapDescFile.open( QIODevice::Text | QIODevice::ReadOnly ))
+	QFile descFile( descFileInfo.filePath() );
+	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
 	{
-		reportRuntimeError( this, "Cannot open map description",
-			"Failed to open map description file \""%mapDescFileInfo.fileName()%"\" ("%mapDescFile.errorString()%")" );
+		reportRuntimeError( this, "Cannot open "%contentType,
+			"Failed to open map "%contentType%" \""%descFileInfo.fileName()%"\" ("%descFile.errorString()%")" );
 		return;
 	}
 
-	QByteArray desc = mapDescFile.readAll();
+	QByteArray desc = descFile.readAll();
 
 	QDialog descDialog( this );
-	descDialog.setObjectName( "MapDescription" );
-	descDialog.setWindowTitle( mapDescFileInfo.fileName() );
+	descDialog.setObjectName( "FileDescription" );
+	descDialog.setWindowTitle( descFileInfo.fileName() );
 	descDialog.setWindowModality( Qt::WindowModal );
 
 	QVBoxLayout * layout = new QVBoxLayout( &descDialog );
@@ -2400,6 +2498,21 @@ void MainWindow::showMapPackDesc( const QModelIndex & index )
 	descDialog.exec();
 }
 
+void MainWindow::showIWADDesc( const QModelIndex & index )
+{
+	showTxtDescriptionFor( iwadModel[ index.row() ].path, "IWAD description" );
+}
+
+void MainWindow::showMapPackDesc( const QModelIndex & index )
+{
+	showTxtDescriptionFor( mapModel.filePath( index ), "map description" );
+}
+
+void MainWindow::showModDesc( const QModelIndex & index )
+{
+	showTxtDescriptionFor( modModel[ index.row() ].path, "mod description" );
+}
+
 void MainWindow::onMapDirUpdated( const QString & path )
 {
 	// the QFileSystemModel mapModel has finally updated its content from mapSettings.dir
@@ -2424,7 +2537,7 @@ void MainWindow::onMapDirUpdated( const QString & path )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  preset list manipulation
+// preset list manipulation
 
 static uint getHighestDefaultPresetNameIndex( const QList< Preset > & presetList )
 {
@@ -2611,22 +2724,17 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  mod list manipulation
+// mod list manipulation
 
 void MainWindow::modAdd()
 {
-	QStringList paths = OwnFileDialog::getOpenFileNames( this, "Locate the mod file", modSettings.dir,
+	QStringList paths = DialogWithPaths::browseFiles( this, "mod file", lastUsedDir,
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel
 		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathConvertor.usingRelativePaths())
-		for (QString & path : paths)
-			path = pathConvertor.getRelativePath( path );
 
 	Preset * selectedPreset = getSelectedPreset();
 
@@ -2649,14 +2757,9 @@ void MainWindow::modAdd()
 
 void MainWindow::modAddDir()
 {
-	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the mod directory", modSettings.dir );
-
+	QString path = DialogWithPaths::browseDir( this, "of the mod", lastUsedDir );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathConvertor.usingRelativePaths())
-		path = pathConvertor.getRelativePath( path );
 
 	Mod mod;
 	mod.path = path;
@@ -2789,14 +2892,22 @@ void MainWindow::modInsertSeparator()
 	scheduleSavingOptions();
 }
 
-void MainWindow::modToggleIcons()
+void MainWindow::onMapsAfterModsToggled( bool checked )
+{
+	bool storageModified = STORE_PRESET_OPTION( .loadMapsAfterMods, checked );
+
+	scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onModIconsToggled()
 {
 	modSettings.showIcons = modModel.areIconsEnabled();
 
 	scheduleSavingOptions();
 }
 
-void MainWindow::onModsDropped( int dropRow, int count )
+void MainWindow::onModsDropped( int dropRow, int count, DnDType )
 {
 	// update the preset
 	if (Preset * selectedPreset = getSelectedPreset())
@@ -2809,7 +2920,7 @@ void MainWindow::onModsDropped( int dropRow, int count )
 	for (int row = dropRow; row < dropRow + count; ++row)
 	{
 		const Mod & mod = modModel[ row ];
-		if (fs::isInsideDir( mod.path, mapRootDir ))
+		if (fs::isInsideDir( mapRootDir, mod.path ))
 		{
 			QModelIndex mapPackIdx = mapModel.index( mod.path );
 			if (mapPackIdx.isValid())
@@ -2825,11 +2936,11 @@ void MainWindow::onModsDropped( int dropRow, int count )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  launch mode
+// launch mode
 
 void MainWindow::onModeChosen_Default()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, Default );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, Default );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -2851,7 +2962,7 @@ void MainWindow::onModeChosen_Default()
 
 void MainWindow::onModeChosen_LaunchMap()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, LaunchMap );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, LaunchMap );
 
 	ui->mapCmbBox->setEnabled( true );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -2873,7 +2984,7 @@ void MainWindow::onModeChosen_LaunchMap()
 
 void MainWindow::onModeChosen_SavedGame()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, LoadSave );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, LoadSave );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( true );
@@ -2890,7 +3001,7 @@ void MainWindow::onModeChosen_SavedGame()
 
 void MainWindow::onModeChosen_RecordDemo()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, RecordDemo );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, RecordDemo );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -2907,7 +3018,7 @@ void MainWindow::onModeChosen_RecordDemo()
 
 void MainWindow::onModeChosen_ReplayDemo()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mode, ReplayDemo );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, ReplayDemo );
 
 	ui->mapCmbBox->setEnabled( false );
 	ui->saveFileCmbBox->setEnabled( false );
@@ -2938,9 +3049,10 @@ void MainWindow::toggleOptionsSubwidgets( bool enabled )
 	ui->noMonstersChkBox->setEnabled( enabled );
 	ui->fastMonstersChkBox->setEnabled( enabled );
 	ui->monstersRespawnChkBox->setEnabled( enabled );
+	ui->pistolStartChkBox->setEnabled( enabled );
 	ui->gameOptsBtn->setEnabled( enabled );
 	ui->compatOptsBtn->setEnabled( enabled );
-	ui->compatLevelCmbBox->setEnabled( enabled && lastCompLvlStyle != CompatLevelStyle::None );
+	ui->compatModeCmbBox->setEnabled( enabled && lastCompLvlStyle != CompatModeStyle::None );
 }
 
 void MainWindow::onMapChanged( const QString & mapName )
@@ -2948,7 +3060,7 @@ void MainWindow::onMapChanged( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mapName, mapName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mapName, mapName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2959,7 +3071,7 @@ void MainWindow::onMapChanged_demo( const QString & mapName )
 	if (disableSelectionCallbacks)
 		return;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( mapName_demo, mapName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mapName_demo, mapName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2972,7 +3084,7 @@ void MainWindow::onSavedGameSelected( int saveIdx )
 
 	const QString & saveFileName = saveIdx >= 0 ? saveModel[ saveIdx ].fileName : emptyString;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( saveFile, saveFileName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .saveFile, saveFileName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2983,7 +3095,7 @@ void MainWindow::onDemoFileChanged_record( const QString & fileName )
 	if (disableSelectionCallbacks)
 		return;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( demoFile_record, fileName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .demoFile_record, fileName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2996,7 +3108,7 @@ void MainWindow::onDemoFileSelected_replay( int demoIdx )
 
 	const QString & demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : emptyString;
 
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( demoFile_replay, demoFileName );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .demoFile_replay, demoFileName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3004,14 +3116,14 @@ void MainWindow::onDemoFileSelected_replay( int demoIdx )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  gameplay options
+// gameplay options
 
 void MainWindow::onSkillSelected( int comboBoxIdx )
 {
 	// skillIdx is an index in the combo-box which starts from 0, but Doom skill number actually starts from 1
 	int skillIdx = comboBoxIdx + 1;
 
-	/*bool storageModified =*/ STORE_GAMEPLAY_OPTION( skillIdx, skillIdx );
+	/*bool storageModified =*/ STORE_GAMEPLAY_OPTION( .skillIdx, skillIdx );
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 
@@ -3025,7 +3137,7 @@ void MainWindow::onSkillSelected( int comboBoxIdx )
 
 void MainWindow::onSkillNumChanged( int skillNum )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( skillNum, skillNum );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .skillNum, skillNum );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3033,7 +3145,7 @@ void MainWindow::onSkillNumChanged( int skillNum )
 
 void MainWindow::onNoMonstersToggled( bool checked )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( noMonsters, checked );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .noMonsters, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3041,7 +3153,7 @@ void MainWindow::onNoMonstersToggled( bool checked )
 
 void MainWindow::onFastMonstersToggled( bool checked )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( fastMonsters, checked );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .fastMonsters, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3049,7 +3161,15 @@ void MainWindow::onFastMonstersToggled( bool checked )
 
 void MainWindow::onMonstersRespawnToggled( bool checked )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( monstersRespawn, checked );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .monstersRespawn, checked );
+
+	scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onPistolStartToggled( bool checked )
+{
+	bool storageModified = STORE_GAMEPLAY_OPTION( .pistolStart, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3057,7 +3177,7 @@ void MainWindow::onMonstersRespawnToggled( bool checked )
 
 void MainWindow::onAllowCheatsToggled( bool checked )
 {
-	bool storageModified = STORE_GAMEPLAY_OPTION( allowCheats, checked );
+	bool storageModified = STORE_GAMEPLAY_OPTION( .allowCheats, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3065,14 +3185,14 @@ void MainWindow::onAllowCheatsToggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  compatibility
+// compatibility
 
-void MainWindow::onCompatLevelSelected( int compatLevel )
+void MainWindow::onCompatModeSelected( int compatMode )
 {
 	if (disableSelectionCallbacks)
 		return;
 
-	bool storageModified = STORE_COMPAT_OPTION( compatLevel, compatLevel - 1 );  // first item is reserved for indicating no selection
+	bool storageModified = STORE_COMPAT_OPTION( .compatMode, compatMode - 1 );  // first item is reserved for indicating no selection
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3080,11 +3200,11 @@ void MainWindow::onCompatLevelSelected( int compatLevel )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  multiplayer
+// multiplayer
 
 void MainWindow::onMultiplayerToggled( bool checked )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( isMultiplayer, checked );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .isMultiplayer, checked );
 
 	int multRole = ui->multRoleCmbBox->currentIndex();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -3130,7 +3250,7 @@ void MainWindow::onMultiplayerToggled( bool checked )
 
 void MainWindow::onMultRoleSelected( int role )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( multRole, MultRole(role) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .multRole, MultRole(role) );
 
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int gameMode = ui->gameModeCmbBox->currentIndex();
@@ -3162,7 +3282,7 @@ void MainWindow::onMultRoleSelected( int role )
 
 void MainWindow::onHostChanged( const QString & hostName )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( hostName, hostName );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .hostName, hostName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3170,7 +3290,7 @@ void MainWindow::onHostChanged( const QString & hostName )
 
 void MainWindow::onPortChanged( int port )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( port, uint16_t(port) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .port, uint16_t(port) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3178,7 +3298,7 @@ void MainWindow::onPortChanged( int port )
 
 void MainWindow::onNetModeSelected( int netMode )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( netMode, NetMode(netMode) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .netMode, NetMode(netMode) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3186,7 +3306,7 @@ void MainWindow::onNetModeSelected( int netMode )
 
 void MainWindow::onGameModeSelected( int gameMode )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( gameMode, GameMode(gameMode) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .gameMode, GameMode(gameMode) );
 
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
@@ -3203,7 +3323,7 @@ void MainWindow::onGameModeSelected( int gameMode )
 
 void MainWindow::onPlayerCountChanged( int count )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( playerCount, uint( count ) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .playerCount, uint( count ) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3211,10 +3331,14 @@ void MainWindow::onPlayerCountChanged( int count )
 
 void MainWindow::onTeamDamageChanged( double damage )
 {
- #pragma GCC diagnostic push
- #pragma GCC diagnostic ignored "-Wfloat-equal"
-	/*bool storageModified =*/ STORE_MULT_OPTION( teamDamage, damage );
- #pragma GCC diagnostic pop
+ #ifdef __GNUC__
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wfloat-equal"
+ #endif
+	/*bool storageModified =*/ STORE_MULT_OPTION( .teamDamage, damage );
+ #ifdef __GNUC__
+  #pragma GCC diagnostic pop
+ #endif
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3222,7 +3346,7 @@ void MainWindow::onTeamDamageChanged( double damage )
 
 void MainWindow::onTimeLimitChanged( int timeLimit )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( timeLimit, uint(timeLimit) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .timeLimit, uint(timeLimit) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3230,7 +3354,7 @@ void MainWindow::onTimeLimitChanged( int timeLimit )
 
 void MainWindow::onFragLimitChanged( int fragLimit )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( fragLimit, uint(fragLimit) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .fragLimit, uint(fragLimit) );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3238,133 +3362,207 @@ void MainWindow::onFragLimitChanged( int fragLimit )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  alternative paths
+// alternative paths
 
-void MainWindow::setAlternativeDirs( const QString & dirName )
+void MainWindow::updateAlternativeDirs( const Preset * selectedPreset )
 {
-	QString newSaveDir;
-	QString newScreenshotDir;
+	if (!selectedPreset)  // optimization
+		selectedPreset = getSelectedPreset();
+	QString subdirName = selectedPreset ? fs::sanitizePath_strict( selectedPreset->name ) : QString();
 
-	const EngineInfo * selectedEngine = getSelectedEngine();
-	if (selectedEngine)
+	if (globalOpts.usePresetNameAsConfigDir)
 	{
-		// the paths in saveDirLine and screenshotDirLine are relative to the engine's data dir by convention,
-		// no need for prepending them with engine data dir.
-
-		newSaveDir = dirName;
-		// Do not set screenshot_dir for engines that don't support it,
-		// some of them are bitchy and won't start if you supply them with unknown command line parameter.
-		if (selectedEngine->hasScreenshotDirParam())
-			newScreenshotDir = dirName;
+		ui->altConfigDirLine->setText( subdirName );
 	}
 
-	// Don't clear the lines first and then set new text, instead do it in one call and one callback.
-	ui->saveDirLine->setText( newSaveDir );
-	ui->screenshotDirLine->setText( newScreenshotDir );
+	if (globalOpts.usePresetNameAsSaveDir)
+	{
+		ui->altSaveDirLine->setText( subdirName );
+	}
+
+	if (globalOpts.usePresetNameAsScreenshotDir)
+	{
+		const EngineInfo * selectedEngine = getSelectedEngine();
+		// Do not set screenshot_dir for engines that don't support it,
+		// some of them are bitchy and won't start if you supply them with unknown command line parameter.
+		if (selectedEngine && selectedEngine->hasScreenshotDirParam())
+			ui->altScreenshotDirLine->setText( subdirName );
+		else
+			ui->altScreenshotDirLine->clear();
+	}
 }
 
-void MainWindow::onUsePresetNameToggled( bool checked )
+void MainWindow::onUsePresetNameForConfigsToggled( bool checked )
 {
-	bool storageModified = STORE_GLOBAL_OPTION( usePresetNameAsDir, checked );
+	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsConfigDir, checked );
 
-	ui->saveDirLine->setEnabled( !checked );
-	ui->saveDirBtn->setEnabled( !checked );
-	ui->screenshotDirLine->setEnabled( !checked );
-	ui->screenshotDirBtn->setEnabled( !checked );
+	ui->altConfigDirLine->setEnabled( !checked );
+	ui->altConfigDirBtn->setEnabled( !checked );
 
 	if (checked)
 	{
-		const Preset * selectedPreset = getSelectedPreset();
-		const QString & presetName = selectedPreset ? selectedPreset->name : emptyString;
-
 		// overwrite whatever is currently in the preset or global launch options
-		setAlternativeDirs( fs::sanitizePath( presetName ) );
+		updateAlternativeDirs();
 	}
 
 	scheduleSavingOptions( storageModified );
 }
 
-void MainWindow::onSaveDirChanged( const QString & rebasedDir )
+void MainWindow::onUsePresetNameForSavesToggled( bool checked )
 {
-	// the path in saveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	QString trueDirPath = engineDataDirRebaser.rebasePathBack( rebasedDir );
+	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsSaveDir, checked );
+
+	ui->altSaveDirLine->setEnabled( !checked );
+	ui->altSaveDirBtn->setEnabled( !checked );
+
+	if (checked)
+	{
+		// overwrite whatever is currently in the preset or global launch options
+		updateAlternativeDirs();
+	}
+
+	scheduleSavingOptions( storageModified );
+}
+
+void MainWindow::onUsePresetNameForScreenshotsToggled( bool checked )
+{
+	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsScreenshotDir, checked );
+
+	ui->altScreenshotDirLine->setEnabled( !checked );
+	ui->altScreenshotDirBtn->setEnabled( !checked );
+
+	if (checked)
+	{
+		// overwrite whatever is currently in the preset or global launch options
+		updateAlternativeDirs();
+	}
+
+	scheduleSavingOptions( storageModified );
+}
+
+void MainWindow::onAltConfigDirChanged( const QString & rebasedDir )
+{
+	// the path in altConfigDirLine is relative to the engine's config dir by convention,
+	// need to make it absolute or rebase it to the current working dir
+	QString absDirPath = engineConfigDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
 
 	bool storageModified = false;
-	if (globalOpts.usePresetNameAsDir)
+	if (globalOpts.usePresetNameAsConfigDir)
 	{
 		// dir is being chosen automatically by the launcher, delete user overrides
-		storageModified = STORE_TO_CURRENT_PRESET( altPaths.saveDir, QString() );
+		storageModified = STORE_TO_CURRENT_PRESET( .altPaths.configDir, QString() );
 	}
 	else
 	{
 		// dir is being edited manually by the user, store his value
-		storageModified = STORE_ALT_PATH( saveDir, rebasedDir );
+		storageModified = STORE_ALT_PATH( .configDir, rebasedDir );
 	}
 
-	highlightDirPathIfFileOrCanBeCreated( ui->saveDirLine, trueDirPath );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->altConfigDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
+
+	updateConfigFilesFromDir();
+
+	scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onAltSaveDirChanged( const QString & rebasedDir )
+{
+	// the path in altSaveDirLine is relative to the engine's data dir by convention,
+	// need to make it absolute or rebase it to the current working dir
+	QString absDirPath = engineDataDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
+
+	bool storageModified = false;
+	if (globalOpts.usePresetNameAsSaveDir)
+	{
+		// dir is being chosen automatically by the launcher, delete user overrides
+		storageModified = STORE_TO_CURRENT_PRESET( .altPaths.saveDir, QString() );
+	}
+	else
+	{
+		// dir is being edited manually by the user, store his value
+		storageModified = STORE_ALT_PATH( .saveDir, rebasedDir );
+	}
+
+	highlightDirPathIfFileOrCanBeCreated( ui->altSaveDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
 
 	updateSaveFilesFromDir();
+	updateDemoFilesFromDir();
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
-void MainWindow::onScreenshotDirChanged( const QString & rebasedDir )
+void MainWindow::onAltScreenshotDirChanged( const QString & rebasedDir )
 {
-	// the path in screenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	QString trueDirPath = engineDataDirRebaser.rebasePathBack( rebasedDir );
+	// the path in altScreenshotDirLine is relative to the engine's data dir by convention,
+	// need to make it absolute or rebase it to the current working dir
+	QString absDirPath = engineDataDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
 
 	bool storageModified = false;
-	if (globalOpts.usePresetNameAsDir)
+	if (globalOpts.usePresetNameAsScreenshotDir)
 	{
 		// dir is being chosen automatically by the launcher, delete user overrides
-		storageModified = STORE_TO_CURRENT_PRESET( altPaths.screenshotDir, QString() );
+		storageModified = STORE_TO_CURRENT_PRESET( .altPaths.screenshotDir, QString() );
 	}
 	else
 	{
 		// dir is being edited manually by the user, store his value
-		storageModified = STORE_ALT_PATH( screenshotDir, rebasedDir );
+		storageModified = STORE_ALT_PATH( .screenshotDir, rebasedDir );
 	}
 
-	highlightDirPathIfFileOrCanBeCreated( ui->screenshotDirLine, trueDirPath );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->altScreenshotDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
-void MainWindow::browseSaveDir()
+void MainWindow::browseAltConfigDir()
 {
-	QString currentSaveDir = getSaveDir();
+	QString currentConfigDir = getActiveConfigDir();
+
+	QString newConfigDir = DialogWithPaths::browseDir( this, "with config files", currentConfigDir );
+	if (newConfigDir.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path in altConfigDirLine is relative to the engine's config dir by convention,
+	// but the path from the file dialog is relative to the current working dir -> need to rebase it
+	ui->altConfigDirLine->setText( engineConfigDirRebaser.rebaseAndMakeRelative( newConfigDir ) );  // TODO
+}
+
+void MainWindow::browseAltSaveDir()
+{
+	QString currentSaveDir = getActiveSaveDir();
 
 	QString newSaveDir = DialogWithPaths::browseDir( this, "with saves", currentSaveDir );
 	if (newSaveDir.isEmpty())  // user probably clicked cancel
 		return;
 
-	// the path in saveDirLine is relative to the engine's data dir by convention,
+	// the path in altSaveDirLine is relative to the engine's data dir by convention,
 	// but the path from the file dialog is relative to the current working dir -> need to rebase it
-	ui->saveDirLine->setText( engineDataDirRebaser.rebasePath( newSaveDir ) );
+	ui->altSaveDirLine->setText( engineDataDirRebaser.rebaseAndMakeRelative( newSaveDir ) );
 }
 
-void MainWindow::browseScreenshotDir()
+void MainWindow::browseAltScreenshotDir()
 {
-	QString currentScreenshotDir = getScreenshotDir();
+	QString currentScreenshotDir = getActiveScreenshotDir();
 
 	QString newScreenshotDir = DialogWithPaths::browseDir( this, "for screenshots", currentScreenshotDir );
 	if (newScreenshotDir.isEmpty())  // user probably clicked cancel
 		return;
 
-	// the path in screenshotDirLine is relative to the engine's data dir by convention,
+	// the path in altScreenshotDirLine is relative to the engine's data dir by convention,
 	// but the path from the file dialog is relative to the current working dir -> need to rebase it
-	ui->screenshotDirLine->setText( engineDataDirRebaser.rebasePath( newScreenshotDir ) );
+	ui->altScreenshotDirLine->setText( engineDataDirRebaser.rebaseAndMakeRelative( newScreenshotDir ) );
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  video options
+// video options
 
 void MainWindow::onMonitorSelected( int index )
 {
-	/*bool storageModified =*/ STORE_VIDEO_OPTION( monitorIdx, index );
+	/*bool storageModified =*/ STORE_VIDEO_OPTION( .monitorIdx, index );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3372,7 +3570,7 @@ void MainWindow::onMonitorSelected( int index )
 
 void MainWindow::onResolutionXChanged( const QString & xStr )
 {
-	bool storageModified = STORE_VIDEO_OPTION( resolutionX, xStr.toUInt() );
+	bool storageModified = STORE_VIDEO_OPTION( .resolutionX, xStr.toUInt() );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3380,7 +3578,7 @@ void MainWindow::onResolutionXChanged( const QString & xStr )
 
 void MainWindow::onResolutionYChanged( const QString & yStr )
 {
-	bool storageModified = STORE_VIDEO_OPTION( resolutionY, yStr.toUInt() );
+	bool storageModified = STORE_VIDEO_OPTION( .resolutionY, yStr.toUInt() );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3388,7 +3586,7 @@ void MainWindow::onResolutionYChanged( const QString & yStr )
 
 void MainWindow::onShowFpsToggled( bool checked )
 {
-	bool storageModified = STORE_VIDEO_OPTION( showFPS, checked );
+	bool storageModified = STORE_VIDEO_OPTION( .showFPS, checked );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3396,11 +3594,11 @@ void MainWindow::onShowFpsToggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  audio options
+// audio options
 
 void MainWindow::onNoSoundToggled( bool checked )
 {
-	/*bool storageModified =*/ STORE_AUDIO_OPTION( noSound, checked );
+	/*bool storageModified =*/ STORE_AUDIO_OPTION( .noSound, checked );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3408,7 +3606,7 @@ void MainWindow::onNoSoundToggled( bool checked )
 
 void MainWindow::onNoSFXToggled( bool checked )
 {
-	/*bool storageModified =*/ STORE_AUDIO_OPTION( noSFX, checked );
+	/*bool storageModified =*/ STORE_AUDIO_OPTION( .noSFX, checked );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3416,7 +3614,7 @@ void MainWindow::onNoSFXToggled( bool checked )
 
 void MainWindow::onNoMusicToggled( bool checked )
 {
-	/*bool storageModified =*/ STORE_AUDIO_OPTION( noMusic, checked );
+	/*bool storageModified =*/ STORE_AUDIO_OPTION( .noMusic, checked );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3424,7 +3622,7 @@ void MainWindow::onNoMusicToggled( bool checked )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  environment variables
+// environment variables
 
 void MainWindow::presetEnvVarAdd()
 {
@@ -3574,11 +3772,11 @@ void MainWindow::onGlobalEnvVarDataChanged( int row, int column )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  additional command line arguments
+// additional command line arguments
 
 void MainWindow::onPresetCmdArgsChanged( const QString & text )
 {
-	/*bool storageModified =*/ STORE_PRESET_OPTION( cmdArgs, text );
+	/*bool storageModified =*/ STORE_PRESET_OPTION( .cmdArgs, text );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3586,7 +3784,15 @@ void MainWindow::onPresetCmdArgsChanged( const QString & text )
 
 void MainWindow::onGlobalCmdArgsChanged( const QString & text )
 {
-	/*bool storageModified =*/ STORE_GLOBAL_OPTION( cmdArgs, text );
+	/*bool storageModified =*/ STORE_GLOBAL_OPTION( .cmdArgs, text );
+
+	//scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onCmdPrefixChanged( const QString & text )
+{
+	/*bool storageModified =*/ STORE_GLOBAL_OPTION( .cmdPrefix, text );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3594,18 +3800,20 @@ void MainWindow::onGlobalCmdArgsChanged( const QString & text )
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  misc
+// miscellaneous
 
 void MainWindow::togglePathStyle( PathStyle style )
 {
 	bool styleChanged = style != pathConvertor.pathStyle();
 
 	pathConvertor.setPathStyle( style );
+	engineConfigDirRebaser.setOutputPathStyle( style );
+	engineDataDirRebaser.setOutputPathStyle( style );
 
 	for (Engine & engine : engineModel)
 	{
 		engine.executablePath = pathConvertor.convertPath( engine.executablePath );
-		engine.configDir = pathConvertor.convertPath( engine.configDir );
+		// don't convert the config/data dirs, some of them may be better stored as relative, some as absolute
 	}
 
 	iwadSettings.dir = pathConvertor.convertPath( iwadSettings.dir );
@@ -3637,26 +3845,29 @@ void MainWindow::togglePathStyle( PathStyle style )
 		}
 	}
 
-	ui->saveDirLine->setText( convertRebasedEngineDataPath( ui->saveDirLine->text() ) );
-	ui->screenshotDirLine->setText( convertRebasedEngineDataPath( ui->screenshotDirLine->text() ) );
-
 	scheduleSavingOptions( styleChanged );
 }
 
-void MainWindow::fillDerivedEngineInfo( DirectList< EngineInfo > & engines )
+void MainWindow::fillDerivedEngineInfo( DirectList< EngineInfo > & engines, bool refreshAllAutoEngineInfo )
 {
 	for (EngineInfo & engine : engines)
 	{
-		if (!engine.hasAppInfo())
-			engine.loadAppInfo( engine.executablePath );
-		if (!engine.hasFamilyTraits())
-			engine.assignFamilyTraits( engine.family );
+		engine.autoDetectTraits( engine.executablePath );
+
+		// If the following fields are missing (may be options from an older version),
+		// or the user wishes to refresh them, auto-detect them again.
+		if (engine.configDir.isEmpty() || refreshAllAutoEngineInfo)
+			engine.configDir = engine.getDefaultConfigDir();
+		if (engine.dataDir.isEmpty() || refreshAllAutoEngineInfo)
+			engine.dataDir = engine.getDefaultDataDir();
+		if (engine.family == EngineFamily::_EnumEnd || refreshAllAutoEngineInfo)
+			engine.family = engine.currentEngineFamily();
 	}
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  automatic list updates according to directory content
+// automatic list updates according to directory content
 
 // All lists must be updated with special care. In some widgets, when a selection is reset it calls our "item selected"
 // callback and that causes the command to regenerate. Which means on every update tick the command is changed back and
@@ -3684,7 +3895,7 @@ void MainWindow::updateIWADsFromDir()
 	int origIwadIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 	disableSelectionCallbacks = true;
 
-	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::isIWAD );
+	wdg::updateListFromDir( iwadModel, ui->iwadListView, iwadSettings.dir, iwadSettings.searchSubdirs, pathConvertor, doom::canBeIWAD );
 
 	if (!iwadSettings.defaultIWAD.isEmpty())
 	{
@@ -3716,14 +3927,21 @@ void MainWindow::resetMapDirModelAndView()
 
 void MainWindow::updateConfigFilesFromDir( const QString * callersConfigDir )
 {
-	QString configDir = callersConfigDir ? *callersConfigDir : getConfigDir();
+	EngineInfo * selectedEngine = getSelectedEngine();
+	if (!selectedEngine)
+	{
+		return;
+	}
+
+	QString configDir = callersConfigDir ? *callersConfigDir /*optimization*/ : getActiveConfigDir();
 
 	// workaround (read the big comment above)
 	int origConfigIdx = ui->configCmbBox->currentIndex();
 	disableSelectionCallbacks = true;
 
+	// if the configDir is empty (not set), it will clear the combo box, which is exactly what we want
 	wdg::updateComboBoxFromDir( configModel, ui->configCmbBox, configDir, /*recursively*/false, /*emptyItem*/true, pathConvertor,
-		/*isDesiredFile*/[]( const QFileInfo & file ) { return doom::configFileSuffixes.contains( file.suffix().toLower() ); }
+		/*isDesiredFile*/[&]( const QFileInfo & file ) { return file.suffix().toLower() == selectedEngine->configFileSuffix(); }
 	);
 
 	disableSelectionCallbacks = false;
@@ -3736,16 +3954,22 @@ void MainWindow::updateConfigFilesFromDir( const QString * callersConfigDir )
 	}
 }
 
-void MainWindow::updateSaveFilesFromDir( const QString * callersSaveDir )
+void MainWindow::updateSaveFilesFromDir()
 {
-	QString saveDir = callersSaveDir ? *callersSaveDir : getSaveDir();
+	EngineInfo * selectedEngine = getSelectedEngine();
+	if (!selectedEngine)
+	{
+		return;
+	}
+
+	QString saveDir = getActiveSaveDir();
 
 	// workaround (read the big comment above)
 	int origSaveIdx = ui->saveFileCmbBox->currentIndex();
 	disableSelectionCallbacks = true;
 
 	wdg::updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
-		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == doom::saveFileSuffix; }
+		/*isDesiredFile*/[&]( const QFileInfo & file ) { return file.suffix().toLower() == selectedEngine->saveFileSuffix(); }
 	);
 
 	disableSelectionCallbacks = false;
@@ -3758,9 +3982,9 @@ void MainWindow::updateSaveFilesFromDir( const QString * callersSaveDir )
 	}
 }
 
-void MainWindow::updateDemoFilesFromDir( const QString * callersDemoDir )
+void MainWindow::updateDemoFilesFromDir()
 {
-	QString demoDir = callersDemoDir ? *callersDemoDir : getDemoDir();
+	QString demoDir = getActiveDemoDir();
 
 	// workaround (read the big comment above)
 	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
@@ -3780,37 +4004,37 @@ void MainWindow::updateDemoFilesFromDir( const QString * callersDemoDir )
 	}
 }
 
-/// Updates the compat level combo-box according to the currently selected engine.
-void MainWindow::updateCompatLevels()
+/// Updates the compat mode combo-box according to the currently selected engine.
+void MainWindow::updateCompatModes()
 {
 	const EngineInfo * selectedEngine = getSelectedEngine();
-	CompatLevelStyle currentCompLvlStyle = selectedEngine ? selectedEngine->compatLevelStyle() : CompatLevelStyle::None;
+	CompatModeStyle currentCompLvlStyle = selectedEngine ? selectedEngine->compatModeStyle() : CompatModeStyle::None;
 
 	if (currentCompLvlStyle != lastCompLvlStyle)
 	{
 		disableSelectionCallbacks = true;  // workaround (read the big comment above)
 
-		ui->compatLevelCmbBox->setCurrentIndex( -1 );
+		ui->compatModeCmbBox->setCurrentIndex( -1 );
 
-		// automatically initialize compat level combox fox according to the selected engine (its compat level options)
-		ui->compatLevelCmbBox->clear();
-		ui->compatLevelCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
-		if (currentCompLvlStyle != CompatLevelStyle::None)
+		// automatically initialize compat mode combox fox according to the selected engine (its compat mode options)
+		ui->compatModeCmbBox->clear();
+		ui->compatModeCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
+		if (currentCompLvlStyle != CompatModeStyle::None)
 		{
-			ui->compatLevelCmbBox->addItems( getCompatLevels( currentCompLvlStyle ) );
+			ui->compatModeCmbBox->addItems( getCompatModes( currentCompLvlStyle ) );
 		}
 
-		ui->compatLevelCmbBox->setCurrentIndex( 0 );
+		ui->compatModeCmbBox->setCurrentIndex( 0 );
 
 		disableSelectionCallbacks = false;
 
-		// available compat levels changed -> reset the compat level index, because the previous one is no longer valid
-		onCompatLevelSelected( 0 );
+		// available compat modes changed -> reset the compat mode index, because the previous one is no longer valid
+		onCompatModeSelected( 0 );
 
 		// keep the widget enabled only if the engine supports compatibility levels
 		LaunchMode launchMode = getLaunchModeFromUI();
-		ui->compatLevelCmbBox->setEnabled(
-			currentCompLvlStyle != CompatLevelStyle::None && launchMode != LoadSave && launchMode != ReplayDemo
+		ui->compatModeCmbBox->setEnabled(
+			currentCompLvlStyle != CompatModeStyle::None && launchMode != LoadSave && launchMode != ReplayDemo
 		);
 
 		lastCompLvlStyle = currentCompLvlStyle;
@@ -3894,34 +4118,42 @@ void MainWindow::updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  command export
+// command export
 
 void MainWindow::exportPresetToScript()
 {
-	if (!wdg::isSomethingSelected( ui->presetListView ))
+	if (!getSelectedPreset())
 	{
 		reportUserError( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
 
-	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, scriptFileSuffix );
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	if (!selectedEngine)
+	{
+		reportUserError( this, "No engine selected", "No Doom engine is selected." );
+		return;  // no sense to generate a command when we don't even know the engine
+	}
+
+	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, os::scriptFileSuffix );
 	if (scriptFilePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
 	}
 
-	QFileInfo scriptFileInfo( scriptFilePath );
-	QString scriptDir = scriptFileInfo.path();
+	lastUsedDir = fs::getParentDir( scriptFilePath );
 
-	PathStyle cmdPathStyle = pathConvertor.pathStyle();
+	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
-	// Both the executable and the paths in the arguments need to be relative to the directory of the script file,
-	// because the script will set the working directory to it's own directory.
-	auto cmd = generateLaunchCommand(
-		scriptDir, cmdPathStyle, scriptDir, cmdPathStyle, QuotePaths, DontVerifyPaths
-	);
-
-	lastUsedDir = std::move(scriptDir);
+	// All relative paths need to be relative to the engine's executable directory,
+	// because the working dir must be set to the engine's executable directory.
+	auto cmd = generateLaunchCommand({
+		.exePathStyle = PathStyle::Relative,
+		.parentWorkingDir = engineExeDir,
+		.engineWorkingDir = engineExeDir,
+		.quotePaths = true,
+		.verifyPaths = false,
+	});
 
 	QFile scriptFile( scriptFilePath );
 	if (!scriptFile.open( QIODevice::WriteOnly | QIODevice::Text ))
@@ -3932,12 +4164,13 @@ void MainWindow::exportPresetToScript()
 
 	QTextStream stream( &scriptFile );
 
-	// make sure the working directory is set to the script file's directory
+	// Make sure the working directory is set to the engine's executable directory,
+	// because some engines refuse to start or don't work properly when the working dir is not their executable dir.
  #if IS_WINDOWS
-	stream << "cd \"%~dp0\"\n";
+	stream << "cd \""%fs::toNativePath( engineExeDir )%"\"" << '\n';
  #else
 	stream << "#!/bin/bash\n\n";
-	stream << "cd $(dirname $(readlink -f \"$0\"))\n";
+	stream << "cd '"%fs::toNativePath( engineExeDir )%"'" << '\n';
  #endif
 
 	stream << cmd.executable << " " << cmd.arguments.join(' ') << '\n';
@@ -3963,27 +4196,31 @@ void MainWindow::exportPresetToShortcut()
 		return;  // no sense to generate a command when we don't even know the engine
 	}
 
-	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, shortcutFileSuffix );
+	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, os::shortcutFileSuffix );
 	if (shortcutPath.isEmpty())  // user probably clicked cancel
 	{
 		return;
 	}
 
-	lastUsedDir = fs::getDirOfFile( shortcutPath );
+	lastUsedDir = fs::getParentDir( shortcutPath );
 
 	QString currentWorkingDir = pathConvertor.workingDir().path();
-	QString engineWorkingDir = fs::getAbsoluteDirOfFile( selectedEngine->executablePath );
+	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
 	// - The paths in the arguments need to be relative to the engine's directory
 	//   because the engine will be executed with the working directory set to engine's directory,
 	// - But the executable itself must be either absolute or relative to the current working dir
 	//   so that it is correctly saved to the shortcut.
 	// - Paths need to be quoted because Windows accepts a single string with all arguments concatenated instead of a list.
-	auto cmd = generateLaunchCommand(
-		currentWorkingDir, PathStyle::Absolute, engineWorkingDir, pathConvertor.pathStyle(), QuotePaths, DontVerifyPaths
-	);
+	auto cmd = generateLaunchCommand({
+		.exePathStyle = PathStyle::Absolute,
+		.parentWorkingDir = currentWorkingDir,
+		.engineWorkingDir = engineExeDir,
+		.quotePaths = true,
+		.verifyPaths = false,
+	});
 
-	bool success = win::createShortcut( shortcutPath, cmd.executable, cmd.arguments, engineWorkingDir, selectedPreset->name );
+	bool success = win::createShortcut( shortcutPath, cmd.executable, cmd.arguments, engineExeDir, selectedPreset->name );
 	if (!success)
 	{
 		reportRuntimeError( this, "Cannot create shortcut", "Failed to create a shortcut. Check errors.txt for details." );
@@ -4004,7 +4241,7 @@ void MainWindow::importPresetFromScript()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  launch command generation
+// launch command generation
 
 void MainWindow::updateLaunchCommand()
 {
@@ -4024,16 +4261,20 @@ void MainWindow::updateLaunchCommand()
 
 	QString currentCommand = ui->commandLine->text();
 
-	QString engineDir = fs::getDirOfFile( selectedEngine->executablePath );
+	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
-	PathStyle cmdPathStyle = pathConvertor.pathStyle();
+	// because some engines refuse to start or don't work properly when the working dir is not their executable dir.
 
-	// The paths in the arguments need to be relative to the engine's directory,
-	// because the engine will be executed with the working directory set to engine's directory.
+	// The relative paths in the arguments need to be relative to the engine's executable directory,
+	// because the engine must be started with the working directory set to its executable directory.
 	// The relative path of the executable does not matter, because here it is for displaying only.
-	auto cmd = generateLaunchCommand(
-		engineDir, cmdPathStyle, engineDir, cmdPathStyle, QuotePaths, DontVerifyPaths
-	);
+	auto cmd = generateLaunchCommand({
+		.exePathStyle = PathStyle::Relative,
+		.parentWorkingDir = engineExeDir,
+		.engineWorkingDir = engineExeDir,
+		.quotePaths = true,
+		.verifyPaths = false,
+	});
 
 	QString newCommand = cmd.executable % ' ' % cmd.arguments.join(' ');
 
@@ -4047,31 +4288,42 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
-/// Generates a command to be run, displayed or saved to a script file, according to the specified options.
-/**
-  * \param parentWorkingDir Working directory when the command is executed by the parent process.
-  *                         This will determine the relative path of the engine executable in the command.
-  * \param engineWorkingDir Working directory for the engine process that will be started.
-  *                         This will determine the relative paths of the file or directory arguments passed to the engine.
-  * \param enginePathStyle Path style to be used for the engine executable.
-  * \param argPathStyle Path style to be used for the paths in the command line arguments.
-  * \param quotePaths Surround each path in the command with quotes.
-  *                   Required for displaying the command or saving it to a script file.
-  * \param verifyPaths Verify that each path in the command is valid and leads to the correct entry type (file or directory).
-  *                    If invalid path is found, display a message box with an error description.
-  */
-os::ShellCommand MainWindow::generateLaunchCommand(
-	const QString & parentWorkingDir, PathStyle enginePathStyle, const QString & engineWorkingDir, PathStyle argPathStyle,
-	bool quotePaths, bool verifyPaths
-){
+static void appendCustomArguments( QStringVec & args, const QString & customArgsStr, bool quotePaths )
+{
+	auto splitArgs = splitCommandLineArguments( customArgsStr );
+	for (auto & arg : splitArgs)
+	{
+		if (quotePaths && arg.wasQuoted)
+			args << quoted( arg.str );
+		else
+			args << std::move( arg.str );
+	}
+};
+
+static void prependCommandWith( os::ShellCommand & cmd, const QString & cmdPrefix, bool quotePaths )
+{
+	QStringVec cmdParts;
+	appendCustomArguments( cmdParts, cmdPrefix, quotePaths );
+	cmdParts << std::move( cmd.executable );
+	cmdParts << std::move( cmd.arguments );
+
+	cmd.executable = cmdParts.takeFirst();
+	cmd.arguments = std::move( cmdParts );
+}
+
+os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
+{
 	os::ShellCommand cmd;
 
+	const QDir & currentWorkingDir = pathConvertor.workingDir();
 	// The stored engine path is relative to DoomRunner's directory, but we need it relative to parentWorkingDir.
-	PathRebaser parentDirRebaser( pathConvertor.workingDir(), parentWorkingDir, enginePathStyle, quotePaths );
+	PathRebaser parentDirRebaser( currentWorkingDir, opts.parentWorkingDir, opts.exePathStyle, opts.quotePaths );
 	// All stored paths are relative to DoomRunner's directory, but we need them relative to engineWorkingDir.
-	PathRebaser engineDirRebaser( pathConvertor.workingDir(), engineWorkingDir, argPathStyle, quotePaths );
+	PathRebaser engineDirRebaser( currentWorkingDir, opts.engineWorkingDir, opts.exePathStyle /*not used*/, opts.quotePaths );
+	// Checks if the required files or directories exist and displays error message if requested.
+	PathChecker p( this, opts.verifyPaths );
 
-	PathChecker p( this, verifyPaths );
+	QString cmdPrefixStr = ui->cmdPrefixLine->text();
 
 	//-- engine --------------------------------------------------------------------
 
@@ -4083,11 +4335,16 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 
 	const EngineInfo & engine = *selectedEngine;  // non-const so that we can change color of invalid paths
 
-	{
-		p.checkItemFilePath( engine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
+	p.checkItemFilePath( engine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
-		// get the beginning of the launch command based on OS and installation type
-		cmd = os::getRunCommand( engine.executablePath, parentDirRebaser, getDirsToBeAccessed() );
+	// get the beginning of the launch command based on OS and installation type
+	cmd = os::getRunCommand( engine.executablePath, parentDirRebaser, !cmdPrefixStr.isEmpty(), getDirsToBeAccessed() );
+
+	//-- command prefix ------------------------------------------------------------
+
+	if (!cmdPrefixStr.isEmpty())
+	{
+		prependCommandWith( cmd, cmdPrefixStr, opts.quotePaths );
 	}
 
 	//-- engine's config -----------------------------------------------------------
@@ -4098,7 +4355,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		QString configPath = fs::getPathFromFileName( engine.configDir, selectedConfig->fileName );
 
 		p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
-		cmd.arguments << "-config" << engineDirRebaser.rebaseAndQuotePath( configPath );
+		cmd.arguments << "-config" << engineDirRebaser.makeRebasedCmdPath( configPath );
 	}
 
 	//-- game data files -----------------------------------------------------------
@@ -4107,7 +4364,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	if (const IWAD * selectedIWAD = getSelectedIWAD())
 	{
 		p.checkItemFilePath( *selectedIWAD, "selected IWAD", "Please select another one." );
-		cmd.arguments << "-iwad" << engineDirRebaser.rebaseAndQuotePath( selectedIWAD->path );
+		cmd.arguments << "-iwad" << engineDirRebaser.makeRebasedCmdPath( selectedIWAD->path );
 	}
 
 	// This part is tricky.
@@ -4115,66 +4372,65 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	// But the user is allowed to intersperse the regular files with deh/bex files or custom cmd arguments.
 	// So we must somehow build an ordered sequence of mod files and custom arguments in which all the regular files are
 	// grouped together, and the easiest option seems to be by using a placeholder item.
-
-	QStringVec modArguments;
-	QStringVec fileList;
-
-	auto addFileAccordingToSuffix = [&]( const QString & filePath )
 	{
-		QString suffix = QFileInfo( filePath ).suffix().toLower();
-		if (suffix == "deh" || suffix == "hhe") {
-			modArguments << "-deh" << engineDirRebaser.rebaseAndQuotePath( filePath );
-		} else if (suffix == "bex") {
-			modArguments << "-bex" << engineDirRebaser.rebaseAndQuotePath( filePath );
-		} else {
-			if (fileList.isEmpty())
-				modArguments << "-file" << "<file_list>";  // insert placeholder where all the files will be together
-			fileList.append( engineDirRebaser.rebaseAndQuotePath( filePath ) );
-		}
-	};
+		QStringVec fileArgs;
+		bool placeholderPlaced = false;
 
-	auto appendCustomArguments = [&]( QStringVec & args, const QString & customArgsStr )
-	{
-		auto splitArgs = splitCommandLineArguments( customArgsStr );
-		for (const auto & arg : splitArgs)
+		auto addFileAccordingToSuffix = [&]( QStringVec & fileList, const QString & filePath )
 		{
-			if (quotePaths && arg.wasQuoted)
-				args << quoted( arg.str );
-			else
-				args << arg.str;
-		}
-	};
-
-	// map files
-	forEachSelectedMapPack( [&]( const QString & mapFilePath )
-	{
-		p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
-		addFileAccordingToSuffix( mapFilePath );
-	});
-
-	// mod files
-	for (const Mod & mod : modModel)
-	{
-		if (!mod.isSeparator && mod.checked)
-		{
-			if (mod.isCmdArg) {  // this is not a file but a custom command line argument
-				appendCustomArguments( modArguments, mod.fileName );  // the fileName holds the argument value
+			QString suffix = QFileInfo( filePath ).suffix().toLower();
+			if (suffix == "deh" || suffix == "hhe") {
+				fileArgs << "-deh" << engineDirRebaser.makeRebasedCmdPath( filePath );
+			} else if (suffix == "bex") {
+				fileArgs << "-bex" << engineDirRebaser.makeRebasedCmdPath( filePath );
 			} else {
-				p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
-				addFileAccordingToSuffix( mod.path );
+				if (!placeholderPlaced) {
+					fileArgs << "-file" << "<files>";  // insert placeholder where all the files will be together
+					placeholderPlaced = true;
+				}
+				fileList.append( engineDirRebaser.makeRebasedCmdPath( filePath ) );
+			}
+		};
+
+		QStringVec mapFiles;
+		forEachSelectedMapPack( [&]( const QString & mapFilePath )
+		{
+			p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
+			addFileAccordingToSuffix( mapFiles, mapFilePath );
+		});
+
+		QStringVec modFiles;
+		for (const Mod & mod : modModel)
+		{
+			if (!mod.isSeparator && mod.checked)
+			{
+				if (mod.isCmdArg) {  // this is not a file but a custom command line argument
+					appendCustomArguments( fileArgs, mod.fileName, opts.quotePaths );  // the fileName holds the argument value
+				} else {
+					p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
+					addFileAccordingToSuffix( modFiles, mod.path );
+				}
 			}
 		}
-	}
 
-	// output the final sequence to the cmd.arguments
-	for (QString & modArgument : modArguments)
-	{
-		if (modArgument == "<file_list>") {
-			// replace the placeholder with the actual list
-			for (QString & filePath : fileList)
-				cmd.arguments << std::move(filePath);
-		} else {
-			cmd.arguments << std::move(modArgument);
+		// output the final sequence to the cmd.arguments
+		for (QString & argument : fileArgs)
+		{
+			if (argument == "<files>")
+			{
+				// replace the placeholder with the actual list
+				if (ui->mapsAfterModsChkBox->isChecked()) {
+					cmd.arguments << std::move( modFiles );
+					cmd.arguments << std::move( mapFiles );
+				} else {
+					cmd.arguments << std::move( mapFiles );
+					cmd.arguments << std::move( modFiles );
+				}
+			}
+			else
+			{
+				cmd.arguments << std::move( argument );
+			}
 		}
 	}
 
@@ -4182,17 +4438,17 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	// Rather set them before the launch parameters, because some of the parameters
 	// (e.g. -loadgame) can be relative to these alternative directories.
 
-	if (!ui->saveDirLine->text().isEmpty())
+	if (!ui->altSaveDirLine->text().isEmpty())
 	{
-		QString saveDirPath = getSaveDir();
+		QString saveDirPath = getActiveSaveDir();  // rebased altSaveDirLine
 		p.checkNotAFile( saveDirPath, "the save dir", {} );
-		cmd.arguments << engine.saveDirParam() << engineDirRebaser.rebaseAndQuotePath( saveDirPath );
+		cmd.arguments << engine.saveDirParam() << engineDirRebaser.makeRebasedCmdPath( saveDirPath );
 	}
-	if (!ui->screenshotDirLine->text().isEmpty())
+	if (!ui->altScreenshotDirLine->text().isEmpty())
 	{
-		QString screenshotDirPath = getScreenshotDir();
+		QString screenshotDirPath = getActiveScreenshotDir();  // rebased altScreenshotDirLine
 		p.checkNotAFile( screenshotDirPath, "the screenshot dir", {} );
-		cmd.arguments << "+screenshot_dir" << engineDirRebaser.rebaseAndQuotePath( screenshotDirPath );
+		cmd.arguments << "-shotdir" << engineDirRebaser.makeRebasedCmdPath( screenshotDirPath );
 	}
 
 	//-- launch mode and parameters ------------------------------------------------
@@ -4206,24 +4462,24 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	}
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
-		QString saveDir = getSaveDir();  // save dir cannot be empty, otherwise the saveFileCmbBox would be empty
-		QString trueSavePath = fs::getPathFromFileName( saveDir, ui->saveFileCmbBox->currentText() );
-		p.checkFilePath( trueSavePath, "the selected save file", "Please select another one." );
-		cmd.arguments << "-loadgame" << rebaseSaveFilePath( trueSavePath, engineDirRebaser, &engine );
+		QString saveDir = getActiveSaveDir();  // save dir cannot be empty, otherwise the saveFileCmbBox would be empty
+		QString savePath = fs::getPathFromFileName( saveDir, ui->saveFileCmbBox->currentText() );
+		p.checkFilePath( savePath, "the selected save file", "Please select another one." );
+		cmd.arguments << "-loadgame" << makeCmdSaveFilePath( savePath, &engine, engineDirRebaser, saveDir );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
-		QString demoDir = getDemoDir();  // if demo dir is empty (saveDirLine is empty and engine.configDir is not set), then
+		QString demoDir = getActiveDemoDir();  // if demo dir is empty (saveDirLine is empty and engine.configDir is not set), then
 		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileLine_record->text() );  // the demoFileLine will be used as is
-		cmd.arguments << "-record" << engineDirRebaser.rebaseAndQuotePath( demoPath );
+		cmd.arguments << "-record" << engineDirRebaser.makeRebasedCmdPath( demoPath );
 		cmd.arguments << engine.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
-		QString demoDir = getDemoDir();  // demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
+		QString demoDir = getActiveDemoDir();  // demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
 		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileCmbBox_replay->currentText() );
 		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
-		cmd.arguments << "-playdemo" << engineDirRebaser.rebaseAndQuotePath( demoPath );
+		cmd.arguments << "-playdemo" << engineDirRebaser.makeRebasedCmdPath( demoPath );
 	}
 
 	//-- gameplay and compatibility options ----------------------------------------
@@ -4237,18 +4493,22 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 		cmd.arguments << "-fast";
 	if (ui->monstersRespawnChkBox->isEnabled() && ui->monstersRespawnChkBox->isChecked())
 		cmd.arguments << "-respawn";
+	if (ui->pistolStartChkBox->isChecked())
+		cmd.arguments << "-pistolstart";
+	if (ui->allowCheatsChkBox->isChecked())
+		cmd.arguments << "+sv_cheats" << "1";
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags1 != 0)
 		cmd.arguments << "+dmflags" << QString::number( activeGameOpts.dmflags1 );
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags2 != 0)
 		cmd.arguments << "+dmflags2" << QString::number( activeGameOpts.dmflags2 );
+	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags3 != 0)
+		cmd.arguments << "+dmflags3" << QString::number( activeGameOpts.dmflags3 );
 
 	const CompatibilityOptions & activeCompatOpts = activeCompatOptions();
-	if (ui->compatLevelCmbBox->isEnabled() && activeCompatOpts.compatLevel >= 0)
-		cmd.arguments << engine.getCompatLevelArgs( activeCompatOpts.compatLevel );
+	if (ui->compatModeCmbBox->isEnabled() && activeCompatOpts.compatMode >= 0)
+		cmd.arguments << engine.getCompatModeArgs( activeCompatOpts.compatMode );
 	if (ui->compatOptsBtn->isEnabled() && !compatOptsCmdArgs.isEmpty())
 		cmd.arguments << compatOptsCmdArgs;
-	if (ui->allowCheatsChkBox->isChecked())
-		cmd.arguments << "+sv_cheats" << "1";
 
 	//-- multiplayer options -------------------------------------------------------
 
@@ -4326,10 +4586,10 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 	//-- additional custom command line arguments ----------------------------------
 
 	if (!ui->globalCmdArgsLine->text().isEmpty())
-		appendCustomArguments( cmd.arguments, ui->globalCmdArgsLine->text() );
+		appendCustomArguments( cmd.arguments, ui->globalCmdArgsLine->text(), opts.quotePaths );
 
 	if (!ui->presetCmdArgsLine->text().isEmpty())
-		appendCustomArguments( cmd.arguments, ui->presetCmdArgsLine->text() );
+		appendCustomArguments( cmd.arguments, ui->presetCmdArgsLine->text(), opts.quotePaths );
 
 	//------------------------------------------------------------------------------
 
@@ -4339,7 +4599,7 @@ os::ShellCommand MainWindow::generateLaunchCommand(
 int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions )
 {
 	auto engineName = fs::getFileNameFromPath( selectedEngine.executablePath );
-	auto sandboxName = selectedEngine.sandboxEnvName();
+	auto sandboxName = os::getSandboxName( selectedEngine.sandboxType() );
 
 	QMessageBox messageBox( QMessageBox::Question, "Extra permissions needed",
 		engineName%" requires extra permissions to be able to access files outside of its "%sandboxName%" environment. "
@@ -4395,16 +4655,21 @@ void MainWindow::launch()
 	}
 
 	QString currentWorkingDir = pathConvertor.workingDir().path();
-	QString engineWorkingDir = fs::getAbsoluteDirOfFile( selectedEngine->executablePath );
+	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
 	// Re-run the command construction, but display error message and abort when there is invalid path.
 	// - The engine must be launched using absolute path, because some engines cannot handle being started
 	//   from another directory with relative executable path (looking at you Crispy Doom, fix your shit!).
 	// - All paths will be relative to the engine's dir, because working dir will be set to the engine's dir when started.
 	// - When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
-	auto cmd = generateLaunchCommand(
-		currentWorkingDir, PathStyle::Absolute, engineWorkingDir, pathConvertor.pathStyle(), DontQuotePaths, VerifyPaths
-	);
+	auto cmd = generateLaunchCommand({
+		.exePathStyle = PathStyle::Absolute,
+		.parentWorkingDir = currentWorkingDir,
+		.engineWorkingDir = engineExeDir,
+		.quotePaths = false,
+		.verifyPaths = true,
+	});
+
 	if (cmd.executable.isNull())
 	{
 		return;  // errors are already shown during the generation
@@ -4423,7 +4688,7 @@ void MainWindow::launch()
 	}
 
 	// Make sure the alternative save dir exists, because engine will not create it if demo file path points there.
-	QString saveDirPath = getSaveDir();
+	QString saveDirPath = getActiveSaveDir();
 	bool saveDirExists = fs::createDirIfDoesntExist( saveDirPath );
 	if (!saveDirExists)
 	{
@@ -4434,7 +4699,7 @@ void MainWindow::launch()
 	// We need to start the process with the working dir set to the engine's dir,
 	// because some engines search for their own files in the working dir and would fail if started from elsewhere.
 	// The command paths are always generated relative to the engine's dir.
-	const QString & processWorkingDir = engineWorkingDir;
+	const QString & processWorkingDir = engineExeDir;
 
 	// merge optional environment variables defined globally and defined for this preset
 	EnvVars envVars = globalOpts.envVars;

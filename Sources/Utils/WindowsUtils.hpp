@@ -23,7 +23,7 @@ namespace win {
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  registry
+// registry
 
 using OptRegistryKey = ValueOrError< HKEY, LONG, ERROR_SUCCESS >;
 OptRegistryKey openRegistryKey( HKEY parentKeyHandle, const char * subKeyPath );

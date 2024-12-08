@@ -14,40 +14,66 @@
 #include <QRegularExpression>
 #include <QThread>  // sleep
 
+#include <mutex>
+
+#if IS_WINDOWS
+// Writing into this external global variable is the official way to enable querying NTFS permissions. Seriously Qt?!?
+extern Q_CORE_EXPORT int qt_ntfs_permission_lookup;
+static std::mutex qt_ntfs_permission_mtx;
+#endif
+
+#include <QDebug>
+
 
 //======================================================================================================================
 
 namespace fs {
 
 
-static bool tryToWriteFile( const QString & filePath )
-{
-	QFile file( filePath );
-	if (!file.open( QIODevice::WriteOnly ))
-	{
-		return false;
-	}
-	file.close();
-	file.remove();
-	return true;
-}
-
 bool isDirectoryWritable( const QString & dirPath )
 {
-	// Qt does not offer any reliable way to determine if we can write a file into a directory.
-	// This is the only working workaround.
-	return tryToWriteFile( getPathFromFileName( dirPath, "write_test.txt" ) );
+	bool isWritable = false;
+	QFileInfo dir( dirPath );
+	{
+ #if IS_WINDOWS
+		std::unique_lock< std::mutex > lock( qt_ntfs_permission_mtx );
+		qt_ntfs_permission_lookup = 1;
+ #endif
+		isWritable = dir.exists() && dir.isWritable();
+ #if IS_WINDOWS
+		qt_ntfs_permission_lookup = 0;
+ #endif
+	}
+	return isWritable;
+}
+
+#define DISALLOWED_PATH_SYMBOLS ":*?\"<>|"
+
+const QRegularExpression & getPathRegex()
+{
+	static const QRegularExpression pathRegex("^[^" DISALLOWED_PATH_SYMBOLS "]*$");
+	return pathRegex;
+}
+
+static QString sanitizePath_impl( const QString & path, const QRegularExpression & invalidChars )
+{
+	QString sanitizedPath = path;
+	sanitizedPath.remove( invalidChars );
+	return sanitizedPath;
 }
 
 QString sanitizePath( const QString & path )
 {
+	static const QRegularExpression invalidChars("[" DISALLOWED_PATH_SYMBOLS "]");
+	return sanitizePath_impl( path, invalidChars );
+}
+
+QString sanitizePath_strict( const QString & path )
+{
 	// Newer engines such as GZDoom 4.x can handle advanced Unicode characters such as emojis,
-	// but the old ones are pretty much limited to ASCII, so it's easier to just stick to aS "safe" white-list.
-	QString sanitizedPath = path;
+	// but the old ones are pretty much limited to ASCII, so it's easier to just stick to a "safe" white-list.
 	static const QRegularExpression invalidChars("[^a-zA-Z0-9_ !#$&'\\(\\)+,\\-.;=@\\[\\]\\^~]");
-	//sanitizedPath.replace( invalidChars, "#" );
-	sanitizedPath.remove( invalidChars );
-	return sanitizedPath;
+	return sanitizePath_impl( path, invalidChars );
 }
 
 QString readWholeFile( const QString & filePath, QByteArray & dest )

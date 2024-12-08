@@ -10,7 +10,7 @@
 
 
 //======================================================================================================================
-//  OptionsStorageDialog
+// OptionsStorageDialog
 
 OptionsStorageDialog::OptionsStorageDialog( QWidget * parent, const StorageSettings & settings )
 :
@@ -69,7 +69,7 @@ OptionsStorageDialog::~OptionsStorageDialog()
 
 
 //----------------------------------------------------------------------------------------------------------------------
-//  slots
+// slots
 
 void OptionsStorageDialog::onLaunchStorageChosen_none()
 {

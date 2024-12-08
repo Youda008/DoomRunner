@@ -6,7 +6,9 @@
   <summary>Preset-oriented graphical launcher of ZDoom and derivatives</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
-  <developer_name>Youda008</developer_name>
+  <developer id="io.github.youda008">
+    <name>Youda008</name>
+  </developer>
   <url type="homepage">https://github.com/Youda008/DoomRunner</url>
   <url type="bugtracker">https://github.com/Youda008/DoomRunner/issues</url>
   <url type="help">https://github.com/Youda008/DoomRunner#readme</url>
@@ -42,8 +44,9 @@
     <content_attribute id="violence-bloodshed">moderate</content_attribute>
   </content_rating>
   <releases>
-    <release version="1.8.1" date="2023-08-05"><url>https://github.com/Youda008/DoomRunner/releases/tag/v1.8.1</url></release>
+    <release version="1.8.3" date="2024-12-08"><url>https://github.com/Youda008/DoomRunner/releases/tag/v1.8.3</url></release>
     <release version="1.8.2" date="2024-01-15"><url>https://github.com/Youda008/DoomRunner/releases/tag/v1.8.2</url></release>
+    <release version="1.8.1" date="2023-08-05"><url>https://github.com/Youda008/DoomRunner/releases/tag/v1.8.1</url></release>
   </releases>
   <provides>
     <binary>DoomRunner</binary>

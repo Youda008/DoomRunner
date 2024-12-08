@@ -77,7 +77,7 @@ class UpdateChecker : public QObject, protected LoggingComponent {
 
 
 //======================================================================================================================
-//  common result reactions
+// common result reactions
 
 bool showUpdateNotification( QWidget * parent, const QStringVec & versionInfo, bool includeCheckbox );
 

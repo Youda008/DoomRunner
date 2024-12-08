@@ -8,11 +8,11 @@
 #include "OwnFileDialog.hpp"
 
 #include "CommonTypes.hpp"  // emptyString
-#include "Utils/OSUtils.hpp"  // getLinuxDesktopEnv(), getThisAppDataDir()
+#include "Utils/OSUtils.hpp"  // getLinuxDesktopEnv(), getCachedThisAppDataDir()
 
 
 //======================================================================================================================
-//  static file dialog wrappers
+// static file dialog wrappers
 
 // workaround for some issues with less common Linux graphical environments
 static const QFileDialog::Options disableNativeDialogOnLinux( QFileDialog::Options options )
@@ -31,7 +31,7 @@ static const QString & getDefaultStartingDir()
 {
 	// initialize once on first call and then re-use.
  #ifdef FLATPAK_BUILD
-	return os::getCachedThisAppDataDir();  // should return $XDG_DATA_HOME
+	return os::getThisLauncherDataDir();
  #else
 	return emptyString;  // let the OS choose one
  #endif

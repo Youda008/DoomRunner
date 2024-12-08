@@ -15,70 +15,87 @@
 
 //======================================================================================================================
 
-typedef uint flagsIdx;
-constexpr flagsIdx DM_FLAGS_1 = 0;
-constexpr flagsIdx DM_FLAGS_2 = 1;
+enum class Field
+{
+	DmFlags1 = 1,
+	DmFlags2 = 2,
+	DmFlags3 = 3,
+};
 
-struct DMFlag {
-	flagsIdx flags;
+struct DMFlag
+{
+	Field field;
 	int32_t bit;
 	bool defaultVal;
 };
 
-static const DMFlag FALLING_DAMAGE               = { DM_FLAGS_1, 8, false };
-static const DMFlag DROP_WEAPON                  = { DM_FLAGS_2, 2, false };
-static const DMFlag DOUBLE_AMMO                  = { DM_FLAGS_2, 64, false };
-static const DMFlag INF_AMMO                     = { DM_FLAGS_1, 2048, false };
-static const DMFlag INF_INVENTORY                = { DM_FLAGS_2, 65536, false };
-static const DMFlag NO_MONSTERS                  = { DM_FLAGS_1, 4096, false };
-static const DMFlag NO_MONSTERS_TO_EXIT          = { DM_FLAGS_2, 131072, false };
-static const DMFlag MONSTERS_RESPAWN             = { DM_FLAGS_1, 8192, false };
-static const DMFlag NO_RESPAWN                   = { DM_FLAGS_2, 16384, false };
-static const DMFlag ITEMS_RESPAWN                = { DM_FLAGS_1, 16384, false };
-static const DMFlag BIG_POWERUPS_RESPAWN         = { DM_FLAGS_2, 134217728, false };
-static const DMFlag FAST_MONSTERS                = { DM_FLAGS_1, 32768, false };
-static const DMFlag DEGENERATION                 = { DM_FLAGS_2, 128, false };
-static const DMFlag ALLOW_AUTO_AIM               = { DM_FLAGS_2, 8388608, true };
-static const DMFlag ALLOW_SUICIDE                = { DM_FLAGS_2, 4194304, true };
-static const DMFlag ALLOW_JUMP_ALWAYS_OFF        = { DM_FLAGS_1, 65536, false };
-static const DMFlag ALLOW_JUMP_ALWAYS_ON         = { DM_FLAGS_1, 131072, false };
-static const DMFlag ALLOW_CROUCH_ALWAYS_OFF      = { DM_FLAGS_1, 4194304, false };
-static const DMFlag ALLOW_CROUCH_ALWAYS_ON       = { DM_FLAGS_1, 8388608, false };
-static const DMFlag ALLOW_FREELOOK_ALWAYS_OFF    = { DM_FLAGS_1, 262144, false };
-static const DMFlag ALLOW_FREELOOK_ALWAYS_ON     = { DM_FLAGS_1, 524288, false };
-static const DMFlag ALLOW_FOV                    = { DM_FLAGS_1, 1048576, true };
-static const DMFlag ALLOW_BFG_AIMING             = { DM_FLAGS_2, 256, true };
-static const DMFlag ALLOW_AUTOMAP                = { DM_FLAGS_2, 262144, true };
-static const DMFlag AUTOMAP_ALLIES               = { DM_FLAGS_2, 524288, true };
-static const DMFlag ALLOW_SPYING                 = { DM_FLAGS_2, 1048576, true };
-static const DMFlag CHASECAM_CHEAT               = { DM_FLAGS_2, 2097152, false };
-static const DMFlag CHECK_AMMO_FOR_WEAPON_SWITCH = { DM_FLAGS_2, 16777216, true };
-static const DMFlag ICONS_DEATH_KILLS_ITS_SPAWNS = { DM_FLAGS_2, 33554432, false };
-static const DMFlag END_SECTOR_COUNTS_FOR_KILL   = { DM_FLAGS_2, 67108864, true };
+// general options
+static const DMFlag FALLING_DAMAGE               = { Field::DmFlags1, 1 <<  3, false };
+static const DMFlag DROP_WEAPON                  = { Field::DmFlags2, 1 <<  1, false };
+static const DMFlag DOUBLE_AMMO                  = { Field::DmFlags2, 1 <<  6, false };
+static const DMFlag INF_AMMO                     = { Field::DmFlags1, 1 << 11, false };
+static const DMFlag INF_INVENTORY                = { Field::DmFlags2, 1 << 16, false };
+static const DMFlag NO_MONSTERS                  = { Field::DmFlags1, 1 << 12, false };
+static const DMFlag NO_MONSTERS_TO_EXIT          = { Field::DmFlags2, 1 << 17, false };
+static const DMFlag MONSTERS_RESPAWN             = { Field::DmFlags1, 1 << 13, false };
+static const DMFlag NO_RESPAWN                   = { Field::DmFlags2, 1 << 14, false };
+static const DMFlag ITEMS_RESPAWN                = { Field::DmFlags1, 1 << 14, false };
+static const DMFlag BIG_POWERUPS_RESPAWN         = { Field::DmFlags2, 1 << 27, false };
+static const DMFlag FAST_MONSTERS                = { Field::DmFlags1, 1 << 15, false };
+static const DMFlag DEGENERATION                 = { Field::DmFlags2, 1 <<  7, false };
+static const DMFlag ALLOW_AUTO_AIM               = { Field::DmFlags2, 1 << 23, true };
+static const DMFlag ALLOW_SUICIDE                = { Field::DmFlags2, 1 << 22, true };
+static const DMFlag ALLOW_JUMP_ALWAYS_OFF        = { Field::DmFlags1, 1 << 16, false };
+static const DMFlag ALLOW_JUMP_ALWAYS_ON         = { Field::DmFlags1, 1 << 17, false };
+static const DMFlag ALLOW_CROUCH_ALWAYS_OFF      = { Field::DmFlags1, 1 << 22, false };
+static const DMFlag ALLOW_CROUCH_ALWAYS_ON       = { Field::DmFlags1, 1 << 23, false };
+static const DMFlag ALLOW_FREELOOK_ALWAYS_OFF    = { Field::DmFlags1, 1 << 18, false };
+static const DMFlag ALLOW_FREELOOK_ALWAYS_ON     = { Field::DmFlags1, 1 << 19, false };
+static const DMFlag ALLOW_FOV                    = { Field::DmFlags1, 1 << 20, true };
+static const DMFlag ALLOW_BFG_AIMING             = { Field::DmFlags2, 1 <<  8, true };
+static const DMFlag ALLOW_AUTOMAP                = { Field::DmFlags2, 1 << 18, true };
+static const DMFlag AUTOMAP_ALLIES               = { Field::DmFlags2, 1 << 19, true };
+static const DMFlag ALLOW_SPYING                 = { Field::DmFlags2, 1 << 20, true };
+static const DMFlag CHASECAM_CHEAT               = { Field::DmFlags2, 1 << 21, false };
+static const DMFlag CHECK_AMMO_FOR_WEAPON_SWITCH = { Field::DmFlags2, 1 << 24, true };
+static const DMFlag ICONS_DEATH_KILLS_ITS_SPAWNS = { Field::DmFlags2, 1 << 25, false };
+static const DMFlag END_SECTOR_COUNTS_FOR_KILL   = { Field::DmFlags2, 1 << 26, true };
 
-static const DMFlag WEAPONS_STAY                 = { DM_FLAGS_1, 4, false };
-static const DMFlag ALLOW_POWERUPS               = { DM_FLAGS_1, 2, true };
-static const DMFlag ALLOW_HEALTH                 = { DM_FLAGS_1, 1, true };
-static const DMFlag ALLOW_ARMOR                  = { DM_FLAGS_1, 512, true };
-static const DMFlag SPAWN_FARTHEST               = { DM_FLAGS_1, 128, false };
-static const DMFlag SAME_MAP                     = { DM_FLAGS_1, 64, false };
-static const DMFlag FORCE_RESPAWN                = { DM_FLAGS_1, 256, false };
-static const DMFlag ALLOW_EXIT                   = { DM_FLAGS_1, 1024, true };
-static const DMFlag BARRELS_RESPAWN              = { DM_FLAGS_2, 512, false };
-static const DMFlag RESPAWN_PROTECTION           = { DM_FLAGS_2, 1024, false };
-static const DMFlag LOSE_FRAG_IF_FRAGGED         = { DM_FLAGS_2, 32768, false };
-static const DMFlag KEEP_FRAGS_GAINED            = { DM_FLAGS_2, 8192, false };
-static const DMFlag NO_TEAM_SWITCHING            = { DM_FLAGS_2, 16, false };
+// deathmatch options
+static const DMFlag WEAPONS_STAY                 = { Field::DmFlags1, 1 <<  2, false };
+static const DMFlag ALLOW_POWERUPS               = { Field::DmFlags1, 1 <<  1, true };
+static const DMFlag ALLOW_HEALTH                 = { Field::DmFlags1, 1 <<  0, true };
+static const DMFlag ALLOW_ARMOR                  = { Field::DmFlags1, 1 <<  9, true };
+static const DMFlag SPAWN_FARTHEST               = { Field::DmFlags1, 1 <<  7, false };
+static const DMFlag SAME_MAP                     = { Field::DmFlags1, 1 <<  6, false };
+static const DMFlag FORCE_RESPAWN                = { Field::DmFlags1, 1 <<  8, false };
+static const DMFlag ALLOW_EXIT                   = { Field::DmFlags1, 1 << 10, true };
+static const DMFlag BARRELS_RESPAWN              = { Field::DmFlags2, 1 <<  9, false };
+static const DMFlag RESPAWN_PROTECTION           = { Field::DmFlags2, 1 << 10, false };
+static const DMFlag LOSE_FRAG_IF_FRAGGED         = { Field::DmFlags2, 1 << 15, false };
+static const DMFlag KEEP_FRAGS_GAINED            = { Field::DmFlags2, 1 << 13, false };
+static const DMFlag NO_TEAM_SWITCHING            = { Field::DmFlags2, 1 <<  4, false };
 
-static const DMFlag SPAWN_MULTI_WEAPONS          = { DM_FLAGS_1, 2097152, true };
-static const DMFlag LOSE_ENTIRE_INVENTORY        = { DM_FLAGS_1, 16777216, false };
-static const DMFlag KEEP_KEYS                    = { DM_FLAGS_1, 33554432, true };
-static const DMFlag KEEP_WEAPONS                 = { DM_FLAGS_1, 67108864, true };
-static const DMFlag KEEP_ARMOR                   = { DM_FLAGS_1, 134217728, true };
-static const DMFlag KEEP_POWERUPS                = { DM_FLAGS_1, 268435456, true };
-static const DMFlag KEEP_AMMO                    = { DM_FLAGS_1, 536870912, true };
-static const DMFlag LOSE_HALF_AMMO               = { DM_FLAGS_1, 1073741824, false };
-static const DMFlag SPAWN_WHERE_DIED             = { DM_FLAGS_2, 4096, false };
+// cooperative options
+static const DMFlag SPAWN_MULTI_WEAPONS          = { Field::DmFlags1, 1 << 21, true };
+static const DMFlag LOSE_ENTIRE_INVENTORY        = { Field::DmFlags1, 1 << 24, false };
+static const DMFlag KEEP_KEYS                    = { Field::DmFlags1, 1 << 25, true };
+static const DMFlag KEEP_WEAPONS                 = { Field::DmFlags1, 1 << 26, true };
+static const DMFlag KEEP_ARMOR                   = { Field::DmFlags1, 1 << 27, true };
+static const DMFlag KEEP_POWERUPS                = { Field::DmFlags1, 1 << 28, true };
+static const DMFlag KEEP_AMMO                    = { Field::DmFlags1, 1 << 29, true };
+static const DMFlag LOSE_HALF_AMMO               = { Field::DmFlags1, 1 << 30, false };
+static const DMFlag SPAWN_WHERE_DIED             = { Field::DmFlags2, 1 << 12, false };
+
+// new options added in GZDoom 4.11.0 and later
+static const DMFlag NO_PLAYER_CLIP               = { Field::DmFlags3, 1 << 0, false };  // since 4.11.0
+static const DMFlag COOP_SHARED_KEYS             = { Field::DmFlags3, 1 << 1, false };  // since 4.12.0
+static const DMFlag LOCAL_ITEMS                  = { Field::DmFlags3, 1 << 2, false };  // since 4.12.0
+//static const DMFlag NO_LOCAL_DROPS               = { Field::DmFlags3, 1 << 3, false };  // since 4.12.0
+//static const DMFlag NO_COOP_ITEMS                = { Field::DmFlags3, 1 << 4, false };  // since 4.12.0
+//static const DMFlag NO_COOP_THINGS               = { Field::DmFlags3, 1 << 5, false };  // since 4.12.0
+//static const DMFlag REMEMBER_LAST_WEAPON         = { Field::DmFlags3, 1 << 6, false };  // since 4.12.0
+static const DMFlag PISTOL_START                 = { Field::DmFlags3, 1 << 7, false };  // since 4.12.2
 
 
 //======================================================================================================================
@@ -93,10 +110,13 @@ GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayDetails & gamepl
 	ui->setupUi( this );
 
 	ui->dmflags1_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
-	ui->dmflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
-
 	ui->dmflags1_line->setText( QString::number( gameplayDetails.dmflags1 ) );
+
+	ui->dmflags2_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
 	ui->dmflags2_line->setText( QString::number( gameplayDetails.dmflags2 ) );
+
+	ui->dmflags3_line->setValidator( new QIntValidator( INT32_MIN, INT32_MAX, this ) );
+	ui->dmflags3_line->setText( QString::number( gameplayDetails.dmflags3 ) );
 
 	updateCheckboxes();
 }
@@ -111,15 +131,20 @@ void GameOptsDialog::setFlag( const DMFlag & flag, bool enabled )
 	int32_t * flags;
 	QLineEdit * line;
 
-	if (flag.flags == DM_FLAGS_1)
+	if (flag.field == Field::DmFlags1)
 	{
 		flags = &gameplayDetails.dmflags1;
 		line = ui->dmflags1_line;
 	}
-	else
+	else if (flag.field == Field::DmFlags1)
 	{
 		flags = &gameplayDetails.dmflags2;
 		line = ui->dmflags2_line;
+	}
+	else
+	{
+		flags = &gameplayDetails.dmflags3;
+		line = ui->dmflags3_line;
 	}
 
 	if (enabled != flag.defaultVal)
@@ -134,10 +159,12 @@ bool GameOptsDialog::isEnabled( const DMFlag & flag ) const
 {
 	const int32_t * flags;
 
-	if (flag.flags == DM_FLAGS_1)
+	if (flag.field == Field::DmFlags1)
 		flags = &gameplayDetails.dmflags1;
-	else
+	else if (flag.field == Field::DmFlags2)
 		flags = &gameplayDetails.dmflags2;
+	else
+		flags = &gameplayDetails.dmflags3;
 
 	if (flag.defaultVal == 0)
 		return (*flags & flag.bit) != 0;
@@ -435,6 +462,26 @@ void GameOptsDialog::on_spawnWhereDied_toggled( bool checked )
 	setFlag( SPAWN_WHERE_DIED, checked );
 }
 
+void GameOptsDialog::on_noPlayerClipping_toggled( bool checked )
+{
+	setFlag( NO_PLAYER_CLIP, checked );
+}
+
+void GameOptsDialog::on_shareKeys_toggled( bool checked )
+{
+	setFlag( COOP_SHARED_KEYS, checked );
+}
+
+void GameOptsDialog::on_localItemPickups_toggled( bool checked )
+{
+	setFlag( LOCAL_ITEMS, checked );
+}
+
+void GameOptsDialog::on_pistolStart_toggled( bool checked )
+{
+	setFlag( PISTOL_START, checked );
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -447,6 +494,12 @@ void GameOptsDialog::on_dmflags1_line_textEdited( const QString & )
 void GameOptsDialog::on_dmflags2_line_textEdited( const QString & )
 {
 	gameplayDetails.dmflags2 = ui->dmflags2_line->text().toInt();
+	updateCheckboxes();
+}
+
+void GameOptsDialog::on_dmflags3_line_textEdited( const QString & )
+{
+	gameplayDetails.dmflags3 = ui->dmflags3_line->text().toInt();
 	updateCheckboxes();
 }
 
@@ -494,6 +547,7 @@ void GameOptsDialog::updateCheckboxes()
 	ui->checkAmmoForWeaponSwitch->setChecked( isEnabled( CHECK_AMMO_FOR_WEAPON_SWITCH ) );
 	ui->iconsDeathKillsItsSpawns->setChecked( isEnabled( ICONS_DEATH_KILLS_ITS_SPAWNS ) );
 	ui->endSectorCountsForKill->setChecked( isEnabled( END_SECTOR_COUNTS_FOR_KILL ) );
+
 	ui->weaponsStay->setChecked( isEnabled( WEAPONS_STAY ) );
 	ui->allowPowerups->setChecked( isEnabled( ALLOW_POWERUPS ) );
 	ui->allowHealth->setChecked( isEnabled( ALLOW_HEALTH ) );
@@ -507,6 +561,7 @@ void GameOptsDialog::updateCheckboxes()
 	ui->loseFragIfFragged->setChecked( isEnabled( LOSE_FRAG_IF_FRAGGED ) );
 	ui->keepFragsGained->setChecked( isEnabled( KEEP_FRAGS_GAINED ) );
 	ui->noTeamSwitching->setChecked( isEnabled( NO_TEAM_SWITCHING ) );
+
 	ui->spawnMultiWeapons->setChecked( isEnabled( SPAWN_MULTI_WEAPONS ) );
 	ui->loseEntireInventory->setChecked( isEnabled( LOSE_ENTIRE_INVENTORY ) );
 	ui->keepKeys->setChecked( isEnabled( KEEP_KEYS ) );
@@ -516,4 +571,9 @@ void GameOptsDialog::updateCheckboxes()
 	ui->keepAmmo->setChecked( isEnabled( KEEP_AMMO ) );
 	ui->loseHalfAmmo->setChecked( isEnabled( LOSE_HALF_AMMO ) );
 	ui->spawnWhereDied->setChecked( isEnabled( SPAWN_WHERE_DIED ) );
+
+	ui->noPlayerClipping->setChecked( isEnabled( NO_PLAYER_CLIP ) );
+	ui->shareKeys->setChecked( isEnabled( COOP_SHARED_KEYS ) );
+	ui->localItemPickups->setChecked( isEnabled( LOCAL_ITEMS ) );
+	ui->pistolStart->setChecked( isEnabled( PISTOL_START ) );
 }

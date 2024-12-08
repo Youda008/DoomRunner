@@ -16,7 +16,7 @@
 
 
 //======================================================================================================================
-//  scope guards
+// scope guards
 
 template< typename EndFunc >
 class ScopeGuard
@@ -89,7 +89,7 @@ AutoClosable< Handle, CloseFunc > autoClosable( Handle handle, CloseFunc closeFu
 
 
 //======================================================================================================================
-//  reporting errors via return values
+// reporting errors via return values
 
 /// Represents either a return value or an error that prevented returning a valid value.
 /** Basically an enhanced std::optional with details why the value is not present.
@@ -128,7 +128,7 @@ class ValueOrError {
 
 
 //======================================================================================================================
-//  value matching
+// value matching
 
 template< typename Source, typename Result >
 struct CorrespondingPair
@@ -163,7 +163,7 @@ Result correspondingValue( Source source, CorrespondingPair< Source, Result > &&
 
 
 //======================================================================================================================
-//  other
+// other
 
 // just to be little more explicit when needed
 template< typename Type >
@@ -203,7 +203,7 @@ bool isFloatEqual( Float a, Float b )
 
 
 //======================================================================================================================
-//  utils from standard library of a newer C++ standard
+// utils from standard library of a newer C++ standard
 
 namespace fut {
 

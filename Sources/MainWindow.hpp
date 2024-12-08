@@ -12,6 +12,7 @@
 #include "Dialogs/DialogCommon.hpp"
 
 #include "Widgets/ListModel.hpp"
+#include "Widgets/EditableListView.hpp"  // DnDType
 #include "Widgets/SearchPanel.hpp"
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
@@ -27,8 +28,9 @@ class QItemSelection;
 class QComboBox;
 class QLineEdit;
 class QShortcut;
+
 class JsonDocumentCtx;
-class OptionsToLoad;
+struct OptionsToLoad;
 
 namespace Ui {
 	class MainWindow;
@@ -73,7 +75,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onPresetDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 	void onModDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 
+	void showIWADDesc( const QModelIndex & index );
 	void showMapPackDesc( const QModelIndex & index );
+	void showModDesc( const QModelIndex & index );
 
 	void onMapDirUpdated( const QString & path );
 
@@ -97,8 +101,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modMoveUp();
 	void modMoveDown();
 	void modInsertSeparator();
-	void modToggleIcons();
-	void onModsDropped( int row, int count );
+	void onMapsAfterModsToggled( bool checked );
+	void onModIconsToggled();
+	void onModsDropped( int row, int count, DnDType type );
 
 	void onModeChosen_Default();
 	void onModeChosen_LaunchMap();
@@ -116,8 +121,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onNoMonstersToggled( bool checked );
 	void onFastMonstersToggled( bool checked );
 	void onMonstersRespawnToggled( bool checked );
+	void onPistolStartToggled( bool checked );
 	void onAllowCheatsToggled( bool checked );
-	void onCompatLevelSelected( int compatLevel );
+	void onCompatModeSelected( int compatMode );
 
 	void onMultiplayerToggled( bool checked );
 	void onMultRoleSelected( int role );
@@ -130,11 +136,15 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onTimeLimitChanged( int limit );
 	void onFragLimitChanged( int limit );
 
-	void onUsePresetNameToggled( bool checked );
-	void onSaveDirChanged( const QString & dir );
-	void onScreenshotDirChanged( const QString & dir );
-	void browseSaveDir();
-	void browseScreenshotDir();
+	void onUsePresetNameForConfigsToggled( bool checked );
+	void onUsePresetNameForSavesToggled( bool checked );
+	void onUsePresetNameForScreenshotsToggled( bool checked );
+	void onAltConfigDirChanged( const QString & dir );
+	void onAltSaveDirChanged( const QString & dir );
+	void onAltScreenshotDirChanged( const QString & dir );
+	void browseAltConfigDir();
+	void browseAltSaveDir();
+	void browseAltScreenshotDir();
 
 	void onMonitorSelected( int index );
 	void onResolutionXChanged( const QString & xStr );
@@ -159,6 +169,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void onPresetCmdArgsChanged( const QString & text );
 	void onGlobalCmdArgsChanged( const QString & text );
+	void onCmdPrefixChanged( const QString & text );
 
 	void launch();
 
@@ -185,6 +196,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	std::unique_ptr< JsonDocumentCtx > readOptions( const QString & filePath );
 	void loadAppearance( const JsonDocumentCtx & optionsDoc, bool loadGeometry );
 	void loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc );
+	int askForEngineInfoRefresh();
 
 	bool isCacheDirty() const;
 	bool saveCache( const QString & filePath );
@@ -214,20 +226,22 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void togglePathStyle( PathStyle style );
 
-	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines );
+	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines, bool refreshAllAutoEngineInfo );
 
 	void autoselectItems();
 
-	void setAlternativeDirs( const QString & dirName );
+	void updateAlternativeDirs( const Preset * selectedPreset = nullptr );
 
 	void updateListsFromDirs();
 	void updateIWADsFromDir();
 	void resetMapDirModelAndView();
 	void updateConfigFilesFromDir( const QString * configDir = nullptr );
-	void updateSaveFilesFromDir( const QString * saveDir = nullptr );
-	void updateDemoFilesFromDir( const QString * demoDir = nullptr );
-	void updateCompatLevels();
+	void updateSaveFilesFromDir();
+	void updateDemoFilesFromDir();
+	void updateCompatModes();
 	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
+
+	void showTxtDescriptionFor( const QString & filePath, const QString & contentType );
 
 	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
 
@@ -238,10 +252,31 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void toggleOptionsSubwidgets( bool enabled );
 
 	void updateLaunchCommand();
-	os::ShellCommand generateLaunchCommand(
-		const QString & parentWorkingDir, PathStyle enginePathStyle, const QString & engineWorkingDir, PathStyle argPathStyle,
-		bool quotePaths, bool verifyPaths
-	);
+
+	struct LaunchCommandOptions
+	{
+		/// Path style to be used for the engine executable.
+		PathStyle exePathStyle;
+
+		// Path style for the arguments is determined case by case.
+
+		/// Working directory of the parent process (this process) when executing the command.
+		/** This determines the relative path of the engine executable in the command. */
+		const QString & parentWorkingDir;
+
+		/// Working directory for the engine process that will be started.
+		/** This determines the relative paths of the file or directory arguments passed to the engine. */
+		const QString & engineWorkingDir;
+
+		/// Surround each path in the command with quotes.
+		/** Required for displaying the command or saving it to a script file. */
+		bool quotePaths;
+
+		/// Verify that each path in the command is valid and leads to the correct entry type (file or directory).
+		/** If invalid path is found, display a message box with an error description. */
+		bool verifyPaths;
+	};
+	os::ShellCommand generateLaunchCommand( LaunchCommandOptions cmdOpts );
 
 	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
 	bool startDetached(
@@ -265,14 +300,16 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QStringList getUniqueMapNamesFromWADs( const QVector<QString> & selectedWADs ) const;
 
-	QString getConfigDir() const;
-	QString getDataDir() const;
-	QString getSaveDir() const;
-	QString getScreenshotDir() const;
-	QString getDemoDir() const;
+	QString getEngineConfigDir() const;
+	QString getEngineDataDir() const;
+	QString getActiveConfigDir() const;
+	QString getActiveSaveDir() const;
+	QString getActiveScreenshotDir() const;
+	QString getActiveDemoDir() const;
 
-	QString convertRebasedEngineDataPath( QString path ) const;
-	QString rebaseSaveFilePath( const QString & filePath, const PathRebaser & workingDirRebaser, const EngineInfo * engine );
+	QString makeCmdSaveFilePath(
+		const QString & filePath, const EngineInfo * engine, const PathRebaser & workingDirRebaser, const QString & saveDir
+	);
 
 	LaunchMode getLaunchModeFromUI() const;
 
@@ -312,9 +349,13 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
 
-	PathRebaser engineDataDirRebaser;   ///< path convertor set up to rebase relative paths from the current working dir to the engine's data dir and back
+	QString currentEngineSaveDir;         ///< cached path of the directory when the currently selected engine stores its save files by default
+	QString currentEngineScreenshotDir;   ///< cached path of the directory when the currently selected engine stores its screenshots by default
 
-	CompatLevelStyle lastCompLvlStyle = CompatLevelStyle::None;  ///< compat level style of the engine that was selected the last time
+	PathRebaser engineConfigDirRebaser;   ///< path convertor set up to rebase relative paths from the current working dir to the engine's config dir and back
+	PathRebaser engineDataDirRebaser;     ///< path convertor set up to rebase relative paths from the current working dir to the engine's data dir and back
+
+	CompatModeStyle lastCompLvlStyle = CompatModeStyle::None;  ///< compat mode style of the engine that was selected the last time
 
 	QStringVec compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 

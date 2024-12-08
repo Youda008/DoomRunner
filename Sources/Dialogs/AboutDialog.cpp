@@ -79,6 +79,11 @@ void AboutDialog::checkForUpdate()
 			 case UpdateChecker::UpdateAvailable:
 				showUpdateNotification( this, versionInfo, /*checkbox*/false );
 				break;
+			 default:
+				reportLogicError( this, "Update check failed",
+					"UpdateChecker::Result is out of bounds: "%QString::number( fut::to_underlying(result) )
+				);
+				break;
 			}
 		}
 	);

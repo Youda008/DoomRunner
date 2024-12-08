@@ -38,8 +38,11 @@ class DialogWithPaths : public DialogCommon {
 	DialogWithPaths( QWidget * thisWidget, PathConvertor pathConvertor )
 		: DialogCommon( thisWidget ), pathConvertor( std::move(pathConvertor) ) {}
 
-	/// Runs a file-system dialog to let the user select a file and stores the its directory for the next call.
+	/// Runs a file-system dialog to let the user select a file and stores its directory for the next call.
 	QString browseFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );
+
+	/// Runs a file-system dialog to let the user select multiple files and stores their directory for the next call.
+	QStringList browseFiles( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );
 
 	/// Runs a file-system dialog to let the user select a directory and stores it for the next call.
 	QString browseDir( QWidget * parent, const QString & dirDesc, QString startingDir = QString() );

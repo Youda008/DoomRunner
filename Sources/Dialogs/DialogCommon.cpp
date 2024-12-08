@@ -40,6 +40,25 @@ QString DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc,
 	return path;
 }
 
+QStringList DialogWithPaths::browseFiles( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter )
+{
+	QStringList paths = OwnFileDialog::getOpenFileNames(
+		parent, "Locate the "+fileDesc, !startingDir.isEmpty() ? startingDir : lastUsedDir, filter
+	);
+	if (paths.isEmpty())  // user probably clicked cancel
+		return {};
+
+	// the paths comming out of the file dialog are always absolute
+	if (pathConvertor.usingRelativePaths())
+		for (QString & path : paths)
+			path = pathConvertor.getRelativePath( path );
+
+	// next time use this dir as the starting dir of the file dialog for convenience
+	lastUsedDir = fs::getParentDir( paths.first() );
+
+	return paths;
+}
+
 QString DialogWithPaths::browseDir( QWidget * parent, const QString & dirDesc, QString startingDir )
 {
 	QString path = OwnFileDialog::getExistingDirectory(

@@ -2728,18 +2728,13 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 
 void MainWindow::modAdd()
 {
-	QStringList paths = OwnFileDialog::getOpenFileNames( this, "Locate the mod file", modSettings.dir,
+	QStringList paths = DialogWithPaths::browseFiles( this, "mod file", modSettings.dir,
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel
 		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathConvertor.usingRelativePaths())
-		for (QString & path : paths)
-			path = pathConvertor.getRelativePath( path );
 
 	Preset * selectedPreset = getSelectedPreset();
 
@@ -2762,14 +2757,9 @@ void MainWindow::modAdd()
 
 void MainWindow::modAddDir()
 {
-	QString path = OwnFileDialog::getExistingDirectory( this, "Locate the mod directory", modSettings.dir );
-
+	QString path = DialogWithPaths::browseDir( this, "of the mod", modSettings.dir );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
-
-	// the path comming out of the file dialog is always absolute
-	if (pathConvertor.usingRelativePaths())
-		path = pathConvertor.getRelativePath( path );
 
 	Mod mod;
 	mod.path = path;

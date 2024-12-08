@@ -3382,13 +3382,7 @@ void MainWindow::updateAlternativeDirs( const Preset * selectedPreset )
 
 	if (globalOpts.usePresetNameAsScreenshotDir)
 	{
-		const EngineInfo * selectedEngine = getSelectedEngine();
-		// Do not set screenshot_dir for engines that don't support it,
-		// some of them are bitchy and won't start if you supply them with unknown command line parameter.
-		if (selectedEngine && selectedEngine->hasScreenshotDirParam())
-			ui->altScreenshotDirLine->setText( subdirName );
-		else
-			ui->altScreenshotDirLine->clear();
+		ui->altScreenshotDirLine->setText( subdirName );
 	}
 }
 
@@ -4438,17 +4432,19 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	// Rather set them before the launch parameters, because some of the parameters
 	// (e.g. -loadgame) can be relative to these alternative directories.
 
-	if (!ui->altSaveDirLine->text().isEmpty())
+	// Do not use -savedir or -shotdir for engines that don't support it,
+	// some of them are bitchy and won't start if you supply them with unknown command line parameter.
+	if (engine.saveDirParam() != nullptr && !ui->altSaveDirLine->text().isEmpty())
 	{
 		QString saveDirPath = getActiveSaveDir();  // rebased altSaveDirLine
 		p.checkNotAFile( saveDirPath, "the save dir", {} );
 		cmd.arguments << engine.saveDirParam() << engineDirRebaser.makeRebasedCmdPath( saveDirPath );
 	}
-	if (!ui->altScreenshotDirLine->text().isEmpty())
+	if (engine.screenshotDirParam() != nullptr && !ui->altScreenshotDirLine->text().isEmpty())
 	{
 		QString screenshotDirPath = getActiveScreenshotDir();  // rebased altScreenshotDirLine
 		p.checkNotAFile( screenshotDirPath, "the screenshot dir", {} );
-		cmd.arguments << "-shotdir" << engineDirRebaser.makeRebasedCmdPath( screenshotDirPath );
+		cmd.arguments << engine.screenshotDirParam() << engineDirRebaser.makeRebasedCmdPath( screenshotDirPath );
 	}
 
 	//-- launch mode and parameters ------------------------------------------------

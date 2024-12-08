@@ -62,23 +62,25 @@ EngineFamily familyFromStr( const QString & familyStr );
 /// Traits that are shared among different engines belonging to the same family.
 struct EngineFamilyTraits
 {
-	const char * configFileSuffix;  ///< which file name suffix the engine uses for its save files
-	const char * saveFileSuffix;    ///< which file name suffix the engine uses for its save files
-	const char * saveDirParam;      ///< which command line parameter is used for overriding the save directory
-	MapParamStyle mapParamStyle;    ///< which command line parameter is used for choosing the starting map
-	CompatModeStyle compModeStyle;  ///< which command line parameter is used for choosing the compatibility mode
-	bool hasScreenshotDirParam;     ///< whether the screenshot directory override parameter +screenshot_dir is supported
-	bool needsStdoutParam;          ///< whether the engine needs -stdout option to send its output to stdout where it can be read by this launcher
+	const char * configFileSuffix;    ///< which file name suffix the engine uses for its save files
+	const char * saveFileSuffix;      ///< which file name suffix the engine uses for its save files
+	const char * saveDirParam;        ///< which command line parameter is used for overriding the save directory
+	MapParamStyle mapParamStyle;      ///< which command line parameter is used for choosing the starting map
+	CompatModeStyle compatModeStyle;  ///< which command line parameter is used for choosing the compatibility mode
 };
 
 /// Properties and capabilities of a particular engine that decide what command-line parameters will be used.
 class EngineTraits {
 
+	// general application info
 	std::optional< os::AppInfo > _appInfo;
+	// traits common for the whole family of engines
 	EngineFamily _family = EngineFamily::_EnumEnd;
 	const EngineFamilyTraits * _familyTraits = nullptr;
+	// pre-calculated traits specific only to this particular engine
 	QString _configFileName;
-	QString _commonSaveSubdir;  ///< pre-calculated common part of the save sub-directory
+	QString _commonSaveSubdir;  ///< common part of the save sub-directory
+	const char * _screenshotDirParam = nullptr;
 
  public:
 
@@ -153,13 +155,22 @@ class EngineTraits {
 
 	// command line parameters deduction - requires application info and family traits to be initialized
 
+	/// Command line parameter for specifying a custom save directory, can be nullptr if the engine doesn't support it.
 	const char * saveDirParam() const           { assert( _familyTraits ); return _familyTraits->saveDirParam; }
-	bool hasScreenshotDirParam() const          { assert( _familyTraits ); return _familyTraits->hasScreenshotDirParam; }
+
+	/// Command line parameter for specifying a custom screenshot directory, can be nullptr if the engine doesn't support it.
+	const char * screenshotDirParam() const     { assert( isInitialized() ); return _screenshotDirParam; }
 
 	bool supportsCustomMapNames() const         { assert( _familyTraits ); return _familyTraits->mapParamStyle == MapParamStyle::Map; }
-	CompatModeStyle compatModeStyle() const     { assert( _familyTraits ); return _familyTraits->compModeStyle; }
 
-	bool needsStdoutParam() const               { assert( _familyTraits ); return _familyTraits->needsStdoutParam; }
+	CompatModeStyle compatModeStyle() const     { assert( _familyTraits ); return _familyTraits->compatModeStyle; }
+
+	/// Whether the engine needs -stdout option to send its output to stdout where it can be read by this launcher.
+	bool needsStdoutParam() const
+	{
+		assert( _family != EngineFamily::_EnumEnd );
+		return _family == EngineFamily::ZDoom && IS_WINDOWS;
+	}
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
 	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;
@@ -185,6 +196,7 @@ class EngineTraits {
 
 	QString getCommonSaveSubdir() const;
 	QString getDefaultConfigFileName() const;
+	const char * getScreenshotDirParam() const;
 };
 
 

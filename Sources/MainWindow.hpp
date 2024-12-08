@@ -248,6 +248,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void togglePresetSubWidgets( bool enabled );
 	void clearPresetSubWidgets();
 
+	//void toggleEngineDependentWidgets( const EngineInfo * engine );
+
 	void toggleSkillSubwidgets( bool enabled );
 	void toggleOptionsSubwidgets( bool enabled );
 

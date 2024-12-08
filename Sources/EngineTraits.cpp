@@ -66,9 +66,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.saveFileSuffix = "zds",
 		.saveDirParam = "-savedir",
 		.mapParamStyle = MapParamStyle::Map,
-		.compModeStyle = CompatModeStyle::ZDoom,
-		.hasScreenshotDirParam = true,
-		.needsStdoutParam = IS_WINDOWS,
+		.compatModeStyle = CompatModeStyle::ZDoom,
 	},
 
 	//Chocolate Doom
@@ -77,9 +75,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.saveFileSuffix = "dsg",
 		.saveDirParam = "-savedir",
 		.mapParamStyle = MapParamStyle::Warp,
-		.compModeStyle = CompatModeStyle::None,
-		.hasScreenshotDirParam = false,
-		.needsStdoutParam = false,
+		.compatModeStyle = CompatModeStyle::None,
 	},
 
 	//PrBoom
@@ -88,9 +84,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.saveFileSuffix = "dsg",
 		.saveDirParam = "-save",
 		.mapParamStyle = MapParamStyle::Warp,
-		.compModeStyle = CompatModeStyle::PrBoom,
-		.hasScreenshotDirParam = false,
-		.needsStdoutParam = false,
+		.compatModeStyle = CompatModeStyle::PrBoom,
 	},
 
 	//MBF
@@ -99,20 +93,16 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.saveFileSuffix = "dsg",
 		.saveDirParam = "-save",
 		.mapParamStyle = MapParamStyle::Warp,
-		.compModeStyle = CompatModeStyle::PrBoom,
-		.hasScreenshotDirParam = false,
-		.needsStdoutParam = false,
+		.compatModeStyle = CompatModeStyle::PrBoom,
 	},
 
 	//EDGE
 	{
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "esg",  // EDGE stores saves completely differently than all the other engines, but screw it
-		.saveDirParam = "-savedir",  // not tested, probably doesn't work
+		.saveDirParam = nullptr,
 		.mapParamStyle = MapParamStyle::Warp,
-		.compModeStyle = CompatModeStyle::None,
-		.hasScreenshotDirParam = false,
-		.needsStdoutParam = false,
+		.compatModeStyle = CompatModeStyle::None,
 	},
 };
 static_assert( std::size(engineFamilyTraits) == std::size(engineFamilyStrings), "Please update this table too" );
@@ -247,9 +237,10 @@ void EngineTraits::setFamilyTraits( EngineFamily family )
 	else
 		_familyTraits = &engineFamilyTraits[ size_t(EngineFamily::ZDoom) ];  // use ZDoom traits as fallback
 
-	// pre-compute the common subdirectory for save files, so that we don't have to repeat it on every IWAD change
-	_commonSaveSubdir = getCommonSaveSubdir();
+	// update all engine traits that might depend on family
+	_commonSaveSubdir = getCommonSaveSubdir();  // pre-compute the common subdirectory for save files, so that we don't have to repeat it on every IWAD change
 	_configFileName = getDefaultConfigFileName();
+	_screenshotDirParam = getScreenshotDirParam();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -494,6 +485,15 @@ QString EngineTraits::getDefaultConfigFileName() const
 //----------------------------------------------------------------------------------------------------------------------
 // command line parameters deduction
 
+const char * EngineTraits::getScreenshotDirParam() const
+{
+	// https://doomwiki.org/wiki/Source_port_parameters#-shotdir_.3Cdirectory.3E
+	if (_family == EngineFamily::ZDoom || normalizedName() == "prboom-plus" || normalizedName() == "doomretro")
+		return "-shotdir";
+	else
+		return nullptr;
+}
+
 static const QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
 static const QRegularExpression doom2MapNameRegex("MAP(\\d+)");
 
@@ -536,9 +536,9 @@ QStringVec EngineTraits::getCompatModeArgs( int compatMode ) const
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
 	if (isBasedOnGZDoomVersionOrLater({4,8,0}))
 		return { "-compatmode", QString::number( compatMode ) };
-	else if (_familyTraits->compModeStyle == CompatModeStyle::ZDoom)
+	else if (_familyTraits->compatModeStyle == CompatModeStyle::ZDoom)
 		return { "+compatmode", QString::number( compatMode ) };
-	else if (_familyTraits->compModeStyle == CompatModeStyle::PrBoom)
+	else if (_familyTraits->compatModeStyle == CompatModeStyle::PrBoom)
 		return { "-complevel", QString::number( compatMode ) };
 	else
 		return {};

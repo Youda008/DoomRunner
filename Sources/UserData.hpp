@@ -110,9 +110,10 @@ enum LaunchMode
 	LoadSave,
 	RecordDemo,
 	ReplayDemo,
+	ResumeDemo,
 };
 template<> inline const char * enumName< LaunchMode >() { return "LaunchMode"; }
-template<> inline uint enumSize< LaunchMode >() { return uint( LaunchMode::ReplayDemo ) + 1; }
+template<> inline uint enumSize< LaunchMode >() { return uint( LaunchMode::ResumeDemo ) + 1; }
 
 enum Skill
 {
@@ -161,6 +162,8 @@ struct LaunchOptions
 	QString mapName_demo;
 	QString demoFile_record;
 	QString demoFile_replay;
+	QString demoFile_resumeFrom;
+	QString demoFile_resumeTo;
 };
 
 struct MultiplayerOptions

@@ -236,6 +236,8 @@ static QJsonObject serialize( const LaunchOptions & opts )
 	optsJs["map_name_demo"] = opts.mapName_demo;
 	optsJs["demo_file_record"] = opts.demoFile_record;
 	optsJs["demo_file_replay"] = opts.demoFile_replay;
+	optsJs["demo_file_resume_from"] = opts.demoFile_resumeFrom;
+	optsJs["demo_file_resume_to"] = opts.demoFile_resumeTo;
 
 	return optsJs;
 }
@@ -248,6 +250,8 @@ static void deserialize( const JsonObjectCtx & optsJs, LaunchOptions & opts )
 	opts.mapName_demo = optsJs.getString( "map_name_demo" );
 	opts.demoFile_record = optsJs.getString( "demo_file_record" );
 	opts.demoFile_replay = optsJs.getString( "demo_file_replay" );
+	opts.demoFile_resumeFrom = optsJs.getString( "demo_file_resume_from" );
+	opts.demoFile_resumeTo = optsJs.getString( "demo_file_resume_to" );
 }
 
 static QJsonObject serialize( const MultiplayerOptions & opts )

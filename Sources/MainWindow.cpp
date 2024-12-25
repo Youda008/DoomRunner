@@ -234,6 +234,8 @@ LaunchMode MainWindow::getLaunchModeFromUI() const
 		return LaunchMode::RecordDemo;
 	else if (ui->launchMode_replayDemo->isChecked())
 		return LaunchMode::ReplayDemo;
+	else if (ui->launchMode_resumeDemo->isChecked())
+		return LaunchMode::ResumeDemo;
 	else
 		return LaunchMode::Default;
 }
@@ -306,7 +308,7 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 
 	// dir of demo files
 	LaunchMode launchMode = getLaunchModeFromUI();
-	if (launchMode == RecordDemo || launchMode == ReplayDemo)
+	if (launchMode == RecordDemo || launchMode == ReplayDemo || launchMode == ResumeDemo)
 	{
 		if (QString demoDir = getActiveDemoDir(); !demoDir.isEmpty() && !fs::isInsideDir( dataDir, demoDir ))
 		{
@@ -618,13 +620,17 @@ MainWindow::MainWindow()
 	ui->saveFileCmbBox->setModel( &saveModel );
 	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onSavedGameSelected );
 
+	// we can re-use the same model for these two combo boxes
 	ui->demoFileCmbBox_replay->setModel( &demoModel );
 	connect( ui->demoFileCmbBox_replay, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onDemoFileSelected_replay );
+	ui->demoFileCmbBox_resume->setModel( &demoModel );
+	connect( ui->demoFileCmbBox_resume, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onDemoFileSelected_resume );
 
 	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::onMapChanged );
 	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &thisClass::onMapChanged_demo );
 
 	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::onDemoFileChanged_record );
+	connect( ui->demoFileLine_resume, &QLineEdit::textChanged, this, &thisClass::onDemoFileChanged_resume );
 
 	ui->compatModeCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
 
@@ -642,6 +648,7 @@ MainWindow::MainWindow()
 	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::onModeChosen_SavedGame );
 	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &thisClass::onModeChosen_RecordDemo );
 	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &thisClass::onModeChosen_ReplayDemo );
+	connect( ui->launchMode_resumeDemo, &QRadioButton::clicked, this, &thisClass::onModeChosen_ResumeDemo );
 
 	// mutiplayer
 	connect( ui->multiplayerGrpBox, &QGroupBox::toggled, this, &thisClass::onMultiplayerToggled );
@@ -1738,6 +1745,9 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 	 case LaunchMode::ReplayDemo:
 		ui->launchMode_replayDemo->click();
 		break;
+	 case LaunchMode::ResumeDemo:
+		ui->launchMode_resumeDemo->click();
+		break;
 	 default:
 		ui->launchMode_default->click();
 		break;
@@ -1761,6 +1771,7 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 	}
 	ui->mapCmbBox_demo->setCurrentIndex( ui->mapCmbBox_demo->findText( launchOpts.mapName_demo ) );
 	ui->demoFileLine_record->setText( launchOpts.demoFile_record );
+	ui->demoFileLine_resume->setText( launchOpts.demoFile_resumeTo );
 	if (!launchOpts.demoFile_replay.isEmpty())
 	{
 		int demoFileIdx = findSuch( demoModel, [&]( const DemoFile & demo )
@@ -1773,6 +1784,20 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 				"Demo file \""%launchOpts.demoFile_replay%"\" no longer exists. Please select another one."
 			);
 			launchOpts.demoFile_replay.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
+		}
+	}
+	if (!launchOpts.demoFile_resumeFrom.isEmpty())
+	{
+		int demoFileIdx = findSuch( demoModel, [&]( const DemoFile & demo )
+		                                       { return demo.fileName == launchOpts.demoFile_resumeFrom; } );
+		ui->demoFileCmbBox_resume->setCurrentIndex( demoFileIdx );
+
+		if (demoFileIdx < 0)
+		{
+			reportUserError( this, "Demo file no longer exists",
+				"Demo file \""%launchOpts.demoFile_resumeFrom%"\" no longer exists. Please select another one."
+			);
+			launchOpts.demoFile_resumeFrom.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
 		}
 	}
 
@@ -2942,12 +2967,7 @@ void MainWindow::onModeChosen_Default()
 {
 	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, Default );
 
-	ui->mapCmbBox->setEnabled( false );
-	ui->saveFileCmbBox->setEnabled( false );
-	ui->mapCmbBox_demo->setEnabled( false );
-	ui->demoFileLine_record->setEnabled( false );
-	ui->demoFileCmbBox_replay->setEnabled( false );
-
+	toggleLaunchModeSubwidgets( Default );
 	toggleSkillSubwidgets( false );
 	toggleOptionsSubwidgets( !ui->multiplayerGrpBox->isChecked() );
 
@@ -2964,12 +2984,7 @@ void MainWindow::onModeChosen_LaunchMap()
 {
 	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, LaunchMap );
 
-	ui->mapCmbBox->setEnabled( true );
-	ui->saveFileCmbBox->setEnabled( false );
-	ui->mapCmbBox_demo->setEnabled( false );
-	ui->demoFileLine_record->setEnabled( false );
-	ui->demoFileCmbBox_replay->setEnabled( false );
-
+	toggleLaunchModeSubwidgets( LaunchMap );
 	toggleSkillSubwidgets( true );
 	toggleOptionsSubwidgets( true );
 
@@ -2986,12 +3001,7 @@ void MainWindow::onModeChosen_SavedGame()
 {
 	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, LoadSave );
 
-	ui->mapCmbBox->setEnabled( false );
-	ui->saveFileCmbBox->setEnabled( true );
-	ui->mapCmbBox_demo->setEnabled( false );
-	ui->demoFileLine_record->setEnabled( false );
-	ui->demoFileCmbBox_replay->setEnabled( false );
-
+	toggleLaunchModeSubwidgets( LoadSave );
 	toggleSkillSubwidgets( false );
 	toggleOptionsSubwidgets( false );
 
@@ -3003,12 +3013,7 @@ void MainWindow::onModeChosen_RecordDemo()
 {
 	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, RecordDemo );
 
-	ui->mapCmbBox->setEnabled( false );
-	ui->saveFileCmbBox->setEnabled( false );
-	ui->mapCmbBox_demo->setEnabled( true );
-	ui->demoFileLine_record->setEnabled( true );
-	ui->demoFileCmbBox_replay->setEnabled( false );
-
+	toggleLaunchModeSubwidgets( RecordDemo );
 	toggleSkillSubwidgets( true );
 	toggleOptionsSubwidgets( true );
 
@@ -3020,12 +3025,7 @@ void MainWindow::onModeChosen_ReplayDemo()
 {
 	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, ReplayDemo );
 
-	ui->mapCmbBox->setEnabled( false );
-	ui->saveFileCmbBox->setEnabled( false );
-	ui->mapCmbBox_demo->setEnabled( false );
-	ui->demoFileLine_record->setEnabled( false );
-	ui->demoFileCmbBox_replay->setEnabled( true );
-
+	toggleLaunchModeSubwidgets( ReplayDemo );
 	toggleSkillSubwidgets( false );
 	toggleOptionsSubwidgets( false );
 
@@ -3033,6 +3033,31 @@ void MainWindow::onModeChosen_ReplayDemo()
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
+}
+
+void MainWindow::onModeChosen_ResumeDemo()
+{
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, ResumeDemo );
+
+	toggleLaunchModeSubwidgets( ResumeDemo );
+	toggleSkillSubwidgets( false );
+	toggleOptionsSubwidgets( false );
+
+	ui->multiplayerGrpBox->setChecked( false );   // no multiplayer when replaying demo
+
+	//scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::toggleLaunchModeSubwidgets( LaunchMode mode )
+{
+	ui->mapCmbBox->setEnabled( mode == LaunchMap );
+	ui->saveFileCmbBox->setEnabled( mode == LoadSave );
+	ui->mapCmbBox_demo->setEnabled( mode == RecordDemo );
+	ui->demoFileLine_record->setEnabled( mode == RecordDemo );
+	ui->demoFileCmbBox_replay->setEnabled( mode == ReplayDemo );
+	ui->demoFileCmbBox_resume->setEnabled( mode == ResumeDemo );
+	ui->demoFileLine_resume->setEnabled( mode == ResumeDemo );
 }
 
 void MainWindow::toggleSkillSubwidgets( bool enabled )
@@ -3109,6 +3134,30 @@ void MainWindow::onDemoFileSelected_replay( int demoIdx )
 	const QString & demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : emptyString;
 
 	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .demoFile_replay, demoFileName );
+
+	//scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onDemoFileSelected_resume( int demoIdx )
+{
+	if (disableSelectionCallbacks)
+		return;
+
+	const QString & demoFileName = demoIdx >= 0 ? demoModel[ demoIdx ].fileName : emptyString;
+
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .demoFile_resumeFrom, demoFileName );
+
+	//scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onDemoFileChanged_resume( const QString & fileName )
+{
+	if (disableSelectionCallbacks)
+		return;
+
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .demoFile_resumeTo, fileName );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3233,7 +3282,7 @@ void MainWindow::onMultiplayerToggled( bool checked )
 		{
 			ui->multRoleCmbBox->setCurrentIndex( Client );
 		}
-		if (launchMode == ReplayDemo)  // can't replay demo in multiplayer
+		if (launchMode == ReplayDemo || launchMode == ResumeDemo)  // can't replay demo in multiplayer
 		{
 			ui->launchMode_default->click();
 			launchMode = Default;
@@ -3978,23 +4027,49 @@ void MainWindow::updateSaveFilesFromDir()
 
 void MainWindow::updateDemoFilesFromDir()
 {
+	// We have 2 combo-boxes sharing the same model, update the model only once.
+
 	QString demoDir = getActiveDemoDir();
 
+	// note down the currently selected item
+	int origReplayDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
+	int origResumeDemoIdx = ui->demoFileCmbBox_resume->currentIndex();
+	QString origReplayDemoText = ui->demoFileCmbBox_replay->currentText();
+	QString origResumeDemoText = ui->demoFileCmbBox_resume->currentText();
 	// workaround (read the big comment above)
-	int origDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
 	disableSelectionCallbacks = true;
 
-	wdg::updateComboBoxFromDir( demoModel, ui->demoFileCmbBox_replay, demoDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
-		/*isDesiredFile*/[]( const QFileInfo & file ) { return file.suffix().toLower() == doom::demoFileSuffix; }
-	);
+	ui->demoFileCmbBox_replay->setCurrentIndex( -1 );
+	ui->demoFileCmbBox_resume->setCurrentIndex( -1 );
+
+	demoModel.startCompleteUpdate();
+	demoModel.clear();
+	traverseDirectory( demoDir, /*recursively*/false, fs::EntryType::FILE, pathConvertor, [&]( const QFileInfo & file )
+	{
+		if (file.suffix().toLower() == doom::demoFileSuffix)
+		{
+			demoModel.append( DemoFile( file ) );
+		}
+	});
+	demoModel.finishCompleteUpdate();
+
+	// restore the originally selected item, the selection will be reset if the item does not exist in the new content
+	// because findText returns -1 which is valid value for setCurrentIndex
+	ui->demoFileCmbBox_replay->setCurrentIndex( ui->demoFileCmbBox_replay->findText( origReplayDemoText ) );
+	ui->demoFileCmbBox_resume->setCurrentIndex( ui->demoFileCmbBox_resume->findText( origResumeDemoText ) );
 
 	disableSelectionCallbacks = false;
-	int newDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
-
-	if (newDemoIdx != origDemoIdx)
+	int newReplayDemoIdx = ui->demoFileCmbBox_replay->currentIndex();
+	int newResumeDemoIdx = ui->demoFileCmbBox_resume->currentIndex();
+	if (newReplayDemoIdx != origReplayDemoIdx)
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
-		onDemoFileSelected_replay( newDemoIdx );
+		onDemoFileSelected_replay( newReplayDemoIdx );
+	}
+	if (newResumeDemoIdx != origResumeDemoIdx)
+	{
+		// selection changed while the callbacks were disabled, we need to call them manually
+		onDemoFileSelected_resume( newResumeDemoIdx );
 	}
 }
 
@@ -4028,7 +4103,8 @@ void MainWindow::updateCompatModes()
 		// keep the widget enabled only if the engine supports compatibility levels
 		LaunchMode launchMode = getLaunchModeFromUI();
 		ui->compatModeCmbBox->setEnabled(
-			currentCompLvlStyle != CompatModeStyle::None && launchMode != LoadSave && launchMode != ReplayDemo
+			currentCompLvlStyle != CompatModeStyle::None
+			&& launchMode != LoadSave && launchMode != ReplayDemo && launchMode != ResumeDemo
 		);
 
 		lastCompLvlStyle = currentCompLvlStyle;
@@ -4476,6 +4552,16 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileCmbBox_replay->currentText() );
 		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
 		cmd.arguments << "-playdemo" << engineDirRebaser.makeRebasedCmdPath( demoPath );
+	}
+	else if (launchMode == ResumeDemo
+	      && !ui->demoFileCmbBox_resume->currentText().isEmpty() && !ui->demoFileLine_resume->text().isEmpty())
+	{
+		QString demoDir = getActiveDemoDir();  // demo dir cannot be empty, otherwise the demoFileCmbBox_resume would be empty
+		QString origDemoPath = fs::getPathFromFileName( demoDir, ui->demoFileCmbBox_resume->currentText() );
+		QString newDemoPath = fs::getPathFromFileName( demoDir, ui->demoFileLine_resume->text() );
+		p.checkFilePath( origDemoPath, "the selected demo", "Please select another one." );
+		cmd.arguments << "-recordfromto"
+			<< engineDirRebaser.makeRebasedCmdPath( origDemoPath ) << engineDirRebaser.makeRebasedCmdPath( newDemoPath );
 	}
 
 	//-- gameplay and compatibility options ----------------------------------------

@@ -110,11 +110,14 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onModeChosen_SavedGame();
 	void onModeChosen_RecordDemo();
 	void onModeChosen_ReplayDemo();
+	void onModeChosen_ResumeDemo();
 	void onMapChanged( const QString & mapName );
 	void onSavedGameSelected( int index );
 	void onMapChanged_demo( const QString & mapName );
 	void onDemoFileChanged_record( const QString & fileName );
 	void onDemoFileSelected_replay( int index );
+	void onDemoFileSelected_resume( int index );
+	void onDemoFileChanged_resume( const QString & fileName );
 
 	void onSkillSelected( int skillIdx );
 	void onSkillNumChanged( int skillNum );
@@ -250,6 +253,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	//void toggleEngineDependentWidgets( const EngineInfo * engine );
 
+	void toggleLaunchModeSubwidgets( LaunchMode mode );
 	void toggleSkillSubwidgets( bool enabled );
 	void toggleOptionsSubwidgets( bool enabled );
 

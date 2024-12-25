@@ -620,26 +620,6 @@
                  </property>
                 </widget>
                </item>
-               <item row="5" column="1">
-                <widget class="QLineEdit" name="demoFileLine_record">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QRadioButton" name="launchMode_savefile">
-                 <property name="text">
-                  <string>Load saved game</string>
-                 </property>
-                </widget>
-               </item>
                <item row="1" column="1">
                 <layout class="QHBoxLayout" name="hLayout_launchMap">
                  <item>
@@ -682,15 +662,15 @@
                  </item>
                 </layout>
                </item>
-               <item row="6" column="0">
-                <widget class="QRadioButton" name="launchMode_replayDemo">
+               <item row="2" column="0">
+                <widget class="QRadioButton" name="launchMode_savefile">
                  <property name="text">
-                  <string>Play demo</string>
+                  <string>Load saved game</string>
                  </property>
                 </widget>
                </item>
-               <item row="6" column="1">
-                <widget class="QComboBox" name="demoFileCmbBox_replay">
+               <item row="2" column="1">
+                <widget class="QComboBox" name="saveFileCmbBox">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
@@ -700,12 +680,15 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="editable">
+                  <bool>false</bool>
+                 </property>
                  <property name="maxVisibleItems">
                   <number>30</number>
                  </property>
                 </widget>
                </item>
-               <item row="5" column="0">
+               <item row="3" column="0">
                 <layout class="QHBoxLayout" name="hLayout_recordMap">
                  <item>
                   <widget class="QRadioButton" name="launchMode_recordDemo">
@@ -741,8 +724,8 @@
                  </item>
                 </layout>
                </item>
-               <item row="2" column="1">
-                <widget class="QComboBox" name="saveFileCmbBox">
+               <item row="3" column="1">
+                <widget class="QLineEdit" name="demoFileLine_record">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
@@ -752,13 +735,61 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
-                 <property name="editable">
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QRadioButton" name="launchMode_replayDemo">
+                 <property name="text">
+                  <string>Play demo</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QComboBox" name="demoFileCmbBox_replay">
+                 <property name="enabled">
                   <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
                  <property name="maxVisibleItems">
                   <number>30</number>
                  </property>
                 </widget>
+               </item>
+               <item row="5" column="0" colspan="2">
+                <layout class="QHBoxLayout" name="horizontalLayout">
+                 <item>
+                  <widget class="QRadioButton" name="launchMode_resumeDemo">
+                   <property name="text">
+                    <string>Resume demo</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="demoFileCmbBox_resume">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="demoFileLine_resume">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
               </layout>
              </widget>
@@ -776,6 +807,9 @@
                  </property>
                  <item>
                   <widget class="QLabel" name="skillLabel">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="text">
                     <string>Skill</string>
                    </property>

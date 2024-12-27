@@ -248,14 +248,14 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
 
-	void togglePresetSubWidgets( bool enabled );
+	void togglePresetSubWidgets( const Preset * selectedPreset );
 	void clearPresetSubWidgets();
 
-	//void toggleEngineDependentWidgets( const EngineInfo * engine );
+	void toggleAndClearEngineDependentWidgets( const EngineInfo * selectedEngine );
 
 	void toggleLaunchModeSubwidgets( LaunchMode mode );
-	void toggleSkillSubwidgets( bool enabled );
-	void toggleOptionsSubwidgets( bool enabled );
+	void toggleSkillSubwidgets( LaunchMode mode );
+	void toggleOptionsSubwidgets( LaunchMode mode );
 
 	void updateLaunchCommand();
 
@@ -317,12 +317,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 		const QString & filePath, const EngineInfo * engine, const PathRebaser & workingDirRebaser, const QString & saveDir
 	);
 
-	LaunchMode getLaunchModeFromUI() const;
-
 	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
 	QStringVec getDirsToBeAccessed() const;
-
-	void scheduleSavingOptions( bool storedOptionsModified = true );
 
 	LaunchOptions & activeLaunchOptions();
 	MultiplayerOptions & activeMultiplayerOptions();
@@ -330,6 +326,23 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	CompatibilityOptions & activeCompatOptions();
 	VideoOptions & activeVideoOptions();
 	AudioOptions & activeAudioOptions();
+
+	static bool shouldEnableEngineDirBtn( const EngineInfo * selectedEngine );
+	static bool shouldEnableConfigCmbBox( const EngineInfo * selectedEngine );
+	static bool shouldEnableConfigCloneBtn( const ConfigFile * selectedConfig );
+	static bool shouldEnableSkillSelector( LaunchMode mode );
+	static bool shouldEnableSkillSpinBox( LaunchMode mode, int skillIdx );
+	static bool shouldEnableGameOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine );
+	static bool shouldEnableCompatOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine );
+	static bool shouldEnableCompatModeCmbBox( LaunchMode mode, const EngineInfo * selectedEngine );
+	static bool shouldEnableMultiplayerGrpBox( const StorageSettings & storage, const Preset * selectedPreset, const EngineInfo * selectedEngine );
+	static bool shouldEnableAltConfigDir( const EngineInfo * selectedEngine, bool usePresetName );
+	static bool shouldEnableAltSaveDir( const EngineInfo * selectedEngine, bool usePresetName );
+	static bool shouldEnableAltScreenshotDir( const EngineInfo * selectedEngine, bool usePresetName );
+
+	LaunchMode getLaunchModeFromUI() const;
+
+	void scheduleSavingOptions( bool storedOptionsModified = true );
 
  private: // internal members
 

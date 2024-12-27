@@ -70,6 +70,8 @@ void MainWindow::addShortcut( const QKeySequence & keys, const Func & shortcutAc
 	connect( shortcut, &QShortcut::activated, this, shortcutAction );
 }
 
+// selected items
+
 Preset * MainWindow::getSelectedPreset() const
 {
 	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
@@ -139,6 +141,8 @@ QStringList MainWindow::getUniqueMapNamesFromWADs( const QVector<QString> & sele
 	}
 	return uniqueMapNames.keys();
 }
+
+// paths of data dirs
 
 // returns config dir configured for the current engine, or empty string if engine is not selected
 // Used as a base directory for config dir override or directly for searching config files.
@@ -223,22 +227,6 @@ QString MainWindow::makeCmdSaveFilePath(
 		return workingDirRebaser.makeRebasedCmdPath( filePath );
 	}
 };
-
-LaunchMode MainWindow::getLaunchModeFromUI() const
-{
-	if (ui->launchMode_map->isChecked())
-		return LaunchMode::LaunchMap;
-	else if (ui->launchMode_savefile->isChecked())
-		return LaunchMode::LoadSave;
-	else if (ui->launchMode_recordDemo->isChecked())
-		return LaunchMode::RecordDemo;
-	else if (ui->launchMode_replayDemo->isChecked())
-		return LaunchMode::ReplayDemo;
-	else if (ui->launchMode_resumeDemo->isChecked())
-		return LaunchMode::ResumeDemo;
-	else
-		return LaunchMode::Default;
-}
 
 // Iterates over all directories which the engine will need to access (either for reading or writing).
 // Required for supporting sandbox environments like Snap or Flatpak
@@ -338,12 +326,7 @@ QStringVec MainWindow::getDirsToBeAccessed() const
 	return QStringVec( normDirPaths.begin(), normDirPaths.end() );
 }
 
-// This needs to be called everytime the user make a change that needs to be saved into the options file.
-void MainWindow::scheduleSavingOptions( bool storedOptionsModified )
-{
-	// update the options file at the nearest file-saving cycle
-	optionsNeedUpdate = optionsNeedUpdate || storedOptionsModified;
-}
+// internal options storage
 
 LaunchOptions & MainWindow::activeLaunchOptions()
 {
@@ -521,6 +504,147 @@ AudioOptions & MainWindow::activeAudioOptions()
 #define STORE_GLOBAL_OPTION( structMember, value ) \
 	STORE_TO_GLOBAL_STORAGE_IF_SAFE( (globalOpts)structMember, value )
 
+// conditions for enabling widgets
+
+bool MainWindow::shouldEnableEngineDirBtn( const EngineInfo * selectedEngine )
+{
+	return selectedEngine && !selectedEngine->dataDir.isEmpty();
+}
+
+bool MainWindow::shouldEnableConfigCmbBox( const EngineInfo * selectedEngine )
+{
+	return selectedEngine != nullptr;
+}
+
+bool MainWindow::shouldEnableConfigCloneBtn( const ConfigFile * selectedConfig )
+{
+	return selectedConfig != nullptr;
+}
+
+static bool isDirectLaunch( LaunchMode mode )
+{
+	return mode == LaunchMap || mode == RecordDemo;
+}
+
+bool MainWindow::shouldEnableSkillSelector( LaunchMode mode )
+{
+	return isDirectLaunch( mode );
+}
+
+bool MainWindow::shouldEnableSkillSpinBox( LaunchMode mode, int skillIdx )
+{
+	return shouldEnableSkillSelector( mode ) && skillIdx == Skill::Custom;
+}
+
+bool MainWindow::shouldEnableGameOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine )
+{
+	return (isDirectLaunch( mode ) || mode == Default)
+	    && (selectedEngine && selectedEngine->hasDetailedGameOptions());
+}
+
+bool MainWindow::shouldEnableCompatOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine )
+{
+	return (isDirectLaunch( mode ) || mode == Default)
+	    && (selectedEngine && selectedEngine->hasDetailedCompatOptions());
+}
+
+bool MainWindow::shouldEnableCompatModeCmbBox( LaunchMode mode, const EngineInfo * selectedEngine )
+{
+	return (isDirectLaunch( mode ) || mode == Default)
+	    && (selectedEngine && selectedEngine->compatModeStyle() != CompatModeStyle::None);
+}
+
+bool MainWindow::shouldEnableMultiplayerGrpBox(
+	const StorageSettings & storage, const Preset * selectedPreset, const EngineInfo * selectedEngine
+){
+	return (selectedPreset || storage.gameOptsStorage != StoreToPreset)
+	    && (selectedEngine && selectedEngine->hasMultiplayer());
+}
+
+bool MainWindow::shouldEnableAltConfigDir( const EngineInfo * selectedEngine, bool usePresetName )
+{
+	return !usePresetName && selectedEngine;
+}
+
+bool MainWindow::shouldEnableAltSaveDir( const EngineInfo * selectedEngine, bool usePresetName )
+{
+	return !usePresetName && selectedEngine && selectedEngine->saveDirParam();
+}
+
+bool MainWindow::shouldEnableAltScreenshotDir( const EngineInfo * selectedEngine, bool usePresetName )
+{
+	return !usePresetName && selectedEngine && selectedEngine->screenshotDirParam();
+}
+
+// disabling and clearing widgets
+
+[[maybe_unused]] static void toggleAndUncheck( QGroupBox * widget, bool enabled )
+{
+	widget->setEnabled( enabled );
+	if (!enabled)
+		widget->setChecked( false );
+}
+
+[[maybe_unused]] static void toggleAndUncheck( QCheckBox * widget, bool enabled )
+{
+	widget->setEnabled( enabled );
+	if (!enabled)
+		widget->setChecked( false );
+}
+
+[[maybe_unused]] static void toggleAndClear( QLineEdit * widget, bool enabled )
+{
+	widget->setEnabled( enabled );
+	if (!enabled)
+		widget->clear();
+}
+
+[[maybe_unused]] static void toggleAndDeselect( QComboBox * widget, bool enabled )
+{
+	widget->setEnabled( enabled );
+	if (!enabled)
+		widget->setCurrentIndex( -1 );
+}
+
+[[maybe_unused]] static void toggleAndDeselect( QListView * view, bool enabled )
+{
+	view->setEnabled( enabled );
+	if (!enabled)
+		wdg::deselectAllAndUnsetCurrent( view );
+}
+
+[[maybe_unused]] static void toggleAndDeselect( QTreeView * view, bool enabled )
+{
+	view->setEnabled( enabled );
+	if (!enabled)
+		wdg::deselectAllAndUnsetCurrent( view );
+}
+
+// miscellaneous
+
+LaunchMode MainWindow::getLaunchModeFromUI() const
+{
+	if (ui->launchMode_map->isChecked())
+		return LaunchMode::LaunchMap;
+	else if (ui->launchMode_savefile->isChecked())
+		return LaunchMode::LoadSave;
+	else if (ui->launchMode_recordDemo->isChecked())
+		return LaunchMode::RecordDemo;
+	else if (ui->launchMode_replayDemo->isChecked())
+		return LaunchMode::ReplayDemo;
+	else if (ui->launchMode_resumeDemo->isChecked())
+		return LaunchMode::ResumeDemo;
+	else
+		return LaunchMode::Default;
+}
+
+// This needs to be called everytime the user make a change that needs to be saved into the options file.
+void MainWindow::scheduleSavingOptions( bool storedOptionsModified )
+{
+	// update the options file at the nearest file-saving cycle
+	optionsNeedUpdate = optionsNeedUpdate || storedOptionsModified;
+}
+
 
 //======================================================================================================================
 // MainWindow
@@ -564,7 +688,7 @@ MainWindow::MainWindow()
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
 
 	// make sure the correct widgets are enabled/disabled according to the default storage settings, until the settings are loaded
-	togglePresetSubWidgets( false );
+	togglePresetSubWidgets( nullptr );
 
 	// OS-specific initialization
 
@@ -1434,7 +1558,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	togglePathStyle( settings.pathStyle );
 
 	// make sure the correct widgets are enabled/disabled according to the loaded storage settings, until a preset is selected
-	togglePresetSubWidgets( false );
+	togglePresetSubWidgets( nullptr );
 
 	// load the last selected preset
 	if (!opts.selectedPreset.isEmpty())
@@ -2047,13 +2171,14 @@ void MainWindow::runOptsStorageDialog()
 
 		updateOptionsGrpBoxTitles( settings );
 
-		bool isPresetSelected = getSelectedPreset() != nullptr;
-		ui->launchModeGrpBox->setEnabled( isPresetSelected || settings.launchOptsStorage != StoreToPreset );
-		ui->gameplayGrpBox->setEnabled( isPresetSelected || settings.gameOptsStorage != StoreToPreset );
-		ui->compatGrpBox->setEnabled( isPresetSelected || settings.compatOptsStorage != StoreToPreset );
-		ui->multiplayerGrpBox->setEnabled( isPresetSelected || settings.launchOptsStorage != StoreToPreset );
-		ui->videoGrpBox->setEnabled( isPresetSelected || settings.videoOptsStorage != StoreToPreset );
-		ui->audioGrpBox->setEnabled( isPresetSelected || settings.audioOptsStorage != StoreToPreset );
+		const Preset * selectedPreset = getSelectedPreset();
+		const EngineInfo * selectedEngine = getSelectedEngine();
+		ui->launchModeGrpBox->setEnabled( selectedPreset || settings.launchOptsStorage != StoreToPreset );
+		ui->gameplayGrpBox->setEnabled( selectedPreset || settings.gameOptsStorage != StoreToPreset );
+		ui->compatGrpBox->setEnabled( selectedPreset || settings.compatOptsStorage != StoreToPreset );
+		ui->multiplayerGrpBox->setEnabled( shouldEnableMultiplayerGrpBox( settings, selectedPreset, selectedEngine ) );
+		ui->videoGrpBox->setEnabled( selectedPreset || settings.videoOptsStorage != StoreToPreset );
+		ui->audioGrpBox->setEnabled( selectedPreset || settings.audioOptsStorage != StoreToPreset );
 	}
 }
 
@@ -2214,60 +2339,123 @@ void MainWindow::onPresetToggled( const QItemSelection & /*selected*/, const QIt
 	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0 && !presetModel[ selectedPresetIdx ].isSeparator)
 	{
-		togglePresetSubWidgets( true );  // enable all widgets that contain preset settings
+		togglePresetSubWidgets( &presetModel[ selectedPresetIdx ] );  // enable all widgets that contain preset settings
 		restorePreset( selectedPresetIdx );  // load the content of the selected preset into the other widgets
 	}
 	else  // the preset was deselected using CTRL
 	{
-		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
+		togglePresetSubWidgets( nullptr );  // disable the widgets so that user can't enter data that would not be saved anywhere
 		clearPresetSubWidgets();  // clear the other widgets that display the content of the preset
 	}
 }
 
-void MainWindow::togglePresetSubWidgets( bool enabled )
+// Enables UI elements whose state is stored in a preset,
+// or disables them and clears their current content
+void MainWindow::togglePresetSubWidgets( const Preset * selectedPreset )
 {
-	ui->engineCmbBox->setEnabled( enabled );
-	ui->engineDirBtn->setEnabled( enabled );
-	ui->configCmbBox->setEnabled( enabled );
-	ui->configCloneBtn->setEnabled( enabled );
-	ui->iwadListView->setEnabled( enabled );
-	ui->mapDirView->setEnabled( enabled );
-	ui->modListView->setEnabled( enabled );
-	ui->modBtnAdd->setEnabled( enabled );
-	ui->modBtnAddDir->setEnabled( enabled );
-	ui->modBtnAddArg->setEnabled( enabled );
-	ui->modBtnDel->setEnabled( enabled );
-	ui->modBtnUp->setEnabled( enabled );
-	ui->modBtnDown->setEnabled( enabled );
-	ui->presetCmdArgsLine->setEnabled( enabled );
-	ui->presetEnvVarTable->setEnabled( enabled );
-	ui->presetEnvVarBtnAdd->setEnabled( enabled );
-	ui->presetEnvVarBtnDel->setEnabled( enabled );
+	const EngineInfo * selectedEngine = getSelectedEngine();
 
-	ui->launchModeGrpBox->setEnabled( enabled || settings.launchOptsStorage != StoreToPreset );
-	ui->gameplayGrpBox->setEnabled( enabled || settings.gameOptsStorage != StoreToPreset);
-	ui->compatGrpBox->setEnabled( enabled || settings.compatOptsStorage != StoreToPreset);
-	ui->multiplayerGrpBox->setEnabled( enabled || settings.launchOptsStorage != StoreToPreset );
-	ui->videoGrpBox->setEnabled( enabled || settings.videoOptsStorage != StoreToPreset);
-	ui->audioGrpBox->setEnabled( enabled || settings.audioOptsStorage != StoreToPreset);
-	ui->altPathsGrpBox->setEnabled( enabled );
-	ui->presetEnvVarsGrpBox->setEnabled( enabled );
+	// We don't need to disable every widget individually, disabling their parent group box disables them all.
+
+	// Files tab
+
+	ui->engineGrpBox->setEnabled( selectedPreset != nullptr );
+	ui->configGrpBox->setEnabled( selectedPreset != nullptr );
+	ui->iwadGrpBox->setEnabled( selectedPreset != nullptr );
+	ui->mapGrpBox->setEnabled( selectedPreset != nullptr );
+	ui->modGrpBox->setEnabled( selectedPreset != nullptr );
+
+	ui->presetCmdArgsLine->setEnabled( selectedPreset != nullptr );
+
+	// Launch Options tab
+
+	ui->launchModeGrpBox->setEnabled( selectedPreset || settings.launchOptsStorage != StoreToPreset );
+	ui->gameplayGrpBox->setEnabled( selectedPreset || settings.gameOptsStorage != StoreToPreset );
+	ui->compatGrpBox->setEnabled( selectedPreset || settings.compatOptsStorage != StoreToPreset );
+	ui->multiplayerGrpBox->setEnabled( shouldEnableMultiplayerGrpBox( settings, selectedPreset, selectedEngine ) );
+
+	// Alt Paths tab
+
+	ui->altPathsGrpBox->setEnabled( selectedPreset != nullptr );
+
+	// Video/Audio tab
+
+	ui->videoGrpBox->setEnabled( selectedPreset || settings.videoOptsStorage != StoreToPreset );
+	ui->audioGrpBox->setEnabled( selectedPreset || settings.audioOptsStorage != StoreToPreset );
+
+	// Environment tab
+
+	ui->presetEnvVarsGrpBox->setEnabled( selectedPreset != nullptr );
 }
 
 void MainWindow::clearPresetSubWidgets()
 {
+	// Files tab
+
 	ui->engineCmbBox->setCurrentIndex( -1 );
-	// map names, saves and demos will be cleared and deselected automatically
+	// configs, map names, saves and demos will be cleared and deselected automatically
 
 	wdg::deselectAllAndUnsetCurrent( ui->iwadListView );
 	wdg::deselectAllAndUnsetCurrent( ui->mapDirView );
 	wdg::deselectAllAndUnsetCurrent( ui->modListView );
-
 	modModel.startCompleteUpdate();
 	modModel.clear();
 	modModel.finishCompleteUpdate();
 
 	ui->presetCmdArgsLine->clear();
+
+	// Launch Options tab
+
+	if (settings.launchOptsStorage == StoreToPreset)
+	{
+		ui->launchMode_default->click();
+	}
+
+	if (settings.gameOptsStorage == StoreToPreset)
+	{
+		ui->noMonstersChkBox->setChecked( false );
+		ui->fastMonstersChkBox->setChecked( false );
+		ui->monstersRespawnChkBox->setChecked( false );
+		ui->pistolStartChkBox->setChecked( false );
+		ui->allowCheatsChkBox->setChecked( false );
+	}
+
+	if (settings.compatOptsStorage == StoreToPreset)
+	{
+		ui->compatModeCmbBox->setCurrentIndex( -1 );
+	}
+
+	if (settings.launchOptsStorage == StoreToPreset)
+	{
+		ui->multiplayerGrpBox->setChecked( false );
+	}
+
+	// Alt Paths tab
+
+	ui->altConfigDirLine->clear();
+	ui->altSaveDirLine->clear();
+	ui->altScreenshotDirLine->clear();
+
+	// Video/Audio tab
+
+	if (settings.videoOptsStorage == StoreToPreset)
+	{
+		ui->monitorCmbBox->setCurrentIndex( 0 );
+		ui->resolutionXLine->clear();
+		ui->resolutionYLine->clear();
+		ui->showFpsChkBox->setChecked( false );
+	}
+
+	if (settings.audioOptsStorage == StoreToPreset)
+	{
+		ui->noSoundChkBox->setChecked( false );
+		ui->noSfxChkBox->setChecked( false );
+		ui->noMusicChkBox->setChecked( false );
+	}
+
+	// Environment tab
+
+	ui->presetEnvVarTable->clearContents();  // clear() also clears the column names
 }
 
 void MainWindow::onEngineSelected( int index )
@@ -2304,8 +2492,7 @@ void MainWindow::onEngineSelected( int index )
 	ui->mapCmbBox_demo->setEditable( supportsCustomMapNames );
 
 	// update related UI elements
-	ui->engineDirBtn->setEnabled( selectedEngine != nullptr );
-	ui->configCloneBtn->setEnabled( selectedEngine != nullptr );
+	toggleAndClearEngineDependentWidgets( selectedEngine );
 	// automatic alt dirs depend on the engine traits, which has now changed, so this needs to be refreshed
 	updateAlternativeDirs();
 
@@ -2317,6 +2504,29 @@ void MainWindow::onEngineSelected( int index )
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
+}
+
+void MainWindow::toggleAndClearEngineDependentWidgets( const EngineInfo * engine )
+{
+	ui->engineDirBtn->setEnabled( shouldEnableEngineDirBtn( engine ) );
+	toggleAndDeselect( ui->configCmbBox, shouldEnableConfigCmbBox( engine ) );
+
+	LaunchMode mode = getLaunchModeFromUI();
+	ui->gameOptsBtn->setEnabled( shouldEnableGameOptsBtn( mode, engine ) );
+	ui->compatOptsBtn->setEnabled( shouldEnableCompatOptsBtn( mode, engine ) );
+	ui->compatModeLabel->setEnabled( shouldEnableCompatModeCmbBox( mode, engine ) );
+	ui->compatModeCmbBox->setEnabled( shouldEnableCompatModeCmbBox( mode, engine ) );
+	toggleAndUncheck( ui->multiplayerGrpBox, shouldEnableMultiplayerGrpBox( settings, getSelectedPreset(), engine ) );
+
+	bool enableAltConfigDir = shouldEnableAltConfigDir( engine, ui->altConfigDirPresetChkBox->isChecked() );
+	ui->altConfigDirLine->setEnabled( enableAltConfigDir );
+	ui->altConfigDirBtn->setEnabled( enableAltConfigDir );
+	bool enableAltSaveDir = shouldEnableAltSaveDir( engine, ui->altSaveDirPresetChkBox->isChecked() );
+	ui->altSaveDirLine->setEnabled( enableAltSaveDir );
+	ui->altSaveDirBtn->setEnabled( enableAltSaveDir );
+	bool enableAltScreenshotDir = shouldEnableAltScreenshotDir( engine, ui->altScreenshotDirPresetChkBox->isChecked() );
+	ui->altScreenshotDirLine->setEnabled( enableAltScreenshotDir );
+	ui->altScreenshotDirBtn->setEnabled( enableAltScreenshotDir );
 }
 
 void MainWindow::onConfigSelected( int index )
@@ -2333,6 +2543,8 @@ void MainWindow::onConfigSelected( int index )
 	{
 		QString configPath = fs::getPathFromFileName( getConfigDir(), configFileName );
 	}*/
+
+	ui->configCloneBtn->setEnabled( shouldEnableConfigCloneBtn( selectedConfig ) );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2627,7 +2839,7 @@ void MainWindow::presetDelete()
 	}
 	else
 	{
-		togglePresetSubWidgets( false );  // disable the widgets so that user can't enter data that would not be saved anywhere
+		togglePresetSubWidgets( nullptr );  // disable the widgets so that user can't enter data that would not be saved anywhere
 		clearPresetSubWidgets();
 	}
 
@@ -2965,11 +3177,13 @@ void MainWindow::onModsDropped( int dropRow, int count, DnDType )
 
 void MainWindow::onModeChosen_Default()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, Default );
+	constexpr LaunchMode chosenMode = Default;
 
-	toggleLaunchModeSubwidgets( Default );
-	toggleSkillSubwidgets( false );
-	toggleOptionsSubwidgets( !ui->multiplayerGrpBox->isChecked() );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, chosenMode );
+
+	toggleLaunchModeSubwidgets( chosenMode );
+	toggleSkillSubwidgets( chosenMode );
+	toggleOptionsSubwidgets( chosenMode );
 
 	if (ui->multiplayerGrpBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Server)
 	{
@@ -2982,11 +3196,13 @@ void MainWindow::onModeChosen_Default()
 
 void MainWindow::onModeChosen_LaunchMap()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, LaunchMap );
+	constexpr LaunchMode chosenMode = LaunchMap;
 
-	toggleLaunchModeSubwidgets( LaunchMap );
-	toggleSkillSubwidgets( true );
-	toggleOptionsSubwidgets( true );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, chosenMode );
+
+	toggleLaunchModeSubwidgets( chosenMode );
+	toggleSkillSubwidgets( chosenMode );
+	toggleOptionsSubwidgets( chosenMode );
 
 	if (ui->multiplayerGrpBox->isChecked() && ui->multRoleCmbBox->currentIndex() == Client)
 	{
@@ -2999,11 +3215,13 @@ void MainWindow::onModeChosen_LaunchMap()
 
 void MainWindow::onModeChosen_SavedGame()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, LoadSave );
+	constexpr LaunchMode chosenMode = LoadSave;
 
-	toggleLaunchModeSubwidgets( LoadSave );
-	toggleSkillSubwidgets( false );
-	toggleOptionsSubwidgets( false );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, chosenMode );
+
+	toggleLaunchModeSubwidgets( chosenMode );
+	toggleSkillSubwidgets( chosenMode );
+	toggleOptionsSubwidgets( chosenMode );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3011,11 +3229,13 @@ void MainWindow::onModeChosen_SavedGame()
 
 void MainWindow::onModeChosen_RecordDemo()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, RecordDemo );
+	constexpr LaunchMode chosenMode = RecordDemo;
 
-	toggleLaunchModeSubwidgets( RecordDemo );
-	toggleSkillSubwidgets( true );
-	toggleOptionsSubwidgets( true );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, chosenMode );
+
+	toggleLaunchModeSubwidgets( chosenMode );
+	toggleSkillSubwidgets( chosenMode );
+	toggleOptionsSubwidgets( chosenMode );
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3023,11 +3243,13 @@ void MainWindow::onModeChosen_RecordDemo()
 
 void MainWindow::onModeChosen_ReplayDemo()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, ReplayDemo );
+	constexpr LaunchMode chosenMode = ReplayDemo;
 
-	toggleLaunchModeSubwidgets( ReplayDemo );
-	toggleSkillSubwidgets( false );
-	toggleOptionsSubwidgets( false );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, chosenMode );
+
+	toggleLaunchModeSubwidgets( chosenMode );
+	toggleSkillSubwidgets( chosenMode );
+	toggleOptionsSubwidgets( chosenMode );
 
 	ui->multiplayerGrpBox->setChecked( false );   // no multiplayer when replaying demo
 
@@ -3037,11 +3259,13 @@ void MainWindow::onModeChosen_ReplayDemo()
 
 void MainWindow::onModeChosen_ResumeDemo()
 {
-	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, ResumeDemo );
+	constexpr LaunchMode chosenMode = ResumeDemo;
 
-	toggleLaunchModeSubwidgets( ResumeDemo );
-	toggleSkillSubwidgets( false );
-	toggleOptionsSubwidgets( false );
+	/*bool storageModified =*/ STORE_LAUNCH_OPTION( .mode, chosenMode );
+
+	toggleLaunchModeSubwidgets( chosenMode );
+	toggleSkillSubwidgets( chosenMode );
+	toggleOptionsSubwidgets( chosenMode );
 
 	ui->multiplayerGrpBox->setChecked( false );   // no multiplayer when replaying demo
 
@@ -3060,24 +3284,29 @@ void MainWindow::toggleLaunchModeSubwidgets( LaunchMode mode )
 	ui->demoFileLine_resume->setEnabled( mode == ResumeDemo );
 }
 
-void MainWindow::toggleSkillSubwidgets( bool enabled )
+void MainWindow::toggleSkillSubwidgets( LaunchMode mode )
 {
 	// skillIdx is an index in the combo-box, which starts from 0, but Doom skill numbers actually start from 1
 	int skillIdx = ui->skillCmbBox->currentIndex() + 1;
 
-	ui->skillCmbBox->setEnabled( enabled );
-	ui->skillSpinBox->setEnabled( enabled && skillIdx == Skill::Custom );
+	ui->skillLabel->setEnabled( shouldEnableSkillSelector( mode ) );
+	ui->skillCmbBox->setEnabled( shouldEnableSkillSelector( mode ) );
+	ui->skillSpinBox->setEnabled( shouldEnableSkillSpinBox( mode, skillIdx ) );
 }
 
-void MainWindow::toggleOptionsSubwidgets( bool enabled )
+void MainWindow::toggleOptionsSubwidgets( LaunchMode mode )
 {
-	ui->noMonstersChkBox->setEnabled( enabled );
-	ui->fastMonstersChkBox->setEnabled( enabled );
-	ui->monstersRespawnChkBox->setEnabled( enabled );
-	ui->pistolStartChkBox->setEnabled( enabled );
-	ui->gameOptsBtn->setEnabled( enabled );
-	ui->compatOptsBtn->setEnabled( enabled );
-	ui->compatModeCmbBox->setEnabled( enabled && lastCompLvlStyle != CompatModeStyle::None );
+	bool enableBasicGameplayOptions = isDirectLaunch( mode ) || mode == Default;
+	ui->noMonstersChkBox->setEnabled( enableBasicGameplayOptions );
+	ui->fastMonstersChkBox->setEnabled( enableBasicGameplayOptions );
+	ui->monstersRespawnChkBox->setEnabled( enableBasicGameplayOptions );
+	ui->pistolStartChkBox->setEnabled( enableBasicGameplayOptions );
+
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	ui->gameOptsBtn->setEnabled( shouldEnableGameOptsBtn( mode, selectedEngine ) );
+	ui->compatOptsBtn->setEnabled( shouldEnableCompatOptsBtn( mode, selectedEngine ) );
+	ui->compatModeLabel->setEnabled( shouldEnableCompatModeCmbBox( mode, selectedEngine ) );
+	ui->compatModeCmbBox->setEnabled( shouldEnableCompatModeCmbBox( mode, selectedEngine ) );
 }
 
 void MainWindow::onMapChanged( const QString & mapName )
@@ -3176,7 +3405,7 @@ void MainWindow::onSkillSelected( int comboBoxIdx )
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 
-	ui->skillSpinBox->setEnabled( skillIdx == Skill::Custom && (launchMode == LaunchMap || launchMode == RecordDemo) );
+	ui->skillSpinBox->setEnabled( shouldEnableSkillSpinBox( launchMode, skillIdx ) );
 	if (skillIdx < Skill::Custom)
 		ui->skillSpinBox->setValue( skillIdx );
 
@@ -3255,25 +3484,27 @@ void MainWindow::onMultiplayerToggled( bool checked )
 {
 	/*bool storageModified =*/ STORE_MULT_OPTION( .isMultiplayer, checked );
 
-	int multRole = ui->multRoleCmbBox->currentIndex();
-	int gameMode = ui->gameModeCmbBox->currentIndex();
-	bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
-	bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
-
-	ui->multRoleCmbBox->setEnabled( checked );
-	ui->hostnameLine->setEnabled( checked && multRole == Client );
-	ui->portSpinBox->setEnabled( checked );
-	ui->netModeCmbBox->setEnabled( checked );
-	ui->gameModeCmbBox->setEnabled( checked && multRole == Server );
-	ui->playerCountSpinBox->setEnabled( checked && multRole == Server );
-	ui->teamDmgSpinBox->setEnabled( checked && multRole == Server && isTeamPlay );
-	ui->timeLimitSpinBox->setEnabled( checked && multRole == Server && isDeathMatch );
-	ui->fragLimitSpinBox->setEnabled( checked && multRole == Server && isDeathMatch );
-
-	LaunchMode launchMode = getLaunchModeFromUI();
-
-	if (checked)
+	if (checked)  // do not mess with the sub-widgets if the parent widget is not checked
 	{
+		LaunchMode launchMode = getLaunchModeFromUI();
+		int multRole = ui->multRoleCmbBox->currentIndex();
+		int gameMode = ui->gameModeCmbBox->currentIndex();
+		bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
+		bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
+
+		ui->hostnameLabel->setEnabled( multRole == Client );
+		ui->hostnameLine->setEnabled( multRole == Client );
+		ui->gameModeLabel->setEnabled( multRole == Server );
+		ui->gameModeCmbBox->setEnabled( multRole == Server );
+		ui->playerCountLabel->setEnabled( multRole == Server );
+		ui->playerCountSpinBox->setEnabled( multRole == Server );
+		ui->teamDmgLabel->setEnabled( multRole == Server && isTeamPlay );
+		ui->teamDmgSpinBox->setEnabled( multRole == Server && isTeamPlay );
+		ui->timeLimitLabel->setEnabled( multRole == Server && isDeathMatch );
+		ui->timeLimitSpinBox->setEnabled( multRole == Server && isDeathMatch );
+		ui->fragLimitLabel->setEnabled( multRole == Server && isDeathMatch );
+		ui->fragLimitSpinBox->setEnabled( multRole == Server && isDeathMatch );
+
 		if (launchMode == LaunchMap && multRole == Client)  // client doesn't select map, server does
 		{
 			ui->multRoleCmbBox->setCurrentIndex( Server );
@@ -3285,41 +3516,42 @@ void MainWindow::onMultiplayerToggled( bool checked )
 		if (launchMode == ReplayDemo || launchMode == ResumeDemo)  // can't replay demo in multiplayer
 		{
 			ui->launchMode_default->click();
-			launchMode = Default;
 		}
 	}
-
-	toggleOptionsSubwidgets(
-		(launchMode == Default && !checked) || launchMode == LaunchMap || launchMode == RecordDemo
-	);
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
 }
 
-void MainWindow::onMultRoleSelected( int role )
+void MainWindow::onMultRoleSelected( int multRole )
 {
-	/*bool storageModified =*/ STORE_MULT_OPTION( .multRole, MultRole(role) );
+	/*bool storageModified =*/ STORE_MULT_OPTION( .multRole, MultRole(multRole) );
 
-	bool multEnabled = ui->multiplayerGrpBox->isChecked();
-	int gameMode = ui->gameModeCmbBox->currentIndex();
-	bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
-	bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
-
-	ui->hostnameLine->setEnabled( multEnabled && role == Client );
-	ui->gameModeCmbBox->setEnabled( multEnabled && role == Server );
-	ui->playerCountSpinBox->setEnabled( multEnabled && role == Server );
-	ui->teamDmgSpinBox->setEnabled( multEnabled && role == Server && isTeamPlay );
-	ui->timeLimitSpinBox->setEnabled( multEnabled && role == Server && isDeathMatch );
-	ui->fragLimitSpinBox->setEnabled( multEnabled && role == Server && isDeathMatch );
-
-	if (multEnabled)
+	if (ui->multiplayerGrpBox->isChecked())  // do not mess with the sub-widgets if the parent widget is not checked
 	{
-		if (ui->launchMode_map->isChecked() && role == Client)  // client doesn't select map, server does
+		LaunchMode launchMode = getLaunchModeFromUI();
+		int gameMode = ui->gameModeCmbBox->currentIndex();
+		bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
+		bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
+
+		ui->hostnameLabel->setEnabled( multRole == Client );
+		ui->hostnameLine->setEnabled( multRole == Client );
+		ui->gameModeLabel->setEnabled( multRole == Server );
+		ui->gameModeCmbBox->setEnabled( multRole == Server );
+		ui->playerCountLabel->setEnabled( multRole == Server );
+		ui->playerCountSpinBox->setEnabled( multRole == Server );
+		ui->teamDmgLabel->setEnabled( multRole == Server && isTeamPlay );
+		ui->teamDmgSpinBox->setEnabled( multRole == Server && isTeamPlay );
+		ui->timeLimitLabel->setEnabled( multRole == Server && isDeathMatch );
+		ui->timeLimitSpinBox->setEnabled( multRole == Server && isDeathMatch );
+		ui->fragLimitLabel->setEnabled( multRole == Server && isDeathMatch );
+		ui->fragLimitSpinBox->setEnabled( multRole == Server && isDeathMatch );
+
+		if (multRole == Client && launchMode == LaunchMap)  // client doesn't select map, server does
 		{
 			ui->launchMode_default->click();
 		}
-		if (ui->launchMode_default->isChecked() && role == Server)  // server MUST choose a map
+		if (multRole == Server && launchMode == Default)  // server MUST choose a map
 		{
 			ui->launchMode_map->click();
 		}
@@ -3357,14 +3589,19 @@ void MainWindow::onGameModeSelected( int gameMode )
 {
 	/*bool storageModified =*/ STORE_MULT_OPTION( .gameMode, GameMode(gameMode) );
 
-	bool multEnabled = ui->multiplayerGrpBox->isChecked();
-	int multRole = ui->multRoleCmbBox->currentIndex();
-	bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
-	bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
+	if (ui->multiplayerGrpBox->isChecked())  // do not mess with the sub-widgets if the parent widget is not checked
+	{
+		int multRole = ui->multRoleCmbBox->currentIndex();
+		bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
+		bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
 
-	ui->teamDmgSpinBox->setEnabled( multEnabled && multRole == Server && isTeamPlay );
-	ui->timeLimitSpinBox->setEnabled( multEnabled && multRole == Server && isDeathMatch );
-	ui->fragLimitSpinBox->setEnabled( multEnabled && multRole == Server && isDeathMatch );
+		ui->teamDmgLabel->setEnabled( multRole == Server && isTeamPlay );
+		ui->teamDmgSpinBox->setEnabled( multRole == Server && isTeamPlay );
+		ui->timeLimitLabel->setEnabled( multRole == Server && isDeathMatch );
+		ui->timeLimitSpinBox->setEnabled( multRole == Server && isDeathMatch );
+		ui->fragLimitLabel->setEnabled( multRole == Server && isDeathMatch );
+		ui->fragLimitSpinBox->setEnabled( multRole == Server && isDeathMatch );
+	}
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3439,13 +3676,18 @@ void MainWindow::onUsePresetNameForConfigsToggled( bool checked )
 {
 	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsConfigDir, checked );
 
-	ui->altConfigDirLine->setEnabled( !checked );
-	ui->altConfigDirBtn->setEnabled( !checked );
+	bool enable = shouldEnableAltConfigDir( getSelectedEngine(), checked );
+	ui->altConfigDirLine->setEnabled( enable );
+	ui->altConfigDirBtn->setEnabled( enable );
 
 	if (checked)
 	{
 		// overwrite whatever is currently in the preset or global launch options
 		updateAlternativeDirs();
+	}
+	else
+	{
+		ui->altConfigDirLine->clear();
 	}
 
 	scheduleSavingOptions( storageModified );
@@ -3455,13 +3697,18 @@ void MainWindow::onUsePresetNameForSavesToggled( bool checked )
 {
 	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsSaveDir, checked );
 
-	ui->altSaveDirLine->setEnabled( !checked );
-	ui->altSaveDirBtn->setEnabled( !checked );
+	bool enable = shouldEnableAltSaveDir( getSelectedEngine(), checked );
+	ui->altSaveDirLine->setEnabled( enable );
+	ui->altSaveDirBtn->setEnabled( enable );
 
 	if (checked)
 	{
 		// overwrite whatever is currently in the preset or global launch options
 		updateAlternativeDirs();
+	}
+	else
+	{
+		ui->altSaveDirLine->clear();
 	}
 
 	scheduleSavingOptions( storageModified );
@@ -3471,13 +3718,18 @@ void MainWindow::onUsePresetNameForScreenshotsToggled( bool checked )
 {
 	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsScreenshotDir, checked );
 
-	ui->altScreenshotDirLine->setEnabled( !checked );
-	ui->altScreenshotDirBtn->setEnabled( !checked );
+	bool enable = shouldEnableAltScreenshotDir( getSelectedEngine(), checked );
+	ui->altScreenshotDirLine->setEnabled( enable );
+	ui->altScreenshotDirBtn->setEnabled( enable );
 
 	if (checked)
 	{
 		// overwrite whatever is currently in the preset or global launch options
 		updateAlternativeDirs();
+	}
+	else
+	{
+		ui->altScreenshotDirLine->clear();
 	}
 
 	scheduleSavingOptions( storageModified );
@@ -3895,6 +4147,7 @@ void MainWindow::fillDerivedEngineInfo( DirectList< EngineInfo > & engines, bool
 {
 	for (EngineInfo & engine : engines)
 	{
+		// TODO: overrides family even if refresh = false
 		engine.autoDetectTraits( engine.executablePath );
 
 		// If the following fields are missing (may be options from an older version),
@@ -4102,10 +4355,8 @@ void MainWindow::updateCompatModes()
 
 		// keep the widget enabled only if the engine supports compatibility levels
 		LaunchMode launchMode = getLaunchModeFromUI();
-		ui->compatModeCmbBox->setEnabled(
-			currentCompLvlStyle != CompatModeStyle::None
-			&& launchMode != LoadSave && launchMode != ReplayDemo && launchMode != ResumeDemo
-		);
+		ui->compatModeLabel->setEnabled( shouldEnableCompatModeCmbBox( launchMode, selectedEngine ) );
+		ui->compatModeCmbBox->setEnabled( shouldEnableCompatModeCmbBox( launchMode, selectedEngine ) );
 
 		lastCompLvlStyle = currentCompLvlStyle;
 	}
@@ -4575,9 +4826,9 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		cmd.arguments << "-fast";
 	if (ui->monstersRespawnChkBox->isEnabled() && ui->monstersRespawnChkBox->isChecked())
 		cmd.arguments << "-respawn";
-	if (ui->pistolStartChkBox->isChecked())
+	if (ui->pistolStartChkBox->isEnabled() && ui->pistolStartChkBox->isChecked())
 		cmd.arguments << "-pistolstart";
-	if (ui->allowCheatsChkBox->isChecked())
+	if (ui->allowCheatsChkBox->isEnabled() && ui->allowCheatsChkBox->isChecked())
 		cmd.arguments << "+sv_cheats" << "1";
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags1 != 0)
 		cmd.arguments << "+dmflags" << QString::number( activeGameOpts.dmflags1 );
@@ -4594,7 +4845,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 	//-- multiplayer options -------------------------------------------------------
 
-	if (ui->multiplayerGrpBox->isChecked())
+	if (ui->multiplayerGrpBox->isEnabled() && ui->multiplayerGrpBox->isChecked())
 	{
 		switch (ui->multRoleCmbBox->currentIndex())
 		{
@@ -4645,24 +4896,24 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		cmd.arguments << "-stdout";
 
 	// video options
-	if (ui->monitorCmbBox->currentIndex() > 0)
+	if (ui->monitorCmbBox->isEnabled() && ui->monitorCmbBox->currentIndex() > 0)
 	{
 		int monitorIndex = ui->monitorCmbBox->currentIndex() - 1;  // the first item is a placeholder for leaving it default
 		cmd.arguments << "+vid_adapter" << engine.getCmdMonitorIndex( monitorIndex );  // some engines index monitors from 1 and others from 0
 	}
-	if (!ui->resolutionXLine->text().isEmpty())
+	if (ui->resolutionXLine->isEnabled() && !ui->resolutionXLine->text().isEmpty())
 		cmd.arguments << "-width" << ui->resolutionXLine->text();
-	if (!ui->resolutionYLine->text().isEmpty())
+	if (ui->resolutionYLine->isEnabled() && !ui->resolutionYLine->text().isEmpty())
 		cmd.arguments << "-height" << ui->resolutionYLine->text();
-	if (ui->showFpsChkBox->isChecked())
+	if (ui->showFpsChkBox->isEnabled() && ui->showFpsChkBox->isChecked())
 		cmd.arguments << "+vid_fps" << "1";
 
 	// audio options
-	if (ui->noSoundChkBox->isChecked())
+	if (ui->noSoundChkBox->isEnabled() && ui->noSoundChkBox->isChecked())
 		cmd.arguments << "-nosound";
-	if (ui->noSfxChkBox->isChecked())
+	if (ui->noSfxChkBox->isEnabled() && ui->noSfxChkBox->isChecked())
 		cmd.arguments << "-nosfx";
-	if (ui->noMusicChkBox->isChecked())
+	if (ui->noMusicChkBox->isEnabled() && ui->noMusicChkBox->isChecked())
 		cmd.arguments << "-nomusic";
 
 	//-- additional custom command line arguments ----------------------------------
@@ -4675,7 +4926,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 	//------------------------------------------------------------------------------
 
-	return p.gotSomeInvalidPaths() ? os::ShellCommand() : cmd;
+	return !p.gotSomeInvalidPaths() ? cmd : os::ShellCommand{};
 }
 
 int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions )

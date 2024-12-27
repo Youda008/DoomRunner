@@ -107,7 +107,8 @@ class EngineTraits {
 	void setFamilyTraits( EngineFamily family );
 
 	bool isInitialized() const            { return _appInfo.has_value(); }
-	bool isCorrectlyInitialized() const   { return _appInfo && _familyTraits; }
+	bool hasFamily() const                { return _family != EngineFamily::_EnumEnd; }
+	bool isCorrectlyInitialized() const   { return _appInfo && _familyTraits && _family != EngineFamily::_EnumEnd; }
 
 	// application properties - requires application info to be loaded
 
@@ -166,11 +167,11 @@ class EngineTraits {
 	CompatModeStyle compatModeStyle() const     { assert( _familyTraits ); return _familyTraits->compatModeStyle; }
 
 	/// Whether the engine needs -stdout option to send its output to stdout where it can be read by this launcher.
-	bool needsStdoutParam() const
-	{
-		assert( _family != EngineFamily::_EnumEnd );
-		return _family == EngineFamily::ZDoom && IS_WINDOWS;
-	}
+	bool needsStdoutParam() const               { assert( hasFamily() ); return _family == EngineFamily::ZDoom && IS_WINDOWS; }
+
+	bool hasDetailedGameOptions() const         { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
+	bool hasDetailedCompatOptions() const       { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
+	bool hasMultiplayer() const                 { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
 	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;

@@ -949,7 +949,7 @@
                  <item>
                   <widget class="QCheckBox" name="allowCheatsChkBox">
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+sv_cheats&lt;br/&gt;&lt;/span&gt;When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &amp;quot;disablecheats&amp;quot; property, as well as network games.&lt;br/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Until GZDoom 4.9.0:&lt;/span&gt; However, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+sv_cheats&lt;br/&gt;&lt;/span&gt;(ZDoom only) When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &amp;quot;disablecheats&amp;quot; property, as well as network games.&lt;br/&gt;Until GZDoom 4.9.0: However, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>Force allow cheats</string>
@@ -960,8 +960,11 @@
                </item>
                <item>
                 <widget class="QPushButton" name="gameOptsBtn">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Based on ZDoom and GZDoom, might not work in other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gameplay options for ZDoom and GZDoom, probably won't work in other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Detailed gameplay options</string>
@@ -978,10 +981,10 @@
             <item>
              <widget class="QGroupBox" name="multiplayerGrpBox">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Based on ZDoom, might not work in other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Multiplayer options for ZDoom family. Doesn't work for other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="title">
-               <string>Multiplayer (ZDoom-based) [storage configurable]</string>
+               <string>Multiplayer [storage configurable]</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -994,9 +997,6 @@
                 <layout class="QHBoxLayout" name="hLayout_playerCount">
                  <item>
                   <widget class="QSpinBox" name="playerCountSpinBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
@@ -1013,6 +1013,9 @@
                  </item>
                  <item>
                   <widget class="QLabel" name="teamDmgLabel">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -1060,6 +1063,9 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="hostnameLabel">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -1075,9 +1081,6 @@
                 <layout class="QHBoxLayout" name="hLayout_port">
                  <item>
                   <widget class="QSpinBox" name="portSpinBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
@@ -1130,9 +1133,6 @@
                 <layout class="QHBoxLayout" name="hLayout_multRole">
                  <item>
                   <widget class="QComboBox" name="multRoleCmbBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -1236,9 +1236,6 @@
                 <layout class="QHBoxLayout" name="hLayout_gameMode">
                  <item>
                   <widget class="QComboBox" name="gameModeCmbBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -1310,9 +1307,6 @@
                 <layout class="QHBoxLayout" name="hLayout_netMode">
                  <item>
                   <widget class="QComboBox" name="netModeCmbBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -1353,9 +1347,6 @@
                 <layout class="QHBoxLayout" name="hLayout_timeLimit">
                  <item>
                   <widget class="QSpinBox" name="timeLimitSpinBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
@@ -1366,6 +1357,12 @@
                  </item>
                  <item>
                   <widget class="QLabel" name="fragLimitLabel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the fraglimit is non-zero, the game will automatically advance to the next level once anyone gets this many frags. (Deathmatch only)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
@@ -1389,9 +1386,6 @@
                  </item>
                  <item>
                   <widget class="QSpinBox" name="fragLimitSpinBox">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
@@ -1415,6 +1409,9 @@
                 <layout class="QHBoxLayout" name="hLayout_compatLevel">
                  <item>
                   <widget class="QLabel" name="compatModeLabel">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;either &lt;span style=&quot; font-weight:600;&quot;&gt;-complevel&lt;/span&gt; or &lt;span style=&quot; font-weight:600;&quot;&gt;+compatmode&lt;/span&gt; depending on the engine&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
@@ -1425,6 +1422,9 @@
                  </item>
                  <item>
                   <widget class="QComboBox" name="compatModeCmbBox">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -1440,8 +1440,11 @@
                </item>
                <item>
                 <widget class="QPushButton" name="compatOptsBtn">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Based on ZDoom and GZDoom, might not work in other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compatibility options for ZDoom and GZDoom, probably won't work in other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Detailed compatibility options</string>

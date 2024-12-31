@@ -591,7 +591,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="10,10">
           <item>
            <layout class="QVBoxLayout" name="vLayout_optsLeft">
             <item>
@@ -628,7 +628,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -703,7 +703,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -761,7 +761,7 @@
                 </widget>
                </item>
                <item row="5" column="0" colspan="2">
-                <layout class="QHBoxLayout" name="horizontalLayout">
+                <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,10,10">
                  <item>
                   <widget class="QRadioButton" name="launchMode_resumeDemo">
                    <property name="text">
@@ -993,6 +993,272 @@
                <bool>false</bool>
               </property>
               <layout class="QGridLayout" name="gridLayout_2">
+               <item row="0" column="0">
+                <widget class="QLabel" name="multRoleLabel">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Role</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <layout class="QHBoxLayout" name="hLayout_multRole">
+                 <item>
+                  <widget class="QComboBox" name="multRoleCmbBox">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Server (start a game)</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Client (join a game)</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="hostnameLabel">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>IP address / hostname</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <layout class="QHBoxLayout" name="hLayout_host">
+                 <item>
+                  <widget class="QLineEdit" name="hostnameLine">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="portLabel">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Port</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <layout class="QHBoxLayout" name="hLayout_port">
+                 <item>
+                  <widget class="QSpinBox" name="portSpinBox">
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                   <property name="maximum">
+                    <number>65535</number>
+                   </property>
+                   <property name="singleStep">
+                    <number>0</number>
+                   </property>
+                   <property name="value">
+                    <number>5029</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_2">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="netModeLabel">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>Network mode</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <layout class="QHBoxLayout" name="hLayout_netMode">
+                 <item>
+                  <widget class="QComboBox" name="netModeCmbBox">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Peer-to-Peer</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Packet Server</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_3">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="gameModeLabel">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>Game mode</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <layout class="QHBoxLayout" name="hLayout_gameMode">
+                 <item>
+                  <widget class="QComboBox" name="gameModeCmbBox">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Deathmatch</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Team Deathmatch</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Alt. Deathmatch</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Alt. Team Deathmatch</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cooperative</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_4">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+               <item row="5" column="0">
+                <widget class="QLabel" name="playerCountLabel">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Player count</string>
+                 </property>
+                </widget>
+               </item>
                <item row="5" column="1">
                 <layout class="QHBoxLayout" name="hLayout_playerCount">
                  <item>
@@ -1061,232 +1327,6 @@
                  </item>
                 </layout>
                </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="hostnameLabel">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>IP address / hostname</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <layout class="QHBoxLayout" name="hLayout_port">
-                 <item>
-                  <widget class="QSpinBox" name="portSpinBox">
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                   <property name="minimum">
-                    <number>1</number>
-                   </property>
-                   <property name="maximum">
-                    <number>65535</number>
-                   </property>
-                   <property name="singleStep">
-                    <number>0</number>
-                   </property>
-                   <property name="value">
-                    <number>5029</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_2">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>0</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="netModeLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>Network mode</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <layout class="QHBoxLayout" name="hLayout_multRole">
-                 <item>
-                  <widget class="QComboBox" name="multRoleCmbBox">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>Server (start a game)</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Client (join a game)</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>0</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
-               <item row="4" column="0">
-                <widget class="QLabel" name="gameModeLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>Game mode</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="portLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Port</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <layout class="QHBoxLayout" name="hLayout_host">
-                 <item>
-                  <widget class="QLineEdit" name="hostnameLine">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="multRoleLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Role</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0">
-                <widget class="QLabel" name="playerCountLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Player count</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="1">
-                <layout class="QHBoxLayout" name="hLayout_gameMode">
-                 <item>
-                  <widget class="QComboBox" name="gameModeCmbBox">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>Deathmatch</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Team Deathmatch</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Alt. Deathmatch</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Alt. Team Deathmatch</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Cooperative</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_4">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>0</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
                <item row="6" column="0">
                 <widget class="QLabel" name="timeLimitLabel">
                  <property name="sizePolicy">
@@ -1302,46 +1342,6 @@
                   <string>Time limit</string>
                  </property>
                 </widget>
-               </item>
-               <item row="3" column="1">
-                <layout class="QHBoxLayout" name="hLayout_netMode">
-                 <item>
-                  <widget class="QComboBox" name="netModeCmbBox">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>Peer-to-Peer</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Packet Server</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_3">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>0</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
                </item>
                <item row="6" column="1">
                 <layout class="QHBoxLayout" name="hLayout_timeLimit">
@@ -1391,6 +1391,43 @@
                    </property>
                    <property name="maximum">
                     <number>1000</number>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="7" column="0">
+                <widget class="QLabel" name="playerNameLabel">
+                 <property name="text">
+                  <string>Player name</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="7" column="1">
+                <layout class="QHBoxLayout" name="horizontalLayout_3">
+                 <item>
+                  <widget class="QLineEdit" name="playerNameLine"/>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="playerColorLabel">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Color of the player's suit.&lt;br/&gt;Right-click the button to reset the color.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>Color</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="RightClickableButton" name="playerColorBtn">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Color of the player's suit.&lt;br/&gt;Right-click the button to reset the color.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="toolButtonStyle">
+                    <enum>Qt::ToolButtonIconOnly</enum>
                    </property>
                   </widget>
                  </item>
@@ -2288,6 +2325,11 @@
    <class>ExtendedTreeView</class>
    <extends>QTreeView</extends>
    <header location="global">Sources/Widgets/ExtendedTreeView.hpp</header>
+  </customwidget>
+  <customwidget>
+   <class>RightClickableButton</class>
+   <extends>QToolButton</extends>
+   <header location="global">Sources/Widgets/RightClickableButton.hpp</header>
   </customwidget>
  </customwidgets>
  <resources>

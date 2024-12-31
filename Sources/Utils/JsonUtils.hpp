@@ -209,6 +209,10 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 
 	bool hasMember( const QString & key ) const { return _wrappedObject.contains( key ); }
 
+	/// Returns a sub-value at a specified key.
+	/** If it doesn't exist it shows an error dialog and returns invalid value. */
+	QJsonValue getMember( const QString & key, bool showError = true ) const;
+
 	/// Returns a sub-object at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
 	JsonObjectCtxProxy getObject( const QString & key, bool showError = true ) const;
@@ -262,8 +266,11 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
  protected:
 
 	void missingKey( const QString & key, bool showError ) const;
-	void invalidTypeAtKey( const QString & key, const QString & expectedType, bool showError = true ) const;
 	QString elemPath( const QString & elemName ) const;
+
+ public:  // for parsing custom data from string outside of this class (for example: RGB color)
+
+	void invalidTypeAtKey( const QString & key, const QString & expectedType, bool showError = true ) const;
 
 };
 
@@ -279,6 +286,12 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 	JsonArrayCtx( JsonArrayCtxProxy proxy ) : JsonArrayCtxProxy( std::move(proxy) ) {}
 
 	int size() const { return _wrappedArray.size(); }
+
+	bool hasMember( int index ) const { return index > 0 && index < size(); }
+
+	/// Returns a sub-value at a specified index.
+	/** If it doesn't exist it shows an error dialog and returns invalid value. */
+	QJsonValue getMember( int index, bool showError = true ) const;
 
 	/// Returns a sub-object at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid array. */
@@ -333,8 +346,11 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
  protected:
 
 	void indexOutOfBounds( int index, bool showError ) const;
-	void invalidTypeAtIdx( int index, const QString & expectedType, bool showError = true ) const;
 	QString elemPath( int index ) const;
+
+ public:  // for parsing custom data from string outside of this class (for example: RGB color)
+
+	void invalidTypeAtIdx( int index, const QString & expectedType, bool showError = true ) const;
 
 };
 

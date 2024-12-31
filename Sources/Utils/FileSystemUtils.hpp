@@ -327,6 +327,11 @@ class PathRebaser {
 	void setTargetBaseDir( const QDir & baseDir )      { _targetBaseDir = baseDir; }
 	void setOutputPathStyle( PathStyle pathStyle )     { _outPathStyle = pathStyle; }
 
+	QString maybeQuoted( const QString & path ) const
+	{
+		return _quotePaths ? quoted( path ) : path;
+	}
+
 	/// Rebases a path relative to the original base directory to be relative to the target base directory,
 	/// absolute path is kept as is.
 	QString rebase( const QString & path ) const
@@ -417,11 +422,6 @@ class PathRebaser {
 		QString newPath = outputAbsolutePaths() ? absPath : outputBaseDir.relativeFilePath( absPath );
 
 		return newPath;
-	}
-
-	QString maybeQuoted( const QString & path ) const
-	{
-		return _quotePaths ? quoted( path ) : path;
 	}
 
 };

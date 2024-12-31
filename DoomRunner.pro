@@ -68,6 +68,8 @@ HEADERS += \
 	Sources/Widgets/EditableListView.hpp \
 	Sources/Widgets/ExtendedTreeView.hpp \
 	Sources/Widgets/ListModel.hpp \
+	Sources/Widgets/RightClickableButton.hpp \
+	Sources/Widgets/SearchPanel.hpp \
 	Sources/CommonTypes.hpp \
 	Sources/EngineTraits.hpp \
 	Sources/Essential.hpp \
@@ -77,7 +79,6 @@ HEADERS += \
 	Sources/UpdateChecker.hpp \
 	Sources/UserData.hpp \
 	Sources/Version.hpp \
-	Sources/Widgets/SearchPanel.hpp
 
 SOURCES += \
 	Sources/Dialogs/AboutDialog.cpp \
@@ -108,6 +109,8 @@ SOURCES += \
 	Sources/Widgets/EditableListView.cpp \
 	Sources/Widgets/ExtendedTreeView.cpp \
 	Sources/Widgets/ListModel.cpp \
+	Sources/Widgets/RightClickableButton.cpp \
+	Sources/Widgets/SearchPanel.cpp \
 	Sources/CommonTypes.cpp \
 	Sources/EngineTraits.cpp \
 	Sources/MainWindow.cpp \
@@ -116,7 +119,6 @@ SOURCES += \
 	Sources/UpdateChecker.cpp \
 	Sources/UserData.cpp \
 	Sources/Version.cpp \
-	Sources/Widgets/SearchPanel.cpp \
 	Sources/main.cpp \
 
 FORMS += \

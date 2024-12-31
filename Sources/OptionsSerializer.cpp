@@ -45,6 +45,30 @@ static void deserialize( const JsonObjectCtx & envVarsJs, EnvVars & envVars )
 	std::sort( envVars.begin(), envVars.end(), []( const auto & a, const auto & b ) { return a.name < b.name; });
 }
 
+static QJsonValue toJson( const QColor & color )
+{
+	if (color.isValid())
+		return color.name( QColor::HexRgb );
+	else
+		return QJsonValue::Null;
+}
+
+static QColor getColor( const JsonObjectCtx & parentObj, const QString & key )
+{
+	QJsonValue colorJs = parentObj.getMember( key );
+	QColor color;  // not valid until successfully parsed
+	if (colorJs.isString())
+	{
+		QString colorStr = colorJs.toString();
+		color = QColor( colorStr );
+	}
+	else if (!colorJs.isNull())  // null is allowed - it means no color has been selected
+	{
+		parentObj.invalidTypeAtKey( key, "QColor" );
+	}
+	return color;
+}
+
 
 //======================================================================================================================
 // user data sub-sections
@@ -268,6 +292,8 @@ static QJsonObject serialize( const MultiplayerOptions & opts )
 	optsJs["team_damage"] = opts.teamDamage;
 	optsJs["time_limit"] = int( opts.timeLimit );
 	optsJs["frag_limit"] = int( opts.fragLimit );
+	optsJs["player_name"] = opts.playerName;
+	optsJs["player_color"] = toJson( opts.playerColor );
 
 	return optsJs;
 }
@@ -284,6 +310,8 @@ static void deserialize( const JsonObjectCtx & optsJs, MultiplayerOptions & opts
 	opts.teamDamage = optsJs.getDouble( "team_damage", opts.teamDamage );
 	opts.timeLimit = optsJs.getUInt( "time_limit", opts.timeLimit );
 	opts.fragLimit = optsJs.getUInt( "frag_limit", opts.fragLimit );
+	opts.playerName = optsJs.getString( "player_name" );
+	opts.playerColor = getColor( optsJs, "player_color" );
 }
 
 static QJsonObject serialize( const GameplayOptions & opts )

@@ -10,6 +10,7 @@
 #include <QPalette>
 #include <QApplication>
 #include <QTableWidget>
+#include <QAbstractButton>
 
 
 namespace wdg {
@@ -461,6 +462,23 @@ void restoreColors( QWidget * widget )
 	widget->setPalette( qApp->palette() );
 }
 
+void setButtonColor( QAbstractButton * button, QColor color )
+{
+	/*
+	QPalette palette = button->palette();
+	palette.setColor( QPalette::Button, color );
+	//palette.setColor( QPalette::Button, color );
+	button->setAutoFillBackground(true);
+	button->setPalette( palette )
+	*/
+	button->setStyleSheet( QStringLiteral( "background-color: %1; border: none;" ).arg( color.name() ) );
+}
+
+void restoreButtonColor( QAbstractButton * button )
+{
+	//button->setPalette( qApp->palette() );
+	button->setStyleSheet( QString() );
+}
 
 
 } // namespace wdg

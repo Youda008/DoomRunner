@@ -20,7 +20,8 @@
 
 #include <QString>
 #include <QFileInfo>
-#include <QRect>
+#include <QRect>  // WindowGeometry
+#include <QColor>  // player color in multiplayer
 
 
 //======================================================================================================================
@@ -178,6 +179,8 @@ struct MultiplayerOptions
 	double teamDamage = 0.0;
 	uint timeLimit = 0;
 	uint fragLimit = 0;
+	QString playerName;
+	QColor playerColor;
 };
 
 struct GameplayDetails

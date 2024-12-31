@@ -28,6 +28,7 @@
 #include <QFileInfo>
 
 class QTableWidget;
+class QAbstractButton;
 
 #include <functional>
 
@@ -811,6 +812,12 @@ void setTextColor( QWidget * widget, QColor color );
 
 /// Restores all colors of this widget to default.
 void restoreColors( QWidget * widget );
+
+/// Changes background color of a button.
+void setButtonColor( QAbstractButton * button, QColor color );
+
+/// Restores the background color of a button.
+void restoreButtonColor( QAbstractButton * button );
 
 /// makes a hyperlink for a widget's text
 #define HYPERLINK( text, url ) \

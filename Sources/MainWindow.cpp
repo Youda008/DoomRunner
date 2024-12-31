@@ -16,6 +16,7 @@
 #include "Dialogs/GameOptsDialog.hpp"
 #include "Dialogs/CompatOptsDialog.hpp"
 #include "Dialogs/ProcessOutputWindow.hpp"
+#include <QColorDialog>
 
 #include "OptionsSerializer.hpp"
 #include "Version.hpp"  // window title
@@ -785,6 +786,9 @@ MainWindow::MainWindow()
 	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::onTeamDamageChanged );
 	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onTimeLimitChanged );
 	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onFragLimitChanged );
+	connect( ui->playerNameLine, &QLineEdit::textChanged, this, &thisClass::onPlayerNameChanged );
+	connect( ui->playerColorBtn, &RightClickableButton::clicked, this, &thisClass::runPlayerColorDialog );
+	connect( ui->playerColorBtn, &RightClickableButton::rightClicked, this, &thisClass::onPlayerColorRightClicked );
 
 	// gameplay
 	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onSkillSelected );
@@ -1936,6 +1940,9 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 	ui->teamDmgSpinBox->setValue( multOpts.teamDamage );
 	ui->timeLimitSpinBox->setValue( int( multOpts.timeLimit ) );
 	ui->fragLimitSpinBox->setValue( int( multOpts.fragLimit ) );
+	ui->playerNameLine->setText( multOpts.playerName );
+	if (multOpts.playerColor.isValid())
+		wdg::setButtonColor( ui->playerColorBtn, multOpts.playerColor );
 }
 
 void MainWindow::restoreGameplayOptions( const GameplayOptions & opts )
@@ -2213,6 +2220,24 @@ void MainWindow::runCompatOptsDialog()
 		activeCompatOpts.assign( dialog.compatDetails );
 		// cache the command line args string, so that it doesn't need to be regenerated on every command line update
 		compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( dialog.compatDetails );
+		scheduleSavingOptions();
+		updateLaunchCommand();
+	}
+}
+
+void MainWindow::runPlayerColorDialog()
+{
+	MultiplayerOptions & activeMultOpts = activeMultiplayerOptions();
+
+	QColorDialog dialog( activeMultOpts.playerColor, this );
+
+	int code = dialog.exec();
+
+	// update the data only if user clicked Ok
+	if (code == QDialog::Accepted && dialog.selectedColor() != activeMultOpts.playerColor)
+	{
+		activeMultOpts.playerColor = dialog.selectedColor();
+		wdg::setButtonColor( ui->playerColorBtn, activeMultOpts.playerColor );
 		scheduleSavingOptions();
 		updateLaunchCommand();
 	}
@@ -3646,6 +3671,24 @@ void MainWindow::onFragLimitChanged( int fragLimit )
 	updateLaunchCommand();
 }
 
+void MainWindow::onPlayerNameChanged( const QString & name )
+{
+	/*bool storageModified =*/ STORE_MULT_OPTION( .playerName, name );
+
+	//scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onPlayerColorRightClicked()
+{
+	bool storageModified = STORE_MULT_OPTION( .playerColor, QColor() );
+
+	wdg::restoreButtonColor( ui->playerColorBtn );
+
+	scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 // alternative paths
@@ -4847,6 +4890,8 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 	if (ui->multiplayerGrpBox->isEnabled() && ui->multiplayerGrpBox->isChecked())
 	{
+		const MultiplayerOptions & activeMultOpts = activeMultiplayerOptions();
+
 		switch (ui->multRoleCmbBox->currentIndex())
 		{
 		 case MultRole::Server:
@@ -4885,6 +4930,20 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 			break;
 		 default:
 			reportLogicError( this, "Invalid multiplayer role index", "The multiplayer role index is out of range." );
+		}
+
+		if (ui->playerNameLine->isEnabled() && !ui->playerNameLine->text().isEmpty())
+		{
+			cmd.arguments << "+name" << ui->playerNameLine->text();
+
+			if (activeMultOpts.playerColor.isValid())
+			{
+				QString colorArg = QStringLiteral("%1 %2 %3")
+				                   .arg( activeMultOpts.playerColor.red(),   1, 16 )
+				                   .arg( activeMultOpts.playerColor.green(), 1, 16 )
+				                   .arg( activeMultOpts.playerColor.blue(),  1, 16 );
+				cmd.arguments << "+color" << engineDirRebaser.maybeQuoted( colorArg );
+			}
 		}
 	}
 

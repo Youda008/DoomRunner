@@ -52,6 +52,16 @@ QString JsonValueCtx::getJsonPath() const
 //======================================================================================================================
 // JsonObjectCtx
 
+QJsonValue JsonObjectCtx::getMember( const QString & key, bool showError ) const
+{
+	if (!_wrappedObject.contains( key ))
+	{
+		missingKey( key, showError );
+		return QJsonValue::Null;
+	}
+	return _wrappedObject[ key ];
+}
+
 JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool showError ) const
 {
 	if (!_wrappedObject.contains( key ))
@@ -229,6 +239,16 @@ QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool 
 
 //======================================================================================================================
 // JsonArrayCtx
+
+QJsonValue JsonArrayCtx::getMember( int index, bool showError ) const
+{
+	if (index < 0 || index >= _wrappedArray.size())
+	{
+		indexOutOfBounds( index, showError );
+		return QJsonValue::Null;
+	}
+	return _wrappedArray[ index ];
+}
 
 JsonObjectCtxProxy JsonArrayCtx::getObject( int index, bool showError ) const
 {

@@ -66,6 +66,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void runOptsStorageDialog();
 	void runGameOptsDialog();
 	void runCompatOptsDialog();
+	void runPlayerColorDialog();
 
 	void onEngineSelected( int index );
 	void onConfigSelected( int index );
@@ -138,6 +139,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onTeamDamageChanged( double damage );
 	void onTimeLimitChanged( int limit );
 	void onFragLimitChanged( int limit );
+	void onPlayerNameChanged( const QString & name );
+	void onPlayerColorRightClicked();
 
 	void onUsePresetNameForConfigsToggled( bool checked );
 	void onUsePresetNameForSavesToggled( bool checked );

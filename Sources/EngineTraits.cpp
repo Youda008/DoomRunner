@@ -65,6 +65,9 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.configFileSuffix = "ini",
 		.saveFileSuffix = "zds",
 		.saveDirParam = "-savedir",
+		.multHostParam = nullptr,         // the player count is added to the host parameter:  -host <player count>
+		.multPlayerCountParam = "-host",  // instead of having separate parameters like:       -host -players <count>
+		.multJoinParam = "-join",
 		.mapParamStyle = MapParamStyle::Map,
 		.compatModeStyle = CompatModeStyle::ZDoom,
 	},
@@ -74,6 +77,9 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "dsg",
 		.saveDirParam = "-savedir",
+		.multHostParam = nullptr,
+		.multPlayerCountParam = nullptr,
+		.multJoinParam = nullptr,
 		.mapParamStyle = MapParamStyle::Warp,
 		.compatModeStyle = CompatModeStyle::None,
 	},
@@ -83,6 +89,9 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "dsg",
 		.saveDirParam = "-save",
+		.multHostParam = nullptr,         // PrBoom has a separate executable for a multiplayer server
+		.multPlayerCountParam = nullptr,  // with completely different parameters.
+		.multJoinParam = nullptr,         // Not worth implementing unless somebody requests it.
 		.mapParamStyle = MapParamStyle::Warp,
 		.compatModeStyle = CompatModeStyle::PrBoom,
 	},
@@ -92,6 +101,9 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "dsg",
 		.saveDirParam = "-save",
+		.multHostParam = "-server",
+		.multPlayerCountParam = nullptr,  // there is no player count here, the number of players is arbitrary
+		.multJoinParam = "-connect",
 		.mapParamStyle = MapParamStyle::Warp,
 		.compatModeStyle = CompatModeStyle::PrBoom,
 	},
@@ -101,6 +113,9 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "esg",  // EDGE stores saves completely differently than all the other engines, but screw it
 		.saveDirParam = nullptr,
+		.multHostParam = nullptr,
+		.multPlayerCountParam = nullptr,
+		.multJoinParam = nullptr,
 		.mapParamStyle = MapParamStyle::Warp,
 		.compatModeStyle = CompatModeStyle::None,
 	},

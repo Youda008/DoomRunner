@@ -981,7 +981,7 @@
             <item>
              <widget class="QGroupBox" name="multiplayerGrpBox">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Multiplayer options for ZDoom family. Doesn't work for other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Multiplayer options for ZDoom family. May not work for other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="title">
                <string>Multiplayer [storage configurable]</string>
@@ -1395,6 +1395,9 @@
                </item>
                <item row="7" column="0">
                 <widget class="QLabel" name="playerNameLabel">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="text">
                   <string>Player name</string>
                  </property>
@@ -1403,10 +1406,17 @@
                <item row="7" column="1">
                 <layout class="QHBoxLayout" name="horizontalLayout_3">
                  <item>
-                  <widget class="QLineEdit" name="playerNameLine"/>
+                  <widget class="QLineEdit" name="playerNameLine">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                  </widget>
                  </item>
                  <item>
                   <widget class="QLabel" name="playerColorLabel">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Color of the player's suit.&lt;br/&gt;Right-click the button to reset the color.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
@@ -1417,6 +1427,9 @@
                  </item>
                  <item>
                   <widget class="RightClickableButton" name="playerColorBtn">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Color of the player's suit.&lt;br/&gt;Right-click the button to reset the color.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>

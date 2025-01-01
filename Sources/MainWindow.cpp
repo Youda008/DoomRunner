@@ -532,11 +532,6 @@ bool MainWindow::shouldEnableSkillSelector( LaunchMode mode )
 	return isDirectLaunch( mode );
 }
 
-bool MainWindow::shouldEnableSkillSpinBox( LaunchMode mode, int skillIdx )
-{
-	return shouldEnableSkillSelector( mode ) && skillIdx == Skill::Custom;
-}
-
 bool MainWindow::shouldEnableGameOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine )
 {
 	return (isDirectLaunch( mode ) || mode == Default)
@@ -560,6 +555,21 @@ bool MainWindow::shouldEnableMultiplayerGrpBox(
 ){
 	return (selectedPreset || storage.gameOptsStorage != StoreToPreset)
 	    && (selectedEngine && selectedEngine->hasMultiplayer());
+}
+
+bool MainWindow::shouldEnableNetModeCmbBox( bool multEnabled, int multRole, const EngineInfo * selectedEngine )
+{
+	return multEnabled && multRole == Server && selectedEngine && selectedEngine->hasNetMode();
+}
+
+bool MainWindow::shouldEnablePlayerCount( bool multEnabled, int multRole, const EngineInfo * selectedEngine )
+{
+	return multEnabled && multRole == Server && selectedEngine && selectedEngine->multPlayerCountParam();
+}
+
+bool MainWindow::shouldEnablePlayerCustomization( bool multEnabled, const EngineInfo * selectedEngine )
+{
+	return multEnabled && selectedEngine && selectedEngine->hasPlayerCustomization();
 }
 
 bool MainWindow::shouldEnableAltConfigDir( const EngineInfo * selectedEngine, bool usePresetName )
@@ -2537,11 +2547,27 @@ void MainWindow::toggleAndClearEngineDependentWidgets( const EngineInfo * engine
 	toggleAndDeselect( ui->configCmbBox, shouldEnableConfigCmbBox( engine ) );
 
 	LaunchMode mode = getLaunchModeFromUI();
+	bool multEnabled = ui->multiplayerGrpBox->isChecked();
+	int multRole = ui->multRoleCmbBox->currentIndex();
+
 	ui->gameOptsBtn->setEnabled( shouldEnableGameOptsBtn( mode, engine ) );
 	ui->compatOptsBtn->setEnabled( shouldEnableCompatOptsBtn( mode, engine ) );
-	ui->compatModeLabel->setEnabled( shouldEnableCompatModeCmbBox( mode, engine ) );
-	ui->compatModeCmbBox->setEnabled( shouldEnableCompatModeCmbBox( mode, engine ) );
+	bool enableCompatModeSelector = shouldEnableCompatModeCmbBox( mode, engine );
+	ui->compatModeLabel->setEnabled( enableCompatModeSelector );
+	ui->compatModeCmbBox->setEnabled( enableCompatModeSelector );
 	toggleAndUncheck( ui->multiplayerGrpBox, shouldEnableMultiplayerGrpBox( settings, getSelectedPreset(), engine ) );
+
+	bool enableNetMode = shouldEnableNetModeCmbBox( multEnabled, multRole, engine );
+	ui->netModeLabel->setEnabled( enableNetMode );
+	ui->netModeCmbBox->setEnabled( enableNetMode );
+	bool enablePlayerCount = shouldEnablePlayerCount( multEnabled, multRole, engine );
+	ui->playerCountLabel->setEnabled( enablePlayerCount );
+	ui->playerCountSpinBox->setEnabled( enablePlayerCount );
+	bool enablePlayerCustomization = shouldEnablePlayerCustomization( multEnabled, engine );
+	ui->playerNameLabel->setEnabled( enablePlayerCustomization );
+	ui->playerNameLine->setEnabled( enablePlayerCustomization );
+	ui->playerColorLabel->setEnabled( enablePlayerCustomization );
+	ui->playerColorBtn->setEnabled( enablePlayerCustomization );
 
 	bool enableAltConfigDir = shouldEnableAltConfigDir( engine, ui->altConfigDirPresetChkBox->isChecked() );
 	ui->altConfigDirLine->setEnabled( enableAltConfigDir );
@@ -3314,9 +3340,10 @@ void MainWindow::toggleSkillSubwidgets( LaunchMode mode )
 	// skillIdx is an index in the combo-box, which starts from 0, but Doom skill numbers actually start from 1
 	int skillIdx = ui->skillCmbBox->currentIndex() + 1;
 
-	ui->skillLabel->setEnabled( shouldEnableSkillSelector( mode ) );
-	ui->skillCmbBox->setEnabled( shouldEnableSkillSelector( mode ) );
-	ui->skillSpinBox->setEnabled( shouldEnableSkillSpinBox( mode, skillIdx ) );
+	bool enableSkillSelector = shouldEnableSkillSelector( mode );
+	ui->skillLabel->setEnabled( enableSkillSelector );
+	ui->skillCmbBox->setEnabled( enableSkillSelector );
+	ui->skillSpinBox->setEnabled( enableSkillSelector && skillIdx == Skill::Custom );
 }
 
 void MainWindow::toggleOptionsSubwidgets( LaunchMode mode )
@@ -3330,8 +3357,9 @@ void MainWindow::toggleOptionsSubwidgets( LaunchMode mode )
 	const EngineInfo * selectedEngine = getSelectedEngine();
 	ui->gameOptsBtn->setEnabled( shouldEnableGameOptsBtn( mode, selectedEngine ) );
 	ui->compatOptsBtn->setEnabled( shouldEnableCompatOptsBtn( mode, selectedEngine ) );
-	ui->compatModeLabel->setEnabled( shouldEnableCompatModeCmbBox( mode, selectedEngine ) );
-	ui->compatModeCmbBox->setEnabled( shouldEnableCompatModeCmbBox( mode, selectedEngine ) );
+	bool enableCompatModeSelector = shouldEnableCompatModeCmbBox( mode, selectedEngine );
+	ui->compatModeLabel->setEnabled( enableCompatModeSelector );
+	ui->compatModeCmbBox->setEnabled( enableCompatModeSelector );
 }
 
 void MainWindow::onMapChanged( const QString & mapName )
@@ -3430,8 +3458,8 @@ void MainWindow::onSkillSelected( int comboBoxIdx )
 
 	LaunchMode launchMode = getLaunchModeFromUI();
 
-	ui->skillSpinBox->setEnabled( shouldEnableSkillSpinBox( launchMode, skillIdx ) );
-	if (skillIdx < Skill::Custom)
+	ui->skillSpinBox->setEnabled( shouldEnableSkillSelector( launchMode ) && skillIdx == Skill::Custom );
+	if (skillIdx != Skill::Custom)
 		ui->skillSpinBox->setValue( skillIdx );
 
 	//scheduleSavingOptions( storageModified );
@@ -3516,19 +3544,29 @@ void MainWindow::onMultiplayerToggled( bool checked )
 		int gameMode = ui->gameModeCmbBox->currentIndex();
 		bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
 		bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
+		const EngineInfo * selectedEngine = getSelectedEngine();
 
 		ui->hostnameLabel->setEnabled( multRole == Client );
 		ui->hostnameLine->setEnabled( multRole == Client );
 		ui->gameModeLabel->setEnabled( multRole == Server );
 		ui->gameModeCmbBox->setEnabled( multRole == Server );
-		ui->playerCountLabel->setEnabled( multRole == Server );
-		ui->playerCountSpinBox->setEnabled( multRole == Server );
+		bool enableNetMode = shouldEnableNetModeCmbBox( true, multRole, selectedEngine );
+		ui->netModeLabel->setEnabled( enableNetMode );
+		ui->netModeCmbBox->setEnabled( enableNetMode );
+		bool enablePlayerCount = shouldEnablePlayerCount( true, multRole, selectedEngine );
+		ui->playerCountLabel->setEnabled( enablePlayerCount );
+		ui->playerCountSpinBox->setEnabled( enablePlayerCount );
 		ui->teamDmgLabel->setEnabled( multRole == Server && isTeamPlay );
 		ui->teamDmgSpinBox->setEnabled( multRole == Server && isTeamPlay );
 		ui->timeLimitLabel->setEnabled( multRole == Server && isDeathMatch );
 		ui->timeLimitSpinBox->setEnabled( multRole == Server && isDeathMatch );
 		ui->fragLimitLabel->setEnabled( multRole == Server && isDeathMatch );
 		ui->fragLimitSpinBox->setEnabled( multRole == Server && isDeathMatch );
+		bool enablePlayerCustomization = shouldEnablePlayerCustomization( true, selectedEngine );
+		ui->playerNameLabel->setEnabled( enablePlayerCustomization );
+		ui->playerNameLine->setEnabled( enablePlayerCustomization );
+		ui->playerColorLabel->setEnabled( enablePlayerCustomization );
+		ui->playerColorBtn->setEnabled( enablePlayerCustomization );
 
 		if (launchMode == LaunchMap && multRole == Client)  // client doesn't select map, server does
 		{
@@ -3558,13 +3596,18 @@ void MainWindow::onMultRoleSelected( int multRole )
 		int gameMode = ui->gameModeCmbBox->currentIndex();
 		bool isDeathMatch = gameMode >= Deathmatch && gameMode <= AltTeamDeathmatch;
 		bool isTeamPlay = gameMode == TeamDeathmatch || gameMode == AltTeamDeathmatch || gameMode == Cooperative;
+		const EngineInfo * selectedEngine = getSelectedEngine();
 
 		ui->hostnameLabel->setEnabled( multRole == Client );
 		ui->hostnameLine->setEnabled( multRole == Client );
 		ui->gameModeLabel->setEnabled( multRole == Server );
 		ui->gameModeCmbBox->setEnabled( multRole == Server );
-		ui->playerCountLabel->setEnabled( multRole == Server );
-		ui->playerCountSpinBox->setEnabled( multRole == Server );
+		bool enableNetMode = shouldEnableNetModeCmbBox( true, multRole, selectedEngine );
+		ui->netModeLabel->setEnabled( enableNetMode );
+		ui->netModeCmbBox->setEnabled( enableNetMode );
+		bool enablePlayerCount = shouldEnablePlayerCount( true, multRole, selectedEngine );
+		ui->playerCountLabel->setEnabled( enablePlayerCount );
+		ui->playerCountSpinBox->setEnabled( enablePlayerCount );
 		ui->teamDmgLabel->setEnabled( multRole == Server && isTeamPlay );
 		ui->teamDmgSpinBox->setEnabled( multRole == Server && isTeamPlay );
 		ui->timeLimitLabel->setEnabled( multRole == Server && isDeathMatch );
@@ -4399,8 +4442,9 @@ void MainWindow::updateCompatModes()
 
 		// keep the widget enabled only if the engine supports compatibility levels
 		LaunchMode launchMode = getLaunchModeFromUI();
-		ui->compatModeLabel->setEnabled( shouldEnableCompatModeCmbBox( launchMode, selectedEngine ) );
-		ui->compatModeCmbBox->setEnabled( shouldEnableCompatModeCmbBox( launchMode, selectedEngine ) );
+		bool enableCompatModeSelector = shouldEnableCompatModeCmbBox( launchMode, selectedEngine );
+		ui->compatModeLabel->setEnabled( enableCompatModeSelector );
+		ui->compatModeCmbBox->setEnabled( enableCompatModeSelector );
 
 		lastCompLvlStyle = currentCompLvlStyle;
 	}
@@ -4896,9 +4940,14 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		switch (ui->multRoleCmbBox->currentIndex())
 		{
 		 case MultRole::Server:
-			cmd.arguments << "-host" << ui->playerCountSpinBox->text();
+			if (engine.multHostParam())
+				cmd.arguments << engine.multHostParam();
+			if (engine.multPlayerCountParam() && ui->playerCountSpinBox->isEnabled())
+				cmd.arguments << engine.multPlayerCountParam() << ui->playerCountSpinBox->text();
 			if (ui->portSpinBox->value() != 5029)
 				cmd.arguments << "-port" << ui->portSpinBox->text();
+			if (ui->netModeCmbBox->isEnabled())
+				cmd.arguments << "-netmode" << QString::number( ui->netModeCmbBox->currentIndex() );
 			switch (ui->gameModeCmbBox->currentIndex())
 			{
 			 case Deathmatch:
@@ -4924,10 +4973,16 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 				cmd.arguments << "-timer" << ui->timeLimitSpinBox->text();
 			if (ui->fragLimitSpinBox->value() != 0)
 				cmd.arguments << "+fraglimit" << ui->fragLimitSpinBox->text();
-			cmd.arguments << "-netmode" << QString::number( ui->netModeCmbBox->currentIndex() );
 			break;
 		 case MultRole::Client:
-			cmd.arguments << "-join" << ui->hostnameLine->text() % ":" % ui->portSpinBox->text();
+			if (!engine.multJoinParam())
+			{
+				reportLogicError( this, "Multiplayer join parameter is null",
+					"The multiplayer join parameter is not set. The multiplayer group-box should have been disabled."
+				);
+				break;
+			}
+			cmd.arguments << engine.multJoinParam() << ui->hostnameLine->text() % ":" % ui->portSpinBox->text();
 			break;
 		 default:
 			reportLogicError( this, "Invalid multiplayer role index", "The multiplayer role index is out of range." );

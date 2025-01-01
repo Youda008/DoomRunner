@@ -65,6 +65,9 @@ struct EngineFamilyTraits
 	const char * configFileSuffix;    ///< which file name suffix the engine uses for its save files
 	const char * saveFileSuffix;      ///< which file name suffix the engine uses for its save files
 	const char * saveDirParam;        ///< which command line parameter is used for overriding the save directory
+	const char * multHostParam;       ///< which command line parameter is used to host a multiplayer game
+	const char * multPlayerCountParam;///< which command line parameter is used to limit the number of players
+	const char * multJoinParam;       ///< which command line parameter is used to connect to a multiplayer game host
 	MapParamStyle mapParamStyle;      ///< which command line parameter is used for choosing the starting map
 	CompatModeStyle compatModeStyle;  ///< which command line parameter is used for choosing the compatibility mode
 };
@@ -171,7 +174,13 @@ class EngineTraits {
 
 	bool hasDetailedGameOptions() const         { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
 	bool hasDetailedCompatOptions() const       { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
-	bool hasMultiplayer() const                 { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
+	bool hasMultiplayer() const                 { assert( _familyTraits ); return _familyTraits->multJoinParam != nullptr; }
+	bool hasNetMode() const                     { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
+	bool hasPlayerCustomization() const         { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
+
+	const char * multHostParam() const          { assert( _familyTraits ); return _familyTraits->multHostParam; }
+	const char * multPlayerCountParam() const   { assert( _familyTraits ); return _familyTraits->multPlayerCountParam; }
+	const char * multJoinParam() const          { assert( _familyTraits ); return _familyTraits->multJoinParam; }
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
 	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;

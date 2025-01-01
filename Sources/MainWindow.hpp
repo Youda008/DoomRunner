@@ -334,11 +334,13 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	static bool shouldEnableConfigCmbBox( const EngineInfo * selectedEngine );
 	static bool shouldEnableConfigCloneBtn( const ConfigFile * selectedConfig );
 	static bool shouldEnableSkillSelector( LaunchMode mode );
-	static bool shouldEnableSkillSpinBox( LaunchMode mode, int skillIdx );
 	static bool shouldEnableGameOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine );
 	static bool shouldEnableCompatOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine );
 	static bool shouldEnableCompatModeCmbBox( LaunchMode mode, const EngineInfo * selectedEngine );
 	static bool shouldEnableMultiplayerGrpBox( const StorageSettings & storage, const Preset * selectedPreset, const EngineInfo * selectedEngine );
+	static bool shouldEnableNetModeCmbBox( bool multEnabled, int multRole, const EngineInfo * selectedEngine );
+	static bool shouldEnablePlayerCount( bool multEnabled, int multRole, const EngineInfo * selectedEngine );
+	static bool shouldEnablePlayerCustomization( bool multEnabled, const EngineInfo * selectedEngine );
 	static bool shouldEnableAltConfigDir( const EngineInfo * selectedEngine, bool usePresetName );
 	static bool shouldEnableAltSaveDir( const EngineInfo * selectedEngine, bool usePresetName );
 	static bool shouldEnableAltScreenshotDir( const EngineInfo * selectedEngine, bool usePresetName );

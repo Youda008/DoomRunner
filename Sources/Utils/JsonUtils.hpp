@@ -384,7 +384,7 @@ class JsonDocumentCtx {
 
 	const JsonObjectCtx & rootObject() const { return _rootObject; }
 
-	void disableWarnings() const { _context.dontShowAgain = false; }
+	void disableWarnings() const { _context.dontShowAgain = true; }
 
 };
 

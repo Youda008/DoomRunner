@@ -22,9 +22,9 @@
 static const char * const engineFamilyStrings [] =
 {
 	"ZDoom",
+	"ChocolateDoom",
 	"PrBoom",
 	"MBF",
-	"ChocolateDoom",
 	"EDGE",
 };
 static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd), "Please update this table too" );

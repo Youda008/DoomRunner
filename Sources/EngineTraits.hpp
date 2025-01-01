@@ -47,9 +47,9 @@ const QStringList & getCompatModes( CompatModeStyle style );
 enum class EngineFamily
 {
 	ZDoom,
+	ChocolateDoom,
 	PrBoom,
 	MBF,  // Marine's Best Friend
-	ChocolateDoom,
 	EDGE,
 
 	_EnumEnd  ///< indicates an error

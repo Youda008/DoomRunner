@@ -3865,7 +3865,7 @@ void MainWindow::browseAltConfigDir()
 
 	// the path in altConfigDirLine is relative to the engine's config dir by convention,
 	// but the path from the file dialog is relative to the current working dir -> need to rebase it
-	ui->altConfigDirLine->setText( engineConfigDirRebaser.rebaseAndMakeRelative( newConfigDir ) );  // TODO
+	ui->altConfigDirLine->setText( engineConfigDirRebaser.rebaseAndMakeRelative( newConfigDir ) );
 }
 
 void MainWindow::browseAltSaveDir()
@@ -4190,7 +4190,6 @@ void MainWindow::fillDerivedEngineInfo( DirectList< EngineInfo > & engines, bool
 {
 	for (EngineInfo & engine : engines)
 	{
-		// TODO: overrides family even if refresh = false
 		engine.autoDetectTraits( engine.executablePath );
 
 		// If the following fields are missing (may be options from an older version),
@@ -4200,7 +4199,9 @@ void MainWindow::fillDerivedEngineInfo( DirectList< EngineInfo > & engines, bool
 		if (engine.dataDir.isEmpty() || refreshAllAutoEngineInfo)
 			engine.dataDir = engine.getDefaultDataDir();
 		if (engine.family == EngineFamily::_EnumEnd || refreshAllAutoEngineInfo)
-			engine.family = engine.currentEngineFamily();
+			engine.family = engine.currentEngineFamily();  // update user-selected family from auto-detected family
+		else
+			engine.setFamilyTraits( engine.family );  // update family traits from user-selected family
 	}
 }
 

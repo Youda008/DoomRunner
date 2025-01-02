@@ -205,8 +205,6 @@ static void deserialize_pre17( const JsonObjectCtx & jsOpts, OptionsToLoad & opt
 	if (JsonObjectCtx jsMods = jsOpts.getObject( "mods" ))
 	{
 		deserialize( jsMods, opts.modSettings );
-
-		PathChecker::checkNonEmptyDirPath( opts.modSettings.dir, true, "mod directory from the saved options", "Please update it in Menu -> Setup." );
 	}
 
 	// options

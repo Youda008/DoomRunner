@@ -59,7 +59,6 @@ SetupDialog::SetupDialog(
 
 	setPathValidator( ui->iwadDirLine );
 	setPathValidator( ui->mapDirLine );
-	setPathValidator( ui->modDirLine );
 
 	// setup list views
 
@@ -76,7 +75,6 @@ SetupDialog::SetupDialog(
 	ui->iwadDirLine->setText( iwadSettings.dir );
 	ui->iwadSubdirs->setChecked( iwadSettings.searchSubdirs );
 	ui->mapDirLine->setText( mapSettings.dir );
-	ui->modDirLine->setText( modSettings.dir );
 	ui->absolutePathsChkBox->setChecked( settings.pathStyle == PathStyle::Absolute );
 	ui->showEngineOutputChkBox->setChecked( settings.showEngineOutput );
 	ui->closeOnLaunchChkBox->setChecked( settings.closeOnLaunch );
@@ -99,7 +97,6 @@ SetupDialog::SetupDialog(
 	// mark invalid paths
 	highlightDirPathIfInvalid( ui->iwadDirLine, iwadSettings.dir );
 	highlightDirPathIfInvalid( ui->mapDirLine, mapSettings.dir );
-	highlightDirPathIfInvalid( ui->modDirLine, modSettings.dir );
 
 	// setup buttons
 
@@ -108,11 +105,9 @@ SetupDialog::SetupDialog(
 
 	connect( ui->iwadDirBtn, &QPushButton::clicked, this, &thisClass::browseIWADDir );
 	connect( ui->mapDirBtn, &QPushButton::clicked, this, &thisClass::browseMapDir );
-	connect( ui->modDirBtn, &QPushButton::clicked, this, &thisClass::browseModDir );
 
 	connect( ui->iwadDirLine, &QLineEdit::textChanged, this, &thisClass::onIWADDirChanged );
 	connect( ui->mapDirLine, &QLineEdit::textChanged, this, &thisClass::onMapDirChanged );
-	connect( ui->modDirLine, &QLineEdit::textChanged, this, &thisClass::onModDirChanged );
 
 	connect( ui->iwadSubdirs, &QCheckBox::toggled, this, &thisClass::onIWADSubdirsToggled );
 
@@ -488,11 +483,6 @@ void SetupDialog::browseMapDir()
 	DialogWithPaths::browseDir( this, "with maps", ui->mapDirLine );
 }
 
-void SetupDialog::browseModDir()
-{
-	DialogWithPaths::browseDir( this, "with mods", ui->modDirLine );
-}
-
 void SetupDialog::onIWADDirChanged( const QString & dir )
 {
 	iwadSettings.dir = sanitizeInputPath( dir );
@@ -508,13 +498,6 @@ void SetupDialog::onMapDirChanged( const QString & dir )
 	mapSettings.dir = sanitizeInputPath( dir );
 
 	highlightDirPathIfInvalid( ui->mapDirLine, mapSettings.dir );
-}
-
-void SetupDialog::onModDirChanged( const QString & dir )
-{
-	modSettings.dir = sanitizeInputPath( dir );
-
-	highlightDirPathIfInvalid( ui->modDirLine, modSettings.dir );
 }
 
 void SetupDialog::updateIWADsFromDir()
@@ -600,9 +583,6 @@ void SetupDialog::onAbsolutePathsToggled( bool checked )
 
 	mapSettings.dir = pathConvertor.convertPath( mapSettings.dir );
 	ui->mapDirLine->setText( mapSettings.dir );
-
-	modSettings.dir = pathConvertor.convertPath( modSettings.dir );
-	ui->modDirLine->setText( modSettings.dir );
 }
 
 void SetupDialog::onShowEngineOutputToggled( bool checked )

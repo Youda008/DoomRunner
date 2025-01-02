@@ -317,7 +317,6 @@ struct MapSettings
 
 struct ModSettings
 {
-	QString dir;   ///< directory with mods, starting dir for "Add mod" dialog
 	bool showIcons = true;   ///< whether the mod list should show file-system icons provided by the OS
 };
 

@@ -87,11 +87,9 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 
 	void browseIWADDir();
 	void browseMapDir();
-	void browseModDir();
 
 	void onIWADDirChanged( const QString & dir );
 	void onMapDirChanged( const QString & dir );
-	void onModDirChanged( const QString & dir );
 
 	void updateIWADsFromDir();
 

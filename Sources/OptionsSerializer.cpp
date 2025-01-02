@@ -238,7 +238,6 @@ static QJsonObject serialize( const ModSettings & modSettings )
 {
 	QJsonObject modsJs;
 
-	modsJs["directory"] = modSettings.dir;
 	modsJs["show_icons"] = modSettings.showIcons;
 
 	return modsJs;
@@ -246,7 +245,6 @@ static QJsonObject serialize( const ModSettings & modSettings )
 
 static void deserialize( const JsonObjectCtx & modsJs, ModSettings & modSettings )
 {
-	modSettings.dir = modsJs.getString( "directory" );
 	modSettings.showIcons = modsJs.getBool( "show_icons", modSettings.showIcons );
 }
 
@@ -848,8 +846,6 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 	if (JsonObjectCtx modsJs = rootJs.getObject( "mods" ))
 	{
 		deserialize( modsJs, opts.modSettings );
-
-		PathChecker::checkNonEmptyDirPath( opts.modSettings.dir, true, "mod directory from the saved options", "Please update it in Menu -> Initial Setup." );
 	}
 
 	// options

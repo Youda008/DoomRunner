@@ -253,27 +253,10 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 	}
 
 	// dirs of mod files
-	QDir modDir( modSettings.dir );
-	bool modDirUsed = false;
 	for (const Mod & mod : modModel)
 	{
-		if (!mod.checked)
-			continue;
-
-		if (fs::isInsideDir( modDir, mod.path ))
-		{
-			// Aggregate all mods inside the configured mod dir under single dir path.
-			if (!modDirUsed)
-			{
-				loopBody( modSettings.dir );
-				modDirUsed = true;  // use it only once
-			}
-		}
-		else
-		{
-			// But still add directories outside of the configured mod dir, because mod dir is only a hint.
+		if (mod.checked)
 			loopBody( fs::getParentDir( mod.path ) );
-		}
 	}
 
 	// dir of engine config files
@@ -321,6 +304,7 @@ QStringVec MainWindow::getDirsToBeAccessed() const
 	forEachDirToBeAccessed( [&]( const QString & dir )
 	{
 		// insert the paths in a normalized form to deduplicate equivalent paths written in a different way
+		// TODO: don't add if any of the parent directories are already there
 		normDirPaths.insert( fs::getNormalizedPath( dir ) );
 	});
 
@@ -4210,7 +4194,6 @@ void MainWindow::togglePathStyle( PathStyle style )
 	mapSettings.dir = pathConvertor.convertPath( mapSettings.dir );
 	mapModel.setRootPath( mapSettings.dir );
 
-	modSettings.dir = pathConvertor.convertPath( modSettings.dir );
 	for (Mod & mod : modModel)
 	{
 		mod.path = pathConvertor.convertPath( mod.path );

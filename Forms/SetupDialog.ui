@@ -180,42 +180,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="modDirGrpBox">
-         <property name="title">
-          <string>Directory with Mods</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_7">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <widget class="QLineEdit" name="modDirLine"/>
-            </item>
-            <item>
-             <widget class="QPushButton" name="modDirBtn">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Browse</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../Resources/Resources.qrc">
-                <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
-              </property>
-              <property name="autoDefault">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <widget class="QCheckBox" name="absolutePathsChkBox">
          <property name="text">
           <string>Use absolute paths (recommended on Linux)</string>

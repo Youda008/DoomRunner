@@ -709,6 +709,10 @@ MainWindow::MainWindow()
 	this->setWindowIcon( QIcon(":/DoomRunner.ico") );
  #endif
 
+ #ifdef FLATPAK_BUILD
+	QGuiApplication::setDesktopFileName("io.github.Youda008.DoomRunner");
+ #endif
+
 	// setup main menu actions
 
 	connect( ui->initialSetupAction, &QAction::triggered, this, &thisClass::runSetupDialog );

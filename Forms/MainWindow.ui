@@ -253,7 +253,7 @@
                <item>
                 <widget class="QToolButton" name="engineDirBtn">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Open the engine's data directory in a file explorer.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;For portable engines, this is the installation directory.&lt;br/&gt;For GZDoom 4.9.0 or later, it's at %Saved Games%\GZDoom&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open the engine's data directory in a file explorer.&lt;/p&gt;&lt;p&gt;For portable engines, this is the installation directory.&lt;br/&gt;For GZDoom 4.9.0 or later, it's at %Saved Games%\GZDoom&lt;br/&gt;On Linux, this is somewhere in your home, usually ~/.config or ~/.local/share.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="icon">
                   <iconset resource="../Resources/Resources.qrc">
@@ -304,7 +304,7 @@
             <item>
              <widget class="QGroupBox" name="mapGrpBox">
               <property name="toolTip">
-               <string>Map pack can be de-selected by holding CTRL and left-clicking.</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You can de-select a map file or select multiple of them by holding CTRL.&lt;/p&gt;&lt;p&gt;Double-clicking on a file will open corresponding .txt file if it exists.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="title">
                <string>4. Select map pack</string>
@@ -312,8 +312,13 @@
               <layout class="QVBoxLayout" name="verticalLayout_7">
                <item>
                 <widget class="QLabel" name="label">
+                 <property name="font">
+                  <font>
+                   <pointsize>7</pointsize>
+                  </font>
+                 </property>
                  <property name="text">
-                  <string>hold CTRL to select multiple</string>
+                  <string>hold CTRL to deselect or select multiple</string>
                  </property>
                 </widget>
                </item>
@@ -571,7 +576,7 @@
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Additional command line arguments for this preset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Additional command line arguments for this preset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>Additional arguments [preset]</string>
@@ -2198,7 +2203,7 @@
          </sizepolicy>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Additional command line arguments&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Additional command line arguments for all presets.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Additional arguments [global]</string>
@@ -2232,6 +2237,9 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;What command will be executed when clicking the &lt;span style=&quot; font-weight:700;&quot;&gt;Launch&lt;/span&gt; button.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Final launch command</string>

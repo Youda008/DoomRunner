@@ -764,6 +764,9 @@
                 <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,10,10">
                  <item>
                   <widget class="QRadioButton" name="launchMode_resumeDemo">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-recordfromto&lt;br/&gt;&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(DSDA-Doom only)&lt;/span&gt; Plays back the selected demo file, allowing the user to take over the controls at a point of his choosing, and saves the resulting demo as a new file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
                    <property name="text">
                     <string>Resume demo</string>
                    </property>
@@ -780,12 +783,18 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The existing demo file to be resumed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QLineEdit" name="demoFileLine_resume">
                    <property name="enabled">
                     <bool>false</bool>
+                   </property>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The new demo file to record to.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                   </widget>
                  </item>
@@ -893,7 +902,7 @@
                     </sizepolicy>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-nomonsters&lt;br/&gt;&lt;/span&gt;Sets the dmflags CVAR so that monsters are not spawned on levels.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-nomonsters&lt;br/&gt;&lt;/span&gt;Sets the dmflags CVAR so that monsters are not spawned on levels.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>No monsters</string>
@@ -909,7 +918,7 @@
                     </sizepolicy>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-fast&lt;/span&gt;&lt;br/&gt;Sets the dmflags CVAR to make the monsters as fast as in Nightmare mode even if you are not playing Nightmare.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-fast&lt;/span&gt;&lt;br/&gt;Sets the dmflags CVAR to make the monsters as fast as in Nightmare mode even if you are not playing Nightmare.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>Fast monsters</string>
@@ -925,7 +934,7 @@
                     </sizepolicy>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-respawn&lt;/span&gt;&lt;br/&gt;Sets the dmflags CVAR so that monsters respawn even if you are not playing at Nightmare difficulty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-respawn&lt;/span&gt;&lt;br/&gt;Sets the dmflags CVAR so that monsters respawn even if you are not playing at Nightmare difficulty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>Monsters respawn</string>
@@ -939,7 +948,7 @@
                  <item>
                   <widget class="QCheckBox" name="pistolStartChkBox">
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-pistolstart&lt;br/&gt;&lt;/span&gt;Every level is a fresh start, with a pistol only.&lt;br/&gt;(Only works in CrispyDoom, PrBoom+, DSDA Doom, Woof, DoomRetro)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-pistolstart&lt;br/&gt;&lt;/span&gt;Every level is a fresh start, with a pistol only.&lt;br/&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(Only works in CrispyDoom, PrBoom+, DSDA Doom, Woof, DoomRetro)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>Pistol start</string>
@@ -949,7 +958,7 @@
                  <item>
                   <widget class="QCheckBox" name="allowCheatsChkBox">
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+sv_cheats&lt;br/&gt;&lt;/span&gt;(ZDoom only) When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &amp;quot;disablecheats&amp;quot; property, as well as network games.&lt;br/&gt;Until GZDoom 4.9.0: However, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;+sv_cheats&lt;br/&gt;&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(ZDoom only)&lt;/span&gt; When true, cheats will be allowed in Nightmare difficulty and other skill levels with the &amp;quot;disablecheats&amp;quot; property, as well as network games.&lt;br/&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Until GZDoom 4.9.0:&lt;/span&gt; However, changes to this CVAR don't take effect until a new game is started (or a savegame is loaded). This is to prevent the host in a multiplayer game from setting the CVAR just long enough to allow himself to activate a cheat code.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>Force allow cheats</string>
@@ -964,7 +973,7 @@
                   <bool>false</bool>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gameplay options for ZDoom and GZDoom, probably won't work in other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(ZDoom only)&lt;/span&gt; Gameplay options also known as dmflags.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Detailed gameplay options</string>
@@ -981,7 +990,7 @@
             <item>
              <widget class="QGroupBox" name="multiplayerGrpBox">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Multiplayer options for ZDoom family. May not work for other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Multiplayer options for ZDoom family or Woof. May not work for other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="title">
                <string>Multiplayer [storage configurable]</string>
@@ -1125,7 +1134,7 @@
                   </sizepolicy>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(ZDoom only)&lt;/span&gt;&lt;br/&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Network mode</string>
@@ -1143,7 +1152,7 @@
                     </sizepolicy>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(ZDoom only)&lt;/p&gt;&lt;p&gt;Networking modes change how nodes connect to each-other. Depending on networking conditions, one may be more favorable then the other.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Peer-to-Peer&lt;/span&gt;, the default, is the traditional netmode. The faster of the two, each node talks to each other node directly, and the game is only slowed down by the slowest connection between two nodes. In Internet games, this does require all nodes to be able to contact all other nodes, or the game will appear to lock up when it starts (this only applies if you have 3 or more players). Hole punching is used by all guest nodes to connect to other nodes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Packet Server&lt;/span&gt;, which must be forced on, is an alternate mode added to ZDoom. The slowest of the two (depending on networking conditions), each node talks to the arbitrator (typically the first player), and the arbitrator then routes the info to each other node. As you are adding the time it takes the arbitrator to route the information to each node, Internet games can be slowed down significantly by this netmode, but with the advantage of a simpler network setup (only the host needs to be contactable). It's recommended that you do not force this netmode in 2 player games, as it's not needed (nothing changes about how the connection is initiated and maintained) and just results in larger packets. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <item>
                     <property name="text">
@@ -1181,7 +1190,7 @@
                   </sizepolicy>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:700;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:700;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:700;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:700;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Game mode</string>
@@ -1199,7 +1208,7 @@
                     </sizepolicy>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Deathmatch&lt;/span&gt; is a multiplayer game style pioneered by Doom in which players face off against each other, connected to a common area via a network. A point, called a frag, is granted to a player whenever he or she kills an opponent. Upon death, players restart at a random deathmatch start. Players spawn with all keys, and keys are never placed on the map (there is currently no clean way to circumvent this).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Team Deathmatch&lt;/span&gt; is a variant of deathmatch where players are placed into two or more teams. Players score frags by killing members of opposing teams. Gameplay options allow to reduce or remove friendly fire damage.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Cooperative&lt;/span&gt; gameplay, often referred to as co-op or coop, is a multiplayer game mode in which human players cooperate against a given game's monsters. Cooperative play is the default game mode if the -deathmatch parameter is not specified at the command line.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:700;&quot;&gt;Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:700;&quot;&gt;Team Deathmatch&lt;/span&gt; weapons stay behind when a player picks them up.&lt;/p&gt;&lt;p&gt;In &lt;span style=&quot; font-weight:700;&quot;&gt;Alternative Deathmatch&lt;/span&gt; and &lt;span style=&quot; font-weight:700;&quot;&gt;Alternative Team Deathmatch&lt;/span&gt; items other than invulnerability and invisibilty respawn after being picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <item>
                     <property name="text">
@@ -1398,6 +1407,9 @@
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(ZDoom only)&lt;/span&gt; Name of the player that is shown to others during game.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Player name</string>
                  </property>
@@ -1418,7 +1430,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Color of the player's suit.&lt;br/&gt;Right-click the button to reset the color.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(ZDoom only)&lt;/span&gt; Color of the player's suit.&lt;br/&gt;Right-click the button to reset the color.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>Color</string>
@@ -1460,7 +1472,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;either &lt;span style=&quot; font-weight:600;&quot;&gt;-complevel&lt;/span&gt; or &lt;span style=&quot; font-weight:600;&quot;&gt;+compatmode&lt;/span&gt; depending on the engine&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Either &lt;span style=&quot; font-weight:700;&quot;&gt;-complevel&lt;/span&gt; or &lt;span style=&quot; font-weight:700;&quot;&gt;+compatmode&lt;/span&gt; depending on the engine.&lt;br/&gt;Only some engines support this.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>Compatibility level</string>
@@ -1491,7 +1503,7 @@
                   <bool>false</bool>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compatibility options for ZDoom and GZDoom, probably won't work in other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(ZDoom only)&lt;/span&gt; Detailed compatibility options and flags.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Detailed compatibility options</string>
@@ -1555,10 +1567,10 @@
              <item row="2" column="0">
               <widget class="QLabel" name="altScreenshotDirLabel">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where the selected engine should save its screenshot image files.&lt;/p&gt;&lt;p&gt;The path is relative to the main Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example:&lt;br/&gt;Engine's main data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;/span&gt;&lt;br/&gt;The image file that will be created: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom\BrutalDoom\Screenshot_Doom_20241118_225328.png&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(only for PrBoom+, DoomRetro and ZDoom family)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Custom sub-directory where the selected engine should save its screenshot image files.&lt;/p&gt;&lt;p&gt;The path is relative to the main Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example:&lt;br/&gt;Engine's main data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;/span&gt;&lt;br/&gt;The image file that will be created: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom\BrutalDoom\Screenshot_Doom_20241118_225328.png&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="whatsThis">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where the selected engine should save its screenshot image files.&lt;/p&gt;&lt;p&gt;The path is relative to the main Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example:&lt;br/&gt;Engine's main data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;/span&gt;&lt;br/&gt;The image file that will be created: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom\BrutalDoom\Screenshot_Doom_20241118_225328.png&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(only for PrBoom+, DoomRetro and ZDoom family)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Custom sub-directory where the selected engine should save its screenshot image files.&lt;/p&gt;&lt;p&gt;The path is relative to the main Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example:&lt;br/&gt;Engine's main data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;/span&gt;&lt;br/&gt;The image file that will be created: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom\BrutalDoom\Screenshot_Doom_20241118_225328.png&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Screenshot dir &lt;img src=&quot;:/Help.12.png&quot;/&gt;&amp;nbsp;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1694,7 +1706,7 @@
                <item>
                 <widget class="QLabel" name="monitorLabel">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+vid_adapter&lt;br/&gt;&lt;/span&gt;Defines which screen is used if multiple monitors are available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;+vid_adapter&lt;br/&gt;&lt;/span&gt;Defines which screen is used if multiple monitors are available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Monitor</string>
@@ -1726,7 +1738,7 @@
                <item>
                 <widget class="QLabel" name="resolutionLabel">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-width &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;x&lt;br/&gt;&lt;/span&gt;&lt;a name=&quot;height&quot;/&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;height &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;y&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;&lt;br/&gt;&lt;/span&gt;Specifies the desired resolution of the screen. If only one of -width or -height is specified, ZDoom will try to guess the other one based on a standard aspect ratio. If the specified resolution is not supported by your SDL/DirectDraw drivers, ZDoom will try various resolutions until it either finds one that works, or it will finally give up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-width &lt;/span&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;x&lt;br/&gt;&lt;/span&gt;&lt;a name=&quot;height&quot;/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-&lt;/span&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;height &lt;/span&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;y&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;&lt;br/&gt;&lt;/span&gt;Specifies the desired resolution of the screen. If only one of -width or -height is specified, ZDoom will try to guess the other one based on a standard aspect ratio. If the specified resolution is not supported by your SDL/DirectDraw drivers, ZDoom will try various resolutions until it either finds one that works, or it will finally give up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>Resolution</string>
@@ -1809,7 +1821,7 @@
              <item>
               <widget class="QCheckBox" name="showFpsChkBox">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;+vid_fps&lt;br/&gt;&lt;/span&gt;When true, displays the average framerate over the past second in the upper-right corner of the screen. Because the Doom engine's internal game rate and frame rate are linked, the framerate will never be (much) above 35 fps if cl_capfps is true.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;+vid_fps&lt;br/&gt;&lt;/span&gt;When true, displays the average framerate over the past second in the upper-right corner of the screen. Because the Doom engine's internal game rate and frame rate are linked, the framerate will never be (much) above 35 fps if cl_capfps is true.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>Show FPS</string>
@@ -1828,7 +1840,7 @@
              <item>
               <widget class="QCheckBox" name="noSoundChkBox">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-nosound&lt;/span&gt;&lt;br/&gt;Disables both music and sound effects.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-nosound&lt;/span&gt;&lt;br/&gt;Disables both music and sound effects.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>No sound (SFX + music)</string>
@@ -1838,7 +1850,7 @@
              <item>
               <widget class="QCheckBox" name="noSfxChkBox">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-nosfx&lt;/span&gt;&lt;br/&gt;Prevents the playback of sound effects.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-nosfx&lt;/span&gt;&lt;br/&gt;Prevents the playback of sound effects.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>No SFX</string>
@@ -1848,7 +1860,7 @@
              <item>
               <widget class="QCheckBox" name="noMusicChkBox">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;-nomusic&lt;/span&gt;&lt;br/&gt;Prevents the playback of music.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;-nomusic&lt;/span&gt;&lt;br/&gt;Prevents the playback of music.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>No music</string>

@@ -75,7 +75,7 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 	  * \param workingDir Working directory for the started process. All file paths given via arguments must be relative to this.
 	  *                   If not specified, the current working directory is used.
 	  * \param envVars Optional evironment variables to be set for the starting process.
-	  * \return In which state of the process was the dialog closed.
+	  * \return In which state the process was when the the dialog was closed.
 	  */
 	ProcessStatus runProcess(
 		const QString & executable, const QStringVec & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
@@ -115,6 +115,12 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 
 	KeyPressFilter keyPressFilter;
 };
+
+
+/// Alternative to ProcessOutputWindow::runProcess(). Starts the process, detaches from it, and ignores its output.
+bool startDetachedProcess(
+	const QString & executable, const QStringVec & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
+);
 
 
 #endif // ENGINE_OUTPUT_WINDOW_INCLUDED

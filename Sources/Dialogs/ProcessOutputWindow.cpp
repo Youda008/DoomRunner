@@ -203,7 +203,7 @@ ProcessStatus ProcessOutputWindow::runProcess(
 	{
 		env.insert( envVar.name, envVar.value );
 	}
-	process.setProcessEnvironment(env);
+	process.setProcessEnvironment( env );
 
 	connect( &process, &QProcess::started, this, &thisClass::onProcessStarted );
 	connect( &process, &QProcess::readyReadStandardOutput, this, &thisClass::readProcessOutput );
@@ -227,6 +227,33 @@ ProcessStatus ProcessOutputWindow::runProcess(
 	this->exec();
 
 	return ownStatus;
+}
+
+bool startDetachedProcess(
+	const QString & executable, const QStringVec & arguments, const QString & workingDir, const EnvVars & envVars
+){
+	QProcess process;
+
+	QString executableName = fs::getFileNameFromPath( executable );
+
+	process.setProgram( executable );
+	process.setArguments( arguments.toList() );
+	process.setWorkingDirectory( workingDir );
+
+	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+	for (const auto & envVar : envVars)
+	{
+		env.insert( envVar.name, envVar.value );
+	}
+	process.setProcessEnvironment( env );
+
+	bool success = process.startDetached();
+	if (!success)
+	{
+		reportRuntimeError( nullptr, "Process start error", "Failed to start \""%executableName%"\" ("%process.errorString()%")" );
+	}
+
+	return success;
 }
 
 void ProcessOutputWindow::onProcessStarted()

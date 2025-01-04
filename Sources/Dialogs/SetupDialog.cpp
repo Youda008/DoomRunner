@@ -70,7 +70,7 @@ SetupDialog::SetupDialog(
 	if (iwadSettings.updateFromDir)
 	{
 		ui->manageIWADs_auto->click();
-		manageIWADsAutomatically();
+		onManageIWADsAutomaticallySelected();
 	}
 	ui->iwadDirLine->setText( iwadSettings.dir );
 	ui->iwadSubdirs->setChecked( iwadSettings.searchSubdirs );
@@ -100,8 +100,8 @@ SetupDialog::SetupDialog(
 
 	// setup buttons
 
-	connect( ui->manageIWADs_manual, &QRadioButton::clicked, this, &thisClass::manageIWADsManually );
-	connect( ui->manageIWADs_auto, &QRadioButton::clicked, this, &thisClass::manageIWADsAutomatically );
+	connect( ui->manageIWADs_manual, &QRadioButton::clicked, this, &thisClass::onManageIWADsManuallySelected );
+	connect( ui->manageIWADs_auto, &QRadioButton::clicked, this, &thisClass::onManageIWADsAutomaticallySelected );
 
 	connect( ui->iwadDirBtn, &QPushButton::clicked, this, &thisClass::browseIWADDir );
 	connect( ui->mapDirBtn, &QPushButton::clicked, this, &thisClass::browseMapDir );
@@ -150,12 +150,12 @@ void SetupDialog::setupEngineList()
 	connect( ui->engineListView, &EditableListView::itemsDropped, this, &thisClass::onEnginesDropped );
 
 	// set reaction to clicks inside the view
-	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::editEngine );
 	connect( ui->engineListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onEngineSelectionChanged );
+	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::onEngineDoubleClicked );
 
 	// setup enter key detection and reaction
 	ui->engineListView->installEventFilter( &engineConfirmationFilter );
-	connect( &engineConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::editSelectedEngine );
+	connect( &engineConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::onEngineConfirmed );
 
 	// setup reaction to key shortcuts and right click
 	ui->engineListView->toggleContextMenu( true );
@@ -329,6 +329,34 @@ void SetupDialog::onEnginesDropped( int row, int count, DnDType type )
 	}
 }
 
+void SetupDialog::onEngineDoubleClicked( const QModelIndex & index )
+{
+	editEngine( engineModel[ index.row() ] );
+}
+
+void SetupDialog::onEngineConfirmed()
+{
+	int selectedEngineIdx = wdg::getSelectedItemIndex( ui->engineListView );
+	if (selectedEngineIdx >= 0)
+	{
+		editEngine( engineModel[ selectedEngineIdx ] );
+	}
+}
+
+void SetupDialog::editEngine( EngineInfo & selectedEngine )
+{
+	EngineDialog dialog( this, pathConvertor, selectedEngine, lastUsedDir );
+
+	int code = dialog.exec();
+
+	lastUsedDir = dialog.takeLastUsedDir();
+
+	if (code == QDialog::Accepted)
+	{
+		selectedEngine = dialog.engine;
+	}
+}
+
 void SetupDialog::onEngineSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
 	int selectedIdx = wdg::getSelectedItemIndex( ui->engineListView );
@@ -344,31 +372,6 @@ void SetupDialog::onEngineSelectionChanged( const QItemSelection &, const QItemS
 void SetupDialog::setEngineAsDefault()
 {
 	setSelectedItemAsDefault( ui->engineListView, engineModel, setDefaultEngineAction, engineSettings.defaultEngine );
-}
-
-void SetupDialog::editEngine( const QModelIndex & index )
-{
-	EngineInfo & selectedEngine = engineModel[ index.row() ];
-
-	EngineDialog dialog( this, pathConvertor, selectedEngine, lastUsedDir );
-
-	int code = dialog.exec();
-
-	lastUsedDir = dialog.takeLastUsedDir();
-
-	if (code == QDialog::Accepted)
-	{
-		selectedEngine = dialog.engine;
-	}
-}
-
-void SetupDialog::editSelectedEngine()
-{
-	int selectedEngineIdx = wdg::getSelectedItemIndex( ui->engineListView );
-	if (selectedEngineIdx >= 0)
-	{
-		editEngine( engineModel.makeIndex( selectedEngineIdx ) );
-	}
 }
 
 
@@ -451,12 +454,12 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 		updateIWADsFromDir();
 }
 
-void SetupDialog::manageIWADsManually()
+void SetupDialog::onManageIWADsManuallySelected()
 {
 	toggleAutoIWADUpdate( false );
 }
 
-void SetupDialog::manageIWADsAutomatically()
+void SetupDialog::onManageIWADsAutomaticallySelected()
 {
 	toggleAutoIWADUpdate( true );
 }

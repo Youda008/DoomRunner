@@ -64,10 +64,11 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 	void onEnginesDropped( int row, int count, DnDType type );
 
 	void onEngineSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
-	void setEngineAsDefault();
 
-	void editEngine( const QModelIndex & index );
-	void editSelectedEngine();
+	void onEngineDoubleClicked( const QModelIndex & index );
+	void onEngineConfirmed();
+
+	void setEngineAsDefault();
 
 	// IWADs
 
@@ -79,8 +80,8 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 	void onIWADSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
 	void setIWADAsDefault();
 
-	void manageIWADsManually();
-	void manageIWADsAutomatically();
+	void onManageIWADsManuallySelected();
+	void onManageIWADsAutomaticallySelected();
 	void onIWADSubdirsToggled( bool checked );
 
 	// game file directories
@@ -111,6 +112,8 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 
 	void setupEngineList();
 	void setupIWADList();
+
+	void editEngine( EngineInfo & selectedEngine );
 
 	void toggleAutoIWADUpdate( bool enabled );
 

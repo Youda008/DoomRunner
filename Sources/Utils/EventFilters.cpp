@@ -57,7 +57,7 @@ bool ModifierHandler::updateModifiers_released( int key )
 
 
 //======================================================================================================================
-// KeyPressEmitter
+// KeyPressFilter
 
 bool KeyPressFilter::eventFilter( QObject * obj, QEvent * event )
 {
@@ -85,7 +85,7 @@ bool KeyPressFilter::eventFilter( QObject * obj, QEvent * event )
 
 
 //======================================================================================================================
-// EnterPressEmitter
+// ConfirmationFilter
 
 bool ConfirmationFilter::eventFilter( QObject * obj, QEvent * event )
 {

@@ -699,12 +699,12 @@ MainWindow::MainWindow()
 
 	// setup main menu actions
 
-	connect( ui->initialSetupAction, &QAction::triggered, this, &thisClass::runSetupDialog );
-	connect( ui->optionsStorageAction, &QAction::triggered, this, &thisClass::runOptsStorageDialog );
-	connect( ui->exportPresetToScriptAction, &QAction::triggered, this, &thisClass::exportPresetToScript );
-	connect( ui->exportPresetToShortcutAction, &QAction::triggered, this, &thisClass::exportPresetToShortcut );
-	//connect( ui->importPresetAction, &QAction::triggered, this, &thisClass::importPreset );
-	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::runAboutDialog );
+	connect( ui->initialSetupAction, &QAction::triggered, this, &thisClass::onSetupActionTriggered );
+	connect( ui->optionsStorageAction, &QAction::triggered, this, &thisClass::onOptsStorageActionTriggered );
+	connect( ui->exportPresetToScriptAction, &QAction::triggered, this, &thisClass::onExportToScriptTriggered );
+	connect( ui->exportPresetToShortcutAction, &QAction::triggered, this, &thisClass::onExportToShortcutTriggered );
+	//connect( ui->importPresetAction, &QAction::triggered, this, &thisClass::onImportFromScriptTriggered );
+	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::onAboutActionTriggered );
 	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
 
  #if !IS_WINDOWS  // Windows-only feature
@@ -733,12 +733,12 @@ MainWindow::MainWindow()
 	// we use custom model for engines, because we want to display the same list differently in different window
 	ui->engineCmbBox->setModel( &engineModel );
 	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onEngineSelected );
-	connect( ui->engineDirBtn, &QToolButton::clicked, this, &thisClass::openEngineDataDir );
+	connect( ui->engineDirBtn, &QToolButton::clicked, this, &thisClass::onEngineDirBtnClicked );
 
 	configModel.append({""});  // always have an empty item, so that index doesn't have to switch between -1 and 0
 	ui->configCmbBox->setModel( &configModel );
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onConfigSelected );
-	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::cloneConfig );
+	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::onCloneConfigBtnClicked );
 
 	ui->saveFileCmbBox->setModel( &saveModel );
 	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onSavedGameSelected );
@@ -796,8 +796,8 @@ MainWindow::MainWindow()
 	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::onMonstersRespawnToggled );
 	connect( ui->pistolStartChkBox, &QCheckBox::toggled, this, &thisClass::onPistolStartToggled );
 	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::onAllowCheatsToggled );
-	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::runGameOptsDialog );
-	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::runCompatOptsDialog );
+	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::onGameOptsBtnClicked );
+	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::onCompatOptsBtnClicked );
 	connect( ui->compatModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onCompatModeSelected );
 
 	// alternative paths
@@ -828,7 +828,7 @@ MainWindow::MainWindow()
 	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onPresetCmdArgsChanged );
 	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onGlobalCmdArgsChanged );
 	connect( ui->cmdPrefixLine, &QLineEdit::textChanged, this, &thisClass::onCmdPrefixChanged );
-	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::launch );
+	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::onLaunchBtnClicked );
 }
 
 void MainWindow::adjustUi()
@@ -901,7 +901,7 @@ void MainWindow::setupIWADList()
 
 	// set reaction when an item is clicked or double-clicked
 	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onIWADToggled );
-	connect( ui->iwadListView, &QListView::doubleClicked, this, &thisClass::showIWADDesc );
+	connect( ui->iwadListView, &QListView::doubleClicked, this, &thisClass::onIWADDoubleClicked );
 }
 
 void MainWindow::setupMapPackList()
@@ -942,7 +942,7 @@ void MainWindow::setupMapPackList()
 
 	// set reaction when an item is clicked or double-clicked
 	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onMapPackToggled );
-	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::showMapPackDesc );
+	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::onMapPackDoubleClicked );
 
 	// QFileSystemModel updates its content asynchronously in a separate thread. For this reason,
 	// when the model is set to display a certain directory, we cannot select items from the view right away,
@@ -977,7 +977,7 @@ void MainWindow::setupModList()
 
 	// set reaction when an item is checked or unchecked
 	connect( &modModel, &QAbstractListModel::dataChanged, this, &thisClass::onModDataChanged );
-	connect( ui->modListView, &QListView::doubleClicked, this, &thisClass::showModDesc );
+	connect( ui->modListView, &QListView::doubleClicked, this, &thisClass::onModDoubleClicked );
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
@@ -2241,7 +2241,71 @@ void MainWindow::runPlayerColorDialog()
 	}
 }
 
-void MainWindow::openEngineDataDir()
+void MainWindow::showTxtDescriptionFor( const QString & filePath, const QString & contentType )
+{
+	QFileInfo dataFileInfo( filePath );
+
+	if (!dataFileInfo.isFile())  // user could click on a directory
+	{
+		return;
+	}
+
+	// get the corresponding file with txt suffix
+	QFileInfo descFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "txt" ) );
+	if (!descFileInfo.isFile())
+	{
+		// try TXT in case we are in a case-sensitive file-system such as Linux
+		descFileInfo = QFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "TXT" ) );
+		if (!descFileInfo.isFile())
+		{
+			reportUserError( this, "Cannot open "%contentType,
+				capitalize( contentType )%" file \""%descFileInfo.fileName()%"\" does not exist" );
+			return;
+		}
+	}
+
+	QFile descFile( descFileInfo.filePath() );
+	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
+	{
+		reportRuntimeError( this, "Cannot open "%contentType,
+			"Failed to open map "%contentType%" \""%descFileInfo.fileName()%"\" ("%descFile.errorString()%")" );
+		return;
+	}
+
+	QByteArray desc = descFile.readAll();
+
+	QDialog descDialog( this );
+	descDialog.setObjectName( "FileDescription" );
+	descDialog.setWindowTitle( descFileInfo.fileName() );
+	descDialog.setWindowModality( Qt::WindowModal );
+
+	QVBoxLayout * layout = new QVBoxLayout( &descDialog );
+
+	QPlainTextEdit * textEdit = new QPlainTextEdit( &descDialog );
+	textEdit->setReadOnly( true );
+	textEdit->setWordWrapMode( QTextOption::NoWrap );
+	QFont font = QFontDatabase::systemFont( QFontDatabase::FixedFont );
+	font.setPointSize( 10 );
+	textEdit->setFont( font );
+
+	textEdit->setPlainText( desc );
+
+	layout->addWidget( textEdit );
+
+	// estimate the optimal window size
+	int dialogWidth  = int( 75.0f * float( font.pointSize() ) * 0.84f ) + 30;
+	int dialogHeight = int( 40.0f * float( font.pointSize() ) * 1.62f ) + 30;
+	descDialog.resize( dialogWidth, dialogHeight );
+
+	// position it to the right of map widget
+	int windowCenterX = this->pos().x() + (this->width() / 2);
+	int windowCenterY = this->pos().y() + (this->height() / 2);
+	descDialog.move( windowCenterX, windowCenterY - (descDialog.height() / 2) );
+
+	descDialog.exec();
+}
+
+void MainWindow::openCurrentEngineDataDir()
 {
 	const EngineInfo * selectedEngine = getSelectedEngine();
 	if (!selectedEngine)
@@ -2253,7 +2317,7 @@ void MainWindow::openEngineDataDir()
 	os::openDirectoryWindow( selectedEngine->dataDir );  // errors are handled inside
 }
 
-void MainWindow::cloneConfig()
+void MainWindow::cloneCurrentEngineConfigFile()
 {
 	QString configDirStr = getActiveConfigDir();
 	QDir configDir( configDirStr );
@@ -2315,6 +2379,42 @@ void MainWindow::cloneConfig()
 		ui->configCmbBox->setCurrentIndex( newConfigIdx );
 	}
 }
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// menu actions
+
+void MainWindow::onAboutActionTriggered()
+{
+	runAboutDialog();
+}
+
+void MainWindow::onSetupActionTriggered()
+{
+	runSetupDialog();
+}
+
+void MainWindow::onOptsStorageActionTriggered()
+{
+	runOptsStorageDialog();
+}
+
+void MainWindow::onExportToScriptTriggered()
+{
+	exportPresetToScript();
+}
+
+void MainWindow::onExportToShortcutTriggered()
+{
+	exportPresetToShortcut();
+}
+
+/*
+void MainWindow::onImportFromScriptTriggered()
+{
+	importPresetFromScript();
+}
+*/
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -2656,6 +2756,31 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 	updateLaunchCommand();
 }
 
+void MainWindow::onIWADDoubleClicked( const QModelIndex & index )
+{
+	showTxtDescriptionFor( iwadModel[ index.row() ].path, "IWAD description" );
+}
+
+void MainWindow::onMapPackDoubleClicked( const QModelIndex & index )
+{
+	showTxtDescriptionFor( mapModel.filePath( index ), "map description" );
+}
+
+void MainWindow::onModDoubleClicked( const QModelIndex & index )
+{
+	showTxtDescriptionFor( modModel[ index.row() ].path, "mod description" );
+}
+
+void MainWindow::onEngineDirBtnClicked()
+{
+	openCurrentEngineDataDir();
+}
+
+void MainWindow::onCloneConfigBtnClicked()
+{
+	cloneCurrentEngineConfigFile();
+}
+
 void MainWindow::onPresetDataChanged( const QModelIndex & topLeft, const QModelIndex &, const QVector<int> & roles )
 {
 	int editedIdx = topLeft.row();  // there cannot be more than 1 items edited at a time
@@ -2708,85 +2833,6 @@ void MainWindow::onModDataChanged( const QModelIndex & topLeft, const QModelInde
 
 	scheduleSavingOptions( true );  // we can assume options storage was modified, otherwise this callback wouldn't be called
 	updateLaunchCommand();
-}
-
-void MainWindow::showTxtDescriptionFor( const QString & filePath, const QString & contentType )
-{
-	QFileInfo dataFileInfo( filePath );
-
-	if (!dataFileInfo.isFile())  // user could click on a directory
-	{
-		return;
-	}
-
-	// get the corresponding file with txt suffix
-	QFileInfo descFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "txt" ) );
-	if (!descFileInfo.isFile())
-	{
-		// try TXT in case we are in a case-sensitive file-system such as Linux
-		descFileInfo = QFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "TXT" ) );
-		if (!descFileInfo.isFile())
-		{
-			reportUserError( this, "Cannot open "%contentType,
-				capitalize( contentType )%" file \""%descFileInfo.fileName()%"\" does not exist" );
-			return;
-		}
-	}
-
-	QFile descFile( descFileInfo.filePath() );
-	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
-	{
-		reportRuntimeError( this, "Cannot open "%contentType,
-			"Failed to open map "%contentType%" \""%descFileInfo.fileName()%"\" ("%descFile.errorString()%")" );
-		return;
-	}
-
-	QByteArray desc = descFile.readAll();
-
-	QDialog descDialog( this );
-	descDialog.setObjectName( "FileDescription" );
-	descDialog.setWindowTitle( descFileInfo.fileName() );
-	descDialog.setWindowModality( Qt::WindowModal );
-
-	QVBoxLayout * layout = new QVBoxLayout( &descDialog );
-
-	QPlainTextEdit * textEdit = new QPlainTextEdit( &descDialog );
-	textEdit->setReadOnly( true );
-	textEdit->setWordWrapMode( QTextOption::NoWrap );
-	QFont font = QFontDatabase::systemFont( QFontDatabase::FixedFont );
-	font.setPointSize( 10 );
-	textEdit->setFont( font );
-
-	textEdit->setPlainText( desc );
-
-	layout->addWidget( textEdit );
-
-	// estimate the optimal window size
-	int dialogWidth  = int( 75.0f * float( font.pointSize() ) * 0.84f ) + 30;
-	int dialogHeight = int( 40.0f * float( font.pointSize() ) * 1.62f ) + 30;
-	descDialog.resize( dialogWidth, dialogHeight );
-
-	// position it to the right of map widget
-	int windowCenterX = this->pos().x() + (this->width() / 2);
-	int windowCenterY = this->pos().y() + (this->height() / 2);
-	descDialog.move( windowCenterX, windowCenterY - (descDialog.height() / 2) );
-
-	descDialog.exec();
-}
-
-void MainWindow::showIWADDesc( const QModelIndex & index )
-{
-	showTxtDescriptionFor( iwadModel[ index.row() ].path, "IWAD description" );
-}
-
-void MainWindow::showMapPackDesc( const QModelIndex & index )
-{
-	showTxtDescriptionFor( mapModel.filePath( index ), "map description" );
-}
-
-void MainWindow::showModDesc( const QModelIndex & index )
-{
-	showTxtDescriptionFor( modModel[ index.row() ].path, "mod description" );
 }
 
 void MainWindow::onMapDirUpdated( const QString & path )
@@ -3502,9 +3548,19 @@ void MainWindow::onAllowCheatsToggled( bool checked )
 	updateLaunchCommand();
 }
 
+void MainWindow::onGameOptsBtnClicked()
+{
+	runGameOptsDialog();
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
-// compatibility
+// compatibility options
+
+void MainWindow::onCompatOptsBtnClicked()
+{
+	runCompatOptsDialog();
+}
 
 void MainWindow::onCompatModeSelected( int compatMode )
 {
@@ -4167,6 +4223,11 @@ void MainWindow::onCmdPrefixChanged( const QString & text )
 	updateLaunchCommand();
 }
 
+void MainWindow::onLaunchBtnClicked()
+{
+	executeLaunchCommand();
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 // miscellaneous
@@ -4630,59 +4691,16 @@ void MainWindow::exportPresetToShortcut()
  #endif
 }
 
+/*
 void MainWindow::importPresetFromScript()
 {
 	reportUserError( this, "Not implemented", "Sorry, this feature is not implemented yet." );
 }
+*/
 
 
 //----------------------------------------------------------------------------------------------------------------------
 // launch command generation
-
-void MainWindow::updateLaunchCommand()
-{
-	// optimization: don't regenerate the command when we're about to make more changes right away
-	if (restoringOptionsInProgress || restoringPresetInProgress)
-		return;
-
-	//static uint callCnt = 1;
-	//logDebug() << "updateLaunchCommand() " << callCnt++;
-
-	const EngineInfo * selectedEngine = getSelectedEngine();
-	if (!selectedEngine)
-	{
-		ui->commandLine->clear();
-		return;  // no sense to generate a command when we don't even know the engine
-	}
-
-	QString currentCommand = ui->commandLine->text();
-
-	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
-
-	// because some engines refuse to start or don't work properly when the working dir is not their executable dir.
-
-	// The relative paths in the arguments need to be relative to the engine's executable directory,
-	// because the engine must be started with the working directory set to its executable directory.
-	// The relative path of the executable does not matter, because here it is for displaying only.
-	auto cmd = generateLaunchCommand({
-		.exePathStyle = PathStyle::Relative,
-		.parentWorkingDir = engineExeDir,
-		.engineWorkingDir = engineExeDir,
-		.quotePaths = true,
-		.verifyPaths = false,
-	});
-
-	QString newCommand = cmd.executable % ' ' % cmd.arguments.join(' ');
-
-	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
-	// and copy part of the line, by constantly reseting his selection.
-	if (newCommand != currentCommand)
-	{
-		//static int updateCnt = 1;
-		//logDebug() << "    updating " << updateCnt++;
-		ui->commandLine->setText( newCommand );
-	}
-}
 
 static void appendCustomArguments( QStringVec & args, const QString & customArgsStr, bool quotePaths )
 {
@@ -5031,6 +5049,51 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	return !p.gotSomeInvalidPaths() ? cmd : os::ShellCommand{};
 }
 
+void MainWindow::updateLaunchCommand()
+{
+	// optimization: don't regenerate the command when we're about to make more changes right away
+	if (restoringOptionsInProgress || restoringPresetInProgress)
+		return;
+
+	//static uint callCnt = 1;
+	//logDebug() << "updateLaunchCommand() " << callCnt++;
+
+	const EngineInfo * selectedEngine = getSelectedEngine();
+	if (!selectedEngine)
+	{
+		ui->commandLine->clear();
+		return;  // no sense to generate a command when we don't even know the engine
+	}
+
+	QString currentCommand = ui->commandLine->text();
+
+	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
+
+	// because some engines refuse to start or don't work properly when the working dir is not their executable dir.
+
+	// The relative paths in the arguments need to be relative to the engine's executable directory,
+	// because the engine must be started with the working directory set to its executable directory.
+	// The relative path of the executable does not matter, because here it is for displaying only.
+	auto cmd = generateLaunchCommand({
+		.exePathStyle = PathStyle::Relative,
+		.parentWorkingDir = engineExeDir,
+		.engineWorkingDir = engineExeDir,
+		.quotePaths = true,
+		.verifyPaths = false,
+	});
+
+	QString newCommand = cmd.executable % ' ' % cmd.arguments.join(' ');
+
+	// Don't replace the line widget's content if there is no change. It would just annoy a user who is trying to select
+	// and copy part of the line, by constantly reseting his selection.
+	if (newCommand != currentCommand)
+	{
+		//static int updateCnt = 1;
+		//logDebug() << "    updating " << updateCnt++;
+		ui->commandLine->setText( newCommand );
+	}
+}
+
 int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions )
 {
 	auto engineName = fs::getFileNameFromPath( selectedEngine.executablePath );
@@ -5053,34 +5116,7 @@ int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const
 	return answer;
 }
 
-bool MainWindow::startDetached(
-	const QString & executable, const QStringVec & arguments, const QString & workingDir, const EnvVars & envVars
-){
-	QString executableName = fs::getFileNameFromPath( executable );
-
-	QProcess process;
-
-	process.setProgram( executable );
-	process.setArguments( arguments.toList() );
-	process.setWorkingDirectory( workingDir );
-
-	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-	for (const auto & envVar : envVars)
-	{
-		env.insert( envVar.name, envVar.value );
-	}
-	process.setProcessEnvironment(env);
-
-	bool success = process.startDetached();
-	if (!success)
-	{
-		reportRuntimeError( this, "Process start error", "Failed to start \""%executableName%"\" ("%process.errorString()%")" );
-	}
-
-	return success;
-}
-
-void MainWindow::launch()
+void MainWindow::executeLaunchCommand()
 {
 	const EngineInfo * selectedEngine = getSelectedEngine();
 	if (!selectedEngine)
@@ -5149,7 +5185,7 @@ void MainWindow::launch()
 	}
 	else
 	{
-		bool success = startDetached( cmd.executable, cmd.arguments, processWorkingDir, envVars );
+		bool success = startDetachedProcess( cmd.executable, cmd.arguments, processWorkingDir, envVars );
 
 		if (success && settings.closeOnLaunch)
 		{

@@ -61,12 +61,12 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void onWindowShown();
 
-	void runAboutDialog();
-	void runSetupDialog();
-	void runOptsStorageDialog();
-	void runGameOptsDialog();
-	void runCompatOptsDialog();
-	void runPlayerColorDialog();
+	void onAboutActionTriggered();
+	void onSetupActionTriggered();
+	void onOptsStorageActionTriggered();
+	void onExportToScriptTriggered();
+	void onExportToShortcutTriggered();
+	//void onImportFromScriptTriggered();
 
 	void onEngineSelected( int index );
 	void onConfigSelected( int index );
@@ -76,14 +76,14 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onPresetDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 	void onModDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 
-	void showIWADDesc( const QModelIndex & index );
-	void showMapPackDesc( const QModelIndex & index );
-	void showModDesc( const QModelIndex & index );
+	void onIWADDoubleClicked( const QModelIndex & index );
+	void onMapPackDoubleClicked( const QModelIndex & index );
+	void onModDoubleClicked( const QModelIndex & index );
 
 	void onMapDirUpdated( const QString & path );
 
-	void openEngineDataDir();
-	void cloneConfig();
+	void onEngineDirBtnClicked();
+	void onCloneConfigBtnClicked();
 
 	void presetAdd();
 	void presetDelete();
@@ -127,6 +127,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onMonstersRespawnToggled( bool checked );
 	void onPistolStartToggled( bool checked );
 	void onAllowCheatsToggled( bool checked );
+	void onGameOptsBtnClicked();
+	void onCompatOptsBtnClicked();
 	void onCompatModeSelected( int compatMode );
 
 	void onMultiplayerToggled( bool checked );
@@ -169,15 +171,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onPresetEnvVarDataChanged( int row, int column );
 	void onGlobalEnvVarDataChanged( int row, int column );
 
-	void exportPresetToScript();
-	void exportPresetToShortcut();
-	void importPresetFromScript();
-
 	void onPresetCmdArgsChanged( const QString & text );
 	void onGlobalCmdArgsChanged( const QString & text );
 	void onCmdPrefixChanged( const QString & text );
 
-	void launch();
+	void onLaunchBtnClicked();
 
  private: // methods
 
@@ -234,6 +232,22 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void fillDerivedEngineInfo( DirectList< EngineInfo > & engines, bool refreshAllAutoEngineInfo );
 
+	void runAboutDialog();
+	void runSetupDialog();
+	void runOptsStorageDialog();
+	void runGameOptsDialog();
+	void runCompatOptsDialog();
+	void runPlayerColorDialog();
+
+	void showTxtDescriptionFor( const QString & filePath, const QString & contentType );
+
+	void openCurrentEngineDataDir();
+	void cloneCurrentEngineConfigFile();
+
+	void exportPresetToScript();
+	void exportPresetToShortcut();
+	//void importPresetFromScript();
+
 	void autoselectItems();
 
 	void updateAlternativeDirs( const Preset * selectedPreset = nullptr );
@@ -247,8 +261,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateCompatModes();
 	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
 
-	void showTxtDescriptionFor( const QString & filePath, const QString & contentType );
-
 	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
 
 	void togglePresetSubWidgets( const Preset * selectedPreset );
@@ -259,8 +271,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void toggleLaunchModeSubwidgets( LaunchMode mode );
 	void toggleSkillSubwidgets( LaunchMode mode );
 	void toggleOptionsSubwidgets( LaunchMode mode );
-
-	void updateLaunchCommand();
 
 	struct LaunchCommandOptions
 	{
@@ -287,10 +297,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	};
 	os::ShellCommand generateLaunchCommand( LaunchCommandOptions cmdOpts );
 
+	void updateLaunchCommand();
+	void executeLaunchCommand();
 	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
-	bool startDetached(
-		const QString & executable, const QStringVec & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
-	);
 
  private: // MainWindow-specific utils
 

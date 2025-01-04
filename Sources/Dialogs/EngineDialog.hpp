@@ -39,10 +39,16 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 	/// Attempts to auto-detect the engine properties based on its currently set executablePath.
 	static void autofillEngineInfo( EngineInfo & engine, const QString & executablePath );
 
- private: // methods
+ private: // overridden methods
+
+	virtual void showEvent( QShowEvent * event ) override;
+
+ private: // own methods
 
 	void adjustUi();
 	void onWindowShown();
+
+	void autofillEngineFields();
 
  private slots:
 
@@ -50,20 +56,19 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 	void browseConfigDir();
 	void browseDataDir();
 
-	void autofillEngineFields();
-
 	void onNameChanged( const QString & text );
 	void onExecutableChanged( const QString & text );
 	void onConfigDirChanged( const QString & text );
 	void onDataDirChanged( const QString & text );
 	void onFamilySelected( int familyIdx );
 
- public slots: // overridden methods
+	void onAutoDetectBtnClicked();
 
-	virtual void showEvent( QShowEvent * event ) override;
+ private slots: // overridden slots
+
 	virtual void accept() override;
 
- private:
+ private: // internal members
 
 	Ui::EngineDialog * ui;
 

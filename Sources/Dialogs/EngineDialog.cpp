@@ -56,7 +56,7 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 	connect( ui->browseConfigDirBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
 	connect( ui->browseDataDirBtn, &QPushButton::clicked, this, &thisClass::browseDataDir );
 
-	connect( ui->autoDetectBtn, &QPushButton::clicked, this, &thisClass::autofillEngineFields );
+	connect( ui->autoDetectBtn, &QPushButton::clicked, this, &thisClass::onAutoDetectBtnClicked );
 
 	//connect( ui->nameLine, &QLineEdit::textChanged, this, &thisClass::onNameChanged );
 	connect( ui->executableLine, &QLineEdit::textChanged, this, &thisClass::onExecutableChanged );
@@ -121,18 +121,6 @@ void EngineDialog::onWindowShown()
 		done( QDialog::Rejected );
 }
 
-static void suggestUserEngineInfo( Engine & userEngineInfo, const EngineTraits & autoEngineInfo )
-{
-	if (userEngineInfo.name.isEmpty())  // if the user already gave it a name, let him have it
-	{
-		userEngineInfo.name  = autoEngineInfo.displayName();
-	}
-
-	userEngineInfo.family    = autoEngineInfo.currentEngineFamily();
-	userEngineInfo.configDir = autoEngineInfo.getDefaultConfigDir();
-	userEngineInfo.dataDir   = autoEngineInfo.getDefaultDataDir();
-}
-
 void EngineDialog::autofillEngineInfo( EngineInfo & engine, const QString & executablePath )
 {
 	// load the info that can be determined from the executable path
@@ -140,8 +128,14 @@ void EngineDialog::autofillEngineInfo( EngineInfo & engine, const QString & exec
 	engine.autoDetectTraits( executablePath );  // read executable version info and auto-detects its properties
 
 	// automatically suggest the most common user-defined paths and options based on the derived engine info
-	suggestUserEngineInfo( engine, engine );
+	if (engine.name.isEmpty())  // if the user already gave it a name, let him have it
+	{
+		engine.name  = engine.displayName();
+	}
+	engine.family    = engine.currentEngineFamily();
 	// keep the suggested paths in the original form, some may be better stored as relative, some as absolute
+	engine.configDir = engine.getDefaultConfigDir();
+	engine.dataDir   = engine.getDefaultDataDir();
 }
 
 void EngineDialog::autofillEngineFields()
@@ -222,6 +216,11 @@ void EngineDialog::onDataDirChanged( const QString & text )
 void EngineDialog::onFamilySelected( int /*familyIdx*/ )
 {
 	// We don't have to store the UI data on every change, doing it once after confirmation is enough.
+}
+
+void EngineDialog::onAutoDetectBtnClicked()
+{
+	autofillEngineFields();
 }
 
 void EngineDialog::accept()

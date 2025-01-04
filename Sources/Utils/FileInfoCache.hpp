@@ -185,7 +185,7 @@ class FileInfoCache : protected LoggingComponent {
 		}
 		else if (newEntry.fileInfo.status == ReadStatus::NotSupported)
 		{
-			//logDebug() << " -> file info not implemented";
+			logDebug() << " -> not implemented";
 		}
 
 		_dirty = true;

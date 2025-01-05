@@ -61,6 +61,7 @@ HEADERS += \
 	Sources/Utils/MiscUtils.hpp \
 	Sources/Utils/OSUtils.hpp \
 	Sources/Utils/StandardOutput.hpp \
+	Sources/Utils/StringUtils.hpp \
 	Sources/Utils/TimeStats.hpp \
 	Sources/Utils/WADReader.hpp \
 	Sources/Utils/WidgetUtils.hpp \
@@ -103,6 +104,7 @@ SOURCES += \
 	Sources/Utils/MiscUtils.cpp \
 	Sources/Utils/OSUtils.cpp \
 	Sources/Utils/StandardOutput.cpp \
+	Sources/Utils/StringUtils.cpp \
 	Sources/Utils/WADReader.cpp \
 	Sources/Utils/WidgetUtils.cpp \
 	Sources/Utils/WindowsUtils.cpp \

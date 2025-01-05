@@ -8,6 +8,7 @@
 #include "MiscUtils.hpp"
 
 #include "LangUtils.hpp"  // correspondingValue
+#include "StringUtils.hpp"  // capitalize
 #include "FileSystemUtils.hpp"  // isValidDir, isValidFile
 #include "WidgetUtils.hpp"  // setTextColor
 #include "Themes.hpp"  // getCurrentPalette
@@ -221,20 +222,6 @@ bool PathChecker::_checkCollision(
 
 //----------------------------------------------------------------------------------------------------------------------
 // other
-
-QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith )
-{
-	int startIdx = source.indexOf( startingChar );
-	if (startIdx < 0 || startIdx == source.size() - 1)
-		return source;
-	int endIdx = source.indexOf( endingChar, startIdx + 1 );
-	if (endIdx < 0)
-		return source;
-
-	source.replace( startIdx + 1, endIdx - startIdx - 1, replaceWith );
-
-	return source;
-}
 
 QString makeFileFilter( const char * filterName, const QStringVec & suffixes )
 {

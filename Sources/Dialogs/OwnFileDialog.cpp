@@ -7,7 +7,7 @@
 
 #include "OwnFileDialog.hpp"
 
-#include "CommonTypes.hpp"  // emptyString
+#include "Utils/StringUtils.hpp"  // emptyString
 #include "Utils/OSUtils.hpp"  // getLinuxDesktopEnv(), getCachedThisAppDataDir()
 
 

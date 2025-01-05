@@ -209,22 +209,6 @@ class PathChecker {
 //----------------------------------------------------------------------------------------------------------------------
 // other
 
-/// Makes the first letter of a string capital.
-inline QString & capitalize( QString & str )
-{
-	str[0] = str[0].toUpper();
-	return str;
-}
-
-inline QString capitalize( const QString & str )
-{
-	auto strCopy = str;
-	return capitalize( strCopy );
-}
-
-/// Replaces everything between startingChar and endingChar with replaceWith
-QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith );
-
 /// Creates a file filter for the QFileDialog::getOpenFileNames.
 QString makeFileFilter( const char * filterName, const QStringVec & suffixes );
 

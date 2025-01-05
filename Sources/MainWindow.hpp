@@ -274,6 +274,10 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	struct LaunchCommandOptions
 	{
+		/// The currently selected engine.
+		/** The command cannot be generated without one. */
+		const EngineInfo & selectedEngine;
+
 		/// Path style to be used for the engine executable.
 		PathStyle exePathStyle;
 
@@ -282,10 +286,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 		/// Working directory of the parent process (this process) when executing the command.
 		/** This determines the relative path of the engine executable in the command. */
 		const QString & parentWorkingDir;
-
-		/// Working directory for the engine process that will be started.
-		/** This determines the relative paths of the file or directory arguments passed to the engine. */
-		const QString & engineWorkingDir;
 
 		/// Surround each path in the command with quotes.
 		/** Required for displaying the command or saving it to a script file. */
@@ -324,10 +324,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QString getActiveSaveDir() const;
 	QString getActiveScreenshotDir() const;
 	QString getActiveDemoDir() const;
-
-	QString makeCmdSaveFilePath(
-		const QString & filePath, const EngineInfo * engine, const PathRebaser & workingDirRebaser, const QString & saveDir
-	);
 
 	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
 	QStringVec getDirsToBeAccessed() const;
@@ -382,8 +378,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
 
-	QString currentEngineSaveDir;         ///< cached path of the directory when the currently selected engine stores its save files by default
-	QString currentEngineScreenshotDir;   ///< cached path of the directory when the currently selected engine stores its screenshots by default
+	QString currentEngineSaveDir;         ///< cached path of the directory when the currently selected engine stores its save files by default, maintains path style of dataDir of the current engine
+	QString currentEngineScreenshotDir;   ///< cached path of the directory when the currently selected engine stores its screenshots by default, maintains path style of dataDir of the current engine
 
 	PathRebaser engineConfigDirRebaser;   ///< path convertor set up to rebase relative paths from the current working dir to the engine's config dir and back
 	PathRebaser engineDataDirRebaser;     ///< path convertor set up to rebase relative paths from the current working dir to the engine's data dir and back

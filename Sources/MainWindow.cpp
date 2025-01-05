@@ -146,7 +146,7 @@ QStringList MainWindow::getUniqueMapNamesFromWADs( const QVector<QString> & sele
 
 // paths of data dirs
 
-// returns config dir configured for the current engine, or empty string if engine is not selected
+// Returns config dir configured for the current engine, or empty string if engine is not selected.
 // Used as a base directory for config dir override or directly for searching config files.
 QString MainWindow::getEngineConfigDir() const
 {
@@ -154,7 +154,7 @@ QString MainWindow::getEngineConfigDir() const
 	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].configDir : QString();
 }
 
-// returns data dir configured for the current engine, or empty string if engine is not selected
+// Returns data dir configured for the current engine, or empty string if engine is not selected.
 // Only serves as a base directory for save dir and screenshot dir overrides. This launcher doesn't read anything directly from it.
 QString MainWindow::getEngineDataDir() const
 {
@@ -162,7 +162,9 @@ QString MainWindow::getEngineDataDir() const
 	return currentEngineIdx >= 0 ? engineModel[ currentEngineIdx ].dataDir : QString();
 }
 
-// returns the directory this launcher will use for config files under the current launcher options
+// Returns the directory this launcher will use for config files under the current launcher options.
+// Maintains the path style of the configDir configured for the current engine,
+// or uses the globally selected path style if the custom config dir override field is set.
 QString MainWindow::getActiveConfigDir() const
 {
 	// the path in altConfigDirLine is relative to the engine's config dir by convention, need to rebase it to the current working dir
@@ -177,7 +179,9 @@ QString MainWindow::getActiveConfigDir() const
 	}
 }
 
-// returns the directory the engine will use for save files under the current launcher options
+// Returns the directory the engine will use for save files under the current launcher options.
+// Maintains the path style of the dataDir configured for the current engine,
+// or uses the globally selected path style if the custom save dir override field is set.
 QString MainWindow::getActiveSaveDir() const
 {
 	// the path in altSaveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
@@ -192,7 +196,9 @@ QString MainWindow::getActiveSaveDir() const
 	}
 }
 
-// returns the directory where the engine will save screenshots under the current launcher options
+// Returns the directory where the engine will save screenshots under the current launcher options.
+// Maintains the path style of the dataDir configured for the current engine,
+// or uses the globally selected path style if the custom screenshot dir override field is set.
 QString MainWindow::getActiveScreenshotDir() const
 {
 	// the path in altScreenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
@@ -212,23 +218,6 @@ QString MainWindow::getActiveDemoDir() const
 	// let's not complicate things and treat save dir and demo dir as one
 	return getActiveSaveDir();
 }
-
-QString MainWindow::makeCmdSaveFilePath(
-	const QString & filePath, const EngineInfo * engine, const PathRebaser & workingDirRebaser, const QString & saveDir
-){
-	// the base dir for the save file parameter depends on the engine and its version
-	if (engine && engine->baseDirStyleForSaveFiles() == EngineTraits::SaveBaseDir::SaveDir)
-	{
-		// this path must be always relative, absolute path would just get appended to the -savedir path
-		PathRebaser saveDirRebaser( pathConvertor.workingDir(), saveDir, PathStyle::Relative, workingDirRebaser.quotePaths() );
-		return saveDirRebaser.makeRebasedRelativeCmdPath( filePath );
-	}
-	else
-	{
-		// respect the path style of the workingDirRebaser
-		return workingDirRebaser.makeRebasedCmdPath( filePath );
-	}
-};
 
 // Iterates over all directories which the engine will need to access (either for reading or writing).
 // Required for supporting sandbox environments like Snap or Flatpak
@@ -2321,7 +2310,7 @@ void MainWindow::openCurrentEngineDataDir()
 void MainWindow::cloneCurrentEngineConfigFile()
 {
 	QString configDirStr = getActiveConfigDir();
-	QDir configDir( configDirStr );
+	QDir configDir( configDirStr ); configDir.makeAbsolute();
 	QFileInfo oldConfig;
 
 	if (const ConfigFile * selectedConfig = getSelectedConfig())
@@ -4590,7 +4579,7 @@ void MainWindow::exportPresetToScript()
 	if (!selectedEngine)
 	{
 		reportUserError( this, "No engine selected", "No Doom engine is selected." );
-		return;  // no sense to generate a command when we don't even know the engine
+		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
 	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, os::scriptFileSuffix );
@@ -4603,12 +4592,10 @@ void MainWindow::exportPresetToScript()
 
 	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
-	// All relative paths need to be relative to the engine's executable directory,
-	// because the working dir must be set to the engine's executable directory.
 	auto cmd = generateLaunchCommand({
+		.selectedEngine = *selectedEngine,
 		.exePathStyle = PathStyle::Relative,
 		.parentWorkingDir = engineExeDir,
-		.engineWorkingDir = engineExeDir,
 		.quotePaths = true,
 		.verifyPaths = false,
 	});
@@ -4651,7 +4638,7 @@ void MainWindow::exportPresetToShortcut()
 	if (!selectedEngine)
 	{
 		reportUserError( this, "No engine selected", "No Doom engine is selected." );
-		return;  // no sense to generate a command when we don't even know the engine
+		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
 	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, os::shortcutFileSuffix );
@@ -4665,15 +4652,13 @@ void MainWindow::exportPresetToShortcut()
 	QString currentWorkingDir = pathConvertor.workingDir().path();
 	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
-	// - The paths in the arguments need to be relative to the engine's directory
-	//   because the engine will be executed with the working directory set to engine's directory,
-	// - But the executable itself must be either absolute or relative to the current working dir
+	// - The executable itself must be either absolute or relative to the current working dir
 	//   so that it is correctly saved to the shortcut.
 	// - Paths need to be quoted because Windows accepts a single string with all arguments concatenated instead of a list.
 	auto cmd = generateLaunchCommand({
+		.selectedEngine = *selectedEngine,
 		.exePathStyle = PathStyle::Absolute,
 		.parentWorkingDir = currentWorkingDir,
-		.engineWorkingDir = engineExeDir,
 		.quotePaths = true,
 		.verifyPaths = false,
 	});
@@ -4730,25 +4715,22 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 {
 	os::ShellCommand cmd;
 
+	const EngineInfo & engine = opts.selectedEngine;  // let's make it little shorter
+
 	const QDir & currentWorkingDir = pathConvertor.workingDir();
+	const QString engineExeDir = fs::getAbsoluteParentDir( engine.executablePath );
+
 	// The stored engine path is relative to DoomRunner's directory, but we need it relative to parentWorkingDir.
 	PathRebaser parentDirRebaser( currentWorkingDir, opts.parentWorkingDir, opts.exePathStyle, opts.quotePaths );
-	// All stored paths are relative to DoomRunner's directory, but we need them relative to engineWorkingDir.
-	PathRebaser engineDirRebaser( currentWorkingDir, opts.engineWorkingDir, opts.exePathStyle /*not used*/, opts.quotePaths );
+	// All stored paths are relative to DoomRunner's directory, but we need them relative to to the engine's executable
+	// directory, because the engine must be started with the working directory set to its executable directory.
+	PathRebaser engineDirRebaser( currentWorkingDir, engineExeDir, opts.exePathStyle /*not used*/, opts.quotePaths );
 	// Checks if the required files or directories exist and displays error message if requested.
 	PathChecker p( this, opts.verifyPaths );
 
 	QString cmdPrefixStr = ui->cmdPrefixLine->text();
 
 	//-- engine --------------------------------------------------------------------
-
-	const EngineInfo * selectedEngine = getSelectedEngine();
-	if (!selectedEngine)
-	{
-		return {};  // no point in generating a command if we don't even know the engine, it determines everything
-	}
-
-	const EngineInfo & engine = *selectedEngine;  // non-const so that we can change color of invalid paths
 
 	p.checkItemFilePath( engine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
@@ -4879,24 +4861,30 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	}
 	else if (launchMode == LoadSave && !ui->saveFileCmbBox->currentText().isEmpty())
 	{
-		QString saveDir = getActiveSaveDir();  // save dir cannot be empty, otherwise the saveFileCmbBox would be empty
-		QString savePath = fs::getPathFromFileName( saveDir, ui->saveFileCmbBox->currentText() );
-		p.checkFilePath( savePath, "the selected save file", "Please select another one." );
-		cmd.arguments << "-loadgame" << makeCmdSaveFilePath( savePath, &engine, engineDirRebaser, saveDir );
+		// save dir cannot be empty, otherwise the saveFileCmbBox would be empty
+		QString saveDir = getActiveSaveDir();
+		QString saveFileName = ui->saveFileCmbBox->currentText();
+		QString saveFilePath = fs::getPathFromFileName( saveDir, saveFileName );
+		p.checkFilePath( saveFilePath, "the selected save file", "Please select another one." );
+		cmd.arguments << engine.getLoadSavedGameArgs( engineDirRebaser, saveDir, saveFileName );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
-		QString demoDir = getActiveDemoDir();  // if demo dir is empty (saveDirLine is empty and engine.configDir is not set), then
-		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileLine_record->text() );  // the demoFileLine will be used as is
-		cmd.arguments << "-record" << engineDirRebaser.makeRebasedCmdPath( demoPath );
+		// if demo dir is empty (saveDirLine is empty and engine.configDir is not set), then the demoFileLine_record will be used as is
+		QString demoDir = getActiveDemoDir();
+		QString demoFileName = ui->demoFileLine_record->text();
+		QString demoFilePath = fs::getPathFromFileName( demoDir, demoFileName );
+		cmd.arguments << "-record" << engineDirRebaser.makeRebasedCmdPath( demoFilePath );
 		cmd.arguments << engine.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
 	{
-		QString demoDir = getActiveDemoDir();  // demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
-		QString demoPath = fs::getPathFromFileName( demoDir, ui->demoFileCmbBox_replay->currentText() );
-		p.checkFilePath( demoPath, "the selected demo", "Please select another one." );
-		cmd.arguments << "-playdemo" << engineDirRebaser.makeRebasedCmdPath( demoPath );
+		// demo dir cannot be empty, otherwise the demoFileCmbBox_replay would be empty
+		QString demoDir = getActiveDemoDir();
+		QString demoFileName = ui->demoFileCmbBox_replay->currentText();
+		QString demoFilePath = fs::getPathFromFileName( demoDir, demoFileName );
+		p.checkFilePath( demoFilePath, "the selected demo", "Please select another one." );
+		cmd.arguments << "-playdemo" << engineDirRebaser.makeRebasedCmdPath( demoFilePath );
 	}
 	else if (launchMode == ResumeDemo
 	      && !ui->demoFileCmbBox_resume->currentText().isEmpty() && !ui->demoFileLine_resume->text().isEmpty())
@@ -5063,7 +5051,7 @@ void MainWindow::updateLaunchCommand()
 	if (!selectedEngine)
 	{
 		ui->commandLine->clear();
-		return;  // no sense to generate a command when we don't even know the engine
+		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
 	QString currentCommand = ui->commandLine->text();
@@ -5072,13 +5060,11 @@ void MainWindow::updateLaunchCommand()
 
 	// because some engines refuse to start or don't work properly when the working dir is not their executable dir.
 
-	// The relative paths in the arguments need to be relative to the engine's executable directory,
-	// because the engine must be started with the working directory set to its executable directory.
 	// The relative path of the executable does not matter, because here it is for displaying only.
 	auto cmd = generateLaunchCommand({
+		.selectedEngine = *selectedEngine,
 		.exePathStyle = PathStyle::Relative,
 		.parentWorkingDir = engineExeDir,
-		.engineWorkingDir = engineExeDir,
 		.quotePaths = true,
 		.verifyPaths = false,
 	});
@@ -5123,7 +5109,7 @@ void MainWindow::executeLaunchCommand()
 	if (!selectedEngine)
 	{
 		reportUserError( this, "No engine selected", "No Doom engine is selected." );
-		return;
+		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
 	QString currentWorkingDir = pathConvertor.workingDir().path();
@@ -5135,9 +5121,9 @@ void MainWindow::executeLaunchCommand()
 	// - All paths will be relative to the engine's dir, because working dir will be set to the engine's dir when started.
 	// - When sending arguments to the process directly and skipping the shell parsing, the quotes are undesired.
 	auto cmd = generateLaunchCommand({
+		.selectedEngine = *selectedEngine,
 		.exePathStyle = PathStyle::Absolute,
 		.parentWorkingDir = currentWorkingDir,
-		.engineWorkingDir = engineExeDir,
 		.quotePaths = false,
 		.verifyPaths = true,
 	});

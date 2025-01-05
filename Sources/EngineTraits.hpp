@@ -20,6 +20,7 @@
 #include <cassert>
 
 struct Engine;
+class PathRebaser;
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -143,13 +144,6 @@ class EngineTraits {
 	/// Returns a relative sub-directory inside a data directory dedicated for save files.
 	QString getDefaultSaveSubdir( const QString & IWADPath = {} ) const;
 
-	enum class SaveBaseDir
-	{
-		WorkingDir,  ///< path of save file must be relative to the current working directory
-		SaveDir,     ///< path of save file must be relative to the -savedir argument if present or the default save dir otherwise
-	};
-	SaveBaseDir baseDirStyleForSaveFiles() const;
-
 	// default data files names and file suffixes
 
 	const QString & defaultConfigFileName() const  { assert( !_configFileName.isEmpty() ); return _configFileName; }
@@ -165,6 +159,7 @@ class EngineTraits {
 	/// Command line parameter for specifying a custom screenshot directory, can be nullptr if the engine doesn't support it.
 	const char * screenshotDirParam() const     { assert( isInitialized() ); return _screenshotDirParam; }
 
+	auto mapParamStyle() const                  { assert( _familyTraits ); return _familyTraits->mapParamStyle; }
 	bool supportsCustomMapNames() const         { assert( _familyTraits ); return _familyTraits->mapParamStyle == MapParamStyle::Map; }
 
 	CompatModeStyle compatModeStyle() const     { assert( _familyTraits ); return _familyTraits->compatModeStyle; }
@@ -184,6 +179,11 @@ class EngineTraits {
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
 	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;
+
+	// some engines need a file name, other ones require a number
+	QStringVec getLoadSavedGameArgs(
+		const PathRebaser & runDirRebaser, const QString & saveDir, const QString & saveFileName
+	) const;
 
 	// generates either "-complevel x" or "+compatmode x" depending on the engine capabilities
 	QStringVec getCompatModeArgs( int compatMode ) const;
@@ -207,6 +207,13 @@ class EngineTraits {
 	QString getCommonSaveSubdir() const;
 	QString getDefaultConfigFileName() const;
 	const char * getScreenshotDirParam() const;
+
+	QString makeCmdSaveFilePath(
+		const PathRebaser & runDirRebaser, const QString & saveDir, const QString & saveFileName
+	) const;
+
+	QString getSaveNumberFromFileName( const QString & saveFileName ) const;
+
 };
 
 

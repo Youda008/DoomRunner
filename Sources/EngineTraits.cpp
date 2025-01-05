@@ -5,11 +5,30 @@
 // Description: properties and capabilities of different engines
 //======================================================================================================================
 
+// Dear Doom source port developers.
+// If you cannot join your efforts and work on a single engine, can you kindly at least agree on
+// a standardized set of command line parameters and ways of storing save files and use them everywhere?
+// Trying to be compatible with all of your source ports and their older versions is a fucking nightmare.
+// Thank you.
+
+// Sources of information:
+// relations between engines:  https://en.wikipedia.org/wiki/List_of_Doom_ports#/media/File:Doom_source_ports.svg
+// generic parameters (1):     https://doomwiki.org/wiki/Source_port_parameters
+// generic parameters (2):     https://doom.fandom.com/wiki/Parameter
+// Chocolate Doom parameters:  https://www.chocolate-doom.org/wiki/index.php/Command_line_arguments
+// Crispy Doom parameters:     https://github.com/fabiangreffrath/crispy-doom/wiki/New-Command-line-Parameters
+// PrBoom+ parameters:         https://github.com/coelckers/prboom-plus/blob/master/prboom2/doc/README.command-line
+// DSDA-Doom parameters:       https://manpages.ubuntu.com/manpages/lunar/man6/dsda-doom.6.html
+// Woof parameters:            https://github.com/fabiangreffrath/woof/wiki/Command-Line-Parameters
+// ZDoom parameters:           https://zdoom.org/wiki/Command_line_parameters
+
+//----------------------------------------------------------------------------------------------------------------------
+
 #include "EngineTraits.hpp"
 
 #include "Utils/WADReader.hpp"        // g_cachedWadInfo
 #include "Utils/ContainerUtils.hpp"   // find
-#include "Utils/FileSystemUtils.hpp"  // getFileBasenameFromPath
+#include "Utils/FileSystemUtils.hpp"  // getFileBasenameFromPath, PathRebaser
 #include "Utils/OSUtils.hpp"          // getCachedPicturesDir
 
 #include <QHash>
@@ -386,8 +405,6 @@ QString EngineTraits::getCommonSaveSubdir() const
 	// Woof            Linux     latest    any            savegames
 	// anything else   any       any       any            ??
 
-	// Thank you Graph! You're really making this world better and simpler.
-
 	QString saveSubdirBase;
 
 	if (_family == EngineFamily::ZDoom && normalizedName() == "gzdoom")
@@ -491,11 +508,40 @@ bool EngineTraits::saveDirDependsOnIWAD() const
         || (_family == EngineFamily::MBF && normalizedName() == "woof");
 }
 
-EngineTraits::SaveBaseDir EngineTraits::baseDirStyleForSaveFiles() const
+QString EngineTraits::makeCmdSaveFilePath(
+	const PathRebaser & runDirRebaser, const QString & saveDir, const QString & saveFileName
+) const
 {
-	assert( isInitialized() );
+	// the base dir for the save file parameter depends on the engine and its version
+	if (isBasedOnGZDoomVersionOrLater({4,9,0}))
+	{
+		// Path of the save file must be relative to the -savedir argument if present or the default save dir otherwise.
+		// The path also cannot be absolute, because it is directly appended to the -savedir path and would produce nonsense.
+		return runDirRebaser.maybeQuoted( saveFileName );
+	}
+	else
+	{
+		// Path of save file must be relative to the working directory.
+		QString saveFilePath = fs::getPathFromFileName( saveDir, saveFileName );
+		return runDirRebaser.makeRebasedCmdPath( saveFilePath );  // keep the path style of the saveDir
+	}
+}
 
-	return isBasedOnGZDoomVersionOrLater({4,9,0}) ? SaveBaseDir::SaveDir : SaveBaseDir::WorkingDir;
+QString EngineTraits::getSaveNumberFromFileName( const QString & saveFileName ) const
+{
+	static const QRegularExpression saveNumRegex("^[a-zA-Z_\\-]+(\\d+)\\.");
+	if (auto match = saveNumRegex.match( saveFileName ); match.hasMatch())
+	{
+		return match.captured(1);
+	}
+	else if (_family == EngineFamily::MBF && normalizedName() == "woof" && saveFileName == "autosave.dsg")
+	{
+		return "255";
+	}
+	else
+	{
+		return "invalid_file_name";
+	}
 }
 
 QString EngineTraits::getDefaultConfigFileName() const
@@ -552,7 +598,7 @@ QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 		return {};
 	}
 
-	if (_familyTraits->mapParamStyle == MapParamStyle::Map)  // this engine supports +map, we can use the map name directly
+	if (mapParamStyle() == MapParamStyle::Map)  // this engine supports +map, we can use the map name directly
 	{
 		return { "+map", mapName };
 	}
@@ -574,6 +620,27 @@ QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 	}
 }
 
+QStringVec EngineTraits::getLoadSavedGameArgs(
+	const PathRebaser & runDirRebaser, const QString & saveDir, const QString & saveFileName
+) const
+{
+	assert( isInitialized() );
+
+	if (saveFileName.isEmpty())
+	{
+		return {};
+	}
+
+	if (_family == EngineFamily::ZDoom)
+	{
+		return { "-loadgame", makeCmdSaveFilePath( runDirRebaser, saveDir, saveFileName ) };
+	}
+	else
+	{
+		return { "-loadgame", getSaveNumberFromFileName( saveFileName ) };
+	}
+}
+
 QStringVec EngineTraits::getCompatModeArgs( int compatMode ) const
 {
 	assert( isInitialized() );
@@ -581,13 +648,21 @@ QStringVec EngineTraits::getCompatModeArgs( int compatMode ) const
 	// Properly working -compatmode is present only in GZDoom 4.8.0+,
 	// for other ZDoom-based engines use at least something, even if it doesn't fully work.
 	if (isBasedOnGZDoomVersionOrLater({4,8,0}))
+	{
 		return { "-compatmode", QString::number( compatMode ) };
-	else if (_familyTraits->compatModeStyle == CompatModeStyle::ZDoom)
+	}
+	else if (compatModeStyle() == CompatModeStyle::ZDoom)
+	{
 		return { "+compatmode", QString::number( compatMode ) };
-	else if (_familyTraits->compatModeStyle == CompatModeStyle::PrBoom)
+	}
+	else if (compatModeStyle() == CompatModeStyle::PrBoom)
+	{
 		return { "-complevel", QString::number( compatMode ) };
+	}
 	else
+	{
 		return {};
+	}
 }
 
 QString EngineTraits::getCmdMonitorIndex( int ownIndex ) const

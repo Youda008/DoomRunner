@@ -50,8 +50,8 @@ struct Engine : public EditableListModelItem
 {
 	QString name;            ///< user defined engine name
 	QString executablePath;  ///< path to the engine's executable
-	QString configDir;       ///< directory with engine's .ini files
-	QString dataDir;         ///< directory for engine's data files (save files, demo files, ...)
+	QString configDir;       ///< directory with engine's config files, style of this path is kept as the user entered it
+	QString dataDir;         ///< directory for engine's data files (save files, demo files, ...), style of this path is kept as the user entered it
 	EngineFamily family = EngineFamily::ZDoom;  ///< automatically detected, but user-selectable engine family
 
 	Engine() {}

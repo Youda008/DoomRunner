@@ -187,39 +187,46 @@ class DirectList {
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
-	auto & list()                                 { return _list; }
-	const auto & list() const                     { return _list; }
-	void updateList( const QList< Item > & list ) { _list = list; }
-	void assignList( QList< Item > && list )      { _list = std::move(list); }
+	      auto & list()                              { return _list; }
+	const auto & list() const                        { return _list; }
+	void updateList( const QList< Item > &  list )   { _list = list; }
+	void assignList(       QList< Item > && list )   { _list = std::move(list); }
 
 	// content access
 
 	using iterator = decltype( _list.begin() );
 	using const_iterator = decltype( _list.cbegin() );
 
-	auto count() const                            { return _list.count(); }
-	auto size() const                             { return _list.size(); }
-	auto isEmpty() const                          { return _list.isEmpty(); }
-	auto & operator[]( int idx )                  { return _list[ idx ]; }
-	const auto & operator[]( int idx ) const      { return _list[ idx ]; }
-	iterator begin()                              { return _list.begin(); }
-	const_iterator begin() const                  { return _list.begin(); }
-	iterator end()                                { return _list.end(); }
-	const_iterator end() const                    { return _list.end(); }
-	auto & first()                                { return _list.first(); }
-	const auto & first() const                    { return _list.first(); }
-	auto & last()                                 { return _list.last(); }
-	const auto & last() const                     { return _list.last(); }
-	auto indexOf( const Item & item ) const       { return _list.indexOf( item ); }
+	auto count() const                               { return _list.count(); }
+	auto size() const                                { return _list.size(); }
+	auto isEmpty() const                             { return _list.isEmpty(); }
+
+	      auto & operator[]( int idx )               { return _list[ idx ]; }
+	const auto & operator[]( int idx ) const         { return _list[ idx ]; }
+
+	      iterator begin()                           { return _list.begin(); }
+	const_iterator begin() const                     { return _list.begin(); }
+	      iterator end()                             { return _list.end(); }
+	const_iterator end() const                       { return _list.end(); }
+
+	      auto & first()                             { return _list.first(); }
+	const auto & first() const                       { return _list.first(); }
+	      auto & last()                              { return _list.last(); }
+	const auto & last() const                        { return _list.last(); }
 
 	// list modification
 
-	void clear()                                  { _list.clear(); }
-	void append( const Item & item )              { _list.append( item ); }
-	void prepend( const Item & item )             { _list.prepend( item ); }
-	void insert( int idx, const Item & item )     { _list.insert( idx, item ); }
-	void removeAt( int idx )                      { _list.removeAt( idx ); }
-	void move( int from, int to )                 { _list.move( from, to ); }
+	void clear()                                     { _list.clear(); }
+
+	void append( const Item &  item )                { _list.append( item ); }
+	void append(       Item && item )                { _list.append( std::move(item) ); }
+	void prepend( const Item &  item )               { _list.prepend( item ); }
+	void prepend(       Item && item )               { _list.prepend( std::move(item) ); }
+	void insert( int idx, const Item &  item )       { _list.insert( idx, item ); }
+	void insert( int idx,       Item && item )       { _list.insert( idx, std::move(item) ); }
+
+	void removeAt( int idx )                         { _list.removeAt( idx ); }
+	void move( int from, int to )                    { _list.move( from, to ); }
 
 	//-- special -------------------------------------------------------------------------------------------------------
 
@@ -248,32 +255,34 @@ class FilteredList {
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
-	auto & fullList()                             { return _fullList; }
-	const auto & fullList() const                 { return _fullList; }
-	auto & filteredList()                         { return _filteredList; }
-	const auto & filteredList() const             { return _filteredList; }
-	void updateList( const QList< Item > & list ) { _fullList = list; restore(); }
-	void assignList( QList< Item > && list )      { _fullList = std::move(list); restore(); }
+	      auto & fullList()                          { return _fullList; }
+	const auto & fullList() const                    { return _fullList; }
+	      auto & filteredList()                      { return _filteredList; }
+	const auto & filteredList() const                { return _filteredList; }
+	void updateList( const QList< Item > &  list )   { _fullList = list; restore(); }
+	void assignList(       QList< Item > && list )   { _fullList = std::move(list); restore(); }
 
 	// content access
 
 	using iterator = PointerIterator< decltype( _filteredList.begin() ) >;
 	using const_iterator = PointerIterator< decltype( _filteredList.cbegin() ) >;
 
-	auto count() const                            { return _filteredList.count(); }
-	auto size() const                             { return _filteredList.size(); }
-	auto isEmpty() const                          { return _filteredList.isEmpty(); }
-	auto & operator[]( int idx )                  { return *_filteredList[ idx ]; }
-	const auto & operator[]( int idx ) const      { return *_filteredList[ idx ]; }
-	iterator begin()                              { return PointerIterator( _filteredList.begin() ); }
-	const_iterator begin() const                  { return PointerIterator( _filteredList.begin() ); }
-	iterator end()                                { return PointerIterator( _filteredList.end() ); }
-	const_iterator end() const                    { return PointerIterator( _filteredList.end() ); }
-	auto & first()                                { return *_filteredList.first(); }
-	const auto & first() const                    { return *_filteredList.first(); }
-	auto & last()                                 { return *_filteredList.last(); }
-	const auto & last() const                     { return *_filteredList.last(); }
-	auto indexOf( const Item & item ) const       { return _filteredList.indexOf( &item ); }
+	auto count() const                               { return _filteredList.count(); }
+	auto size() const                                { return _filteredList.size(); }
+	auto isEmpty() const                             { return _filteredList.isEmpty(); }
+
+	      auto & operator[]( int idx )               { return *_filteredList[ idx ]; }
+	const auto & operator[]( int idx ) const         { return *_filteredList[ idx ]; }
+
+	      iterator begin()                           { return PointerIterator( _filteredList.begin() ); }
+	const_iterator begin() const                     { return PointerIterator( _filteredList.begin() ); }
+	      iterator end()                             { return PointerIterator( _filteredList.end() ); }
+	const_iterator end() const                       { return PointerIterator( _filteredList.end() ); }
+
+	      auto & first()                             { return *_filteredList.first(); }
+	const auto & first() const                       { return *_filteredList.first(); }
+	      auto & last()                              { return *_filteredList.last(); }
+	const auto & last() const                        { return *_filteredList.last(); }
 
 	// list modification - only when the list is not filtered
 
@@ -290,6 +299,12 @@ class FilteredList {
 		_fullList.append( item );
 		_filteredList.append( &_fullList.last() );
 	}
+	void append( Item && item )
+	{
+		ensureCanBeModified();
+		_fullList.append( std::move(item) );
+		_filteredList.append( &_fullList.last() );
+	}
 
 	void prepend( const Item & item )
 	{
@@ -297,11 +312,23 @@ class FilteredList {
 		_fullList.prepend( item );
 		_filteredList.prepend( &_fullList.first() );
 	}
+	void prepend( Item && item )
+	{
+		ensureCanBeModified();
+		_fullList.prepend( std::move(item) );
+		_filteredList.prepend( &_fullList.first() );
+	}
 
 	void insert( int idx, const Item & item )
 	{
 		ensureCanBeModified();
 		_fullList.insert( idx, item );
+		_filteredList.insert( idx, &_fullList[ idx ] );
+	}
+	void insert( int idx, Item && item )
+	{
+		ensureCanBeModified();
+		_fullList.insert( idx, std::move(item) );
 		_filteredList.insert( idx, &_fullList[ idx ] );
 	}
 

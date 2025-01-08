@@ -655,7 +655,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	virtual Qt::ItemFlags flags( const QModelIndex & index ) const override
 	{
-		if (!index.isValid())
+		if (!index.isValid() || index.row() >= this->size())
 			return Qt::ItemIsDropEnabled;  // otherwise you can't append dragged items to the end of the list
 
 		const Item & item = (*this)[ index.row() ];
@@ -673,7 +673,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	virtual QVariant data( const QModelIndex & index, int role ) const override
 	{
-		if (!index.isValid() || index.parent().isValid() || index.row() >= this->size())
+		if (!index.isValid() || index.row() >= this->size())
 			return QVariant();
 
 		const Item & item = (*this)[ index.row() ];
@@ -741,7 +741,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	virtual bool setData( const QModelIndex & index, const QVariant & value, int role ) override
 	{
-		if (index.parent().isValid() || !index.isValid() || index.row() >= this->size())
+		if (!index.isValid() || index.row() >= this->size())
 			return false;
 
 		Item & item = (*this)[ index.row() ];
@@ -774,7 +774,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	virtual bool insertRows( int row, int count, const QModelIndex & parent ) override
 	{
-		if (parent.isValid() || row < 0)
+		if (row < 0 || row > this->size())
 			return false;
 
 		if (!this->canBeModified())
@@ -797,7 +797,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	virtual bool removeRows( int row, int count, const QModelIndex & parent ) override
 	{
-		if (parent.isValid() || row < 0 || row + count > this->size())
+		if (row < 0 || count < 0 || row + count > this->size())
 			return false;
 
 		if (!this->canBeModified())

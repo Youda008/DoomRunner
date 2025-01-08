@@ -2449,6 +2449,11 @@ void MainWindow::autoselectItems()
 
 void MainWindow::onPresetToggled( const QItemSelection & /*selected*/, const QItemSelection & /*deselected*/ )
 {
+	// Optimization: Ignore these calls when the presets are being moved around (for example reordered by the user),
+	//               the presets would get loaded and unloaded back and forth.
+	if (presetModel.isMovingInProgress())
+		return;
+
 	int selectedPresetIdx = wdg::getSelectedItemIndex( ui->presetListView );
 	if (selectedPresetIdx >= 0 && !presetModel[ selectedPresetIdx ].isSeparator)
 	{

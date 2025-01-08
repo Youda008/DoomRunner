@@ -440,46 +440,56 @@ class ListModelCommon : public QAbstractListModel, protected LoggingComponent {
 
 	void orderAboutToChange()
 	{
+		movingInProgress = true;
 		emit layoutAboutToBeChanged( {}, LayoutChangeHint::VerticalSortHint );
 	}
 	void orderChanged()
 	{
+		movingInProgress = false;
 		emit layoutChanged( {}, LayoutChangeHint::VerticalSortHint );
 	}
 
 	void startAppending( int count = 1 )
 	{
+		movingInProgress = true;
 		beginInsertRows( QModelIndex(), this->rowCount(), this->rowCount() + count - 1 );
 	}
 	void finishAppending()
 	{
+		movingInProgress = false;
 		endInsertRows();
 	}
 
-	void startInserting( int row )
+	void startInserting( int row, int count = 1 )
 	{
-		beginInsertRows( QModelIndex(), row, row );
+		movingInProgress = true;
+		beginInsertRows( QModelIndex(), row, row + count - 1 );
 	}
 	void finishInserting()
 	{
+		movingInProgress = false;
 		endInsertRows();
 	}
 
-	void startDeleting( int row )
+	void startDeleting( int row, int count = 1 )
 	{
-		beginRemoveRows( QModelIndex(), row, row );
+		movingInProgress = true;
+		beginRemoveRows( QModelIndex(), row, row + count - 1 );
 	}
 	void finishDeleting()
 	{
+		movingInProgress = false;
 		endRemoveRows();
 	}
 
 	void startCompleteUpdate()
 	{
+		movingInProgress = true;
 		beginResetModel();
 	}
 	void finishCompleteUpdate()
 	{
+		movingInProgress = false;
 		endResetModel();
 	}
 
@@ -490,9 +500,21 @@ class ListModelCommon : public QAbstractListModel, protected LoggingComponent {
 		return index( row, /*column*/0, /*parent*/QModelIndex() );
 	}
 
+	// Optimization to prevent updating some things when we know they are going to change again right away.
+	bool isMovingInProgress() const
+	{
+		return movingInProgress;
+	}
+
+	void setMovingInProgress( bool val )
+	{
+		movingInProgress = val;
+	}
+
  protected:
 
 	bool iconsEnabled = false;
+	bool movingInProgress = false;
 
 };
 
@@ -772,7 +794,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 	}
 
-	virtual bool insertRows( int row, int count, const QModelIndex & parent ) override
+	virtual bool insertRows( int row, int count, const QModelIndex & ) override
 	{
 		if (row < 0 || row > this->size())
 			return false;
@@ -783,19 +805,19 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 			return false;
 		}
 
-		QAbstractListModel::beginInsertRows( parent, row, row + count - 1 );
+		startInserting( row, count );
 
 		// n times moving all the elements forward to insert one is not nice
 		// but it happens only once in awhile and the number of elements is almost always very low
 		for (int i = 0; i < count; i++)
 			this->insert( row + i, Item() );
 
-		QAbstractListModel::endInsertRows();
+		finishInserting();
 
 		return true;
 	}
 
-	virtual bool removeRows( int row, int count, const QModelIndex & parent ) override
+	virtual bool removeRows( int row, int count, const QModelIndex & ) override
 	{
 		if (row < 0 || count < 0 || row + count > this->size())
 			return false;
@@ -806,7 +828,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 			return false;
 		}
 
-		QAbstractListModel::beginRemoveRows( parent, row, row + count - 1 );
+		startDeleting( row, count );
 
 		// n times moving all the elements backward to insert one is not nice
 		// but it happens only once in awhile and the number of elements is almost always very low
@@ -817,7 +839,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 				DropTarget::decrementRow();      // so target row's index is moving backwards
 		}
 
-		QAbstractListModel::endRemoveRows();
+		finishDeleting();
 
 		return true;
 	}

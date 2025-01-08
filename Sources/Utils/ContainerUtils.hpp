@@ -69,22 +69,6 @@ void reverse( Container & cont )
 	std::reverse( std::begin(cont), std::end(cont) );
 }
 
-/** Convenience wrapper around iterator to container of pointers
-  * that skips the additional needed dereference and returns a reference directly. */
-template< typename IterType >
-class PointerIterator
-{
-	IterType _origIter;
- public:
-	PointerIterator( const IterType & origIter ) : _origIter( origIter ) {}
-	auto operator*() -> decltype( **_origIter ) const { return **_origIter; }
-	auto operator->() -> decltype( *_origIter ) const { return *_origIter; }
-	PointerIterator & operator++() { ++_origIter; return *this; }
-	PointerIterator operator++(int) { auto tmp = *this; ++_origIter; return tmp; }
-	friend bool operator==( const PointerIterator & a, const PointerIterator & b ) { return a._origIter == b._origIter; }
-	friend bool operator!=( const PointerIterator & a, const PointerIterator & b ) { return a._origIter != b._origIter; }
-};
-
 
 //======================================================================================================================
 // span

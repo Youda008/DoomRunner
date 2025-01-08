@@ -7,6 +7,9 @@
 
 #include "StringUtils.hpp"
 
+#include <QStringList>
+#include <QTextStream>
+
 
 //======================================================================================================================
 
@@ -27,4 +30,21 @@ QString replaceStringBetween( QString source, char startingChar, char endingChar
 	source.replace( startIdx + 1, endIdx - startIdx - 1, replaceWith );
 
 	return source;
+}
+
+QTextStream & operator<<( QTextStream & stream, const QStringList & list )
+{
+	stream << "[ ";
+	bool firstWritten = false;
+	for (const auto & str : list)
+	{
+		if (!firstWritten)
+			firstWritten = true;
+		else
+			stream << ", ";
+		stream << '"' << str << '"';
+	}
+	stream << " ]";
+
+	return stream;
 }

@@ -11,7 +11,7 @@
 
 #include "Essential.hpp"
 
-#include "Utils/ContainerUtils.hpp"  // PointerIterator
+#include "CommonTypes.hpp"  // PtrList, DerefIterator
 #include "Utils/FileSystemUtils.hpp"  // PathConvertor
 #include "Utils/ErrorHandling.hpp"
 #include "Themes.hpp"  // separator colors
@@ -28,6 +28,7 @@
 #include <QIcon>
 
 #include <functional>
+#include <vector>
 #include <stdexcept>
 
 
@@ -170,32 +171,32 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 
 
 //======================================================================================================================
-/// A trivial wrapper around QList.
+/// A trivial wrapper around PtrList.
 /** One of possible list implementations for ListModel variants. */
 
 template< typename Item_ >
 class DirectList {
 
-	QList< Item_ > _list;
+	PtrList< Item_ > _list;
 
  public:
 
 	using Item = Item_;
 
 	DirectList() {}
-	DirectList( const QList< Item > & itemList ) : _list( itemList ) {}
+	DirectList( const PtrList< Item > & itemList ) : _list( itemList ) {}
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
 	      auto & list()                              { return _list; }
 	const auto & list() const                        { return _list; }
-	void updateList( const QList< Item > &  list )   { _list = list; }
-	void assignList(       QList< Item > && list )   { _list = std::move(list); }
+	void updateList( const PtrList< Item > &  list ) { _list = list; }
+	void assignList(       PtrList< Item > && list ) { _list = std::move(list); }
 
 	// content access
 
-	using iterator = decltype( _list.begin() );
-	using const_iterator = decltype( _list.cbegin() );
+	using iterator = typename decltype( _list )::iterator;
+	using const_iterator = typename decltype( _list )::const_iterator;
 
 	auto count() const                               { return _list.count(); }
 	auto size() const                                { return _list.size(); }
@@ -228,6 +229,12 @@ class DirectList {
 	void removeAt( int idx )                         { _list.removeAt( idx ); }
 	void move( int from, int to )                    { _list.move( from, to ); }
 
+	// low-level pointer manipulation for implementing optimized high-level operations
+
+	std::unique_ptr< Item > takePtr( int idx )       { return _list.takePtr( idx ); }
+	void removePtr( int idx )                        { return _list.removePtr( idx ); }
+	void insertPtr( int idx, std::unique_ptr< Item > ptr )  { _list.insertPtr( idx, std::move(ptr) ); }
+
 	//-- special -------------------------------------------------------------------------------------------------------
 
 	/// Whether the list modification functions can be safely called.
@@ -237,21 +244,21 @@ class DirectList {
 
 
 //======================================================================================================================
-/// A wrapper around QList allowing to temporarily filter the content present only items matching a specified criteria.
+/// A wrapper around PtrList allowing to temporarily filter the content present only items matching a specified criteria.
 /** One of possible list implementations for ListModel variants. */
 
 template< typename Item_ >
 class FilteredList {
 
-	QList< Item_ > _fullList;
-	QVector< Item_ * > _filteredList;
+	PtrList< Item_ > _fullList;
+	QList< Item_ * > _filteredList;
 
  public:
 
 	using Item = Item_;
 
 	FilteredList() {}
-	FilteredList( const QList< Item > & itemList ) : _fullList( itemList ) { restore(); }
+	FilteredList( const PtrList< Item > & itemList ) : _fullList( itemList ) { restore(); }
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
@@ -259,13 +266,13 @@ class FilteredList {
 	const auto & fullList() const                    { return _fullList; }
 	      auto & filteredList()                      { return _filteredList; }
 	const auto & filteredList() const                { return _filteredList; }
-	void updateList( const QList< Item > &  list )   { _fullList = list; restore(); }
-	void assignList(       QList< Item > && list )   { _fullList = std::move(list); restore(); }
+	void updateList( const PtrList< Item > &  list ) { _fullList = list; restore(); }
+	void assignList(       PtrList< Item > && list ) { _fullList = std::move(list); restore(); }
 
 	// content access
 
-	using iterator = PointerIterator< decltype( _filteredList.begin() ) >;
-	using const_iterator = PointerIterator< decltype( _filteredList.cbegin() ) >;
+	using iterator = DerefIterator< typename decltype( _filteredList )::iterator >;
+	using const_iterator = DerefIterator< typename decltype( _filteredList )::const_iterator >;
 
 	auto count() const                               { return _filteredList.count(); }
 	auto size() const                                { return _filteredList.size(); }
@@ -274,10 +281,10 @@ class FilteredList {
 	      auto & operator[]( int idx )               { return *_filteredList[ idx ]; }
 	const auto & operator[]( int idx ) const         { return *_filteredList[ idx ]; }
 
-	      iterator begin()                           { return PointerIterator( _filteredList.begin() ); }
-	const_iterator begin() const                     { return PointerIterator( _filteredList.begin() ); }
-	      iterator end()                             { return PointerIterator( _filteredList.end() ); }
-	const_iterator end() const                       { return PointerIterator( _filteredList.end() ); }
+	      iterator begin()                           { return DerefIterator( _filteredList.begin() ); }
+	const_iterator begin() const                     { return DerefIterator( _filteredList.begin() ); }
+	      iterator end()                             { return DerefIterator( _filteredList.end() ); }
+	const_iterator end() const                       { return DerefIterator( _filteredList.end() ); }
 
 	      auto & first()                             { return *_filteredList.first(); }
 	const auto & first() const                       { return *_filteredList.first(); }
@@ -354,6 +361,29 @@ class FilteredList {
 		ensureCanBeModified();
 		_fullList.move( from, to );
 		_filteredList.move( from, to );
+	}
+
+	// low-level pointer manipulation for implementing optimized high-level operations
+
+	std::unique_ptr< Item > takePtr( int idx )
+	{
+		ensureCanBeModified();
+		_filteredList[ idx ] = nullptr;
+		return _fullList.takePtr( idx );
+	}
+
+	void removePtr( int idx )
+	{
+		ensureCanBeModified();
+		_fullList.removePtr( idx );
+		_filteredList.removeAt( idx );
+	}
+
+	void insertPtr( int idx, std::unique_ptr< Item > ptr )
+	{
+		ensureCanBeModified();
+		_fullList.insertPtr( idx, std::move(ptr) );
+		_filteredList.insert( idx, &_fullList[ idx ] );
 	}
 
 	//-- searching/filtering -------------------------------------------------------------------------------------------
@@ -631,7 +661,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	EditableListModel( std::function< QString ( const Item & ) > makeDisplayString )
 		: ListImpl(), DropTarget(), makeDisplayString( makeDisplayString ), pathConvertor( nullptr ) {}
 
-	EditableListModel( const QList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
+	EditableListModel( const PtrList< Item > & itemList, std::function< QString ( const Item & ) > makeDisplayString )
 		: ListImpl( itemList ), DropTarget(), makeDisplayString( makeDisplayString ), pathConvertor( nullptr ) {}
 
 
@@ -807,8 +837,8 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		startInserting( row, count );
 
-		// n times moving all the elements forward to insert one is not nice
-		// but it happens only once in awhile and the number of elements is almost always very low
+		// n times moving all the elements forward to insert one is not nice, but they are only pointers,
+		// it happens only once in awhile, and the number of elements is almost always very low
 		for (int i = 0; i < count; i++)
 			this->insert( row + i, Item() );
 
@@ -890,7 +920,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	}
 
 	/// deserializes items from MIME data and inserts them before <row>
-	virtual bool dropMimeData( const QMimeData * mime, Qt::DropAction action, int row, int, const QModelIndex & parent ) override
+	virtual bool dropMimeData( const QMimeData * mime, Qt::DropAction action, int row, int, const QModelIndex & ) override
 	{
 		// in edge cases always append to the end of the list
 		if (row < 0 || row > this->size())
@@ -904,11 +934,11 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 		if (mime->hasFormat( internalMimeType ) && action == Qt::MoveAction)
 		{
-			return dropInternalItems( mime->data( internalMimeType ), row, parent );
+			return dropInternalItems( mime->data( internalMimeType ), row );
 		}
 		else if (mime->hasUrls())
 		{
-			return dropMimeUrls( mime->urls(), row, parent );
+			return dropMimeUrls( mime->urls(), row );
 		}
 		else
 		{
@@ -917,47 +947,40 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 	}
 
-	bool dropInternalItems( QByteArray encodedData, int row, const QModelIndex & parent )
+	bool dropInternalItems( QByteArray encodedData, int row )
 	{
 		// retrieve the original row indexes of the items to be moved
 		const int * rawData = reinterpret_cast< int * >( encodedData.data() );
 		int count = encodedData.size() / int(sizeof(int));
 
-		// Because insertRows shifts the items and invalidates the indexes, we need to capture the original items before
-		// allocating space at the target position. We can avoid making a local temporary copy of Item by abusing
-		// the fact that QList is essentially an array of pointers to objects (official API documentation says so).
-		// So we can just save the pointers to the items and when the rows are inserted and shifted, those pointers
-		// will still point to the correct items and we can use them copy or move the data from them to the target pos.
-		//
-		// We could probably avoid even the copy/move constructors and the allocation when inserting an item into QList,
-		// but we would need a direct access to the pointers inside QList which it doesn't provide.
-		// Alternativelly the QList<Item> could be replaced with QVector<Item*> or QVector<unique_ptr<Item>>
-		// but that would just complicate a lot of other things.
-
-		QVector< int > origItemIndexes;
-		for (int i = 0; i < count; i++)
-			origItemIndexes.append( rawData[i] );
-
 		// The indexes of selected items can come in arbitrary order, but we need to drop them in ascending order.
-		std::sort( origItemIndexes.begin(), origItemIndexes.end() );
+		std::vector< int > sortedItemIndexes( rawData, rawData + count );
+		std::sort( sortedItemIndexes.begin(), sortedItemIndexes.end() );
 
-		QVector< Item * > origItemRefs;
-		for (int origItemIdx : origItemIndexes)
+		// Because every insert or remove operation shifts the items and invalidates the indexes (or iterators),
+		// we need to capture the original items before inserting anything at the target position. We can avoid
+		// copying or moving the instances of Item by abusing the fact that PtrList is an array of pointers to Item.
+		//
+		// First we take the pointers to the selected items, leaving null in their place to avoid shifting,
+		// then we insert the pointers in the new place, and then we leave it to Qt to call removeRows() and remove the
+		// null pointers where the items were originally.
+
+		// cannot use QList or QVector here because those require copyable objects
+		std::vector< std::unique_ptr< Item > > droppedItems;
+		droppedItems.reserve( count );
+		for (int idx : sortedItemIndexes)
+			droppedItems.push_back( this->takePtr( idx ) );  // leaves null at idx
+
+		startInserting( row, count );
+
+		for (size_t i = 0; i < droppedItems.size(); ++i)
 		{
-			origItemRefs.append( &(*this)[ origItemIdx ] );
+			this->insertPtr( row + i, std::move( droppedItems[i] ) );
 		}
 
-		// allocate space for the items to move to
-		if (!insertRows( row, count, parent ))
-		{
-			return false;
-		}
+		finishInserting();
 
-		// move the original items to the target position
-		for (int i = 0; i < count; i++)
-		{
-			(*this)[ row + i ] = std::move( *origItemRefs[i] );
-		}
+		// And now we wait for a call to removeRows to remove those null pointers.
 
 		// idiotic workaround because Qt is fucking retarded   (read the comment at the top of EditableListView.cpp)
 		//
@@ -967,7 +990,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		return true;
 	}
 
-	bool dropMimeUrls( QList< QUrl > urls, int row, const QModelIndex & parent )
+	bool dropMimeUrls( QList< QUrl > urls, int row )
 	{
 		if (!pathConvertor)
 		{
@@ -989,7 +1012,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 
 		// allocate space for the items to be dropped to
-		if (!insertRows( row, filesToBeInserted.count(), parent ))
+		if (!insertRows( row, filesToBeInserted.count(), QModelIndex() ))
 		{
 			return false;
 		}

@@ -223,7 +223,7 @@ bool PathChecker::_checkCollision(
 //----------------------------------------------------------------------------------------------------------------------
 // other
 
-QString makeFileFilter( const char * filterName, const QStringVec & suffixes )
+QString makeFileFilter( const char * filterName, const QStringList & suffixes )
 {
 	QString filter;
 	QTextStream filterStream( &filter, QIODevice::WriteOnly );
@@ -240,9 +240,9 @@ QString makeFileFilter( const char * filterName, const QStringVec & suffixes )
 	return filter;
 }
 
-QVector< Argument > splitCommandLineArguments( const QString & argsStr )
+QList< Argument > splitCommandLineArguments( const QString & argsStr )
 {
-	QVector< Argument > args;
+	QList< Argument > args;
 
 	QString currentArg;
 

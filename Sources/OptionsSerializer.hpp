@@ -11,6 +11,7 @@
 
 #include "Essential.hpp"
 
+#include "CommonTypes.hpp"  // PtrList
 #include "UserData.hpp"
 #include "Version.hpp"
 #include "Utils/JsonUtils.hpp"  // JsonDocumentCtx
@@ -24,8 +25,8 @@
 struct OptionsToSave
 {
 	// files
-	const QList< EngineInfo > & engines;  // we must accept EngineInfo, but we will serialize only Engine fields
-	const QList< IWAD > & iwads;
+	const PtrList< EngineInfo > & engines;  // we must accept EngineInfo, but we will serialize only Engine fields
+	const PtrList< IWAD > & iwads;
 
 	// options
 	const LaunchOptions & launchOpts;
@@ -37,7 +38,7 @@ struct OptionsToSave
 	const GlobalOptions & globalOpts;
 
 	// presets
-	const QList< Preset > & presets;
+	const PtrList< Preset > & presets;
 	int selectedPresetIdx;
 
 	// global settings
@@ -63,8 +64,8 @@ struct OptionsToLoad
 	Version version;  ///< version of the options format that was loaded
 
 	// files
-	QList< EngineInfo > engines;  // we must accept EngineInfo, but we will load only Engine fields
-	QList< IWAD > iwads;
+	PtrList< EngineInfo > engines;  // we must accept EngineInfo, but we will load only Engine fields
+	PtrList< IWAD > iwads;
 
 	// options
 	LaunchOptions & launchOpts;
@@ -76,7 +77,7 @@ struct OptionsToLoad
 	GlobalOptions & globalOpts;
 
 	// presets
-	QList< Preset > presets;
+	PtrList< Preset > presets;
 	QString selectedPreset;
 
 	// global settings

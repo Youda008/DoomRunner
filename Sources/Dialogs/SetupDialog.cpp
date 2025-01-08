@@ -28,8 +28,8 @@
 SetupDialog::SetupDialog(
 	QWidget * parent,
 	const PathConvertor & pathConv,
-	const EngineSettings & engineSettings, const QList< EngineInfo > & engineList,
-	const IwadSettings & iwadSettings, const QList< IWAD > & iwadList,
+	const EngineSettings & engineSettings, const PtrList< EngineInfo > & engineList,
+	const IwadSettings & iwadSettings, const PtrList< IWAD > & iwadList,
 	const MapSettings & mapSettings, const ModSettings & modSettings,
 	const LauncherSettings & settings,
 	const AppearanceSettings & appearance

@@ -42,7 +42,7 @@ class UpdateChecker : public QObject, protected LoggingComponent {
 		UpdateNotAvailable
 	};
 
-	using ResultCallback = std::function< void ( Result result, QString errorDetail, QStringVec versionInfo ) >;
+	using ResultCallback = std::function< void ( Result result, QString errorDetail, QStringList versionInfo ) >;
 
 	/// Asynchronously checks for updates via HTTP connection and calls your callback when it's ready.
 	void checkForUpdates_async( ResultCallback && callback );
@@ -79,7 +79,7 @@ class UpdateChecker : public QObject, protected LoggingComponent {
 //======================================================================================================================
 // common result reactions
 
-bool showUpdateNotification( QWidget * parent, const QStringVec & versionInfo, bool includeCheckbox );
+bool showUpdateNotification( QWidget * parent, const QStringList & versionInfo, bool includeCheckbox );
 
 
 #endif // UPDATE_CHECKER_INCLUDED

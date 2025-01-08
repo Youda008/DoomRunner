@@ -626,9 +626,9 @@ inline static QString fixExePath( QString exePath )
 
 ShellCommand getRunCommand(
 	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, bool forceExeName,
-	const QStringVec & dirsToBeAccessed
+	const QStringList & dirsToBeAccessed
 ){
-	QStringVec cmdParts, extraPermissions;
+	QStringList cmdParts, extraPermissions;
 
 	SandboxEnvInfo sandboxEnv = getSandboxEnvInfo( executablePath );
 	QDir sandboxAppDir( sandboxEnv.homeDir );
@@ -701,9 +701,9 @@ const QString & getLinuxDesktopEnv()
 	return desktopEnv;
 }
 
-QVector< MonitorInfo > listMonitors()
+QList< MonitorInfo > listMonitors()
 {
-	QVector< MonitorInfo > monitors;
+	QList< MonitorInfo > monitors;
 
 	// in the end this work well for both platforms, just ZDoom indexes the monitors from 1 while GZDoom from 0
 	QList< QScreen * > screens = QGuiApplication::screens();
@@ -842,7 +842,7 @@ bool openFileLocation( const QString & filePath )
 #if IS_WINDOWS
 namespace win {
 
-bool createShortcut( QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir, QString description )
+bool createShortcut( QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir, QString description )
 {
 	// prepare arguments for WinAPI
 

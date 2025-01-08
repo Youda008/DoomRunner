@@ -35,7 +35,7 @@ struct WadInfo
 {
 	WadType type = WadType::Neither;
 	GameIdentification game;   ///< which game it probably is, only present if the type == IWAD
-	QStringVec mapNames;       ///< list of map names usable for the +map command
+	QStringList mapNames;       ///< list of map names usable for the +map command
 
 	void serialize( QJsonObject & jsWadInfo ) const;
 	void deserialize( const JsonObjectCtx & jsWadInfo );

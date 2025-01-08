@@ -73,9 +73,9 @@ int getSelectedItemIndex( QListView * view )   // this function is for single se
 	return selectedIndexes[0].row();
 }
 
-QVector< int > getSelectedItemIndexes( QListView * view )
+QList< int > getSelectedItemIndexes( QListView * view )
 {
-	QVector< int > selected;
+	QList< int > selected;
 	for (QModelIndex & index : view->selectionModel()->selectedIndexes())
 		selected.append( index.row() );
 	return selected;
@@ -291,9 +291,9 @@ int getSelectedRowIndex( QTableView * view )   // this function is for single se
 	return selectedIndexes[0].row();
 }
 
-QVector< int > getSelectedRowIndexes( QTableView * view )
+QList< int > getSelectedRowIndexes( QTableView * view )
 {
-	QVector< int > selected;
+	QList< int > selected;
 	for (QModelIndex & index : view->selectionModel()->selectedIndexes())
 		selected.append( index.row() );
 	return selected;

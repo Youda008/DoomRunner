@@ -78,7 +78,7 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 	  * \return In which state the process was when the the dialog was closed.
 	  */
 	ProcessStatus runProcess(
-		const QString & executable, const QStringVec & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
+		const QString & executable, const QStringList & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
 	);
 
  private slots:
@@ -119,7 +119,7 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 
 /// Alternative to ProcessOutputWindow::runProcess(). Starts the process, detaches from it, and ignores its output.
 bool startDetachedProcess(
-	const QString & executable, const QStringVec & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
+	const QString & executable, const QStringList & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
 );
 
 

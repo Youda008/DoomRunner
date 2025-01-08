@@ -11,6 +11,7 @@
 
 #include "Essential.hpp"
 
+#include "CommonTypes.hpp"           // PtrList
 #include "Widgets/ListModel.hpp"     // ReadOnlyListModelItem, EditableListModelItem
 #include "Utils/JsonUtils.hpp"       // enumName, enumSize
 #include "Utils/FileSystemUtils.hpp" // PathStyle
@@ -245,7 +246,7 @@ struct AudioOptions
 // While storing the environment variables in a map is more logical, in our application we need to have it as
 // a linear list, otherwise it's impossible to update the data structure when the user changes the variable name (key).
 // The list should also retain the order the user gave it.
-using EnvVars = QVector< os::EnvVar >;
+using EnvVars = QList< os::EnvVar >;
 
 struct GlobalOptions
 {
@@ -267,8 +268,8 @@ struct Preset : public EditableListModelItem
 	QString selectedEnginePath;   // we store the engine by path, so that it does't break when user renames them or reorders them
 	QString selectedConfig;   // we store the config by name instead of index, so that it does't break when user reorders them
 	QString selectedIWAD;   // we store the IWAD by path instead of index, so that it doesn't break when user reorders them
-	QStringVec selectedMapPacks;
-	QList< Mod > mods;   // this list needs to be kept in sync with mod list widget
+	QStringList selectedMapPacks;
+	PtrList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 	bool loadMapsAfterMods = false;
 
 	LaunchOptions launchOpts;

@@ -259,7 +259,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
 	void updateCompatModes();
-	void updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks = nullptr );
+	void updateMapsFromSelectedWADs( const QStringList * selectedMapPacks = nullptr );
 
 	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
 
@@ -299,7 +299,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void updateLaunchCommand();
 	void executeLaunchCommand();
-	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions );
+	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringList & permissions );
 
  private: // MainWindow-specific utils
 
@@ -314,9 +314,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	IWAD * getSelectedIWAD() const;
 
 	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
-	QStringVec getSelectedMapPacks() const;
+	QStringList getSelectedMapPacks() const;
 
-	QStringList getUniqueMapNamesFromWADs( const QVector<QString> & selectedWADs ) const;
+	QStringList getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs ) const;
 
 	QString getEngineConfigDir() const;
 	QString getEngineDataDir() const;
@@ -326,7 +326,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QString getActiveDemoDir() const;
 
 	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
-	QStringVec getDirsToBeAccessed() const;
+	QStringList getDirsToBeAccessed() const;
 
 	LaunchOptions & activeLaunchOptions();
 	MultiplayerOptions & activeMultiplayerOptions();
@@ -386,7 +386,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	CompatModeStyle lastCompLvlStyle = CompatModeStyle::None;  ///< compat mode style of the engine that was selected the last time
 
-	QStringVec compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
+	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
 
 	UpdateChecker updateChecker;
 

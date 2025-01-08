@@ -53,7 +53,7 @@ void AboutDialog::checkForUpdate()
 	ui->checkUpdateBtn->setEnabled( false );  // prevent him spamming the button and starting many requests simultaneously
 
 	updateChecker.checkForUpdates_async(
-		[ this, origText ]( UpdateChecker::Result result, QString errorDetail, QStringVec versionInfo )
+		[ this, origText ]( UpdateChecker::Result result, QString errorDetail, QStringList versionInfo )
 		{
 			// request finished, restore the button
 			ui->checkUpdateBtn->setText( origText );

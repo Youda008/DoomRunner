@@ -37,7 +37,7 @@ class CompatOptsDialog : public QDialog, private DialogCommon {
 	explicit CompatOptsDialog( QWidget * parent, const CompatibilityDetails & compatDetails );
 	virtual ~CompatOptsDialog() override;
 
-	static QStringVec getCmdArgsFromOptions( const CompatibilityDetails & compatDetails );
+	static QStringList getCmdArgsFromOptions( const CompatibilityDetails & compatDetails );
 
  private slots:
 

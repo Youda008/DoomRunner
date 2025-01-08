@@ -62,7 +62,7 @@ void unsetCurrentItem( QListView * view );
 bool isSelectedIndex( QListView * view, int index );
 bool isSomethingSelected( QListView * view );
 int getSelectedItemIndex( QListView * view );  // assumes a single-selection mode, will throw a message box error otherwise
-QVector<int> getSelectedItemIndexes( QListView * view );
+QList<int> getSelectedItemIndexes( QListView * view );
 void selectItemByIndex( QListView * view, int index );
 void deselectItemByIndex( QListView * view, int index );
 void deselectSelectedItems( QListView * view );
@@ -117,7 +117,7 @@ void unsetCurrentRow( QTableView * view );
 bool isSelectedRow( QTableView * view, int rowIndex );
 bool isSomethingSelected( QTableView * view );
 int getSelectedRowIndex( QTableView * view );  // assumes a single-selection mode, will throw a message box error otherwise
-QVector<int> getSelectedRowIndexes( QTableView * view );
+QList<int> getSelectedRowIndexes( QTableView * view );
 void selectRowByIndex( QTableView * view, int rowIndex );
 void deselectRowByIndex( QTableView * view, int rowIndex );
 void deselectSelectedRows( QTableView * view );
@@ -247,7 +247,7 @@ int deleteSelectedItem( QListView * view, ListModel & model )
 /// Deletes all selected items and attempts to select the item following the deleted ones.
 /** Pops up a warning box if nothing is selected. */
 template< typename ListModel >
-QVector<int> deleteSelectedItems( QListView * view, ListModel & model )
+QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
@@ -267,7 +267,7 @@ QVector<int> deleteSelectedItems( QListView * view, ListModel & model )
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
 	// but for the delete, we need them sorted in ascending order
-	QVector<int> selectedIndexesAsc;
+	QList<int> selectedIndexesAsc;
 	for (const QModelIndex & index : selectedIndexes)
 		selectedIndexesAsc.push_back( index.row() );
 	std::sort( selectedIndexesAsc.begin(), selectedIndexesAsc.end(), []( int idx1, int idx2 ) { return idx1 < idx2; } );
@@ -422,7 +422,7 @@ int moveDownSelectedItem( QListView * view, ListModel & model )
 /// Moves all selected items up and updates the selection to point to the new position.
 /** Pops up a warning box if nothing is selected. */
 template< typename ListModel >
-QVector<int> moveUpSelectedItems( QListView * view, ListModel & model )
+QList<int> moveUpSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
@@ -441,7 +441,7 @@ QVector<int> moveUpSelectedItems( QListView * view, ListModel & model )
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
 	// but for the move, we need them sorted in ascending order
-	QVector<int> selectedIndexesAsc;
+	QList<int> selectedIndexesAsc;
 	for (const QModelIndex & index : selectedIndexes)
 		selectedIndexesAsc.push_back( index.row() );
 	std::sort( selectedIndexesAsc.begin(), selectedIndexesAsc.end(), []( int idx1, int idx2 ) { return idx1 < idx2; } );
@@ -482,7 +482,7 @@ QVector<int> moveUpSelectedItems( QListView * view, ListModel & model )
 /// Moves all selected items down and updates the selection to point to the new position.
 /** Pops up a warning box if nothing is selected. */
 template< typename ListModel >
-QVector<int> moveDownSelectedItems( QListView * view, ListModel & model )
+QList<int> moveDownSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
@@ -501,7 +501,7 @@ QVector<int> moveDownSelectedItems( QListView * view, ListModel & model )
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
 	// but for the move, we need them sorted in descending order
-	QVector<int> selectedIndexesDesc;
+	QList<int> selectedIndexesDesc;
 	for (const QModelIndex & index : selectedIndexes)
 		selectedIndexesDesc.push_back( index.row() );
 	std::sort( selectedIndexesDesc.begin(), selectedIndexesDesc.end(), []( int idx1, int idx2 ) { return idx1 > idx2; } );
@@ -627,9 +627,9 @@ bool selectItemByID( QListView * view, const ListModel & model, const QString & 
 
 /// Gets persistent item IDs that survive node shifting, adding or removal.
 template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
-auto getSelectedItemIDs( QListView * view, const ListModel & model ) -> QStringVec
+auto getSelectedItemIDs( QListView * view, const ListModel & model ) -> QStringList
 {
-	QStringVec itemIDs;
+	QStringList itemIDs;
 	for (int selectedItemIdx : getSelectedItemIndexes( view ))
 		itemIDs.append( model[ selectedItemIdx ].getID() );
 	return itemIDs;
@@ -637,7 +637,7 @@ auto getSelectedItemIDs( QListView * view, const ListModel & model ) -> QStringV
 
 /// Attempts to select previously selected items defined by their persistant itemIDs.
 template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
-void selectItemsByIDs( QListView * view, const ListModel & model, const QStringVec & itemIDs )
+void selectItemsByIDs( QListView * view, const ListModel & model, const QStringList & itemIDs )
 {
 	using Item = typename ListModel::Item;
 
@@ -651,17 +651,17 @@ void selectItemsByIDs( QListView * view, const ListModel & model, const QStringV
 
 /// Compares two selections of persistent item IDs.
 template< typename ItemID >
-bool areSelectionsEqual( const QVector< ItemID > & selection1, const QVector< ItemID > & selection2 )
+bool areSelectionsEqual( const QList< ItemID > & selection1, const QList< ItemID > & selection2 )
 {
 	// The selected indexes are normally ordered in the order in which the user selected them.
 	// So to be able to compare them we need to normalize the order first.
 
-	QVector< ItemID > orderedSelection1;
+	QList< ItemID > orderedSelection1;
 	for (const ItemID & id : selection1)
 		orderedSelection1.push_back( id );
 	std::sort( orderedSelection1.begin(), orderedSelection1.end() );
 
-	QVector< ItemID > orderedSelection2;
+	QList< ItemID > orderedSelection2;
 	for (const ItemID & id : selection2)
 		orderedSelection2.push_back( id );
 	std::sort( orderedSelection2.begin(), orderedSelection2.end() );

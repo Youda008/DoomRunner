@@ -589,7 +589,7 @@ const char * EngineTraits::getScreenshotDirParam() const
 static const QRegularExpression doom1MapNameRegex("E(\\d+)M(\\d+)");
 static const QRegularExpression doom2MapNameRegex("MAP(\\d+)");
 
-QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
+QStringList EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 {
 	assert( isInitialized() );
 
@@ -620,7 +620,7 @@ QStringVec EngineTraits::getMapArgs( int mapIdx, const QString & mapName ) const
 	}
 }
 
-QStringVec EngineTraits::getLoadSavedGameArgs(
+QStringList EngineTraits::getLoadSavedGameArgs(
 	const PathRebaser & runDirRebaser, const QString & saveDir, const QString & saveFileName
 ) const
 {
@@ -641,7 +641,7 @@ QStringVec EngineTraits::getLoadSavedGameArgs(
 	}
 }
 
-QStringVec EngineTraits::getCompatModeArgs( int compatMode ) const
+QStringList EngineTraits::getCompatModeArgs( int compatMode ) const
 {
 	assert( isInitialized() );
 

@@ -114,9 +114,9 @@ void MainWindow::forEachSelectedMapPack( const Functor & loopBody ) const
 	}
 }
 
-QStringVec MainWindow::getSelectedMapPacks() const
+QStringList MainWindow::getSelectedMapPacks() const
 {
-	QStringVec selectedMapPacks;
+	QStringList selectedMapPacks;
 
 	forEachSelectedMapPack( [&]( const QString & mapPackPath )
 	{
@@ -126,7 +126,7 @@ QStringVec MainWindow::getSelectedMapPacks() const
 	return selectedMapPacks;
 }
 
-QStringList MainWindow::getUniqueMapNamesFromWADs( const QVector<QString> & selectedWADs ) const
+QStringList MainWindow::getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs ) const
 {
 	QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
 	for (const QString & selectedWAD : selectedWADs)
@@ -287,7 +287,7 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 }
 
 // Gets directories (unique absolute paths) which the engine will need to access (either for reading or writing).
-QStringVec MainWindow::getDirsToBeAccessed() const
+QStringList MainWindow::getDirsToBeAccessed() const
 {
 	QSet< QString > normDirPaths;  // de-duplicate the paths
 
@@ -298,7 +298,7 @@ QStringVec MainWindow::getDirsToBeAccessed() const
 		normDirPaths.insert( fs::getNormalizedPath( dir ) );
 	});
 
-	return QStringVec( normDirPaths.begin(), normDirPaths.end() );
+	return QStringList( normDirPaths.begin(), normDirPaths.end() );
 }
 
 // internal options storage
@@ -1196,7 +1196,7 @@ void MainWindow::onWindowShown()
 	if (settings.checkForUpdates)
 	{
 		updateChecker.checkForUpdates_async(
-			/* result callback */[ this ]( UpdateChecker::Result result, QString /*errorDetail*/, QStringVec versionInfo )
+			/* result callback */[ this ]( UpdateChecker::Result result, QString /*errorDetail*/, QStringList versionInfo )
 			{
 				if (result == UpdateChecker::UpdateAvailable)
 				{
@@ -1787,7 +1787,7 @@ void MainWindow::restoreSelectedMapPacks( Preset & preset )
 
 	wdg::deselectAllAndUnsetCurrent( ui->mapDirView );
 
-	const QStringVec mapPacksCopy = preset.selectedMapPacks;
+	const QStringList mapPacksCopy = preset.selectedMapPacks;
 	preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
 	for (const QString & path : mapPacksCopy)
 	{
@@ -2715,7 +2715,7 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 	if (disableSelectionCallbacks)
 		return;
 
-	QStringVec selectedMapPacks = getSelectedMapPacks();
+	QStringList selectedMapPacks = getSelectedMapPacks();
 
 	/*bool storageModified =*/ STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedMapPacks, selectedMapPacks );
 
@@ -2856,7 +2856,7 @@ void MainWindow::onMapDirUpdated( const QString & path )
 //----------------------------------------------------------------------------------------------------------------------
 // preset list manipulation
 
-static uint getHighestDefaultPresetNameIndex( const QList< Preset > & presetList )
+static uint getHighestDefaultPresetNameIndex( const PtrList< Preset > & presetList )
 {
 	uint maxIndex = 0;
 	static const QRegularExpression defaultPresetRegex("Preset(\\d+)");
@@ -3118,7 +3118,7 @@ void MainWindow::modAddArg()
 
 void MainWindow::modDelete()
 {
-	QVector<int> deletedIndexes = wdg::deleteSelectedItems( ui->modListView, modModel );
+	QList<int> deletedIndexes = wdg::deleteSelectedItems( ui->modListView, modModel );
 
 	if (deletedIndexes.isEmpty())  // no item was selected
 		return;
@@ -3142,7 +3142,7 @@ void MainWindow::modMoveUp()
 {
 	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
-	QVector<int> movedIndexes = wdg::moveUpSelectedItems( ui->modListView, modModel );
+	QList<int> movedIndexes = wdg::moveUpSelectedItems( ui->modListView, modModel );
 
 	restoringPresetInProgress = false;
 
@@ -3166,7 +3166,7 @@ void MainWindow::modMoveDown()
 {
 	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
-	QVector<int> movedIndexes = wdg::moveDownSelectedItems( ui->modListView, modModel );
+	QList<int> movedIndexes = wdg::moveDownSelectedItems( ui->modListView, modModel );
 
 	restoringPresetInProgress = false;
 
@@ -3192,7 +3192,7 @@ void MainWindow::modInsertSeparator()
 	separator.isSeparator = true;
 	separator.fileName = "New Separator";
 
-	QVector<int> selectedIndexes = wdg::getSelectedItemIndexes( ui->modListView );
+	QList<int> selectedIndexes = wdg::getSelectedItemIndexes( ui->modListView );
 	int insertIdx = selectedIndexes.empty() ? modModel.size() : selectedIndexes[0];  // append if none
 
 	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );
@@ -4494,13 +4494,13 @@ void MainWindow::updateCompatModes()
 }
 
 // this is not called regularly, but only when an IWAD or map WAD is selected or deselected
-void MainWindow::updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks )
+void MainWindow::updateMapsFromSelectedWADs( const QStringList * selectedMapPacks )
 {
 	const IWAD * selectedIWAD = getSelectedIWAD();
 	const QString & selectedIwadPath = selectedIWAD ? selectedIWAD->path : emptyString;
 
 	// optimization: it the caller already has them, use his ones instead of getting them again
-	QStringVec localSelectedMapPacks;
+	QStringList localSelectedMapPacks;
 	if (!selectedMapPacks)
 	{
 		localSelectedMapPacks = getSelectedMapPacks();
@@ -4529,7 +4529,7 @@ void MainWindow::updateMapsFromSelectedWADs( const QStringVec * selectedMapPacks
 			break;  // if no IWAD is selected, let's leave this empty, it cannot be launched anyway
 		}
 
-		auto selectedWADs = QStringVec{ selectedIwadPath } + *selectedMapPacks;
+		auto selectedWADs = QStringList{ selectedIwadPath } + *selectedMapPacks;
 
 		// read the map names from the selected files and merge them so that entries are not duplicated
 		auto uniqueMapNames = getUniqueMapNamesFromWADs( selectedWADs );
@@ -4693,7 +4693,7 @@ void MainWindow::importPresetFromScript()
 //----------------------------------------------------------------------------------------------------------------------
 // launch command generation
 
-static void appendCustomArguments( QStringVec & args, const QString & customArgsStr, bool quotePaths )
+static void appendCustomArguments( QStringList & args, const QString & customArgsStr, bool quotePaths )
 {
 	auto splitArgs = splitCommandLineArguments( customArgsStr );
 	for (auto & arg : splitArgs)
@@ -4707,7 +4707,7 @@ static void appendCustomArguments( QStringVec & args, const QString & customArgs
 
 static void prependCommandWith( os::ShellCommand & cmd, const QString & cmdPrefix, bool quotePaths )
 {
-	QStringVec cmdParts;
+	QStringList cmdParts;
 	appendCustomArguments( cmdParts, cmdPrefix, quotePaths );
 	cmdParts << std::move( cmd.executable );
 	cmdParts << std::move( cmd.arguments );
@@ -4775,10 +4775,10 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	// So we must somehow build an ordered sequence of mod files and custom arguments in which all the regular files are
 	// grouped together, and the easiest option seems to be by using a placeholder item.
 	{
-		QStringVec fileArgs;
+		QStringList fileArgs;
 		bool placeholderPlaced = false;
 
-		auto addFileAccordingToSuffix = [&]( QStringVec & fileList, const QString & filePath )
+		auto addFileAccordingToSuffix = [&]( QStringList & fileList, const QString & filePath )
 		{
 			QString suffix = QFileInfo( filePath ).suffix().toLower();
 			if (suffix == "deh" || suffix == "hhe") {
@@ -4794,14 +4794,14 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 			}
 		};
 
-		QStringVec mapFiles;
+		QStringList mapFiles;
 		forEachSelectedMapPack( [&]( const QString & mapFilePath )
 		{
 			p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
 			addFileAccordingToSuffix( mapFiles, mapFilePath );
 		});
 
-		QStringVec modFiles;
+		QStringList modFiles;
 		for (const Mod & mod : modModel)
 		{
 			if (!mod.isSeparator && mod.checked)
@@ -5086,7 +5086,7 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
-int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const QStringVec & permissions )
+int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const QStringList & permissions )
 {
 	auto engineName = fs::getFileNameFromPath( selectedEngine.executablePath );
 	auto sandboxName = os::getSandboxName( selectedEngine.sandboxType() );

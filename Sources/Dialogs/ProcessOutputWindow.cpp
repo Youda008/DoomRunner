@@ -186,7 +186,7 @@ void ProcessOutputWindow::setOwnStatus( ProcessStatus status, const QString & de
 }
 
 ProcessStatus ProcessOutputWindow::runProcess(
-	const QString & executable, const QStringVec & arguments, const QString & workingDir, const EnvVars & envVars
+	const QString & executable, const QStringList & arguments, const QString & workingDir, const EnvVars & envVars
 ){
 	logDebug() << "ProcessOutputWindow::runProcess: " << executable;
 
@@ -194,7 +194,7 @@ ProcessStatus ProcessOutputWindow::runProcess(
 	this->setWindowTitle( executableName % " output" );
 
 	process.setProgram( executable );
-	process.setArguments( arguments.toList() );
+	process.setArguments( arguments );
 	process.setWorkingDirectory( workingDir );
 	process.setProcessChannelMode( QProcess::MergedChannels );  // merge stdout and stderr
 
@@ -230,14 +230,14 @@ ProcessStatus ProcessOutputWindow::runProcess(
 }
 
 bool startDetachedProcess(
-	const QString & executable, const QStringVec & arguments, const QString & workingDir, const EnvVars & envVars
+	const QString & executable, const QStringList & arguments, const QString & workingDir, const EnvVars & envVars
 ){
 	QProcess process;
 
 	QString executableName = fs::getFileNameFromPath( executable );
 
 	process.setProgram( executable );
-	process.setArguments( arguments.toList() );
+	process.setArguments( arguments );
 	process.setWorkingDirectory( workingDir );
 
 	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();

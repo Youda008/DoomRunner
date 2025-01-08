@@ -392,7 +392,7 @@ class JsonDocumentCtx {
 //======================================================================================================================
 // generic utils
 
-inline QJsonArray serializeStringVec( const QStringVec & vec )
+inline QJsonArray serializeStringVec( const QStringList & vec )
 {
 	QJsonArray jsArray;
 	for (const auto & elem : vec)
@@ -402,9 +402,9 @@ inline QJsonArray serializeStringVec( const QStringVec & vec )
 	return jsArray;
 }
 
-inline QStringVec deserializeStringVec( const JsonArrayCtx & jsVec )
+inline QStringList deserializeStringVec( const JsonArrayCtx & jsVec )
 {
-	QStringVec vec;
+	QStringList vec;
 	for (int i = 0; i < jsVec.size(); i++)
 	{
 		QString elem = jsVec.getString( i );

@@ -7,7 +7,6 @@
 
 #include "DoomFiles.hpp"
 
-#include <QVector>
 #include <QHash>
 #include <QSet>
 #include <QFileInfo>
@@ -22,9 +21,9 @@ namespace doom {
 
 const QString demoFileSuffix = "lmp";  // this seems to be universal across different engines
 
-const QStringVec iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke", "epk", "vwad"};
-const QStringVec pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex", "hhe", "epk", "vwad"};
-const QStringVec dukeSuffixes = {"grp", "rff"};
+const QStringList iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke", "epk", "vwad"};
+const QStringList pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex", "hhe", "epk", "vwad"};
+const QStringList dukeSuffixes = {"grp", "rff"};
 
 // The correct way would be to recognize the type by file header, but there are incorrectly made mods
 // that present themselfs as IWADs, so in order to support those we need to use the file suffix

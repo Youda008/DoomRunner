@@ -15,7 +15,7 @@
 #include "Widgets/ListModel.hpp"  // ReadOnlyListModelItem
 
 #include <QString>
-#include <QVector>
+#include <QList>
 #include <QColor>
 
 class QLineEdit;
@@ -210,7 +210,7 @@ class PathChecker {
 // other
 
 /// Creates a file filter for the QFileDialog::getOpenFileNames.
-QString makeFileFilter( const char * filterName, const QStringVec & suffixes );
+QString makeFileFilter( const char * filterName, const QStringList & suffixes );
 
 struct Argument
 {
@@ -219,7 +219,7 @@ struct Argument
 };
 /// Splits a command line string into individual arguments, taking into account quotes.
 /** NOTE: This is simplified, it will not handle the full command line syntax, only the basic cases. */
-QVector< Argument > splitCommandLineArguments( const QString & argsStr );
+QList< Argument > splitCommandLineArguments( const QString & argsStr );
 
 bool areScreenCoordinatesValid( int x, int y );
 

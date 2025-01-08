@@ -13,6 +13,8 @@
 
 #include <QString>
 
+class QTextStream;
+
 
 // to be used when we want to pass empty string, but a reference or pointer is required
 extern const QString emptyString;
@@ -33,6 +35,8 @@ inline QString capitalize( const QString & str )
 
 /// Replaces everything between startingChar and endingChar with replaceWith
 QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith );
+
+QTextStream & operator<<( QTextStream & stream, const QStringList & list );
 
 
 #endif // STRING_UTILS_INCLUDED

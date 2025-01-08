@@ -16,7 +16,6 @@
 
 #include <QString>
 #include <QList>
-#include <QVector>
 
 class PathRebaser;
 
@@ -140,8 +139,8 @@ AppInfo getAppInfo( const QString & executablePath );
 struct ShellCommand
 {
 	QString executable;
-	QStringVec arguments;  ///< all command line arguments, including options to grant the extra permissions below
-	QStringVec extraPermissions;  ///< extra sandbox environment permissions needed to run this command (for displaying only)
+	QStringList arguments;  ///< all command line arguments, including options to grant the extra permissions below
+	QStringList extraPermissions;  ///< extra sandbox environment permissions needed to run this command (for displaying only)
 };
 /// Returns a shell command needed to run a specified executable without parameters.
 /** The result may be different based on operating system and where the executable is installed.
@@ -152,7 +151,7 @@ struct ShellCommand
   *                         Required to setup permissions for a sandbox environment. */
 ShellCommand getRunCommand(
 	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, bool forceExeName,
-	const QStringVec & dirsToBeAccessed = {}
+	const QStringList & dirsToBeAccessed = {}
 );
 
 
@@ -170,7 +169,7 @@ struct MonitorInfo
 	int height;
 	bool isPrimary;
 };
-QVector< MonitorInfo > listMonitors();
+QList< MonitorInfo > listMonitors();
 
 
 //======================================================================================================================
@@ -205,7 +204,7 @@ namespace win {
   * \param targetArgs Command-line arguments for the targetFile, if it's an executable.
   *                   If the arguments contain file path, they must be relative to the workingDir. */
 bool createShortcut(
-	QString shortcutFile, QString targetFile, QStringVec targetArgs, QString workingDir = {}, QString description = {}
+	QString shortcutFile, QString targetFile, QStringList targetArgs, QString workingDir = {}, QString description = {}
 );
 
 } // namespace win

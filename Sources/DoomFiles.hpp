@@ -12,7 +12,6 @@
 #include "Essential.hpp"
 #include "CommonTypes.hpp"
 
-#include <QVector>
 #include <QString>
 #include <QStringList>
 
@@ -27,9 +26,9 @@ namespace doom {
 
 extern const QString demoFileSuffix;
 
-extern const QStringVec iwadSuffixes;
-extern const QStringVec pwadSuffixes;
-extern const QStringVec dukeSuffixes;
+extern const QStringList iwadSuffixes;
+extern const QStringList pwadSuffixes;
+extern const QStringList dukeSuffixes;
 
 // convenience wrappers to be used, where otherwise lambda would have to be written
 bool canBeIWAD( const QFileInfo & file );

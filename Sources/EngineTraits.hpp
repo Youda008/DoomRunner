@@ -178,15 +178,15 @@ class EngineTraits {
 	const char * multJoinParam() const          { assert( _familyTraits ); return _familyTraits->multJoinParam; }
 
 	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
-	QStringVec getMapArgs( int mapIdx, const QString & mapName ) const;
+	QStringList getMapArgs( int mapIdx, const QString & mapName ) const;
 
 	// some engines need a file name, other ones require a number
-	QStringVec getLoadSavedGameArgs(
+	QStringList getLoadSavedGameArgs(
 		const PathRebaser & runDirRebaser, const QString & saveDir, const QString & saveFileName
 	) const;
 
 	// generates either "-complevel x" or "+compatmode x" depending on the engine capabilities
-	QStringVec getCompatModeArgs( int compatMode ) const;
+	QStringList getCompatModeArgs( int compatMode ) const;
 
 	// some engines index monitors from 1 and others from 0
 	QString getCmdMonitorIndex( int ownIndex ) const;

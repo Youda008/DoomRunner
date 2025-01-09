@@ -30,6 +30,17 @@ static std::mutex qt_ntfs_permission_mtx;
 namespace fs {
 
 
+void forEachParentDir( const QString & path, const std::function< void ( const QString & parentDir ) > & loopBody )
+{
+	QString parentDirPath = fs::getNormalizedPath( path );
+	int lastSlashPos = 0;
+	while ((lastSlashPos = parentDirPath.lastIndexOf( '/', lastSlashPos - 1 )) >= 0)
+	{
+		parentDirPath.resize( lastSlashPos );
+		loopBody( parentDirPath );
+	}
+}
+
 bool isDirectoryWritable( const QString & dirPath )
 {
 	bool isWritable = false;

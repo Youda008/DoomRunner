@@ -43,6 +43,9 @@ enum class PathStyle : uint8_t
 
 namespace fs {
 
+//----------------------------------------------------------------------------------------------------------------------
+// paths and file names
+
 template< typename Appendable >
 inline QString appendToPath( const QString & part1, const Appendable & part2 )
 {
@@ -73,46 +76,6 @@ inline bool isRelativePath( const QString & path )
 inline PathStyle getPathStyle( const QString & path )
 {
 	return isAbsolutePath( path ) ? PathStyle::Absolute : PathStyle::Relative;
-}
-
-inline bool exists( const QString & entryPath )
-{
-	return QFileInfo::exists( entryPath );
-}
-
-inline bool isDirectory( const QString & entryPath )
-{
-	return QFileInfo( entryPath ).isDir();
-}
-
-inline bool isFile( const QString & entryPath )
-{
-	return QFileInfo( entryPath ).isFile();
-}
-
-inline bool isValidDir( const QString & dirPath )
-{
-	return !dirPath.isEmpty() && QFileInfo( dirPath ).isDir();
-}
-
-inline bool isInvalidDir( const QString & dirPath )
-{
-	return !dirPath.isEmpty() && !QFileInfo( dirPath ).isDir();  // it exists but it's not a dir
-}
-
-inline bool isValidFile( const QString & filePath )
-{
-	return !filePath.isEmpty() && QFileInfo( filePath ).isFile();
-}
-
-inline bool isInvalidFile( const QString & filePath )
-{
-	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // it exists but it's not a file
-}
-
-inline bool isValidEntry( const QString & entryPath )
-{
-	return !entryPath.isEmpty() && QFileInfo::exists( entryPath );
 }
 
 inline QString getAbsolutePath( const QString & path )
@@ -175,6 +138,8 @@ inline bool isInsideDir( const QDir & dir, const QString & entryPath )
 	return QFileInfo( entryPath ).absoluteFilePath().startsWith( dir.absolutePath() );
 }
 
+void forEachParentDir( const QString & path, const std::function< void ( const QString & parentDir ) > & loopBody );
+
 /// Takes a path native to the current OS and converts it to a Qt internal path.
 /** Works even if the path is already in Qt format. */
 inline QString fromNativePath( const QString & path )
@@ -187,6 +152,52 @@ inline QString toNativePath( const QString & path )
 {
 	return QDir::toNativeSeparators( path );
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// file-system entry validation
+
+inline bool exists( const QString & entryPath )
+{
+	return QFileInfo::exists( entryPath );
+}
+
+inline bool isDirectory( const QString & entryPath )
+{
+	return QFileInfo( entryPath ).isDir();
+}
+
+inline bool isFile( const QString & entryPath )
+{
+	return QFileInfo( entryPath ).isFile();
+}
+
+inline bool isValidDir( const QString & dirPath )
+{
+	return !dirPath.isEmpty() && QFileInfo( dirPath ).isDir();
+}
+
+inline bool isInvalidDir( const QString & dirPath )
+{
+	return !dirPath.isEmpty() && !QFileInfo( dirPath ).isDir();  // it exists but it's not a dir
+}
+
+inline bool isValidFile( const QString & filePath )
+{
+	return !filePath.isEmpty() && QFileInfo( filePath ).isFile();
+}
+
+inline bool isInvalidFile( const QString & filePath )
+{
+	return !filePath.isEmpty() && !QFileInfo( filePath ).isFile();  // it exists but it's not a file
+}
+
+inline bool isValidEntry( const QString & entryPath )
+{
+	return !entryPath.isEmpty() && QFileInfo::exists( entryPath );
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// other
 
 /// Creates directory if it doesn't exist already, returns false if it doesn't exist and cannot be created.
 inline bool createDirIfDoesntExist( const QString & dirPath )

@@ -231,13 +231,13 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 	}
 
 	// dir of IWAD
-	if (const IWAD * selectedIWAD = getSelectedIWAD())
+	if (const IWAD * selectedIWAD = getSelectedIWAD(); selectedIWAD && !selectedIWAD->path.isEmpty())
 	{
 		loopBody( fs::getParentDir( selectedIWAD->path ) );
 	}
 
 	// dir of map files
-	if (wdg::isSomethingSelected( ui->mapDirView ))
+	if (wdg::isSomethingSelected( ui->mapDirView ) && !mapSettings.dir.isEmpty())
 	{
 		loopBody( mapSettings.dir );  // all map files will always be inside the configured map dir
 	}
@@ -245,14 +245,8 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 	// dirs of mod files
 	for (const Mod & mod : modModel)
 	{
-		if (mod.checked)
+		if (!mod.isSeparator && mod.checked && !mod.path.isEmpty())
 			loopBody( fs::getParentDir( mod.path ) );
-	}
-
-	// dir of engine config files
-	if (QString configDir = getActiveConfigDir(); !configDir.isEmpty())
-	{
-		loopBody( configDir );
 	}
 
 	// dir of engine data files
@@ -262,8 +256,14 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 		loopBody( dataDir );
 	}
 
+	// dir of engine config files
+	if (QString configDir = getActiveConfigDir(); !configDir.isEmpty())
+	{
+		loopBody( configDir );
+	}
+
 	// dir of saves files (in all launch modes the save file either needs to be read or written to)
-	if (QString saveDir = getActiveSaveDir(); !saveDir.isEmpty() && !fs::isInsideDir( dataDir, saveDir ))
+	if (QString saveDir = getActiveSaveDir(); !saveDir.isEmpty())
 	{
 		loopBody( saveDir );
 	}
@@ -272,7 +272,7 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 	LaunchMode launchMode = getLaunchModeFromUI();
 	if (launchMode == RecordDemo || launchMode == ReplayDemo || launchMode == ResumeDemo)
 	{
-		if (QString demoDir = getActiveDemoDir(); !demoDir.isEmpty() && !fs::isInsideDir( dataDir, demoDir ))
+		if (QString demoDir = getActiveDemoDir(); !demoDir.isEmpty())
 		{
 			loopBody( demoDir );
 		}
@@ -280,7 +280,7 @@ void MainWindow::forEachDirToBeAccessed( const Functor & loopBody ) const
 
 	// dir of screenshots
 	// Add it in every case, because the user may want to save a screenshot anytime.
-	if (QString screenshotDir = getActiveScreenshotDir(); !screenshotDir.isEmpty() && !fs::isInsideDir( dataDir, screenshotDir ))
+	if (QString screenshotDir = getActiveScreenshotDir(); !screenshotDir.isEmpty())
 	{
 		loopBody( screenshotDir );
 	}
@@ -293,9 +293,21 @@ QStringList MainWindow::getDirsToBeAccessed() const
 
 	forEachDirToBeAccessed( [&]( const QString & dir )
 	{
-		// insert the paths in a normalized form to deduplicate equivalent paths written in a different way
-		// TODO: don't add if any of the parent directories are already there
-		normDirPaths.insert( fs::getNormalizedPath( dir ) );
+		// don't add if any of the parent directories are already there
+		bool parentDirAlreadyPresent = false;
+		fs::forEachParentDir( dir, [&]( const QString & parentDir )
+		{
+			if (normDirPaths.contains( parentDir ))
+			{
+				parentDirAlreadyPresent = true;
+			}
+		});
+
+		if (!parentDirAlreadyPresent)
+		{
+			// insert the paths in a normalized form to deduplicate equivalent paths written in a different way
+			normDirPaths.insert( fs::getNormalizedPath( dir ) );
+		}
 	});
 
 	return QStringList( normDirPaths.begin(), normDirPaths.end() );
@@ -3057,7 +3069,7 @@ void MainWindow::modAdd()
 
 	for (const QString & path : paths)
 	{
-		Mod mod( QFileInfo( path ), true );
+		Mod mod( QFileInfo( path ), /*checked*/true );
 
 		wdg::appendItem( ui->modListView, modModel, mod );
 
@@ -3078,10 +3090,7 @@ void MainWindow::modAddDir()
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
-	Mod mod;
-	mod.path = path;
-	mod.fileName = fs::getFileNameFromPath( path );
-	mod.checked = true;
+	Mod mod( QFileInfo( path ), /*checked*/true );
 
 	wdg::appendItem( ui->modListView, modModel, mod );
 
@@ -3097,9 +3106,8 @@ void MainWindow::modAddDir()
 
 void MainWindow::modAddArg()
 {
-	Mod mod;
+	Mod mod( /*checked*/true );
 	mod.isCmdArg = true;
-	mod.checked = true;
 
 	int appendedIdx = wdg::appendItem( ui->modListView, modModel, mod );
 
@@ -3188,7 +3196,7 @@ void MainWindow::modMoveDown()
 
 void MainWindow::modInsertSeparator()
 {
-	Mod separator;
+	Mod separator( /*checked*/false );
 	separator.isSeparator = true;
 	separator.fileName = "New Separator";
 

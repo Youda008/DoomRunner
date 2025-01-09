@@ -66,7 +66,7 @@ static void deserialize_pre17( const JsonObjectCtx & jsPreset, Preset & preset, 
 			if (!jsMod)  // wrong type on position i - skip this entry
 				continue;
 
-			Mod mod;
+			Mod mod( /*checked*/false );
 			deserialize( jsMod, mod );
 
 			if (mod.isSeparator && mod.fileName.isEmpty())  // element isn't present in JSON -> skip this entry

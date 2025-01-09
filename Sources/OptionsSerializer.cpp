@@ -543,7 +543,7 @@ static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const 
 			if (!modJs)  // wrong type on position i - skip this entry
 				continue;
 
-			Mod mod;
+			Mod mod( /*checked*/false );
 			deserialize( modJs, mod );
 
 			if (mod.isSeparator || mod.isCmdArg) {

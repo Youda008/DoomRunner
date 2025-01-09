@@ -625,7 +625,7 @@ inline static QString fixExePath( QString exePath )
 }
 
 ShellCommand getRunCommand(
-	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, bool forceExeName,
+	const QString & executablePath, const PathRebaser & runnersDirRebaser, bool forceExeName,
 	const QStringList & dirsToBeAccessed
 ){
 	QStringList cmdParts, extraPermissions;
@@ -665,7 +665,7 @@ ShellCommand getRunCommand(
 		{
 			if (!fs::isInsideDir( sandboxAppDir, dir ))
 			{
-				QString fileSystemPermission = "--filesystem=" + currentDirToNewWorkingDir.makeQuotedCmdPath( dir );
+				QString fileSystemPermission = "--filesystem=" + runnersDirRebaser.makeQuotedCmdPath( dir );
 				cmdParts << fileSystemPermission;  // add it to the command
 				extraPermissions << std::move( fileSystemPermission );  // add it to a list to be shown to the user
 			}
@@ -680,8 +680,8 @@ ShellCommand getRunCommand(
 	}
 	else
 	{
-		QString rebasedExePath = currentDirToNewWorkingDir.rebaseAndConvert( executablePath );  // respect configured path style
-		cmdParts << currentDirToNewWorkingDir.makeCmdPath( fixExePath( rebasedExePath ) );
+		QString rebasedExePath = runnersDirRebaser.rebaseAndConvert( executablePath );  // respect configured path style
+		cmdParts << runnersDirRebaser.makeCmdPath( fixExePath( rebasedExePath ) );
 	}
 
 	ShellCommand cmd;

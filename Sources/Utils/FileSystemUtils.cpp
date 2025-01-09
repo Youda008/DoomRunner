@@ -30,6 +30,9 @@ static std::mutex qt_ntfs_permission_mtx;
 namespace fs {
 
 
+const QString currentDir(".");
+
+
 void forEachParentDir( const QString & path, const std::function< void ( const QString & parentDir ) > & loopBody )
 {
 	QString parentDirPath = fs::getNormalizedPath( path );

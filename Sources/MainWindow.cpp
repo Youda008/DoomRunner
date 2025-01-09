@@ -169,13 +169,13 @@ QString MainWindow::getActiveConfigDir() const
 {
 	// the path in altConfigDirLine is relative to the engine's config dir by convention, need to rebase it to the current working dir
 	QString configDirLine = ui->altConfigDirLine->text();
-	if (!configDirLine.isEmpty())                                     // if custom config dir is specified
+	if (!configDirLine.isEmpty())                                               // if custom config dir is specified
 	{
-		return engineDataDirRebaser.rebaseBack( configDirLine );      // then use it
+		return engineConfigDirRebaser.rebaseBackAndConvert( configDirLine );    // then use it
 	}
-	else                                                              // otherwise
+	else                                                                        // otherwise
 	{
-		return getEngineConfigDir();                                  // use engine's default config dir
+		return getEngineConfigDir();                                            // use engine's default config dir
 	}
 }
 
@@ -186,11 +186,11 @@ QString MainWindow::getActiveSaveDir() const
 {
 	// the path in altSaveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
 	QString saveDirLine = ui->altSaveDirLine->text();
-	if (!saveDirLine.isEmpty())                                       // if custom save dir is specified
+	if (!saveDirLine.isEmpty())                                                 // if custom save dir is specified
 	{
-		return engineDataDirRebaser.rebaseBack( saveDirLine );        // then use it
+		return engineDataDirRebaser.rebaseBackAndConvert( saveDirLine );        // then use it
 	}
-	else                                                              // otherwise use engine's default save dir
+	else                                                                        // otherwise use engine's default save dir
 	{
 		return currentEngineSaveDir;  // return the cached value, because calculating it every time would be wasteful
 	}
@@ -203,11 +203,11 @@ QString MainWindow::getActiveScreenshotDir() const
 {
 	// the path in altScreenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
 	QString screenshotDirLine = ui->altScreenshotDirLine->text();
-	if (!screenshotDirLine.isEmpty())                                  // if custom save dir is specified
+	if (!screenshotDirLine.isEmpty())                                            // if custom save dir is specified
 	{
-		return engineDataDirRebaser.rebaseBack( screenshotDirLine );   // then use it
+		return engineDataDirRebaser.rebaseBackAndConvert( screenshotDirLine );   // then use it
 	}
-	else                                                               // otherwise use engine's default screenshot dir
+	else                                                                         // otherwise use engine's default screenshot dir
 	{
 		return currentEngineScreenshotDir;  // return the cached value, because calculating it every time would be wasteful
 	}
@@ -652,10 +652,11 @@ MainWindow::MainWindow()
 	DialogWithPaths(
 		// All relative paths will internally be stored relative to the current working dir,
 		// so that all file-system operations instantly work without the need to rebase the paths first.
-		this, PathConvertor( QDir::current(), defaultPathStyle )
+		this, PathConvertor( defaultPathStyle, fs::currentDir )
 	),
-	engineConfigDirRebaser( {}, {}, defaultPathStyle ),
-	engineDataDirRebaser( {}, {}, defaultPathStyle ),  // rebase to current working dir (don't rebase at all) until engine is selected
+	// rebase to current working dir (don't rebase at all) until engine is selected
+	engineConfigDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
+	engineDataDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
@@ -2598,9 +2599,13 @@ void MainWindow::onEngineSelected( int index )
 
 	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedEnginePath, enginePath );
 
-	// engine's data dir has changed -> from now on rebase engine config/data paths to the new dir, if empty it will rebase to "."
-	engineConfigDirRebaser.setTargetBaseDir( selectedEngine ? selectedEngine->configDir : emptyString );
-	engineDataDirRebaser.setTargetBaseDir( selectedEngine ? selectedEngine->dataDir : emptyString );
+	// engine's has changed -> from now on rebase engine config/data paths to the new dirs, if empty it will rebase to the current dir
+	const QString & configDir = selectedEngine ? selectedEngine->configDir : fs::currentDir;
+	engineConfigDirRebaser.setTargetBaseDir( configDir );
+	engineConfigDirRebaser.setOutputPathStyle( fs::getPathStyle( configDir ) );  // keep the path style of the configured dir
+	const QString & dataDir = selectedEngine ? selectedEngine->dataDir : fs::currentDir;
+	engineDataDirRebaser.setTargetBaseDir( dataDir );
+	engineDataDirRebaser.setOutputPathStyle( fs::getPathStyle( dataDir ) );  // keep the path style of the configured dir
 
 	if (selectedEngine)
 	{
@@ -4240,8 +4245,6 @@ void MainWindow::togglePathStyle( PathStyle style )
 	bool styleChanged = style != pathConvertor.pathStyle();
 
 	pathConvertor.setPathStyle( style );
-	engineConfigDirRebaser.setOutputPathStyle( style );
-	engineDataDirRebaser.setOutputPathStyle( style );
 
 	for (Engine & engine : engineModel)
 	{
@@ -4608,7 +4611,7 @@ void MainWindow::exportPresetToScript()
 	auto cmd = generateLaunchCommand({
 		.selectedEngine = *selectedEngine,
 		.exePathStyle = PathStyle::Relative,
-		.parentWorkingDir = engineExeDir,
+		.runnersWorkingDir = engineExeDir,
 		.quotePaths = true,
 		.verifyPaths = false,
 	});
@@ -4671,7 +4674,7 @@ void MainWindow::exportPresetToShortcut()
 	auto cmd = generateLaunchCommand({
 		.selectedEngine = *selectedEngine,
 		.exePathStyle = PathStyle::Absolute,
-		.parentWorkingDir = currentWorkingDir,
+		.runnersWorkingDir = currentWorkingDir,
 		.quotePaths = true,
 		.verifyPaths = false,
 	});
@@ -4730,14 +4733,14 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 	const EngineInfo & engine = opts.selectedEngine;  // let's make it little shorter
 
-	const QDir & currentWorkingDir = pathConvertor.workingDir();
+	const QString currentWorkingDir = pathConvertor.workingDir().path();
 	const QString engineExeDir = fs::getAbsoluteParentDir( engine.executablePath );
 
-	// The stored engine path is relative to DoomRunner's directory, but we need it relative to parentWorkingDir.
-	PathRebaser parentDirRebaser( currentWorkingDir, opts.parentWorkingDir, opts.exePathStyle, opts.quotePaths );
+	// The stored engine path is relative to DoomRunner's directory, but we need it relative to runnersWorkingDir.
+	PathRebaser runnersDirRebaser( currentWorkingDir, opts.runnersWorkingDir, opts.exePathStyle, opts.quotePaths );
 	// All stored paths are relative to DoomRunner's directory, but we need them relative to to the engine's executable
 	// directory, because the engine must be started with the working directory set to its executable directory.
-	PathRebaser engineDirRebaser( currentWorkingDir, engineExeDir, opts.exePathStyle /*not used*/, opts.quotePaths );
+	PathRebaser runDirRebaser( currentWorkingDir, engineExeDir, opts.exePathStyle /*not used*/, opts.quotePaths );
 	// Checks if the required files or directories exist and displays error message if requested.
 	PathChecker p( this, opts.verifyPaths );
 
@@ -4748,7 +4751,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	p.checkItemFilePath( engine, "the selected engine", "Please update its path in Menu -> Initial Setup, or select another one." );
 
 	// get the beginning of the launch command based on OS and installation type
-	cmd = os::getRunCommand( engine.executablePath, parentDirRebaser, !cmdPrefixStr.isEmpty(), getDirsToBeAccessed() );
+	cmd = os::getRunCommand( engine.executablePath, runnersDirRebaser, !cmdPrefixStr.isEmpty(), getDirsToBeAccessed() );
 
 	//-- command prefix ------------------------------------------------------------
 
@@ -4765,7 +4768,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QString configPath = fs::getPathFromFileName( engine.configDir, selectedConfig->fileName );
 
 		p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
-		cmd.arguments << "-config" << engineDirRebaser.makeRebasedCmdPath( configPath );
+		cmd.arguments << "-config" << runDirRebaser.makeRebasedCmdPath( configPath );
 	}
 
 	//-- game data files -----------------------------------------------------------
@@ -4774,7 +4777,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	if (const IWAD * selectedIWAD = getSelectedIWAD())
 	{
 		p.checkItemFilePath( *selectedIWAD, "selected IWAD", "Please select another one." );
-		cmd.arguments << "-iwad" << engineDirRebaser.makeRebasedCmdPath( selectedIWAD->path );
+		cmd.arguments << "-iwad" << runDirRebaser.makeRebasedCmdPath( selectedIWAD->path );
 	}
 
 	// This part is tricky.
@@ -4790,15 +4793,15 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		{
 			QString suffix = QFileInfo( filePath ).suffix().toLower();
 			if (suffix == "deh" || suffix == "hhe") {
-				fileArgs << "-deh" << engineDirRebaser.makeRebasedCmdPath( filePath );
+				fileArgs << "-deh" << runDirRebaser.makeRebasedCmdPath( filePath );
 			} else if (suffix == "bex") {
-				fileArgs << "-bex" << engineDirRebaser.makeRebasedCmdPath( filePath );
+				fileArgs << "-bex" << runDirRebaser.makeRebasedCmdPath( filePath );
 			} else {
 				if (!placeholderPlaced) {
 					fileArgs << "-file" << "<files>";  // insert placeholder where all the files will be together
 					placeholderPlaced = true;
 				}
-				fileList.append( engineDirRebaser.makeRebasedCmdPath( filePath ) );
+				fileList.append( runDirRebaser.makeRebasedCmdPath( filePath ) );
 			}
 		};
 
@@ -4854,13 +4857,13 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	{
 		QString saveDirPath = getActiveSaveDir();  // rebased altSaveDirLine
 		p.checkNotAFile( saveDirPath, "the save dir", {} );
-		cmd.arguments << engine.saveDirParam() << engineDirRebaser.makeRebasedCmdPath( saveDirPath );
+		cmd.arguments << engine.saveDirParam() << runDirRebaser.makeRebasedCmdPath( saveDirPath );
 	}
 	if (engine.screenshotDirParam() != nullptr && !ui->altScreenshotDirLine->text().isEmpty())
 	{
 		QString screenshotDirPath = getActiveScreenshotDir();  // rebased altScreenshotDirLine
 		p.checkNotAFile( screenshotDirPath, "the screenshot dir", {} );
-		cmd.arguments << engine.screenshotDirParam() << engineDirRebaser.makeRebasedCmdPath( screenshotDirPath );
+		cmd.arguments << engine.screenshotDirParam() << runDirRebaser.makeRebasedCmdPath( screenshotDirPath );
 	}
 
 	//-- launch mode and parameters ------------------------------------------------
@@ -4879,7 +4882,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QString saveFileName = ui->saveFileCmbBox->currentText();
 		QString saveFilePath = fs::getPathFromFileName( saveDir, saveFileName );
 		p.checkFilePath( saveFilePath, "the selected save file", "Please select another one." );
-		cmd.arguments << engine.getLoadSavedGameArgs( engineDirRebaser, saveDir, saveFileName );
+		cmd.arguments << engine.getLoadSavedGameArgs( runDirRebaser, saveDir, saveFileName );
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
@@ -4887,7 +4890,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QString demoDir = getActiveDemoDir();
 		QString demoFileName = ui->demoFileLine_record->text();
 		QString demoFilePath = fs::getPathFromFileName( demoDir, demoFileName );
-		cmd.arguments << "-record" << engineDirRebaser.makeRebasedCmdPath( demoFilePath );
+		cmd.arguments << "-record" << runDirRebaser.makeRebasedCmdPath( demoFilePath );
 		cmd.arguments << engine.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
@@ -4897,7 +4900,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QString demoFileName = ui->demoFileCmbBox_replay->currentText();
 		QString demoFilePath = fs::getPathFromFileName( demoDir, demoFileName );
 		p.checkFilePath( demoFilePath, "the selected demo", "Please select another one." );
-		cmd.arguments << "-playdemo" << engineDirRebaser.makeRebasedCmdPath( demoFilePath );
+		cmd.arguments << "-playdemo" << runDirRebaser.makeRebasedCmdPath( demoFilePath );
 	}
 	else if (launchMode == ResumeDemo
 	      && !ui->demoFileCmbBox_resume->currentText().isEmpty() && !ui->demoFileLine_resume->text().isEmpty())
@@ -4907,7 +4910,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QString newDemoPath = fs::getPathFromFileName( demoDir, ui->demoFileLine_resume->text() );
 		p.checkFilePath( origDemoPath, "the selected demo", "Please select another one." );
 		cmd.arguments << "-recordfromto"
-			<< engineDirRebaser.makeRebasedCmdPath( origDemoPath ) << engineDirRebaser.makeRebasedCmdPath( newDemoPath );
+			<< runDirRebaser.makeRebasedCmdPath( origDemoPath ) << runDirRebaser.makeRebasedCmdPath( newDemoPath );
 	}
 
 	//-- gameplay and compatibility options ----------------------------------------
@@ -5005,7 +5008,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 				                   .arg( activeMultOpts.playerColor.red(),   1, 16 )
 				                   .arg( activeMultOpts.playerColor.green(), 1, 16 )
 				                   .arg( activeMultOpts.playerColor.blue(),  1, 16 );
-				cmd.arguments << "+color" << engineDirRebaser.maybeQuoted( colorArg );
+				cmd.arguments << "+color" << runDirRebaser.maybeQuoted( colorArg );
 			}
 		}
 	}
@@ -5077,7 +5080,7 @@ void MainWindow::updateLaunchCommand()
 	auto cmd = generateLaunchCommand({
 		.selectedEngine = *selectedEngine,
 		.exePathStyle = PathStyle::Relative,
-		.parentWorkingDir = engineExeDir,
+		.runnersWorkingDir = engineExeDir,
 		.quotePaths = true,
 		.verifyPaths = false,
 	});
@@ -5136,7 +5139,7 @@ void MainWindow::executeLaunchCommand()
 	auto cmd = generateLaunchCommand({
 		.selectedEngine = *selectedEngine,
 		.exePathStyle = PathStyle::Absolute,
-		.parentWorkingDir = currentWorkingDir,
+		.runnersWorkingDir = currentWorkingDir,
 		.quotePaths = false,
 		.verifyPaths = true,
 	});

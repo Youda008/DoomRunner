@@ -283,9 +283,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 		// Path style for the arguments is determined case by case.
 
-		/// Working directory of the parent process (this process) when executing the command.
+		/// Working directory of the process that will run the command.
 		/** This determines the relative path of the engine executable in the command. */
-		const QString & parentWorkingDir;
+		const QString & runnersWorkingDir;
 
 		/// Surround each path in the command with quotes.
 		/** Required for displaying the command or saving it to a script file. */

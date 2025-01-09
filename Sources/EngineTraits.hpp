@@ -177,18 +177,21 @@ class EngineTraits {
 	const char * multPlayerCountParam() const   { assert( _familyTraits ); return _familyTraits->multPlayerCountParam; }
 	const char * multJoinParam() const          { assert( _familyTraits ); return _familyTraits->multJoinParam; }
 
-	// generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities
+	/// Generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities.
 	QStringList getMapArgs( int mapIdx, const QString & mapName ) const;
 
-	// some engines need a file name, other ones require a number
+	/// Returns the command line arguments needed to load a saved game.
+	/** Some engines need a file name, other ones require a number.
+	  * \param runDirRebaser rebaser configured for rebasing paths to the directory where the command will be executed. */
 	QStringList getLoadSavedGameArgs(
 		const PathRebaser & runDirRebaser, const QString & saveDir, const QString & saveFileName
 	) const;
 
-	// generates either "-complevel x" or "+compatmode x" depending on the engine capabilities
+	/// Generates either "-complevel x" or "+compatmode x" depending on the engine capabilities.
 	QStringList getCompatModeArgs( int compatMode ) const;
 
-	// some engines index monitors from 1 and others from 0
+	/// Returns the correct monitor index the engine expects.
+	/** Some engines index monitors from 1 and others from 0. */
 	QString getCmdMonitorIndex( int ownIndex ) const;
 
 	// miscellaneous

@@ -145,12 +145,12 @@ struct ShellCommand
 /// Returns a shell command needed to run a specified executable without parameters.
 /** The result may be different based on operating system and where the executable is installed.
   * \param executablePath path to the executable that's either absolute or relative to the current working dir
-  * \param rebaser path convertor set up to rebase relative paths from current working dir to a working dir
-  *                from which the process will be started
+  * \param runnersDirRebaser path rebaser set up to rebase relative paths from current working dir to a working dir
+  *                          from which the command will be executed.
   * \param dirsToBeAccessed Directories to which the executable will need a read access.
   *                         Required to setup permissions for a sandbox environment. */
 ShellCommand getRunCommand(
-	const QString & executablePath, const PathRebaser & currentDirToNewWorkingDir, bool forceExeName,
+	const QString & executablePath, const PathRebaser & runnersDirRebaser, bool forceExeName,
 	const QStringList & dirsToBeAccessed = {}
 );
 

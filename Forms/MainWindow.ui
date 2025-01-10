@@ -601,6 +601,12 @@
            <layout class="QVBoxLayout" name="vLayout_optsLeft">
             <item>
              <widget class="QGroupBox" name="launchModeGrpBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="title">
                <string>Launch mode [storage configurable]</string>
               </property>
@@ -994,6 +1000,12 @@
            <layout class="QVBoxLayout" name="vLayout_optsRight">
             <item>
              <widget class="QGroupBox" name="multiplayerGrpBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Multiplayer options for ZDoom family or Woof. May not work for other engines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>

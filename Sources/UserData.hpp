@@ -151,6 +151,7 @@ enum GameMode
 	TeamDeathmatch,
 	AltDeathmatch,
 	AltTeamDeathmatch,
+	Deathmatch3,
 	Cooperative
 };
 template<> inline const char * enumName< GameMode >() { return "GameMode"; }

@@ -4972,6 +4972,9 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 			 case AltTeamDeathmatch:
 				cmd.arguments << "-altdeath" << "+teamplay";
 				break;
+			 case Deathmatch3:
+				cmd.arguments << "-dm3";
+				break;
 			 case Cooperative: // default mode, which is started without any param
 				break;
 			 default:
@@ -5015,7 +5018,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 	//-- output options ------------------------------------------------------------
 
-	// On Windows ZDoom doesn't log its output to stdout by default.
+	// On Windows, ZDoom doesn't log its output to stdout by default.
 	// Force it to do so, so that our ProcessOutputWindow displays something.
 	if (settings.showEngineOutput && engine.needsStdoutParam())
 		cmd.arguments << "-stdout";

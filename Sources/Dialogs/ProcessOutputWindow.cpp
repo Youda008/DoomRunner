@@ -332,12 +332,12 @@ void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus 
 	{
 		closeDialog( QDialog::Accepted );
 	}
-	else if (exitStatus == QProcess::CrashExit)
+	/*else if (exitStatus == QProcess::CrashExit)  // already handled in onErrorOccurred
 	{
 		setOwnStatus( ProcessStatus::Crashed );
 		reportRuntimeError( this, "Program crashed", "\""%executableName%"\" has crashed." );
 		closeDialog( QDialog::Accepted );
-	}
+	}*/
 	else if (exitCode != 0)
 	{
 		setOwnStatus( ProcessStatus::ExitedWithError, QString::number( exitCode ) );

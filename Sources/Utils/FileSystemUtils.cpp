@@ -6,6 +6,7 @@
 //======================================================================================================================
 
 #include "FileSystemUtils.hpp"
+#include "StringUtils.hpp"
 
 #include <QDirIterator>
 #include <QFile>
@@ -71,9 +72,18 @@ const QRegularExpression & getPathRegex()
 
 static QString sanitizePath_impl( const QString & path, const QRegularExpression & invalidChars )
 {
-	QString sanitizedPath = path;
-	sanitizedPath.remove( invalidChars );
-	return sanitizedPath;
+	if (IS_WINDOWS && path.size() >= 2 && isLetter( path[0] ) && path[1] == ':')
+	{
+		QString sanitizedDriveLocalPath = path.mid(2);  // part without the initial drive letter
+		sanitizedDriveLocalPath.remove( invalidChars );  // the ':' is allowed in the driver letter, but not anywhere else
+		return path.midRef( 0, 2 ) + sanitizedDriveLocalPath;
+	}
+	else
+	{
+		QString sanitizedPath = path;
+		sanitizedPath.remove( invalidChars );
+		return sanitizedPath;
+	}
 }
 
 QString sanitizePath( const QString & path )

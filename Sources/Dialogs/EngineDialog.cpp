@@ -266,7 +266,7 @@ void EngineDialog::accept()
 		return;  // refuse the user's confirmation
 	}
 
-	QString dataDirLineText = ui->dataDirLine->text();
+	QString dataDirLineText = sanitizeInputPath( ui->dataDirLine->text() );
 	if (dataDirLineText.isEmpty())
 	{
 		reportUserError( this, "Data dir cannot be empty",

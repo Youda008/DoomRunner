@@ -20,6 +20,11 @@ class QTextStream;
 extern const QString emptyString;
 
 
+inline bool isLetter( QChar c )
+{
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
 /// Makes the first letter of a string capital.
 inline QString & capitalize( QString & str )
 {

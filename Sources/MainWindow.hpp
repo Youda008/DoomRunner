@@ -381,8 +381,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QString currentEngineSaveDir;         ///< cached path of the directory when the currently selected engine stores its save files by default, maintains path style of dataDir of the current engine
 	QString currentEngineScreenshotDir;   ///< cached path of the directory when the currently selected engine stores its screenshots by default, maintains path style of dataDir of the current engine
 
-	PathRebaser engineConfigDirRebaser;   ///< path convertor set up to rebase relative paths from the current working dir to the engine's config dir and back
-	PathRebaser engineDataDirRebaser;     ///< path convertor set up to rebase relative paths from the current working dir to the engine's data dir and back
+	PathRebaser engineConfigDirRebaser;      ///< path convertor set up to rebase relative paths from the current working dir to the engine's config dir and back
+	PathRebaser engineSaveDirRebaser;        ///< path convertor set up to rebase relative paths from the current working dir to the engine's save dir and back
+	PathRebaser engineScreenshotDirRebaser;  ///< path convertor set up to rebase relative paths from the current working dir to the engine's screenshot dir and back
 
 	CompatModeStyle lastCompLvlStyle = CompatModeStyle::None;  ///< compat mode style of the engine that was selected the last time
 

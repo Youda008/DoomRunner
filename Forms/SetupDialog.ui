@@ -24,7 +24,7 @@
        <item>
         <widget class="QGroupBox" name="engineGrpBox">
          <property name="title">
-          <string>Engines</string>
+          <string>Add your Doom engines</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
@@ -146,7 +146,7 @@
        <item>
         <widget class="QGroupBox" name="mapDirGrpBox">
          <property name="title">
-          <string>Directory with Maps</string>
+          <string>Directory with community map packs</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_6">
           <item>
@@ -193,7 +193,7 @@
        <item>
         <widget class="QGroupBox" name="iwadGrpBox">
          <property name="title">
-          <string>IWADs</string>
+          <string>Locate your IWADs</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
@@ -393,7 +393,7 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>Theme</string>
+      <string>Visual theme</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="0">

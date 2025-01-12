@@ -381,6 +381,32 @@ QString EngineTraits::getDefaultScreenshotDir() const
  #endif
 }
 
+// Dear Doom source port developers. Are you fucking kidding me?!
+//
+// Observed save file storage
+//
+// engine          OS        version   installation   subdirectory     IWAD-based subdirectory
+//----------------------------------------------------------------------------------------------------------------------
+// GZDoom          Windows   <  4.4    --             --               --
+// GZDoom          Windows   >= 4.4    --             Save             --
+// GZDoom          Windows   >= 4.9    portable       Save             doom.id.doom1.ultimate, ...
+// GZDoom          Windows   >= 4.9    non-portable   --               doom.id.doom1.ultimate, ...
+// GZDoom          Linux     <  4.9    --             --               --
+// GZDoom          Linux     >= 4.9    --             --               doom.id.doom1.ultimate, ...
+// GZDoom          Linux     >= 4.11   --             savegames        doom.id.doom1.ultimate, ...
+// ChocolateDoom   Windows   latest    --             --               --
+// ChocolateDoom   Linux     latest    --             savegames        doom.wad, doom2.wad, ...
+// CrispyDoom      Windows   latest    --             --               --
+// CrispyDoom      Linux     latest    --             savegames        doom.wad, doom2.wad, ...
+// Doom Retro      Windows   latest    --             savegames        doom, doom2, ...
+// Doom Retro      Linux     latest    --             ??               (Linux officially not supported)
+// PrBoom+         Windows   latest    --             --               --
+// PrBoom+         Linux     latest    --             ??               (no longer available in Linux repos)
+// Woof            Windows   latest    --             savegames        Doom1.wad, Doom2.wad, Renamed.wad, ...
+// Woof            Linux     latest    --             savegames        Doom1.wad, Doom2.wad, Renamed.wad, ...
+// DSDA-Doom       Windows   latest    --             dsda_doom_data   doom1, doom2, renamed, ...
+// DSDA-Doom       Linux     latest    --             dsda_doom_data   doom1, doom2, renamed, ...
+
 // For some engines the directory for save files consists of 3 parts:
 //   1. the data directory:                        /home/youda/.config/gzdoom
 //   2. the common part of the save subdirectory:  savegames
@@ -389,25 +415,11 @@ QString EngineTraits::getDefaultScreenshotDir() const
 // This function returns the common part (2.)
 QString EngineTraits::getCommonSaveSubdir() const
 {
-	// engine          OS        version   installation   subdirectory
-	//----------------------------------------------------------------
-	// GZDoom          Windows   <  4.4    any            --
-	// GZDoom          Windows   >= 4.4    any            Save
-	// GZDoom          Windows   >= 4.9    portable       Save
-	// GZDoom          Windows   >= 4.9    non-portable   --
-	// GZDoom          Linux     <  4.11   any            --
-	// GZDoom          Linux     >= 4.11   any            savegames
-	// ChocolateDoom   Windows   latest    any            --
-	// ChocolateDoom   Linux     latest    any            savegames
-	// DSDA-Doom       Windows   latest    any            dsda_doom_data
-	// DSDA-Doom       Linux     latest    any            dsda_doom_data
-	// Woof            Windows   latest    any            savegames
-	// Woof            Linux     latest    any            savegames
-	// anything else   any       any       any            ??
-
 	QString saveSubdirBase;
 
-	if (_family == EngineFamily::ZDoom && normalizedName() == "gzdoom")
+	const QString & name = normalizedName();
+
+	if (_family == EngineFamily::ZDoom && name == "gzdoom")
 	{
 		Version version = getExeVersionOrAssumeLatest();
 		using v = Version;
@@ -429,21 +441,21 @@ QString EngineTraits::getCommonSaveSubdir() const
 	}
 	else if (_family == EngineFamily::ChocolateDoom)
 	{
-		if (!IS_WINDOWS)
+		if (!IS_WINDOWS /* Chocolate/Crispy Doom */ || name == "doomretro")
 		{
 			saveSubdirBase = "savegames";
 		}
 	}
 	else if (_family == EngineFamily::PrBoom)
 	{
-		if (normalizedName() == "dsda-doom")
+		if (name == "dsda-doom")
 		{
 			saveSubdirBase = "dsda_doom_data";
 		}
 	}
 	else if (_family == EngineFamily::MBF)
 	{
-		if (normalizedName() == "woof")
+		if (name == "woof")
 		{
 			saveSubdirBase = "savegames";
 		}
@@ -462,8 +474,11 @@ QString EngineTraits::getDefaultSaveSubdir( const QString & IWADPath ) const
 
 	QString saveDir = _commonSaveSubdir;
 
+	const QString & name = normalizedName();
+
 	// Some engines store their save files in a subdirectory named after the IWAD in use.
-	if (isBasedOnGZDoomVersionOrLater({4,9,0}) || (_family == EngineFamily::ChocolateDoom && !IS_WINDOWS))
+	if ((isBasedOnGZDoomVersionOrLater({4,9,0}))
+	 || (_family == EngineFamily::ChocolateDoom && (!IS_WINDOWS /* Chocolate/Crispy Doom */ || name == "doomretro")))
 	{
 		QString gameID;
 		if (!IWADPath.isEmpty())
@@ -483,14 +498,18 @@ QString EngineTraits::getDefaultSaveSubdir( const QString & IWADPath ) const
 			const doom::GameIdentification & defaultGame = doom::game::Doom2;
 			gameID = _family == EngineFamily::ChocolateDoom ? defaultGame.chocolateID : defaultGame.gzdoomID;
 		}
+		if (_family == EngineFamily::ChocolateDoom && name != "doomretro")  // Chocolate or Crispy Doom
+		{
+			gameID += ".wad";
+		}
 
 		saveDir = fs::appendToPath( saveDir, gameID );
 	}
-	else if (_family == EngineFamily::PrBoom && normalizedName() == "dsda-doom")
+	else if (_family == EngineFamily::PrBoom && name == "dsda-doom")
 	{
 		saveDir = fs::appendToPath( saveDir, fs::getFileBasenameFromPath( IWADPath ).toLower() );
 	}
-	else if (_family == EngineFamily::MBF && normalizedName() == "woof")
+	else if (_family == EngineFamily::MBF && name == "woof")
 	{
 		saveDir = fs::appendToPath( saveDir, fs::getFileNameFromPath( IWADPath ) );
 	}
@@ -502,10 +521,12 @@ bool EngineTraits::saveDirDependsOnIWAD() const
 {
 	assert( isInitialized() );
 
-	return isBasedOnGZDoomVersionOrLater({4,9,0})
-        || (_family == EngineFamily::ChocolateDoom && !IS_WINDOWS)
-        || (_family == EngineFamily::PrBoom && normalizedName() == "dsda-doom")
-        || (_family == EngineFamily::MBF && normalizedName() == "woof");
+	const QString & name = normalizedName();
+
+	return (isBasedOnGZDoomVersionOrLater({4,9,0}))
+        || (_family == EngineFamily::ChocolateDoom && (!IS_WINDOWS /* Chocolate/Crispy Doom */ || name == "doomretro"))
+        || (_family == EngineFamily::PrBoom && name == "dsda-doom")
+        || (_family == EngineFamily::MBF && name == "woof");
 }
 
 QString EngineTraits::makeCmdSaveFilePath(
@@ -576,6 +597,15 @@ QString EngineTraits::getDefaultConfigFileName() const
 
 //----------------------------------------------------------------------------------------------------------------------
 // command line parameters deduction
+
+const char * EngineTraits::saveFileSuffix() const
+{
+	assert( _familyTraits );
+	if (normalizedName() == "doomretro")
+		return "save";  // ffs!
+	else
+		return _familyTraits->saveFileSuffix;
+}
 
 const char * EngineTraits::getScreenshotDirParam() const
 {

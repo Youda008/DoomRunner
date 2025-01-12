@@ -7,6 +7,8 @@
 
 #include "DoomFiles.hpp"
 
+#include "Utils/FileSystemUtils.hpp"
+
 #include <QHash>
 #include <QSet>
 #include <QFileInfo>
@@ -65,49 +67,49 @@ static const GameIdentification Doom1_Shareware =
 {
 	.name = "DOOM Shareware",
 	.gzdoomID = "doom.id.doom1.shareware",
-	.chocolateID = "doom1.wad",
+	.chocolateID = "doom",
 };
 
 static const GameIdentification Doom1_Registered =
 {
 	.name = "DOOM Registered",
 	.gzdoomID = "doom.id.doom1.registered",
-	.chocolateID = "doom.wad",
+	.chocolateID = "doom",
 };
 
 static const GameIdentification Doom1_Ultimate =
 {
 	.name = "The Ultimate DOOM",
 	.gzdoomID = "doom.id.doom1.ultimate",
-	.chocolateID = "doom.wad",
+	.chocolateID = "doom",
 };
 
 static const GameIdentification Doom1_Ultimate_XBox =
 {
 	.name = "DOOM: XBox Edition",
 	.gzdoomID = "doom.id.doom1.ultimate.xbox",
-	.chocolateID = "doom.wad",
+	.chocolateID = "doom",
 };
 
 static const GameIdentification Doom1_BFG =
 {
 	.name = "DOOM: BFG Edition",
 	.gzdoomID = "doom.id.doom1.bfg",
-	.chocolateID = "doom.wad",
+	.chocolateID = "doom",
 };
 
 static const GameIdentification Doom1_KEX =
 {
 	.name = "DOOM: KEX Edition",
 	.gzdoomID = "doom.id.doom1.kex",
-	.chocolateID = "doom.wad",
+	.chocolateID = "doom",
 };
 
 static const GameIdentification Doom1_Unity =
 {
 	.name = "DOOM: Unity Edition",
 	.gzdoomID = "doom.id.doom1.unity",
-	.chocolateID = "doom.wad",
+	.chocolateID = "doom",
 };
 
 //-- Doom 2 --------------------------------------------------------------------
@@ -116,35 +118,35 @@ const GameIdentification Doom2 =
 {
 	.name = "DOOM 2: Hell on Earth",
 	.gzdoomID = "doom.id.doom2.commercial",
-	.chocolateID = "doom2.wad",
+	.chocolateID = "doom2",
 };
 
 static const GameIdentification Doom2_XBox =
 {
 	.name = "DOOM 2: XBox Edition",
 	.gzdoomID = "doom.id.doom2.commercial.xbox",
-	.chocolateID = "doom2.wad",
+	.chocolateID = "doom2",
 };
 
 static const GameIdentification Doom2_BFG =
 {
 	.name = "DOOM 2: BFG Edition",
 	.gzdoomID = "doom.id.doom2.bfg",
-	.chocolateID = "doom2.wad",
+	.chocolateID = "doom2",
 };
 
 static const GameIdentification Doom2_KEX =
 {
 	.name = "DOOM 2: KEX Edition",
 	.gzdoomID = "doom.id.doom2.kex",
-	.chocolateID = "doom2.wad",
+	.chocolateID = "doom2",
 };
 
 static const GameIdentification Doom2_Unity =
 {
 	.name = "DOOM 2: Unity Edition",
 	.gzdoomID = "doom.id.doom2.unity",
-	.chocolateID = "doom2.wad",
+	.chocolateID = "doom2",
 };
 
 //-- Final Doom ----------------------------------------------------------------
@@ -153,42 +155,42 @@ static const GameIdentification Doom2_TNT =
 {
 	.name = "Final Doom: TNT - Evilution",
 	.gzdoomID = "doom.id.doom2.tnt",
-	.chocolateID = "tnt.wad",
+	.chocolateID = "tnt",
 };
 
 static const GameIdentification Doom2_TNT_KEX =
 {
 	.name = "Final Doom: TNT - Evilution: KEX Edition",
 	.gzdoomID = "doom.id.doom2.tnt.kex",
-	.chocolateID = "tnt.wad",
+	.chocolateID = "tnt",
 };
 
 static const GameIdentification Doom2_TNT_Unity =
 {
 	.name = "Final Doom: TNT - Evilution: Unity Edition",
 	.gzdoomID = "doom.id.doom2.tnt.unity",
-	.chocolateID = "tnt.wad",
+	.chocolateID = "tnt",
 };
 
 static const GameIdentification Doom2_Plutonia =
 {
 	.name = "Final Doom: Plutonia Experiment",
 	.gzdoomID = "doom.id.doom2.plutonia",
-	.chocolateID = "plutonia.wad",
+	.chocolateID = "plutonia",
 };
 
 static const GameIdentification Doom2_Plutonia_KEX =
 {
 	.name = "Final Doom: Plutonia Experiment: KEX Edition",
 	.gzdoomID = "doom.id.doom2.plutonia.kex",
-	.chocolateID = "plutonia.wad",
+	.chocolateID = "plutonia",
 };
 
 static const GameIdentification Doom2_Plutonia_Unity =
 {
 	.name = "Final Doom: Plutonia Experiment: Unity Edition",
 	.gzdoomID = "doom.id.doom2.plutonia.unity",
-	.chocolateID = "plutonia.wad",
+	.chocolateID = "plutonia",
 };
 
 //-- Heretic -------------------------------------------------------------------
@@ -197,14 +199,14 @@ static const GameIdentification Heretic_Shareware =
 {
 	.name = "Heretic Shareware",
 	.gzdoomID = "heretic.shareware",
-	.chocolateID = "heretic1.wad",
+	.chocolateID = "heretic1",
 };
 
 static const GameIdentification Heretic =
 {
 	.name = "Heretic",
 	.gzdoomID = "heretic.heretic",
-	.chocolateID = "heretic.wad",
+	.chocolateID = "heretic",
 };
 
 //-- Hexen ---------------------------------------------------------------------
@@ -213,21 +215,21 @@ static const GameIdentification Hexen_Shareware =
 {
 	.name = "Hexen: Demo Version",
 	.gzdoomID = "hexen.shareware",
-	.chocolateID = "hexen.wad",
+	.chocolateID = "hexen",
 };
 
 static const GameIdentification Hexen =
 {
 	.name = "Hexen: Beyond Heretic",
 	.gzdoomID = "hexen.hexen",
-	.chocolateID = "hexen.wad",
+	.chocolateID = "hexen",
 };
 
 static const GameIdentification Hexen_Deathkings =
 {
 	.name = "Hexen: Deathkings of the Dark Citadel",
 	.gzdoomID = "hexen.deathkings",
-	.chocolateID = "hexen.wad",
+	.chocolateID = "hexen",
 };
 
 //-- FreeDoom and "free Heretic" -----------------------------------------------
@@ -236,35 +238,35 @@ static const GameIdentification Freedoom_Demo =
 {
 	.name = "Freedoom: Demo Version",
 	.gzdoomID = "doom.freedoom.demo",
-	.chocolateID = "freedoom1.wad",
+	.chocolateID = "freedoom1",
 };
 
 static const GameIdentification Freedoom_Phase1 =
 {
 	.name = "Freedoom: Phase 1",
 	.gzdoomID = "doom.freedoom.phase1",
-	.chocolateID = "freedoom1.wad",
+	.chocolateID = "freedoom1",
 };
 
 static const GameIdentification Freedoom_Phase2 =
 {
 	.name = "Freedoom: Phase 2",
 	.gzdoomID = "doom.freedoom.phase2",
-	.chocolateID = "freedoom2.wad",
+	.chocolateID = "freedoom2",
 };
 
 static const GameIdentification FreeDM =
 {
 	.name = "FreeDM",
 	.gzdoomID = "doom.freedoom.freedm",
-	.chocolateID = "freedm.wad",
+	.chocolateID = "freedm",
 };
 
 static const GameIdentification Blasphemer =
 {
 	.name = "Blasphemer",
 	.gzdoomID = "blasphemer",
-	.chocolateID = "heretic.wad",
+	.chocolateID = "heretic",
 };
 
 //-- other games ---------------------------------------------------------------
@@ -273,35 +275,35 @@ static const GameIdentification Strife =
 {
 	.name = "Strife: Quest for the Sigil",
 	.gzdoomID = "strife.strife",
-	.chocolateID = "strife1.wad",
+	.chocolateID = "strife1",
 };
 
 static const GameIdentification Strife_Veteran =
 {
 	.name = "Strife: Veteran Edition",
 	.gzdoomID = "strife.veteran",
-	.chocolateID = "strife1.wad",
+	.chocolateID = "strife1",
 };
 
 static const GameIdentification Chex_Quest =
 {
 	.name = "Chex(R) Quest",
 	.gzdoomID = "chex.chex1",
-	.chocolateID = "chex.wad",
+	.chocolateID = "chex",
 };
 
 static const GameIdentification Chex_Quest3 =
 {
 	.name = "Chex(R) Quest 3",
 	.gzdoomID = "chex.chex3",
-	.chocolateID = "chex.wad",
+	.chocolateID = "chex",
 };
 
 static const GameIdentification Harmony =
 {
 	.name = "Harmony",
 	.gzdoomID = "harmony",
-	.chocolateID = "unknown.wad",
+	.chocolateID = "unknown",
 };
 
 } // namespace game
@@ -510,9 +512,9 @@ QStringList getStandardMapNames( const QString & iwadFileName )
 {
 	QStringList mapNames;
 
-	QString iwadFileNameLower = iwadFileName.toLower();
+	QString iwadFileBaseNameLower = fs::getFileBasenameFromPath( iwadFileName ).toLower();
 
-	if (iwadFileNameLower == "doom.wad" || iwadFileNameLower == "doom1.wad")
+	if (iwadFileBaseNameLower == "doom" || iwadFileBaseNameLower == "doom1")
 	{
 		for (int e = 1; e <= 4; e++)
 			for (int m = 1; m <= 9; m++)

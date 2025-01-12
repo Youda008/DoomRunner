@@ -149,7 +149,7 @@ class EngineTraits {
 	const QString & defaultConfigFileName() const  { assert( !_configFileName.isEmpty() ); return _configFileName; }
 
 	const char * configFileSuffix() const       { assert( _familyTraits ); return _familyTraits->configFileSuffix; }
-	const char * saveFileSuffix() const         { assert( _familyTraits ); return _familyTraits->saveFileSuffix; }
+	const char * saveFileSuffix() const;
 
 	// command line parameters deduction - requires application info and family traits to be initialized
 

@@ -76,7 +76,7 @@ static QString sanitizePath_impl( const QString & path, const QRegularExpression
 	{
 		QString sanitizedDriveLocalPath = path.mid(2);  // part without the initial drive letter
 		sanitizedDriveLocalPath.remove( invalidChars );  // the ':' is allowed in the driver letter, but not anywhere else
-		return path.midRef( 0, 2 ) + sanitizedDriveLocalPath;
+		return path[0] % path[1] % sanitizedDriveLocalPath;
 	}
 	else
 	{

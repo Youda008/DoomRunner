@@ -110,7 +110,7 @@ inline QString getFileNameFromPath( const QString & filePath )
 
 inline QString getFileBasenameFromPath( const QString & filePath )
 {
-	return QFileInfo( filePath ).completeBaseName();
+	return QFileInfo( filePath ).baseName();
 }
 
 inline QString getParentDir( const QString & entryPath )

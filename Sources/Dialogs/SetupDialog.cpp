@@ -359,6 +359,13 @@ void SetupDialog::editEngine( EngineInfo & selectedEngine )
 
 void SetupDialog::onEngineSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
+	// For some reason Qt sometimes (not always, i don't understand it) calls this method
+	// when we're shifting items in the ListModel and when there are null pointers in the original item positions.
+	// And for some other reason which i also don't understand, getSelectedItemIndex() queries all items for flags.
+	// Therefore without this check we crash in derefencing null in ListModel::flags().
+	if (engineModel.isMovingInProgress())
+		return;
+
 	int selectedIdx = wdg::getSelectedItemIndex( ui->engineListView );
 	setDefaultEngineAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
 	if (selectedIdx >= 0)
@@ -413,6 +420,13 @@ void SetupDialog::iwadMoveDown()
 
 void SetupDialog::onIWADSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
+	// For some reason Qt sometimes (not always, i don't understand it) calls this method
+	// when we're shifting items in the ListModel and when there are null pointers in the original item positions.
+	// And for some other reason which i also don't understand, getSelectedItemIndex() queries all items for flags.
+	// Therefore without this check we crash in derefencing null in ListModel::flags().
+	if (iwadModel.isMovingInProgress())
+		return;
+
 	int selectedIdx = wdg::getSelectedItemIndex( ui->iwadListView );
 	setDefaultIWADAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
 	if (selectedIdx >= 0)

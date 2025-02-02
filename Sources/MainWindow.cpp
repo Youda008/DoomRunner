@@ -697,7 +697,7 @@ MainWindow::MainWindow()
 	this->setWindowIcon( QIcon(":/DoomRunner.ico") );
  #endif
 
- #ifdef FLATPAK_BUILD
+ #if IS_FLATPAK_BUILD
 	QGuiApplication::setDesktopFileName("io.github.Youda008.DoomRunner");
  #endif
 
@@ -711,9 +711,7 @@ MainWindow::MainWindow()
 	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::onAboutActionTriggered );
 	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
 
- #if !IS_WINDOWS  // Windows-only feature
-	ui->exportPresetToShortcutAction->setEnabled( false );
- #endif
+	ui->exportPresetToShortcutAction->setEnabled( IS_WINDOWS );  // Windows-only feature
 
 	// setup key shortcuts for switching focus
 
@@ -4486,6 +4484,11 @@ void MainWindow::updateDemoFilesFromDir()
 			demoModel.append( DemoFile( file ) );
 		}
 	});
+	// some operating systems don't traverse the directory entries in alphabetical order, so we need to sort them on our own
+	if constexpr (!IS_WINDOWS && !IS_MACOS)
+	{
+		demoModel.sortBy( []( const DemoFile & i1, const DemoFile & i2 ) { return i1.getFilePath() < i2.getFilePath(); } );
+	}
 	demoModel.finishCompleteUpdate();
 
 	// restore the originally selected item, the selection will be reset if the item does not exist in the new content
@@ -4668,12 +4671,15 @@ void MainWindow::exportPresetToScript()
 
 	// Make sure the working directory is set to the engine's executable directory,
 	// because some engines refuse to start or don't work properly when the working dir is not their executable dir.
- #if IS_WINDOWS
-	stream << "cd \""%fs::toNativePath( engineExeDir )%"\"" << '\n';
- #else
-	stream << "#!/bin/bash\n\n";
-	stream << "cd '"%fs::toNativePath( engineExeDir )%"'" << '\n';
- #endif
+	if constexpr (IS_WINDOWS)
+	{
+		stream << "cd \""%fs::toNativePath( engineExeDir )%"\"" << '\n';
+	}
+	else
+	{
+		stream << "#!/bin/bash\n\n";
+		stream << "cd '"%fs::toNativePath( engineExeDir )%"'" << '\n';
+	}
 
 	stream << cmd.executable << " " << cmd.arguments.join(' ') << '\n';
 

@@ -266,9 +266,10 @@ void ProcessOutputWindow::onProcessStarted()
 void ProcessOutputWindow::readProcessOutput()
 {
 	QByteArray output = process.readAllStandardOutput();
- #if IS_WINDOWS
-	output.replace( "\r\n", "\n" );
- #endif
+	if constexpr (IS_WINDOWS)
+	{
+		output.replace( "\r\n", "\n" );
+	}
 
 	// If there are still CRs, the process probably wants to return the cursor to the start of the line to overwrite it.
 	// In that case everytime we encounter CR, we need to move the cursor to the beginning of the current line manually.

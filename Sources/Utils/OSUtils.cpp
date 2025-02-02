@@ -43,9 +43,9 @@ namespace os {
 //======================================================================================================================
 // standard directories
 
-#if defined(FLATPAK_BUILD) && IS_WINDOWS
+#if IS_FLATPAK_BUILD && IS_WINDOWS
 	#error "Flatpak build on Windows is not supported"
-#elif defined(FLATPAK_BUILD) && IS_MACOS
+#elif IS_FLATPAK_BUILD && IS_MACOS
 	#error "Flatpak build on MacOS is not supported"
 #endif
 
@@ -54,11 +54,10 @@ namespace impl {
 static QString getUserName()
 {
 	// There is no other way: https://stackoverflow.com/questions/26552517/get-system-username-in-qt/49215652#49215652
- #if IS_WINDOWS
-	return qEnvironmentVariable("USERNAME");
- #else
-	return qEnvironmentVariable("USER");
- #endif
+	if constexpr (IS_WINDOWS)
+		return qEnvironmentVariable("USERNAME");
+	else
+		return qEnvironmentVariable("USER");
 }
 
 // Here is where QStandardPaths point to on different platforms:
@@ -77,25 +76,31 @@ static QString getCurrentHomeDir()
 
 [[maybe_unused]] static QString getMainHomeDir()
 {
- #ifdef FLATPAK_BUILD  // this is a Flatpak installation of this launcher
-	// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
-	// But we need the system-wide home dir, and that's not available via Qt, so we must do this hack.
-	return "/home/"%getUserName();
- #else
-	return getCurrentHomeDir();
- #endif
+	if constexpr (IS_FLATPAK_BUILD)  // this is a Flatpak installation of this launcher
+	{
+		// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
+		// But we need the system-wide home dir, and that's not available via Qt, so we must do this hack.
+		return "/home/"%getUserName();
+	}
+	else
+	{
+		return getCurrentHomeDir();
+	}
 }
 
 static QString getCurrentAppConfigDir()
 {
- #if IS_WINDOWS
-	// Qt thinks that GenericConfigLocation on Windows belongs to AppData\Local, but imo it belongs to AppData\Roaming.
-	// Unfortunatelly there is no GenericRoamingDataLocation, and the only way to extract that roaming parent directory
-	// is to take the parent directory of AppDataLocation, which already includes this application name.
-	return fs::getParentDir( QStandardPaths::writableLocation( QStandardPaths::AppDataLocation ) );
- #else // Linux and Mac
-	return QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
- #endif
+	if constexpr (IS_WINDOWS)
+	{
+		// Qt thinks that GenericConfigLocation on Windows belongs to AppData\Local, but imo it belongs to AppData\Roaming.
+		// Unfortunatelly there is no GenericRoamingDataLocation, and the only way to extract that roaming parent directory
+		// is to take the parent directory of AppDataLocation, which already includes this application name.
+		return fs::getParentDir( QStandardPaths::writableLocation( QStandardPaths::AppDataLocation ) );
+	}
+	else // Linux and Mac
+	{
+		return QStandardPaths::writableLocation( QStandardPaths::GenericConfigLocation );
+	}
 	// result:
 	// Windows - system-wide:  C:/Users/Youda/AppData/Roaming                                    - %AppData%
 	// Linux - system-wide:    /home/youda/.config                                               \
@@ -113,25 +118,31 @@ static QString getAppConfigDirRelativeToHome()
 
 [[maybe_unused]] static QString getMainAppConfigDir()
 {
- #ifdef FLATPAK_BUILD  // this is a Flatpak installation of this launcher
-	// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
-	// But we need the system-wide config dir, and that's not available via Qt, so we must do this hack.
-	return getMainHomeDir()%"/"%getAppConfigDirRelativeToHome();
- #else
-	return getCurrentAppConfigDir();
- #endif
+	if constexpr (IS_FLATPAK_BUILD)  // this is a Flatpak installation of this launcher
+	{
+		// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
+		// But we need the system-wide config dir, and that's not available via Qt, so we must do this hack.
+		return getMainHomeDir()%"/"%getAppConfigDirRelativeToHome();
+	}
+	else
+	{
+		return getCurrentAppConfigDir();
+	}
 }
 
 static QString getCurrentAppDataDir()
 {
- #if IS_WINDOWS
-	// Qt thinks that GenericDataLocation on Windows belongs to AppData\Local, but imo it belongs to AppData\Roaming.
-	// Unfortunatelly there is no GenericRoamingDataLocation, and the only way to extract that roaming parent directory
-	// is to take the parent directory of AppDataLocation, which already includes this application name.
-	return fs::getParentDir( QStandardPaths::writableLocation( QStandardPaths::AppDataLocation ) );
- #else // Linux and Mac
-	return QStandardPaths::writableLocation( QStandardPaths::GenericDataLocation );
- #endif
+	if constexpr (IS_WINDOWS)
+	{
+		// Qt thinks that GenericDataLocation on Windows belongs to AppData\Local, but imo it belongs to AppData\Roaming.
+		// Unfortunatelly there is no GenericRoamingDataLocation, and the only way to extract that roaming parent directory
+		// is to take the parent directory of AppDataLocation, which already includes this application name.
+		return fs::getParentDir( QStandardPaths::writableLocation( QStandardPaths::AppDataLocation ) );
+	}
+	else // Linux and Mac
+	{
+		return QStandardPaths::writableLocation( QStandardPaths::GenericDataLocation );
+	}
 	// result:
 	// Windows - system-wide:  C:/Users/Youda/AppData/Roaming                                    - %AppData%
 	// Linux - system-wide:    /home/youda/.local/share                                          \
@@ -149,13 +160,16 @@ static QString getAppDataDirRelativeToHome()
 
 [[maybe_unused]] static QString getMainAppDataDir()
 {
- #ifdef FLATPAK_BUILD  // this is a Flatpak installation of this launcher
-	// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
-	// But we need the system-wide data dir, and that's not available via Qt, so we must do this hack.
-	return getMainHomeDir()%"/"%getAppDataDirRelativeToHome();
- #else
-	return getCurrentAppDataDir();
- #endif
+	if constexpr (IS_FLATPAK_BUILD)  // this is a Flatpak installation of this launcher
+	{
+		// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
+		// But we need the system-wide data dir, and that's not available via Qt, so we must do this hack.
+		return getMainHomeDir()%"/"%getAppDataDirRelativeToHome();
+	}
+	else
+	{
+		return getCurrentAppDataDir();
+	}
 }
 
 static QString getCurrentLocalAppDataDir()
@@ -178,13 +192,16 @@ static QString getLocalAppDataDirRelativeToHome()
 
 [[maybe_unused]] static QString getMainLocalAppDataDir()
 {
- #ifdef FLATPAK_BUILD  // this is a Flatpak installation of this launcher
-	// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
-	// But we need the system-wide data dir, and that's not available via Qt, so we must do this hack.
-	return getMainHomeDir()%"/"%getLocalAppDataDirRelativeToHome();
- #else
-	return getCurrentLocalAppDataDir();
- #endif
+	if constexpr (IS_FLATPAK_BUILD)  // this is a Flatpak installation of this launcher
+	{
+		// Inside Flatpak environment the QStandardPaths point into the Flatpak sandbox of this application.
+		// But we need the system-wide data dir, and that's not available via Qt, so we must do this hack.
+		return getMainHomeDir()%"/"%getLocalAppDataDirRelativeToHome();
+	}
+	else
+	{
+		return getCurrentLocalAppDataDir();
+	}
 }
 
 #if IS_WINDOWS
@@ -229,27 +246,26 @@ QString getThisLauncherDataDir()
 
 	QString appDataDir = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
 
- #if IS_WINDOWS
-
-	QString thisExeDir = QApplication::applicationDirPath();
-	if (fs::isDirectoryWritable( thisExeDir ))
+	if constexpr (IS_WINDOWS)
 	{
-		printInfo() << "Saving data (options, cache, errors) into the install directory ("<<thisExeDir<<")";
-		return thisExeDir;
+		QString thisExeDir = QApplication::applicationDirPath();
+		if (fs::isDirectoryWritable( thisExeDir ))
+		{
+			printInfo() << "Saving data (options, cache, errors) into the install directory ("<<thisExeDir<<")";
+			return thisExeDir;
+		}
+		else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%\Roaming
+		{
+			printInfo() << "The install directory ("<<thisExeDir<<") is not writable.";
+			printInfo() << "Saving data (options, cache, errors) into the system standard directory ("<<appDataDir<<")";
+			return appDataDir;
+		}
 	}
-	else  // if we cannot write to the directory where the exe is extracted (e.g. Program Files), fallback to %AppData%\Roaming
+	else
 	{
-		printInfo() << "The install directory ("<<thisExeDir<<") is not writable.";
 		printInfo() << "Saving data (options, cache, errors) into the system standard directory ("<<appDataDir<<")";
 		return appDataDir;
 	}
-
- #else
-
-	printInfo() << "Saving data (options, cache, errors) into the system standard directory ("<<appDataDir<<")";
-	return appDataDir;
-
- #endif
 
 	// result:
 	// Windows - Program Files:  C:/Users/Youda/AppData/Roaming/DoomRunner                                    - %AppData%
@@ -276,7 +292,7 @@ struct SystemDirectories
 	QString currentAppConfigDir;
 	QString currentAppDataDir;
 	QString currentLocalAppDataDir;
- #ifdef FLATPAK_BUILD
+ #if IS_FLATPAK_BUILD
 	QString mainHomeDir;
 	QString mainAppConfigDir;
 	QString mainAppDataDir;
@@ -305,7 +321,7 @@ static std::unique_ptr< SystemDirectories > getSystemDirectories()
 	dirs->currentAppConfigDir     = impl::getCurrentAppConfigDir();
 	dirs->currentAppDataDir       = impl::getCurrentAppDataDir();
 	dirs->currentLocalAppDataDir  = impl::getCurrentLocalAppDataDir();
- #ifdef FLATPAK_BUILD
+ #if IS_FLATPAK_BUILD
 	dirs->mainHomeDir             = impl::getMainHomeDir();
 	dirs->mainAppConfigDir        = impl::getMainAppConfigDir();
 	dirs->mainAppDataDir          = impl::getMainAppDataDir();
@@ -360,7 +376,7 @@ const QString & getMainHomeDir()
 {
 	if (!g_cachedDirs)
 		g_cachedDirs = getSystemDirectories();
- #ifdef FLATPAK_BUILD
+ #if IS_FLATPAK_BUILD
 	return g_cachedDirs->mainHomeDir;
  #else
 	return g_cachedDirs->currentHomeDir;
@@ -370,7 +386,7 @@ const QString & getMainAppConfigDir()
 {
 	if (!g_cachedDirs)
 		g_cachedDirs = getSystemDirectories();
- #ifdef FLATPAK_BUILD
+ #if IS_FLATPAK_BUILD
 	return g_cachedDirs->mainAppConfigDir;
  #else
 	return g_cachedDirs->currentAppConfigDir;
@@ -380,7 +396,7 @@ const QString & getMainAppDataDir()
 {
 	if (!g_cachedDirs)
 		g_cachedDirs = getSystemDirectories();
- #ifdef FLATPAK_BUILD
+ #if IS_FLATPAK_BUILD
 	return g_cachedDirs->mainAppDataDir;
  #else
 	return g_cachedDirs->currentAppDataDir;
@@ -390,7 +406,7 @@ const QString & getMainLocalAppDataDir()
 {
 	if (!g_cachedDirs)
 		g_cachedDirs = getSystemDirectories();
- #ifdef FLATPAK_BUILD
+ #if IS_FLATPAK_BUILD
 	return g_cachedDirs->mainLocalAppDataDir;
  #else
 	return g_cachedDirs->currentLocalAppDataDir;
@@ -560,23 +576,22 @@ static SandboxEnvInfo getSandboxEnvInfo( const QString & executablePath )
 
 static QString getDisplayName( const AppInfo & info )
 {
- #if IS_WINDOWS
-
-	// On Windows we can use the metadata built into the executable, or the name of its directory.
-	if (!info.versionInfo.appName.isEmpty())
-		return info.versionInfo.appName;  // exe metadata should be most reliable source
+	if constexpr (IS_WINDOWS)
+	{
+		// On Windows we can use the metadata built into the executable, or the name of its directory.
+		if (!info.versionInfo.appName.isEmpty())
+			return info.versionInfo.appName;  // exe metadata should be most reliable source
+		else
+			return fs::getParentDirName( info.exePath );
+	}
 	else
-		return fs::getParentDirName( info.exePath );
-
- #else
-
-	// On Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
-	if (info.sandboxEnv.type != SandboxType::None)
-		return info.sandboxEnv.appName;
-	else
-		return info.exeBaseName;
-
- #endif
+	{
+		// On Linux we have to fallback to the binary name (or use the Flatpak name if there is one).
+		if (info.sandboxEnv.type != SandboxType::None)
+			return info.sandboxEnv.appName;
+		else
+			return info.exeBaseName;
+	}
 }
 
 static QString getNormalizedName( const AppInfo & info )
@@ -634,7 +649,7 @@ ShellCommand getRunCommand(
 	QDir sandboxAppDir( sandboxEnv.homeDir );
 
 	// different installations require different ways to launch the program executable
- #ifdef FLATPAK_BUILD
+ #if IS_FLATPAK_BUILD
 	if (fs::getAbsoluteParentDir( executablePath ) == QApplication::applicationDirPath())
 	{
 		// We are inside a Flatpak package but launching an app inside the same Flatpak package,
@@ -742,32 +757,31 @@ static int openEntryInFileBrowser( const QString & entryPath, bool openParentAnd
 
 	QFileInfo entry( entryPath );
 
- #if defined(Q_OS_WIN)
-
-	QStringList args;
-	if (openParentAndSelect)
-		args << "/select,";
-	args << QDir::toNativeSeparators( entry.canonicalFilePath() );
-	return QProcess::startDetached( "explorer.exe", args ) ? ProcessStatus::Success : ProcessStatus::FailedToStart;
-
- #elif defined(Q_OS_MAC)
-
-	QString command = openParentAndSelect ? "select" : "open";
-	QStringList args;
-	args << "-e" << "tell application \"Finder\"";
-	args << "-e" <<     "activate";
-	args << "-e" <<     command%" (\""%entry.canonicalFilePath()%"\" as POSIX file)";
-	args << "-e" << "end tell";
-	// https://doc.qt.io/qt-6/qprocess.html#execute
-	return QProcess::execute( "/usr/bin/osascript", args );
-
- #else
-
-	// We cannot select the entry here, because no file browser really supports it.
-	QString pathToOpen = openParentAndSelect ? entry.canonicalPath() : entry.canonicalFilePath();
-	return QDesktopServices::openUrl( QUrl::fromLocalFile( pathToOpen ) ) ? ProcessStatus::Success : ProcessStatus::FailedToStart;
-
- #endif
+	if constexpr (IS_WINDOWS)
+	{
+		QStringList args;
+		if (openParentAndSelect)
+			args << "/select,";
+		args << QDir::toNativeSeparators( entry.canonicalFilePath() );
+		return QProcess::startDetached( "explorer.exe", args ) ? ProcessStatus::Success : ProcessStatus::FailedToStart;
+	}
+	else if constexpr (IS_MACOS)
+	{
+		QString command = openParentAndSelect ? "select" : "open";
+		QStringList args;
+		args << "-e" << "tell application \"Finder\"";
+		args << "-e" <<     "activate";
+		args << "-e" <<     command%" (\""%entry.canonicalFilePath()%"\" as POSIX file)";
+		args << "-e" << "end tell";
+		// https://doc.qt.io/qt-6/qprocess.html#execute
+		return QProcess::execute( "/usr/bin/osascript", args );
+	}
+	else
+	{
+		// We cannot select the entry here, because no file browser really supports it.
+		QString pathToOpen = openParentAndSelect ? entry.canonicalPath() : entry.canonicalFilePath();
+		return QDesktopServices::openUrl( QUrl::fromLocalFile( pathToOpen ) ) ? ProcessStatus::Success : ProcessStatus::FailedToStart;
+	}
 }
 
 bool openDirectoryWindow( const QString & dirPath )

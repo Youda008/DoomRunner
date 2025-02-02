@@ -173,7 +173,12 @@ win32: LIBS += -lole32 -luuid -ldwmapi -lversion
 #-- user configuration ---------------------------
 
 # add "CONFIG+=flatpak" to the qmake command to activate this
-flatpak: DEFINES += FLATPAK_BUILD
+flatpak {
+	DEFINES += FLATPAK_BUILD
+	DEFINES += IS_FLATPAK_BUILD=true
+} else {
+	DEFINES += IS_FLATPAK_BUILD=false
+}
 
 
 #-- deployment -----------------------------------

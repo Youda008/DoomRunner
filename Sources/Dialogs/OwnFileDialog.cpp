@@ -30,7 +30,7 @@ static const QFileDialog::Options disableNativeDialogOnLinux( QFileDialog::Optio
 static const QString & getDefaultStartingDir()
 {
 	// initialize once on first call and then re-use.
- #ifdef FLATPAK_BUILD
+ #if IS_FLATPAK_BUILD
 	return os::getThisLauncherDataDir();
  #else
 	return emptyString;  // let the OS choose one

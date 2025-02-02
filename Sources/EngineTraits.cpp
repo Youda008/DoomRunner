@@ -424,7 +424,7 @@ QString EngineTraits::getCommonSaveSubdir() const
 		Version version = getExeVersionOrAssumeLatest();
 		using v = Version;
 
-		if (IS_WINDOWS)
+		if constexpr (IS_WINDOWS)
 		{
 			if (version >= v{4,4,0} && (version < v{4,9,0} || isPortableZDoom()))
 			{

@@ -2777,8 +2777,8 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 			}
 			else
 			{
-				reportRuntimeError( this, "Cannot set starting map",
-					"Starting map "%startingMap%" was not found in the \""%wadFileName%"\"." );
+				ui->mapCmbBox->clear();
+				ui->mapCmbBox_demo->clear();
 			}
 		}
 	}

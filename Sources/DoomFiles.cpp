@@ -591,8 +591,9 @@ inline constexpr auto CaseSensitive   = QRegularExpression::NoPatternOption;
 inline constexpr auto CaseInsensitive = QRegularExpression::CaseInsensitiveOption;
 static const QPair< QRegularExpression, QString > startingMapsRegexes [] =
 {
-	{ QRegularExpression("SIGIL_II[^.]*\\.wad", CaseInsensitive), "E6M1" },  // SIGIL_II_V1_0.WAD
-	{ QRegularExpression("SIGIL[^.]*\\.wad",    CaseInsensitive), "E5M1" },  // SIGIL_v1_21.wad
+	{ QRegularExpression("SIGIL_COMPAT[^.]*\\.wad",  CaseInsensitive), "E3M1" },  // SIGIL_COMPAT_v1_21.wad, SIGIL_COMPAT_95.WAD
+	{ QRegularExpression("SIGIL_II[^.]*\\.wad",      CaseInsensitive), "E6M1" },  // SIGIL_II_V1_0.WAD
+	{ QRegularExpression("SIGIL[^.]*\\.wad",         CaseInsensitive), "E5M1" },  // SIGIL_v1_21.wad
 };
 
 QString getStartingMap( const QString & wadFileName )

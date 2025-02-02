@@ -80,7 +80,7 @@ The `QMAKE_LFLAGS+="-Wl,--start-group"` is a workaround for a bug that's current
 
 And finally the last step:
 ```
-mingw32-make qmake_all
+mingw32-make
 ```
 
 
@@ -119,7 +119,7 @@ cd {DoomRunner repository}
 mkdir build
 cd build
 qmake6 ..\DoomRunner.pro -spec win32-g++ CONFIG+=release
-mingw32-make qmake_all
+mingw32-make
 ```
 
 #### Building with MSVC toolchain

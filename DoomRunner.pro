@@ -8,6 +8,7 @@ TARGET = DoomRunner
 
 TEMPLATE = app
 QT += core gui widgets network
+CONFIG -= qml_debug
 
 
 #-- compiler options -----------------------------

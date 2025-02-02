@@ -26,15 +26,32 @@ template< typename WrappedIter >
 class DerefIterator
 {
 	WrappedIter wrappedIter;
+
  public:
-	DerefIterator( const WrappedIter & origIter ) : wrappedIter( origIter ) {}
+
+	using iterator_category = typename WrappedIter::iterator_category;
+    using difference_type = typename WrappedIter::difference_type;
+    using value_type = std::remove_reference_t< decltype( **wrappedIter ) >;
+    using pointer = value_type *;
+    using reference = value_type &;
+
+    DerefIterator( const WrappedIter & origIter ) : wrappedIter( origIter ) {}
 	DerefIterator( WrappedIter && origIter ) : wrappedIter( std::move(origIter) ) {}
+
 	auto operator*() -> decltype( **wrappedIter ) const   { return **wrappedIter; }
 	auto operator->() -> decltype( *wrappedIter ) const   { return *wrappedIter; }
+
 	DerefIterator & operator++()    { ++wrappedIter; return *this; }
 	DerefIterator operator++(int)   { auto tmp = *this; ++wrappedIter; return tmp; }
+	DerefIterator & operator--()    { --wrappedIter; return *this; }
+	DerefIterator operator--(int)   { auto tmp = *this; --wrappedIter; return tmp; }
 	friend bool operator==( const DerefIterator & a, const DerefIterator & b )  { return a.wrappedIter == b.wrappedIter; }
 	friend bool operator!=( const DerefIterator & a, const DerefIterator & b )  { return a.wrappedIter != b.wrappedIter; }
+	friend bool operator< ( const DerefIterator & a, const DerefIterator & b )  { return a.wrappedIter <  b.wrappedIter; }
+	friend bool operator> ( const DerefIterator & a, const DerefIterator & b )  { return a.wrappedIter >  b.wrappedIter; }
+	friend auto operator- ( const DerefIterator & a, const DerefIterator & b )  { return a.wrappedIter -  b.wrappedIter; }
+	friend auto operator+ ( const DerefIterator & a, difference_type b )        { return DerefIterator( a.wrappedIter + b ); }
+	friend auto operator- ( const DerefIterator & a, difference_type b )        { return DerefIterator( a.wrappedIter - b ); }
 };
 
 // Extended unique_ptr that can be copied by allocating a new copy of the element and binding the new pointer to it.

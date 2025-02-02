@@ -229,6 +229,17 @@ class DirectList {
 	void removeAt( int idx )                         { _list.removeAt( idx ); }
 	void move( int from, int to )                    { _list.move( from, to ); }
 
+	//-- custom access helpers -----------------------------------------------------------------------------------------
+
+	// sorting
+
+	template< typename IsLessThan,
+		std::enable_if_t< std::is_invocable_v< IsLessThan, const Item &, const Item & >, int > = 0 >
+	void sortBy( const IsLessThan & isLessThan )
+	{
+		std::sort( begin(), end(), isLessThan );
+	}
+
 	// low-level pointer manipulation for implementing optimized high-level operations
 
 	std::unique_ptr< Item > takePtr( int idx )       { return _list.takePtr( idx ); }
@@ -361,6 +372,17 @@ class FilteredList {
 		ensureCanBeModified();
 		_fullList.move( from, to );
 		_filteredList.move( from, to );
+	}
+
+	//-- custom access helpers -----------------------------------------------------------------------------------------
+
+	// sorting
+
+	template< typename IsLessThan,
+		std::enable_if_t< std::is_invocable_v< IsLessThan, const Item &, const Item & >, int > = 0 >
+	void sortBy( const IsLessThan & isLessThan )
+	{
+		std::sort( begin(), end(), isLessThan );
 	}
 
 	// low-level pointer manipulation for implementing optimized high-level operations

@@ -704,6 +704,11 @@ void updateListFromDir( ListModel & model, QListView * view, const QString & dir
 		}
 	});
 
+ #if !IS_WINDOWS && !IS_MACOS
+	// some operating systems don't traverse the directory entries in alphabetical order, so we need to sort them on our own
+	model.sortBy( []( const Item & i1, const Item & i2 ) { return i1.getFilePath() < i2.getFilePath(); } );
+ #endif
+
 	model.finishCompleteUpdate();
 
 	// restore the selection so that the same file remains selected
@@ -780,6 +785,11 @@ void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString &
 			model.append( Item( file ) );
 		}
 	});
+
+ #if !IS_WINDOWS && !IS_MACOS
+	// some operating systems don't traverse the directory entries in alphabetical order, so we need to sort them on our own
+	model.sortBy( []( const Item & i1, const Item & i2 ) { return i1.getFilePath() < i2.getFilePath(); } );
+ #endif
 
 	model.finishCompleteUpdate();
 

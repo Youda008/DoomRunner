@@ -503,9 +503,9 @@ bool MainWindow::shouldEnableConfigCmbBox( const EngineInfo * selectedEngine )
 	return selectedEngine != nullptr;
 }
 
-bool MainWindow::shouldEnableConfigCloneBtn( const ConfigFile * selectedConfig )
+bool MainWindow::shouldEnableConfigCloneBtn( const EngineInfo * selectedEngine )
 {
-	return selectedConfig != nullptr;
+	return selectedEngine != nullptr;
 }
 
 static bool isDirectLaunch( LaunchMode mode )
@@ -2649,6 +2649,7 @@ void MainWindow::toggleAndClearEngineDependentWidgets( const EngineInfo * engine
 {
 	ui->engineDirBtn->setEnabled( shouldEnableEngineDirBtn( engine ) );
 	toggleAndDeselect( ui->configCmbBox, shouldEnableConfigCmbBox( engine ) );
+	ui->configCloneBtn->setEnabled( shouldEnableConfigCloneBtn( engine ) );
 
 	LaunchMode mode = getLaunchModeFromUI();
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
@@ -2698,8 +2699,6 @@ void MainWindow::onConfigSelected( int index )
 	{
 		QString configPath = fs::getPathFromFileName( getConfigDir(), configFileName );
 	}*/
-
-	ui->configCloneBtn->setEnabled( shouldEnableConfigCloneBtn( selectedConfig ) );
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();

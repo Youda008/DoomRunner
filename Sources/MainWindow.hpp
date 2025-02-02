@@ -337,7 +337,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	static bool shouldEnableEngineDirBtn( const EngineInfo * selectedEngine );
 	static bool shouldEnableConfigCmbBox( const EngineInfo * selectedEngine );
-	static bool shouldEnableConfigCloneBtn( const ConfigFile * selectedConfig );
+	static bool shouldEnableConfigCloneBtn( const EngineInfo * selectedEngine );
 	static bool shouldEnableSkillSelector( LaunchMode mode );
 	static bool shouldEnableGameOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine );
 	static bool shouldEnableCompatOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine );

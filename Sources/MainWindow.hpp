@@ -250,7 +250,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void autoselectItems();
 
-	void updateAlternativeDirs( const Preset * selectedPreset = nullptr );
+	void updateAlternativePath( QLineEdit * altPathLine, const QString * altPath );
+	void updateAltConfigDir( const QString * configDir = nullptr );
+	void updateAltSaveDir( const QString * saveDir = nullptr );
+	void updateAltScreenshotDir( const QString * screenshotDir = nullptr );
+	void updateAlternativePaths( const Preset * selectedPreset );
 
 	void updateListsFromDirs();
 	void updateIWADsFromDir();
@@ -378,12 +382,12 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
 
-	QString currentEngineSaveDir;         ///< cached path of the directory when the currently selected engine stores its save files by default, maintains path style of dataDir of the current engine
-	QString currentEngineScreenshotDir;   ///< cached path of the directory when the currently selected engine stores its screenshots by default, maintains path style of dataDir of the current engine
+	QString engineDefaultSaveDir;         ///< cached path of the directory where the currently selected engine stores its save files by default, maintains path style of dataDir of the current engine
+	QString engineDefaultScreenshotDir;   ///< cached path of the directory where the currently selected engine stores its screenshots by default, maintains path style of dataDir of the current engine
 
-	PathRebaser engineConfigDirRebaser;      ///< path convertor set up to rebase relative paths from the current working dir to the engine's config dir and back
-	PathRebaser engineSaveDirRebaser;        ///< path convertor set up to rebase relative paths from the current working dir to the engine's save dir and back
-	PathRebaser engineScreenshotDirRebaser;  ///< path convertor set up to rebase relative paths from the current working dir to the engine's screenshot dir and back
+	PathRebaser engineAltConfigDirRebaser;      ///< path convertor set up to rebase relative paths for the alternative config dir field
+	PathRebaser engineAltSaveDirRebaser;        ///< path convertor set up to rebase relative paths for the alternative save dir field
+	PathRebaser engineAltScreenshotDirRebaser;  ///< path convertor set up to rebase relative paths for the alternative screenshot dir field
 
 	CompatModeStyle lastCompLvlStyle = CompatModeStyle::None;  ///< compat mode style of the engine that was selected the last time
 

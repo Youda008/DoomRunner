@@ -144,38 +144,43 @@ class EngineTraits {
 	/// Returns a relative sub-directory inside a data directory dedicated for save files.
 	QString getDefaultSaveSubdir( const QString & IWADPath = {} ) const;
 
+	/// Returns a part of the relative save sub-directory common for all IWADs.
+	/** If saveDirDependsOnIWAD(), then this is the common parent directory for all IWADs,
+	  * otherwise it's equal to getDefaultSaveSubdir( const QString & IWADPath ). */
+	const QString & commonSaveSubdir() const       { assert( !_commonSaveSubdir.isEmpty() ); return _commonSaveSubdir; }
+
 	// default data files names and file suffixes
 
 	const QString & defaultConfigFileName() const  { assert( !_configFileName.isEmpty() ); return _configFileName; }
 
-	const char * configFileSuffix() const       { assert( _familyTraits ); return _familyTraits->configFileSuffix; }
+	const char * configFileSuffix() const          { assert( _familyTraits ); return _familyTraits->configFileSuffix; }
 	const char * saveFileSuffix() const;
 
 	// command line parameters deduction - requires application info and family traits to be initialized
 
 	/// Command line parameter for specifying a custom save directory, can be nullptr if the engine doesn't support it.
-	const char * saveDirParam() const           { assert( _familyTraits ); return _familyTraits->saveDirParam; }
+	const char * saveDirParam() const              { assert( _familyTraits ); return _familyTraits->saveDirParam; }
 
 	/// Command line parameter for specifying a custom screenshot directory, can be nullptr if the engine doesn't support it.
-	const char * screenshotDirParam() const     { assert( isInitialized() ); return _screenshotDirParam; }
+	const char * screenshotDirParam() const        { assert( isInitialized() ); return _screenshotDirParam; }
 
-	auto mapParamStyle() const                  { assert( _familyTraits ); return _familyTraits->mapParamStyle; }
-	bool supportsCustomMapNames() const         { assert( _familyTraits ); return _familyTraits->mapParamStyle == MapParamStyle::Map; }
+	auto mapParamStyle() const                     { assert( _familyTraits ); return _familyTraits->mapParamStyle; }
+	bool supportsCustomMapNames() const            { assert( _familyTraits ); return _familyTraits->mapParamStyle == MapParamStyle::Map; }
 
-	CompatModeStyle compatModeStyle() const     { assert( _familyTraits ); return _familyTraits->compatModeStyle; }
+	CompatModeStyle compatModeStyle() const        { assert( _familyTraits ); return _familyTraits->compatModeStyle; }
 
 	/// Whether the engine needs -stdout option to send its output to stdout where it can be read by this launcher.
-	bool needsStdoutParam() const               { assert( hasFamily() ); return _family == EngineFamily::ZDoom && IS_WINDOWS; }
+	bool needsStdoutParam() const                  { assert( hasFamily() ); return _family == EngineFamily::ZDoom && IS_WINDOWS; }
 
-	bool hasDetailedGameOptions() const         { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
-	bool hasDetailedCompatOptions() const       { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
-	bool hasMultiplayer() const                 { assert( _familyTraits ); return _familyTraits->multJoinParam != nullptr; }
-	bool hasNetMode() const                     { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
-	bool hasPlayerCustomization() const         { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
+	bool hasDetailedGameOptions() const            { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
+	bool hasDetailedCompatOptions() const          { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
+	bool hasMultiplayer() const                    { assert( _familyTraits ); return _familyTraits->multJoinParam != nullptr; }
+	bool hasNetMode() const                        { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
+	bool hasPlayerCustomization() const            { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
 
-	const char * multHostParam() const          { assert( _familyTraits ); return _familyTraits->multHostParam; }
-	const char * multPlayerCountParam() const   { assert( _familyTraits ); return _familyTraits->multPlayerCountParam; }
-	const char * multJoinParam() const          { assert( _familyTraits ); return _familyTraits->multJoinParam; }
+	const char * multHostParam() const             { assert( _familyTraits ); return _familyTraits->multHostParam; }
+	const char * multPlayerCountParam() const      { assert( _familyTraits ); return _familyTraits->multPlayerCountParam; }
+	const char * multJoinParam() const             { assert( _familyTraits ); return _familyTraits->multJoinParam; }
 
 	/// Generates either "-warp 2 5" or "+map E2M5" depending on the engine capabilities.
 	QStringList getMapArgs( int mapIdx, const QString & mapName ) const;

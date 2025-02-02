@@ -352,6 +352,12 @@ class PathRebaser {
 	void setTargetBaseDir( const QString & baseDir )   { _targetBaseDir.setPath( baseDir ); }
 	void setOutputPathStyle( PathStyle pathStyle )     { _outPathStyle = pathStyle; }
 
+	void setTargetDirAndOutputStyle( const QString & baseDir )
+	{
+		setTargetBaseDir( baseDir );
+		setOutputPathStyle( fs::getPathStyle( baseDir ) );
+	}
+
 	QString maybeQuoted( const QString & path ) const
 	{
 		return _quotePaths ? quoted( path ) : path;

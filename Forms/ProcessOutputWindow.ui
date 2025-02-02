@@ -277,7 +277,6 @@
         <font>
          <family>Consolas</family>
          <pointsize>10</pointsize>
-         <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
@@ -292,7 +291,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -305,7 +304,7 @@
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="standardButtons">
-        <set>QDialogButtonBox::Abort|QDialogButtonBox::Close</set>
+        <set>QDialogButtonBox::StandardButton::Abort|QDialogButtonBox::StandardButton::Close</set>
        </property>
       </widget>
      </item>

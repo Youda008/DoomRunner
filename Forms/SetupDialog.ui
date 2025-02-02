@@ -3,7 +3,7 @@
  <class>SetupDialog</class>
  <widget class="QDialog" name="SetupDialog">
   <property name="windowModality">
-   <enum>Qt::WindowModal</enum>
+   <enum>Qt::WindowModality::WindowModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -30,7 +30,7 @@
           <item>
            <widget class="EditableListView" name="engineListView">
             <property name="editTriggers">
-             <set>QAbstractItemView::NoEditTriggers</set>
+             <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
             </property>
            </widget>
           </item>
@@ -267,7 +267,7 @@
           <item>
            <widget class="EditableListView" name="iwadListView">
             <property name="editTriggers">
-             <set>QAbstractItemView::NoEditTriggers</set>
+             <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
             </property>
            </widget>
           </item>
@@ -470,7 +470,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>

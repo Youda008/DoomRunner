@@ -1,3 +1,20 @@
+1.9.0
+- new application icon
+- reworked the way the launcher detects where the engines store their data (configs, saves, ...)
+- fixed the output path format for Windows (slashes)
+- added an ability to prepend the command with a prefix
+- added an option to load maps after mods
+- added new launch option Resume demo (for DSDA-Doom)
+- added dmflags3 options for latest GZDoom
+- added pistolstart option for those engines that support it
+- added support for Woof multiplayer parameters
+- added an ability to choose player name and suit color for multiplayer (ZDoom family)
+- fixed the port spin-box up/down buttons
+- fixed loading saved games for PrBoom, DSDA-Doom and Woof
+- removed the no longer used mod dir from Initial Setup dialog
+- reorganized the second tab so that the launcher fits into a small resolution screen
+- minor bug-fixes and optimizations
+
 1.8.3
 - added support for .hhe dehacked files
 - added keyboard shortcuts for switching focus between the main lists + better button tooltips

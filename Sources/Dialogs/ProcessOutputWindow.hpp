@@ -61,7 +61,7 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 
  public:
 
-	explicit ProcessOutputWindow( QWidget * parent );
+	explicit ProcessOutputWindow( QWidget * parent, bool closeOnSuccess );
 	virtual ~ProcessOutputWindow() override;
 
 	/// Starts a process and shows a window displaying its standard output until the process finishes.
@@ -114,6 +114,11 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 	ProcessStatus ownStatus;
 
 	KeyPressFilter keyPressFilter;
+
+ public: // return values from this dialog
+
+	bool closeOnSuccessChecked;
+
 };
 
 

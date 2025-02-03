@@ -625,6 +625,7 @@ static void serialize( QJsonObject & settingsJs, const LauncherSettings & settin
 	settingsJs["use_absolute_paths"] = settings.pathStyle == PathStyle::Absolute;
 	settingsJs["show_engine_output"] = settings.showEngineOutput;
 	settingsJs["close_on_launch"] = settings.closeOnLaunch;
+	settingsJs["close_output_on_success"] = settings.closeOutputOnSuccess;
 	settingsJs["check_for_updates"] = settings.checkForUpdates;
 	settingsJs["ask_for_sandbox_permissions"] = settings.askForSandboxPermissions;
 
@@ -638,6 +639,7 @@ static void deserialize( const JsonObjectCtx & settingsJs, LauncherSettings & se
 
 	settings.showEngineOutput = settingsJs.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 	settings.closeOnLaunch = settingsJs.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
+	settings.closeOutputOnSuccess = settingsJs.getBool( "close_output_on_success", settings.closeOutputOnSuccess, DontShowError );
 	settings.checkForUpdates = settingsJs.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
 	settings.askForSandboxPermissions = settingsJs.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
 

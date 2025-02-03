@@ -289,6 +289,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="closeOnSuccessChkBox">
+       <property name="text">
+        <string>Close this window when engine quits successfully</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Orientation::Horizontal</enum>

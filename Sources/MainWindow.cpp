@@ -5232,9 +5232,10 @@ void MainWindow::executeLaunchCommand()
 
 	if (settings.showEngineOutput)
 	{
-		ProcessOutputWindow processWindow( this );
+		ProcessOutputWindow processWindow( this, settings.closeOutputOnSuccess );
 		processWindow.runProcess( cmd.executable, cmd.arguments, processWorkingDir, envVars );
 		//int resultCode = processWindow.result();
+		settings.closeOutputOnSuccess = processWindow.closeOnSuccessChecked;
 	}
 	else
 	{

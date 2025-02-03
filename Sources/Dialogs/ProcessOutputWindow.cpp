@@ -53,7 +53,7 @@ static const char * const killBtnText = "Kill";
 
 //======================================================================================================================
 
-ProcessOutputWindow::ProcessOutputWindow( QWidget * parent )
+ProcessOutputWindow::ProcessOutputWindow( QWidget * parent, bool closeOnSuccess )
 :
 	QDialog( parent ),
 	DialogCommon( this )
@@ -75,6 +75,8 @@ ProcessOutputWindow::ProcessOutputWindow( QWidget * parent )
 	keyPressFilter.toggleKeyPressSupression( true );  // stop Enter/Esc key events, otherwise they would close the window
 	ui->textEdit->installEventFilter( &keyPressFilter );
 	connect( &keyPressFilter, &KeyPressFilter::keyPressed, this, &thisClass::onKeyPressed );
+
+	ui->closeOnSuccessChkBox->setChecked( closeOnSuccess );
 
 	closeBtn->setText("Close");
 	connect( abortBtn, &QPushButton::clicked, this, &thisClass::onAbortClicked );
@@ -337,7 +339,7 @@ void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus 
 	{
 		setOwnStatus( ProcessStatus::Crashed );
 		reportRuntimeError( this, "Program crashed", "\""%executableName%"\" has crashed." );
-		closeDialog( QDialog::Accepted );
+		//closeDialog( QDialog::Accepted );
 	}*/
 	else if (exitCode != 0)
 	{
@@ -349,7 +351,8 @@ void ProcessOutputWindow::onProcessFinished( int exitCode, QProcess::ExitStatus 
 	else
 	{
 		setOwnStatus( ProcessStatus::Finished );
-		closeDialog( QDialog::Accepted );
+		if (ui->closeOnSuccessChkBox->isChecked())
+			closeDialog( QDialog::Accepted );
 	}
 }
 
@@ -375,15 +378,15 @@ void ProcessOutputWindow::onErrorOccurred( QProcess::ProcessError error )
 			reportRuntimeError( this, "Process start error", "Failed to start \""%executableName%"\" ("%process.errorString()%")" );
 			closeDialog( QDialog::Accepted );
 			break;
-		case QProcess::Crashed:
-			setOwnStatus( ProcessStatus::Crashed );
-			reportRuntimeError( this, "Program crashed", "\""%executableName%"\" has crashed." );
-			closeDialog( QDialog::Accepted );
-			break;
 		case QProcess::Timedout:
 			setOwnStatus( ProcessStatus::FailedToStart );
 			reportRuntimeError( this, "Process start timeout", "\""%executableName%"\" process has timed out while starting." );
 			closeDialog( QDialog::Accepted );
+			break;
+		case QProcess::Crashed:
+			setOwnStatus( ProcessStatus::Crashed );
+			reportRuntimeError( this, "Program crashed", "\""%executableName%"\" has crashed." );
+			//closeDialog( QDialog::Accepted );
 			break;
 		case QProcess::ReadError:
 			setOwnStatus( ProcessStatus::UnknownError );
@@ -445,4 +448,6 @@ void ProcessOutputWindow::closeDialog( int resultCode )
 void ProcessOutputWindow::onDialogClosed( int resultCode )
 {
 	logDebug() << "ProcessOutputWindow::onDialogClosed: " << resultCode;
+
+	closeOnSuccessChecked = ui->closeOnSuccessChkBox->isChecked();
 }

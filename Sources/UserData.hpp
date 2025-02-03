@@ -346,6 +346,7 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	PathStyle pathStyle = defaultPathStyle;
 	bool showEngineOutput = showEngineOutputByDefault;
 	bool closeOnLaunch = false;
+	bool closeOutputOnSuccess = false;
 	bool checkForUpdates = true;
 	bool askForSandboxPermissions = true;
 

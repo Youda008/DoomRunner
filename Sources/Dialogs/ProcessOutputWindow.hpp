@@ -11,7 +11,6 @@
 
 #include "DialogCommon.hpp"
 
-#include "CommonTypes.hpp"
 #include "UserData.hpp"  // EnvVars
 #include "Utils/EventFilters.hpp"
 

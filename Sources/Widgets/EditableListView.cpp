@@ -206,7 +206,7 @@ void EditableListView::openCurrentFileLocation()
 	}
 
 	auto userData = model()->data( currentIdx, Qt::UserRole );
-	if (userData.type() != QVariant::Type::String)
+	if (userData.typeId() != QMetaType::Type::QString)
 	{
 		reportLogicError( this->parentWidget(), "Unsupported model",
 			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "

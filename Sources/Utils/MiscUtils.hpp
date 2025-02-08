@@ -11,7 +11,6 @@
 
 #include "Essential.hpp"
 
-#include "CommonTypes.hpp"
 #include "Widgets/ListModel.hpp"  // ReadOnlyListModelItem
 
 #include <QString>

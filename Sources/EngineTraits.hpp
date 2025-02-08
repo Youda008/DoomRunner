@@ -11,7 +11,6 @@
 
 #include "Essential.hpp"
 
-#include "CommonTypes.hpp"
 #include "Utils/OSUtils.hpp"  // AppInfo
 
 #include <QString>

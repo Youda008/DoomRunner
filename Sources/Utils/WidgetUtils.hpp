@@ -11,7 +11,6 @@
 
 #include "Essential.hpp"
 
-#include "CommonTypes.hpp"
 #include "ContainerUtils.hpp"    // findSuch
 #include "FileSystemUtils.hpp"   // traverseDirectory
 #include "ErrorHandling.hpp"

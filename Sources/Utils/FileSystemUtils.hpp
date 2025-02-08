@@ -293,7 +293,7 @@ class PathConvertor {
 	bool usingAbsolutePaths() const                    { return _pathStyle == PathStyle::Absolute; }
 	bool usingRelativePaths() const                    { return _pathStyle == PathStyle::Relative; }
 
-	void setWorkingDir( const QDir & workingDir )      { _workingDir = workingDir; }
+	void setWorkingDir( const QString & workingDir )   { _workingDir.setPath( workingDir ); }
 	void setPathStyle( PathStyle pathStyle )           { _pathStyle = pathStyle; }
 	void toggleAbsolutePaths( bool useAbsolutePaths )  { _pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative; }
 

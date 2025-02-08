@@ -15,14 +15,6 @@
 #include <QRegularExpression>
 #include <QThread>  // sleep
 
-#include <mutex>
-
-#if IS_WINDOWS
-// Writing into this external global variable is the official way to enable querying NTFS permissions. Seriously Qt?!?
-extern Q_CORE_EXPORT int qt_ntfs_permission_lookup;
-static std::mutex qt_ntfs_permission_mtx;
-#endif
-
 #include <QDebug>
 
 
@@ -48,16 +40,12 @@ void forEachParentDir( const QString & path, const std::function< void ( const Q
 bool isDirectoryWritable( const QString & dirPath )
 {
 	bool isWritable = false;
-	QFileInfo dir( dirPath );
 	{
  #if IS_WINDOWS
-		std::unique_lock< std::mutex > lock( qt_ntfs_permission_mtx );
-		qt_ntfs_permission_lookup = 1;
+		QNtfsPermissionCheckGuard ntfsGuard;
  #endif
+		QFileInfo dir( dirPath );
 		isWritable = dir.exists() && dir.isWritable();
- #if IS_WINDOWS
-		qt_ntfs_permission_lookup = 0;
- #endif
 	}
 	return isWritable;
 }

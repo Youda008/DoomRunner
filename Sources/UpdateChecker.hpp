@@ -10,7 +10,6 @@
 
 
 #include "Essential.hpp"
-#include "CommonTypes.hpp"
 #include "Utils/ErrorHandling.hpp"  // LoggingComponent
 
 #include <QObject>

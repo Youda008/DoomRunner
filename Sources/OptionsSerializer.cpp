@@ -7,7 +7,7 @@
 
 #include "OptionsSerializer.hpp"
 
-#include "CommonTypes.hpp"
+#include "CommonTypes.hpp"  // PtrList
 #include "Utils/JsonUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidListItem
 #include "Utils/ErrorHandling.hpp"

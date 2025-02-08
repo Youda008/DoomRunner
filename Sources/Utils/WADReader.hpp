@@ -11,7 +11,6 @@
 
 #include "Essential.hpp"
 
-#include "CommonTypes.hpp"
 #include "FileInfoCache.hpp"
 #include "DoomFiles.hpp"  // GameIdentification
 

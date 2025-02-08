@@ -8,7 +8,9 @@
 #include "OwnFileDialog.hpp"
 
 #include "Utils/StringUtils.hpp"  // emptyString
-#include "Utils/OSUtils.hpp"  // getLinuxDesktopEnv(), getCachedThisAppDataDir()
+#if !IS_WINDOWS || IS_FLATPAK_BUILD
+	#include "Utils/OSUtils.hpp"  // getLinuxDesktopEnv(), getThisLauncherDataDir()
+#endif
 
 
 //======================================================================================================================

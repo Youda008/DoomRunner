@@ -61,8 +61,8 @@ EditableListView::EditableListView( QWidget * parent )
 	contextMenu = new QMenu( this );  // will be deleted when this QListView (their parent) is deleted
 	addItemAction = addAction( "Add", { Qt::Key_Insert } );
 	deleteItemAction = addAction( "Delete", { Qt::Key_Delete } );
-	moveItemUpAction = addAction( "Move up", { Qt::CTRL + Qt::Key_Up } );  // shut-up clang, this is the official way to do it by Qt doc
-	moveItemDownAction = addAction( "Move down", { Qt::CTRL + Qt::Key_Down } );
+	moveItemUpAction = addAction( "Move up", { Qt::CTRL | Qt::Key_Up } );
+	moveItemDownAction = addAction( "Move down", { Qt::CTRL | Qt::Key_Down } );
 	contextMenuEnabled = false;
 
 	allowIntraWidgetDnD = true;
@@ -142,12 +142,12 @@ void EditableListView::toggleContextMenu( bool enabled )
 
 void EditableListView::enableItemCloning()
 {
-	cloneItemAction = addAction( "Clone", { Qt::CTRL + Qt::Key_C } );
+	cloneItemAction = addAction( "Clone", { Qt::CTRL | Qt::Key_C } );
 }
 
 void EditableListView::enableInsertSeparator()
 {
-	insertSeparatorAction = addAction( "Insert separator", { Qt::CTRL + Qt::Key_Slash } );
+	insertSeparatorAction = addAction( "Insert separator", { Qt::CTRL | Qt::Key_Slash } );
 }
 
 void EditableListView::enableFinding()

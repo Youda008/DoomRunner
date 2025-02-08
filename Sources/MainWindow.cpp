@@ -715,12 +715,12 @@ MainWindow::MainWindow()
 
 	// setup key shortcuts for switching focus
 
-	addShortcut( { Qt::CTRL + Qt::Key_1 }, [ this ](){ ui->presetListView->setFocus(); } );
-	addShortcut( { Qt::CTRL + Qt::Key_2 }, [ this ](){ ui->engineCmbBox->setFocus(); } );
-	addShortcut( { Qt::CTRL + Qt::Key_3 }, [ this ](){ ui->iwadListView->setFocus(); } );     // shut-up clang, this is the official way to do it by Qt doc
-	addShortcut( { Qt::CTRL + Qt::Key_4 }, [ this ](){ ui->mapDirView->setFocus(); } );
-	addShortcut( { Qt::CTRL + Qt::Key_5 }, [ this ](){ ui->configCmbBox->setFocus(); } );
-	addShortcut( { Qt::CTRL + Qt::Key_6 }, [ this ](){ ui->modListView->setFocus(); } );
+	addShortcut( { Qt::CTRL | Qt::Key_1 }, [ this ](){ ui->presetListView->setFocus(); } );
+	addShortcut( { Qt::CTRL | Qt::Key_2 }, [ this ](){ ui->engineCmbBox->setFocus(); } );
+	addShortcut( { Qt::CTRL | Qt::Key_3 }, [ this ](){ ui->iwadListView->setFocus(); } );
+	addShortcut( { Qt::CTRL | Qt::Key_4 }, [ this ](){ ui->mapDirView->setFocus(); } );
+	addShortcut( { Qt::CTRL | Qt::Key_5 }, [ this ](){ ui->configCmbBox->setFocus(); } );
+	addShortcut( { Qt::CTRL | Qt::Key_6 }, [ this ](){ ui->modListView->setFocus(); } );
 
 	// setup main list views
 
@@ -983,7 +983,7 @@ void MainWindow::setupModList()
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->toggleContextMenu( true );
-	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL + Qt::Key_Asterisk } );
+	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL | Qt::Key_Asterisk } );
 	ui->modListView->enableInsertSeparator();
 	ui->modListView->enableOpenFileLocation();
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &thisClass::modAdd );

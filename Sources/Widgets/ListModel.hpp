@@ -88,12 +88,20 @@ class DropTarget {
 //======================================================================================================================
 // support structs
 
+// The following structs have dummy method declarations to denote what the model classes expect.
+//
+// Virtual methods (runtime polymorphism) is not needed here, because the item type is a template parameter
+// of the list model so the type is always fully known.
+//
+// However, some of the methods must have an dummy implementation as well, because the model/view properties
+// are not known at compile time, therefore the compiler expects them to always be there, even if they are not used.
+
 #ifdef __GNUC__
  #pragma GCC diagnostic push
  #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"  // std::optional sometimes makes false positive warnings
 #endif
 
-/** Each item of ReadOnlyListModel must inherit from this struct to satisfy the requirements of the model.
+/** Every item type of ReadOnlyListModel must inherit from this struct to satisfy the requirements of the model.
   * The following methods should be overriden to point to the appropriate members. */
 struct ReadOnlyListModelItem
 {
@@ -101,6 +109,10 @@ struct ReadOnlyListModelItem
 	mutable std::optional< QColor > backgroundColor;
 	bool isSeparator = false;  ///< true means this is a special item used to mark a section
 
+	// Should return an ID of this item that's unique within the list. Used for remembering selected items.
+	const QString & getID() const;
+
+	// Used for special purposes such as "Open File Location" action. Must be overriden when such action is enabled.
 	const QString & getFilePath() const
 	{
 		throw std::logic_error(
@@ -109,6 +121,7 @@ struct ReadOnlyListModelItem
 		);
 	}
 
+	// When icons are enabled, this must return the icon for this particular item.
 	const QIcon & getIcon() const
 	{
 		throw std::logic_error(
@@ -131,6 +144,7 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 		return false;
 	}
 
+	// When the model is set up to be editable, this must return the text to be edited in the view.
 	const QString & getEditString() const
 	{
 		throw std::logic_error(
@@ -139,6 +153,7 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 		);
 	}
 
+	// When the model is set up to be editable, this must apply the user edit from the view.
 	void setEditString( QString /*str*/ )
 	{
 		throw std::logic_error(
@@ -147,11 +162,13 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 		);
 	}
 
+	// Whether this item has an active checkbox in the view.
 	bool isCheckable() const
 	{
 		return false;
 	}
 
+	// When the model is set up to have checkboxes, this must return whether the checkbox should be displayed as checked.
 	bool isChecked() const
 	{
 		throw std::logic_error(
@@ -160,6 +177,7 @@ struct EditableListModelItem : public ReadOnlyListModelItem
 		);
 	}
 
+	// When the model is set up to have checkboxes, this must apply the new status of the checkbox.
 	void setChecked( bool /*checked*/ ) const
 	{
 		throw std::logic_error(

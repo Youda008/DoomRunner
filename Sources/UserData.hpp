@@ -61,7 +61,7 @@ struct Engine : public EditableListModelItem
 
 	// requirements of EditableListModel
 	const QString & getFilePath() const   { return executablePath; }
-	QString getID() const                 { return executablePath; }
+	const QString & getID() const         { return executablePath; }
 };
 
 struct IWAD : public EditableListModelItem
@@ -77,7 +77,7 @@ struct IWAD : public EditableListModelItem
 	const QString & getEditString() const   { return name; }
 	void setEditString( QString str )       { name = std::move(str); }
 	const QString & getFilePath() const     { return path; }
-	QString getID() const                   { return path; }
+	const QString & getID() const           { return path; }
 };
 
 struct Mod : public EditableListModelItem
@@ -293,7 +293,7 @@ struct Preset : public EditableListModelItem
 	bool isEditable() const                 { return true; }
 	const QString & getEditString() const   { return name; }
 	void setEditString( QString str )       { name = std::move(str); }
-	QString getID() const                   { return name; }
+	const QString & getID() const           { return name; }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

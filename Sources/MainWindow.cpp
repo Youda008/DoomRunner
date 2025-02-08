@@ -965,7 +965,7 @@ void MainWindow::setupModList()
 
 	// setup editing and separators
 	modModel.toggleEditing( true );
-	ui->modListView->toggleNameEditing( true );
+	ui->modListView->toggleNameEditing( true );  // needed for the custom command line options
 	ui->modListView->toggleListModifications( true );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory

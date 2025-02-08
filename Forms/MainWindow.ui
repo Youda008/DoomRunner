@@ -36,11 +36,7 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_4">
                <item>
-                <widget class="EditableListView" name="presetListView">
-                 <property name="editTriggers">
-                  <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-                 </property>
-                </widget>
+                <widget class="EditableListView" name="presetListView"/>
                </item>
                <item>
                 <layout class="QHBoxLayout" name="hLayout_searchBtn">
@@ -293,9 +289,6 @@
                    <height>180</height>
                   </size>
                  </property>
-                 <property name="editTriggers">
-                  <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-                 </property>
                 </widget>
                </item>
               </layout>
@@ -323,11 +316,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="ExtendedTreeView" name="mapDirView">
-                 <property name="editTriggers">
-                  <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-                 </property>
-                </widget>
+                <widget class="ExtendedTreeView" name="mapDirView"/>
                </item>
               </layout>
              </widget>
@@ -388,11 +377,7 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_6">
                <item>
-                <widget class="EditableListView" name="modListView">
-                 <property name="editTriggers">
-                  <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-                 </property>
-                </widget>
+                <widget class="EditableListView" name="modListView"/>
                </item>
                <item>
                 <widget class="QCheckBox" name="mapsAfterModsChkBox">

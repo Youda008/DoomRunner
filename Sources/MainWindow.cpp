@@ -4487,7 +4487,7 @@ void MainWindow::updateDemoFilesFromDir()
 	// some operating systems don't traverse the directory entries in alphabetical order, so we need to sort them on our own
 	if constexpr (!IS_WINDOWS && !IS_MACOS)
 	{
-		demoModel.sortBy( []( const DemoFile & i1, const DemoFile & i2 ) { return i1.getFilePath() < i2.getFilePath(); } );
+		demoModel.sortBy( []( const DemoFile & i1, const DemoFile & i2 ) { return i1.getID() < i2.getID(); } );
 	}
 	demoModel.finishCompleteUpdate();
 

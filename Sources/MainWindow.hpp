@@ -415,7 +415,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 		ConfigFile( const QString & fileName ) : fileName( fileName ) {}
 		ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		const QString & getID() const { return fileName; }
-		const QString & getFilePath() const { return fileName; }  // it's not a path, but it's only used for sorting, so it's ok
 	};
 	ReadOnlyDirectListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
 
@@ -425,7 +424,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 		SaveFile( const QString & fileName ) : fileName( fileName ) {}
 		SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		const QString & getID() const { return fileName; }
-		const QString & getFilePath() const { return fileName; }  // it's not a path, but it's only used for sorting, so it's ok
 	};
 	ReadOnlyDirectListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
 
@@ -435,7 +433,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 		DemoFile( const QString & fileName ) : fileName( fileName ) {}
 		DemoFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		const QString & getID() const { return fileName; }
-		const QString & getFilePath() const { return fileName; }  // it's not a path, but it's only used for sorting, so it's ok
 	};
 	ReadOnlyDirectListModel< DemoFile > demoModel;    ///< list of demo files found in pre-defined directory
 

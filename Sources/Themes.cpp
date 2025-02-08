@@ -414,7 +414,7 @@ static void initStyles()
 	// So we need to convert it to the right case, otherwise it can't be found in the c_availableStyleNames.
 	if constexpr (!IS_WINDOWS)
 	{
-		for (const auto & styleName : c_availableStyleNames)
+		for (const auto & styleName : std::as_const( c_availableStyleNames ))
 			if (c_defaultStyleName.toLower() == styleName.toLower())
 				c_defaultStyleName = styleName;
 	}
@@ -474,7 +474,7 @@ static void toggleDarkTitleBar( HWND hWnd, bool enable )
 static void toggleDarkTitleBars( bool enable )
 {
 	QWindow * focusWindow = qApp->focusWindow();
-	QWindowList topLevelWindows = qApp->topLevelWindows();
+	const QWindowList topLevelWindows = qApp->topLevelWindows();
 	for (const QWindow * window : topLevelWindows)
 	{
 		HWND hWnd = reinterpret_cast< HWND >( window->winId() );

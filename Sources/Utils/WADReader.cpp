@@ -76,7 +76,7 @@ QString charArrayToString( const char (&arr) [N] )
 
 static bool isPrintableAsciiString( const QString & str )
 {
-	auto strLatin = str.toLatin1();
+	const auto strLatin = str.toLatin1();
 	for (auto c : strLatin)
 		if (!isprint( c ))
 			return false;

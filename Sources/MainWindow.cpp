@@ -3081,7 +3081,7 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 
 void MainWindow::modAdd()
 {
-	QStringList paths = DialogWithPaths::browseFiles( this, "mod file", lastUsedDir,
+	const QStringList paths = DialogWithPaths::browseFiles( this, "mod file", lastUsedDir,
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ "All files (*)"
@@ -3150,7 +3150,7 @@ void MainWindow::modAddArg()
 
 void MainWindow::modDelete()
 {
-	QList<int> deletedIndexes = wdg::deleteSelectedItems( ui->modListView, modModel );
+	const QList<int> deletedIndexes = wdg::deleteSelectedItems( ui->modListView, modModel );
 
 	if (deletedIndexes.isEmpty())  // no item was selected
 		return;
@@ -3174,7 +3174,7 @@ void MainWindow::modMoveUp()
 {
 	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
-	QList<int> movedIndexes = wdg::moveUpSelectedItems( ui->modListView, modModel );
+	const QList<int> movedIndexes = wdg::moveUpSelectedItems( ui->modListView, modModel );
 
 	restoringPresetInProgress = false;
 
@@ -3198,7 +3198,7 @@ void MainWindow::modMoveDown()
 {
 	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
-	QList<int> movedIndexes = wdg::moveDownSelectedItems( ui->modListView, modModel );
+	const QList<int> movedIndexes = wdg::moveDownSelectedItems( ui->modListView, modModel );
 
 	restoringPresetInProgress = false;
 

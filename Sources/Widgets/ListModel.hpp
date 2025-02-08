@@ -1018,7 +1018,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		// cannot use QList or QVector here because those require copyable objects
 		std::vector< std::unique_ptr< Item > > droppedItems;
 		droppedItems.reserve( count );
-		for (int idx : sortedItemIndexes)
+		for (int idx : std::as_const( sortedItemIndexes ))
 			droppedItems.push_back( this->takePtr( idx ) );  // leaves null at idx
 
 		startInserting( row, count );
@@ -1040,7 +1040,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		return true;
 	}
 
-	bool dropMimeUrls( QList< QUrl > urls, int row )
+	bool dropMimeUrls( const QList< QUrl > & urls, int row )
 	{
 		if (!pathConvertor)
 		{

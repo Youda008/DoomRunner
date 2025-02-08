@@ -302,7 +302,7 @@ QList< Argument > splitCommandLineArguments( const QString & argsStr )
 bool areScreenCoordinatesValid( int x, int y )
 {
 	// find if the coordinates belong to any of the currently active virtual screens
-	auto screens = qApp->screens();
+	const auto screens = qApp->screens();
 	for (QScreen * screen : screens)
 	{
 		auto availableCoordinates = screen->availableGeometry();

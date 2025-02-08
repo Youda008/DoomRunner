@@ -453,7 +453,7 @@ QJsonObject serializeMap( const QHash< QString, Elem > & map )
 template< typename Elem >
 void deserializeMap( const JsonObjectCtx & jsMap, QHash< QString, Elem > & map )
 {
-	auto keys = jsMap.keys();
+	const auto keys = jsMap.keys();
 	for (const QString & key : keys)
 	{
 		JsonObjectCtx jsElem = jsMap.getObject( key );

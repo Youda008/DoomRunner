@@ -130,6 +130,21 @@ void chooseRowByIndex( QTableView * view, int rowIndex );
 // button actions - all of these function assume a 1-dimensional non-recursive list view/widget
 
 
+namespace impl {
+
+template< typename IsLessThan >
+QList<int> getSortedRows( const QModelIndexList & selectedIndexes, const IsLessThan & isLessThan )
+{
+	QList<int> selectedRowsAsc;
+	for (const QModelIndex & index : selectedIndexes)
+		selectedRowsAsc.push_back( index.row() );
+	std::sort( selectedRowsAsc.begin(), selectedRowsAsc.end(), isLessThan );
+	return selectedRowsAsc;
+}
+
+} // namespace impl
+
+
 /// Adds an item to the end of the list and selects it.
 template< typename ListModel >
 int appendItem( QListView * view, ListModel & model, const typename ListModel::Item & item )
@@ -251,7 +266,7 @@ QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 		return {};
 	}
 
-	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
+	const QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty())
 	{
 		if (!model.isEmpty())
@@ -261,12 +276,9 @@ QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
 	// but for the delete, we need them sorted in ascending order
-	QList<int> selectedIndexesAsc;
-	for (const QModelIndex & index : selectedIndexes)
-		selectedIndexesAsc.push_back( index.row() );
-	std::sort( selectedIndexesAsc.begin(), selectedIndexesAsc.end(), []( int idx1, int idx2 ) { return idx1 < idx2; } );
+	const QList<int> selectedRowsAsc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 < i2; } );
 
-	int firstSelectedIdx = selectedIndexesAsc[0];
+	int firstSelectedIdx = selectedRowsAsc[0];
 
 	deselectAllAndUnsetCurrent( view );
 
@@ -274,7 +286,7 @@ QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 
 	// delete all the selected items
 	uint deletedCnt = 0;
-	for (int selectedIdx : selectedIndexesAsc)
+	for (int selectedIdx : selectedRowsAsc)
 	{
 		model.removeAt( selectedIdx - deletedCnt );
 		deletedCnt++;
@@ -292,7 +304,7 @@ QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 		selectAndSetCurrentByIndex( view, firstSelectedIdx - 1 );
 	}
 
-	return selectedIndexesAsc;
+	return selectedRowsAsc;
 }
 
 /// Creates a copy of a selected item and selects the newly created one.
@@ -426,7 +438,7 @@ QList<int> moveUpSelectedItems( QListView * view, ListModel & model )
 		return {};
 	}
 
-	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
+	const QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty())
 	{
 		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
@@ -435,13 +447,10 @@ QList<int> moveUpSelectedItems( QListView * view, ListModel & model )
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
 	// but for the move, we need them sorted in ascending order
-	QList<int> selectedIndexesAsc;
-	for (const QModelIndex & index : selectedIndexes)
-		selectedIndexesAsc.push_back( index.row() );
-	std::sort( selectedIndexesAsc.begin(), selectedIndexesAsc.end(), []( int idx1, int idx2 ) { return idx1 < idx2; } );
+	const QList<int> selectedRowsAsc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 < i2; } );
 
 	// if the selected items are at the bottom, do nothing
-	if (selectedIndexesAsc.first() == 0)
+	if (selectedRowsAsc.first() == 0)
 	{
 		return {};
 	}
@@ -453,7 +462,7 @@ QList<int> moveUpSelectedItems( QListView * view, ListModel & model )
 	model.orderAboutToChange();
 
 	// do the move and select the new positions
-	for (int selectedIdx : selectedIndexesAsc)
+	for (int selectedIdx : selectedRowsAsc)
 	{
 		model.move( selectedIdx, selectedIdx - 1 );
 		selectItemByIndex( view, selectedIdx - 1 );
@@ -470,7 +479,7 @@ QList<int> moveUpSelectedItems( QListView * view, ListModel & model )
 		setCurrentItemByIndex( view, 0 );               // set the first one as current
 	}
 
-	return selectedIndexesAsc;
+	return selectedRowsAsc;
 }
 
 /// Moves all selected items down and updates the selection to point to the new position.
@@ -486,7 +495,7 @@ QList<int> moveDownSelectedItems( QListView * view, ListModel & model )
 		return {};
 	}
 
-	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
+	const QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.isEmpty())
 	{
 		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
@@ -495,13 +504,10 @@ QList<int> moveDownSelectedItems( QListView * view, ListModel & model )
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
 	// but for the move, we need them sorted in descending order
-	QList<int> selectedIndexesDesc;
-	for (const QModelIndex & index : selectedIndexes)
-		selectedIndexesDesc.push_back( index.row() );
-	std::sort( selectedIndexesDesc.begin(), selectedIndexesDesc.end(), []( int idx1, int idx2 ) { return idx1 > idx2; } );
+	const QList<int> selectedRowsDesc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 > i2; } );
 
 	// if the selected items are at the top, do nothing
-	if (selectedIndexesDesc.first() == model.size() - 1)
+	if (selectedRowsDesc.first() == model.size() - 1)
 	{
 		return {};
 	}
@@ -513,7 +519,7 @@ QList<int> moveDownSelectedItems( QListView * view, ListModel & model )
 	model.orderAboutToChange();
 
 	// do the move and select the new positions
-	for (int selectedIdx : selectedIndexesDesc)
+	for (int selectedIdx : selectedRowsDesc)
 	{
 		model.move( selectedIdx, selectedIdx + 1 );
 		selectItemByIndex( view, selectedIdx + 1 );
@@ -530,7 +536,7 @@ QList<int> moveDownSelectedItems( QListView * view, ListModel & model )
 		setCurrentItemByIndex( view, model.size() - 1 );  // set the last one as current
 	}
 
-	return selectedIndexesDesc;
+	return selectedRowsDesc;
 }
 
 bool editItemAtIndex( QListView * view, int index );
@@ -669,7 +675,8 @@ template< typename ListModel >  // Item must have getID() method that returns so
 auto getSelectedItemIDs( QListView * view, const ListModel & model ) -> QStringList
 {
 	QStringList itemIDs;
-	for (int selectedItemIdx : getSelectedItemIndexes( view ))
+	const auto selectedIndexes = getSelectedItemIndexes( view );
+	for (int selectedItemIdx : selectedIndexes)
 		itemIDs.append( model[ selectedItemIdx ].getID() );
 	return itemIDs;
 }

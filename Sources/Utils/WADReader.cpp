@@ -237,7 +237,7 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 			}
 
 			QByteArray lumpData = file.read( lump.size );
-			if (lumpData.size() < int( lump.size ))
+			if (lumpData.size() < qsizetype( lump.size ))
 			{
 				file.seek( origPos );
 				continue;

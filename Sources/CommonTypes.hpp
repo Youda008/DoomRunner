@@ -113,50 +113,50 @@ class PtrList {
 
 	// content access
 
-	auto count() const                            { return _list.count(); }
-	auto size() const                             { return _list.size(); }
-	auto isEmpty() const                          { return _list.isEmpty(); }
+	auto count() const                                { return _list.count(); }
+	auto size() const                                 { return _list.size(); }
+	auto isEmpty() const                              { return _list.isEmpty(); }
 
-	      auto & operator[]( int idx )            { return *_list[ idx ]; }
-	const auto & operator[]( int idx ) const      { return *_list[ idx ]; }
+	      auto & operator[]( qsizetype idx )          { return *_list[ idx ]; }
+	const auto & operator[]( qsizetype idx ) const    { return *_list[ idx ]; }
 
-	      iterator begin()                        { return DerefIterator( _list.begin() ); }
-	const_iterator begin() const                  { return DerefIterator( _list.begin() ); }
-	      iterator end()                          { return DerefIterator( _list.end() ); }
-	const_iterator end() const                    { return DerefIterator( _list.end() ); }
+	      iterator begin()                            { return DerefIterator( _list.begin() ); }
+	const_iterator begin() const                      { return DerefIterator( _list.begin() ); }
+	      iterator end()                              { return DerefIterator( _list.end() ); }
+	const_iterator end() const                        { return DerefIterator( _list.end() ); }
 
-	      auto & first()                          { return *_list.first(); }
-	const auto & first() const                    { return *_list.first(); }
-	      auto & last()                           { return *_list.last(); }
-	const auto & last() const                     { return *_list.last(); }
+	      auto & first()                              { return *_list.first(); }
+	const auto & first() const                        { return *_list.first(); }
+	      auto & last()                               { return *_list.last(); }
+	const auto & last() const                         { return *_list.last(); }
 
 	// list modification
 
-	void clear()                                  { _list.clear(); }
+	void clear()                                      { _list.clear(); }
 
-	void append( const Elem &  elem )             { _list.append( DeepCopyableUniquePtr< Elem >::allocNew( elem ) ); }
-	void append(       Elem && elem )             { _list.append( DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
-	void prepend( const Elem &  elem )            { _list.prepend( DeepCopyableUniquePtr< Elem >::allocNew( elem ) ); }
-	void prepend(       Elem && elem )            { _list.prepend( DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
-	void insert( int idx, const Elem &  elem )    { _list.insert( idx, DeepCopyableUniquePtr< Elem >::allocNew( elem ) ); }
-	void insert( int idx,       Elem && elem )    { _list.insert( idx, DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
+	void append( const Elem &  elem )                 { _list.append( DeepCopyableUniquePtr< Elem >::allocNew( elem ) ); }
+	void append(       Elem && elem )                 { _list.append( DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
+	void prepend( const Elem &  elem )                { _list.prepend( DeepCopyableUniquePtr< Elem >::allocNew( elem ) ); }
+	void prepend(       Elem && elem )                { _list.prepend( DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
+	void insert( qsizetype idx, const Elem &  elem )  { _list.insert( idx, DeepCopyableUniquePtr< Elem >::allocNew( elem ) ); }
+	void insert( qsizetype idx,       Elem && elem )  { _list.insert( idx, DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
 
-	void removeAt( int idx )                      { _list.removeAt( idx ); }
-	void move( int from, int to )                 { _list.move( from, to ); }
+	void removeAt( qsizetype idx )                    { _list.removeAt( idx ); }
+	void move( qsizetype from, qsizetype to )         { _list.move( from, to ); }
 
 	// low-level pointer manipulation for implementing optimized high-level operations
 
-	std::unique_ptr< Elem > takePtr( int idx )
+	std::unique_ptr< Elem > takePtr( qsizetype idx )
 	{
 		return std::move( _list[ idx ] ).to_unique_ptr();
 	}
 
-	void removePtr( int idx )
+	void removePtr( qsizetype idx )
 	{
 		_list.removeAt( idx );
 	}
 
-	void insertPtr( int idx, std::unique_ptr< Elem > ptr )
+	void insertPtr( qsizetype idx, std::unique_ptr< Elem > ptr )
 	{
 		_list.insert( idx, DeepCopyableUniquePtr< Elem >( std::move(ptr) ) );
 	}

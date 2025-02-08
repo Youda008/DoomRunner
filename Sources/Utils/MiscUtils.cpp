@@ -248,7 +248,7 @@ QList< Argument > splitCommandLineArguments( const QString & argsStr )
 
 	bool escaped = false;
 	bool inQuotes = false;
-	for (int currentPos = 0; currentPos < argsStr.size(); ++currentPos)
+	for (qsizetype currentPos = 0; currentPos < argsStr.size(); ++currentPos)
 	{
 		QChar currentChar = argsStr[ currentPos ];
 

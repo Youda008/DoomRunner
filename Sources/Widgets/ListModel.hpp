@@ -206,46 +206,46 @@ class DirectList {
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
-	      auto & list()                              { return _list; }
-	const auto & list() const                        { return _list; }
-	void updateList( const PtrList< Item > &  list ) { _list = list; }
-	void assignList(       PtrList< Item > && list ) { _list = std::move(list); }
+	      auto & list()                                { return _list; }
+	const auto & list() const                          { return _list; }
+	void updateList( const PtrList< Item > &  list )   { _list = list; }
+	void assignList(       PtrList< Item > && list )   { _list = std::move(list); }
 
 	// content access
 
 	using iterator = typename decltype( _list )::iterator;
 	using const_iterator = typename decltype( _list )::const_iterator;
 
-	auto count() const                               { return _list.count(); }
-	auto size() const                                { return _list.size(); }
-	auto isEmpty() const                             { return _list.isEmpty(); }
+	auto count() const                                 { return _list.count(); }
+	auto size() const                                  { return _list.size(); }
+	auto isEmpty() const                               { return _list.isEmpty(); }
 
-	      auto & operator[]( int idx )               { return _list[ idx ]; }
-	const auto & operator[]( int idx ) const         { return _list[ idx ]; }
+	      auto & operator[]( qsizetype idx )           { return _list[ idx ]; }
+	const auto & operator[]( qsizetype idx ) const     { return _list[ idx ]; }
 
-	      iterator begin()                           { return _list.begin(); }
-	const_iterator begin() const                     { return _list.begin(); }
-	      iterator end()                             { return _list.end(); }
-	const_iterator end() const                       { return _list.end(); }
+	      iterator begin()                             { return _list.begin(); }
+	const_iterator begin() const                       { return _list.begin(); }
+	      iterator end()                               { return _list.end(); }
+	const_iterator end() const                         { return _list.end(); }
 
-	      auto & first()                             { return _list.first(); }
-	const auto & first() const                       { return _list.first(); }
-	      auto & last()                              { return _list.last(); }
-	const auto & last() const                        { return _list.last(); }
+	      auto & first()                               { return _list.first(); }
+	const auto & first() const                         { return _list.first(); }
+	      auto & last()                                { return _list.last(); }
+	const auto & last() const                          { return _list.last(); }
 
 	// list modification
 
-	void clear()                                     { _list.clear(); }
+	void clear()                                       { _list.clear(); }
 
-	void append( const Item &  item )                { _list.append( item ); }
-	void append(       Item && item )                { _list.append( std::move(item) ); }
-	void prepend( const Item &  item )               { _list.prepend( item ); }
-	void prepend(       Item && item )               { _list.prepend( std::move(item) ); }
-	void insert( int idx, const Item &  item )       { _list.insert( idx, item ); }
-	void insert( int idx,       Item && item )       { _list.insert( idx, std::move(item) ); }
+	void append( const Item &  item )                  { _list.append( item ); }
+	void append(       Item && item )                  { _list.append( std::move(item) ); }
+	void prepend( const Item &  item )                 { _list.prepend( item ); }
+	void prepend(       Item && item )                 { _list.prepend( std::move(item) ); }
+	void insert( qsizetype idx, const Item &  item )   { _list.insert( idx, item ); }
+	void insert( qsizetype idx,       Item && item )   { _list.insert( idx, std::move(item) ); }
 
-	void removeAt( int idx )                         { _list.removeAt( idx ); }
-	void move( int from, int to )                    { _list.move( from, to ); }
+	void removeAt( qsizetype idx )                     { _list.removeAt( idx ); }
+	void move( qsizetype from, qsizetype to )          { _list.move( from, to ); }
 
 	//-- custom access helpers -----------------------------------------------------------------------------------------
 
@@ -265,9 +265,9 @@ class DirectList {
 
 	// low-level pointer manipulation for implementing optimized high-level operations
 
-	std::unique_ptr< Item > takePtr( int idx )       { return _list.takePtr( idx ); }
-	void removePtr( int idx )                        { return _list.removePtr( idx ); }
-	void insertPtr( int idx, std::unique_ptr< Item > ptr )  { _list.insertPtr( idx, std::move(ptr) ); }
+	std::unique_ptr< Item > takePtr( qsizetype idx )              { return _list.takePtr( idx ); }
+	void removePtr( qsizetype idx )                               { return _list.removePtr( idx ); }
+	void insertPtr( qsizetype idx, std::unique_ptr< Item > ptr )  { _list.insertPtr( idx, std::move(ptr) ); }
 
 	//-- special -------------------------------------------------------------------------------------------------------
 
@@ -296,34 +296,34 @@ class FilteredList {
 
 	//-- wrapper functions for manipulating the list -------------------------------------------------------------------
 
-	      auto & fullList()                          { return _fullList; }
-	const auto & fullList() const                    { return _fullList; }
-	      auto & filteredList()                      { return _filteredList; }
-	const auto & filteredList() const                { return _filteredList; }
-	void updateList( const PtrList< Item > &  list ) { _fullList = list; restore(); }
-	void assignList(       PtrList< Item > && list ) { _fullList = std::move(list); restore(); }
+	      auto & fullList()                            { return _fullList; }
+	const auto & fullList() const                      { return _fullList; }
+	      auto & filteredList()                        { return _filteredList; }
+	const auto & filteredList() const                  { return _filteredList; }
+	void updateList( const PtrList< Item > &  list )   { _fullList = list; restore(); }
+	void assignList(       PtrList< Item > && list )   { _fullList = std::move(list); restore(); }
 
 	// content access
 
 	using iterator = DerefIterator< typename decltype( _filteredList )::iterator >;
 	using const_iterator = DerefIterator< typename decltype( _filteredList )::const_iterator >;
 
-	auto count() const                               { return _filteredList.count(); }
-	auto size() const                                { return _filteredList.size(); }
-	auto isEmpty() const                             { return _filteredList.isEmpty(); }
+	auto count() const                                 { return _filteredList.count(); }
+	auto size() const                                  { return _filteredList.size(); }
+	auto isEmpty() const                               { return _filteredList.isEmpty(); }
 
-	      auto & operator[]( int idx )               { return *_filteredList[ idx ]; }
-	const auto & operator[]( int idx ) const         { return *_filteredList[ idx ]; }
+	      auto & operator[]( qsizetype idx )           { return *_filteredList[ idx ]; }
+	const auto & operator[]( qsizetype idx ) const     { return *_filteredList[ idx ]; }
 
-	      iterator begin()                           { return DerefIterator( _filteredList.begin() ); }
-	const_iterator begin() const                     { return DerefIterator( _filteredList.begin() ); }
-	      iterator end()                             { return DerefIterator( _filteredList.end() ); }
-	const_iterator end() const                       { return DerefIterator( _filteredList.end() ); }
+	      iterator begin()                             { return DerefIterator( _filteredList.begin() ); }
+	const_iterator begin() const                       { return DerefIterator( _filteredList.begin() ); }
+	      iterator end()                               { return DerefIterator( _filteredList.end() ); }
+	const_iterator end() const                         { return DerefIterator( _filteredList.end() ); }
 
-	      auto & first()                             { return *_filteredList.first(); }
-	const auto & first() const                       { return *_filteredList.first(); }
-	      auto & last()                              { return *_filteredList.last(); }
-	const auto & last() const                        { return *_filteredList.last(); }
+	      auto & first()                               { return *_filteredList.first(); }
+	const auto & first() const                         { return *_filteredList.first(); }
+	      auto & last()                                { return *_filteredList.last(); }
+	const auto & last() const                          { return *_filteredList.last(); }
 
 	// list modification - only when the list is not filtered
 
@@ -360,20 +360,20 @@ class FilteredList {
 		_filteredList.prepend( &_fullList.first() );
 	}
 
-	void insert( int idx, const Item & item )
+	void insert( qsizetype idx, const Item & item )
 	{
 		ensureCanBeModified();
 		_fullList.insert( idx, item );
 		_filteredList.insert( idx, &_fullList[ idx ] );
 	}
-	void insert( int idx, Item && item )
+	void insert( qsizetype idx, Item && item )
 	{
 		ensureCanBeModified();
 		_fullList.insert( idx, std::move(item) );
 		_filteredList.insert( idx, &_fullList[ idx ] );
 	}
 
-	void removeAt( int idx )
+	void removeAt( qsizetype idx )
 	{
 		if (!isFiltered())
 		{
@@ -384,13 +384,13 @@ class FilteredList {
 		{
 			// can be allowed for filtered list, but the fullList entry needs to be found and deleted too
 			auto * ptr = _filteredList.takeAt( idx );
-			for (int i = 0; i < _fullList.size(); ++i)
+			for (qsizetype i = 0; i < _fullList.size(); ++i)
 				if (&_fullList[i] == ptr)
 					_fullList.removeAt( i );
 		}
 	}
 
-	void move( int from, int to )
+	void move( qsizetype from, qsizetype to )
 	{
 		ensureCanBeModified();
 		_fullList.move( from, to );
@@ -415,21 +415,21 @@ class FilteredList {
 
 	// low-level pointer manipulation for implementing optimized high-level operations
 
-	std::unique_ptr< Item > takePtr( int idx )
+	std::unique_ptr< Item > takePtr( qsizetype idx )
 	{
 		ensureCanBeModified();
 		_filteredList[ idx ] = nullptr;
 		return _fullList.takePtr( idx );
 	}
 
-	void removePtr( int idx )
+	void removePtr( qsizetype idx )
 	{
 		ensureCanBeModified();
 		_fullList.removePtr( idx );
 		_filteredList.removeAt( idx );
 	}
 
-	void insertPtr( int idx, std::unique_ptr< Item > ptr )
+	void insertPtr( qsizetype idx, std::unique_ptr< Item > ptr )
 	{
 		ensureCanBeModified();
 		_fullList.insertPtr( idx, std::move(ptr) );
@@ -752,7 +752,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 
 	virtual int rowCount( const QModelIndex & = QModelIndex() ) const override
 	{
-		return this->size();
+		return int( this->size() );
 	}
 
 	virtual Qt::ItemFlags flags( const QModelIndex & index ) const override
@@ -956,7 +956,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		// Because we want only internal drag&drop for reordering the items, we don't need to serialize the whole rich
 		// content of each Item and then deserialize all of it back. Instead we can serialize only indexes of the items
 		// and then use them in dropMimeData to find the original items and copy/move them to the target position
-		QByteArray encodedData( indexes.size() * int(sizeof(int)), 0 );
+		QByteArray encodedData( indexes.size() * qsizetype( sizeof(int) ), 0 );
 		int * rawData = reinterpret_cast< int * >( encodedData.data() );
 
 		for (const QModelIndex & index : indexes)
@@ -1001,7 +1001,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	{
 		// retrieve the original row indexes of the items to be moved
 		const int * rawData = reinterpret_cast< int * >( encodedData.data() );
-		int count = encodedData.size() / int(sizeof(int));
+		qsizetype count = encodedData.size() / qsizetype( sizeof(int) );
 
 		// The indexes of selected items can come in arbitrary order, but we need to drop them in ascending order.
 		std::vector< int > sortedItemIndexes( rawData, rawData + count );
@@ -1021,7 +1021,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		for (int idx : std::as_const( sortedItemIndexes ))
 			droppedItems.push_back( this->takePtr( idx ) );  // leaves null at idx
 
-		startInserting( row, count );
+		startInserting( row, int(count) );
 
 		for (size_t i = 0; i < droppedItems.size(); ++i)
 		{
@@ -1062,12 +1062,12 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		}
 
 		// allocate space for the items to be dropped to
-		if (!insertRows( row, filesToBeInserted.count(), QModelIndex() ))
+		if (!insertRows( row, filesToBeInserted.size(), QModelIndex() ))
 		{
 			return false;
 		}
 
-		for (int i = 0; i < filesToBeInserted.count(); i++)
+		for (qsizetype i = 0; i < filesToBeInserted.size(); i++)
 		{
 			// This template class doesn't know about the structure of Item, it's supposed to be universal for any.
 			// Therefore only author of Item knows how to assign a dropped file into it, so he must define it by a constructor.
@@ -1077,7 +1077,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		// idiotic workaround because Qt is fucking retarded   (read the comment at the top of EditableListView.cpp)
 		//
 		// note down the destination drop index, so it can be later retrieved by ListView
-		DropTarget::itemsDropped( row, filesToBeInserted.count() );
+		DropTarget::itemsDropped( row, int( filesToBeInserted.size() ) );
 
 		return true;
 	}

@@ -2969,7 +2969,7 @@ void MainWindow::presetClone()
 	if (selectedIdx >= 0)
 	{
 		// open edit mode so that user can name the preset
-		wdg::editItemAtIndex( ui->presetListView, presetModel.size() - 1 );
+		wdg::editItemAtIndex( ui->presetListView, int( presetModel.size() ) - 1 );
 
 		scheduleSavingOptions();
 	}
@@ -3002,7 +3002,7 @@ void MainWindow::presetInsertSeparator()
 	separator.name = "New Separator";
 
 	int selectedIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	int insertIdx = selectedIdx < 0 ? presetModel.size() : selectedIdx;  // append if none
+	int insertIdx = selectedIdx < 0 ? int( presetModel.size() ) : selectedIdx;  // append if none
 
 	wdg::insertItem( ui->presetListView, presetModel, separator, insertIdx );
 
@@ -3225,7 +3225,7 @@ void MainWindow::modInsertSeparator()
 	separator.fileName = "New Separator";
 
 	QList<int> selectedIndexes = wdg::getSelectedItemIndexes( ui->modListView );
-	int insertIdx = selectedIndexes.empty() ? modModel.size() : selectedIndexes[0];  // append if none
+	int insertIdx = selectedIndexes.empty() ? int( modModel.size() ) : selectedIndexes[0];  // append if none
 
 	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );
 

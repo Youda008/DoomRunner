@@ -209,12 +209,12 @@ span< LangInfo > LoggingExeReader::getLangInfo( const Resource & res )
 	{
 		auto lastError = GetLastError();
 		logRuntimeError() << "Cannot read language info of "<<_filePath<<", VerQueryValue(\"\\VarFileInfo\\Translation\") failed with error "<<lastError;
-		return { nullptr, 0 };
+		return {};
 	}
 	else if (lpTranslate == nullptr || cbTranslate < sizeof(LangInfo))
 	{
 		logRuntimeError() << "Cannot read language info of "<<_filePath<<", VerQueryValue(\"\\VarFileInfo\\Translation\") returned "<<lpTranslate<<','<<cbTranslate;
-		return { nullptr, 0 };
+		return {};
 	}
 	return { lpTranslate, cbTranslate / sizeof(LangInfo) };
 }
@@ -250,7 +250,7 @@ QString LoggingExeReader::getVerInfoValue( const Resource & res, const LangInfo 
 		return {};
 	}
 
-	return QString::fromWCharArray( reinterpret_cast< const wchar_t * >( lpBuffer ), int( cchLen ) - 1 );
+	return QString::fromWCharArray( reinterpret_cast< const wchar_t * >( lpBuffer ), qsizetype( cchLen ) - 1 );
 }
 
 void LoggingExeReader::extractVersionInfo( const Resource & res, ExeVersionInfo & verInfo )

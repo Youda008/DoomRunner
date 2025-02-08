@@ -722,7 +722,7 @@ QList< MonitorInfo > listMonitors()
 
 	// in the end this work well for both platforms, just ZDoom indexes the monitors from 1 while GZDoom from 0
 	QList< QScreen * > screens = QGuiApplication::screens();
-	for (int monitorIdx = 0; monitorIdx < screens.count(); monitorIdx++)
+	for (qsizetype monitorIdx = 0; monitorIdx < screens.size(); monitorIdx++)
 	{
 		MonitorInfo myInfo;
 		myInfo.name = screens[ monitorIdx ]->name();

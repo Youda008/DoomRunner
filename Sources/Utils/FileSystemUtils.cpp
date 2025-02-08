@@ -29,7 +29,7 @@ const QString currentDir(".");
 void forEachParentDir( const QString & path, const std::function< void ( const QString & parentDir ) > & loopBody )
 {
 	QString parentDirPath = fs::getNormalizedPath( path );
-	int lastSlashPos = 0;
+	qsizetype lastSlashPos = 0;
 	while ((lastSlashPos = parentDirPath.lastIndexOf( '/', lastSlashPos - 1 )) >= 0)
 	{
 		parentDirPath.resize( lastSlashPos );

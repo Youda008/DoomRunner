@@ -82,11 +82,11 @@ class JsonValueCtx {
 		};
 		Type type;
 		QString key;
-		int idx;
+		qsizetype idx;
 
 		Key() : type( Uninitialized ), key(), idx( -1 ) {}
 		Key( const QString & key ) : type( ObjectKey ), key( key ), idx( -1 ) {}
-		Key( int idx ) : type( ArrayIndex ), key(), idx( idx ) {}
+		Key( qsizetype idx ) : type( ArrayIndex ), key(), idx( idx ) {}
 	};
 
 	impl::ParsingContext * _context;  ///< document-wide context shared among all elements of that document, the struct is stored in JsonDocumentCtx
@@ -112,7 +112,7 @@ class JsonValueCtx {
 		: _context( context ), _parent( parent ), _key( key ) {}
 
 	/// Constructs a JSON value with a parent that is a JSON array.
-	JsonValueCtx( impl::ParsingContext * context, const JsonValueCtx * parent, int index )
+	JsonValueCtx( impl::ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
 		: _context( context ), _parent( parent ), _key( index ) {}
 
 	JsonValueCtx( const JsonValueCtx & ) = default;
@@ -153,7 +153,7 @@ class JsonObjectCtxProxy : public JsonValueCtx {
 	JsonObjectCtxProxy( QJsonObject wrappedObject, impl::ParsingContext * context, const JsonValueCtx * parent, const QString & key )
 		: JsonValueCtx( context, parent, key ), _wrappedObject( std::move(wrappedObject) ) {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, impl::ParsingContext * context, const JsonValueCtx * parent, int index )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, impl::ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
 		: JsonValueCtx( context, parent, index ), _wrappedObject( std::move(wrappedObject) ) {}
 
 	JsonObjectCtxProxy( const JsonObjectCtxProxy & ) = default;
@@ -178,7 +178,7 @@ class JsonArrayCtxProxy : public JsonValueCtx {
 	JsonArrayCtxProxy( QJsonArray wrappedArray, impl::ParsingContext * context, const JsonValueCtx * parent, const QString & key )
 		: JsonValueCtx( context, parent, key ), _wrappedArray( std::move(wrappedArray) ) {}
 
-	JsonArrayCtxProxy( QJsonArray wrappedArray, impl::ParsingContext * context, const JsonValueCtx * parent, int index )
+	JsonArrayCtxProxy( QJsonArray wrappedArray, impl::ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
 		: JsonValueCtx( context, parent, index ), _wrappedArray( std::move(wrappedArray) ) {}
 
 	JsonArrayCtxProxy( const JsonArrayCtxProxy & ) = default;
@@ -284,54 +284,54 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
 	JsonArrayCtx( JsonArrayCtxProxy proxy ) : JsonArrayCtxProxy( std::move(proxy) ) {}
 
-	int size() const { return _wrappedArray.size(); }
+	qsizetype size() const { return _wrappedArray.size(); }
 
-	bool hasMember( int index ) const { return index > 0 && index < size(); }
+	bool hasMember( qsizetype index ) const { return index > 0 && index < size(); }
 
 	/// Returns a sub-value at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid value. */
-	QJsonValue getMember( int index, bool showError = true ) const;
+	QJsonValue getMember( qsizetype index, bool showError = true ) const;
 
 	/// Returns a sub-object at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid array. */
-	JsonObjectCtxProxy getObject( int index, bool showError = true ) const;
+	JsonObjectCtxProxy getObject( qsizetype index, bool showError = true ) const;
 
 	/// Returns a sub-array at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid array. */
-	JsonArrayCtxProxy getArray( int index, bool showError = true ) const;
+	JsonArrayCtxProxy getArray( qsizetype index, bool showError = true ) const;
 
 	/// Returns a bool at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	bool getBool( int index, bool defaultVal, bool showError = true ) const;
+	bool getBool( qsizetype index, bool defaultVal, bool showError = true ) const;
 
 	/// Returns an int at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	int getInt( int index, int defaultVal, bool showError = true ) const;
+	int getInt( qsizetype index, int defaultVal, bool showError = true ) const;
 
 	/// Returns an uint at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	uint getUInt( int index, uint defaultVal, bool showError = true ) const;
+	uint getUInt( qsizetype index, uint defaultVal, bool showError = true ) const;
 
 	/// Returns an uint16_t at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	uint16_t getUInt16( int index, uint16_t defaultVal, bool showError = true ) const;
+	uint16_t getUInt16( qsizetype index, uint16_t defaultVal, bool showError = true ) const;
 
 	/// Returns an int64_t at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	int64_t getInt64( int index, int64_t defaultVal, bool showError = true ) const;
+	int64_t getInt64( qsizetype index, int64_t defaultVal, bool showError = true ) const;
 
 	/// Returns a double at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	double getDouble( int index, double defaultVal, bool showError = true ) const;
+	double getDouble( qsizetype index, double defaultVal, bool showError = true ) const;
 
 	/// Returns a string at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	QString getString( int index, QString defaultVal = QString(), bool showError = true ) const;
+	QString getString( qsizetype index, QString defaultVal = QString(), bool showError = true ) const;
 
 	/// Returns a sub-object at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
 	template< typename Enum >
-	Enum getEnum( int index, Enum defaultVal, bool showError = true ) const
+	Enum getEnum( qsizetype index, Enum defaultVal, bool showError = true ) const
 	{
 		uint intVal = getUInt( index, defaultVal, showError );
 		if (intVal <= enumSize< Enum >()) {
@@ -344,12 +344,12 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 
  protected:
 
-	void indexOutOfBounds( int index, bool showError ) const;
-	QString elemPath( int index ) const;
+	void indexOutOfBounds( qsizetype index, bool showError ) const;
+	QString elemPath( qsizetype index ) const;
 
  public:  // for parsing custom data from string outside of this class (for example: RGB color)
 
-	void invalidTypeAtIdx( int index, const QString & expectedType, bool showError = true ) const;
+	void invalidTypeAtIdx( qsizetype index, const QString & expectedType, bool showError = true ) const;
 
 };
 
@@ -404,7 +404,7 @@ inline QJsonArray serializeStringVec( const QStringList & vec )
 inline QStringList deserializeStringVec( const JsonArrayCtx & jsVec )
 {
 	QStringList vec;
-	for (int i = 0; i < jsVec.size(); i++)
+	for (qsizetype i = 0; i < jsVec.size(); i++)
 	{
 		QString elem = jsVec.getString( i );
 		if (!elem.isEmpty())
@@ -427,7 +427,7 @@ QJsonArray serializeList( const List & list )
 template< typename List >
 void deserializeList( const JsonArrayCtx & jsList, List & list )
 {
-	for (int i = 0; i < jsList.size(); i++)
+	for (qsizetype i = 0; i < jsList.size(); i++)
 	{
 		JsonObjectCtx jsElem = jsList.getObject( i );
 		if (jsElem)

@@ -11,6 +11,8 @@
 
 #include "Essential.hpp"
 
+#include <QtTypes>
+
 #include <algorithm>
 
 
@@ -83,15 +85,15 @@ class span
 
 	span() : _begin( nullptr ), _end( nullptr ) {}
 	span( Type * begin, Type * end ) : _begin( begin ), _end( end ) {}
-	span( Type * data, int size ) : _begin( data ), _end( data + size ) {}
+	span( Type * data, qsizetype size ) : _begin( data ), _end( data + size ) {}
 	span( Type * data, size_t size ) : _begin( data ), _end( data + size ) {}
 
-	Type * begin() const                   { return _begin; }
-	Type * end() const                     { return _end; }
-	Type * data() const                    { return _begin; }
-	size_t size() const                    { return _end - _begin; }
-	bool empty() const                     { return _begin == _end; }
-	Type & operator[]( int index ) const   { return _begin[ index ]; }
+	Type * begin() const                         { return _begin; }
+	Type * end() const                           { return _end; }
+	Type * data() const                          { return _begin; }
+	size_t size() const                          { return _end - _begin; }
+	bool empty() const                           { return _begin == _end; }
+	Type & operator[]( qsizetype index ) const   { return _begin[ index ]; }
 };
 
 

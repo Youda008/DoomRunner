@@ -51,25 +51,49 @@ namespace wdg {
 
 
 //----------------------------------------------------------------------------------------------------------------------
-// list view helpers
+// generic view
+
+// current item
+QModelIndex getCurrentItemIndex( QAbstractItemView * view );
+void setCurrentItemByIndex( QAbstractItemView * view, const QModelIndex & index );
+void unsetCurrentItem( QAbstractItemView * view );
+
+// selected items
+bool isSelectedIndex( QAbstractItemView * view, const QModelIndex & index );
+bool isSomethingSelected( QAbstractItemView * view );
+QModelIndex getSelectedItemIndex( QAbstractItemView * view );
+QModelIndexList getSelectedItemIndexes( QAbstractItemView * view );
+QModelIndexList getSelectedRows( QAbstractItemView * view );
+void selectItemByIndex( QAbstractItemView * view, const QModelIndex & index );
+void deselectItemByIndex( QAbstractItemView * view, const QModelIndex & index );
+void deselectSelectedItems( QAbstractItemView * view );
+
+// high-level control
+void selectAndSetCurrentByIndex( QAbstractItemView * view, const QModelIndex & index );
+void deselectAllAndUnsetCurrent( QAbstractItemView * view );
+/// Deselects currently selected items, selects new one and makes it the current item.
+/** Basically equivalent to left-clicking on an item. */
+void chooseItemByIndex( QAbstractItemView * view, const QModelIndex & index );
+/// Selects an item, sets it as current, and moves the scrollbar so that the item is visible.
+void selectSetCurrentAndScrollTo( QAbstractItemView * view, const QModelIndex & index );
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// 1D list view convenience wrappers converting QModelIndex to int or vice versa
 
 // current item
 int getCurrentItemIndex( QListView * view );
 void setCurrentItemByIndex( QListView * view, int index );
-void unsetCurrentItem( QListView * view );
 
 // selected items
 bool isSelectedIndex( QListView * view, int index );
-bool isSomethingSelected( QListView * view );
 int getSelectedItemIndex( QListView * view );  // assumes a single-selection mode, will throw a message box error otherwise
 QList<int> getSelectedItemIndexes( QListView * view );
 void selectItemByIndex( QListView * view, int index );
 void deselectItemByIndex( QListView * view, int index );
-void deselectSelectedItems( QListView * view );
 
 // high-level control
 void selectAndSetCurrentByIndex( QListView * view, int index );
-void deselectAllAndUnsetCurrent( QListView * view );
 /// Deselects currently selected items, selects new one and makes it the current item.
 /** Basically equivalent to left-clicking on an item. */
 void chooseItemByIndex( QListView * view, int index );
@@ -78,35 +102,7 @@ void selectSetCurrentAndScrollTo( QListView * view, int index );
 
 
 //----------------------------------------------------------------------------------------------------------------------
-// tree view helpers
-
-// current item
-QModelIndex getCurrentItemIndex( QTreeView * view );
-void setCurrentItemByIndex( QTreeView * view, const QModelIndex & index );
-void unsetCurrentItem( QTreeView * view );
-
-// selected items
-bool isSelectedIndex( QTreeView * view, const QModelIndex & index );
-bool isSomethingSelected( QTreeView * view );
-QModelIndex getSelectedItemIndex( QTreeView * view );
-QModelIndexList getSelectedItemIndexes( QTreeView * view );
-QModelIndexList getSelectedRows( QTreeView * view );
-void selectItemByIndex( QTreeView * view, const QModelIndex & index );
-void deselectItemByIndex( QTreeView * view, const QModelIndex & index );
-void deselectSelectedItems( QTreeView * view );
-
-// high-level control
-void selectAndSetCurrentByIndex( QTreeView * view, const QModelIndex & index );
-void deselectAllAndUnsetCurrent( QTreeView * view );
-/// Deselects currently selected items, selects new one and makes it the current item.
-/** Basically equivalent to left-clicking on an item. */
-void chooseItemByIndex( QTreeView * view, const QModelIndex & index );
-/// Selects an item, sets it as current, and moves the scrollbar so that the item is visible.
-void selectSetCurrentAndScrollTo( QTreeView * view, const QModelIndex & index );
-
-
-//----------------------------------------------------------------------------------------------------------------------
-// row-oriented table view helpers
+// row-oriented table view convenience wrappers
 
 // current item
 int getCurrentRowIndex( QTableView * view );
@@ -115,7 +111,6 @@ void unsetCurrentRow( QTableView * view );
 
 // selected items
 bool isSelectedRow( QTableView * view, int rowIndex );
-bool isSomethingSelected( QTableView * view );
 int getSelectedRowIndex( QTableView * view );  // assumes a single-selection mode, will throw a message box error otherwise
 QList<int> getSelectedRowIndexes( QTableView * view );
 void selectRowByIndex( QTableView * view, int rowIndex );
@@ -124,7 +119,6 @@ void deselectSelectedRows( QTableView * view );
 
 // high-level control
 void selectAndSetCurrentRowByIndex( QTableView * view, int rowIndex );
-void deselectAllAndUnsetCurrentRow( QTableView * view );
 /// Deselects currently selected rows, selects new one and makes it the current row.
 /** Basically equivalent to left-clicking on an item. */
 void chooseRowByIndex( QTableView * view, int rowIndex );
@@ -564,6 +558,51 @@ bool editCellAtIndex( QTableView * view, int row, int column );
 
 
 //======================================================================================================================
+// common complete update helpers
+
+
+/// Fills a model with entries found in a directory.
+template< typename ListModel >
+void updateModelFromDir(
+	ListModel & model, const QString & dir, bool recursively, bool includeEmptyItem,
+	const PathConvertor & pathConvertor, std::function< bool ( const QFileInfo & file ) > isDesiredFile
+){
+	using Item = typename ListModel::Item;
+
+	// Doing a differential update (deleting only things that were deleted and adding only things that were added)
+	// is not worth here. It's too complicated and prone to bugs and its advantages are too small.
+	// Instead we just clear everything and then load it from scratch according to the current state of the directory
+	// and update selection and scroll bar.
+
+	model.startCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor,
+	                              // but that's an acceptable drawback, instead of making differential update
+	model.clear();
+
+	// in combo-box item cannot be deselected, so we provide an empty item to express "no selection"
+	if (includeEmptyItem)
+		model.append( Item() );
+
+	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathConvertor, [&]( const QFileInfo & file )
+	{
+		if (isDesiredFile( file ))
+		{
+			model.append( Item( file ) );
+		}
+	});
+
+	// some operating systems don't traverse the directory entries in alphabetical order, so we need to sort them on our own
+	if constexpr (!IS_WINDOWS && !IS_MACOS)
+	{
+		model.sortByID();  // for most item types, their ID is either their file name or file path
+	}
+
+	model.finishCompleteUpdate();
+}
+
+
+
+
+//======================================================================================================================
 // complete update helpers for list-view
 
 
@@ -671,16 +710,10 @@ bool areSelectionsEqual( const QList< ItemID > & selection1, const QList< ItemID
 
 /// Fills a list with entries found in a directory.
 template< typename ListModel >
-void updateListFromDir( ListModel & model, QListView * view, const QString & dir, bool recursively,
-                        const PathConvertor & pathConvertor, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+void updateListFromDir(
+	ListModel & model, QListView * view, const QString & dir, bool recursively,
+	const PathConvertor & pathConvertor, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
-	using Item = typename ListModel::Item;
-
-	// Doing a differential update (deleting only things that were deleted and adding only things that were added)
-	// is not worth here. It's too complicated and prone to bugs and its advantages are too small.
-	// Instead we just clear everything and then load it from scratch according to the current state of the directory
-	// and update selection and scroll bar.
-
 	// note down the current scroll bar position
 	auto scrollPos = view->verticalScrollBar()->value();
 
@@ -692,25 +725,7 @@ void updateListFromDir( ListModel & model, QListView * view, const QString & dir
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.startCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor,
-	                              // but that's an acceptable drawback, instead of making differential update
-	model.clear();
-
-	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathConvertor, [&]( const QFileInfo & file )
-	{
-		if (isDesiredFile( file ))
-		{
-			model.append( Item( file ) );
-		}
-	});
-
-	// some operating systems don't traverse the directory entries in alphabetical order, so we need to sort them on our own
-	if constexpr (!IS_WINDOWS && !IS_MACOS)
-	{
-		model.sortBy( []( const Item & i1, const Item & i2 ) { return i1.getID() < i2.getID(); } );
-	}
-
-	model.finishCompleteUpdate();
+	updateModelFromDir( model, dir, recursively, /*includeEmptyItem*/false, pathConvertor, isDesiredFile );
 
 	// restore the selection so that the same file remains selected
 	selectItemsByIDs( view, model, selectedItemIDs );
@@ -760,40 +775,16 @@ bool setCurrentItemByID( QComboBox * view, const ListModel & model, const QStrin
 
 /// Fills a combo-box with entries found in a directory.
 template< typename ListModel >
-void updateComboBoxFromDir( ListModel & model, QComboBox * view, const QString & dir, bool recursively,
-                            bool includeEmptyItem, const PathConvertor & pathConvertor,
-                            std::function< bool ( const QFileInfo & file ) > isDesiredFile )
+void updateComboBoxFromDir(
+	ListModel & model, QComboBox * view, const QString & dir, bool recursively, bool includeEmptyItem,
+	const PathConvertor & pathConvertor, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
-	using Item = typename ListModel::Item;
-
 	// note down the currently selected item
 	QString lastText = view->currentText();
 
 	view->setCurrentIndex( -1 );
 
-	model.startCompleteUpdate();
-
-	model.clear();
-
-	// in combo-box item cannot be deselected, so we provide an empty item to express "no selection"
-	if (includeEmptyItem)
-		model.append( QString() );
-
-	traverseDirectory( dir, recursively, fs::EntryType::FILE, pathConvertor, [&]( const QFileInfo & file )
-	{
-		if (isDesiredFile( file ))
-		{
-			model.append( Item( file ) );
-		}
-	});
-
-	// some operating systems don't traverse the directory entries in alphabetical order, so we need to sort them on our own
-	if constexpr (!IS_WINDOWS && !IS_MACOS)
-	{
-		model.sortBy( []( const Item & i1, const Item & i2 ) { return i1.getID() < i2.getID(); } );
-	}
-
-	model.finishCompleteUpdate();
+	updateModelFromDir( model, dir, recursively, includeEmptyItem, pathConvertor, isDesiredFile );
 
 	// restore the originally selected item, the selection will be reset if the item does not exist in the new content
 	// because findText returns -1 which is valid value for setCurrentIndex

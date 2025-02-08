@@ -16,137 +16,28 @@
 namespace wdg {
 
 
-
 //======================================================================================================================
 // selection manipulation
 
 
 //----------------------------------------------------------------------------------------------------------------------
-// 1D list view helpers
+// generic view helpers
 
 
 // current item
 
-int getCurrentItemIndex( QListView * view )
-{
-	QModelIndex currentIndex = view->selectionModel()->currentIndex();
-	return currentIndex.isValid() ? currentIndex.row() : -1;
-}
-
-void setCurrentItemByIndex( QListView * view, int index )
-{
-	QModelIndex modelIndex = view->model()->index( index, 0 );
-	view->selectionModel()->setCurrentIndex( modelIndex, QItemSelectionModel::NoUpdate );
-	view->scrollTo( modelIndex, QListView::ScrollHint::EnsureVisible );
-}
-
-void unsetCurrentItem( QListView * view )
-{
-	view->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
-}
-
-
-// selected items
-
-bool isSelectedIndex( QListView * view, int index )
-{
-	return view->selectionModel()->isSelected( view->model()->index( index, 0 ) );
-}
-
-bool isSomethingSelected( QListView * view )
-{
-	return !view->selectionModel()->selectedIndexes().isEmpty();
-}
-
-int getSelectedItemIndex( QListView * view )   // this function is for single selection lists
-{
-	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
-	if (selectedIndexes.empty())
-	{
-		return -1;
-	}
-	if (selectedIndexes.size() > 1)
-	{
-		reportLogicError( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
-		return -1;
-	}
-	return selectedIndexes[0].row();
-}
-
-QList< int > getSelectedItemIndexes( QListView * view )
-{
-	QList< int > selected;
-	for (QModelIndex & index : view->selectionModel()->selectedIndexes())
-		selected.append( index.row() );
-	return selected;
-}
-
-void selectItemByIndex( QListView * view, int index )
-{
-	QModelIndex modelIndex = view->model()->index( index, 0 );
-	view->selectionModel()->select( modelIndex, QItemSelectionModel::Select );
-}
-
-void deselectItemByIndex( QListView * view, int index )
-{
-	QModelIndex modelIndex = view->model()->index( index, 0 );
-	view->selectionModel()->select( modelIndex, QItemSelectionModel::Deselect );
-}
-
-void deselectSelectedItems( QListView * view )
-{
-	view->selectionModel()->clearSelection();
-}
-
-
-// high-level control
-
-void selectAndSetCurrentByIndex( QListView * view, int index )
-{
-	selectItemByIndex( view, index );
-	setCurrentItemByIndex( view, index );
-}
-
-void deselectAllAndUnsetCurrent( QListView * view )
-{
-	deselectSelectedItems( view );
-	unsetCurrentItem( view );
-}
-
-void chooseItemByIndex( QListView * view, int index )
-{
-	deselectSelectedItems( view );
-	selectItemByIndex( view, index );
-	setCurrentItemByIndex( view, index );
-}
-
-void selectSetCurrentAndScrollTo( QListView * view, int index )
-{
-	const auto origHorizontalPos = view->horizontalScrollBar()->value();
-	selectAndSetCurrentByIndex( view, index );
-	scrollToItemAtIndex( view, index );
-	view->horizontalScrollBar()->setValue( origHorizontalPos );
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-// tree view helpers
-
-
-// current item
-
-QModelIndex getCurrentItemIndex( QTreeView * view )
+QModelIndex getCurrentItemIndex( QAbstractItemView * view )
 {
 	return view->selectionModel()->currentIndex();
 }
 
-void setCurrentItemByIndex( QTreeView * view, const QModelIndex & index )
+void setCurrentItemByIndex( QAbstractItemView * view, const QModelIndex & index )
 {
 	view->selectionModel()->setCurrentIndex( index, QItemSelectionModel::NoUpdate );
 	view->scrollTo( index, QListView::ScrollHint::EnsureVisible );
 }
 
-void unsetCurrentItem( QTreeView * view )
+void unsetCurrentItem( QAbstractItemView * view )
 {
 	view->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
 }
@@ -154,17 +45,17 @@ void unsetCurrentItem( QTreeView * view )
 
 // selected items
 
-bool isSelectedIndex( QTreeView * view, const QModelIndex & index )
+bool isSelectedIndex( QAbstractItemView * view, const QModelIndex & index )
 {
 	return view->selectionModel()->isSelected( index );
 }
 
-bool isSomethingSelected( QTreeView * view )
+bool isSomethingSelected( QAbstractItemView * view )
 {
 	return !view->selectionModel()->selectedIndexes().isEmpty();
 }
 
-QModelIndex getSelectedItemIndex( QTreeView * view )   // this function is for single selection lists
+QModelIndex getSelectedItemIndex( QAbstractItemView * view )
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
 	if (selectedIndexes.empty())
@@ -179,12 +70,12 @@ QModelIndex getSelectedItemIndex( QTreeView * view )   // this function is for s
 	return selectedIndexes[0];
 }
 
-QModelIndexList getSelectedItemIndexes( QTreeView * view )
+QModelIndexList getSelectedItemIndexes( QAbstractItemView * view )
 {
 	return view->selectionModel()->selectedIndexes();
 }
 
-QModelIndexList getSelectedRows( QTreeView * view )
+QModelIndexList getSelectedRows( QAbstractItemView * view )
 {
 	QModelIndexList selectedRows;
 
@@ -198,17 +89,17 @@ QModelIndexList getSelectedRows( QTreeView * view )
 	return selectedRows;
 }
 
-void selectItemByIndex( QTreeView * view, const QModelIndex & index )
+void selectItemByIndex( QAbstractItemView * view, const QModelIndex & index )
 {
 	view->selectionModel()->select( index, QItemSelectionModel::Select );
 }
 
-void deselectItemByIndex( QTreeView * view, const QModelIndex & index )
+void deselectItemByIndex( QAbstractItemView * view, const QModelIndex & index )
 {
 	view->selectionModel()->select( index, QItemSelectionModel::Deselect );
 }
 
-void deselectSelectedItems( QTreeView * view )
+void deselectSelectedItems( QAbstractItemView * view )
 {
 	view->selectionModel()->clearSelection();
 }
@@ -216,55 +107,135 @@ void deselectSelectedItems( QTreeView * view )
 
 // high-level control
 
-void selectAndSetCurrentByIndex( QTreeView * view, const QModelIndex & index )
+void selectAndSetCurrentByIndex( QAbstractItemView * view, const QModelIndex & index )
 {
 	selectItemByIndex( view, index );
 	setCurrentItemByIndex( view, index );
 }
 
-void deselectAllAndUnsetCurrent( QTreeView * view )
+void deselectAllAndUnsetCurrent( QAbstractItemView * view )
 {
 	deselectSelectedItems( view );
 	unsetCurrentItem( view );
 }
 
-void chooseItemByIndex( QTreeView * view, const QModelIndex & index )
+void chooseItemByIndex( QAbstractItemView * view, const QModelIndex & index )
 {
 	deselectSelectedItems( view );
 	selectItemByIndex( view, index );
 	setCurrentItemByIndex( view, index );
 }
 
-void selectSetCurrentAndScrollTo( QTreeView * view, const QModelIndex & index )
+void selectSetCurrentAndScrollTo( QAbstractItemView * view, const QModelIndex & index )
 {
 	const auto origHorizontalPos = view->horizontalScrollBar()->value();
 	selectAndSetCurrentByIndex( view, index );
-	scrollToItemAtIndex( view, index );
+	scrollToItemAtIndex( view, index );  // this sets the horizontal scrollbar to middle, so it needs to be set back
 	view->horizontalScrollBar()->setValue( origHorizontalPos );
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------
-// row-oriented table view helpers
+// 1D list view convenience wrappers
+
+
+static QAbstractItemView * toAbstract( QListView * view )
+{
+	return static_cast< QAbstractItemView * >( view );
+}
+
+
+// current item
+
+int getCurrentItemIndex( QListView * view )
+{
+	QModelIndex currentIndex = getCurrentItemIndex( toAbstract( view ) );
+	return currentIndex.isValid() ? currentIndex.row() : -1;
+}
+
+void setCurrentItemByIndex( QListView * view, int index )
+{
+	setCurrentItemByIndex( toAbstract( view ), view->model()->index( index, 0 ) );
+}
+
+
+// selected items
+
+bool isSelectedIndex( QListView * view, int index )
+{
+	return isSelectedIndex( toAbstract( view ), view->model()->index( index, 0 ) );
+}
+
+int getSelectedItemIndex( QListView * view )
+{
+	QModelIndex selectedIndex = getSelectedItemIndex( toAbstract( view ) );
+	return selectedIndex.isValid() ? selectedIndex.row() : -1;
+}
+
+QList< int > getSelectedItemIndexes( QListView * view )
+{
+	QList< int > selectedRowIndexes;
+	const QModelIndexList selectedModelIndexes = getSelectedItemIndexes( toAbstract( view ) );
+	for (const QModelIndex & index : selectedModelIndexes)
+		selectedRowIndexes.append( index.row() );
+	return selectedRowIndexes;
+}
+
+void selectItemByIndex( QListView * view, int index )
+{
+	selectItemByIndex( toAbstract( view ), view->model()->index( index, 0 ) );
+}
+
+void deselectItemByIndex( QListView * view, int index )
+{
+	deselectItemByIndex( toAbstract( view ), view->model()->index( index, 0 ) );
+}
+
+
+// high-level control
+
+void selectAndSetCurrentByIndex( QListView * view, int index )
+{
+	selectAndSetCurrentByIndex( toAbstract( view ), view->model()->index( index, 0 ) );
+}
+
+void chooseItemByIndex( QListView * view, int index )
+{
+	chooseItemByIndex( toAbstract( view ), view->model()->index( index, 0 ) );
+}
+
+void selectSetCurrentAndScrollTo( QListView * view, int index )
+{
+	selectSetCurrentAndScrollTo( toAbstract( view ), view->model()->index( index, 0 ) );
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// row-oriented table view convenience wrappers
+
+
+static QAbstractItemView * toAbstract( QTableView * view )
+{
+	return static_cast< QAbstractItemView * >( view );
+}
 
 
 // current item
 
 int getCurrentRowIndex( QTableView * view )
 {
-	QModelIndex currentIndex = view->selectionModel()->currentIndex();
+	QModelIndex currentIndex = getCurrentItemIndex( toAbstract( view ) );
 	return currentIndex.isValid() ? currentIndex.row() : -1;
 }
 
 void setCurrentRowByIndex( QTableView * view, int rowIndex )
 {
-	QModelIndex modelIndex = view->model()->index( rowIndex, 0 );
-	view->selectionModel()->setCurrentIndex( modelIndex, QItemSelectionModel::NoUpdate );
+	setCurrentItemByIndex( toAbstract( view ), view->model()->index( rowIndex, 0 ) );
 }
 
 void unsetCurrentRow( QTableView * view )
 {
-	view->selectionModel()->setCurrentIndex( QModelIndex(), QItemSelectionModel::NoUpdate );
+	deselectAllAndUnsetCurrent( toAbstract( view ) );
 }
 
 
@@ -272,35 +243,39 @@ void unsetCurrentRow( QTableView * view )
 
 bool isSelectedRow( QTableView * view, int rowIndex )
 {
-	return view->selectionModel()->isSelected( view->model()->index( rowIndex, 0 ) );
+	return isSelectedIndex( toAbstract( view ), view->model()->index( rowIndex, 0 ) );
 }
 
-bool isSomethingSelected( QTableView * view )
+int getSelectedRowIndex( QTableView * view )
 {
-	return !view->selectionModel()->selectedIndexes().isEmpty();
-}
-
-int getSelectedRowIndex( QTableView * view )   // this function is for single selection tables
-{
-	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
-	if (selectedIndexes.empty())
+	// For each row there may be multiple columns selected, but we want to count them as a single row.
+	int selectedRowIndex = -1;
+	const QModelIndexList selectedModelIndexes = getSelectedItemIndexes( toAbstract( view ) );
+	for (const QModelIndex & index : selectedModelIndexes)
 	{
-		return -1;
+		if (selectedRowIndex == -1) {
+			selectedRowIndex = index.row();
+		} else if (selectedRowIndex != index.row()) {
+			reportLogicError( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
+			break;
+		}
 	}
-	// there can be multiple cells selected if the whole row is selected
-	return selectedIndexes[0].row();
+	return selectedRowIndex;
 }
 
 QList< int > getSelectedRowIndexes( QTableView * view )
 {
-	QList< int > selected;
-	for (QModelIndex & index : view->selectionModel()->selectedIndexes())
-		selected.append( index.row() );
-	return selected;
+	// For each row there may be multiple columns selected, but we want to count them as a single row.
+	QSet< int > selectedRowIndexes;
+	const QModelIndexList selectedModelIndexes = getSelectedItemIndexes( toAbstract( view ) );
+	for (const QModelIndex & index : selectedModelIndexes)
+		selectedRowIndexes.insert( index.row() );
+	return { selectedRowIndexes.begin(), selectedRowIndexes.end() };
 }
 
 void selectRowByIndex( QTableView * view, int rowIndex )
 {
+	// select all items (columns) in the row
 	QModelIndex firstModelIndex = view->model()->index( rowIndex, 0 );
 	QModelIndex lastModelIndex = view->model()->index( rowIndex, view->model()->columnCount() - 1 );
 	QItemSelection selection( firstModelIndex, lastModelIndex );
@@ -309,13 +284,16 @@ void selectRowByIndex( QTableView * view, int rowIndex )
 
 void deselectRowByIndex( QTableView * view, int rowIndex )
 {
-	QModelIndex modelIndex = view->model()->index( rowIndex, 0 );
-	view->selectionModel()->select( modelIndex, QItemSelectionModel::Deselect );
+	// deselect all items (columns) in the row
+	QModelIndex firstModelIndex = view->model()->index( rowIndex, 0 );
+	QModelIndex lastModelIndex = view->model()->index( rowIndex, view->model()->columnCount() - 1 );
+	QItemSelection selection( firstModelIndex, lastModelIndex );
+	view->selectionModel()->select( selection, QItemSelectionModel::Deselect );
 }
 
 void deselectSelectedRows( QTableView * view )
 {
-	view->selectionModel()->clearSelection();
+	deselectSelectedItems( toAbstract( view ) );
 }
 
 
@@ -325,12 +303,6 @@ void selectAndSetCurrentRowByIndex( QTableView * view, int rowIndex )
 {
 	selectRowByIndex( view, rowIndex );
 	setCurrentRowByIndex( view, rowIndex );
-}
-
-void deselectAllAndUnsetCurrentRow( QTableView * view )
-{
-	deselectSelectedRows( view );
-	unsetCurrentRow( view );
 }
 
 void chooseItemByIndex( QTableView * view, int index )
@@ -388,7 +360,7 @@ int deleteSelectedRow( QTableWidget * widget )
 		return -1;
 	}
 
-	deselectAllAndUnsetCurrentRow( widget );
+	deselectAllAndUnsetCurrent( widget );
 
 	widget->removeRow( selectedIdx );
 

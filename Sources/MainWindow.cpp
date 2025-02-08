@@ -4182,7 +4182,7 @@ void MainWindow::moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * en
 	// and this function will be recursively called again.
 	disableEnvVarsCallbacks = true;
 
-	wdg::deselectAllAndUnsetCurrentRow( table );
+	wdg::deselectAllAndUnsetCurrent( table );
 
 	while (rowIdx > 0 && newVarName < table->item( rowIdx - 1, VarNameColumn )->text())
 	{
@@ -4475,21 +4475,9 @@ void MainWindow::updateDemoFilesFromDir()
 	ui->demoFileCmbBox_replay->setCurrentIndex( -1 );
 	ui->demoFileCmbBox_resume->setCurrentIndex( -1 );
 
-	demoModel.startCompleteUpdate();
-	demoModel.clear();
-	traverseDirectory( demoDir, /*recursively*/false, fs::EntryType::FILE, pathConvertor, [&]( const QFileInfo & file )
-	{
-		if (file.suffix().toLower() == doom::demoFileSuffix)
-		{
-			demoModel.append( DemoFile( file ) );
-		}
-	});
-	// some operating systems don't traverse the directory entries in alphabetical order, so we need to sort them on our own
-	if constexpr (!IS_WINDOWS && !IS_MACOS)
-	{
-		demoModel.sortBy( []( const DemoFile & i1, const DemoFile & i2 ) { return i1.getID() < i2.getID(); } );
-	}
-	demoModel.finishCompleteUpdate();
+	wdg::updateModelFromDir( demoModel, demoDir, /*recursively*/false, /*includeEmptyItem*/false, pathConvertor,
+		/*isDesiredFile*/[&]( const QFileInfo & file ) { return file.suffix().toLower() == doom::demoFileSuffix; }
+	);
 
 	// restore the originally selected item, the selection will be reset if the item does not exist in the new content
 	// because findText returns -1 which is valid value for setCurrentIndex

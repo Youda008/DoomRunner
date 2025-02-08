@@ -258,6 +258,11 @@ class DirectList {
 		std::sort( begin(), end(), isLessThan );
 	}
 
+	void sortByID()
+	{
+		sortBy( []( const Item & i1, const Item & i2 ) { return i1.getID() < i2.getID(); } );
+	}
+
 	// low-level pointer manipulation for implementing optimized high-level operations
 
 	std::unique_ptr< Item > takePtr( int idx )       { return _list.takePtr( idx ); }
@@ -401,6 +406,11 @@ class FilteredList {
 	void sortBy( const IsLessThan & isLessThan )
 	{
 		std::sort( begin(), end(), isLessThan );
+	}
+
+	void sortByID()
+	{
+		sortBy( []( const Item & i1, const Item & i2 ) { return i1.getID() < i2.getID(); } );
 	}
 
 	// low-level pointer manipulation for implementing optimized high-level operations

@@ -412,6 +412,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	struct ConfigFile : public ReadOnlyListModelItem
 	{
 		QString fileName;
+		ConfigFile() {}
 		ConfigFile( const QString & fileName ) : fileName( fileName ) {}
 		ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		const QString & getID() const { return fileName; }
@@ -421,6 +422,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	struct SaveFile : public ReadOnlyListModelItem
 	{
 		QString fileName;
+		SaveFile() {}
 		SaveFile( const QString & fileName ) : fileName( fileName ) {}
 		SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		const QString & getID() const { return fileName; }
@@ -430,6 +432,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	struct DemoFile : public ReadOnlyListModelItem
 	{
 		QString fileName;
+		DemoFile() {}
 		DemoFile( const QString & fileName ) : fileName( fileName ) {}
 		DemoFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		const QString & getID() const { return fileName; }

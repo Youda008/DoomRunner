@@ -27,8 +27,8 @@ int main( int argc, char * argv [] )
 
 	themes::init();
 
-	MainWindow w;
-	w.show();
+	auto w = std::make_unique< MainWindow >();  // don't consume so much stack
+	w->show();
 	int exitCode = a.exec();
 
 	return exitCode;

@@ -207,7 +207,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	bool loadCache( const QString & filePath );
 
 	void restoreLoadedOptions( OptionsToLoad && opts );
-	void restorePreset( int index );
+	void restorePreset( Preset & preset );
 
 	void restoreSelectedEngine( Preset & preset );
 	void restoreSelectedConfig( Preset & preset );
@@ -259,11 +259,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateListsFromDirs();
 	void updateIWADsFromDir();
 	void resetMapDirModelAndView();
-	void updateConfigFilesFromDir( const QString * configDir = nullptr );
+	void updateConfigFilesFromDir();
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
 	void updateCompatModes();
-	void updateMapsFromSelectedWADs( const QStringList * selectedMapPacks = nullptr );
+	void updateMapsFromSelectedWADs( const IWAD * selectedIWAD, const QStringList & selectedMapPacks );
 
 	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
 
@@ -310,24 +310,18 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	template< typename Func >
 	void addShortcut( const QKeySequence & keys, const Func & shortcutAction );
 
-	struct ConfigFile;
-
-	Preset * getSelectedPreset() const;
-	EngineInfo * getSelectedEngine() const;
-	ConfigFile * getSelectedConfig() const;
-	IWAD * getSelectedIWAD() const;
-
 	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
 	QStringList getSelectedMapPacks() const;
 
-	QStringList getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs ) const;
+	static QStringList getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs );
 
-	QString getEngineConfigDir() const;
-	QString getEngineDataDir() const;
-	QString getActiveConfigDir() const;
-	QString getActiveSaveDir() const;
-	QString getActiveScreenshotDir() const;
-	QString getActiveDemoDir() const;
+	static QString getEngineDefaultConfigDir( const EngineInfo * selectedEngine );
+	static QString getEngineDefaultSaveDir( const EngineInfo * selectedEngine, const IWAD * selectedIWAD );
+	static QString getEngineDefaultScreenshotDir( const EngineInfo * selectedEngine );
+	       QString getActiveConfigDir( const EngineInfo * selectedEngine, const QString & altConfigDirLineText ) const;
+	       QString getActiveSaveDir( const EngineInfo * selectedEngine, const IWAD * selectedIWAD, const QString & altSaveDirLineText ) const;
+	       QString getActiveDemoDir( const EngineInfo * selectedEngine, const IWAD * selectedIWAD, const QString & altSaveDirLineText ) const;
+	       QString getActiveScreenshotDir( const EngineInfo * selectedEngine, const QString & altScreenshotDirLineText ) const;
 
 	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
 	QStringList getDirsToBeAccessed() const;
@@ -367,10 +361,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	uint tickCount = 0;
 
-	QDir appDataDir;   ///< directory where this application can store its data
-	QString optionsFilePath;
-	QString cacheFilePath;
-
 	std::unique_ptr< JsonDocumentCtx > parsedOptionsDoc;  ///< result of first phase of options loading, kept for the second phase
 	bool optionsNeedUpdate = false;  ///< indicates that the user has made a change and the options file needs to be updated
 	bool optionsCorrupted = false;   ///< true if there was a critical error during parsing of the options file, such content should not be saved
@@ -382,13 +372,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
 
-	QString engineDefaultSaveDir;         ///< cached path of the directory where the currently selected engine stores its save files by default, maintains path style of dataDir of the current engine
-	QString engineDefaultScreenshotDir;   ///< cached path of the directory where the currently selected engine stores its screenshots by default, maintains path style of dataDir of the current engine
-
-	PathRebaser engineAltConfigDirRebaser;      ///< path convertor set up to rebase relative paths for the alternative config dir field
-	PathRebaser engineAltSaveDirRebaser;        ///< path convertor set up to rebase relative paths for the alternative save dir field
-	PathRebaser engineAltScreenshotDirRebaser;  ///< path convertor set up to rebase relative paths for the alternative screenshot dir field
-
 	CompatModeStyle lastCompLvlStyle = CompatModeStyle::None;  ///< compat mode style of the engine that was selected the last time
 
 	QStringList compatOptsCmdArgs;  ///< string with command line args created from compatibility options, cached so that it doesn't need to be regenerated on every command line update
@@ -398,6 +381,29 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
  #if IS_WINDOWS
 	SystemThemeWatcher systemThemeWatcher;
  #endif
+
+	// data cached for faster re-use
+
+	QDir appDataDir;   ///< directory where this application can store its data
+	QString optionsFilePath;  ///< path to file with user options
+	QString cacheFilePath;    ///< path to file with various cached file info
+
+	struct ConfigFile;
+
+	Preset * selectedPreset = nullptr;       ///< which preset from the presetModel is currently selected in its view
+	EngineInfo * selectedEngine = nullptr;   ///< which engine from the engineModel is currently selected in its view
+	ConfigFile * selectedConfig = nullptr;   ///< which config from the configModel is currently selected in its view
+	IWAD * selectedIWAD = nullptr;           ///< which IWAD from the iwadModel is currently selected in its view
+	QStringList selectedMapPacks;            ///< file paths of the map packs that are currently selected in their view
+
+	PathRebaser altConfigDirRebaser;       ///< path convertor set up to rebase relative paths for the alternative config dir field
+	PathRebaser altSaveDirRebaser;         ///< path convertor set up to rebase relative paths for the alternative save dir field
+	PathRebaser altScreenshotDirRebaser;   ///< path convertor set up to rebase relative paths for the alternative screenshot dir field
+
+	QString activeConfigDir;       ///< directory where this launcher will search for config files in the current launcher state
+	QString activeSaveDir;         ///< directory where this launcher and selected engine will search for save files in the current launcher state
+	QString activeDemoDir;         ///< directory where the launcher and engine will search for demo files in the current launcher state
+	QString activeScreenshotDir;   ///< directory where this launcher will search for screenshot files in the current launcher state
 
  private: // user data
 

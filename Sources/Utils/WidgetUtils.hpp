@@ -49,6 +49,13 @@ namespace wdg {
 // selection manipulation
 
 
+template< typename ListModel >
+auto * getItemByRowIndex( ListModel && model, int rowIdx )
+{
+	return (rowIdx >= 0 && rowIdx < model.size()) ? &model[ rowIdx ] : nullptr;
+}
+
+
 //----------------------------------------------------------------------------------------------------------------------
 // generic view
 
@@ -84,12 +91,24 @@ void selectSetCurrentAndScrollTo( QAbstractItemView * view, const QModelIndex & 
 int getCurrentItemIndex( QListView * view );
 void setCurrentItemByIndex( QListView * view, int index );
 
+template< typename ListModel >
+auto * getCurrentItem( QListView * view, ListModel && model )
+{
+	return getItemByRowIndex( model, getCurrentItemIndex( view ) );
+}
+
 // selected items
 bool isSelectedIndex( QListView * view, int index );
 int getSelectedItemIndex( QListView * view );  // assumes a single-selection mode, will throw a message box error otherwise
 QList<int> getSelectedItemIndexes( QListView * view );
 void selectItemByIndex( QListView * view, int index );
 void deselectItemByIndex( QListView * view, int index );
+
+template< typename ListModel >
+auto * getSelectedItem( QListView * view, ListModel && model )  // assumes a single-selection mode, will throw a message box error otherwise
+{
+	return getItemByRowIndex( model, getSelectedItemIndex( view ) );
+}
 
 // high-level control
 void selectAndSetCurrentByIndex( QListView * view, int index );
@@ -108,6 +127,12 @@ int getCurrentRowIndex( QTableView * view );
 void setCurrentRowByIndex( QTableView * view, int rowIndex );
 void unsetCurrentRow( QTableView * view );
 
+template< typename ListModel >
+auto * getCurrentItem( QTableView * view, ListModel && model )
+{
+	return getItemByRowIndex( model, getCurrentRowIndex( view ) );
+}
+
 // selected items
 bool isSelectedRow( QTableView * view, int rowIndex );
 int getSelectedRowIndex( QTableView * view );  // assumes a single-selection mode, will throw a message box error otherwise
@@ -116,11 +141,27 @@ void selectRowByIndex( QTableView * view, int rowIndex );
 void deselectRowByIndex( QTableView * view, int rowIndex );
 void deselectSelectedRows( QTableView * view );
 
+template< typename ListModel >
+auto * getSelectedItem( QTableView * view, ListModel && model )  // assumes a single-selection mode, will throw a message box error otherwise
+{
+	return getItemByRowIndex( model, getSelectedRowIndex( view ) );
+}
+
 // high-level control
 void selectAndSetCurrentRowByIndex( QTableView * view, int rowIndex );
 /// Deselects currently selected rows, selects new one and makes it the current row.
 /** Basically equivalent to left-clicking on an item. */
 void chooseRowByIndex( QTableView * view, int rowIndex );
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// combo box
+
+template< typename ListModel >
+auto * getCurrentItem( QComboBox * comboBox, ListModel && model )
+{
+	return getItemByRowIndex( model, comboBox->currentIndex() );
+}
 
 
 

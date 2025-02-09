@@ -246,17 +246,15 @@ SetupDialog::~SetupDialog()
 template< typename ListModel >
 void setSelectedItemAsDefault( QListView * view, ListModel & model, QAction * setDefaultAction, QString & defaultItemID )
 {
-	int selectedIdx = wdg::getSelectedItemIndex( view );
-	if (selectedIdx < 0)
+	auto * selectedItem = wdg::getSelectedItem( view, model );
+	if (!selectedItem)
 	{
 		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return;
 	}
 
-	auto & selectedItem = model[ selectedIdx ];
-
 	QString prevDefaultItemID = std::move( defaultItemID );
-	defaultItemID = selectedItem.getID();
+	defaultItemID = selectedItem->getID();
 
 	// unmark the previous default entry
 	int prevIdx = findSuch( model, [&]( const auto & item ){ return item.getID() == prevDefaultItemID; } );
@@ -266,7 +264,7 @@ void setSelectedItemAsDefault( QListView * view, ListModel & model, QAction * se
 	if (defaultItemID != prevDefaultItemID)
 	{
 		// mark the new default entry
-		markItemAsDefault( selectedItem );
+		markItemAsDefault( *selectedItem );
 		setDefaultAction->setText( "Unset as default" );
 	}
 	else  // already marked, clear the default status
@@ -336,10 +334,9 @@ void SetupDialog::onEngineDoubleClicked( const QModelIndex & index )
 
 void SetupDialog::onEngineConfirmed()
 {
-	int selectedEngineIdx = wdg::getSelectedItemIndex( ui->engineListView );
-	if (selectedEngineIdx >= 0)
+	if (EngineInfo * selectedEngine = wdg::getSelectedItem( ui->engineListView, engineModel ))
 	{
-		editEngine( engineModel[ selectedEngineIdx ] );
+		editEngine( *selectedEngine );
 	}
 }
 
@@ -359,19 +356,19 @@ void SetupDialog::editEngine( EngineInfo & selectedEngine )
 
 void SetupDialog::onEngineSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
-	// For some reason Qt sometimes (not always, i don't understand it) calls this method
+	// For some reason i don't understand Qt sometimes (not always) calls this method
 	// when we're shifting items in the ListModel and when there are null pointers in the original item positions.
-	// And for some other reason which i also don't understand, getSelectedItemIndex() queries all items for flags.
+	// And for some other reason i also don't understand, getSelectedItemIndex() queries all items for flags.
 	// Therefore without this check we crash in derefencing null in ListModel::flags().
 	if (engineModel.isMovingInProgress())
 		return;
 
-	int selectedIdx = wdg::getSelectedItemIndex( ui->engineListView );
-	setDefaultEngineAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
-	if (selectedIdx >= 0)
+	const EngineInfo * selectedEngine = wdg::getSelectedItem( ui->engineListView, engineModel );
+	setDefaultEngineAction->setEnabled( selectedEngine != nullptr );  // only allow this action if something is selected
+	if (selectedEngine)
 	{
 		// allow unsetting as default
-		bool isDefaultItem = engineModel[ selectedIdx ].getID() == engineSettings.defaultEngine;
+		bool isDefaultItem = selectedEngine->getID() == engineSettings.defaultEngine;
 		setDefaultEngineAction->setText( !isDefaultItem ? "Set as default" : "Unset as default" );
 	}
 }
@@ -420,19 +417,19 @@ void SetupDialog::iwadMoveDown()
 
 void SetupDialog::onIWADSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
-	// For some reason Qt sometimes (not always, i don't understand it) calls this method
+	// For some reason i don't understand Qt sometimes (not always) calls this method
 	// when we're shifting items in the ListModel and when there are null pointers in the original item positions.
-	// And for some other reason which i also don't understand, getSelectedItemIndex() queries all items for flags.
+	// And for some other reason i also don't understand, getSelectedItemIndex() queries all items for flags.
 	// Therefore without this check we crash in derefencing null in ListModel::flags().
 	if (iwadModel.isMovingInProgress())
 		return;
 
-	int selectedIdx = wdg::getSelectedItemIndex( ui->iwadListView );
-	setDefaultIWADAction->setEnabled( selectedIdx >= 0 );  // only allow this action if something is selected
-	if (selectedIdx >= 0)
+	const IWAD * selectedIWAD = wdg::getSelectedItem( ui->iwadListView, iwadModel );
+	setDefaultIWADAction->setEnabled( selectedIWAD != nullptr );  // only allow this action if something is selected
+	if (selectedIWAD)
 	{
 		// allow unsetting as default
-		bool isDefaultItem = iwadModel[ selectedIdx ].getID() == iwadSettings.defaultIWAD;
+		bool isDefaultItem = selectedIWAD->getID() == iwadSettings.defaultIWAD;
 		setDefaultIWADAction->setText( !isDefaultItem ? "Set as default" : "Unset as default" );
 	}
 }

@@ -157,10 +157,14 @@ void chooseRowByIndex( QTableView * view, int rowIndex );
 //----------------------------------------------------------------------------------------------------------------------
 // combo box
 
+inline int getCurrentItemIndex( QComboBox * comboBox )                 { return comboBox->currentIndex(); }
+inline void setCurrentItemByIndex( QComboBox * comboBox, int index )   { comboBox->setCurrentIndex( index ); }
+inline void unsetCurrentItem( QComboBox * comboBox )                   { comboBox->setCurrentIndex( -1 ); }
+
 template< typename ListModel >
 auto * getCurrentItem( QComboBox * comboBox, ListModel && model )
 {
-	return getItemByRowIndex( model, comboBox->currentIndex() );
+	return getItemByRowIndex( model, getCurrentItemIndex( comboBox ) );
 }
 
 
@@ -793,9 +797,9 @@ void updateListFromDir(
 
 /// Gets a persistent item ID that survives node shifting, adding or removal.
 template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
-QString getCurrentItemID( QComboBox * view, const ListModel & model )
+QString getCurrentItemID( QComboBox * comboBox, const ListModel & model )
 {
-	int selectedItemIdx = view->currentIndex();
+	int selectedItemIdx = getCurrentItemIndex( comboBox );
 	if (selectedItemIdx >= 0)
 		return model[ selectedItemIdx ].getID();
 	else
@@ -804,7 +808,7 @@ QString getCurrentItemID( QComboBox * view, const ListModel & model )
 
 /// Attempts to select a previously selected item defined by persistant itemID.
 template< typename ListModel >  // Item must have getID() method that returns some kind of persistant unique identifier
-bool setCurrentItemByID( QComboBox * view, const ListModel & model, const QString & itemID )
+bool setCurrentItemByID( QComboBox * comboBox, const ListModel & model, const QString & itemID )
 {
 	using Item = typename ListModel::Item;
 
@@ -813,7 +817,7 @@ bool setCurrentItemByID( QComboBox * view, const ListModel & model, const QStrin
 		int newItemIdx = findSuch( model, [&]( const Item & item ) { return item.getID() == itemID; } );
 		if (newItemIdx >= 0)
 		{
-			view->setCurrentIndex( newItemIdx );
+			setCurrentItemByIndex( comboBox, newItemIdx );
 			return true;
 		}
 	}
@@ -823,19 +827,19 @@ bool setCurrentItemByID( QComboBox * view, const ListModel & model, const QStrin
 /// Fills a combo-box with entries found in a directory.
 template< typename ListModel >
 void updateComboBoxFromDir(
-	ListModel & model, QComboBox * view, const QString & dir, bool recursively, bool includeEmptyItem,
+	ListModel & model, QComboBox * comboBox, const QString & dir, bool recursively, bool includeEmptyItem,
 	const PathConvertor & pathConvertor, std::function< bool ( const QFileInfo & file ) > isDesiredFile )
 {
 	// note down the currently selected item
-	QString lastText = view->currentText();
+	QString lastText = comboBox->currentText();
 
-	view->setCurrentIndex( -1 );
+	unsetCurrentItem( comboBox );
 
 	updateModelFromDir( model, dir, recursively, includeEmptyItem, pathConvertor, isDesiredFile );
 
 	// restore the originally selected item, the selection will be reset if the item does not exist in the new content
 	// because findText returns -1 which is valid value for setCurrentIndex
-	view->setCurrentIndex( view->findText( lastText ) );
+	setCurrentItemByIndex( comboBox, comboBox->findText( lastText ) );
 }
 
 

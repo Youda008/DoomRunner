@@ -573,7 +573,7 @@ bool MainWindow::shouldEnableAltScreenshotDir( const EngineInfo * selectedEngine
 {
 	widget->setEnabled( enabled );
 	if (!enabled)
-		widget->setCurrentIndex( -1 );
+		wdg::unsetCurrentItem( widget );
 }
 
 [[maybe_unused]] static void toggleAndDeselect( QListView * view, bool enabled )
@@ -1695,7 +1695,7 @@ void MainWindow::restoreSelectedConfig( Preset & preset )
 			ui->configCmbBox->setCurrentIndex( configIdx );
 
 			// No sense to verify if this config file exists, the configModel has just been updated during
-			// selectEngine( ui->engineCmbBox->currentIndex() ), so there are only existing entries.
+			// onEngineSelected(...), so there are only existing entries.
 		}
 		else
 		{
@@ -2098,7 +2098,7 @@ void MainWindow::runSetupDialog()
 		disableSelectionCallbacks = true;
 
 		// deselect the items
-		ui->engineCmbBox->setCurrentIndex( -1 );
+		wdg::unsetCurrentItem( ui->engineCmbBox );
 		wdg::deselectAllAndUnsetCurrent( ui->iwadListView );
 
 		// make sure all data and indexes are invalidated and no longer used
@@ -2136,7 +2136,7 @@ void MainWindow::runSetupDialog()
 		// Regardless whether the index of the selected items actually changed or whether they still exist,
 		// we have to call these callbacks, because their content (e.g. config dir) might have changed,
 		// and we need to update all the widgets dependent on that content.
-		onEngineSelected( ui->engineCmbBox->currentIndex() );
+		onEngineSelected( wdg::getCurrentItemIndex( ui->engineCmbBox ) );
 		onIWADToggled( QItemSelection(), QItemSelection()/*TODO*/ );
 
 		scheduleSavingOptions();

@@ -146,12 +146,15 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void onUsePresetNameForConfigsToggled( bool checked );
 	void onUsePresetNameForSavesToggled( bool checked );
+	void onUsePresetNameForDemosToggled( bool checked );
 	void onUsePresetNameForScreenshotsToggled( bool checked );
 	void onAltConfigDirChanged( const QString & dir );
 	void onAltSaveDirChanged( const QString & dir );
+	void onAltDemoDirChanged( const QString & dir );
 	void onAltScreenshotDirChanged( const QString & dir );
 	void browseAltConfigDir();
 	void browseAltSaveDir();
+	void browseAltDemoDir();
 	void browseAltScreenshotDir();
 
 	void onMonitorSelected( int index );
@@ -253,6 +256,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateAlternativePath( QLineEdit * altPathLine, const QString * altPath );
 	void updateAltConfigDir( const QString * configDir = nullptr );
 	void updateAltSaveDir( const QString * saveDir = nullptr );
+	void updateAltDemoDir( const QString * demoDir = nullptr );
 	void updateAltScreenshotDir( const QString * screenshotDir = nullptr );
 	void updateAlternativePaths( const Preset * selectedPreset );
 
@@ -317,10 +321,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	static QString getEngineDefaultConfigDir( const EngineInfo * selectedEngine );
 	static QString getEngineDefaultSaveDir( const EngineInfo * selectedEngine, const IWAD * selectedIWAD );
+	static QString getEngineDefaultDemoDir( const EngineInfo * selectedEngine );
 	static QString getEngineDefaultScreenshotDir( const EngineInfo * selectedEngine );
 	       QString getActiveConfigDir( const EngineInfo * selectedEngine, const QString & altConfigDirLineText ) const;
 	       QString getActiveSaveDir( const EngineInfo * selectedEngine, const IWAD * selectedIWAD, const QString & altSaveDirLineText ) const;
-	       QString getActiveDemoDir( const EngineInfo * selectedEngine, const IWAD * selectedIWAD, const QString & altSaveDirLineText ) const;
+	       QString getActiveDemoDir( const EngineInfo * selectedEngine, const QString & altDemoDirLineText ) const;
 	       QString getActiveScreenshotDir( const EngineInfo * selectedEngine, const QString & altScreenshotDirLineText ) const;
 
 	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
@@ -346,6 +351,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	static bool shouldEnablePlayerCustomization( bool multEnabled, const EngineInfo * selectedEngine );
 	static bool shouldEnableAltConfigDir( const EngineInfo * selectedEngine, bool usePresetName );
 	static bool shouldEnableAltSaveDir( const EngineInfo * selectedEngine, bool usePresetName );
+	static bool shouldEnableAltDemoDir( const EngineInfo * selectedEngine, bool usePresetName );
 	static bool shouldEnableAltScreenshotDir( const EngineInfo * selectedEngine, bool usePresetName );
 
 	LaunchMode getLaunchModeFromUI() const;
@@ -398,6 +404,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	PathRebaser altConfigDirRebaser;       ///< path convertor set up to rebase relative paths for the alternative config dir field
 	PathRebaser altSaveDirRebaser;         ///< path convertor set up to rebase relative paths for the alternative save dir field
+	PathRebaser altDemoDirRebaser;         ///< path convertor set up to rebase relative paths for the alternative demo dir field
 	PathRebaser altScreenshotDirRebaser;   ///< path convertor set up to rebase relative paths for the alternative screenshot dir field
 
 	QString activeConfigDir;       ///< directory where this launcher will search for config files in the current launcher state

@@ -226,6 +226,7 @@ struct AlternativePaths
 	// these are always relative either to Engine::configDir or Engine::dataDir
 	QString configDir;
 	QString saveDir;
+	QString demoDir;
 	QString screenshotDir;
 };
 
@@ -253,6 +254,7 @@ struct GlobalOptions
 {
 	bool usePresetNameAsConfigDir = false;
 	bool usePresetNameAsSaveDir = false;
+	bool usePresetNameAsDemoDir = false;
 	bool usePresetNameAsScreenshotDir = false;
 	QString cmdArgs;
 	QString cmdPrefix;

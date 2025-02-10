@@ -134,6 +134,7 @@ class EngineTraits {
 	// all of these paths are absolute
 	QString getDefaultConfigDir() const;
 	QString getDefaultDataDir() const;
+	QString getDefaultDemoDir() const;
 	QString getDefaultScreenshotDir() const;
 
 	/// Whether the save directory depends on the IWAD in use.

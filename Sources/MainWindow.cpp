@@ -120,14 +120,14 @@ QStringList MainWindow::getUniqueMapNamesFromWADs( const QList<QString> & select
 // paths of data dirs
 
 // Returns config dir configured for the current engine, or empty string if engine is not selected.
-// Used as a base directory for config dir override or directly for searching config files.
+// Used for searching config files.
 QString MainWindow::getEngineDefaultConfigDir( const EngineInfo * selectedEngine )
 {
 	return selectedEngine ? selectedEngine->configDir : emptyString;
 }
 
 // Returns save dir configured for the current engine, or empty string if engine is not selected.
-// Used as a base directory for save dir override or directly for searching save files.
+// Used for searching save files.
 QString MainWindow::getEngineDefaultSaveDir( const EngineInfo * selectedEngine, const IWAD * selectedIWAD )
 {
 	if (selectedEngine)
@@ -140,8 +140,19 @@ QString MainWindow::getEngineDefaultSaveDir( const EngineInfo * selectedEngine, 
 	return emptyString;
 }
 
+// Returns default demo dir for the current engine, or empty string if engine is not selected.
+// Used for searching demo files.
+QString MainWindow::getEngineDefaultDemoDir( const EngineInfo * selectedEngine )
+{
+	if (selectedEngine)
+	{
+		return selectedEngine->getDefaultDemoDir();
+	}
+	return emptyString;
+}
+
 // Returns screenshot dir typical for the current engine, or empty string if engine is not selected.
-// Only serves as a base directory for screenshot dir override. This launcher doesn't read anything from it.
+// Currently unused.
 QString MainWindow::getEngineDefaultScreenshotDir( const EngineInfo * selectedEngine )
 {
 	return selectedEngine ? selectedEngine->getDefaultScreenshotDir() : emptyString;
@@ -153,14 +164,14 @@ QString MainWindow::getEngineDefaultScreenshotDir( const EngineInfo * selectedEn
 QString MainWindow::getActiveConfigDir( const EngineInfo * selectedEngine, const QString & altConfigDirLineText ) const
 {
 	// the path in altConfigDirLine is relative to the engine's config dir by convention, need to rebase it to the current working dir
-	if (!altConfigDirLineText.isEmpty())                           // if custom config dir is specified
+	if (!altConfigDirLineText.isEmpty())                                 // if custom config dir is specified
 	{
 		return altConfigDirRebaser
-		       .rebaseBackAndConvert( altConfigDirLineText );      // then use it
+		       .rebaseBackAndConvert( altConfigDirLineText );            // then use it
 	}
-	else                                                           // otherwise
+	else                                                                 // otherwise
 	{
-		return getEngineDefaultConfigDir( selectedEngine );        // use engine's default config dir
+		return getEngineDefaultConfigDir( selectedEngine );              // use engine's default config dir
 	}
 }
 
@@ -172,26 +183,32 @@ QString MainWindow::getActiveSaveDir(
 ) const
 {
 	// the path in altSaveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	if (!altSaveDirLineText.isEmpty())                             // if custom save dir is specified
+	if (!altSaveDirLineText.isEmpty())                                   // if custom save dir is specified
 	{
 		return altSaveDirRebaser
-		       .rebaseBackAndConvert( altSaveDirLineText );        // then use it
+		       .rebaseBackAndConvert( altSaveDirLineText );              // then use it
 	}
-	else                                                           // otherwise use engine's default save dir
+	else                                                                 // otherwise
 	{
-		return getEngineDefaultSaveDir( selectedEngine, selectedIWAD );  // return the cached value, because calculating it every time would be wasteful
+		return getEngineDefaultSaveDir( selectedEngine, selectedIWAD );  // use engine's default save dir
 	}
 }
 
 // Returns the directory where this launcher and selected engine will search for demo files in the current launcher state.
 // Maintains the path style of the dataDir configured for the current engine,
 // or uses the globally selected path style if the custom demo dir override field is set.
-QString MainWindow::getActiveDemoDir(
-	const EngineInfo * selectedEngine, const IWAD * selectedIWAD, const QString & altSaveDirLineText
-) const
+QString MainWindow::getActiveDemoDir( const EngineInfo * selectedEngine, const QString & altDemoDirLineText ) const
 {
-	// let's not complicate things and treat save dir and demo dir as one
-	return getActiveSaveDir( selectedEngine, selectedIWAD, altSaveDirLineText );
+	// the path in altDemoDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
+	if (!altDemoDirLineText.isEmpty())                                   // if custom demo dir is specified
+	{
+		return altDemoDirRebaser
+		       .rebaseBackAndConvert( altDemoDirLineText );              // then use it
+	}
+	else                                                                 // otherwise
+	{
+		return getEngineDefaultDemoDir( selectedEngine );                // use engine's default demo dir
+	}
 }
 
 // Returns the directory where the engine will save screenshots under the current launcher options.
@@ -200,14 +217,14 @@ QString MainWindow::getActiveDemoDir(
 QString MainWindow::getActiveScreenshotDir( const EngineInfo * selectedEngine, const QString & altScreenshotDirLineText ) const
 {
 	// the path in altScreenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	if (!altScreenshotDirLineText.isEmpty())                        // if custom screenshot dir is specified
+	if (!altScreenshotDirLineText.isEmpty())                             // if custom screenshot dir is specified
 	{
 		return altScreenshotDirRebaser
-		       .rebaseBackAndConvert( altScreenshotDirLineText );   // then use it
+		       .rebaseBackAndConvert( altScreenshotDirLineText );        // then use it
 	}
-	else                                                            // otherwise use engine's default screenshot dir
+	else                                                                 // otherwise
 	{
-		return getEngineDefaultScreenshotDir( selectedEngine );     // return the cached value, because calculating it every time would be wasteful
+		return getEngineDefaultScreenshotDir( selectedEngine );          // use engine's default screenshot dir
 	}
 }
 
@@ -541,6 +558,11 @@ bool MainWindow::shouldEnableAltSaveDir( const EngineInfo * selectedEngine, bool
 	return !usePresetName && selectedEngine && selectedEngine->saveDirParam();
 }
 
+bool MainWindow::shouldEnableAltDemoDir( const EngineInfo * selectedEngine, bool usePresetName )
+{
+	return !usePresetName && selectedEngine;
+}
+
 bool MainWindow::shouldEnableAltScreenshotDir( const EngineInfo * selectedEngine, bool usePresetName )
 {
 	return !usePresetName && selectedEngine && selectedEngine->screenshotDirParam();
@@ -630,6 +652,7 @@ MainWindow::MainWindow()
 	// rebase to current working dir (don't rebase at all) until engine is selected
 	altConfigDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
 	altSaveDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
+	altDemoDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
 	altScreenshotDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
@@ -736,6 +759,7 @@ MainWindow::MainWindow()
 
 	setPathValidator( ui->altConfigDirLine );
 	setPathValidator( ui->altSaveDirLine );
+	setPathValidator( ui->altDemoDirLine );
 	setPathValidator( ui->altScreenshotDirLine );
 
 	// setup launch options callbacks
@@ -778,12 +802,15 @@ MainWindow::MainWindow()
 	// alternative paths
 	connect( ui->altConfigDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForConfigsToggled );
 	connect( ui->altSaveDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForSavesToggled );
+	connect( ui->altDemoDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForDemosToggled );
 	connect( ui->altScreenshotDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForScreenshotsToggled );
 	connect( ui->altConfigDirLine, &QLineEdit::textChanged, this, &thisClass::onAltConfigDirChanged );
 	connect( ui->altSaveDirLine, &QLineEdit::textChanged, this, &thisClass::onAltSaveDirChanged );
+	connect( ui->altDemoDirLine, &QLineEdit::textChanged, this, &thisClass::onAltDemoDirChanged );
 	connect( ui->altScreenshotDirLine, &QLineEdit::textChanged, this, &thisClass::onAltScreenshotDirChanged );
-	connect( ui->altSaveDirBtn, &QPushButton::clicked, this, &thisClass::browseAltConfigDir );
+	connect( ui->altConfigDirBtn, &QPushButton::clicked, this, &thisClass::browseAltConfigDir );
 	connect( ui->altSaveDirBtn, &QPushButton::clicked, this, &thisClass::browseAltSaveDir );
+	connect( ui->altDemoDirBtn, &QPushButton::clicked, this, &thisClass::browseAltDemoDir );
 	connect( ui->altScreenshotDirBtn, &QPushButton::clicked, this, &thisClass::browseAltScreenshotDir );
 
 	// video
@@ -1959,6 +1986,11 @@ void MainWindow::restoreAlternativePaths( const AlternativePaths & altPaths )
 	else
 		ui->altSaveDirLine->setText( altPaths.saveDir );
 
+	if (globalOpts.usePresetNameAsDemoDir)
+		ui->altDemoDirLine->setText( altPathFromPresetName );
+	else
+		ui->altDemoDirLine->setText( altPaths.demoDir );
+
 	if (globalOpts.usePresetNameAsScreenshotDir)
 		ui->altScreenshotDirLine->setText( altPathFromPresetName );
 	else
@@ -1987,6 +2019,7 @@ void MainWindow::restoreGlobalOptions( const GlobalOptions & opts )
 {
 	ui->altConfigDirPresetChkBox->setChecked( opts.usePresetNameAsConfigDir );
 	ui->altSaveDirPresetChkBox->setChecked( opts.usePresetNameAsSaveDir );
+	ui->altDemoDirPresetChkBox->setChecked( opts.usePresetNameAsDemoDir );
 	ui->altScreenshotDirPresetChkBox->setChecked( opts.usePresetNameAsScreenshotDir );
 
 	ui->globalCmdArgsLine->setText( opts.cmdArgs );
@@ -2543,6 +2576,7 @@ void MainWindow::clearPresetSubWidgets()
 
 	ui->altConfigDirLine->clear();
 	ui->altSaveDirLine->clear();
+	ui->altDemoDirLine->clear();
 	ui->altScreenshotDirLine->clear();
 
 	// Video/Audio tab
@@ -2584,12 +2618,13 @@ void MainWindow::onEngineSelected( int index )
 	// use the same parent dir for all alt dirs, so that everything related to a preset is together in a single dir
 	altConfigDirRebaser.setTargetDirAndOutputStyle( engineDefaultDataDir );
 	altSaveDirRebaser.setTargetDirAndOutputStyle( engineDefaultDataDir );
+	altDemoDirRebaser.setTargetDirAndOutputStyle( engineDefaultDataDir );
 	altScreenshotDirRebaser.setTargetDirAndOutputStyle( engineDefaultDataDir );
 
 	// update active config/data dirs
 	activeConfigDir = getActiveConfigDir( selectedEngine, ui->altConfigDirLine->text() );
 	activeSaveDir = getActiveSaveDir( selectedEngine, selectedIWAD, ui->altSaveDirLine->text() );
-	activeDemoDir = getActiveDemoDir( selectedEngine, selectedIWAD, ui->altSaveDirLine->text() );
+	activeDemoDir = getActiveDemoDir( selectedEngine, ui->altDemoDirLine->text() );
 	activeScreenshotDir = getActiveScreenshotDir( selectedEngine, ui->altScreenshotDirLine->text() );
 
 	// only allow editing, if the engine supports specifying map by its name
@@ -2645,6 +2680,9 @@ void MainWindow::toggleAndClearEngineDependentWidgets( const EngineInfo * engine
 	bool enableAltSaveDir = shouldEnableAltSaveDir( engine, ui->altSaveDirPresetChkBox->isChecked() );
 	ui->altSaveDirLine->setEnabled( enableAltSaveDir );
 	ui->altSaveDirBtn->setEnabled( enableAltSaveDir );
+	bool enableAltDemoDir = shouldEnableAltDemoDir( engine, ui->altDemoDirPresetChkBox->isChecked() );
+	ui->altDemoDirLine->setEnabled( enableAltDemoDir );
+	ui->altDemoDirBtn->setEnabled( enableAltDemoDir );
 	bool enableAltScreenshotDir = shouldEnableAltScreenshotDir( engine, ui->altScreenshotDirPresetChkBox->isChecked() );
 	ui->altScreenshotDirLine->setEnabled( enableAltScreenshotDir );
 	ui->altScreenshotDirBtn->setEnabled( enableAltScreenshotDir );
@@ -2684,7 +2722,6 @@ void MainWindow::onIWADToggled( const QItemSelection & /*selected*/, const QItem
 
 	// activeSaveDir may depend on IWAD -> update it
 	activeSaveDir = getActiveSaveDir( selectedEngine, selectedIWAD, ui->altSaveDirLine->text() );
-	activeDemoDir = getActiveDemoDir( selectedEngine, selectedIWAD, ui->altSaveDirLine->text() );  // TODO: altDemoDirLine
 
 	updateMapsFromSelectedWADs( selectedIWAD, selectedMapPacks );   // IWAD determines the maps we can choose from
 	updateSaveFilesFromDir();   // IWAD determines the directory in which the save files and demo files are stored
@@ -3771,6 +3808,11 @@ void MainWindow::updateAltSaveDir( const QString * saveDir )
 	updateAlternativePath( ui->altSaveDirLine, saveDir );
 }
 
+void MainWindow::updateAltDemoDir( const QString * demoDir )
+{
+	updateAlternativePath( ui->altDemoDirLine, demoDir );
+}
+
 void MainWindow::updateAltScreenshotDir( const QString * screenshotDir )
 {
 	updateAlternativePath( ui->altScreenshotDirLine, screenshotDir );
@@ -3785,6 +3827,9 @@ void MainWindow::updateAlternativePaths( const Preset * selectedPreset )
 
 	if (globalOpts.usePresetNameAsSaveDir)
 		ui->altSaveDirLine->setText( altPathFromPresetName );
+
+	if (globalOpts.usePresetNameAsDemoDir)
+		ui->altDemoDirLine->setText( altPathFromPresetName );
 
 	if (globalOpts.usePresetNameAsScreenshotDir)
 		ui->altScreenshotDirLine->setText( altPathFromPresetName );
@@ -3825,6 +3870,26 @@ void MainWindow::onUsePresetNameForSavesToggled( bool checked )
 	else
 	{
 		ui->altSaveDirLine->clear();
+	}
+
+	scheduleSavingOptions( storageModified );
+}
+
+void MainWindow::onUsePresetNameForDemosToggled( bool checked )
+{
+	bool storageModified = STORE_GLOBAL_OPTION( .usePresetNameAsDemoDir, checked );
+
+	bool enable = shouldEnableAltDemoDir( selectedEngine, checked );
+	ui->altDemoDirLine->setEnabled( enable );
+	ui->altDemoDirBtn->setEnabled( enable );
+
+	if (checked)
+	{
+		updateAltDemoDir();
+	}
+	else
+	{
+		ui->altDemoDirLine->clear();
 	}
 
 	scheduleSavingOptions( storageModified );
@@ -3901,9 +3966,36 @@ void MainWindow::onAltSaveDirChanged( const QString & rebasedDir )
 
 	// update active dir
 	activeSaveDir = getActiveSaveDir( selectedEngine, selectedIWAD, rebasedDir );
-	activeDemoDir = getActiveDemoDir( selectedEngine, selectedIWAD, rebasedDir );
 
 	updateSaveFilesFromDir();
+
+	scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onAltDemoDirChanged( const QString & rebasedDir )
+{
+	// the path in altDemoDirLine is relative to the engine's data dir by convention,
+	// need to make it absolute or rebase it to the current working dir
+	QString absDirPath = altDemoDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
+
+	bool storageModified = false;
+	if (globalOpts.usePresetNameAsDemoDir)
+	{
+		// dir is being chosen automatically by the launcher, delete user overrides
+		storageModified = STORE_ALT_PATH( .demoDir, emptyString );
+	}
+	else
+	{
+		// dir is being edited manually by the user, store his value
+		storageModified = STORE_ALT_PATH( .demoDir, rebasedDir );
+	}
+
+	highlightDirPathIfFileOrCanBeCreated( ui->altDemoDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
+
+	// update active dir
+	activeDemoDir = getActiveDemoDir( selectedEngine, rebasedDir );
+
 	updateDemoFilesFromDir();
 
 	scheduleSavingOptions( storageModified );
@@ -3954,13 +4046,26 @@ void MainWindow::browseAltSaveDir()
 {
 	const QString & currentSaveDir = activeSaveDir;
 
-	QString newSaveDir = DialogWithPaths::browseDir( this, "with saves", currentSaveDir );
+	QString newSaveDir = DialogWithPaths::browseDir( this, "with save files", currentSaveDir );
 	if (newSaveDir.isEmpty())  // user probably clicked cancel
 		return;
 
 	// the path in altSaveDirLine is relative to the engine's data dir by convention,
 	// but the path from the file dialog is relative to the current working dir -> need to rebase it
 	ui->altSaveDirLine->setText( altSaveDirRebaser.rebaseAndMakeRelative( newSaveDir ) );
+}
+
+void MainWindow::browseAltDemoDir()
+{
+	const QString & currentDemoDir = activeDemoDir;
+
+	QString newDemoDir = DialogWithPaths::browseDir( this, "with demo files", currentDemoDir );
+	if (newDemoDir.isEmpty())  // user probably clicked cancel
+		return;
+
+	// the path in altDemoDirLine is relative to the engine's data dir by convention,
+	// but the path from the file dialog is relative to the current working dir -> need to rebase it
+	ui->altDemoDirLine->setText( altDemoDirRebaser.rebaseAndMakeRelative( newDemoDir ) );
 }
 
 void MainWindow::browseAltScreenshotDir()
@@ -4403,6 +4508,11 @@ void MainWindow::updateSaveFilesFromDir()
 
 void MainWindow::updateDemoFilesFromDir()
 {
+	if (!selectedEngine)
+	{
+		return;
+	}
+
 	// We have 2 combo-boxes sharing the same model, update the model only once.
 
 	const QString & demoDir = activeDemoDir;
@@ -4850,7 +4960,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	}
 	else if (launchMode == RecordDemo && !ui->demoFileLine_record->text().isEmpty())
 	{
-		// if demo dir is empty (saveDirLine is empty and engine.dataDir is not set), then the demoFileLine_record will be used as is
+		// if demo dir is empty (demoDirLine is empty and engine.dataDir is not set), then the demoFileLine_record will be used as is
 		const QString & demoDir = activeDemoDir;
 		QString demoFileName = ui->demoFileLine_record->text();
 		QString demoFilePath = fs::getPathFromFileName( demoDir, demoFileName );

@@ -371,6 +371,7 @@ static QJsonObject serialize( const AlternativePaths & opts )
 
 	optsJs["config_dir"] = opts.configDir;
 	optsJs["save_dir"] = opts.saveDir;
+	optsJs["demo_dir"] = opts.demoDir;
 	optsJs["screenshot_dir"] = opts.screenshotDir;
 
 	return optsJs;
@@ -380,6 +381,7 @@ static void deserialize( const JsonObjectCtx & optsJs, AlternativePaths & opts )
 {
 	opts.configDir = optsJs.getString( "config_dir" );
 	opts.saveDir = optsJs.getString( "save_dir" );
+	opts.demoDir = optsJs.getString( "demo_dir" );
 	opts.screenshotDir = optsJs.getString( "screenshot_dir" );
 }
 
@@ -427,6 +429,7 @@ static QJsonObject serialize( const GlobalOptions & opts )
 
 	optsJs["use_preset_name_as_config_dir"] = opts.usePresetNameAsConfigDir;
 	optsJs["use_preset_name_as_save_dir"] = opts.usePresetNameAsSaveDir;
+	optsJs["use_preset_name_as_demo_dir"] = opts.usePresetNameAsDemoDir;
 	optsJs["use_preset_name_as_screenshot_dir"] = opts.usePresetNameAsScreenshotDir;
 	optsJs["additional_args"] = opts.cmdArgs;
 	optsJs["cmd_prefix"] = opts.cmdPrefix;
@@ -442,6 +445,7 @@ static void deserialize( const JsonObjectCtx & optsJs, GlobalOptions & opts )
 		bool usePresetNameAsDir = optsJs.getBool( "use_preset_name_as_dir", false );
 		// Before 1.9.0 this option controlled saves and screenshots together -> apply it for those.
 		opts.usePresetNameAsSaveDir = usePresetNameAsDir;
+		opts.usePresetNameAsDemoDir = usePresetNameAsDir;
 		opts.usePresetNameAsScreenshotDir = usePresetNameAsDir;
 		// However this option did not exist and could cause confusion -> leave at false.
 		opts.usePresetNameAsConfigDir = false;
@@ -450,6 +454,7 @@ static void deserialize( const JsonObjectCtx & optsJs, GlobalOptions & opts )
 	{
 		opts.usePresetNameAsConfigDir = optsJs.getBool( "use_preset_name_as_config_dir", opts.usePresetNameAsConfigDir );
 		opts.usePresetNameAsSaveDir = optsJs.getBool( "use_preset_name_as_save_dir", opts.usePresetNameAsSaveDir );
+		opts.usePresetNameAsDemoDir = optsJs.getBool( "use_preset_name_as_demo_dir", opts.usePresetNameAsDemoDir );
 		opts.usePresetNameAsScreenshotDir = optsJs.getBool( "use_preset_name_as_screenshot_dir", opts.usePresetNameAsScreenshotDir );
 	}
 

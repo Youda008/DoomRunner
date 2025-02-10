@@ -356,6 +356,15 @@ QString EngineTraits::getDefaultDataDir() const
  #endif
 }
 
+QString EngineTraits::getDefaultDemoDir() const
+{
+	// All the engines i tried expect a demo file path that is either absolute or relative to the current working dir.
+	// That means if only a file name is specified, it will try to save to the executable's directory,
+	// which works for portable installations, but fail when the engine is installed in a non-writeable location.
+	// Not a single engine i tried, not even on Linux, tried to save the demo where it can write, such as home.
+	return fs::getParentDir( exePath() );
+}
+
 QString EngineTraits::getDefaultScreenshotDir() const
 {
  #if IS_WINDOWS

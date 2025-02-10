@@ -1540,54 +1540,32 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_19">
            <item>
-            <layout class="QGridLayout" name="gridLayout_3">
-             <item row="2" column="2">
-              <widget class="QLineEdit" name="altScreenshotDirLine"/>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="altSaveDirLabel">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where the selected engine should store its save files and where launcher should then find them.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the save directory of the current engine for the current IWAD.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom&lt;br/&gt;&lt;/span&gt;IWAD-based subdir: &lt;span style=&quot; color:#686868;&quot;&gt;doom.id.doom1.ultimate&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Save file selected on the Launch options tab:&lt;span style=&quot; color:#686868;&quot;&gt; save00.zds&lt;br/&gt;&lt;/span&gt;The save file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom\doom.id.doom1.ultimate\BrutalDoom\save00.zds&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="whatsThis">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where the selected engine should store its save files and where launcher should then find them.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the save directory of the current engine for the current IWAD.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom&lt;br/&gt;&lt;/span&gt;IWAD-based subdir: &lt;span style=&quot; color:#686868;&quot;&gt;doom.id.doom1.ultimate&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Save file selected on the Launch options tab:&lt;span style=&quot; color:#686868;&quot;&gt; save00.zds&lt;br/&gt;&lt;/span&gt;The save file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Saved Games\GZDoom\doom.id.doom1.ultimate\BrutalDoom\save00.zds&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>Save dir &lt;img src=&quot;:/Help.12.png&quot;/&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QLineEdit" name="altConfigDirLine"/>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="altScreenshotDirLabel">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(only for PrBoom+, Woof, DoomRetro and ZDoom family)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Custom sub-directory where the selected engine should save its screenshot image files.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the engine's default screenshot directory.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's default screenshot dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Pictures\Screenshots\GZDoom&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;/span&gt;&lt;br/&gt;The image file that will be created: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Pictures\Screenshots\GZDoom\BrutalDoom\Screenshot_Doom_20241118_225328.png&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="whatsThis">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(only for PrBoom+, Woof, DoomRetro and ZDoom family)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Custom sub-directory where the selected engine should save its screenshot image files.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the engine's default screenshot directory.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's default screenshot dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Pictures\Screenshots\GZDoom&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;/span&gt;&lt;br/&gt;The image file that will be created: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Pictures\Screenshots\GZDoom\BrutalDoom\Screenshot_Doom_20241118_225328.png&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Screenshot dir &lt;img src=&quot;:/Help.12.png&quot;/&gt;&amp;nbsp;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-              </widget>
-             </item>
+            <layout class="QGridLayout" name="gLayout_altConfigDirs">
              <item row="0" column="0">
               <widget class="QLabel" name="altConfigDirLabel">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where this launcher should search for engine's config files.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the main Config directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's main config dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Documents\My Games\GZDoom&lt;br/&gt;&lt;/span&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Config file selected on the Files tab: &lt;span style=&quot; color:#686868;&quot;&gt;gzdoom_bd.ini&lt;br/&gt;&lt;/span&gt;The config file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Documents\My Games\GZDoom\BrutalDoom\gzdoom_bd.ini&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where this launcher should search for engine's config files.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom&lt;br/&gt;&lt;/span&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Config file selected on the Files tab: &lt;span style=&quot; color:#686868;&quot;&gt;gzdoom_bd.ini&lt;br/&gt;&lt;/span&gt;The config file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom\BrutalDoom\gzdoom_bd.ini&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="whatsThis">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where this launcher should search for engine's config files.&lt;/p&gt;&lt;p&gt;The path is relative to the main Config directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's main config dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Documents\My Games\GZDoom&lt;br/&gt;&lt;/span&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Config file selected on the Files tab: &lt;span style=&quot; color:#686868;&quot;&gt;gzdoom_bd.ini&lt;br/&gt;&lt;/span&gt;The config file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Documents\My Games\GZDoom\BrutalDoom\gzdoom_bd.ini&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where this launcher should search for engine's config files.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom&lt;br/&gt;&lt;/span&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Config file selected on the Files tab: &lt;span style=&quot; color:#686868;&quot;&gt;gzdoom_bd.ini&lt;br/&gt;&lt;/span&gt;The config file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom\BrutalDoom\gzdoom_bd.ini&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>Config dir &lt;img src=&quot;:/Help.12.png&quot;/&gt;</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="2">
-              <widget class="QLineEdit" name="altSaveDirLine"/>
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="altConfigDirPresetChkBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the name of the currently selected preset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Use preset name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QLineEdit" name="altConfigDirLine"/>
              </item>
              <item row="0" column="3">
               <widget class="QPushButton" name="altConfigDirBtn">
@@ -1599,6 +1577,32 @@
                  <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
                </property>
               </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="altSaveDirLabel">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where the selected engine should store its save files and where launcher should then find them.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom&lt;br/&gt;&lt;/span&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Save file selected on the Launch options tab:&lt;span style=&quot; color:#686868;&quot;&gt; save00.zds&lt;br/&gt;&lt;/span&gt;The save file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom\BrutalDoom\save00.zds&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="whatsThis">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where the selected engine should store its save files and where launcher should then find them.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom&lt;br/&gt;&lt;/span&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Save file selected on the Launch options tab:&lt;span style=&quot; color:#686868;&quot;&gt; save00.zds&lt;br/&gt;&lt;/span&gt;The save file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom\BrutalDoom\save00.zds&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Save dir &lt;img src=&quot;:/Help.12.png&quot;/&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QCheckBox" name="altSaveDirPresetChkBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the name of the currently selected preset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Use preset name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QLineEdit" name="altSaveDirLine"/>
              </item>
              <item row="1" column="3">
               <widget class="QPushButton" name="altSaveDirBtn">
@@ -1617,7 +1621,70 @@
                </property>
               </widget>
              </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="altDemoDirLabel">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where the selected engine should store its demo files and where launcher should then find them.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom&lt;br/&gt;&lt;/span&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Demo file selected on the Launch options tab:&lt;span style=&quot; color:#686868;&quot;&gt; demo01.lmp&lt;br/&gt;&lt;/span&gt;The save file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom\BrutalDoom\demo01.lmp&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="whatsThis">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Custom sub-directory where the selected engine should store its demo files and where launcher should then find them.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom&lt;br/&gt;&lt;/span&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;br/&gt;&lt;/span&gt;Demo file selected on the Launch options tab:&lt;span style=&quot; color:#686868;&quot;&gt; demo01.lmp&lt;br/&gt;&lt;/span&gt;The save file that will be loaded: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom\BrutalDoom\demo01.lmp&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Demo dir &lt;img src=&quot;:/Help.12.png&quot;/&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QCheckBox" name="altDemoDirPresetChkBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the name of the currently selected preset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Use preset name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QLineEdit" name="altDemoDirLine"/>
+             </item>
              <item row="2" column="3">
+              <widget class="QPushButton" name="altDemoDirBtn">
+               <property name="text">
+                <string>Browse</string>
+               </property>
+               <property name="icon">
+                <iconset resource="../Resources/Resources.qrc">
+                 <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="altScreenshotDirLabel">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(only for PrBoom+, Woof, DoomRetro and ZDoom family)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Custom sub-directory where the selected engine should save its screenshot image files.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;/span&gt;&lt;br/&gt;The image file that will be created: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom\BrutalDoom\Screenshot_Doom_20241118_225328.png&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="whatsThis">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(only for PrBoom+, Woof, DoomRetro and ZDoom family)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Custom sub-directory where the selected engine should save its screenshot image files.&lt;/p&gt;&lt;p&gt;The path can be either absolute or relative to the Data directory of the current engine configured in the Initial Setup dialog.&lt;/p&gt;&lt;p&gt;Example for GZDoom:&lt;br/&gt;Engine's configured data dir: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom&lt;/span&gt;&lt;br/&gt;Content of this line: &lt;span style=&quot; color:#686868;&quot;&gt;BrutalDoom&lt;/span&gt;&lt;br/&gt;The image file that will be created: &lt;span style=&quot; color:#686868;&quot;&gt;C:\Users\Youda\Saved Games\GZDoom\BrutalDoom\Screenshot_Doom_20241118_225328.png&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Red text&lt;/span&gt; means the directory doesn't exist and you should fix it.&lt;br/&gt;&lt;span style=&quot; color:#008000;&quot;&gt;Green text&lt;/span&gt; means the directory doesn't exist, but it will be created on launch.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Screenshot dir &lt;img src=&quot;:/Help.12.png&quot;/&gt;&amp;nbsp;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QCheckBox" name="altScreenshotDirPresetChkBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the name of the currently selected preset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Use preset name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QLineEdit" name="altScreenshotDirLine"/>
+             </item>
+             <item row="3" column="3">
               <widget class="QPushButton" name="altScreenshotDirBtn">
                <property name="minimumSize">
                 <size>
@@ -1631,36 +1698,6 @@
                <property name="icon">
                 <iconset resource="../Resources/Resources.qrc">
                  <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QCheckBox" name="altConfigDirPresetChkBox">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the name of the currently selected preset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>Use preset name</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QCheckBox" name="altSaveDirPresetChkBox">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the name of the currently selected preset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>Use preset name</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QCheckBox" name="altScreenshotDirPresetChkBox">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the name of the currently selected preset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>Use preset name</string>
                </property>
               </widget>
              </item>

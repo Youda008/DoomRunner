@@ -15,7 +15,30 @@
 #include <QRegularExpression>
 #include <QThread>  // sleep
 
-#include <QDebug>
+#if IS_WINDOWS
+	#if QT_VERSION < QT_VERSION_CHECK(6, 6, 0)
+		#include <mutex>
+
+		extern Q_CORE_EXPORT int qt_ntfs_permission_lookup;
+		static std::mutex qt_ntfs_permission_mtx;
+
+		struct NtfsPermissionCheckGuard
+		{
+			NtfsPermissionCheckGuard()
+			{
+				qt_ntfs_permission_mtx.lock();
+				qt_ntfs_permission_lookup = 1;
+			}
+			~NtfsPermissionCheckGuard()
+			{
+				qt_ntfs_permission_mtx.unlock();
+				qt_ntfs_permission_lookup = 0;
+			}
+		};
+	#else
+		using NtfsPermissionCheckGuard = QNtfsPermissionCheckGuard;
+	#endif // QT_VERSION < 6.6
+#endif // IS_WINDOWS
 
 
 //======================================================================================================================
@@ -42,7 +65,7 @@ bool isDirectoryWritable( const QString & dirPath )
 	bool isWritable = false;
 	{
  #if IS_WINDOWS
-		QNtfsPermissionCheckGuard ntfsGuard;
+		NtfsPermissionCheckGuard ntfsGuard;
  #endif
 		QFileInfo dir( dirPath );
 		isWritable = dir.exists() && dir.isWritable();

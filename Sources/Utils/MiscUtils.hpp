@@ -13,6 +13,7 @@
 
 #include "Widgets/ListModel.hpp"  // ReadOnlyListModelItem
 
+#include <QVariant>
 #include <QString>
 #include <QList>
 #include <QColor>
@@ -207,6 +208,15 @@ class PathChecker {
 
 //----------------------------------------------------------------------------------------------------------------------
 // other
+
+inline auto getType( const QVariant & variant )
+{
+ #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+	return variant.type();
+ #else
+	return variant.typeId();
+ #endif
+}
 
 /// Creates a file filter for the QFileDialog::getOpenFileNames.
 QString makeFileFilter( const char * filterName, const QStringList & suffixes );

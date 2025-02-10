@@ -12,6 +12,7 @@
 #include "Utils/EventFilters.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/OSUtils.hpp"  // openFileLocation
+#include "Utils/MiscUtils.hpp"  // getType
 #include "Utils/ErrorHandling.hpp"
 
 #include <QDragEnterEvent>
@@ -206,7 +207,7 @@ void EditableListView::openCurrentFileLocation()
 	}
 
 	auto userData = model()->data( currentIdx, Qt::UserRole );
-	if (userData.typeId() != QMetaType::Type::QString)
+	if (getType( userData ) != QMetaType::Type::QString)  // NOLINT
 	{
 		reportLogicError( this->parentWidget(), "Unsupported model",
 			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "

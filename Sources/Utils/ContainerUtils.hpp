@@ -11,7 +11,7 @@
 
 #include "Essential.hpp"
 
-#include <QtTypes>
+#include <QtGlobal>  // qsizetype
 
 #include <algorithm>
 

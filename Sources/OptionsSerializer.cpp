@@ -9,7 +9,7 @@
 
 #include "CommonTypes.hpp"  // PtrList
 #include "Utils/JsonUtils.hpp"
-#include "Utils/MiscUtils.hpp"  // checkPath, highlightInvalidListItem
+#include "Utils/PathCheckUtils.hpp"  // checkPath, highlightInvalidListItem
 #include "Utils/ErrorHandling.hpp"
 
 #include <QFileInfo>

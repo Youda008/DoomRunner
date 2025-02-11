@@ -29,11 +29,12 @@
 #include "Utils/ContainerUtils.hpp"
 #include "Utils/StringUtils.hpp"
 #include "Utils/FileSystemUtils.hpp"
+#include "Utils/PathCheckUtils.hpp"
 #include "Utils/OSUtils.hpp"
 #include "Utils/ExeReader.hpp"
 #include "Utils/WADReader.hpp"
 #include "Utils/WidgetUtils.hpp"
-#include "Utils/MiscUtils.hpp"  // checkPath, highlightPathIfInvalid
+#include "Utils/MiscUtils.hpp"  // areScreenCoordinatesValid, makeFileFilter, splitCommandLineArguments
 #include "Utils/ErrorHandling.hpp"
 
 // showMapPackDesc

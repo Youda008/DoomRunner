@@ -12,7 +12,8 @@
 
 #include "DoomFiles.hpp"
 #include "Utils/WidgetUtils.hpp"
-#include "Utils/MiscUtils.hpp"  // makeFileFilter, highlightPathIfInvalid
+#include "Utils/PathCheckUtils.hpp"  // highlightPathIfInvalid
+#include "Utils/MiscUtils.hpp"  // makeFileFilter
 #include "Utils/ErrorHandling.hpp"
 
 #include <QString>

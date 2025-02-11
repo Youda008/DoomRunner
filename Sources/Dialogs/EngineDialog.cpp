@@ -9,7 +9,7 @@
 #include "ui_EngineDialog.h"
 
 #include "Utils/FileSystemUtils.hpp"  // getPathRegex
-#include "Utils/MiscUtils.hpp"  // highlightInvalidPath
+#include "Utils/PathCheckUtils.hpp"  // highlightInvalidPath
 #include "Utils/ErrorHandling.hpp"
 
 #include <QDir>

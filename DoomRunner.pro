@@ -61,6 +61,7 @@ HEADERS += \
 	Sources/Utils/LangUtils.hpp \
 	Sources/Utils/MiscUtils.hpp \
 	Sources/Utils/OSUtils.hpp \
+	Sources/Utils/PathCheckUtils.hpp \
 	Sources/Utils/StandardOutput.hpp \
 	Sources/Utils/StringUtils.hpp \
 	Sources/Utils/TimeStats.hpp \
@@ -104,6 +105,7 @@ SOURCES += \
 	Sources/Utils/JsonUtils.cpp \
 	Sources/Utils/MiscUtils.cpp \
 	Sources/Utils/OSUtils.cpp \
+	Sources/Utils/PathCheckUtils.cpp \
 	Sources/Utils/StandardOutput.cpp \
 	Sources/Utils/StringUtils.cpp \
 	Sources/Utils/WADReader.cpp \

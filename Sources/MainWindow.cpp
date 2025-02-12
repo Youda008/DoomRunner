@@ -159,73 +159,87 @@ QString MainWindow::getEngineDefaultScreenshotDir( const EngineInfo * selectedEn
 	return selectedEngine ? selectedEngine->getDefaultScreenshotDir() : emptyString;
 }
 
+// Returns what path style should be used in the final command when specifying custom data directory (e.g. -savedir)
+static PathStyle getPreferableAltDirPathStyle( const PathRebaser & altDirRebaser, const QString & altDirLineText )
+{
+	PathStyle rebaserPathStyle = altDirRebaser.outputPathStyle();
+	PathStyle altDirPathStyle = fs::getPathStyle( altDirLineText );
+	
+	// absolute data dir + absolute dir override -> absolute command line argument   (the only reasonable option)
+	// absolute data dir + relative dir override -> absolute command line argument   (relative wouldn't be intuitive)
+	// relative data dir + absolute dir override -> absolute command line argument   (relative wouldn't be intuitive)
+	// relative data dir + relative dir override -> relative command line argument   (the only reasonable option)
+	return (rebaserPathStyle == PathStyle::Absolute || altDirPathStyle == PathStyle::Absolute)
+	       ? PathStyle::Absolute : PathStyle::Relative;
+}
+
 // Returns the directory where this launcher will search for config files in the current launcher state.
-// Maintains the path style of the configDir configured for the current engine,
-// or uses the globally selected path style if the custom config dir override field is set.
+// The path style is determined by getPreferableAltDirPathStyle().
 QString MainWindow::getActiveConfigDir( const EngineInfo * selectedEngine, const QString & altConfigDirLineText ) const
 {
-	// the path in altConfigDirLine is relative to the engine's config dir by convention, need to rebase it to the current working dir
-	if (!altConfigDirLineText.isEmpty())                                 // if custom config dir is specified
+	if (!altConfigDirLineText.isEmpty())
 	{
-		return altConfigDirRebaser
-		       .rebaseBackAndConvert( altConfigDirLineText );            // then use it
+		// the path in altConfigDirLine is relative to the engine's config dir by convention, need to rebase it to the current working dir
+		return altConfigDirRebaser.rebaseBackAndConvert(
+			altConfigDirLineText, getPreferableAltDirPathStyle( altConfigDirRebaser, altConfigDirLineText )
+		);
 	}
-	else                                                                 // otherwise
+	else
 	{
-		return getEngineDefaultConfigDir( selectedEngine );              // use engine's default config dir
+		return getEngineDefaultConfigDir( selectedEngine );
 	}
 }
 
 // Returns the directory where this launcher and selected engine will search for save files in the current launcher state.
-// Maintains the path style of the dataDir configured for the current engine,
-// or uses the globally selected path style if the custom save dir override field is set.
+// The path style is determined by getPreferableAltDirPathStyle().
 QString MainWindow::getActiveSaveDir(
 	const EngineInfo * selectedEngine, const IWAD * selectedIWAD, const QString & altSaveDirLineText
 ) const
 {
-	// the path in altSaveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	if (!altSaveDirLineText.isEmpty())                                   // if custom save dir is specified
+	if (!altSaveDirLineText.isEmpty())
 	{
-		return altSaveDirRebaser
-		       .rebaseBackAndConvert( altSaveDirLineText );              // then use it
+		// the path in altSaveDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
+		return altSaveDirRebaser.rebaseBackAndConvert(
+			altSaveDirLineText, getPreferableAltDirPathStyle( altSaveDirRebaser, altSaveDirLineText )
+		);
 	}
-	else                                                                 // otherwise
+	else
 	{
-		return getEngineDefaultSaveDir( selectedEngine, selectedIWAD );  // use engine's default save dir
+		return getEngineDefaultSaveDir( selectedEngine, selectedIWAD );
 	}
 }
 
 // Returns the directory where this launcher and selected engine will search for demo files in the current launcher state.
-// Maintains the path style of the dataDir configured for the current engine,
-// or uses the globally selected path style if the custom demo dir override field is set.
+// The path style is determined by getPreferableAltDirPathStyle().
 QString MainWindow::getActiveDemoDir( const EngineInfo * selectedEngine, const QString & altDemoDirLineText ) const
 {
-	// the path in altDemoDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	if (!altDemoDirLineText.isEmpty())                                   // if custom demo dir is specified
+	if (!altDemoDirLineText.isEmpty())
 	{
-		return altDemoDirRebaser
-		       .rebaseBackAndConvert( altDemoDirLineText );              // then use it
+		// the path in altDemoDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
+		return altDemoDirRebaser.rebaseBackAndConvert(
+			altDemoDirLineText, getPreferableAltDirPathStyle( altDemoDirRebaser, altDemoDirLineText )
+		);
 	}
-	else                                                                 // otherwise
+	else
 	{
-		return getEngineDefaultDemoDir( selectedEngine );                // use engine's default demo dir
+		return getEngineDefaultDemoDir( selectedEngine );
 	}
 }
 
 // Returns the directory where the engine will save screenshots under the current launcher options.
-// Maintains the path style of the dataDir configured for the current engine,
-// or uses the globally selected path style if the custom screenshot dir override field is set.
+// The path style is determined by getPreferableAltDirPathStyle().
 QString MainWindow::getActiveScreenshotDir( const EngineInfo * selectedEngine, const QString & altScreenshotDirLineText ) const
 {
-	// the path in altScreenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
-	if (!altScreenshotDirLineText.isEmpty())                             // if custom screenshot dir is specified
+	if (!altScreenshotDirLineText.isEmpty())
 	{
-		return altScreenshotDirRebaser
-		       .rebaseBackAndConvert( altScreenshotDirLineText );        // then use it
+		// the path in altScreenshotDirLine is relative to the engine's data dir by convention, need to rebase it to the current working dir
+		return altScreenshotDirRebaser.rebaseBackAndConvert(
+			altScreenshotDirLineText, getPreferableAltDirPathStyle( altScreenshotDirRebaser, altScreenshotDirLineText )
+		);
 	}
-	else                                                                 // otherwise
+	else
 	{
-		return getEngineDefaultScreenshotDir( selectedEngine );          // use engine's default screenshot dir
+		return getEngineDefaultScreenshotDir( selectedEngine );
 	}
 }
 
@@ -4930,13 +4944,13 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	// some of them are bitchy and won't start if you supply them with unknown command line parameter.
 	if (engine.saveDirParam() != nullptr && !ui->altSaveDirLine->text().isEmpty())
 	{
-		const QString & saveDirPath = activeSaveDir;  // rebased altSaveDirLine
+		const QString & saveDirPath = activeSaveDir;  // rebased altSaveDirLine, keeps the path style of engine's data dir
 		p.checkNotAFile( saveDirPath, "the save dir", {} );
 		cmd.arguments << engine.saveDirParam() << runDirRebaser.makeRebasedCmdPath( saveDirPath );
 	}
 	if (engine.screenshotDirParam() != nullptr && !ui->altScreenshotDirLine->text().isEmpty())
 	{
-		const QString & screenshotDirPath = activeScreenshotDir;  // rebased altScreenshotDirLine
+		const QString & screenshotDirPath = activeScreenshotDir;  // rebased altScreenshotDirLine, keeps the path style of engine's data dir
 		p.checkNotAFile( screenshotDirPath, "the screenshot dir", {} );
 		cmd.arguments << engine.screenshotDirParam() << runDirRebaser.makeRebasedCmdPath( screenshotDirPath );
 	}

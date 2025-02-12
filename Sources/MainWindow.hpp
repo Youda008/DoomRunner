@@ -407,10 +407,10 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	PathRebaser altDemoDirRebaser;         ///< path convertor set up to rebase relative paths for the alternative demo dir field
 	PathRebaser altScreenshotDirRebaser;   ///< path convertor set up to rebase relative paths for the alternative screenshot dir field
 
-	QString activeConfigDir;       ///< directory where this launcher will search for config files in the current launcher state
-	QString activeSaveDir;         ///< directory where this launcher and selected engine will search for save files in the current launcher state
-	QString activeDemoDir;         ///< directory where the launcher and engine will search for demo files in the current launcher state
-	QString activeScreenshotDir;   ///< directory where this launcher will search for screenshot files in the current launcher state
+	QString activeConfigDir;       ///< directory where this launcher will search for config files in the current launcher state, maintains the path style of the engine's data dir
+	QString activeSaveDir;         ///< directory where this launcher and selected engine will search for save files in the current launcher state, maintains the path style of the engine's data dir
+	QString activeDemoDir;         ///< directory where the launcher and engine will search for demo files in the current launcher state, maintains the path style of the engine's data dir
+	QString activeScreenshotDir;   ///< directory where this launcher will search for screenshot files in the current launcher state, maintains the path style of the engine's data dir
 
  private: // user data
 

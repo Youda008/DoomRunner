@@ -73,11 +73,16 @@ bool isDirectoryWritable( const QString & dirPath )
 	return isWritable;
 }
 
+#if IS_WINDOWS
+	#define PATH_BEGINNING "(\\w:)?"
+#else
+	#define PATH_BEGINNING
+#endif
 #define DISALLOWED_PATH_SYMBOLS ":*?\"<>|"
 
 const QRegularExpression & getPathRegex()
 {
-	static const QRegularExpression pathRegex("^[^" DISALLOWED_PATH_SYMBOLS "]*$");
+	static const QRegularExpression pathRegex("^" PATH_BEGINNING "[^" DISALLOWED_PATH_SYMBOLS "]*$");
 	return pathRegex;
 }
 

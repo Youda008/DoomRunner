@@ -128,6 +128,20 @@ inline QString getParentDirName( const QString & entryPath )
 	return QFileInfo( entryPath ).dir().dirName();
 }
 
+inline QString getFileSuffix( const QString & filePath )
+{
+	return QFileInfo( filePath ).suffix();
+}
+
+inline QString ensureFileSuffix( const QString & filePath, const QString & suffix )
+{
+	QString dotAndSuffix = "." + suffix;
+	if (filePath.endsWith( dotAndSuffix ))
+		return filePath;
+	else
+		return filePath + dotAndSuffix;
+}
+
 inline QString replaceFileSuffix( const QString & filePath, const QString & newSuffix )
 {
 	QFileInfo fileInfo( filePath );

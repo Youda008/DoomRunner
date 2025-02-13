@@ -307,6 +307,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void updateLaunchCommand();
 	void executeLaunchCommand();
+	bool makeSureDirExists( const QString & dirPath, QLineEdit * lineEdit = nullptr );
 	int askForExtraPermissions( const EngineInfo & selectedEngine, const QStringList & permissions );
 
  private: // MainWindow-specific utils

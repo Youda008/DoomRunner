@@ -802,7 +802,7 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 					continue;
 
 				if (!PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ))
-					highlightInvalidListItem( engine );
+					highlightListItemAsInvalid( engine );
 
 				opts.engines.append( EngineInfo( std::move(engine) ) );  // populates only Engine fields, leaves other EngineInfo fields empty
 			}
@@ -835,7 +835,7 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 						continue;
 
 					if (!PathChecker::checkFilePath( iwad.path, true, "an IWAD from the saved options", "Please update it in Menu -> Initial Setup." ))
-						highlightInvalidListItem( iwad );
+						highlightListItemAsInvalid( iwad );
 
 					opts.iwads.append( std::move( iwad ) );
 				}

@@ -13,23 +13,40 @@
 #include "Utils/ErrorHandling.hpp"   // reportUserError
 #include "Themes.hpp"                // getCurrentPalette
 
+#include <QString>
 #include <QFileInfo>
 #include <QLineEdit>
+#include <QMessageBox>
 
 
 //----------------------------------------------------------------------------------------------------------------------
 // path highlighting
 
+void highlightPathLineAsInvalid( QLineEdit * lineEdit )
+{
+	wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+}
+
+void highlightPathLineAsToBeCreated( QLineEdit * lineEdit )
+{
+	wdg::setTextColor( lineEdit, themes::getCurrentPalette().toBeCreatedEntryText );
+}
+
+void unhighlightPathLine( QLineEdit * lineEdit )
+{
+	wdg::restoreColors( lineEdit );
+}
+
 bool highlightDirPathIfInvalid( QLineEdit * lineEdit, const QString & path )
 {
 	if (fs::isInvalidDir( path ))
 	{
-		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+		highlightPathLineAsInvalid( lineEdit );
 		return true;
 	}
 	else
 	{
-		wdg::restoreColors( lineEdit );
+		unhighlightPathLine( lineEdit );
 		return false;
 	}
 }
@@ -38,12 +55,12 @@ bool highlightFilePathIfInvalid( QLineEdit * lineEdit, const QString & path )
 {
 	if (fs::isInvalidFile( path ))
 	{
-		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+		highlightPathLineAsInvalid( lineEdit );
 		return true;
 	}
 	else
 	{
-		wdg::restoreColors( lineEdit );
+		unhighlightPathLine( lineEdit );
 		return false;
 	}
 }
@@ -52,12 +69,12 @@ bool highlightDirPathIfFile( QLineEdit * lineEdit, const QString & path )
 {
 	if (fs::isValidFile( path ))
 	{
-		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+		highlightPathLineAsInvalid( lineEdit );
 		return true;
 	}
 	else
 	{
-		wdg::restoreColors( lineEdit );
+		unhighlightPathLine( lineEdit );
 		return false;
 	}
 }
@@ -66,12 +83,12 @@ bool highlightFilePathIfDir( QLineEdit * lineEdit, const QString & path )
 {
 	if (fs::isValidDir( path ))
 	{
-		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+		highlightPathLineAsInvalid( lineEdit );
 		return true;
 	}
 	else
 	{
-		wdg::restoreColors( lineEdit );
+		unhighlightPathLine( lineEdit );
 		return false;
 	}
 }
@@ -80,55 +97,55 @@ bool highlightDirPathIfFileOrCanBeCreated( QLineEdit * lineEdit, const QString &
 {
 	if (path.isEmpty())
 	{
-		wdg::restoreColors( lineEdit );
+		unhighlightPathLine( lineEdit );
 		return false;
 	}
 
 	QFileInfo dir( path );
 	if (!dir.exists())
 	{
-		wdg::setTextColor( lineEdit, themes::getCurrentPalette().toBeCreatedEntryText );
+		highlightPathLineAsToBeCreated( lineEdit );
 		return true;
 	}
 	else if (dir.isFile())
 	{
-		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+		highlightPathLineAsInvalid( lineEdit );
 		return true;
 	}
 	else
 	{
-		wdg::restoreColors( lineEdit );
+		unhighlightPathLine( lineEdit );
 		return false;
 	}
 }
 
-bool highlightFilePathIfInvalidOrCanBeCreated( QLineEdit * lineEdit, const QString & path )
+bool highlightFilePathIfDirOrCanBeCreated( QLineEdit * lineEdit, const QString & path )
 {
 	if (path.isEmpty())
 	{
-		wdg::restoreColors( lineEdit );
+		unhighlightPathLine( lineEdit );
 		return false;
 	}
 
 	QFileInfo file( path );
 	if (!file.exists())
 	{
-		wdg::setTextColor( lineEdit, themes::getCurrentPalette().toBeCreatedEntryText );
+		highlightPathLineAsToBeCreated( lineEdit );
 		return true;
 	}
 	else if (file.isDir())
 	{
-		wdg::setTextColor( lineEdit, themes::getCurrentPalette().invalidEntryText );
+		highlightPathLineAsInvalid( lineEdit );
 		return true;
 	}
 	else
 	{
-		wdg::restoreColors( lineEdit );
+		unhighlightPathLine( lineEdit );
 		return false;
 	}
 }
 
-void highlightInvalidListItem( const ReadOnlyListModelItem & item )
+void highlightListItemAsInvalid( const ReadOnlyListModelItem & item )
 {
 	item.textColor = themes::getCurrentPalette().invalidEntryText;
 }
@@ -152,7 +169,7 @@ void unmarkItemAsDefault( const ReadOnlyListModelItem & item )
 //----------------------------------------------------------------------------------------------------------------------
 // PathChecker
 
-void PathChecker::_maybeShowError( bool & errorMessageDisplayed, QWidget * parent, QString title, QString message )
+void PathChecker::s_maybeShowError( bool & errorMessageDisplayed, QWidget * parent, cStrRef title, cStrRef message )
 {
 	if (!errorMessageDisplayed)
 	{
@@ -161,23 +178,23 @@ void PathChecker::_maybeShowError( bool & errorMessageDisplayed, QWidget * paren
 	}
 }
 
-bool PathChecker::_checkPath(
-	const QString & path, EntryType expectedType, bool & errorMessageDisplayed,
-	QWidget * parent, QString subjectName, QString errorPostscript
+bool PathChecker::s_checkPath(
+	cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+	cStrRef subjectName, cStrRef errorPostscript
 ){
 	if (path.isEmpty())
 	{
-		_maybeShowError( errorMessageDisplayed, parent, "Path is empty",
+		s_maybeShowError( errorMessageDisplayed, parent, "Path is empty",
 			"Path of "%subjectName%" is empty. "%errorPostscript );
 		return false;
 	}
 
-	return _checkNonEmptyPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	return s_checkNonEmptyPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
 }
 
-bool PathChecker::_checkNonEmptyPath(
-	const QString & path, EntryType expectedType, bool & errorMessageDisplayed,
-	QWidget * parent, QString subjectName, QString errorPostscript
+bool PathChecker::s_checkNonEmptyPath(
+	cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+	cStrRef subjectName, cStrRef errorPostscript
 ){
 	if (!fs::exists( path ))
 	{
@@ -186,30 +203,68 @@ bool PathChecker::_checkNonEmptyPath(
 			corresponds( EntryType::Dir,  "Directory" ),
 			corresponds( EntryType::Both, "File or directory" )
 		);
-		_maybeShowError( errorMessageDisplayed, parent, fileOrDir%" no longer exists",
+		s_maybeShowError( errorMessageDisplayed, parent, fileOrDir%" no longer exists",
 			capitalize(subjectName)%" ("%path%") no longer exists. "%errorPostscript );
 		return false;
 	}
 
-	return _checkCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	return s_checkExistingPathForCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
 }
 
-bool PathChecker::_checkCollision(
-	const QString & path, EntryType expectedType, bool & errorMessageDisplayed,
-	QWidget * parent, QString subjectName, QString errorPostscript
+bool PathChecker::s_checkCollision(
+	cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+	cStrRef subjectName, cStrRef errorPostscript
+){
+	if (path.isEmpty() || !fs::exists( path ))
+	{
+		return true;  // here we only care if the path collides with something, everything else is ok
+	}
+
+	return s_checkExistingPathForCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+}
+
+bool PathChecker::s_checkExistingPathForCollision(
+	cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+	cStrRef subjectName, cStrRef errorPostscript
 ){
 	QFileInfo entry( path );
 	if (expectedType == EntryType::File && !entry.isFile())
 	{
-		_maybeShowError( errorMessageDisplayed, parent, "Path is a directory",
-			capitalize(subjectName)%" ("%path%") is a directory, but it should be a file. "%errorPostscript );
+		s_maybeShowError( errorMessageDisplayed, parent, "Path is a directory",
+			capitalize(subjectName)%" ("%path%") is a directory, but a file is expected. "%errorPostscript );
 		return false;
 	}
 	if (expectedType == EntryType::Dir && !entry.isDir())
 	{
-		_maybeShowError( errorMessageDisplayed, parent, "Path is a file",
-			capitalize(subjectName)%" ("%path%") is a file, but it should be a directory. "%errorPostscript );
+		s_maybeShowError( errorMessageDisplayed, parent, "Path is a file",
+			capitalize(subjectName)%" ("%path%") is a file, but a directory is expected. "%errorPostscript );
 		return false;
+	}
+	return true;
+}
+
+bool PathChecker::s_checkOverwrite(
+	cStrRef path, bool & errorMessageDisplayed, QWidget * parent,
+	cStrRef subjectName, cStrRef errorPostscript
+){
+	QFileInfo entry( path );
+	if (entry.exists( path ))
+	{
+		if (!entry.isFile())
+		{
+			s_maybeShowError( errorMessageDisplayed, parent, "Path is a directory",
+				capitalize(subjectName)%" ("%path%") is a directory, but a file is expected. "%errorPostscript );
+			return false;
+		}
+		else if (!errorMessageDisplayed)
+		{
+			auto answer = QMessageBox::question( parent, "Overwrite existing file",
+				capitalize(subjectName)%" ("%path%") already exists. Do you want to overwrite it?",
+				QMessageBox::Yes | QMessageBox::No
+			);
+			errorMessageDisplayed = (answer == QMessageBox::No);
+			return answer == QMessageBox::Yes;
+		}
 	}
 	return true;
 }

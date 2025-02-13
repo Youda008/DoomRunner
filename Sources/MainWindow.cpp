@@ -164,7 +164,7 @@ static PathStyle getPreferableAltDirPathStyle( const PathRebaser & altDirRebaser
 {
 	PathStyle rebaserPathStyle = altDirRebaser.outputPathStyle();
 	PathStyle altDirPathStyle = fs::getPathStyle( altDirLineText );
-	
+
 	// absolute data dir + absolute dir override -> absolute command line argument   (the only reasonable option)
 	// absolute data dir + relative dir override -> absolute command line argument   (relative wouldn't be intuitive)
 	// relative data dir + absolute dir override -> absolute command line argument   (relative wouldn't be intuitive)
@@ -1696,7 +1696,7 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 					"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists. "
 					"Please update its path in Menu -> Initial Setup, or select another one."
 				);
-				highlightInvalidListItem( engineModel[ engineIdx ] );
+				highlightListItemAsInvalid( engineModel[ engineIdx ] );
 			}
 		}
 		else
@@ -1779,7 +1779,7 @@ void MainWindow::restoreSelectedIWAD( Preset & preset )
 					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
 					"Please select another one."
 				);
-				highlightInvalidListItem( iwadModel[ iwadIdx ] );
+				highlightListItemAsInvalid( iwadModel[ iwadIdx ] );
 			}
 		}
 		else
@@ -1863,7 +1863,7 @@ void MainWindow::restoreSelectedMods( Preset & preset )
 			// Let's just highlight it now, we will show warning when the user tries to launch it.
 			//reportUserError( this, "Mod no longer exists",
 			//	"A mod file \""%mod.path%"\" from this preset no longer exists. Please update it." );
-			highlightInvalidListItem( modModel.last() );
+			highlightListItemAsInvalid( modModel.last() );
 		}
 	}
 	modModel.finishCompleteUpdate();
@@ -2386,7 +2386,7 @@ void MainWindow::cloneCurrentEngineConfigFile()
 	}
 
 	QString oldConfigPath = oldConfig.filePath();
-	QString newConfigPath = configDir.filePath( dialog.newConfigName + '.' + oldConfig.suffix() );
+	QString newConfigPath = configDir.filePath( fs::ensureFileSuffix( dialog.newConfigName, oldConfig.suffix() ) );
 	if (!configDir.exists() && !configDir.mkdir("."))
 	{
 		reportRuntimeError( this, "Error creating directory", "Couldn't create directory \""%configDir.path()%"\". Check permissions." );
@@ -4679,7 +4679,6 @@ void MainWindow::exportPresetToScript()
 		reportUserError( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
-
 	if (!selectedEngine)
 	{
 		reportUserError( this, "No engine selected", "No Doom engine is selected." );
@@ -4739,7 +4738,6 @@ void MainWindow::exportPresetToShortcut()
 		reportUserError( this, "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
-
 	if (!selectedEngine)
 	{
 		reportUserError( this, "No engine selected", "No Doom engine is selected." );
@@ -4945,13 +4943,13 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	if (engine.saveDirParam() != nullptr && !ui->altSaveDirLine->text().isEmpty())
 	{
 		const QString & saveDirPath = activeSaveDir;  // rebased altSaveDirLine, keeps the path style of engine's data dir
-		p.checkNotAFile( saveDirPath, "the save dir", {} );
+		p.checkLineDirPath( saveDirPath, ui->altSaveDirLine, "the save dir", {} );
 		cmd.arguments << engine.saveDirParam() << runDirRebaser.makeRebasedCmdPath( saveDirPath );
 	}
 	if (engine.screenshotDirParam() != nullptr && !ui->altScreenshotDirLine->text().isEmpty())
 	{
 		const QString & screenshotDirPath = activeScreenshotDir;  // rebased altScreenshotDirLine, keeps the path style of engine's data dir
-		p.checkNotAFile( screenshotDirPath, "the screenshot dir", {} );
+		p.checkLineDirPath( screenshotDirPath, ui->altScreenshotDirLine, "the screenshot dir", {} );
 		cmd.arguments << engine.screenshotDirParam() << runDirRebaser.makeRebasedCmdPath( screenshotDirPath );
 	}
 
@@ -4977,8 +4975,9 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	{
 		// if demo dir is empty (demoDirLine is empty and engine.dataDir is not set), then the demoFileLine_record will be used as is
 		const QString & demoDir = activeDemoDir;
-		QString demoFileName = ui->demoFileLine_record->text();
+		QString demoFileName = fs::ensureFileSuffix( ui->demoFileLine_record->text(), doom::demoFileSuffix );
 		QString demoFilePath = fs::getPathFromFileName( demoDir, demoFileName );
+		p.checkOverwrite( demoFilePath, "the specified demo file", "Please select another one." );
 		cmd.arguments << "-record" << runDirRebaser.makeRebasedCmdPath( demoFilePath );
 		cmd.arguments << engine.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
@@ -4988,7 +4987,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		const QString & demoDir = activeDemoDir;
 		QString demoFileName = ui->demoFileCmbBox_replay->currentText();
 		QString demoFilePath = fs::getPathFromFileName( demoDir, demoFileName );
-		p.checkFilePath( demoFilePath, "the selected demo", "Please select another one." );
+		p.checkFilePath( demoFilePath, "the selected demo file", "Please select another one." );
 		cmd.arguments << "-playdemo" << runDirRebaser.makeRebasedCmdPath( demoFilePath );
 	}
 	else if (launchMode == ResumeDemo
@@ -4996,10 +4995,11 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	{
 		const QString & demoDir = activeDemoDir;  // demo dir cannot be empty, otherwise the demoFileCmbBox_resume would be empty
 		QString origDemoPath = fs::getPathFromFileName( demoDir, ui->demoFileCmbBox_resume->currentText() );
-		QString newDemoPath = fs::getPathFromFileName( demoDir, ui->demoFileLine_resume->text() );
-		p.checkFilePath( origDemoPath, "the selected demo", "Please select another one." );
+		QString destDemoPath = fs::getPathFromFileName( demoDir, fs::ensureFileSuffix( ui->demoFileLine_resume->text(), doom::demoFileSuffix ) );
+		p.checkFilePath( origDemoPath, "the original demo file", "Please select another one." );
+		p.checkOverwrite( destDemoPath, "the destination demo file", "Please select another one." );
 		cmd.arguments << "-recordfromto"
-			<< runDirRebaser.makeRebasedCmdPath( origDemoPath ) << runDirRebaser.makeRebasedCmdPath( newDemoPath );
+			<< runDirRebaser.makeRebasedCmdPath( origDemoPath ) << runDirRebaser.makeRebasedCmdPath( destDemoPath );
 	}
 
 	//-- gameplay and compatibility options ----------------------------------------
@@ -5188,6 +5188,26 @@ void MainWindow::updateLaunchCommand()
 	}
 }
 
+bool MainWindow::makeSureDirExists( const QString & dirPath, QLineEdit * dirLine )
+{
+	if (dirPath.isEmpty())
+		return true;  // nothing to create
+
+	bool dirExists = fs::createDirIfDoesntExist( dirPath );
+	if (!dirExists)
+	{
+		highlightPathLineAsInvalid( dirLine );
+		reportRuntimeError(
+			this, "Error creating directory", "Failed to create directory \""%dirPath%"\". Check permissions."
+		);
+	}
+	else if (dirLine)
+	{
+		unhighlightPathLine( dirLine );
+	}
+	return dirExists;
+}
+
 int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const QStringList & permissions )
 {
 	auto engineName = fs::getFileNameFromPath( selectedEngine.executablePath );
@@ -5212,6 +5232,11 @@ int MainWindow::askForExtraPermissions( const EngineInfo & selectedEngine, const
 
 void MainWindow::executeLaunchCommand()
 {
+	if (!selectedPreset)
+	{
+		reportUserError( this, "No preset selected", "Select a preset from the preset list." );
+		return;
+	}
 	if (!selectedEngine)
 	{
 		reportUserError( this, "No engine selected", "No Doom engine is selected." );
@@ -5220,6 +5245,16 @@ void MainWindow::executeLaunchCommand()
 
 	QString currentWorkingDir = pathConvertor.workingDir().path();
 	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
+
+	// Make sure the alternative dirs exist, because engine may not create it if some of the file paths point there.
+	const AlternativePaths & altPaths = selectedPreset->altPaths;
+	if ((!altPaths.configDir.isEmpty() && !makeSureDirExists( activeConfigDir, ui->altConfigDirLine ))
+	 || (!altPaths.saveDir.isEmpty() && !makeSureDirExists( activeSaveDir, ui->altSaveDirLine ))
+	 || (!altPaths.demoDir.isEmpty() && !makeSureDirExists( activeDemoDir, ui->altDemoDirLine ))
+	 || (!altPaths.screenshotDir.isEmpty() && !makeSureDirExists( activeScreenshotDir, ui->altScreenshotDirLine )))
+	{
+		return;
+	}
 
 	// Re-run the command construction, but display error message and abort when there is invalid path.
 	// - The engine must be launched using absolute path, because some engines cannot handle being started
@@ -5239,8 +5274,6 @@ void MainWindow::executeLaunchCommand()
 		return;  // errors are already shown during the generation
 	}
 
-	logDebug().quote() << cmd.executable << ' ' << cmd.arguments;
-
 	// If extra permissions are needed to run the engine inside its sandbox environment, better ask the user.
 	if (settings.askForSandboxPermissions && !cmd.extraPermissions.isEmpty())
 	{
@@ -5251,14 +5284,7 @@ void MainWindow::executeLaunchCommand()
 		}
 	}
 
-	// Make sure the alternative save dir exists, because engine will not create it if demo file path points there.
-	const QString & saveDirPath = activeSaveDir;
-	bool saveDirExists = fs::createDirIfDoesntExist( saveDirPath );
-	if (!saveDirExists)
-	{
-		reportRuntimeError( this, "Error creating directory", "Failed to create directory \""%saveDirPath%"\". Check permissions." );
-		// we can continue without this directory, it will just not save demos
-	}
+	logDebug().quote() << cmd.executable << ' ' << cmd.arguments;
 
 	// We need to start the process with the working dir set to the engine's dir,
 	// because some engines search for their own files in the working dir and would fail if started from elsewhere.
@@ -5267,8 +5293,7 @@ void MainWindow::executeLaunchCommand()
 
 	// merge optional environment variables defined globally and defined for this preset
 	EnvVars envVars = globalOpts.envVars;
-	if (selectedPreset)
-		envVars += selectedPreset->envVars;
+	envVars += selectedPreset->envVars;
 
 	if (settings.showEngineOutput)
 	{

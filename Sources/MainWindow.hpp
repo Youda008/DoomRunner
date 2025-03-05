@@ -353,6 +353,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	static bool shouldEnableAltConfigDir( const EngineInfo * selectedEngine, bool usePresetName );
 	static bool shouldEnableAltSaveDir( const EngineInfo * selectedEngine, bool usePresetName );
 	static bool shouldEnableAltScreenshotDir( const EngineInfo * selectedEngine, bool usePresetName );
+	static bool shouldEnableAllowCheats(const EngineInfo * selectedEngine);
 
 	LaunchMode getLaunchModeFromUI() const;
 

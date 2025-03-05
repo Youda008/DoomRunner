@@ -573,6 +573,11 @@ bool MainWindow::shouldEnableAltScreenshotDir( const EngineInfo * selectedEngine
 	return !usePresetName && selectedEngine && selectedEngine->screenshotDirParam();
 }
 
+bool MainWindow::shouldEnableAllowCheats(const EngineInfo * selectedEngine)
+{
+    return selectedEngine && selectedEngine->name.contains("ZDoom", Qt::CaseInsensitive);
+}
+
 // disabling and clearing widgets
 
 [[maybe_unused]] static void toggleAndUncheck( QGroupBox * widget, bool enabled )
@@ -2661,6 +2666,7 @@ void MainWindow::toggleAndClearEngineDependentWidgets( const EngineInfo * engine
 	ui->engineDirBtn->setEnabled( shouldEnableEngineDirBtn( engine ) );
 	toggleAndDeselect( ui->configCmbBox, shouldEnableConfigCmbBox( engine ) );
 	ui->configCloneBtn->setEnabled( shouldEnableConfigCloneBtn( engine ) );
+	ui->allowCheatsChkBox->setEnabled( shouldEnableAllowCheats( engine ) );
 
 	LaunchMode mode = getLaunchModeFromUI();
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
@@ -3416,6 +3422,8 @@ void MainWindow::toggleOptionsSubwidgets( LaunchMode mode )
 	ui->pistolStartChkBox->setEnabled( enableBasicGameplayOptions );
 
 	const EngineInfo * selectedEngine = getSelectedEngine();
+	ui->allowCheatsChkBox->setEnabled( shouldEnableAllowCheats( selectedEngine ) );
+
 	ui->gameOptsBtn->setEnabled( shouldEnableGameOptsBtn( mode, selectedEngine ) );
 	ui->compatOptsBtn->setEnabled( shouldEnableCompatOptsBtn( mode, selectedEngine ) );
 	bool enableCompatModeSelector = shouldEnableCompatModeCmbBox( mode, selectedEngine );

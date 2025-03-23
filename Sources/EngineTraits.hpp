@@ -84,6 +84,8 @@ class EngineTraits {
 	// pre-calculated traits specific only to this particular engine
 	QString _configFileName;
 	QString _commonSaveSubdir;  ///< common part of the save sub-directory
+	QStringList _allowCheatsArgs;
+	const char * _pistolStartOption = nullptr;
 	const char * _screenshotDirParam = nullptr;
 
  public:
@@ -176,6 +178,9 @@ class EngineTraits {
 	/// Whether the engine needs -stdout option to send its output to stdout where it can be read by this launcher.
 	bool needsStdoutParam() const                  { assert( hasFamily() ); return _family == EngineFamily::ZDoom && IS_WINDOWS; }
 
+	const auto & allowCheatsArgs() const           { assert( isInitialized() ); return _allowCheatsArgs; }
+	const char * pistolStartOption() const         { assert( isInitialized() ); return _pistolStartOption; }
+
 	bool hasDetailedGameOptions() const            { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
 	bool hasDetailedCompatOptions() const          { assert( hasFamily() ); return _family == EngineFamily::ZDoom; }
 	bool hasMultiplayer() const                    { assert( _familyTraits ); return _familyTraits->multJoinParam != nullptr; }
@@ -218,6 +223,8 @@ class EngineTraits {
 
 	QString getCommonSaveSubdir() const;
 	QString getDefaultConfigFileName() const;
+	QStringList getAllowCheatsArgs() const;
+	const char * getPistolStartOption() const;
 	const char * getScreenshotDirParam() const;
 
 	QString makeCmdSaveFilePath(

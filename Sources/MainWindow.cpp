@@ -522,6 +522,18 @@ bool MainWindow::shouldEnableSkillSelector( LaunchMode mode )
 	return isDirectLaunch( mode );
 }
 
+bool MainWindow::shouldEnablePistolStart( LaunchMode mode, const EngineInfo * selectedEngine )
+{
+	return (isDirectLaunch( mode ) || mode == Default)
+	    && (selectedEngine && selectedEngine->pistolStartOption() != nullptr);
+}
+
+bool MainWindow::shouldEnableAllowCheats( LaunchMode mode, const EngineInfo * selectedEngine )
+{
+    return (isDirectLaunch( mode ) || mode == Default)
+	    && (selectedEngine && !selectedEngine->allowCheatsArgs().isEmpty());
+}
+
 bool MainWindow::shouldEnableGameOptsBtn( LaunchMode mode, const EngineInfo * selectedEngine )
 {
 	return (isDirectLaunch( mode ) || mode == Default)
@@ -2669,6 +2681,8 @@ void MainWindow::toggleAndClearEngineDependentWidgets( const EngineInfo * engine
 	bool multEnabled = ui->multiplayerGrpBox->isChecked();
 	int multRole = ui->multRoleCmbBox->currentIndex();
 
+	ui->pistolStartChkBox->setEnabled( shouldEnablePistolStart( mode, engine ) );
+	ui->allowCheatsChkBox->setEnabled( shouldEnableAllowCheats( mode, engine ) );
 	ui->gameOptsBtn->setEnabled( shouldEnableGameOptsBtn( mode, engine ) );
 	ui->compatOptsBtn->setEnabled( shouldEnableCompatOptsBtn( mode, engine ) );
 	bool enableCompatModeSelector = shouldEnableCompatModeCmbBox( mode, engine );
@@ -3405,7 +3419,9 @@ void MainWindow::toggleOptionsSubwidgets( LaunchMode mode )
 	ui->noMonstersChkBox->setEnabled( enableBasicGameplayOptions );
 	ui->fastMonstersChkBox->setEnabled( enableBasicGameplayOptions );
 	ui->monstersRespawnChkBox->setEnabled( enableBasicGameplayOptions );
-	ui->pistolStartChkBox->setEnabled( enableBasicGameplayOptions );
+
+	ui->pistolStartChkBox->setEnabled( shouldEnablePistolStart( mode, selectedEngine ) );
+	ui->allowCheatsChkBox->setEnabled( shouldEnableAllowCheats( mode, selectedEngine ) );
 
 	ui->gameOptsBtn->setEnabled( shouldEnableGameOptsBtn( mode, selectedEngine ) );
 	ui->compatOptsBtn->setEnabled( shouldEnableCompatOptsBtn( mode, selectedEngine ) );
@@ -5005,6 +5021,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	}
 
 	//-- gameplay and compatibility options ----------------------------------------
+	// These widgets are enabled only if the corresponding command line options are supported by the engine.
 
 	const GameplayOptions & activeGameOpts = activeGameplayOptions();
 	if (ui->skillCmbBox->isEnabled())
@@ -5016,9 +5033,9 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	if (ui->monstersRespawnChkBox->isEnabled() && ui->monstersRespawnChkBox->isChecked())
 		cmd.arguments << "-respawn";
 	if (ui->pistolStartChkBox->isEnabled() && ui->pistolStartChkBox->isChecked())
-		cmd.arguments << "-pistolstart";
+		cmd.arguments << engine.pistolStartOption();
 	if (ui->allowCheatsChkBox->isEnabled() && ui->allowCheatsChkBox->isChecked())
-		cmd.arguments << "+sv_cheats" << "1";
+		cmd.arguments << engine.allowCheatsArgs();
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags1 != 0)
 		cmd.arguments << "+dmflags" << QString::number( activeGameOpts.dmflags1 );
 	if (ui->gameOptsBtn->isEnabled() && activeGameOpts.dmflags2 != 0)

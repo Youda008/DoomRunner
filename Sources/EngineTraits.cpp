@@ -314,6 +314,8 @@ void EngineTraits::setFamilyTraits( EngineFamily family )
 	// update all engine traits that might depend on family
 	_commonSaveSubdir = getCommonSaveSubdir();  // pre-compute the common subdirectory for save files, so that we don't have to repeat it on every IWAD change
 	_configFileName = getDefaultConfigFileName();
+	_pistolStartOption = getPistolStartOption();
+	_allowCheatsArgs = getAllowCheatsArgs();
 	_screenshotDirParam = getScreenshotDirParam();
 }
 
@@ -658,6 +660,24 @@ const char * EngineTraits::saveFileSuffix() const
 		return "save";  // ffs!
 	else
 		return _familyTraits->saveFileSuffix;
+}
+
+QStringList EngineTraits::getAllowCheatsArgs() const
+{
+	if (_family == EngineFamily::ZDoom)
+		return { "+sv_cheats", "1" };
+	else
+		return {};
+}
+
+const char * EngineTraits::getPistolStartOption() const
+{
+	// https://doomwiki.org/wiki/Source_port_parameters#-pistolstart
+	const QString & name = normalizedName();
+	if (_family == EngineFamily::ChocolateDoom || _family == EngineFamily::PrBoom || name == "woof")
+		return "-pistolstart";
+	else
+		return nullptr;
 }
 
 const char * EngineTraits::getScreenshotDirParam() const

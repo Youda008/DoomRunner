@@ -76,7 +76,7 @@ SetupDialog::SetupDialog(
 	ui->iwadDirLine->setText( iwadSettings.dir );
 	ui->iwadSubdirs->setChecked( iwadSettings.searchSubdirs );
 	ui->mapDirLine->setText( mapSettings.dir );
-	ui->absolutePathsChkBox->setChecked( settings.pathStyle == PathStyle::Absolute );
+	ui->absolutePathsChkBox->setChecked( settings.pathStyle.isAbsolute() );
 	ui->showEngineOutputChkBox->setChecked( settings.showEngineOutput );
 	ui->closeOnLaunchChkBox->setChecked( settings.closeOnLaunch );
 
@@ -578,7 +578,7 @@ void SetupDialog::onLightSchemeChosen()
 
 void SetupDialog::onAbsolutePathsToggled( bool checked )
 {
-	settings.pathStyle = checked ? PathStyle::Absolute : PathStyle::Relative;
+	settings.pathStyle.toggleAbsolute( checked );
 	pathConvertor.setPathStyle( settings.pathStyle );
 
 	for (Engine & engine : engineModel)

@@ -162,15 +162,14 @@ QString MainWindow::getEngineDefaultScreenshotDir( const EngineInfo * selectedEn
 // Returns what path style should be used in the final command when specifying custom data directory (e.g. -savedir)
 static PathStyle getPreferableAltDirPathStyle( const PathRebaser & altDirRebaser, const QString & altDirLineText )
 {
-	PathStyle rebaserPathStyle = altDirRebaser.outputPathStyle();
+	PathStyle rebaserPathStyle = altDirRebaser.requiredPathStyle() ? *altDirRebaser.requiredPathStyle() : defaultPathStyle;
 	PathStyle altDirPathStyle = fs::getPathStyle( altDirLineText );
 
 	// absolute data dir + absolute dir override -> absolute command line argument   (the only reasonable option)
 	// absolute data dir + relative dir override -> absolute command line argument   (relative wouldn't be intuitive)
 	// relative data dir + absolute dir override -> absolute command line argument   (relative wouldn't be intuitive)
 	// relative data dir + relative dir override -> relative command line argument   (the only reasonable option)
-	return (rebaserPathStyle == PathStyle::Absolute || altDirPathStyle == PathStyle::Absolute)
-	       ? PathStyle::Absolute : PathStyle::Relative;
+	return (rebaserPathStyle.isAbsolute() || altDirPathStyle.isAbsolute()) ? PathStyle::Absolute : PathStyle::Relative;
 }
 
 // Returns the directory where this launcher will search for config files in the current launcher state.
@@ -665,10 +664,10 @@ MainWindow::MainWindow()
 		this, PathConvertor( defaultPathStyle, fs::currentDir )
 	),
 	// rebase to current working dir (don't rebase at all) until engine is selected
-	altConfigDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
-	altSaveDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
-	altDemoDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
-	altScreenshotDirRebaser( fs::currentDir, fs::currentDir, defaultPathStyle ),
+	altConfigDirRebaser( fs::currentDir, fs::currentDir ),
+	altSaveDirRebaser( fs::currentDir, fs::currentDir ),
+	altDemoDirRebaser( fs::currentDir, fs::currentDir ),
+	altScreenshotDirRebaser( fs::currentDir, fs::currentDir ),
 	engineModel(
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
@@ -2631,10 +2630,10 @@ void MainWindow::onEngineSelected( int index )
 	QString engineDefaultDataDir = selectedEngine ? selectedEngine->dataDir : emptyString;
 	// setup rebasers for alternative data dirs, but keep the path style of the configured dirs
 	// use the same parent dir for all alt dirs, so that everything related to a preset is together in a single dir
-	altConfigDirRebaser.setTargetDirAndOutputStyle( engineDefaultDataDir );
-	altSaveDirRebaser.setTargetDirAndOutputStyle( engineDefaultDataDir );
-	altDemoDirRebaser.setTargetDirAndOutputStyle( engineDefaultDataDir );
-	altScreenshotDirRebaser.setTargetDirAndOutputStyle( engineDefaultDataDir );
+	altConfigDirRebaser.setTargetDirAndPathStyle( engineDefaultDataDir );
+	altSaveDirRebaser.setTargetDirAndPathStyle( engineDefaultDataDir );
+	altDemoDirRebaser.setTargetDirAndPathStyle( engineDefaultDataDir );
+	altScreenshotDirRebaser.setTargetDirAndPathStyle( engineDefaultDataDir );
 
 	// update active config/data dirs
 	activeConfigDir = getActiveConfigDir( selectedEngine, ui->altConfigDirLine->text() );
@@ -3934,7 +3933,7 @@ void MainWindow::onAltConfigDirChanged( const QString & rebasedDir )
 {
 	// the path in altConfigDirLine is relative to the engine's config dir by convention,
 	// need to make it absolute or rebase it to the current working dir
-	QString absDirPath = altConfigDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
+	QString dirPath = altConfigDirRebaser.rebaseBackAndConvert( sanitizeInputPath( rebasedDir ) );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsConfigDir)
@@ -3948,7 +3947,7 @@ void MainWindow::onAltConfigDirChanged( const QString & rebasedDir )
 		storageModified = STORE_ALT_PATH( .configDir, rebasedDir );
 	}
 
-	highlightDirPathIfFileOrCanBeCreated( ui->altConfigDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->altConfigDirLine, dirPath );  // non-existing dir is ok becase it will be created automatically
 
 	// update active dir
 	activeConfigDir = getActiveConfigDir( selectedEngine, rebasedDir );
@@ -3963,7 +3962,7 @@ void MainWindow::onAltSaveDirChanged( const QString & rebasedDir )
 {
 	// the path in altSaveDirLine is relative to the engine's data dir by convention,
 	// need to make it absolute or rebase it to the current working dir
-	QString absDirPath = altSaveDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
+	QString dirPath = altSaveDirRebaser.rebaseBackAndConvert( sanitizeInputPath( rebasedDir ) );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsSaveDir)
@@ -3977,7 +3976,7 @@ void MainWindow::onAltSaveDirChanged( const QString & rebasedDir )
 		storageModified = STORE_ALT_PATH( .saveDir, rebasedDir );
 	}
 
-	highlightDirPathIfFileOrCanBeCreated( ui->altSaveDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->altSaveDirLine, dirPath );  // non-existing dir is ok becase it will be created automatically
 
 	// update active dir
 	activeSaveDir = getActiveSaveDir( selectedEngine, selectedIWAD, rebasedDir );
@@ -3992,7 +3991,7 @@ void MainWindow::onAltDemoDirChanged( const QString & rebasedDir )
 {
 	// the path in altDemoDirLine is relative to the engine's data dir by convention,
 	// need to make it absolute or rebase it to the current working dir
-	QString absDirPath = altDemoDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
+	QString dirPath = altDemoDirRebaser.rebaseBackAndConvert( sanitizeInputPath( rebasedDir ) );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsDemoDir)
@@ -4006,7 +4005,7 @@ void MainWindow::onAltDemoDirChanged( const QString & rebasedDir )
 		storageModified = STORE_ALT_PATH( .demoDir, rebasedDir );
 	}
 
-	highlightDirPathIfFileOrCanBeCreated( ui->altDemoDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->altDemoDirLine, dirPath );  // non-existing dir is ok becase it will be created automatically
 
 	// update active dir
 	activeDemoDir = getActiveDemoDir( selectedEngine, rebasedDir );
@@ -4021,7 +4020,7 @@ void MainWindow::onAltScreenshotDirChanged( const QString & rebasedDir )
 {
 	// the path in altScreenshotDirLine is relative to the engine's data dir by convention,
 	// need to make it absolute or rebase it to the current working dir
-	QString absDirPath = altScreenshotDirRebaser.rebaseBackAndMakeAbsolute( sanitizeInputPath( rebasedDir ) );
+	QString dirPath = altScreenshotDirRebaser.rebaseBackAndConvert( sanitizeInputPath( rebasedDir ) );
 
 	bool storageModified = false;
 	if (globalOpts.usePresetNameAsScreenshotDir)
@@ -4035,7 +4034,7 @@ void MainWindow::onAltScreenshotDirChanged( const QString & rebasedDir )
 		storageModified = STORE_ALT_PATH( .screenshotDir, rebasedDir );
 	}
 
-	highlightDirPathIfFileOrCanBeCreated( ui->altScreenshotDirLine, absDirPath );  // non-existing dir is ok becase it will be created automatically
+	highlightDirPathIfFileOrCanBeCreated( ui->altScreenshotDirLine, dirPath );  // non-existing dir is ok becase it will be created automatically
 
 	// update active dir
 	activeScreenshotDir = getActiveScreenshotDir( selectedEngine, rebasedDir );
@@ -4824,10 +4823,11 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	const QString engineExeDir = fs::getAbsoluteParentDir( engine.executablePath );
 
 	// The stored engine path is relative to DoomRunner's directory, but we need it relative to runnersWorkingDir.
-	PathRebaser runnersDirRebaser( currentWorkingDir, opts.runnersWorkingDir, opts.exePathStyle, opts.quotePaths );
+	PathRebaser runnersDirRebaser( currentWorkingDir, opts.runnersWorkingDir, opts.quotePaths );
+	runnersDirRebaser.setRequiredPathStyle( opts.exePathStyle );
 	// All stored paths are relative to DoomRunner's directory, but we need them relative to to the engine's executable
 	// directory, because the engine must be started with the working directory set to its executable directory.
-	PathRebaser runDirRebaser( currentWorkingDir, engineExeDir, opts.exePathStyle /*not used*/, opts.quotePaths );
+	PathRebaser runDirRebaser( currentWorkingDir, engineExeDir, opts.quotePaths );
 	// Checks if the required files or directories exist and displays error message if requested.
 	PathChecker p( this, opts.verifyPaths );
 

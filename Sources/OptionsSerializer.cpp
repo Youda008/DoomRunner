@@ -627,7 +627,7 @@ static void deserialize( const JsonObjectCtx & settingsJs, StorageSettings & set
 
 static void serialize( QJsonObject & settingsJs, const LauncherSettings & settings )
 {
-	settingsJs["use_absolute_paths"] = settings.pathStyle == PathStyle::Absolute;
+	settingsJs["use_absolute_paths"] = settings.pathStyle.isAbsolute();
 	settingsJs["show_engine_output"] = settings.showEngineOutput;
 	settingsJs["close_on_launch"] = settings.closeOnLaunch;
 	settingsJs["close_output_on_success"] = settings.closeOutputOnSuccess;
@@ -639,8 +639,7 @@ static void serialize( QJsonObject & settingsJs, const LauncherSettings & settin
 
 static void deserialize( const JsonObjectCtx & settingsJs, LauncherSettings & settings )
 {
-	bool useAbsolutePaths = settingsJs.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
-	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
+	settings.pathStyle.toggleAbsolute( settingsJs.getBool( "use_absolute_paths", settings.pathStyle.isAbsolute() ) );
 
 	settings.showEngineOutput = settingsJs.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 	settings.closeOnLaunch = settingsJs.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );

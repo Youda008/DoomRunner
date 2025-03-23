@@ -107,8 +107,7 @@ static void deserialize_pre17( const JsonObjectCtx & settingsJs, LauncherSetting
 {
 	// leave appStyle and colorScheme at their defaults
 
-	bool useAbsolutePaths = settingsJs.getBool( "use_absolute_paths", settings.pathStyle == PathStyle::Absolute );
-	settings.pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative;
+	settings.pathStyle.toggleAbsolute( settingsJs.getBool( "use_absolute_paths", settings.pathStyle.isAbsolute() ) );
 
 	settings.showEngineOutput = settingsJs.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
 	settings.closeOnLaunch = settingsJs.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );

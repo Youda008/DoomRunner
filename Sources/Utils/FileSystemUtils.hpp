@@ -31,10 +31,36 @@ inline QString quoted( const QString & path )
 	return '"' % path % '"';
 }
 
-enum class PathStyle : uint8_t
+// Convenience wrapper around enum for shorter code. Simplifies:
+//  * if (pathStyle == PathStyle::Relative)
+//  * pathStyle = isAbsolute ? PathStyle::Absolute : PathStyle::Relative;
+struct PathStyle
 {
-	Relative,
-	Absolute
+	enum Value : uint8_t
+	{
+		Relative,
+		Absolute
+	};
+
+	struct IsAbsolute
+	{
+		bool isAbsolute;
+	};
+
+	PathStyle() {}
+	constexpr PathStyle( Value val ) : _val( val ) {}
+	constexpr PathStyle( IsAbsolute val ) : _val( val.isAbsolute ? PathStyle::Absolute : PathStyle::Relative ) {}
+
+	bool operator==( const PathStyle & other ) const   { return _val == other._val; }
+	bool operator!=( const PathStyle & other ) const   { return _val != other._val; }
+
+	bool isAbsolute() const                            { return _val == Absolute; }
+	bool isRelative() const                            { return _val == Relative; }
+	void toggleAbsolute( bool isAbsolute )             { _val = isAbsolute ? PathStyle::Absolute : PathStyle::Relative; }
+
+ private:
+
+	Value _val;
 };
 
 
@@ -77,7 +103,7 @@ inline bool isRelativePath( const QString & path )
 
 inline PathStyle getPathStyle( const QString & path )
 {
-	return isAbsolutePath( path ) ? PathStyle::Absolute : PathStyle::Relative;
+	return PathStyle({ .isAbsolute = isAbsolutePath( path ) });
 }
 
 inline QString getAbsolutePath( const QString & path )
@@ -294,9 +320,6 @@ class PathConvertor {
 		_workingDir.makeAbsolute();
 	}
 
-	PathConvertor( bool useAbsolutePaths, const QString & workingDir = fs::currentDir )
-		: PathConvertor( useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative, workingDir ) {}
-
 	PathConvertor( const PathConvertor & other ) = default;
 	PathConvertor( PathConvertor && other ) = default;
 	PathConvertor & operator=( const PathConvertor & other ) = default;
@@ -304,33 +327,50 @@ class PathConvertor {
 
 	const QDir & workingDir() const                    { return _workingDir; }
 	PathStyle pathStyle() const                        { return _pathStyle; }
-	bool usingAbsolutePaths() const                    { return _pathStyle == PathStyle::Absolute; }
-	bool usingRelativePaths() const                    { return _pathStyle == PathStyle::Relative; }
+	bool usingAbsolutePaths() const                    { return _pathStyle.isAbsolute(); }
+	bool usingRelativePaths() const                    { return _pathStyle.isRelative(); }
 
 	void setWorkingDir( const QString & workingDir )   { _workingDir.setPath( workingDir ); }
 	void setPathStyle( PathStyle pathStyle )           { _pathStyle = pathStyle; }
-	void toggleAbsolutePaths( bool useAbsolutePaths )  { _pathStyle = useAbsolutePaths ? PathStyle::Absolute : PathStyle::Relative; }
+	void toggleAbsolutePaths( bool useAbsolutePaths )  { _pathStyle.toggleAbsolute( useAbsolutePaths ); }
 
 	QString getAbsolutePath( const QString & path ) const
 	{
-		// _workingDir.absoluteFilePath( fileName ) only appends path to the absolute path of _workingDir,
-		// QDir::cleanPath() gets rid of any redundant "/./" or "/../" in the middle of the input path.
-		// Works even if path is already absolute.
-		return path.isEmpty() ? QString() : QDir::cleanPath( _workingDir.absoluteFilePath( path ) );
+		return !path.isEmpty() ? makePathAbsolute( path, _workingDir ) : QString();
 	}
 	QString getRelativePath( const QString & path ) const
 	{
-		// Gets rid of any redundant "/./" or "/../" in the middle.
-		// Works even if path is already relative.
-		return path.isEmpty() ? QString() : _workingDir.relativeFilePath( path );
+		return !path.isEmpty() ? makePathRelativeTo( path, _workingDir ) : QString();
 	}
 	QString convertPath( const QString & path, PathStyle pathStyle ) const
 	{
-		return pathStyle == PathStyle::Absolute ? getAbsolutePath( path ) : getRelativePath( path );
+		return !path.isEmpty() ? convertPath( path, _workingDir, pathStyle ) : QString();
 	}
 	QString convertPath( const QString & path ) const
 	{
-		return convertPath( path, _pathStyle );
+		return !path.isEmpty() ? convertPath( path, _workingDir, _pathStyle ) : QString();
+	}
+
+ public: // static
+
+	static QString makePathAbsolute( const QString & inputPath, const QDir & baseDir )
+	{
+		// baseDir.absoluteFilePath( inputPath ) only appends inputPath to the absolute path of baseDir,
+		// QDir::cleanPath() gets rid of any redundant "/./" or "/../" in the middle of the input path.
+		// Works even if the inputPath is already absolute.
+		return  QDir::cleanPath( baseDir.absoluteFilePath( inputPath ) );
+	}
+
+	static QString makePathRelativeTo( const QString & inputPath, const QDir & baseDir )
+	{
+		// Gets rid of any redundant "/./" or "/../" in the middle.
+		// Works even if the inputPath is already relative.
+		return baseDir.relativeFilePath( inputPath );
+	}
+
+	static QString convertPath( const QString & path, const QDir & baseDir, PathStyle pathStyle )
+	{
+		return pathStyle.isAbsolute() ? makePathAbsolute( path, baseDir ) : makePathRelativeTo( path, baseDir );
 	}
 
 };
@@ -343,13 +383,13 @@ class PathRebaser {
 
 	QDir _origBaseDir;    ///< original base dir for the relative input paths
 	QDir _targetBaseDir;   ///< target base dir for the relative output paths
-	PathStyle _outPathStyle;   ///< whether the output paths should be relative or absolute
+	std::optional< PathStyle > _reqPathStyle;   ///< required output path style - if set, paths will be converted to this style
 	bool _quotePaths;  ///< whether to surround all output paths with quotes (needed when generating a batch)
-	                   // !!IMPORTANT!! Never store the quoted paths and pass them back to PathConvertor, they are output-only.
+
  public:
 
-	PathRebaser( const QString & origBaseDir, const QString & targetBaseDir, PathStyle outPathStyle, bool quotePaths = false )
-		: _origBaseDir( origBaseDir ), _targetBaseDir( targetBaseDir ), _outPathStyle( outPathStyle ), _quotePaths( quotePaths ) {}
+	PathRebaser( const QString & origBaseDir, const QString & targetBaseDir, bool quotePaths = false )
+		: _origBaseDir( origBaseDir ), _targetBaseDir( targetBaseDir ), _reqPathStyle(), _quotePaths( quotePaths ) {}
 
 	PathRebaser( const PathRebaser & other ) = default;
 	PathRebaser( PathRebaser && other ) = default;
@@ -358,24 +398,23 @@ class PathRebaser {
 
 	const QDir & origBaseDir() const                   { return _origBaseDir; }
 	const QDir & targetBaseDir() const                 { return _targetBaseDir; }
-	PathStyle outputPathStyle() const                  { return _outPathStyle; }
-	bool outputAbsolutePaths() const                   { return _outPathStyle == PathStyle::Absolute; }
+	auto requiredPathStyle() const                     { return _reqPathStyle; }
+	bool requiresAbsolutePaths() const                 { return _reqPathStyle && _reqPathStyle->isAbsolute(); }
+	bool requiresRelativePaths() const                 { return _reqPathStyle && _reqPathStyle->isRelative(); }
 	bool quotePaths() const                            { return _quotePaths; }
 
 	void setOrigBaseDir( const QString & baseDir )     { _origBaseDir.setPath( baseDir ); }
 	void setTargetBaseDir( const QString & baseDir )   { _targetBaseDir.setPath( baseDir ); }
-	void setOutputPathStyle( PathStyle pathStyle )     { _outPathStyle = pathStyle; }
+	void setRequiredPathStyle( PathStyle pathStyle )   { _reqPathStyle = pathStyle; }
+	void enforceAbsolutePaths()                        { _reqPathStyle = PathStyle::Absolute; }
 
-	void setTargetDirAndOutputStyle( const QString & baseDir )
+	void setTargetDirAndPathStyle( const QString & baseDir )
 	{
 		setTargetBaseDir( baseDir );
-		setOutputPathStyle( fs::getPathStyle( baseDir ) );
+		setRequiredPathStyle( fs::getPathStyle( baseDir ) );
 	}
 
-	QString maybeQuoted( const QString & path ) const
-	{
-		return _quotePaths ? quoted( path ) : path;
-	}
+	//-- path conversion -----------------------------------------------------------------------------------------------
 
 	/// Rebases a path relative to the original base directory to be relative to the target base directory,
 	/// absolute path is kept as is.
@@ -392,44 +431,44 @@ class PathRebaser {
 	}
 
 	/// Converts a path that is either absolute or relative to the original base directory
-	/// to a path either absolute or relative to the target base directory (based on the configured output path style).
-	QString rebaseAndConvert( const QString & path ) const
-	{
-		return convertAndRebaseFromTo( path, _origBaseDir, _targetBaseDir );
-	}
-	/// Converts a path that is either absolute or relative to the original base directory
-	/// to a path either absolute or relative to the target base directory (based on the path style parameter).
+	/// to a path either absolute or relative to the target base directory, based on the path style parameter.
 	QString rebaseAndConvert( const QString & path, PathStyle outputPathStyle ) const
 	{
 		return convertAndRebaseFromTo( path, _origBaseDir, _targetBaseDir, outputPathStyle );
 	}
+	/// Converts a path that is either absolute or relative to the original base directory
+	/// to a path either absolute or relative to the target base directory, based on the configured required path style.
+	/** If the required path style is not set, the style of the input path is preserved. */
+	QString rebaseAndConvert( const QString & path ) const
+	{
+		return convertAndRebaseFromTo( path, _origBaseDir, _targetBaseDir, _reqPathStyle );
+	}
+	/// Converts a path to a path relative to the target base directory.
+	QString rebaseAndMakeRelative( const QString & path ) const
+	{
+		return convertAndRebaseFromTo( path, _origBaseDir, _targetBaseDir, PathStyle::Relative );
+	}
 
 	/// Converts a path that is either absolute or relative to the target base directory
-	/// to a path either absolute or relative to the original base directory (based on the configured output path style).
-	QString rebaseBackAndConvert( const QString & path ) const
-	{
-		return convertAndRebaseFromTo( path, _targetBaseDir, _origBaseDir );
-	}
-	/// Converts a path that is either absolute or relative to the target base directory
-	/// to a path either absolute or relative to the original base directory (based on the path style parameter).
+	/// to a path either absolute or relative to the original base directory, based on the path style parameter.
 	QString rebaseBackAndConvert( const QString & path, PathStyle outputPathStyle ) const
 	{
 		return convertAndRebaseFromTo( path, _targetBaseDir, _origBaseDir, outputPathStyle );
 	}
-
-	/// Converts a path to a path relative to the target base directory.
-	QString rebaseAndMakeRelative( const QString & path ) const
+	/// Converts a path that is either absolute or relative to the target base directory
+	/// to a path either absolute or relative to the original base directory, based on the configured required path style.
+	/** If the required path style is not set, the style of the input path is preserved. */
+	QString rebaseBackAndConvert( const QString & path ) const
 	{
-		if (fs::isAbsolutePath( path ))
-			return _targetBaseDir.relativeFilePath( path );
-		else
-			return rebase( path );
+		return convertAndRebaseFromTo( path, _targetBaseDir, _origBaseDir, _reqPathStyle );
 	}
 
-	/// Converts a path relative to the target base directory to an absolute path.
-	QString rebaseBackAndMakeAbsolute( const QString & rebasedPath ) const
+	//-- final command line path generation ----------------------------------------------------------------------------
+	// These paths are output-only, they cannot be passed back to the PathConvertor or PathRebaser.
+
+	QString maybeQuoted( const QString & path ) const
 	{
-		return !rebasedPath.isEmpty() ? _targetBaseDir.absoluteFilePath( rebasedPath ) : QString();
+		return _quotePaths ? quoted( path ) : path;
 	}
 
 	/// Takes a Qt internal path and outputs a path suitable for an OS shell command.
@@ -451,43 +490,34 @@ class PathRebaser {
 		return maybeQuoted( fs::toNativePath( rebase( path ) ) );
 	}
 
-	/// Takes a Qt internal path and outputs a rebased relative path suitable for an OS shell command.
-	QString makeRebasedRelativeCmdPath( const QString & path ) const
-	{
-		return maybeQuoted( fs::toNativePath( rebaseAndMakeRelative( path ) ) );
-	}
-
  private:
 
 	// Keeps the path style of the input path, only performs the rebasing if it's a relative path.
-	static QString rebaseFromTo( const QString & path, const QDir & inputBaseDir, const QDir & outputBaseDir )
+	static QString rebaseFromTo( const QString & inPath, const QDir & inBaseDir, const QDir & outBaseDir )
 	{
-		if (path.isEmpty() || fs::isAbsolutePath( path ))
-			return path;
+		if (inPath.isEmpty() || fs::isAbsolutePath( inPath ))
+			return inPath;
 
-		QString absPath = inputBaseDir.absoluteFilePath( path );
-		QString newPath = outputBaseDir.relativeFilePath( absPath );
+		QString absPath = PathConvertor::makePathAbsolute( inPath, inBaseDir );
+		QString outPath = PathConvertor::makePathRelativeTo( absPath, outBaseDir );
 
-		return newPath;
+		return outPath;
 	}
 
-	// Rebases the path and converts it to absolute or relative based on the configured output path style.
-	QString convertAndRebaseFromTo( const QString & path, const QDir & inputBaseDir, const QDir & outputBaseDir ) const
-	{
-		return convertAndRebaseFromTo( path, inputBaseDir, outputBaseDir, this->outputPathStyle() );
-	}
-
-	// Rebases the path and converts it to absolute or relative based on the outputPathStyle parameter.
+	// Rebases the path and converts it to absolute or relative based on the requiredPathStyle parameter, if it is set.
 	static QString convertAndRebaseFromTo(
-		const QString & path, const QDir & inputBaseDir, const QDir & outputBaseDir, PathStyle outputPathStyle
+		const QString & inPath, const QDir & inBaseDir, const QDir & outBaseDir, std::optional< PathStyle > requiredPathStyle
 	){
-		if (path.isEmpty())
+		if (inPath.isEmpty())
 			return {};
 
-		QString absPath = fs::isAbsolutePath( path ) ? path : inputBaseDir.absoluteFilePath( path );
-		QString newPath = outputPathStyle == PathStyle::Absolute ? absPath : outputBaseDir.relativeFilePath( absPath );
+		PathStyle inPathStyle = fs::getPathStyle( inPath );
+		QString absPath = inPathStyle.isAbsolute() ? inPath : PathConvertor::makePathAbsolute( inPath, inBaseDir );
 
-		return newPath;
+		PathStyle outPathStyle = requiredPathStyle ? *requiredPathStyle : inPathStyle;
+		QString outPath = outPathStyle.isAbsolute() ? absPath : PathConvertor::makePathRelativeTo( absPath, outBaseDir );
+
+		return outPath;
 	}
 
 };

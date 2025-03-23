@@ -45,12 +45,14 @@ static const char * const engineFamilyStrings [] =
 	"PrBoom",
 	"MBF",
 	"EDGE",
+	"KEX",
 };
 static_assert( std::size(engineFamilyStrings) == size_t(EngineFamily::_EnumEnd), "Please update this table too" );
 
+/// Engine families for known executable names.
+/** The key is a normalizedName() - executable name in lower case without the .exe suffix. */
 static const QHash< QString, EngineFamily > knownEngineFamilies =
 {
-	// the key is an executable name in lower case without the .exe suffix
 	{ "zdoom",             EngineFamily::ZDoom },
 	{ "lzdoom",            EngineFamily::ZDoom },
 	{ "gzdoom",            EngineFamily::ZDoom },
@@ -75,6 +77,14 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 	{ "edge",              EngineFamily::EDGE },
 	{ "3dge",              EngineFamily::EDGE },
 	{ "edge-classic",      EngineFamily::EDGE },
+	{ "doom_gog",          EngineFamily::KEX },
+};
+
+/// Engine families for known application names.
+/** The key is exeAppName() - application name from the executable metadata (Windows only). */
+static const QHash< QString, EngineFamily > knownEngineFamilies2 =
+{
+	{ "DOOM + DOOM II",    EngineFamily::KEX },
 };
 
 static const EngineFamilyTraits engineFamilyTraits [] =
@@ -131,6 +141,19 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 	{
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "esg",  // EDGE stores saves completely differently than all the other engines, but screw it
+		.saveDirParam = nullptr,
+		.multHostParam = nullptr,
+		.multPlayerCountParam = nullptr,
+		.multJoinParam = nullptr,
+		.mapParamStyle = MapParamStyle::Warp,
+		.compatModeStyle = CompatModeStyle::None,
+	},
+
+	//KEX
+	{
+		// TODO: Where do i find any documentation for this?
+		.configFileSuffix = "cfg",
+		.saveFileSuffix = "sav",
 		.saveDirParam = nullptr,
 		.multHostParam = nullptr,
 		.multPlayerCountParam = nullptr,
@@ -250,15 +273,28 @@ void EngineTraits::autoDetectTraits( const QString & executablePath )
 
 EngineFamily EngineTraits::guessEngineFamily() const
 {
-	auto iter = knownEngineFamilies.find( normalizedName() );
-	if (iter != knownEngineFamilies.end())
+	if (auto iter = knownEngineFamilies.find( normalizedName() ); iter != knownEngineFamilies.end())
+	{
 		return iter.value();
+	}
+
+ #if IS_WINDOWS
+	// in case the executable name is not reliable (example: doom_gog.exe)
+	if (auto iter = knownEngineFamilies2.find( exeAppName() ); iter != knownEngineFamilies2.end())
+	{
+		return iter.value();
+	}
+ #endif
+
 	// Of course there has to be an exception that does it differently than everybody else for no reason.
 	// Who the hell thinks that adding version number to the executable file name is a good idea?!
-	else if (normalizedName().startsWith("edge"))  // example: "edge135"
+	if (normalizedName().startsWith("edge"))  // example: "edge135"
+	{
 		return EngineFamily::EDGE;
-	else
-		return EngineFamily::ZDoom;
+	}
+
+	// fallback if everything fails
+	return EngineFamily::ZDoom;
 }
 
 void EngineTraits::setFamilyTraits( EngineFamily family )
@@ -317,6 +353,8 @@ QString EngineTraits::getDefaultConfigDir() const
 	// with the exception of GZDoom that started storing it to Documents\My Games\GZDoom
 	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableZDoom())
 		return os::getDocumentsDir()%"/My Games/"%exeAppName();        // -> C:/Users/Youda/Documents/My Games/GZDoom
+	else if (_family == EngineFamily::KEX)
+		return os::getSavedGamesDir()%"/Nightdive Studios/DOOM";       // -> C:/Users/Youda/Saved Games/Nightdive Studios/DOOM
 	else
 		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom  (may be relative - based on exePath)
 
@@ -345,6 +383,8 @@ QString EngineTraits::getDefaultDataDir() const
 	// with the exception of GZDoom that started storing it to Saved Games\GZDoom
 	if (isBasedOnGZDoomVersionOrLater({4,9,0}) && !isPortableZDoom())
 		return os::getSavedGamesDir()%"/"%exeAppName();                // -> C:/Users/Youda/Saved Games/GZDoom
+	else if (_family == EngineFamily::KEX)
+		return os::getSavedGamesDir()%"/Nightdive Studios/DOOM";       // -> C:/Users/Youda/Saved Games/Nightdive Studios/DOOM
 	else
 		return fs::getParentDir( exePath() );                          // -> E:/Youda/Games/Doom/GZDoom  (may be relative - based on exePath)
 
@@ -543,7 +583,7 @@ QString EngineTraits::makeCmdSaveFilePath(
 ) const
 {
 	// the base dir for the save file parameter depends on the engine and its version
-	if (isBasedOnGZDoomVersionOrLater({4,9,0}))
+	if (isBasedOnGZDoomVersionOrLater({4,9,0}) || _family == EngineFamily::KEX)
 	{
 		// Path of the save file must be relative to the -savedir argument if present or the default save dir otherwise.
 		// The path also cannot be absolute, because it is directly appended to the -savedir path and would produce nonsense.

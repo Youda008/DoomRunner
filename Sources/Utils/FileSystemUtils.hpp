@@ -490,6 +490,13 @@ class PathRebaser {
 		return maybeQuoted( fs::toNativePath( rebase( path ) ) );
 	}
 
+	/// Takes a Qt internal path and outputs a rebased path of configured style suitable for an OS shell command.
+	/** If the required path style is set, it is applied on the path, otherwise the original style of the path is preserved. */
+	QString makeRequiredCmdPath( const QString & path ) const
+	{
+		return maybeQuoted( fs::toNativePath( rebaseAndConvert( path ) ) );
+	}
+
  private:
 
 	// Keeps the path style of the input path, only performs the rebasing if it's a relative path.

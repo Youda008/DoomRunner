@@ -51,6 +51,7 @@ enum class EngineFamily
 	PrBoom,
 	MBF,  // Marine's Best Friend
 	EDGE,
+	KEX,
 
 	_EnumEnd  ///< indicates an error
 };
@@ -157,6 +158,9 @@ class EngineTraits {
 	const char * saveFileSuffix() const;
 
 	// command line parameters deduction - requires application info and family traits to be initialized
+
+	/// Whether this engine requires data paths to be always absolute. (Thanks Bethesda)
+	bool requiresAbsolutePaths() const             { assert( hasFamily() ); return _family == EngineFamily::KEX; }
 
 	/// Command line parameter for specifying a custom save directory, can be nullptr if the engine doesn't support it.
 	const char * saveDirParam() const              { assert( _familyTraits ); return _familyTraits->saveDirParam; }

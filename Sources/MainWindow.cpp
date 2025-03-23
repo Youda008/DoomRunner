@@ -4828,6 +4828,8 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	// All stored paths are relative to DoomRunner's directory, but we need them relative to to the engine's executable
 	// directory, because the engine must be started with the working directory set to its executable directory.
 	PathRebaser runDirRebaser( currentWorkingDir, engineExeDir, opts.quotePaths );
+	if (engine.requiresAbsolutePaths())
+		runDirRebaser.enforceAbsolutePaths();
 	// Checks if the required files or directories exist and displays error message if requested.
 	PathChecker p( this, opts.verifyPaths );
 
@@ -4855,7 +4857,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QString configPath = fs::getPathFromFileName( activeConfigDir, selectedConfig->fileName );
 
 		p.checkFilePath( configPath, "the selected config", "Please update the config dir in Menu -> Initial Setup, or select another one." );
-		cmd.arguments << "-config" << runDirRebaser.makeRebasedCmdPath( configPath );
+		cmd.arguments << "-config" << runDirRebaser.makeRequiredCmdPath( configPath );
 	}
 
 	//-- game data files -----------------------------------------------------------
@@ -4864,7 +4866,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	if (selectedIWAD)
 	{
 		p.checkItemFilePath( *selectedIWAD, "selected IWAD", "Please select another one." );
-		cmd.arguments << "-iwad" << runDirRebaser.makeRebasedCmdPath( selectedIWAD->path );
+		cmd.arguments << "-iwad" << runDirRebaser.makeRequiredCmdPath( selectedIWAD->path );
 	}
 
 	// This part is tricky.
@@ -4880,15 +4882,15 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		{
 			QString suffix = QFileInfo( filePath ).suffix().toLower();
 			if (suffix == "deh" || suffix == "hhe") {
-				fileArgs << "-deh" << runDirRebaser.makeRebasedCmdPath( filePath );
+				fileArgs << "-deh" << runDirRebaser.makeRequiredCmdPath( filePath );
 			} else if (suffix == "bex") {
-				fileArgs << "-bex" << runDirRebaser.makeRebasedCmdPath( filePath );
+				fileArgs << "-bex" << runDirRebaser.makeRequiredCmdPath( filePath );
 			} else {
 				if (!placeholderPlaced) {
 					fileArgs << "-file" << "<files>";  // insert placeholder where all the files will be together
 					placeholderPlaced = true;
 				}
-				fileList.append( runDirRebaser.makeRebasedCmdPath( filePath ) );
+				fileList.append( runDirRebaser.makeRequiredCmdPath( filePath ) );
 			}
 		};
 
@@ -4944,13 +4946,13 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	{
 		const QString & saveDirPath = activeSaveDir;  // rebased altSaveDirLine, keeps the path style of engine's data dir
 		p.checkLineDirPath( saveDirPath, ui->altSaveDirLine, "the save dir", {} );
-		cmd.arguments << engine.saveDirParam() << runDirRebaser.makeRebasedCmdPath( saveDirPath );
+		cmd.arguments << engine.saveDirParam() << runDirRebaser.makeRequiredCmdPath( saveDirPath );
 	}
 	if (engine.screenshotDirParam() != nullptr && !ui->altScreenshotDirLine->text().isEmpty())
 	{
 		const QString & screenshotDirPath = activeScreenshotDir;  // rebased altScreenshotDirLine, keeps the path style of engine's data dir
 		p.checkLineDirPath( screenshotDirPath, ui->altScreenshotDirLine, "the screenshot dir", {} );
-		cmd.arguments << engine.screenshotDirParam() << runDirRebaser.makeRebasedCmdPath( screenshotDirPath );
+		cmd.arguments << engine.screenshotDirParam() << runDirRebaser.makeRequiredCmdPath( screenshotDirPath );
 	}
 
 	//-- launch mode and parameters ------------------------------------------------
@@ -4978,7 +4980,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QString demoFileName = fs::ensureFileSuffix( ui->demoFileLine_record->text(), doom::demoFileSuffix );
 		QString demoFilePath = fs::getPathFromFileName( demoDir, demoFileName );
 		p.checkOverwrite( demoFilePath, "the specified demo file", "Please select another one." );
-		cmd.arguments << "-record" << runDirRebaser.makeRebasedCmdPath( demoFilePath );
+		cmd.arguments << "-record" << runDirRebaser.makeRequiredCmdPath( demoFilePath );
 		cmd.arguments << engine.getMapArgs( ui->mapCmbBox_demo->currentIndex(), ui->mapCmbBox_demo->currentText() );
 	}
 	else if (launchMode == ReplayDemo && !ui->demoFileCmbBox_replay->currentText().isEmpty())
@@ -4988,7 +4990,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QString demoFileName = ui->demoFileCmbBox_replay->currentText();
 		QString demoFilePath = fs::getPathFromFileName( demoDir, demoFileName );
 		p.checkFilePath( demoFilePath, "the selected demo file", "Please select another one." );
-		cmd.arguments << "-playdemo" << runDirRebaser.makeRebasedCmdPath( demoFilePath );
+		cmd.arguments << "-playdemo" << runDirRebaser.makeRequiredCmdPath( demoFilePath );
 	}
 	else if (launchMode == ResumeDemo
 	      && !ui->demoFileCmbBox_resume->currentText().isEmpty() && !ui->demoFileLine_resume->text().isEmpty())
@@ -4999,7 +5001,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		p.checkFilePath( origDemoPath, "the original demo file", "Please select another one." );
 		p.checkOverwrite( destDemoPath, "the destination demo file", "Please select another one." );
 		cmd.arguments << "-recordfromto"
-			<< runDirRebaser.makeRebasedCmdPath( origDemoPath ) << runDirRebaser.makeRebasedCmdPath( destDemoPath );
+			<< runDirRebaser.makeRequiredCmdPath( origDemoPath ) << runDirRebaser.makeRequiredCmdPath( destDemoPath );
 	}
 
 	//-- gameplay and compatibility options ----------------------------------------

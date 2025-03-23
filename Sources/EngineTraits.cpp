@@ -87,6 +87,10 @@ static const QHash< QString, EngineFamily > knownEngineFamilies2 =
 	{ "DOOM + DOOM II",    EngineFamily::KEX },
 };
 
+// Used when the auto-detection of the engine family fails.
+// ChocolateDoom because the command line options that work here will probably work everywhere.
+static const EngineFamily fallbackEngineFamily = EngineFamily::ChocolateDoom;
+
 static const EngineFamilyTraits engineFamilyTraits [] =
 {
 	//ZDoom
@@ -294,7 +298,7 @@ EngineFamily EngineTraits::guessEngineFamily() const
 	}
 
 	// fallback if everything fails
-	return EngineFamily::ZDoom;
+	return fallbackEngineFamily;
 }
 
 void EngineTraits::setFamilyTraits( EngineFamily family )
@@ -305,7 +309,7 @@ void EngineTraits::setFamilyTraits( EngineFamily family )
 	if (size_t(family) < std::size(engineFamilyTraits))
 		_familyTraits = &engineFamilyTraits[ size_t(family) ];
 	else
-		_familyTraits = &engineFamilyTraits[ size_t(EngineFamily::ZDoom) ];  // use ZDoom traits as fallback
+		_familyTraits = &engineFamilyTraits[ size_t(fallbackEngineFamily) ];
 
 	// update all engine traits that might depend on family
 	_commonSaveSubdir = getCommonSaveSubdir();  // pre-compute the common subdirectory for save files, so that we don't have to repeat it on every IWAD change

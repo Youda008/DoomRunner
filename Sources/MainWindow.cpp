@@ -903,6 +903,8 @@ void MainWindow::setupPresetList()
 	connect( ui->presetListView->cloneItemAction, &QAction::triggered, this, &thisClass::presetClone );
 	connect( ui->presetListView->moveItemUpAction, &QAction::triggered, this, &thisClass::presetMoveUp );
 	connect( ui->presetListView->moveItemDownAction, &QAction::triggered, this, &thisClass::presetMoveDown );
+	connect( ui->presetListView->moveItemToTopAction, &QAction::triggered, this, &thisClass::presetMoveToTop );
+	connect( ui->presetListView->moveItemToBottomAction, &QAction::triggered, this, &thisClass::presetMoveToBottom );
 	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::presetInsertSeparator );
 
 	// setup buttons
@@ -1017,6 +1019,8 @@ void MainWindow::setupModList()
 	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &thisClass::modDelete );
 	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
 	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
+	connect( ui->modListView->moveItemToTopAction, &QAction::triggered, this, &thisClass::modMoveToTop );
+	connect( ui->modListView->moveItemToBottomAction, &QAction::triggered, this, &thisClass::modMoveToBottom );
 	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::modInsertSeparator );
 
 	// setup buttons
@@ -3003,6 +3007,26 @@ void MainWindow::presetMoveDown()
 	}
 }
 
+void MainWindow::presetMoveToTop()
+{
+	const auto selectedIndexes = wdg::moveSelectedItemsToTop( ui->presetListView, presetModel );
+
+	if (!selectedIndexes.isEmpty())
+	{
+		scheduleSavingOptions();
+	}
+}
+
+void MainWindow::presetMoveToBottom()
+{
+	const auto selectedIndexes = wdg::moveSelectedItemsToBottom( ui->presetListView, presetModel );
+
+	if (!selectedIndexes.isEmpty())
+	{
+		scheduleSavingOptions();
+	}
+}
+
 void MainWindow::presetInsertSeparator()
 {
 	Preset separator;
@@ -3218,6 +3242,48 @@ void MainWindow::modMoveDown()
 		{
 			selectedPreset->mods.move( movedIdx, movedIdx + 1 );
 		}
+	}
+
+	scheduleSavingOptions();
+	updateLaunchCommand();
+}
+
+void MainWindow::modMoveToTop()
+{
+	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
+
+	const auto movedIndexes = wdg::moveSelectedItemsToTop( ui->modListView, modModel );
+
+	restoringPresetInProgress = false;
+
+	if (movedIndexes.isEmpty())  // no item was selected
+		return;
+
+	// update the preset
+	if (selectedPreset)
+	{
+		selectedPreset->mods = modModel.list();  // not the most optimal way, but the size of the list will be always small
+	}
+
+	scheduleSavingOptions();
+	updateLaunchCommand();
+}
+
+void MainWindow::modMoveToBottom()
+{
+	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
+
+	const auto movedIndexes = wdg::moveSelectedItemsToBottom( ui->modListView, modModel );
+
+	restoringPresetInProgress = false;
+
+	if (movedIndexes.isEmpty())  // no item was selected
+		return;
+
+	// update the preset
+	if (selectedPreset)
+	{
+		selectedPreset->mods = modModel.list();  // not the most optimal way, but the size of the list will be always small
 	}
 
 	scheduleSavingOptions();

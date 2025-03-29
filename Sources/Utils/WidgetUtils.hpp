@@ -466,6 +466,104 @@ QList<int> moveSelectedItemsDown( QListView * view, ListModel & model )
 	return selectedRowsDesc;
 }
 
+/// Moves all selected items to the top of the list and updates the selection to point to the new positions.
+/** Returns the original indexes of the selected items before moving. Pops up a warning box if nothing is selected. */
+template< typename ListModel >
+QList<int> moveSelectedItemsToTop( QListView * view, ListModel & model )
+{
+	if (!model.canBeModified())
+	{
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
+			"Cannot move selected items because the model is locked for changes."
+		);
+		return {};
+	}
+
+	const QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
+	if (selectedIndexes.isEmpty())
+	{
+		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
+		return {};
+	}
+
+	// the list of indexes is not sorted, they are in the order in which user selected them
+	// but for the move, we need them sorted in ascending order
+	QList<int> selectedRowsAsc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 < i2; } );
+
+	int currentIdx = getCurrentItemIndex( view );
+
+	deselectAllAndUnsetCurrent( view );
+
+	model.orderAboutToChange();
+
+	// do the move and select the new positions
+	// move the items from top to bottom so that the remaining indexes remain valid
+	int movedCnt = 0;
+	for (int selectedIdx : std::as_const( selectedRowsAsc ))
+	{
+		int destIdx = movedCnt;  // move below the already moved items
+		if (selectedIdx != destIdx)
+			model.move( selectedIdx, destIdx );
+		selectItemByIndex( view, destIdx );
+		if (selectedIdx == currentIdx)  // if we just moved the current item, set the new location as current too
+			setCurrentItemByIndex( view, destIdx );
+		movedCnt++;
+	}
+
+	model.orderChanged();
+
+	return selectedRowsAsc;
+}
+
+/// Moves all selected items to the bottom of the list and updates the selection to point to the new positions.
+/** Returns the original indexes of the selected items before moving. Pops up a warning box if nothing is selected. */
+template< typename ListModel >
+QList<int> moveSelectedItemsToBottom( QListView * view, ListModel & model )
+{
+	if (!model.canBeModified())
+	{
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
+			"Cannot move selected items because the model is locked for changes."
+		);
+		return {};
+	}
+
+	const QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
+	if (selectedIndexes.isEmpty())
+	{
+		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
+		return {};
+	}
+
+	// the list of indexes is not sorted, they are in the order in which user selected them
+	// but for the move, we need them sorted in descending order
+	QList<int> selectedRowsDesc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 > i2; } );
+
+	int currentIdx = getCurrentItemIndex( view );
+
+	deselectAllAndUnsetCurrent( view );
+
+	model.orderAboutToChange();
+
+	// do the move and select the new positions
+	// move the items from bottom to top so that the remaining indexes remain valid
+	int movedCnt = 0;
+	for (int selectedIdx : std::as_const( selectedRowsDesc ))
+	{
+		int destIdx = model.size() - 1 - movedCnt;  // move above the already moved items
+		if (selectedIdx != destIdx)
+			model.move( selectedIdx, destIdx );
+		selectItemByIndex( view, destIdx );
+		if (selectedIdx == currentIdx)  // if we just moved the current item, set the new location as current too
+			setCurrentItemByIndex( view, destIdx );
+		movedCnt++;
+	}
+
+	model.orderChanged();
+
+	return selectedRowsDesc;
+}
+
 bool editItemAtIndex( QListView * view, int index );
 
 

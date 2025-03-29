@@ -64,6 +64,8 @@ EditableListView::EditableListView( QWidget * parent )
 	deleteItemAction = addAction( "Delete", { Qt::Key_Delete } );
 	moveItemUpAction = addAction( "Move up", { Qt::CTRL | Qt::Key_Up } );
 	moveItemDownAction = addAction( "Move down", { Qt::CTRL | Qt::Key_Down } );
+	moveItemToTopAction = addAction( "Move to top", { Qt::CTRL | Qt::ALT | Qt::Key_Up } );
+	moveItemToBottomAction = addAction( "Move to bottom", { Qt::CTRL | Qt::ALT | Qt::Key_Down } );
 	contextMenuEnabled = false;
 
 	allowIntraWidgetDnD = true;
@@ -185,6 +187,10 @@ void EditableListView::contextMenuEvent( QContextMenuEvent * event )
 		moveItemUpAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
 	if (moveItemDownAction)
 		moveItemDownAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (moveItemToTopAction)
+		moveItemToTopAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (moveItemToBottomAction)
+		moveItemToBottomAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
 	if (insertSeparatorAction)
 		insertSeparatorAction->setEnabled( allowModifyList );
 	if (findItemAction)

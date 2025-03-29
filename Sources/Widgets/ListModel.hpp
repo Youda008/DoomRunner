@@ -245,7 +245,10 @@ class DirectList {
 	void insert( qsizetype idx,       Item && item )   { _list.insert( idx, std::move(item) ); }
 
 	void removeAt( qsizetype idx )                     { _list.removeAt( idx ); }
+
 	void move( qsizetype from, qsizetype to )          { _list.move( from, to ); }
+	void moveToFront( qsizetype from )                 { _list.move( from, 0 ); }
+	void moveToBack( qsizetype from )                  { _list.move( from, size() - 1 ); }
 
 	//-- custom access helpers -----------------------------------------------------------------------------------------
 
@@ -395,6 +398,20 @@ class FilteredList {
 		ensureCanBeModified();
 		_fullList.move( from, to );
 		_filteredList.move( from, to );
+	}
+
+	void moveToFront( qsizetype from )
+	{
+		ensureCanBeModified();
+		_fullList.move( from, 0 );
+		_filteredList.move( from, 0 );
+	}
+
+	void moveToBack( qsizetype from )
+	{
+		ensureCanBeModified();
+		_fullList.move( from, size() - 1 );
+		_filteredList.move( from, size() - 1 );
 	}
 
 	//-- custom access helpers -----------------------------------------------------------------------------------------

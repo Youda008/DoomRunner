@@ -126,6 +126,8 @@ class EditableListView : public QListView, protected LoggingComponent {
 	QAction * cloneItemAction = nullptr;
 	QAction * moveItemUpAction = nullptr;
 	QAction * moveItemDownAction = nullptr;
+	QAction * moveItemToTopAction = nullptr;
+	QAction * moveItemToBottomAction = nullptr;
 	QAction * insertSeparatorAction = nullptr;
 	QAction * findItemAction = nullptr;
 	QAction * openFileLocationAction = nullptr;

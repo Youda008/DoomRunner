@@ -90,6 +90,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void presetClone();
 	void presetMoveUp();
 	void presetMoveDown();
+	void presetMoveToTop();
+	void presetMoveToBottom();
 	void presetInsertSeparator();
 	void onPresetsReordered();
 
@@ -101,6 +103,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
+	void modMoveToTop();
+	void modMoveToBottom();
 	void modInsertSeparator();
 	void onMapsAfterModsToggled( bool checked );
 	void onModIconsToggled();

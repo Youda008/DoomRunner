@@ -61,6 +61,8 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 	void engineDelete();
 	void engineMoveUp();
 	void engineMoveDown();
+	void engineMoveToTop();
+	void engineMoveToBottom();
 	void onEnginesDropped( int row, int count, DnDType type );
 
 	void onEngineSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
@@ -76,6 +78,8 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 	void iwadDelete();
 	void iwadMoveUp();
 	void iwadMoveDown();
+	void iwadMoveToTop();
+	void iwadMoveToBottom();
 
 	void onIWADSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
 	void setIWADAsDefault();

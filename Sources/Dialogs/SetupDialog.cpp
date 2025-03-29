@@ -166,6 +166,8 @@ void SetupDialog::setupEngineList()
 	connect( ui->engineListView->deleteItemAction, &QAction::triggered, this, &thisClass::engineDelete );
 	connect( ui->engineListView->moveItemUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
 	connect( ui->engineListView->moveItemDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
+	connect( ui->engineListView->moveItemToTopAction, &QAction::triggered, this, &thisClass::engineMoveToTop );
+	connect( ui->engineListView->moveItemToBottomAction, &QAction::triggered, this, &thisClass::engineMoveToBottom );
 	connect( setDefaultEngineAction, &QAction::triggered, this, &thisClass::setEngineAsDefault );
 
 	// setup buttons
@@ -207,6 +209,8 @@ void SetupDialog::setupIWADList()
 	connect( ui->iwadListView->deleteItemAction, &QAction::triggered, this, &thisClass::iwadDelete );
 	connect( ui->iwadListView->moveItemUpAction, &QAction::triggered, this, &thisClass::iwadMoveUp );
 	connect( ui->iwadListView->moveItemDownAction, &QAction::triggered, this, &thisClass::iwadMoveDown );
+	connect( ui->iwadListView->moveItemToTopAction, &QAction::triggered, this, &thisClass::iwadMoveToTop );
+	connect( ui->iwadListView->moveItemToBottomAction, &QAction::triggered, this, &thisClass::iwadMoveToBottom );
 	connect( setDefaultIWADAction, &QAction::triggered, this, &thisClass::setIWADAsDefault );
 
 	// setup buttons
@@ -297,7 +301,7 @@ void SetupDialog::engineDelete()
 {
 	int defaultIndex = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
 
-	auto deletedIndexes = wdg::deleteSelectedItems( ui->engineListView, engineModel );
+	const auto deletedIndexes = wdg::deleteSelectedItems( ui->engineListView, engineModel );
 
 	if (!deletedIndexes.isEmpty() && deletedIndexes[0] == defaultIndex)
 		engineSettings.defaultEngine.clear();
@@ -311,6 +315,16 @@ void SetupDialog::engineMoveUp()
 void SetupDialog::engineMoveDown()
 {
 	wdg::moveSelectedItemsDown( ui->engineListView, engineModel );
+}
+
+void SetupDialog::engineMoveToTop()
+{
+	wdg::moveSelectedItemsToTop( ui->engineListView, engineModel );
+}
+
+void SetupDialog::engineMoveToBottom()
+{
+	wdg::moveSelectedItemsToBottom( ui->engineListView, engineModel );
 }
 
 void SetupDialog::onEnginesDropped( int row, int count, DnDType type )
@@ -400,7 +414,7 @@ void SetupDialog::iwadDelete()
 {
 	int defaultIndex = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
 
-	auto deletedIndexes = wdg::deleteSelectedItems( ui->iwadListView, iwadModel );
+	const auto deletedIndexes = wdg::deleteSelectedItems( ui->iwadListView, iwadModel );
 
 	if (!deletedIndexes.isEmpty() && deletedIndexes[0] == defaultIndex)
 		iwadSettings.defaultIWAD.clear();
@@ -414,6 +428,16 @@ void SetupDialog::iwadMoveUp()
 void SetupDialog::iwadMoveDown()
 {
 	wdg::moveSelectedItemsDown( ui->iwadListView, iwadModel );
+}
+
+void SetupDialog::iwadMoveToTop()
+{
+	wdg::moveSelectedItemsToTop( ui->iwadListView, iwadModel );
+}
+
+void SetupDialog::iwadMoveToBottom()
+{
+	wdg::moveSelectedItemsToBottom( ui->iwadListView, iwadModel );
 }
 
 void SetupDialog::onIWADSelectionChanged( const QItemSelection &, const QItemSelection & )

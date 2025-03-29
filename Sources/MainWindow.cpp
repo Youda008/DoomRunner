@@ -2985,7 +2985,7 @@ void MainWindow::presetClone()
 
 void MainWindow::presetMoveUp()
 {
-	int selectedIdx = wdg::moveUpSelectedItem( ui->presetListView, presetModel );
+	int selectedIdx = wdg::moveSelectedItemUp( ui->presetListView, presetModel );
 
 	if (selectedIdx >= 0)
 	{
@@ -2995,7 +2995,7 @@ void MainWindow::presetMoveUp()
 
 void MainWindow::presetMoveDown()
 {
-	int selectedIdx = wdg::moveDownSelectedItem( ui->presetListView, presetModel );
+	int selectedIdx = wdg::moveSelectedItemDown( ui->presetListView, presetModel );
 
 	if (selectedIdx >= 0)
 	{
@@ -3180,7 +3180,7 @@ void MainWindow::modMoveUp()
 {
 	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
-	const QList<int> movedIndexes = wdg::moveUpSelectedItems( ui->modListView, modModel );
+	const QList<int> movedIndexes = wdg::moveSelectedItemsUp( ui->modListView, modModel );
 
 	restoringPresetInProgress = false;
 
@@ -3204,7 +3204,7 @@ void MainWindow::modMoveDown()
 {
 	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
-	const QList<int> movedIndexes = wdg::moveDownSelectedItems( ui->modListView, modModel );
+	const QList<int> movedIndexes = wdg::moveSelectedItemsDown( ui->modListView, modModel );
 
 	restoringPresetInProgress = false;
 

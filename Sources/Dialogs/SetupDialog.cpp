@@ -305,12 +305,12 @@ void SetupDialog::engineDelete()
 
 void SetupDialog::engineMoveUp()
 {
-	wdg::moveUpSelectedItem( ui->engineListView, engineModel );
+	wdg::moveSelectedItemUp( ui->engineListView, engineModel );
 }
 
 void SetupDialog::engineMoveDown()
 {
-	wdg::moveDownSelectedItem( ui->engineListView, engineModel );
+	wdg::moveSelectedItemDown( ui->engineListView, engineModel );
 }
 
 void SetupDialog::onEnginesDropped( int row, int count, DnDType type )
@@ -408,12 +408,12 @@ void SetupDialog::iwadDelete()
 
 void SetupDialog::iwadMoveUp()
 {
-	wdg::moveUpSelectedItem( ui->iwadListView, iwadModel );
+	wdg::moveSelectedItemUp( ui->iwadListView, iwadModel );
 }
 
 void SetupDialog::iwadMoveDown()
 {
-	wdg::moveDownSelectedItem( ui->iwadListView, iwadModel );
+	wdg::moveSelectedItemDown( ui->iwadListView, iwadModel );
 }
 
 void SetupDialog::onIWADSelectionChanged( const QItemSelection &, const QItemSelection & )

@@ -196,7 +196,7 @@ int appendItem( QListView * view, ListModel & model, const typename ListModel::I
 	if (!model.canBeModified())
 	{
 		reportLogicError( view->parentWidget(), "Model cannot be modified",
-			"Cannot append item because the model is locked for changes."
+			"Cannot insert item because the model is locked for changes."
 		);
 		return -1;
 	}
@@ -221,7 +221,7 @@ void prependItem( QListView * view, ListModel & model, const typename ListModel:
 	if (!model.canBeModified())
 	{
 		reportLogicError( view->parentWidget(), "Model cannot be modified",
-			"Cannot prepend item because the model is locked for changes."
+			"Cannot insert item because the model is locked for changes."
 		);
 		return;
 	}
@@ -261,10 +261,18 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 }
 
 /// Deletes a selected item and attempts to select an item following the deleted one.
-/** Returns the index of the selected and deleted item. Pops up a warning box if nothing is selected. */
+/** Returns the index of the deleted item. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 int deleteSelectedItem( QListView * view, ListModel & model )
 {
+	if (!model.canBeModified())
+	{
+		reportLogicError( view->parentWidget(), "Model cannot be modified",
+			"Cannot delete selected item because the model is locked for changes."
+		);
+		return {};
+	}
+
 	int selectedIdx = getSelectedItemIndex( view );
 	if (selectedIdx < 0)
 	{
@@ -298,7 +306,7 @@ int deleteSelectedItem( QListView * view, ListModel & model )
 }
 
 /// Deletes all selected items and attempts to select the item following the deleted ones.
-/** Pops up a warning box if nothing is selected. */
+/** Returns sorted indexes of the deleted items. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
 QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 {
@@ -320,9 +328,9 @@ QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
 	// but for the delete, we need them sorted in ascending order
-	const QList<int> selectedRowsAsc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 < i2; } );
+	QList<int> selectedRowsAsc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 < i2; } );
 
-	int firstSelectedIdx = selectedRowsAsc[0];
+	int topMostSelectedIdx = selectedRowsAsc[0];
 
 	deselectAllAndUnsetCurrent( view );
 
@@ -330,22 +338,22 @@ QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 
 	// delete all the selected items
 	uint deletedCnt = 0;
-	for (int selectedIdx : selectedRowsAsc)
+	for (int selectedIdx : std::as_const( selectedRowsAsc ))
 	{
-		model.removeAt( selectedIdx - deletedCnt );
+		model.removeAt( selectedIdx - deletedCnt );  // every deleted item shifts the indexes of the following items
 		deletedCnt++;
 	}
 
 	model.finishCompleteUpdate();
 
 	// try to select some nearest item, so that user can click 'delete' repeatedly to delete all of them
-	if (firstSelectedIdx < model.size())                       // if the first deleted item index is still within range of existing ones,
+	if (topMostSelectedIdx < model.size())                       // if the first deleted item index is still within range of existing ones,
 	{
-		selectAndSetCurrentByIndex( view, firstSelectedIdx );  // select that one,
+		selectAndSetCurrentByIndex( view, topMostSelectedIdx );  // select that one,
 	}
-	else if (!model.isEmpty())                                 // otherwise select the previous, if there is any
+	else if (!model.isEmpty())                                   // otherwise select the previous, if there is any
 	{
-		selectAndSetCurrentByIndex( view, firstSelectedIdx - 1 );
+		selectAndSetCurrentByIndex( view, topMostSelectedIdx - 1 );
 	}
 
 	return selectedRowsAsc;
@@ -392,14 +400,14 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 }
 
 /// Moves a selected item up and updates the selection to point to the new position.
-/** Returns index of the originally selected item before moving. Pops up a warning box if nothing is selected. */
+/** Returns the original index of the selected item before moving. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
-int moveUpSelectedItem( QListView * view, ListModel & model )
+int moveSelectedItemUp( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
 		reportLogicError( view->parentWidget(), "Model cannot be modified",
-			"Cannot move up selected item because the model is locked for changes."
+			"Cannot move selected item because the model is locked for changes."
 		);
 		return -1;
 	}
@@ -431,14 +439,14 @@ int moveUpSelectedItem( QListView * view, ListModel & model )
 }
 
 /// Moves a selected item down and updates the selection to point to the new position.
-/** Returns index of the originally selected item before moving. Pops up a warning box if nothing is selected. */
+/** Returns the original index of the selected item before moving. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
-int moveDownSelectedItem( QListView * view, ListModel & model )
+int moveSelectedItemDown( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
 		reportLogicError( view->parentWidget(), "Model cannot be modified",
-			"Cannot move down selected item because the model is locked for changes."
+			"Cannot move selected item because the model is locked for changes."
 		);
 		return -1;
 	}
@@ -469,15 +477,15 @@ int moveDownSelectedItem( QListView * view, ListModel & model )
 	return selectedIdx;
 }
 
-/// Moves all selected items up and updates the selection to point to the new position.
-/** Pops up a warning box if nothing is selected. */
+/// Moves all selected items up and updates the selection to point to the new positions.
+/** Returns the original indexes of the selected items before moving. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
-QList<int> moveUpSelectedItems( QListView * view, ListModel & model )
+QList<int> moveSelectedItemsUp( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
 		reportLogicError( view->parentWidget(), "Model cannot be modified",
-			"Cannot move up selected items because the model is locked for changes."
+			"Cannot move selected items because the model is locked for changes."
 		);
 		return {};
 	}
@@ -491,9 +499,9 @@ QList<int> moveUpSelectedItems( QListView * view, ListModel & model )
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
 	// but for the move, we need them sorted in ascending order
-	const QList<int> selectedRowsAsc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 < i2; } );
+	QList<int> selectedRowsAsc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 < i2; } );
 
-	// if the selected items are at the bottom, do nothing
+	// if the selected items are at the top, do nothing
 	if (selectedRowsAsc.first() == 0)
 	{
 		return {};
@@ -506,7 +514,7 @@ QList<int> moveUpSelectedItems( QListView * view, ListModel & model )
 	model.orderAboutToChange();
 
 	// do the move and select the new positions
-	for (int selectedIdx : selectedRowsAsc)
+	for (int selectedIdx : std::as_const( selectedRowsAsc ))
 	{
 		model.move( selectedIdx, selectedIdx - 1 );
 		selectItemByIndex( view, selectedIdx - 1 );
@@ -526,15 +534,15 @@ QList<int> moveUpSelectedItems( QListView * view, ListModel & model )
 	return selectedRowsAsc;
 }
 
-/// Moves all selected items down and updates the selection to point to the new position.
-/** Pops up a warning box if nothing is selected. */
+/// Moves all selected items down and updates the selection to point to the new positions.
+/** Returns the original indexes of the selected items before moving. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
-QList<int> moveDownSelectedItems( QListView * view, ListModel & model )
+QList<int> moveSelectedItemsDown( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
 		reportLogicError( view->parentWidget(), "Model cannot be modified",
-			"Cannot move down selected items because the model is locked for changes."
+			"Cannot move selected items because the model is locked for changes."
 		);
 		return {};
 	}
@@ -548,9 +556,9 @@ QList<int> moveDownSelectedItems( QListView * view, ListModel & model )
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
 	// but for the move, we need them sorted in descending order
-	const QList<int> selectedRowsDesc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 > i2; } );
+	QList<int> selectedRowsDesc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 > i2; } );
 
-	// if the selected items are at the top, do nothing
+	// if the selected items are at the bottom, do nothing
 	if (selectedRowsDesc.first() == model.size() - 1)
 	{
 		return {};
@@ -563,7 +571,7 @@ QList<int> moveDownSelectedItems( QListView * view, ListModel & model )
 	model.orderAboutToChange();
 
 	// do the move and select the new positions
-	for (int selectedIdx : selectedRowsDesc)
+	for (int selectedIdx : std::as_const( selectedRowsDesc ))
 	{
 		model.move( selectedIdx, selectedIdx + 1 );
 		selectItemByIndex( view, selectedIdx + 1 );

@@ -101,15 +101,17 @@ class EditableListView : public QListView, protected LoggingComponent {
 	/// external drag&drop for moving files from a file explorer window, disabled by default
 	void toggleExternalFileDragAndDrop( bool enabled );
 
- public slots:
-
-	/// Attempts to open a directory of the last clicked item in a new File Explorer window.
-	void openCurrentFileLocation();
+	// other
 
 	/// Enables/disables the item icons and updates the text of the context menu entry, default is disabled.
 	void toggleIcons( bool enabled );
 
 	bool areIconsEnabled() const;
+
+ public slots:
+
+	/// Attempts to open a directory of the last clicked item in a new File Explorer window.
+	void openCurrentFileLocation();
 
  signals:
 

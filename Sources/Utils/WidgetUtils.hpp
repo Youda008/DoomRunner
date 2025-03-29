@@ -260,51 +260,6 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 	selectAndSetCurrentByIndex( view, index );  // select the inserted item
 }
 
-/// Deletes a selected item and attempts to select an item following the deleted one.
-/** Returns the index of the deleted item. Pops up a warning box if nothing is selected. */
-template< typename ListModel >
-int deleteSelectedItem( QListView * view, ListModel & model )
-{
-	if (!model.canBeModified())
-	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
-			"Cannot delete selected item because the model is locked for changes."
-		);
-		return {};
-	}
-
-	int selectedIdx = getSelectedItemIndex( view );
-	if (selectedIdx < 0)
-	{
-		if (!model.isEmpty())
-			reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
-		return -1;
-	}
-
-	deselectAllAndUnsetCurrent( view );
-
-	model.startDeleting( selectedIdx );
-
-	model.removeAt( selectedIdx );
-
-	model.finishDeleting();
-
-	// try to select some nearest item, so that user can click 'delete' repeatedly to delete all of them
-	if (selectedIdx < model.size())
-	{
-		selectAndSetCurrentByIndex( view, selectedIdx );
-	}
-	else  // ........................................................... if the deleted item was the last one,
-	{
-		if (selectedIdx > 0)  // ....................................... and not the only one,
-		{
-			selectAndSetCurrentByIndex( view, selectedIdx - 1 );  // ... select the previous
-		}
-	}
-
-	return selectedIdx;
-}
-
 /// Deletes all selected items and attempts to select the item following the deleted ones.
 /** Returns sorted indexes of the deleted items. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
@@ -334,17 +289,15 @@ QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.startCompleteUpdate();
-
 	// delete all the selected items
 	uint deletedCnt = 0;
 	for (int selectedIdx : std::as_const( selectedRowsAsc ))
 	{
+		model.startDeleting( selectedIdx - deletedCnt );
 		model.removeAt( selectedIdx - deletedCnt );  // every deleted item shifts the indexes of the following items
+		model.finishDeleting();
 		deletedCnt++;
 	}
-
-	model.finishCompleteUpdate();
 
 	// try to select some nearest item, so that user can click 'delete' repeatedly to delete all of them
 	if (topMostSelectedIdx < model.size())                       // if the first deleted item index is still within range of existing ones,
@@ -395,84 +348,6 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 	model.contentChanged( newItemIdx.row() );
 
 	selectAndSetCurrentByIndex( view, model.size() - 1 );  // select the new item
-
-	return selectedIdx;
-}
-
-/// Moves a selected item up and updates the selection to point to the new position.
-/** Returns the original index of the selected item before moving. Pops up a warning box if nothing is selected. */
-template< typename ListModel >
-int moveSelectedItemUp( QListView * view, ListModel & model )
-{
-	if (!model.canBeModified())
-	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
-			"Cannot move selected item because the model is locked for changes."
-		);
-		return -1;
-	}
-
-	int selectedIdx = getSelectedItemIndex( view );
-	if (selectedIdx < 0)
-	{
-		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
-		return -1;
-	}
-
-	// if the selected item is the first one, do nothing
-	if (selectedIdx == 0)
-	{
-		return selectedIdx;
-	}
-
-	deselectAllAndUnsetCurrent( view );
-
-	model.orderAboutToChange();
-
-	model.move( selectedIdx, selectedIdx - 1 );
-
-	model.orderChanged();
-
-	selectAndSetCurrentByIndex( view, selectedIdx - 1 );  // select the new position of the moved item
-
-	return selectedIdx;
-}
-
-/// Moves a selected item down and updates the selection to point to the new position.
-/** Returns the original index of the selected item before moving. Pops up a warning box if nothing is selected. */
-template< typename ListModel >
-int moveSelectedItemDown( QListView * view, ListModel & model )
-{
-	if (!model.canBeModified())
-	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
-			"Cannot move selected item because the model is locked for changes."
-		);
-		return -1;
-	}
-
-	int selectedIdx = getSelectedItemIndex( view );
-	if (selectedIdx < 0)
-	{
-		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
-		return -1;
-	}
-
-	// if the selected item is the last one, do nothing
-	if (selectedIdx == model.size() - 1)
-	{
-		return selectedIdx;
-	}
-
-	deselectAllAndUnsetCurrent( view );
-
-	model.orderAboutToChange();
-
-	model.move( selectedIdx, selectedIdx + 1 );
-
-	model.orderChanged();
-
-	selectAndSetCurrentByIndex( view, selectedIdx + 1 );  // select the new position of the moved item
 
 	return selectedIdx;
 }

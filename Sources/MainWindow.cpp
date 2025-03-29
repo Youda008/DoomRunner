@@ -2953,8 +2953,8 @@ void MainWindow::presetDelete()
 			return;
 	}
 
-	int deletedIdx = wdg::deleteSelectedItem( ui->presetListView, presetModel );
-	if (deletedIdx < 0)  // no item was selected
+	const auto deletedIndexes = wdg::deleteSelectedItems( ui->presetListView, presetModel );
+	if (deletedIndexes.isEmpty())  // no item was selected
 		return;
 
 	if (selectedPreset)
@@ -2985,9 +2985,9 @@ void MainWindow::presetClone()
 
 void MainWindow::presetMoveUp()
 {
-	int selectedIdx = wdg::moveSelectedItemUp( ui->presetListView, presetModel );
+	const auto selectedIndexes = wdg::moveSelectedItemsUp( ui->presetListView, presetModel );
 
-	if (selectedIdx >= 0)
+	if (!selectedIndexes.isEmpty())
 	{
 		scheduleSavingOptions();
 	}
@@ -2995,9 +2995,9 @@ void MainWindow::presetMoveUp()
 
 void MainWindow::presetMoveDown()
 {
-	int selectedIdx = wdg::moveSelectedItemDown( ui->presetListView, presetModel );
+	const auto selectedIndexes = wdg::moveSelectedItemsDown( ui->presetListView, presetModel );
 
-	if (selectedIdx >= 0)
+	if (!selectedIndexes.isEmpty())
 	{
 		scheduleSavingOptions();
 	}
@@ -3156,7 +3156,7 @@ void MainWindow::modAddArg()
 
 void MainWindow::modDelete()
 {
-	const QList<int> deletedIndexes = wdg::deleteSelectedItems( ui->modListView, modModel );
+	const auto deletedIndexes = wdg::deleteSelectedItems( ui->modListView, modModel );
 
 	if (deletedIndexes.isEmpty())  // no item was selected
 		return;
@@ -3180,7 +3180,7 @@ void MainWindow::modMoveUp()
 {
 	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
-	const QList<int> movedIndexes = wdg::moveSelectedItemsUp( ui->modListView, modModel );
+	const auto movedIndexes = wdg::moveSelectedItemsUp( ui->modListView, modModel );
 
 	restoringPresetInProgress = false;
 
@@ -3204,7 +3204,7 @@ void MainWindow::modMoveDown()
 {
 	restoringPresetInProgress = true;  // prevent onModDataChanged() from updating our preset too early and incorrectly
 
-	const QList<int> movedIndexes = wdg::moveSelectedItemsDown( ui->modListView, modModel );
+	const auto movedIndexes = wdg::moveSelectedItemsDown( ui->modListView, modModel );
 
 	restoringPresetInProgress = false;
 
@@ -3230,7 +3230,7 @@ void MainWindow::modInsertSeparator()
 	separator.isSeparator = true;
 	separator.fileName = "New Separator";
 
-	QList<int> selectedIndexes = wdg::getSelectedItemIndexes( ui->modListView );
+	const auto selectedIndexes = wdg::getSelectedItemIndexes( ui->modListView );
 	int insertIdx = selectedIndexes.empty() ? int( modModel.size() ) : selectedIndexes[0];  // append if none
 
 	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );

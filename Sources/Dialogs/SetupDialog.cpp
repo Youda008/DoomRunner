@@ -295,22 +295,22 @@ void SetupDialog::engineAdd()
 
 void SetupDialog::engineDelete()
 {
-	int defaultIdx = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
+	int defaultIndex = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
 
-	int deletedIdx = wdg::deleteSelectedItem( ui->engineListView, engineModel );
+	auto deletedIndexes = wdg::deleteSelectedItems( ui->engineListView, engineModel );
 
-	if (deletedIdx == defaultIdx)
+	if (!deletedIndexes.isEmpty() && deletedIndexes[0] == defaultIndex)
 		engineSettings.defaultEngine.clear();
 }
 
 void SetupDialog::engineMoveUp()
 {
-	wdg::moveSelectedItemUp( ui->engineListView, engineModel );
+	wdg::moveSelectedItemsUp( ui->engineListView, engineModel );
 }
 
 void SetupDialog::engineMoveDown()
 {
-	wdg::moveSelectedItemDown( ui->engineListView, engineModel );
+	wdg::moveSelectedItemsDown( ui->engineListView, engineModel );
 }
 
 void SetupDialog::onEnginesDropped( int row, int count, DnDType type )
@@ -398,22 +398,22 @@ void SetupDialog::iwadAdd()
 
 void SetupDialog::iwadDelete()
 {
-	int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
+	int defaultIndex = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
 
-	int deletedIdx = wdg::deleteSelectedItem( ui->iwadListView, iwadModel );
+	auto deletedIndexes = wdg::deleteSelectedItems( ui->iwadListView, iwadModel );
 
-	if (deletedIdx == defaultIdx)
+	if (!deletedIndexes.isEmpty() && deletedIndexes[0] == defaultIndex)
 		iwadSettings.defaultIWAD.clear();
 }
 
 void SetupDialog::iwadMoveUp()
 {
-	wdg::moveSelectedItemUp( ui->iwadListView, iwadModel );
+	wdg::moveSelectedItemsUp( ui->iwadListView, iwadModel );
 }
 
 void SetupDialog::iwadMoveDown()
 {
-	wdg::moveSelectedItemDown( ui->iwadListView, iwadModel );
+	wdg::moveSelectedItemsDown( ui->iwadListView, iwadModel );
 }
 
 void SetupDialog::onIWADSelectionChanged( const QItemSelection &, const QItemSelection & )

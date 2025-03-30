@@ -5332,11 +5332,10 @@ void MainWindow::executeLaunchCommand()
 	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
 	// Make sure the alternative dirs exist, because engine may not create it if some of the file paths point there.
-	const AlternativePaths & altPaths = selectedPreset->altPaths;
-	if ((!altPaths.configDir.isEmpty() && !makeSureDirExists( activeConfigDir, ui->altConfigDirLine ))
-	 || (!altPaths.saveDir.isEmpty() && !makeSureDirExists( activeSaveDir, ui->altSaveDirLine ))
-	 || (!altPaths.demoDir.isEmpty() && !makeSureDirExists( activeDemoDir, ui->altDemoDirLine ))
-	 || (!altPaths.screenshotDir.isEmpty() && !makeSureDirExists( activeScreenshotDir, ui->altScreenshotDirLine )))
+	if ((!ui->altConfigDirLine->text().isEmpty() && !makeSureDirExists( activeConfigDir, ui->altConfigDirLine ))
+	 || (!ui->altSaveDirLine->text().isEmpty() && !makeSureDirExists( activeSaveDir, ui->altSaveDirLine ))
+	 || (!ui->altDemoDirLine->text().isEmpty() && !makeSureDirExists( activeDemoDir, ui->altDemoDirLine ))
+	 || (!ui->altScreenshotDirLine->text().isEmpty() && !makeSureDirExists( activeScreenshotDir, ui->altScreenshotDirLine )))
 	{
 		return;
 	}

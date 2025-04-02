@@ -268,6 +268,7 @@ class DirectList {
 
 	// low-level pointer manipulation for implementing optimized high-level operations
 
+	bool isNull( qsizetype idx ) const                            { return _list.isNull( idx ); }
 	std::unique_ptr< Item > takePtr( qsizetype idx )              { return _list.takePtr( idx ); }
 	void removePtr( qsizetype idx )                               { return _list.removePtr( idx ); }
 	void insertPtr( qsizetype idx, std::unique_ptr< Item > ptr )  { _list.insertPtr( idx, std::move(ptr) ); }
@@ -431,6 +432,11 @@ class FilteredList {
 	}
 
 	// low-level pointer manipulation for implementing optimized high-level operations
+
+	bool isNull( qsizetype idx ) const
+	{
+		return _fullList.isNull( idx );
+	}
 
 	std::unique_ptr< Item > takePtr( qsizetype idx )
 	{
@@ -777,10 +783,15 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		if (!index.isValid() || index.row() >= this->size())
 			return Qt::ItemIsDropEnabled;  // otherwise you can't append dragged items to the end of the list
 
+		// On some OSes Qt calls flags inside beginRemoveRows(),
+		// which means when moving items within a list, it can catch us while there is temporarily nullptr.
+		// (see the code and comments in dropInternalItems)
+		if (this->isNull( index.row() ))
+			return Qt::NoItemFlags;
+
 		const Item & item = (*this)[ index.row() ];
 
-		Qt::ItemFlags flags = QAbstractListModel::flags( index );
-
+		Qt::ItemFlags flags = QAbstractListModel::flags( index );  // default flags
 		flags |= Qt::ItemIsDragEnabled;
 		if (canBeEdited( item ))
 			flags |= Qt::ItemIsEditable;
@@ -794,6 +805,13 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	{
 		if (!index.isValid() || index.row() >= this->size())
 			return QVariant();
+
+		if (this->isNull( index.row() ))
+		{
+			logLogicError() << QStringLiteral("EditableListModel::data: item at index %1 is null").arg( index.row() );
+			assert( !this->isNull( index.row() ) );
+			return QVariant();
+		}
 
 		const Item & item = (*this)[ index.row() ];
 
@@ -862,6 +880,13 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	{
 		if (!index.isValid() || index.row() >= this->size())
 			return false;
+
+		if (this->isNull( index.row() ))
+		{
+			logLogicError() << QStringLiteral("EditableListModel::setData: item at index %1 is null").arg( index.row() );
+			assert( !this->isNull( index.row() ) );
+			return false;
+		}
 
 		Item & item = (*this)[ index.row() ];
 

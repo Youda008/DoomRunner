@@ -146,6 +146,11 @@ class PtrList {
 
 	// low-level pointer manipulation for implementing optimized high-level operations
 
+	bool isNull( qsizetype idx ) const
+	{
+		return _list[ idx ].get() == nullptr;
+	}
+
 	std::unique_ptr< Elem > takePtr( qsizetype idx )
 	{
 		return std::move( _list[ idx ] ).to_unique_ptr();

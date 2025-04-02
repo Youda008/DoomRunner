@@ -3116,6 +3116,7 @@ void MainWindow::modAdd()
 	const QStringList paths = DialogWithPaths::browseFiles( this, "mod file", lastUsedDir,
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
+		+ makeFileFilter( "Wolf3D data files", doom::wolfSuffixes )
 		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel

@@ -26,19 +26,20 @@ const QString demoFileSuffix = "lmp";  // this seems to be universal across diff
 const QStringList iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke", "epk", "vwad"};
 const QStringList pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex", "hhe", "epk", "vwad"};
 const QStringList dukeSuffixes = {"grp", "rff"};
+const QStringList wolfSuffixes = {"sd2", "sd3", "sod", "wl3", "wl6"};
 
 // The correct way would be to recognize the type by file header, but there are incorrectly made mods
 // that present themselfs as IWADs, so in order to support those we need to use the file suffix
 bool canBeIWAD( const QFileInfo & file )
 {
 	return (iwadSuffixes.contains( file.suffix().toLower() ))
-	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
+	     || dukeSuffixes.contains( file.suffix().toLower() );
 }
 
 bool canBeMapPack( const QFileInfo & file )
 {
 	return (pwadSuffixes.contains( file.suffix().toLower() ))
-	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
+	     || dukeSuffixes.contains( file.suffix().toLower() );
 }
 
 QStringList getModFileSuffixes()

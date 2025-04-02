@@ -28,6 +28,7 @@ extern const QString demoFileSuffix;
 extern const QStringList iwadSuffixes;
 extern const QStringList pwadSuffixes;
 extern const QStringList dukeSuffixes;
+extern const QStringList wolfSuffixes;
 
 // convenience wrappers to be used, where otherwise lambda would have to be written
 bool canBeIWAD( const QFileInfo & file );

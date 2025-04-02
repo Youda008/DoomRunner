@@ -809,7 +809,6 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		if (this->isNull( index.row() ))
 		{
 			logLogicError() << QStringLiteral("EditableListModel::data: item at index %1 is null").arg( index.row() );
-			assert( !this->isNull( index.row() ) );
 			return QVariant();
 		}
 
@@ -884,7 +883,6 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		if (this->isNull( index.row() ))
 		{
 			logLogicError() << QStringLiteral("EditableListModel::setData: item at index %1 is null").arg( index.row() );
-			assert( !this->isNull( index.row() ) );
 			return false;
 		}
 

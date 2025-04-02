@@ -85,6 +85,7 @@ const QString & getCachedErrorFilePath()
 
 LogStream::LogStream( LogLevel level, const char * component, bool canLogToFile )
 :
+	_aborter( level ),
 	_debugStream( debugStreamFromLogLevel( level ) ),
 	_logFile(),
 	_fileStream(),
@@ -110,6 +111,18 @@ LogStream::~LogStream()
 		_fileStream << Qt::endl;
 	}
 	// log file is closed automatically
+}
+
+LogStream::Aborter::~Aborter()
+{
+	if constexpr (IS_DEBUG_BUILD)
+	{
+		if (fut::to_underlying( _logLevel ) >= fut::to_underlying( LogLevel::Bug ))
+		{
+			assert_msg( false, "This error that deserves your attention" );
+			// To get more info, either setup a breakpoint here, or check errors.txt
+		}
+	}
 }
 
 QDebug LogStream::debugStreamFromLogLevel( LogLevel level )

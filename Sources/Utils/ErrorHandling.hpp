@@ -22,6 +22,12 @@ class QWidget;
 
 
 //======================================================================================================================
+// misc
+
+#define assert_msg( condition, message ) assert(( (void)message, (condition) ))
+
+
+//======================================================================================================================
 // displaying foreground errors that directly thwart features requested by the user
 
 /// Reports an event that is not necessarily an error, but is worth noting. (example: no update available)
@@ -54,6 +60,16 @@ const char * logLevelToStr( LogLevel level );
 /// Stream wrapper that logs to multiple streams depending on log level and build type
 class LogStream
 {
+	// A helper class that aborts the program if it's a debug build and the level is high enough,
+	// but only after all streams are already closed and flushed.
+	struct Aborter
+	{
+		LogLevel _logLevel;
+		Aborter( LogLevel logLevel ) : _logLevel( logLevel ) {}
+		~Aborter();
+	};
+
+	Aborter _aborter;
 	QDebug _debugStream;
 	QFile _logFile;
 	QTextStream _fileStream;

@@ -137,7 +137,7 @@ void SetupDialog::setupEngineList()
 	ui->engineListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	engineModel.setPathContext( &pathConvertor );
+	engineModel.setPathConvertor( &pathConvertor );
 
 	// setup editing
 	engineModel.toggleEditing( false );
@@ -186,7 +186,7 @@ void SetupDialog::setupIWADList()
 	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	iwadModel.setPathContext( &pathConvertor );
+	iwadModel.setPathConvertor( &pathConvertor );
 
 	// setup editing
 	iwadModel.toggleEditing( !iwadSettings.updateFromDir );

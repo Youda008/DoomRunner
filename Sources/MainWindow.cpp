@@ -997,7 +997,7 @@ void MainWindow::setupModList()
 	ui->modListView->toggleListModifications( true );
 
 	// give the model our path convertor, it will need it for converting paths dropped from directory
-	modModel.setPathContext( &pathConvertor );
+	modModel.setPathConvertor( &pathConvertor );
 
 	// set drag&drop behaviour
 	ui->modListView->toggleIntraWidgetDragAndDrop( true );

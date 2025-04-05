@@ -750,7 +750,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	void toggleCheckableItems( bool enabled ) { checkableItems = enabled; }
 
 	/** Must be set before external drag&drop is enabled in the parent widget. */
-	void setPathContext( const PathConvertor * pathConvertor ) { this->pathConvertor = pathConvertor; }
+	void setPathConvertor( const PathConvertor * pathConvertor ) { this->pathConvertor = pathConvertor; }
 
 
 	//-- helpers -------------------------------------------------------------------------------------------------------
@@ -1085,7 +1085,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 		if (!pathConvertor)
 		{
 			logLogicError() << "File has been dropped but no PathConvertor is set. "
-			                   "Either use setPathContext or disable file dropping in the widget.";
+			                   "Either use setPathConvertor or disable file dropping in the widget.";
 			return false;
 		}
 
@@ -1135,7 +1135,7 @@ class EditableListModel : public ListModelCommon, public ListImpl, public DropTa
 	/// whether items have a checkbox that can be checked and unchecked
 	bool checkableItems = false;
 
-	/// optional path helper that will convert paths dropped from directory to absolute or relative
+	/// optional path convertor that will convert paths dropped from directory to absolute or relative
 	const PathConvertor * pathConvertor;
 
 };

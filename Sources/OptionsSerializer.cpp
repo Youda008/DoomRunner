@@ -15,6 +15,12 @@
 #include <QFileInfo>
 
 
+//----------------------------------------------------------------------------------------------------------------------
+
+const QString InvalidItemName = "<invalid name>";
+const QString InvalidItemPath = "<invalid path>";
+
+
 //======================================================================================================================
 // custom data types
 
@@ -99,14 +105,17 @@ static void deserialize( const JsonObjectCtx & engineJs, Engine & engine )
 	engine.isSeparator = engineJs.getBool( "separator", false, DontShowError );
 	if (engine.isSeparator)
 	{
-		engine.name = engineJs.getString( "name", "<missing name>" );
+		engine.name = engineJs.getString( "name", InvalidItemName );
 	}
 	else
 	{
-		engine.name = engineJs.getString( "name", "<missing name>" );
-		engine.executablePath = engineJs.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
-		engine.configDir = engineJs.getString( "config_dir", fs::getParentDir( engine.executablePath ) );
-		engine.dataDir = engineJs.getString( "data_dir", engine.configDir );
+		engine.name = engineJs.getString( "name", InvalidItemName );
+		engine.executablePath = engineJs.getString( "path", InvalidItemPath );
+		if (engine.executablePath != InvalidItemPath)
+		{
+			engine.configDir = engineJs.getString( "config_dir", fs::getParentDir( engine.executablePath ) );
+			engine.dataDir = engineJs.getString( "data_dir", engine.configDir );
+		}
 		engine.family = familyFromStr( engineJs.getString( "family", {} ) );
 	}
 }
@@ -134,12 +143,12 @@ static void deserialize( const JsonObjectCtx & engineJs, IWAD & iwad )
 	iwad.isSeparator = engineJs.getBool( "separator", false, DontShowError );
 	if (iwad.isSeparator)
 	{
-		iwad.name = engineJs.getString( "name", "<missing name>" );
+		iwad.name = engineJs.getString( "name", InvalidItemName );
 	}
 	else
 	{
-		iwad.path = engineJs.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
-		iwad.name = engineJs.getString( "name", QFileInfo( iwad.path ).fileName() );
+		iwad.path = engineJs.getString( "path", InvalidItemPath );
+		iwad.name = engineJs.getString( "name", iwad.path != InvalidItemPath ? QFileInfo( iwad.path ).fileName() : InvalidItemName );
 	}
 }
 
@@ -171,17 +180,17 @@ static void deserialize( const JsonObjectCtx & modJs, Mod & mod )
 {
 	if ((mod.isSeparator = modJs.getBool( "separator", false, DontShowError )))
 	{
-		mod.fileName = modJs.getString( "name", "<missing name>" );
+		mod.fileName = modJs.getString( "name", InvalidItemName );
 	}
 	else if ((mod.isCmdArg = modJs.getBool( "cmd_argument", false, DontShowError )))
 	{
-		mod.fileName = modJs.getString( "value", "<missing value>" );
+		mod.fileName = modJs.getString( "value", InvalidItemName );
 		mod.checked = modJs.getBool( "checked", mod.checked );
 	}
 	else
 	{
-		mod.path = modJs.getString( "path", {} );  // empty path is used to indicate invalid entry to be skipped
-		mod.fileName = QFileInfo( mod.path ).fileName();
+		mod.path = modJs.getString( "path", InvalidItemPath );
+		mod.fileName = mod.path != InvalidItemPath ? QFileInfo( mod.path ).fileName() : InvalidItemName;
 		mod.checked = modJs.getBool( "checked", mod.checked );
 	}
 }
@@ -520,7 +529,7 @@ static QJsonObject serialize( const Preset & preset, const StorageSettings & set
 
 static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const StorageSettings & settings )
 {
-	preset.name = presetJs.getString( "name", "<missing name>" );
+	preset.name = presetJs.getString( "name", InvalidItemName );
 
 	preset.isSeparator = presetJs.getBool( "separator", false, DontShowError );
 	if (preset.isSeparator)
@@ -551,15 +560,10 @@ static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const 
 			Mod mod( /*checked*/false );
 			deserialize( modJs, mod );
 
-			if (mod.isSeparator || mod.isCmdArg) {
-				if (mod.fileName.isEmpty())  // vital element is missing in the JSON -> skip this entry
-					continue;
-			} else {
-				if (mod.path.isEmpty())  // vital element is missing in the JSON -> skip this entry
-					continue;
-			}
-
-			// check path or not?
+			bool isValid = mod.fileName != InvalidItemName && mod.path != InvalidItemPath;
+				//&& (mod.path.isEmpty() || PathChecker::checkFilePath( mod.path, true, "a Mod from the saved options", "Please update it in the corresponding preset." ));
+			if (!isValid)
+				highlightListItemAsInvalid( mod );
 
 			preset.mods.append( std::move( mod ) );
 		}
@@ -797,10 +801,9 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 				Engine engine;
 				deserialize( engineJs, engine );
 
-				if (engine.executablePath.isEmpty())  // element isn't present in JSON -> skip this entry
-					continue;
-
-				if (!PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ))
+				bool isValid = engine.name != InvalidItemName && engine.executablePath != InvalidItemPath
+					&& (engine.executablePath.isEmpty() || PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ));
+				if (!isValid)
 					highlightListItemAsInvalid( engine );
 
 				opts.engines.append( EngineInfo( std::move(engine) ) );  // populates only Engine fields, leaves other EngineInfo fields empty
@@ -830,10 +833,9 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 					IWAD iwad;
 					deserialize( iwadJs, iwad );
 
-					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
-						continue;
-
-					if (!PathChecker::checkFilePath( iwad.path, true, "an IWAD from the saved options", "Please update it in Menu -> Initial Setup." ))
+					bool isValid = iwad.name != InvalidItemName && iwad.path != InvalidItemPath
+						&& (iwad.path.isEmpty() || PathChecker::checkFilePath( iwad.path, true, "an IWAD from the saved options", "Please update it in Menu -> Initial Setup." ));
+					if (!isValid)
 						highlightListItemAsInvalid( iwad );
 
 					opts.iwads.append( std::move( iwad ) );

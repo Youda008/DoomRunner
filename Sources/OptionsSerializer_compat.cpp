@@ -7,11 +7,9 @@
 
 #include "OptionsSerializer.hpp"  // OptionsToLoad
 
+#include "CommonTypes.hpp"  // PtrList
 #include "Utils/JsonUtils.hpp"
-#include "Utils/MiscUtils.hpp"  // checkPath
-#include "Version.hpp"
-
-#include <QFileInfo>
+#include "Utils/PathCheckUtils.hpp"  // checkPath, highlightInvalidListItem
 
 
 //======================================================================================================================
@@ -38,7 +36,7 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, GameplayOptions & o
 
 static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, const StorageSettings & settings )
 {
-	preset.name = presetJs.getString( "name", "<missing name>" );
+	preset.name = presetJs.getString( "name", InvalidItemName );
 
 	preset.isSeparator = presetJs.getBool( "separator", false, DontShowError );
 	if (preset.isSeparator)
@@ -60,7 +58,7 @@ static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, 
 	if (JsonArrayCtx modsJs = presetJs.getArray( "mods" ))
 	{
 		// iterate manually, so that we can filter-out invalid items
-		for (int i = 0; i < modsJs.size(); i++)
+		for (qsizetype i = 0; i < modsJs.size(); i++)
 		{
 			JsonObjectCtx modJs = modsJs.getObject( i );
 			if (!modJs)  // wrong type on position i - skip this entry
@@ -69,10 +67,9 @@ static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, 
 			Mod mod( /*checked*/false );
 			deserialize( modJs, mod );
 
-			if (mod.isSeparator && mod.fileName.isEmpty())  // element isn't present in JSON -> skip this entry
-				continue;
-			else if (!mod.isSeparator && mod.path.isEmpty())  // element isn't present in JSON -> skip this entry
-				continue;
+			bool isValid = mod.fileName != InvalidItemName && mod.path != InvalidItemPath;
+			if (!isValid)
+				highlightListItemAsInvalid( mod );
 
 			// check path or not?
 
@@ -140,7 +137,7 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 		if (JsonArrayCtx engineArrayJs = enginesJs.getArray( "engines" ))
 		{
 			// iterate manually, so that we can filter-out invalid items
-			for (int i = 0; i < engineArrayJs.size(); i++)
+			for (qsizetype i = 0; i < engineArrayJs.size(); i++)
 			{
 				JsonObjectCtx engineJs = engineArrayJs.getObject( i );
 				if (!engineJs)  // wrong type on position i -> skip this entry
@@ -149,10 +146,9 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 				Engine engine;
 				deserialize( engineJs, engine );
 
-				if (engine.executablePath.isEmpty())  // element isn't present in JSON -> skip this entry
-					continue;
-
-				if (!PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Setup." ))
+				bool isValid = engine.name != InvalidItemName && engine.executablePath != InvalidItemPath
+					&& (engine.executablePath.isEmpty() || PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ));
+				if (!isValid)
 					highlightListItemAsInvalid( engine );
 
 				opts.engines.append( EngineInfo( std::move(engine) ) );
@@ -173,7 +169,7 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 			if (JsonArrayCtx iwadArrayJs = iwadsJs.getArray( "IWADs" ))
 			{
 				// iterate manually, so that we can filter-out invalid items
-				for (int i = 0; i < iwadArrayJs.size(); i++)
+				for (qsizetype i = 0; i < iwadArrayJs.size(); i++)
 				{
 					JsonObjectCtx iwadJs = iwadArrayJs.getObject( i );
 					if (!iwadJs)  // wrong type on position i - skip this entry
@@ -182,10 +178,9 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 					IWAD iwad;
 					deserialize( iwadJs, iwad );
 
-					if (iwad.name.isEmpty() || iwad.path.isEmpty())  // element isn't present in JSON -> skip this entry
-						continue;
-
-					if (!PathChecker::checkFilePath( iwad.path, true, "an IWAD from the saved options", "Please update it in Menu -> Setup." ))
+					bool isValid = iwad.name != InvalidItemName && iwad.path != InvalidItemPath
+						&& (iwad.path.isEmpty() || PathChecker::checkFilePath( iwad.path, true, "an IWAD from the saved options", "Please update it in Menu -> Initial Setup." ));
+					if (!isValid)
 						highlightListItemAsInvalid( iwad );
 
 					opts.iwads.append( std::move( iwad ) );
@@ -235,7 +230,7 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 
 	if (JsonArrayCtx presetArrayJs = optsJs.getArray( "presets" ))
 	{
-		for (int i = 0; i < presetArrayJs.size(); i++)
+		for (qsizetype i = 0; i < presetArrayJs.size(); i++)
 		{
 			JsonObjectCtx presetJs = presetArrayJs.getObject( i );
 			if (!presetJs)  // wrong type on position i - skip this entry

@@ -22,6 +22,13 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 
+// Values used to recognize items that haven't been parsed successfully and should be left out.
+extern const QString InvalidItemName;
+extern const QString InvalidItemPath;
+
+
+//----------------------------------------------------------------------------------------------------------------------
+
 struct OptionsToSave
 {
 	// files

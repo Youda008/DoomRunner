@@ -156,11 +156,6 @@ class PtrList {
 		return std::move( _list[ idx ] ).to_unique_ptr();
 	}
 
-	void removePtr( qsizetype idx )
-	{
-		_list.removeAt( idx );
-	}
-
 	void insertPtr( qsizetype idx, std::unique_ptr< Elem > ptr )
 	{
 		_list.insert( idx, DeepCopyableUniquePtr< Elem >( std::move(ptr) ) );

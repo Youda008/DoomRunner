@@ -270,7 +270,6 @@ class DirectList {
 
 	bool isNull( qsizetype idx ) const                            { return _list.isNull( idx ); }
 	std::unique_ptr< Item > takePtr( qsizetype idx )              { return _list.takePtr( idx ); }
-	void removePtr( qsizetype idx )                               { return _list.removePtr( idx ); }
 	void insertPtr( qsizetype idx, std::unique_ptr< Item > ptr )  { _list.insertPtr( idx, std::move(ptr) ); }
 
 	//-- special -------------------------------------------------------------------------------------------------------
@@ -443,13 +442,6 @@ class FilteredList {
 		ensureCanBeModified();
 		_filteredList[ idx ] = nullptr;
 		return _fullList.takePtr( idx );
-	}
-
-	void removePtr( qsizetype idx )
-	{
-		ensureCanBeModified();
-		_fullList.removePtr( idx );
-		_filteredList.removeAt( idx );
 	}
 
 	void insertPtr( qsizetype idx, std::unique_ptr< Item > ptr )

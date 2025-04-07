@@ -222,10 +222,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void restoreSelectedMapPacks( Preset & preset );
 	void restoreSelectedMods( Preset & preset );
 
+	void restoreAlternativePaths( const Preset & preset );
+
 	void restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const MultiplayerOptions & multOpts );
 	void restoreGameplayOptions( const GameplayOptions & opts );
 	void restoreCompatibilityOptions( const CompatibilityOptions & opts );
-	void restoreAlternativePaths( const AlternativePaths & opts );
 	void restoreVideoOptions( const VideoOptions & opts );
 	void restoreAudioOptions( const AudioOptions & opts );
 	void restoreGlobalOptions( const GlobalOptions & opts );
@@ -257,12 +258,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void autoselectItems();
 
-	void updateAlternativePath( QLineEdit * altPathLine, const QString * altPath );
-	void updateAltConfigDir( const QString * configDir = nullptr );
-	void updateAltSaveDir( const QString * saveDir = nullptr );
-	void updateAltDemoDir( const QString * demoDir = nullptr );
-	void updateAltScreenshotDir( const QString * screenshotDir = nullptr );
-	void updateAlternativePaths( const Preset * selectedPreset );
+	void updateAlternativePath( QLineEdit * altPathLine );
 
 	void updateListsFromDirs();
 	void updateIWADsFromDir();

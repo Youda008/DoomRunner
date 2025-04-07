@@ -1652,7 +1652,7 @@ void MainWindow::restorePreset( Preset & preset )
 	// This must be restored before restoring any of the data files (configs, saves, demos, ...)
 	// because these alt paths override the engine default data paths,
 	// and restoring the data files expect the data paths to be in their final state.
-	restoreAlternativePaths( preset.altPaths );
+	restoreAlternativePaths( preset );
 
 	restoreSelectedConfig( preset );
 	restoreSelectedIWAD( preset );
@@ -1884,6 +1884,31 @@ void MainWindow::restoreSelectedMods( Preset & preset )
 	modModel.finishCompleteUpdate();
 }
 
+void MainWindow::restoreAlternativePaths( const Preset & preset )
+{
+	QString altPathFromPresetName = fs::sanitizePath_strict( preset.name );
+
+	if (globalOpts.usePresetNameAsConfigDir)
+		ui->altConfigDirLine->setText( altPathFromPresetName );
+	else
+		ui->altConfigDirLine->setText( preset.altPaths.configDir );
+
+	if (globalOpts.usePresetNameAsSaveDir)
+		ui->altSaveDirLine->setText( altPathFromPresetName );
+	else
+		ui->altSaveDirLine->setText( preset.altPaths.saveDir );
+
+	if (globalOpts.usePresetNameAsDemoDir)
+		ui->altDemoDirLine->setText( altPathFromPresetName );
+	else
+		ui->altDemoDirLine->setText( preset.altPaths.demoDir );
+
+	if (globalOpts.usePresetNameAsScreenshotDir)
+		ui->altScreenshotDirLine->setText( altPathFromPresetName );
+	else
+		ui->altScreenshotDirLine->setText( preset.altPaths.screenshotDir );
+}
+
 void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const MultiplayerOptions & multOpts )
 {
 	// launch mode
@@ -2000,31 +2025,6 @@ void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts 
 	ui->compatModeCmbBox->setCurrentIndex( compatModeIdx );
 
 	compatOptsCmdArgs = CompatOptsDialog::getCmdArgsFromOptions( opts );
-}
-
-void MainWindow::restoreAlternativePaths( const AlternativePaths & altPaths )
-{
-	QString altPathFromPresetName = selectedPreset ? fs::sanitizePath_strict( selectedPreset->name ) : emptyString;
-
-	if (globalOpts.usePresetNameAsConfigDir)
-		ui->altConfigDirLine->setText( altPathFromPresetName );
-	else
-		ui->altConfigDirLine->setText( altPaths.configDir );
-
-	if (globalOpts.usePresetNameAsSaveDir)
-		ui->altSaveDirLine->setText( altPathFromPresetName );
-	else
-		ui->altSaveDirLine->setText( altPaths.saveDir );
-
-	if (globalOpts.usePresetNameAsDemoDir)
-		ui->altDemoDirLine->setText( altPathFromPresetName );
-	else
-		ui->altDemoDirLine->setText( altPaths.demoDir );
-
-	if (globalOpts.usePresetNameAsScreenshotDir)
-		ui->altScreenshotDirLine->setText( altPathFromPresetName );
-	else
-		ui->altScreenshotDirLine->setText( altPaths.screenshotDir );
 }
 
 void MainWindow::restoreVideoOptions( const VideoOptions & opts )
@@ -2838,7 +2838,7 @@ void MainWindow::onPresetDataChanged( const QModelIndex & topLeft, const QModelI
 		if (wdg::isSelectedIndex( ui->presetListView, editedIdx ))
 		{
 			// automatic alt dirs are derived from preset name, which has now changed, so this needs to be refreshed
-			updateAlternativePaths( &presetModel[ editedIdx ] );
+			restoreAlternativePaths( presetModel[ editedIdx ] );
 		}
 	}
 
@@ -3878,13 +3878,9 @@ void MainWindow::onPlayerColorRightClicked()
 //----------------------------------------------------------------------------------------------------------------------
 // alternative paths
 
-void MainWindow::updateAlternativePath( QLineEdit * altPathLine, const QString * altPath )
+void MainWindow::updateAlternativePath( QLineEdit * altPathLine )
 {
-	if (altPath)
-	{
-		altPathLine->setText( *altPath );
-	}
-	else if (selectedPreset)
+	if (selectedPreset)
 	{
 		altPathLine->setText( fs::sanitizePath_strict( selectedPreset->name ) );
 	}
@@ -3892,43 +3888,6 @@ void MainWindow::updateAlternativePath( QLineEdit * altPathLine, const QString *
 	{
 		altPathLine->clear();
 	}
-}
-
-void MainWindow::updateAltConfigDir( const QString * configDir )
-{
-	updateAlternativePath( ui->altConfigDirLine, configDir );
-}
-
-void MainWindow::updateAltSaveDir( const QString * saveDir )
-{
-	updateAlternativePath( ui->altSaveDirLine, saveDir );
-}
-
-void MainWindow::updateAltDemoDir( const QString * demoDir )
-{
-	updateAlternativePath( ui->altDemoDirLine, demoDir );
-}
-
-void MainWindow::updateAltScreenshotDir( const QString * screenshotDir )
-{
-	updateAlternativePath( ui->altScreenshotDirLine, screenshotDir );
-}
-
-void MainWindow::updateAlternativePaths( const Preset * selectedPreset )
-{
-	QString altPathFromPresetName = selectedPreset ? fs::sanitizePath_strict( selectedPreset->name ) : emptyString;
-
-	if (globalOpts.usePresetNameAsConfigDir)
-		ui->altConfigDirLine->setText( altPathFromPresetName );
-
-	if (globalOpts.usePresetNameAsSaveDir)
-		ui->altSaveDirLine->setText( altPathFromPresetName );
-
-	if (globalOpts.usePresetNameAsDemoDir)
-		ui->altDemoDirLine->setText( altPathFromPresetName );
-
-	if (globalOpts.usePresetNameAsScreenshotDir)
-		ui->altScreenshotDirLine->setText( altPathFromPresetName );
 }
 
 void MainWindow::onUsePresetNameForConfigsToggled( bool checked )
@@ -3941,7 +3900,7 @@ void MainWindow::onUsePresetNameForConfigsToggled( bool checked )
 
 	if (checked)
 	{
-		updateAltConfigDir();
+		updateAlternativePath( ui->altConfigDirLine );
 	}
 	else
 	{
@@ -3961,7 +3920,7 @@ void MainWindow::onUsePresetNameForSavesToggled( bool checked )
 
 	if (checked)
 	{
-		updateAltSaveDir();
+		updateAlternativePath( ui->altSaveDirLine );
 	}
 	else
 	{
@@ -3981,7 +3940,7 @@ void MainWindow::onUsePresetNameForDemosToggled( bool checked )
 
 	if (checked)
 	{
-		updateAltDemoDir();
+		updateAlternativePath( ui->altDemoDirLine );
 	}
 	else
 	{
@@ -4001,7 +3960,7 @@ void MainWindow::onUsePresetNameForScreenshotsToggled( bool checked )
 
 	if (checked)
 	{
-		updateAltScreenshotDir();
+		updateAlternativePath( ui->altScreenshotDirLine );
 	}
 	else
 	{

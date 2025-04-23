@@ -2,9 +2,9 @@
 /build*
 /Releases
 /TestDoomDir
+/Research
 *.autosave
 *.pro.user*
-/todo.txt
-/OtherLaunchers
 /*.bat
 /*.sh
+/todo.txt

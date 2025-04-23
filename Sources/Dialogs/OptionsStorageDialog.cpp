@@ -15,7 +15,7 @@
 OptionsStorageDialog::OptionsStorageDialog( QWidget * parent, const StorageSettings & settings )
 :
 	QDialog( parent ),
-	DialogCommon( this ),
+	DialogCommon( this, u"OptionsStorageDialog" ),
 	storageSettings( settings )
 {
 	ui = new Ui::OptionsStorageDialog;

@@ -16,10 +16,12 @@
 
 //======================================================================================================================
 
-DialogCommon::DialogCommon( QWidget * thisWidget )
+DialogCommon::DialogCommon( QWidget * self, QStringView dialogName )
+:
+	ErrorReportingComponent( self, dialogName )
 {
 	// On Windows we need to manually make title bar of every new window dark, if dark theme is used.
-	themes::updateWindowBorder( thisWidget );
+	themes::updateWindowBorder( self );
 }
 
 QString DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter )

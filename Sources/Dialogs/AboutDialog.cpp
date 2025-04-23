@@ -20,7 +20,7 @@
 AboutDialog::AboutDialog( QWidget * parent, bool checkForUpdates )
 :
 	QDialog( parent ),
-	DialogCommon( this ),
+	DialogCommon( this, u"AboutDialog" ),
 	checkForUpdates( checkForUpdates )
 {
 	ui = new Ui::AboutDialog;
@@ -61,18 +61,18 @@ void AboutDialog::checkForUpdate()
 
 			switch (result) {
 			 case UpdateChecker::ConnectionFailed:
-				reportRuntimeError( this, "Update check failed",
+				reportRuntimeError( "Update check failed",
 					"Failed to connect to the project web page. Is your internet down?"
 					"Details: "%errorDetail
 				);
 				break;
 			 case UpdateChecker::InvalidFormat:
-				reportLogicError( this, "Update check failed",
+				reportLogicError( u"checkForUpdate", "Update check failed",
 					"Version number from github is in invalid format: "%errorDetail
 				);
 				break;
 			 case UpdateChecker::UpdateNotAvailable:
-				reportInformation( this, "No update available",
+				reportInformation( "No update available",
 					"No update is available, you have the newest version."
 				);
 				break;
@@ -80,7 +80,7 @@ void AboutDialog::checkForUpdate()
 				showUpdateNotification( this, versionInfo, /*checkbox*/false );
 				break;
 			 default:
-				reportLogicError( this, "Update check failed",
+				reportLogicError( u"checkForUpdate", "Update check failed",
 					"UpdateChecker::Result is out of bounds: "%QString::number( fut::to_underlying(result) )
 				);
 				break;

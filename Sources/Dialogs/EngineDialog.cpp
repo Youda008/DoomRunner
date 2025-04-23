@@ -20,7 +20,7 @@
 EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, const EngineInfo & engine, QString lastUsedDir_ )
 :
 	QDialog( parent ),
-	DialogWithPaths( this, pathConv ),
+	DialogWithPaths( this, u"EngineDialog", pathConv ),
 	engine( engine )
 {
 	ui = new Ui::EngineDialog;
@@ -230,21 +230,21 @@ void EngineDialog::accept()
 	QString nameLineText = ui->nameLine->text();
 	if (nameLineText.isEmpty())
 	{
-		reportUserError( this, "Engine name cannot be empty", "Please give the engine some name." );
+		reportUserError( "Engine name cannot be empty", "Please give the engine some name." );
 		return;  // refuse the user's confirmation
 	}
 
 	QString executablePath = sanitizeInputPath( ui->executableLine->text() );
 	if (executablePath.isEmpty())
 	{
-		reportUserError( this, "Executable path cannot be empty",
+		reportUserError( "Executable path cannot be empty",
 			"Please specify the engine's executable path."
 		);
 		return;  // refuse the user's confirmation
 	}
 	else if (fs::isInvalidFile( executablePath ))
 	{
-		reportUserError( this, "Executable doesn't exist",
+		reportUserError( "Executable doesn't exist",
 			"Please fix the engine's executable path, such file doesn't exist."
 		);
 		return;  // refuse the user's confirmation
@@ -253,14 +253,14 @@ void EngineDialog::accept()
 	QString configDirPath = sanitizeInputPath( ui->configDirLine->text() );
 	if (configDirPath.isEmpty())
 	{
-		reportUserError( this, "Config dir cannot be empty",
+		reportUserError( "Config dir cannot be empty",
 			"Please specify the engine's config directory, this launcher cannot operate without it."
 		);
 		return;  // refuse the user's confirmation
 	}
 	else if (configDirPath != suggestedConfigDir && fs::isInvalidDir( configDirPath ))
 	{
-		reportUserError( this, "Config dir doesn't exist",
+		reportUserError( "Config dir doesn't exist",
 			"Please fix the engine's config directory, such directory doesn't exist."
 		);
 		return;  // refuse the user's confirmation
@@ -269,14 +269,14 @@ void EngineDialog::accept()
 	QString dataDirLineText = sanitizeInputPath( ui->dataDirLine->text() );
 	if (dataDirLineText.isEmpty())
 	{
-		reportUserError( this, "Data dir cannot be empty",
+		reportUserError( "Data dir cannot be empty",
 			"Please specify the engine's data directory, this launcher cannot operate without it."
 		);
 		return;  // refuse the user's confirmation
 	}
 	else if (dataDirLineText != suggestedDataDir && fs::isInvalidDir( dataDirLineText ))
 	{
-		reportUserError( this, "Data dir doesn't exist",
+		reportUserError( "Data dir doesn't exist",
 			"Please fix the engine's data directory, such directory doesn't exist."
 		);
 		return;  // refuse the user's confirmation
@@ -305,7 +305,7 @@ void EngineDialog::accept()
 	int familyIdx = ui->familyCmbBox->currentIndex();
 	if (familyIdx < 0 || familyIdx >= int( EngineFamily::_EnumEnd ))
 	{
-		reportLogicError( this, "Invalid engine family index", "Family combo-box index is out of bounds." );
+		reportLogicError( u"accept" ,"Invalid engine family index", "Family combo-box index is out of bounds." );
 		return;
 	}
 	engine.family = EngineFamily( familyIdx );

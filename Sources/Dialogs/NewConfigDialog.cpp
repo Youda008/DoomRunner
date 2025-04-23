@@ -14,7 +14,7 @@
 NewConfigDialog::NewConfigDialog( QWidget * parent, const QFileInfo & origConfigFile )
 :
 	QDialog( parent ),
-	DialogCommon( this )
+	DialogCommon( this, u"NewConfigDialog" )
 {
 	ui = new Ui::NewConfigDialog;
 	ui->setupUi(this);

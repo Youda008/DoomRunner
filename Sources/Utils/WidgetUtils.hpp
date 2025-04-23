@@ -195,7 +195,7 @@ int appendItem( QListView * view, ListModel & model, const typename ListModel::I
 {
 	if (!model.canBeModified())
 	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), u"wdg::appendItem", "Model cannot be modified",
 			"Cannot insert item because the model is locked for changes."
 		);
 		return -1;
@@ -220,7 +220,7 @@ void prependItem( QListView * view, ListModel & model, const typename ListModel:
 {
 	if (!model.canBeModified())
 	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), u"wdg::prependItem", "Model cannot be modified",
 			"Cannot insert item because the model is locked for changes."
 		);
 		return;
@@ -243,7 +243,7 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 {
 	if (!model.canBeModified())
 	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), u"wdg::insertItem", "Model cannot be modified",
 			"Cannot insert item because the model is locked for changes."
 		);
 		return;
@@ -267,7 +267,7 @@ QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), u"wdg::deleteSelectedItems", "Model cannot be modified",
 			"Cannot delete selected items because the model is locked for changes."
 		);
 		return {};
@@ -319,7 +319,7 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), u"wdg::cloneSelectedItem", "Model cannot be modified",
 			"Cannot clone selected item because the model is locked for changes."
 		);
 		return -1;
@@ -359,7 +359,7 @@ QList<int> moveSelectedItemsUp( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), u"wdg::moveSelectedItemsUp", "Model cannot be modified",
 			"Cannot move selected items because the model is locked for changes."
 		);
 		return {};
@@ -416,7 +416,7 @@ QList<int> moveSelectedItemsDown( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), u"wdg::moveSelectedItemsDown", "Model cannot be modified",
 			"Cannot move selected items because the model is locked for changes."
 		);
 		return {};
@@ -473,7 +473,7 @@ QList<int> moveSelectedItemsToTop( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), u"wdg::moveSelectedItemsToTop", "Model cannot be modified",
 			"Cannot move selected items because the model is locked for changes."
 		);
 		return {};
@@ -522,7 +522,7 @@ QList<int> moveSelectedItemsToBottom( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
-		reportLogicError( view->parentWidget(), "Model cannot be modified",
+		reportLogicError( view->parentWidget(), u"wdg::moveSelectedItemsToBottom", "Model cannot be modified",
 			"Cannot move selected items because the model is locked for changes."
 		);
 		return {};

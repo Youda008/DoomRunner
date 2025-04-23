@@ -52,7 +52,7 @@
 EditableListView::EditableListView( QWidget * parent )
 :
 	QListView( parent ),
-	LoggingComponent("EditableListView")
+	LoggingComponent( u"EditableListView" )
 {
 	allowEditNames = false;
 	this->setEditTriggers( QAbstractItemView::NoEditTriggers );
@@ -215,7 +215,7 @@ void EditableListView::openCurrentFileLocation()
 	auto userData = model()->data( currentIdx, Qt::UserRole );
 	if (getType( userData ) != QMetaType::Type::QString)  // NOLINT
 	{
-		reportLogicError( this->parentWidget(), "Unsupported model",
+		reportLogicError( this->parentWidget(), u"openCurrentFileLocation", "Unsupported model",
 			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
 			"otherwise openFileLocation will not work."
 		);
@@ -244,7 +244,7 @@ void EditableListView::toggleIcons()
 	ListModelCommon * model = dynamic_cast< ListModelCommon * >( this->model() );
 	if (!model)
 	{
-		reportLogicError( this->parentWidget(), "Unsupported model",
+		reportLogicError( this->parentWidget(), u"toggleIcons", "Unsupported model",
 			"EditableListView should be used only together with ReadOnlyListModel or EditableListModel, "
 			"otherwise icons cannot be toggled."
 		);

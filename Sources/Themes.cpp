@@ -492,7 +492,7 @@ class WindowsThemeWatcherImpl : public SystemThemeWatcher::SystemThemeWatcherImp
 
  public:
 
-	WindowsThemeWatcherImpl() : LoggingComponent("ThemeWatcher"), _themeSettingsKeyHandle( INVALID_HKEY ) {}
+	WindowsThemeWatcherImpl() : LoggingComponent(u"ThemeWatcher"), _themeSettingsKeyHandle( INVALID_HKEY ) {}
 
 	~WindowsThemeWatcherImpl() override;
 
@@ -755,7 +755,7 @@ Q_DECLARE_METATYPE( SystemTheme )
 
 SystemThemeWatcher::SystemThemeWatcher()
 :
-	LoggingComponent("ThemeWatcher")
+	LoggingComponent(u"ThemeWatcher")
 {
  #if IS_WINDOWS
 	_impl = std::make_unique< WindowsThemeWatcherImpl >();

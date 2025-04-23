@@ -12,8 +12,10 @@
 #include "Essential.hpp"
 
 #include "Utils/FileSystemUtils.hpp"  // PathConvertor
+#include "Utils/ErrorHandling.hpp"  // ErrorReportingComponent
 
 #include <QString>
+#include <QStringView>
 
 class QWidget;
 class QLineEdit;
@@ -22,11 +24,11 @@ class QLineEdit;
 //======================================================================================================================
 
 /// Functionality common for all dialogs and windows.
-class DialogCommon {
+class DialogCommon : public ErrorReportingComponent {
 
 protected:
 
-	DialogCommon( QWidget * thisWidget );
+	DialogCommon( QWidget * self, QStringView dialogName );
 
 };
 
@@ -35,8 +37,8 @@ class DialogWithPaths : public DialogCommon {
 
  protected:
 
-	DialogWithPaths( QWidget * thisWidget, PathConvertor pathConvertor )
-		: DialogCommon( thisWidget ), pathConvertor( std::move(pathConvertor) ) {}
+	DialogWithPaths( QWidget * self, QStringView dialogName, PathConvertor pathConvertor )
+		: DialogCommon( self, dialogName ), pathConvertor( std::move(pathConvertor) ) {}
 
 	/// Runs a file-system dialog to let the user select a file and stores its directory for the next call.
 	QString browseFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );

@@ -32,7 +32,7 @@ class LoggingWadReader : protected LoggingComponent {
 
  public:
 
-	LoggingWadReader( QString filePath ) : LoggingComponent("ExeReader"), _filePath( std::move(filePath) ) {}
+	LoggingWadReader( QString filePath ) : LoggingComponent( u"WadReader" ), _filePath( std::move(filePath) ) {}
 
 	UncertainWadInfo readWadInfo();
 

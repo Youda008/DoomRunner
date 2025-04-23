@@ -103,7 +103,7 @@ static const DMFlag PISTOL_START                 = { Field::DmFlags3, 1 << 7, fa
 GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayDetails & gameplayDetails )
 :
 	QDialog( parent ),
-	DialogCommon( this ),
+	DialogCommon( this, u"GameOptsDialog" ),
 	gameplayDetails( gameplayDetails )
 {
 	ui = new Ui::GameOptsDialog;

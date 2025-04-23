@@ -36,7 +36,7 @@ static const QString changelogUrl = "https://raw.githubusercontent.com/Youda008/
 
 UpdateChecker::UpdateChecker()
 :
-	LoggingComponent("UpdateChecker")
+	LoggingComponent( u"UpdateChecker" )
 {
 	QObject::connect( &manager, &QNetworkAccessManager::finished, this, &UpdateChecker::requestFinished );
 }
@@ -172,7 +172,7 @@ static NewElements reworkLayout( QMessageBox & msgBox )
 	QGridLayout * layout = qobject_cast< QGridLayout * >( msgBox.layout() );
 	if (!layout)
 	{
-		logLogicError("UpdateChecker") << "MessageBox doesn't use grid layout, wtf?";
+		::logLogicError( u"UpdateChecker::reworkLayout" ) << "MessageBox doesn't use grid layout, wtf?";
 		return newElements;
 	}
 
@@ -197,7 +197,7 @@ static NewElements reworkLayout( QMessageBox & msgBox )
 	QDialogButtonBox * btnBox = msgBox.findChild< QDialogButtonBox * >();
 	if (!btnBox)
 	{
-		logLogicError("UpdateChecker") << "MessageBox doesn't have button box, wtf?";
+		::logLogicError( u"UpdateChecker::reworkLayout" ) << "MessageBox doesn't have button box, wtf?";
 		return newElements;
 	}
 	layout->removeWidget( btnBox );
@@ -227,7 +227,7 @@ static NewElements reworkLayout( QMessageBox & msgBox )
 	newElements.firstLabel = msgBox.findChild< QLabel * >( "qt_msgbox_label" );
 	if (!newElements.firstLabel)
 	{
-		logLogicError("UpdateChecker") << "MessageBox doesn't have this label, incorrect name?";
+		::logLogicError( u"UpdateChecker::reworkLayout" ) << "MessageBox doesn't have this label, incorrect name?";
 		return newElements;
 	}
 	int labelRow, labelColumn, labelRowSpan, labelColumnSpan;

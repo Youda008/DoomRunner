@@ -35,20 +35,27 @@ void reportUserError( QWidget * parent, const QString & title, const QString & m
 
 void reportRuntimeError( QWidget * parent, const QString & title, const QString & message )
 {
+	auto logStream = logRuntimeError();
+	logStream.noquote() << message;
+	logStream.flush();
+
 	QMessageBox::warning( parent, title, message );
-	logRuntimeError().noquote() << message;
 }
 
-void reportLogicError( QWidget * parent, const QString & title, const QString & message )
+// Logic errors should be more detailed, so that we have enough information to debug and fix them.
+void reportLogicError( QWidget * parent, QStringView locationTag, const QString & title, const QString & message )
 {
-	QMessageBox::critical( parent, title,
+	auto logStream = logLogicError( locationTag );
+	logStream.noquote() << message;
+	logStream.flush();
+
+	QMessageBox::critical( parent, !locationTag.isEmpty() ? (locationTag%": "%title) : title,
 		"<html><head/><body>"
 		"<p>"
 			%message%" This is a bug, please create an issue at " HYPERLINK( issuePageUrl, issuePageUrl )
 		"</p>"
 		"</body></html>"
 	);
-	logLogicError().noquote() << message;
 }
 
 
@@ -83,7 +90,7 @@ const QString & getCachedErrorFilePath()
 	return logFilePath;
 }
 
-LogStream::LogStream( LogLevel level, const char * component, bool canLogToFile )
+LogStream::LogStream( LogLevel level, QStringView locationTag, bool canLogToFile )
 :
 	_aborter( level ),
 	_debugStream( debugStreamFromLogLevel( level ) ),
@@ -92,7 +99,7 @@ LogStream::LogStream( LogLevel level, const char * component, bool canLogToFile 
 	_logLevel( level ),
 	_canLogToFile( canLogToFile )
 {
-	_debugStream.noquote().nospace();
+	_debugStream->noquote().nospace();
 
 	if (shouldWriteToFileStream())
 	{
@@ -101,7 +108,7 @@ LogStream::LogStream( LogLevel level, const char * component, bool canLogToFile 
 			_fileStream.setDevice( &_logFile );
 	}
 
-	writeLineOpening( level, component );
+	writeLineOpening( level, locationTag );
 }
 
 LogStream::~LogStream()
@@ -125,35 +132,46 @@ LogStream::Aborter::~Aborter()
 	}
 }
 
-QDebug LogStream::debugStreamFromLogLevel( LogLevel level )
+std::unique_ptr< QDebug > LogStream::debugStreamFromLogLevel( LogLevel level )
 {
 	switch (level)
 	{
-		case LogLevel::Debug:    return QMessageLogger().debug();
-		case LogLevel::Info:     return QMessageLogger().info();
-		case LogLevel::Failure:  return QMessageLogger().warning();
-		case LogLevel::Bug:      return QMessageLogger().critical();
-		default:                 return QMessageLogger().critical();
+		case LogLevel::Debug:    return std::make_unique< QDebug >( QtMsgType::QtDebugMsg );
+		case LogLevel::Info:     return std::make_unique< QDebug >( QtMsgType::QtInfoMsg );
+		case LogLevel::Failure:  return std::make_unique< QDebug >( QtMsgType::QtWarningMsg );
+		case LogLevel::Bug:      return std::make_unique< QDebug >( QtMsgType::QtCriticalMsg );
+		default:                 return std::make_unique< QDebug >( QtMsgType::QtCriticalMsg );
 	}
 }
 
-void LogStream::writeLineOpening( LogLevel level, const char * component )
+void LogStream::writeLineOpening( LogLevel level, QStringView locationTag )
 {
 	auto logLevelStr = logLevelToStr( level );
-	QString componentStr = component ? QStringLiteral("%1: ").arg( component ) : "";
+	QString messagePrefix = !locationTag.isEmpty() ? QStringLiteral("%1: ").arg( locationTag ) : "";
 
 	if (shouldWriteToDebugStream())
 	{
 		// with the workaround in initStdStreams(), this should write to stdout even on Windows
-		_debugStream << QStringLiteral("[%1] %2").arg( logLevelStr, -7 ).arg( componentStr );
+		*_debugStream << QStringLiteral("[%1] %2").arg( logLevelStr, -7 ).arg( messagePrefix );
 	}
 
 	if (shouldAndCanWriteToFileStream())
 	{
 		auto currentTime = QDateTime::currentDateTime().toString( Qt::DateFormat::ISODate );
 
-		_fileStream << QStringLiteral("[%1] [%2] %3").arg( currentTime ).arg( logLevelStr, -7 ).arg( componentStr );
+		_fileStream << QStringLiteral("[%1] [%2] %3").arg( currentTime ).arg( logLevelStr, -7 ).arg( messagePrefix );
 	}
 }
 
 } // namespace impl
+
+
+QString LoggingComponent::makeLocationTag( QStringView funcName ) const
+{
+	QString tag( _componentType );
+	if (!_componentName.isEmpty())
+		tag = tag%"("%_componentName%")";
+	if (!funcName.isEmpty())
+		tag = tag%"::"%funcName;
+	return tag;
+}

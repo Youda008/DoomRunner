@@ -37,7 +37,7 @@ SetupDialog::SetupDialog(
 )
 :
 	QDialog( parent ),
-	DialogWithPaths( this, pathConv ),
+	DialogWithPaths( this, u"SetupDialog", pathConv ),
 	engineSettings( engineSettings ),
 	engineModel( engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.executablePath % "]"; }

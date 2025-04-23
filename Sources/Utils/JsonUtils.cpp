@@ -464,7 +464,7 @@ void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
 	{
 		if (!_context->dontShowAgain)
 			_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
-		logRuntimeError("JsonValueCtx").noquote() << message;
+		logRuntimeError( u"JsonObjectCtx" ).noquote() << message;
 	}
 }
 
@@ -479,7 +479,7 @@ void JsonArrayCtx::indexOutOfBounds( qsizetype index, bool showError ) const
 	{
 		if (!_context->dontShowAgain)
 			_context->dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading JSON file", message );
-		logRuntimeError("JsonValueCtx").noquote() << message;
+		logRuntimeError( u"JsonArrayCtx" ).noquote() << message;
 	}
 }
 
@@ -494,7 +494,7 @@ void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expec
 	{
 		if (!_context->dontShowAgain)
 			_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
-		logRuntimeError("JsonValueCtx").noquote() << message;
+		logRuntimeError( u"JsonObjectCtx" ).noquote() << message;
 	}
 }
 
@@ -509,7 +509,7 @@ void JsonArrayCtx::invalidTypeAtIdx( qsizetype index, const QString & expectedTy
 	{
 		if (!_context->dontShowAgain)
 			_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
-		logRuntimeError("JsonValueCtx").noquote() << message;
+		logRuntimeError( u"JsonArrayCtx" ).noquote() << message;
 	}
 }
 

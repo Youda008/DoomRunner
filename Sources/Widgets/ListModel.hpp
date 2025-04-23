@@ -503,7 +503,7 @@ class FilteredList {
 	{
 		if (!canBeModified())
 		{
-			logLogicError("FilteredList") << "the list cannot be modified when it is filtered";
+			logLogicError(u"FilteredList") << "the list cannot be modified when it is filtered";
 			throw std::logic_error("the list cannot be modified when it is filtered");
 		}
 	}
@@ -518,7 +518,7 @@ class ListModelCommon : public QAbstractListModel, protected LoggingComponent {
 
  public:
 
-	ListModelCommon() : LoggingComponent("ListModel") {}
+	ListModelCommon() : LoggingComponent(u"ListModel") {}
 
 	//-- model configuration -------------------------------------------------------------------------------------------
 

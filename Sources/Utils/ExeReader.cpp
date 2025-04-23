@@ -93,7 +93,7 @@ bool Resource::load( const QString & filePath, HMODULE hExeModule, LPWSTR lpType
 	{
 		// this resource is optional, some exe files don't have it
 		auto lastError = GetLastError();
-		logDebug("ExeReader") << "Cannot find resource "<<lpType<<" in "<<filePath<<", FindResource() failed with error "<<lastError;
+		logDebug( u"ExeReader" ) << "Cannot find resource "<<lpType<<" in "<<filePath<<", FindResource() failed with error "<<lastError;
 		return false;
 	}
 
@@ -101,7 +101,7 @@ bool Resource::load( const QString & filePath, HMODULE hExeModule, LPWSTR lpType
 	if (hResource == nullptr)  // careful: it's nullptr, not INVALID_HANDLE_VALUE
 	{
 		auto lastError = GetLastError();
-		logRuntimeError("ExeReader") << "Cannot load resource "<<lpType<<" from "<<filePath<<", LoadResource() failed with error "<<lastError;
+		logRuntimeError( u"ExeReader" ) << "Cannot load resource "<<lpType<<" from "<<filePath<<", LoadResource() failed with error "<<lastError;
 		return false;
 	}
 
@@ -110,7 +110,7 @@ bool Resource::load( const QString & filePath, HMODULE hExeModule, LPWSTR lpType
 	if (lpData == nullptr || dwSize == 0)
 	{
 		auto lastError = GetLastError();
-		logRuntimeError("ExeReader") << "Cannot read resource "<<lpType<<" from "<<filePath<<", LockResource() failed with error "<<lastError;
+		logRuntimeError( u"ExeReader" ) << "Cannot read resource "<<lpType<<" from "<<filePath<<", LockResource() failed with error "<<lastError;
 		FreeResource( hResource );
 		return false;
 	}
@@ -146,7 +146,7 @@ class LoggingExeReader : protected LoggingComponent {
 
  public:
 
-	LoggingExeReader( QString filePath ) : LoggingComponent("ExeReader"), _filePath( std::move(filePath) ) {}
+	LoggingExeReader( QString filePath ) : LoggingComponent( u"ExeReader" ), _filePath( std::move(filePath) ) {}
 
 	UncertainExeVersionInfo readVersionInfo();
 

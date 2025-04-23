@@ -64,7 +64,7 @@ QModelIndex getSelectedItemIndex( QAbstractItemView * view )
 	}
 	if (selectedIndexes.size() > 1)
 	{
-		reportLogicError( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
+		reportLogicError( view->parentWidget(), {}, "Multiple items selected", "Multiple items are selected." );
 		return {};
 	}
 	return selectedIndexes[0];
@@ -256,7 +256,7 @@ int getSelectedRowIndex( QTableView * view )
 		if (selectedRowIndex == -1) {
 			selectedRowIndex = index.row();
 		} else if (selectedRowIndex != index.row()) {
-			reportLogicError( view->parentWidget(), "Multiple items selected", "Multiple items are selected." );
+			reportLogicError( view->parentWidget(), {}, "Multiple items selected", "Multiple items are selected." );
 			break;
 		}
 	}

@@ -76,7 +76,7 @@ static const CompatFlag USE_ORIGINAL_SOUND      = { "compat_soundtarget",       
 CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityDetails & compatDetails )
 :
 	QDialog( parent ),
-	DialogCommon( this ),
+	DialogCommon( this, u"CompatOptsDialog" ),
 	compatDetails( compatDetails )
 {
 	ui = new Ui::CompatOptsDialog;

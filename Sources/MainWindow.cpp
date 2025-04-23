@@ -673,7 +673,7 @@ MainWindow::MainWindow()
 	DialogWithPaths(
 		// All relative paths will internally be stored relative to the current working dir,
 		// so that all file-system operations instantly work without the need to rebase the paths first.
-		this, PathConvertor( defaultPathStyle, fs::currentDir )
+		this, u"MainWindow", PathConvertor( defaultPathStyle, fs::currentDir )
 	),
 	// rebase to current working dir (don't rebase at all) until engine is selected
 	altConfigDirRebaser( fs::currentDir, fs::currentDir ),
@@ -1105,12 +1105,12 @@ void MainWindow::moveOptionsFromOldDir( QDir oldOptionsDir, QDir newOptionsDir, 
 	{
 		QString newOptionsFilePath = newOptionsDir.filePath( optionsFileName );
 
-		reportInformation( nullptr, "Migrating options file",
+		::reportInformation( nullptr, "Migrating options file",
 			"DoomRunner changed the location of "%optionsFileName%", where it stores your presets and other options. "
 			%optionsFileName%" has been found in the old data directory \""%oldOptionsDir.path()%"\""
 			" and will be automatically moved to the new data directory \""%newOptionsDir.path()%"\""
 		);
-		logInfo() <<
+		::logInfo() <<
 			"NOTICE: Found "%optionsFileName%" in the old data directory \""%oldOptionsDir.path()%"\". "
 			"Moving it to the new data directory \""%newOptionsDir.path()%"\"";
 
@@ -1527,7 +1527,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		}
 		else if (!engineSettings.defaultEngine.isEmpty())
 		{
-			reportUserError( nullptr, "Default engine no longer exists",
+			reportUserError( "Default engine no longer exists",
 				"Engine that was marked as default ("%engineSettings.defaultEngine%") no longer exists. Please select another one." );
 		}
 	}
@@ -1555,7 +1555,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		}
 		else if (!iwadSettings.defaultIWAD.isEmpty())
 		{
-			reportUserError( nullptr, "Default IWAD no longer exists",
+			reportUserError( "Default IWAD no longer exists",
 				"IWAD that was marked as default ("%iwadSettings.defaultIWAD%") no longer exists. Please select another one." );
 		}
 	}
@@ -1606,7 +1606,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		}
 		else
 		{
-			reportUserError( nullptr, "Preset no longer exists",
+			reportUserError( "Preset no longer exists",
 				"Preset that was selected last time ("%opts.selectedPreset%") no longer exists. Did you mess up with the options.json?" );
 		}
 	}
@@ -1707,7 +1707,7 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 
 			if (!fs::isValidFile( preset.selectedEnginePath ))
 			{
-				reportUserError( this, "Engine no longer exists",
+				reportUserError( "Engine no longer exists",
 					"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists. "
 					"Please update its path in Menu -> Initial Setup, or select another one."
 				);
@@ -1716,7 +1716,7 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 		}
 		else
 		{
-			reportUserError( this, "Engine no longer exists",
+			reportUserError( "Engine no longer exists",
 				"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list. "
 				"Please select another one."
 			);
@@ -1756,7 +1756,7 @@ void MainWindow::restoreSelectedConfig( Preset & preset )
 		}
 		else
 		{
-			reportUserError( this, "Config no longer exists",
+			reportUserError( "Config no longer exists",
 				"Config file selected for this preset ("%preset.selectedConfig%") no longer exists. "
 				"Please select another one."
 			);
@@ -1790,7 +1790,7 @@ void MainWindow::restoreSelectedIWAD( Preset & preset )
 
 			if (!fs::isValidFile( preset.selectedIWAD ))
 			{
-				reportUserError( this, "IWAD no longer exists",
+				reportUserError( "IWAD no longer exists",
 					"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
 					"Please select another one."
 				);
@@ -1799,7 +1799,7 @@ void MainWindow::restoreSelectedIWAD( Preset & preset )
 		}
 		else
 		{
-			reportUserError( this, "IWAD no longer exists",
+			reportUserError( "IWAD no longer exists",
 				"IWAD selected for this preset ("%preset.selectedIWAD%") no longer exists. "
 				"Please select another one."
 			);
@@ -1841,14 +1841,14 @@ void MainWindow::restoreSelectedMapPacks( Preset & preset )
 			}
 			else
 			{
-				reportUserError( this, "Map file no longer exists",
+				reportUserError( "Map file no longer exists",
 					"Map file selected for this preset ("%path%") no longer exists."
 				);
 			}
 		}
 		else
 		{
-			reportUserError( this, "Map file no longer exists",
+			reportUserError( "Map file no longer exists",
 				"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")."
 			);
 		}
@@ -1876,7 +1876,7 @@ void MainWindow::restoreSelectedMods( Preset & preset )
 		if ((!mod.isSeparator && !mod.isCmdArg) && !fs::isValidEntry( mod.path ))
 		{
 			// Let's just highlight it now, we will show warning when the user tries to launch it.
-			//reportUserError( this, "Mod no longer exists",
+			//reportUserError( "Mod no longer exists",
 			//	"A mod file \""%mod.path%"\" from this preset no longer exists. Please update it." );
 			highlightListItemAsInvalid( modModel.last() );
 		}
@@ -1944,7 +1944,7 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 
 		if (saveFileIdx < 0)
 		{
-			reportUserError( this, "Save file no longer exists",
+			reportUserError( "Save file no longer exists",
 				"Save file \""%launchOpts.saveFile%"\" no longer exists. Please select another one."
 			);
 			launchOpts.saveFile.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
@@ -1961,7 +1961,7 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 
 		if (demoFileIdx < 0)
 		{
-			reportUserError( this, "Demo file no longer exists",
+			reportUserError( "Demo file no longer exists",
 				"Demo file \""%launchOpts.demoFile_replay%"\" no longer exists. Please select another one."
 			);
 			launchOpts.demoFile_replay.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
@@ -1975,7 +1975,7 @@ void MainWindow::restoreLaunchAndMultOptions( LaunchOptions & launchOpts, const 
 
 		if (demoFileIdx < 0)
 		{
-			reportUserError( this, "Demo file no longer exists",
+			reportUserError( "Demo file no longer exists",
 				"Demo file \""%launchOpts.demoFile_resumeFrom%"\" no longer exists. Please select another one."
 			);
 			launchOpts.demoFile_resumeFrom.clear();  // if previous index was -1, callback is not called, so we clear the invalid item manually
@@ -2305,7 +2305,7 @@ void MainWindow::showTxtDescriptionFor( const QString & filePath, const QString 
 		descFileInfo = QFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "TXT" ) );
 		if (!descFileInfo.isFile())
 		{
-			reportUserError( this, "Cannot open "%contentType,
+			reportUserError( "Cannot open "%contentType,
 				capitalize( contentType )%" file \""%descFileInfo.fileName()%"\" does not exist" );
 			return;
 		}
@@ -2314,7 +2314,7 @@ void MainWindow::showTxtDescriptionFor( const QString & filePath, const QString 
 	QFile descFile( descFileInfo.filePath() );
 	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
 	{
-		reportRuntimeError( this, "Cannot open "%contentType,
+		reportRuntimeError( "Cannot open "%contentType,
 			"Failed to open map "%contentType%" \""%descFileInfo.fileName()%"\" ("%descFile.errorString()%")" );
 		return;
 	}
@@ -2356,7 +2356,7 @@ void MainWindow::openCurrentEngineDataDir()
 {
 	if (!selectedEngine)
 	{
-		reportUserError( this, "No engine selected", "You haven't selected any engine." );
+		reportUserError( "No engine selected", "You haven't selected any engine." );
 		return;
 	}
 
@@ -2381,12 +2381,12 @@ void MainWindow::cloneCurrentEngineConfigFile()
 	}
 	else
 	{
-		reportLogicError( this, "No config or engine selected", "This button should be disabled without config and engine." );
+		reportLogicError( {}, "No config or engine selected", "This button should be disabled without config and engine." );
 	}
 
 	if (!oldConfig.exists())  // it can't be a directory, because the combox is only filled with files
 	{
-		reportUserError( this, "Invalid config selected", "This config file no longer exists, please select another one." );
+		reportUserError( "Invalid config selected", "This config file no longer exists, please select another one." );
 		return;
 	}
 
@@ -2404,12 +2404,12 @@ void MainWindow::cloneCurrentEngineConfigFile()
 	QString newConfigPath = configDir.filePath( fs::ensureFileSuffix( dialog.newConfigName, oldConfig.suffix() ) );
 	if (!configDir.exists() && !configDir.mkdir("."))
 	{
-		reportRuntimeError( this, "Error creating directory", "Couldn't create directory \""%configDir.path()%"\". Check permissions." );
+		reportRuntimeError( "Error creating directory", "Couldn't create directory \""%configDir.path()%"\". Check permissions." );
 		return;
 	}
 	if (!QFile::copy( oldConfigPath, newConfigPath ))
 	{
-		reportRuntimeError( this, "Error copying file", "Couldn't create file \""%newConfigPath%"\". Check permissions." );
+		reportRuntimeError( "Error copying file", "Couldn't create file \""%newConfigPath%"\". Check permissions." );
 		return;
 	}
 
@@ -4716,12 +4716,12 @@ void MainWindow::exportPresetToScript()
 {
 	if (!selectedPreset)
 	{
-		reportUserError( this, "No preset selected", "Select a preset from the preset list." );
+		reportUserError( "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
 	if (!selectedEngine)
 	{
-		reportUserError( this, "No engine selected", "No Doom engine is selected." );
+		reportUserError( "No engine selected", "No Doom engine is selected." );
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
@@ -4746,7 +4746,7 @@ void MainWindow::exportPresetToScript()
 	QFile scriptFile( scriptFilePath );
 	if (!scriptFile.open( QIODevice::WriteOnly | QIODevice::Text ))
 	{
-		reportRuntimeError( this, "Cannot open file", "Cannot open file for writing ("%scriptFile.errorString()%")" );
+		reportRuntimeError( "Cannot open file", "Cannot open file for writing ("%scriptFile.errorString()%")" );
 		return;
 	}
 
@@ -4775,12 +4775,12 @@ void MainWindow::exportPresetToShortcut()
 
 	if (!selectedPreset)
 	{
-		reportUserError( this, "No preset selected", "Select a preset from the preset list." );
+		reportUserError( "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
 	if (!selectedEngine)
 	{
-		reportUserError( this, "No engine selected", "No Doom engine is selected." );
+		reportUserError( "No engine selected", "No Doom engine is selected." );
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
@@ -4809,7 +4809,7 @@ void MainWindow::exportPresetToShortcut()
 	bool success = win::createShortcut( shortcutPath, cmd.executable, cmd.arguments, engineExeDir, selectedPreset->name );
 	if (!success)
 	{
-		reportRuntimeError( this, "Cannot create shortcut", "Failed to create a shortcut. Check errors.txt for details." );
+		reportRuntimeError( "Cannot create shortcut", "Failed to create a shortcut. Check errors.txt for details." );
 		return;
 	}
 
@@ -5111,7 +5111,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 			 case Cooperative: // default mode, which is started without any param
 				break;
 			 default:
-				reportLogicError( this, "Invalid game mode index", "The game mode index is out of range." );
+				reportLogicError( u"generateLaunchCommand", "Invalid game mode index", "The game mode index is out of range." );
 			}
 			if (ui->teamDmgSpinBox->value() != 0.0)
 				cmd.arguments << "+teamdamage" << QString::number( ui->teamDmgSpinBox->value(), 'f', 2 );
@@ -5123,7 +5123,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		 case MultRole::Client:
 			if (!engine.multJoinParam())
 			{
-				reportLogicError( this, "Multiplayer join parameter is null",
+				reportLogicError( u"generateLaunchCommand", "Multiplayer join parameter is null",
 					"The multiplayer join parameter is not set. The multiplayer group-box should have been disabled."
 				);
 				break;
@@ -5131,7 +5131,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 			cmd.arguments << engine.multJoinParam() << ui->hostnameLine->text() % ":" % ui->portSpinBox->text();
 			break;
 		 default:
-			reportLogicError( this, "Invalid multiplayer role index", "The multiplayer role index is out of range." );
+			reportLogicError( u"generateLaunchCommand", "Invalid multiplayer role index", "The multiplayer role index is out of range." );
 		}
 
 		if (ui->playerNameLine->isEnabled() && !ui->playerNameLine->text().isEmpty())
@@ -5242,7 +5242,7 @@ bool MainWindow::makeSureDirExists( const QString & dirPath, QLineEdit * dirLine
 	{
 		highlightPathLineAsInvalid( dirLine );
 		reportRuntimeError(
-			this, "Error creating directory", "Failed to create directory \""%dirPath%"\". Check permissions."
+			"Error creating directory", "Failed to create directory \""%dirPath%"\". Check permissions."
 		);
 	}
 	else if (dirLine)
@@ -5278,12 +5278,12 @@ void MainWindow::executeLaunchCommand()
 {
 	if (!selectedPreset)
 	{
-		reportUserError( this, "No preset selected", "Select a preset from the preset list." );
+		reportUserError( "No preset selected", "Select a preset from the preset list." );
 		return;
 	}
 	if (!selectedEngine)
 	{
-		reportUserError( this, "No engine selected", "No Doom engine is selected." );
+		reportUserError( "No engine selected", "No Doom engine is selected." );
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 

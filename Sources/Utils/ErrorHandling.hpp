@@ -14,6 +14,7 @@
 #include "LangUtils.hpp"
 
 #include <QString>
+#include <QStringView>
 #include <QtCore/qdebug.h>
 #include <QTextStream>
 #include <QFile>
@@ -31,16 +32,21 @@ class QWidget;
 // displaying foreground errors that directly thwart features requested by the user
 
 /// Reports an event that is not necessarily an error, but is worth noting. (example: no update available)
+/** \param parent Parent widget for the error message box. See https://doc.qt.io/qt-6/qdialog.html#QDialog */
 void reportInformation( QWidget * parent, const QString & title, const QString & message );
 
 /// Reports an error that is a result of an incorrect usage of the application. (example: no item selected)
+/** \param parent Parent widget for the error message box. See https://doc.qt.io/qt-6/qdialog.html#QDialog */
 void reportUserError( QWidget * parent, const QString & title, const QString & message );
 
 /// Reports an error that is usually not the user's fault, but can happen time to time. (example: network error)
+/** \param parent Parent widget for the error message box. See https://doc.qt.io/qt-6/qdialog.html#QDialog */
 void reportRuntimeError( QWidget * parent, const QString & title, const QString & message );
 
 /// Reports an error that is a result of mistake in the code and should be fixed. (example: index out of bounds)
-void reportLogicError( QWidget * parent, const QString & title, const QString & message );
+/** \param parent Parent widget for the error message box. See https://doc.qt.io/qt-6/qdialog.html#QDialog
+  * \param locationTag Short spaceless description of where the error occured. */
+void reportLogicError( QWidget * parent, QStringView locationTag, const QString & title, const QString & message );
 
 
 //======================================================================================================================
@@ -70,19 +76,19 @@ class LogStream
 	};
 
 	Aborter _aborter;
-	QDebug _debugStream;
+	std::unique_ptr< QDebug > _debugStream;
 	QFile _logFile;
 	QTextStream _fileStream;
 
 	LogLevel _logLevel;
 	bool _canLogToFile;
 	bool _addQuotes = true;
-	//bool _addSpace = true;
-	//bool _firstTokenWritten = false;
+	bool _addSpace = true;
+	bool _firstTokenWritten = false;
 
  public:
 
-	LogStream( LogLevel level, const char * componentName, bool canLogToFile = true );
+	LogStream( LogLevel level, QStringView locationTag, bool canLogToFile = true );
 	~LogStream();
 
 	LogStream & quote()
@@ -95,7 +101,7 @@ class LogStream
 		_addQuotes = false;
 		return *this;
 	}
-	/*LogStream & space()
+	LogStream & space()
 	{
 		_addSpace = true;
 		return *this;
@@ -104,35 +110,43 @@ class LogStream
 	{
 		_addSpace = false;
 		return *this;
-	}*/
+	}
 
 	template< typename Obj >
 	LogStream & operator<<( const Obj & obj )
 	{
-		/*if (_addSpace)
+		if (_addSpace)
 		{
 			if (!_firstTokenWritten)
 				_firstTokenWritten = true;
 			else
 				write(' ');
-		}*/
+		}
 		if (std::is_same_v< Obj, QString > && _addQuotes) write('"');
 		write( obj );
 		if (std::is_same_v< Obj, QString > && _addQuotes) write('"');
 		return *this;
 	}
 
+	void flush()
+	{
+		// deleting the QDebug is the only way to flush the debug stream ..... really Qt? -_-
+		_debugStream.reset();
+		_fileStream.flush();
+		_logFile.flush();
+	}
+
  private:
 
-	static QDebug debugStreamFromLogLevel( LogLevel level );
+	static std::unique_ptr< QDebug > debugStreamFromLogLevel( LogLevel level );
 
-	void writeLineOpening( LogLevel level, const char * componentName );
+	void writeLineOpening( LogLevel level, QStringView locationTag );
 
 	template< typename Obj >
 	void write( const Obj & obj )
 	{
 		if (shouldWriteToDebugStream())
-			_debugStream << obj;
+			*_debugStream << obj;
 		if (shouldAndCanWriteToFileStream())
 			_fileStream << obj;
 	}
@@ -162,8 +176,8 @@ class DummyLogStream
 
 	DummyLogStream & quote() { return *this; }
 	DummyLogStream & noquote() { return *this; }
-	//DummyLogStream & space() { return *this; }
-	//DummyLogStream & nospace() { return *this; }
+	DummyLogStream & space() { return *this; }
+	DummyLogStream & nospace() { return *this; }
 
 	template< typename Obj >
 	DummyLogStream & operator<<( const Obj & ) { return *this; }
@@ -177,55 +191,55 @@ class DummyLogStream
 // top-level logging API
 
 /// Logs a debugging message into stderr (in debug builds only).
-inline auto logDebug( [[maybe_unused]] const char * componentName = nullptr )
+inline auto logDebug( [[maybe_unused]] QStringView locationTag = {} )
 {
  #if IS_DEBUG_BUILD
-	return impl::LogStream( impl::LogLevel::Debug, componentName );
+	return impl::LogStream( impl::LogLevel::Debug, locationTag );
  #else
 	return impl::DummyLogStream();
  #endif
 }
 
 /// Logs a message about an event that is not necessarily an error, but is worth noting.
-inline auto logInfo( const char * componentName = nullptr )
+inline auto logInfo( QStringView locationTag = {} )
 {
-	return impl::LogStream( impl::LogLevel::Info, componentName );
+	return impl::LogStream( impl::LogLevel::Info, locationTag );
 }
 
 /// Logs a message about a non-critical background error into stderr and an error file.
-inline auto logRuntimeError( const char * componentName = nullptr )
+inline auto logRuntimeError( QStringView locationTag = {} )
 {
-	return impl::LogStream( impl::LogLevel::Failure, componentName );
+	return impl::LogStream( impl::LogLevel::Failure, locationTag );
 }
 
 /// Logs a message about a serious background error into stderr and an error file.
-inline auto logLogicError( const char * componentName = nullptr )
+inline auto logLogicError( QStringView locationTag = {} )
 {
-	return impl::LogStream( impl::LogLevel::Bug, componentName );
+	return impl::LogStream( impl::LogLevel::Bug, locationTag );
 }
 
 // Workaround that only prints the messages to console and doesn't write it the log file,
 // in case a messages needs to be logged before the log file is successfully open.
 
-inline auto printDebug( [[maybe_unused]] const char * componentName = nullptr )
+inline auto printDebug( [[maybe_unused]] QStringView locationTag = {} )
 {
  #if IS_DEBUG_BUILD
-	return impl::LogStream( impl::LogLevel::Debug, componentName, /*canLogToFile*/ false );
+	return impl::LogStream( impl::LogLevel::Debug, locationTag, /*canLogToFile*/ false );
  #else
 	return impl::DummyLogStream();
  #endif
 }
-inline auto printInfo( const char * componentName = nullptr )
+inline auto printInfo( QStringView locationTag = {} )
 {
-	return impl::LogStream( impl::LogLevel::Info, componentName, /*canLogToFile*/ false );
+	return impl::LogStream( impl::LogLevel::Info, locationTag, /*canLogToFile*/ false );
 }
-inline auto printRuntimeError( const char * componentName = nullptr )
+inline auto printRuntimeError( QStringView locationTag = {} )
 {
-	return impl::LogStream( impl::LogLevel::Failure, componentName, /*canLogToFile*/ false );
+	return impl::LogStream( impl::LogLevel::Failure, locationTag, /*canLogToFile*/ false );
 }
-inline auto printLogicError( const char * componentName = nullptr )
+inline auto printLogicError( QStringView locationTag = {} )
 {
-	return impl::LogStream( impl::LogLevel::Bug, componentName, /*canLogToFile*/ false );
+	return impl::LogStream( impl::LogLevel::Bug, locationTag, /*canLogToFile*/ false );
 }
 
 
@@ -238,16 +252,47 @@ class LoggingComponent {
 
  protected:
 
-	LoggingComponent( const char * componentName ) : _componentName( componentName ) {}
+	LoggingComponent( QStringView componentType, QStringView componentName = {} )
+		: _componentType( componentType ), _componentName( componentName ) {}
 
-	auto logLogicError() const     { return ::logLogicError( _componentName ); }
-	auto logRuntimeError() const   { return ::logRuntimeError( _componentName ); }
-	auto logInfo() const           { return ::logInfo( _componentName ); }
-	auto logDebug() const          { return ::logDebug( _componentName ); }
+	QStringView componentType() const  { return _componentType; }
+	QStringView componentName() const  { return _componentName; }
 
- private:
+	auto logDebug( QStringView funcName = {} ) const         { return ::logDebug( makeLocationTag( funcName ) ); }
+	auto logInfo( QStringView funcName = {} ) const          { return ::logInfo( makeLocationTag( funcName ) ); }
+	auto logRuntimeError( QStringView funcName = {} ) const  { return ::logRuntimeError( makeLocationTag( funcName ) ); }
+	auto logLogicError( QStringView funcName = {} ) const    { return ::logLogicError( makeLocationTag( funcName ) ); }
 
-	const char * _componentName;
+ protected:
+
+	QStringView _componentType;  // for example: "ListView"
+	QStringView _componentName;  // for example: "iwadList"
+
+	QString makeLocationTag( QStringView funcName ) const;
+
+};
+
+class ErrorReportingComponent : public LoggingComponent {
+
+ protected:
+
+	ErrorReportingComponent( QWidget * self, QStringView componentType, QStringView componentName = {} )
+		: LoggingComponent( componentType, componentName ), _self( self ) {}
+
+	// These don't need the source location tag, because they don't indicate a bug.
+	void reportInformation( const QString & title, const QString & message )   { ::reportInformation( _self, title, message ); }
+	void reportUserError( const QString & title, const QString & message )     { ::reportUserError( _self, title, message ); }
+	void reportRuntimeError( const QString & title, const QString & message )  { ::reportRuntimeError( _self, title, message ); }
+
+	// Logic errors should be more detailed, so that we have enough information to debug and fix them.
+	void reportLogicError( QStringView funcName, const QString & title, const QString & message )
+	{
+		::reportLogicError( _self, makeLocationTag( funcName ), title, message );
+	}
+
+ protected:
+
+	QWidget * _self;
 
 };
 

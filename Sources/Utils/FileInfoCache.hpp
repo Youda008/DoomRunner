@@ -65,7 +65,7 @@ class FileInfoCache : protected LoggingComponent {
  public:
 
 	FileInfoCache( ReadFileInfoFunc readFileInfo )
-		: LoggingComponent("FileInfoCache"), _readFileInfo( readFileInfo ) {}
+		: LoggingComponent( u"FileInfoCache" ), _readFileInfo( readFileInfo ) {}
 
 	/// Reads selected information from a file and stores it into a cache.
 	/** If the file was already read earlier and was not modified since, it returns the cached info. */

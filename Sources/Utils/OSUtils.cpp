@@ -788,7 +788,7 @@ bool openDirectoryWindow( const QString & dirPath )
 {
 	if (dirPath.isEmpty())
 	{
-		reportLogicError( nullptr, "Cannot open directory window", "The path is empty." );
+		reportLogicError( nullptr, {}, "Cannot open directory window", "The path is empty." );
 		return false;
 	}
 	else if (!fs::exists( dirPath ))
@@ -819,7 +819,7 @@ bool openFileLocation( const QString & filePath )
 {
 	if (filePath.isEmpty())
 	{
-		reportLogicError( nullptr, "Cannot open file location", "The path is empty." );
+		reportLogicError( nullptr, {}, "Cannot open file location", "The path is empty." );
 		return false;
 	}
 	else if (!fs::exists( filePath ))
@@ -892,7 +892,9 @@ bool createShortcut( QString shortcutFile, QString targetFile, QStringList targe
 	if (!SUCCEEDED( hRes ))
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot create shortcut "<<shortcutFile<<", CoCreateInstance() failed with error "<<lastError;
+		reportRuntimeError( nullptr, "Cannot create shortcut",
+			"Cannot create shortcut "%shortcutFile%", CoCreateInstance() failed with error "%QString::number(lastError)
+		);
 		return false;
 	}
 
@@ -913,7 +915,9 @@ bool createShortcut( QString shortcutFile, QString targetFile, QStringList targe
 	if (!SUCCEEDED( hRes ))
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot create shortcut "<<shortcutFile<<", IShellLink::QueryInterface() failed with error "<<lastError;
+		reportRuntimeError( nullptr, "Cannot create shortcut",
+			"Cannot create shortcut "%shortcutFile%", IShellLink::QueryInterface() failed with error "%QString::number(lastError)
+		);
 		return false;
 	}
 
@@ -921,7 +925,9 @@ bool createShortcut( QString shortcutFile, QString targetFile, QStringList targe
 	if (!SUCCEEDED( hRes ))
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot create shortcut "<<shortcutFile<<", IPersistFile::Save() failed with error "<<lastError;
+		reportRuntimeError( nullptr, "Cannot create shortcut",
+			"Cannot create shortcut "%shortcutFile%", IPersistFile::Save() failed with error "%QString::number(lastError)
+		);
 		return false;
 	}
 

@@ -145,22 +145,22 @@ bool highlightFilePathIfDirOrCanBeCreated( QLineEdit * lineEdit, const QString &
 	}
 }
 
-void highlightListItemAsInvalid( const ReadOnlyListModelItem & item )
+void highlightListItemAsInvalid( const AModelItem & item )
 {
 	item.textColor = themes::getCurrentPalette().invalidEntryText;
 }
 
-void unhighlightListItem( const ReadOnlyListModelItem & item )
+void unhighlightListItem( const AModelItem & item )
 {
 	item.textColor.reset();
 }
 
-void markItemAsDefault( const ReadOnlyListModelItem & item )
+void markItemAsDefault( const AModelItem & item )
 {
 	item.textColor = themes::getCurrentPalette().defaultEntryText;
 }
 
-void unmarkItemAsDefault( const ReadOnlyListModelItem & item )
+void unmarkItemAsDefault( const AModelItem & item )
 {
 	item.textColor = themes::getCurrentPalette().color( QPalette::Text );
 }

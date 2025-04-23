@@ -350,7 +350,7 @@ int appendRow( QTableWidget * widget )
 	return newRowIdx;
 }
 
-int deleteSelectedRow( QTableWidget * widget )
+int removeSelectedRow( QTableWidget * widget )
 {
 	int selectedIdx = getSelectedRowIndex( widget );
 	if (selectedIdx < 0)
@@ -369,7 +369,7 @@ int deleteSelectedRow( QTableWidget * widget )
 	{
 		selectAndSetCurrentRowByIndex( widget, selectedIdx );
 	}
-	else  // ................................................................ if the deleted row was the last one,
+	else  // ................................................................ if the removed row was the last one,
 	{
 		if (selectedIdx > 0)  // ............................................ and not the only one,
 		{

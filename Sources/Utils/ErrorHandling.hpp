@@ -280,12 +280,12 @@ class ErrorReportingComponent : public LoggingComponent {
 		: LoggingComponent( componentType, componentName ), _self( self ) {}
 
 	// These don't need the source location tag, because they don't indicate a bug.
-	void reportInformation( const QString & title, const QString & message )   { ::reportInformation( _self, title, message ); }
-	void reportUserError( const QString & title, const QString & message )     { ::reportUserError( _self, title, message ); }
-	void reportRuntimeError( const QString & title, const QString & message )  { ::reportRuntimeError( _self, title, message ); }
+	void reportInformation( const QString & title, const QString & message ) const   { ::reportInformation( _self, title, message ); }
+	void reportUserError( const QString & title, const QString & message ) const     { ::reportUserError( _self, title, message ); }
+	void reportRuntimeError( const QString & title, const QString & message ) const  { ::reportRuntimeError( _self, title, message ); }
 
 	// Logic errors should be more detailed, so that we have enough information to debug and fix them.
-	void reportLogicError( QStringView funcName, const QString & title, const QString & message )
+	void reportLogicError( QStringView funcName, const QString & title, const QString & message ) const
 	{
 		::reportLogicError( _self, makeLocationTag( funcName ), title, message );
 	}

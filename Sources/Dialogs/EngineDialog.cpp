@@ -24,7 +24,7 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 	engine( engine )
 {
 	ui = new Ui::EngineDialog;
-	ui->setupUi(this);
+	ui->setupUi( this );
 
 	DialogWithPaths::lastUsedDir = lastUsedDir_;
 

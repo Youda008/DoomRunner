@@ -39,11 +39,11 @@ SetupDialog::SetupDialog(
 	QDialog( parent ),
 	DialogWithPaths( this, u"SetupDialog", pathConv ),
 	engineSettings( engineSettings ),
-	engineModel( engineList,
+	engineModel( u"engineModel", engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.executablePath % "]"; }
 	),
 	iwadSettings( iwadSettings ),
-	iwadModel( iwadList,
+	iwadModel( u"iwadModel", iwadList,
 		/*makeDisplayString*/ []( const IWAD & iwad ) -> QString { return iwad.name % "   [" % iwad.path % "]"; }
 	),
 	mapSettings( mapSettings ),
@@ -130,25 +130,16 @@ SetupDialog::SetupDialog(
 
 void SetupDialog::setupEngineList()
 {
-	// connect the view with model
+	// connect the view with the model
 	ui->engineListView->setModel( &engineModel );
 
 	// set selection rules
 	ui->engineListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
-	// give the model our path convertor, it will need it for converting paths dropped from directory
-	engineModel.setPathConvertor( &pathConvertor );
-
-	// setup editing
-	engineModel.toggleEditing( false );
-	ui->engineListView->toggleNameEditing( false );
-	ui->engineListView->toggleListModifications( true );
-
 	// set drag&drop behaviour
-	ui->engineListView->toggleIntraWidgetDragAndDrop( true );
-	ui->engineListView->toggleInterWidgetDragAndDrop( false );
-	ui->engineListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->engineListView, &EditableListView::itemsDropped, this, &thisClass::onEnginesDropped );
+	engineModel.setPathConvertor( pathConvertor );  // the model needs our path convertor for converting paths dropped from a file explorer
+	ui->engineListView->setAllowedDnDSources( DnDSource::ThisWidget | DnDSource::ExternalApp );
+	connect( &engineModel, &AListModel::itemsInserted, this, &thisClass::onEnginesInserted );
 
 	// set reaction to clicks inside the view
 	connect( ui->engineListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onEngineSelectionChanged );
@@ -159,9 +150,13 @@ void SetupDialog::setupEngineList()
 	connect( &engineConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::onEngineConfirmed );
 
 	// setup reaction to key shortcuts and right click
-	ui->engineListView->toggleContextMenu( true );
+	ui->engineListView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::AddAndDelete
+		| ExtendedListView::MenuAction::Move
+		| ExtendedListView::MenuAction::OpenFileLocation
+	);
 	setDefaultEngineAction = ui->engineListView->addAction( "Set as default", {} );
-	ui->engineListView->enableOpenFileLocation();
+	ui->engineListView->toggleListModifications( true );
 	connect( ui->engineListView->addItemAction, &QAction::triggered, this, &thisClass::engineAdd );
 	connect( ui->engineListView->deleteItemAction, &QAction::triggered, this, &thisClass::engineDelete );
 	connect( ui->engineListView->moveItemUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
@@ -179,32 +174,31 @@ void SetupDialog::setupEngineList()
 
 void SetupDialog::setupIWADList()
 {
-	// connect the view with model
+	// connect the view with the model
 	ui->iwadListView->setModel( &iwadModel );
 
 	// set selection rules
-	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
-
-	// give the model our path convertor, it will need it for converting paths dropped from directory
-	iwadModel.setPathConvertor( &pathConvertor );
+	ui->iwadListView->setSelectionMode( QAbstractItemView::ExtendedSelection );
 
 	// setup editing
-	iwadModel.toggleEditing( !iwadSettings.updateFromDir );
-	ui->iwadListView->toggleNameEditing( !iwadSettings.updateFromDir );
-	ui->iwadListView->toggleListModifications( !iwadSettings.updateFromDir );
+	ui->iwadListView->toggleItemEditing( !iwadSettings.updateFromDir );
 
 	// set drag&drop behaviour
-	ui->iwadListView->toggleIntraWidgetDragAndDrop( !iwadSettings.updateFromDir );
-	ui->iwadListView->toggleInterWidgetDragAndDrop( false );
-	ui->iwadListView->toggleExternalFileDragAndDrop( !iwadSettings.updateFromDir );
+	iwadModel.setPathConvertor( pathConvertor );  // the model needs our path convertor for converting paths dropped from a file explorer
+	if (!iwadSettings.updateFromDir)
+		ui->iwadListView->setAllowedDnDSources( DnDSource::ThisWidget | DnDSource::ExternalApp );
 
 	// set reaction to clicks inside the view
 	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onIWADSelectionChanged );
 
 	// setup reaction to key shortcuts and right click
-	ui->iwadListView->toggleContextMenu( true );
+	ui->iwadListView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::AddAndDelete
+		| ExtendedListView::MenuAction::Move
+		| ExtendedListView::MenuAction::OpenFileLocation
+	);
 	setDefaultIWADAction = ui->iwadListView->addAction( "Set as default", {} );
-	ui->iwadListView->enableOpenFileLocation();
+	ui->iwadListView->toggleListModifications( !iwadSettings.updateFromDir );
 	connect( ui->iwadListView->addItemAction, &QAction::triggered, this, &thisClass::iwadAdd );
 	connect( ui->iwadListView->deleteItemAction, &QAction::triggered, this, &thisClass::iwadDelete );
 	connect( ui->iwadListView->moveItemUpAction, &QAction::triggered, this, &thisClass::iwadMoveUp );
@@ -234,7 +228,7 @@ void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
 
 	if (tickCount % dirUpdateDelay == 0)
 	{
-		if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))  // the second prevents clearing the list when the path is invalid
+		if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is invalid
 			updateIWADsFromDir();
 	}
 }
@@ -301,9 +295,9 @@ void SetupDialog::engineDelete()
 {
 	int defaultIndex = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
 
-	const auto deletedIndexes = wdg::deleteSelectedItems( ui->engineListView, engineModel );
+	const auto removedIndexes = wdg::removeSelectedItems( ui->engineListView, engineModel );
 
-	if (!deletedIndexes.isEmpty() && deletedIndexes[0] == defaultIndex)
+	if (!removedIndexes.isEmpty() && removedIndexes[0] == defaultIndex)
 		engineSettings.defaultEngine.clear();
 }
 
@@ -327,37 +321,41 @@ void SetupDialog::engineMoveToBottom()
 	wdg::moveSelectedItemsToBottom( ui->engineListView, engineModel );
 }
 
-void SetupDialog::onEnginesDropped( int row, int count, DnDType type )
+void SetupDialog::onEnginesInserted( int row, int count )
 {
-	if (type == DnDType::IntraWidget)  // engines were just moved within the list
-		return;
-
-	// Engine (or more of them) got dragged&dropped from other place,
-	// in that case we only have the executable path, other things must be filled automatically.
+	// Engine (or more of them) got dragged&dropped into this list.
 	for (int engineIdx = row; engineIdx < row + count; ++engineIdx)
 	{
 		EngineInfo & engine = engineModel[ engineIdx ];
-		// the executablePath is already converted by the ListModel
-		EngineDialog::autofillEngineInfo( engine, engine.executablePath );
+
+		// If it was dragged&dropped from this list, it already contains everything.
+		// But if it was dragged&dropped from a file explorer, we have to deduce everything automatically.
+		if (!engine.isInitialized())
+		{
+			// the executablePath is already converted to the right path style by the ListModel
+			EngineDialog::autofillEngineInfo( engine, engine.executablePath );
+		}
 	}
 }
 
 void SetupDialog::onEngineDoubleClicked( const QModelIndex & index )
 {
-	editEngine( engineModel[ index.row() ] );
+	editEngine( index.row() );
 }
 
 void SetupDialog::onEngineConfirmed()
 {
-	if (EngineInfo * selectedEngine = wdg::getSelectedItem( ui->engineListView, engineModel ))
+	if (int selectedIdx = wdg::getSelectedItemIndex( ui->engineListView ); selectedIdx >= 0)
 	{
-		editEngine( *selectedEngine );
+		editEngine( selectedIdx );
 	}
 }
 
-void SetupDialog::editEngine( EngineInfo & selectedEngine )
+void SetupDialog::editEngine( int engineIdx )
 {
-	EngineDialog dialog( this, pathConvertor, selectedEngine, lastUsedDir );
+	EngineInfo & engine = engineModel[ engineIdx ];
+
+	EngineDialog dialog( this, pathConvertor, engine, lastUsedDir );
 
 	int code = dialog.exec();
 
@@ -365,17 +363,16 @@ void SetupDialog::editEngine( EngineInfo & selectedEngine )
 
 	if (code == QDialog::Accepted)
 	{
-		selectedEngine = dialog.engine;
+		engineModel.startEditingItemData();
+		engine = dialog.engine;
+		engineModel.finishEditingItemData( engineIdx, 1, AListModel::allDataRoles );
 	}
 }
 
 void SetupDialog::onEngineSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
-	// For some reason i don't understand Qt sometimes (not always) calls this method
-	// when we're shifting items in the ListModel and when there are null pointers in the original item positions.
-	// And for some other reason i also don't understand, getSelectedItemIndex() queries all items for flags.
-	// Therefore without this check we crash in derefencing null in ListModel::flags().
-	if (engineModel.isMovingInProgress())
+	// Optimization: Don't update when the list is not in its final state and is going to change right away.
+	if (ui->engineListView->isDragAndDropInProgress())
 		return;
 
 	const EngineInfo * selectedEngine = wdg::getSelectedItem( ui->engineListView, engineModel );
@@ -414,9 +411,9 @@ void SetupDialog::iwadDelete()
 {
 	int defaultIndex = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
 
-	const auto deletedIndexes = wdg::deleteSelectedItems( ui->iwadListView, iwadModel );
+	const auto removedIndexes = wdg::removeSelectedItems( ui->iwadListView, iwadModel );
 
-	if (!deletedIndexes.isEmpty() && deletedIndexes[0] == defaultIndex)
+	if (!removedIndexes.isEmpty() && removedIndexes[0] == defaultIndex)
 		iwadSettings.defaultIWAD.clear();
 }
 
@@ -442,19 +439,16 @@ void SetupDialog::iwadMoveToBottom()
 
 void SetupDialog::onIWADSelectionChanged( const QItemSelection &, const QItemSelection & )
 {
-	// For some reason i don't understand Qt sometimes (not always) calls this method
-	// when we're shifting items in the ListModel and when there are null pointers in the original item positions.
-	// And for some other reason i also don't understand, getSelectedItemIndex() queries all items for flags.
-	// Therefore without this check we crash in derefencing null in ListModel::flags().
-	if (iwadModel.isMovingInProgress())
+	// Optimization: Don't update when the list is not in its final state and is going to change right away.
+	if (ui->engineListView->isDragAndDropInProgress())
 		return;
 
-	const IWAD * selectedIWAD = wdg::getSelectedItem( ui->iwadListView, iwadModel );
-	setDefaultIWADAction->setEnabled( selectedIWAD != nullptr );  // only allow this action if something is selected
-	if (selectedIWAD)
+	const IWAD * currentIWAD = wdg::getCurrentItem( ui->iwadListView, iwadModel );
+	setDefaultIWADAction->setEnabled( currentIWAD != nullptr );  // only allow this action if something is selected
+	if (currentIWAD)
 	{
 		// allow unsetting as default
-		bool isDefaultItem = selectedIWAD->getID() == iwadSettings.defaultIWAD;
+		bool isDefaultItem = currentIWAD->getID() == iwadSettings.defaultIWAD;
 		setDefaultIWADAction->setText( !isDefaultItem ? "Set as default" : "Unset as default" );
 	}
 }
@@ -478,15 +472,15 @@ void SetupDialog::toggleAutoIWADUpdate( bool enabled )
 	ui->iwadBtnUp->setEnabled( !enabled );
 	ui->iwadBtnDown->setEnabled( !enabled );
 
-	ui->iwadListView->toggleIntraWidgetDragAndDrop( !enabled );
-	ui->iwadListView->toggleExternalFileDragAndDrop( !enabled );
-
-	iwadModel.toggleEditing( !enabled );
-	ui->iwadListView->toggleNameEditing( !enabled );
+	ui->iwadListView->toggleItemEditing( !enabled );
 	ui->iwadListView->toggleListModifications( !enabled );
 
+	ui->iwadListView->setAllowedDnDSources(
+		!enabled ? (DnDSource::ThisWidget | DnDSource::ExternalApp) : DnDSource::None
+	);
+
 	// populate the list
-	if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is empty
+	if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is invalid
 		updateIWADsFromDir();
 }
 
@@ -504,7 +498,7 @@ void SetupDialog::onIWADSubdirsToggled( bool checked )
 {
 	iwadSettings.searchSubdirs = checked;
 
-	if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is empty
+	if (iwadSettings.updateFromDir && fs::isValidDir( iwadSettings.dir ))  // don't clear the current items when the dir line is invalid
 		updateIWADsFromDir();
 }
 
@@ -605,20 +599,22 @@ void SetupDialog::onAbsolutePathsToggled( bool checked )
 	settings.pathStyle.toggleAbsolute( checked );
 	pathConvertor.setPathStyle( settings.pathStyle );
 
+	engineModel.startEditingItemData();
 	for (Engine & engine : engineModel)
 	{
 		engine.executablePath = pathConvertor.convertPath( engine.executablePath );
 		// don't convert the config/data dirs, some of them may be better stored as relative, some as absolute
 	}
-	engineModel.contentChanged( 0 );
+	engineModel.finishEditingItemData( 0, -1, AListModel::onlyDisplayRole );
 
 	iwadSettings.dir = pathConvertor.convertPath( iwadSettings.dir );
 	ui->iwadDirLine->setText( iwadSettings.dir );
+	engineModel.startEditingItemData();
 	for (IWAD & iwad : iwadModel)
 	{
 		iwad.path = pathConvertor.convertPath( iwad.path );
 	}
-	iwadModel.contentChanged( 0 );
+	engineModel.finishEditingItemData( 0, -1, AListModel::onlyDisplayRole );
 
 	mapSettings.dir = pathConvertor.convertPath( mapSettings.dir );
 	ui->mapDirLine->setText( mapSettings.dir );

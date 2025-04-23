@@ -67,7 +67,7 @@ static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, 
 			Mod mod( /*checked*/false );
 			deserialize( modJs, mod );
 
-			bool isValid = mod.fileName != InvalidItemName && mod.path != InvalidItemPath;
+			bool isValid = mod.name != InvalidItemName && mod.path != InvalidItemPath;
 			if (!isValid)
 				highlightListItemAsInvalid( mod );
 

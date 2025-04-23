@@ -11,13 +11,13 @@
 
 #include "Essential.hpp"
 
-#include "CommonTypes.hpp"           // PtrList
-#include "Widgets/ListModel.hpp"     // ReadOnlyListModelItem, EditableListModelItem
-#include "Utils/JsonUtils.hpp"       // enumName, enumSize
-#include "Utils/FileSystemUtils.hpp" // PathStyle
-#include "Utils/OSUtils.hpp"         // EnvVar
-#include "EngineTraits.hpp"          // EngineFamily
-#include "Themes.hpp"                // Theme
+#include "CommonTypes.hpp"             // PtrList
+#include "DataModels/AModelItem.hpp"   // AModelItem - all list items inherit from this
+#include "Utils/JsonUtils.hpp"         // enumName, enumSize  TODO: separate header
+#include "Utils/FileSystemUtils.hpp"   // PathStyle  TODO: separate header?
+#include "Utils/OSUtils.hpp"           // EnvVar  TODO: separate header?
+#include "EngineTraits.hpp"            // EngineFamily  TODO: separate header?
+#include "Themes.hpp"                  // Theme
 
 #include <QString>
 #include <QFileInfo>
@@ -47,7 +47,7 @@
 // files
 
 /// a ported Doom engine (source port) located somewhere on the disc
-struct Engine : public EditableListModelItem
+struct Engine : public AModelItem
 {
 	QString name;            ///< user defined engine name
 	QString executablePath;  ///< path to the engine's executable
@@ -59,12 +59,12 @@ struct Engine : public EditableListModelItem
 	// When file is dropped from a file explorer: The other members have to be auto-detected later by EngineTraits.
 	Engine( const QFileInfo & file ) : executablePath( file.filePath() ) {}
 
-	// requirements of EditableListModel
+	// requirements of GenericListModel
 	const QString & getFilePath() const   { return executablePath; }
 	const QString & getID() const         { return executablePath; }
 };
 
-struct IWAD : public EditableListModelItem
+struct IWAD : public AModelItem
 {
 	QString name;   ///< initially set to file name, but user can edit it by double-clicking on it in SetupDialog
 	QString path;   ///< path to the IWAD file
@@ -72,7 +72,7 @@ struct IWAD : public EditableListModelItem
 	IWAD() {}
 	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
 
-	// requirements of EditableListModel
+	// requirements of GenericListModel
 	bool isEditable() const                 { return true; }
 	const QString & getEditString() const   { return name; }
 	void setEditString( QString str )       { name = std::move(str); }
@@ -80,21 +80,21 @@ struct IWAD : public EditableListModelItem
 	const QString & getID() const           { return path; }
 };
 
-struct Mod : public EditableListModelItem
+struct Mod : public AModelItem
 {
 	QString path;           ///< path to the mod file
-	QString fileName;       ///< cached last part of path, beware of inconsistencies
+	QString name;           ///< cached last part of path, beware of inconsistencies
 	bool checked = false;   ///< whether this mod is selected to be loaded
 	bool isCmdArg = false;  ///< indicates that this is a special item used to insert a custom command line argument between the mod files
 
 	Mod( bool checked = false ) : checked( checked ) {}
 	Mod( const QFileInfo & file, bool checked = true )
-		: path( file.filePath() ), fileName( file.fileName() ), checked( checked ) {}
+		: path( file.filePath() ), name( file.fileName() ), checked( checked ) {}
 
-	// requirements of EditableListModel
+	// requirements of GenericListModel
 	bool isEditable() const                 { return isCmdArg; }
-	const QString & getEditString() const   { return fileName; }
-	void setEditString( QString str )       { fileName = std::move(str); }
+	const QString & getEditString() const   { return name; }
+	void setEditString( QString str )       { name = std::move(str); }
 	bool isCheckable() const                { return true; }
 	bool isChecked() const                  { return checked; }
 	void setChecked( bool checked )         { this->checked = checked; }
@@ -264,7 +264,7 @@ struct GlobalOptions
 //----------------------------------------------------------------------------------------------------------------------
 // preset
 
-struct Preset : public EditableListModelItem
+struct Preset : public AModelItem
 {
 	QString name;
 
@@ -289,9 +289,9 @@ struct Preset : public EditableListModelItem
 
 	Preset() {}
 	Preset( const QString & name ) : name( name ) {}
-	Preset( const QFileInfo & ) {}  // dummy, it's required by the EditableListModel template, but isn't actually used
+	Preset( const QFileInfo & ) {}  // dummy, it's required by the GenericListModel template, but isn't actually used
 
-	// requirements of EditableListModel
+	// requirements of GenericListModel
 	bool isEditable() const                 { return true; }
 	const QString & getEditString() const   { return name; }
 	void setEditString( QString str )       { name = std::move(str); }

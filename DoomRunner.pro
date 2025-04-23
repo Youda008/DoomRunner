@@ -40,6 +40,9 @@ QMAKE_CXXFLAGS += -Wno-comment
 INCLUDEPATH += Sources
 
 HEADERS += \
+	Sources/DataModels/AModelItem.hpp \
+	Sources/DataModels/GenericListModel.hpp \
+	Sources/DataModels/ModelCommon.hpp \
 	Sources/Dialogs/AboutDialog.hpp \
 	Sources/Dialogs/CompatOptsDialog.hpp \
 	Sources/Dialogs/DialogCommon.hpp \
@@ -50,7 +53,6 @@ HEADERS += \
 	Sources/Dialogs/OwnFileDialog.hpp \
 	Sources/Dialogs/ProcessOutputWindow.hpp \
 	Sources/Dialogs/SetupDialog.hpp \
-	Sources/DoomFiles.hpp \
 	Sources/Utils/ContainerUtils.hpp \
 	Sources/Utils/ErrorHandling.hpp \
 	Sources/Utils/EventFilters.hpp \
@@ -65,15 +67,16 @@ HEADERS += \
 	Sources/Utils/StandardOutput.hpp \
 	Sources/Utils/StringUtils.hpp \
 	Sources/Utils/TimeStats.hpp \
+	Sources/Utils/TypeTraits.hpp \
 	Sources/Utils/WADReader.hpp \
 	Sources/Utils/WidgetUtils.hpp \
 	Sources/Utils/WindowsUtils.hpp \
-	Sources/Widgets/EditableListView.hpp \
+	Sources/Widgets/ExtendedListView.hpp \
 	Sources/Widgets/ExtendedTreeView.hpp \
-	Sources/Widgets/ListModel.hpp \
 	Sources/Widgets/RightClickableButton.hpp \
 	Sources/Widgets/SearchPanel.hpp \
 	Sources/CommonTypes.hpp \
+	Sources/DoomFiles.hpp \
 	Sources/EngineTraits.hpp \
 	Sources/Essential.hpp \
 	Sources/MainWindow.hpp \
@@ -84,6 +87,7 @@ HEADERS += \
 	Sources/Version.hpp \
 
 SOURCES += \
+	Sources/DataModels/GenericListModel.cpp \
 	Sources/Dialogs/AboutDialog.cpp \
 	Sources/Dialogs/CompatOptsDialog.cpp \
 	Sources/Dialogs/DialogCommon.cpp \
@@ -94,7 +98,6 @@ SOURCES += \
 	Sources/Dialogs/OwnFileDialog.cpp \
 	Sources/Dialogs/ProcessOutputWindow.cpp \
 	Sources/Dialogs/SetupDialog.cpp \
-	Sources/DoomFiles.cpp \
 	Sources/Utils/ContainerUtils.cpp \
 	Sources/Utils/ErrorHandling.cpp \
 	Sources/Utils/EventFilters.cpp \
@@ -108,15 +111,16 @@ SOURCES += \
 	Sources/Utils/PathCheckUtils.cpp \
 	Sources/Utils/StandardOutput.cpp \
 	Sources/Utils/StringUtils.cpp \
+	Sources/Utils/TypeTraitsTest.cpp \
 	Sources/Utils/WADReader.cpp \
 	Sources/Utils/WidgetUtils.cpp \
 	Sources/Utils/WindowsUtils.cpp \
-	Sources/Widgets/EditableListView.cpp \
+	Sources/Widgets/ExtendedListView.cpp \
 	Sources/Widgets/ExtendedTreeView.cpp \
-	Sources/Widgets/ListModel.cpp \
 	Sources/Widgets/RightClickableButton.cpp \
 	Sources/Widgets/SearchPanel.cpp \
 	Sources/CommonTypes.cpp \
+	Sources/DoomFiles.cpp \
 	Sources/EngineTraits.cpp \
 	Sources/MainWindow.cpp \
 	Sources/OptionsSerializer.cpp \

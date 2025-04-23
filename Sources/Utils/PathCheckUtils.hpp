@@ -11,7 +11,7 @@
 
 #include "Essential.hpp"
 
-#include "Widgets/ListModel.hpp"  // ReadOnlyListModelItem
+#include "DataModels/AModelItem.hpp"
 
 class QString;
 class QWidget;
@@ -55,16 +55,16 @@ bool highlightDirPathIfFileOrCanBeCreated( QLineEdit * lineEdit, const QString &
 bool highlightFilePathIfDirOrCanBeCreated( QLineEdit * lineEdit, const QString & path );
 
 /// Makes this item highlighted in its views.
-void highlightListItemAsInvalid( const ReadOnlyListModelItem & item );
+void highlightListItemAsInvalid( const AModelItem & item );
 
 /// Removes the highlighting of this item in its views.
-void unhighlightListItem( const ReadOnlyListModelItem & item );
+void unhighlightListItem( const AModelItem & item );
 
 /// Marks this item as the default one.
-void markItemAsDefault( const ReadOnlyListModelItem & item );
+void markItemAsDefault( const AModelItem & item );
 
 /// Removes the default item marking.
-void unmarkItemAsDefault( const ReadOnlyListModelItem & item );
+void unmarkItemAsDefault( const AModelItem & item );
 
 
 //----------------------------------------------------------------------------------------------------------------------

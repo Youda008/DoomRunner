@@ -7,6 +7,7 @@
 
 #include "UserData.hpp"
 
+#include <QIcon>
 #include <QFileIconProvider>
 #include <QString>
 #include <QHash>

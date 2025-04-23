@@ -36,7 +36,7 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_4">
                <item>
-                <widget class="EditableListView" name="presetListView"/>
+                <widget class="ExtendedListView" name="presetListView"/>
                </item>
                <item>
                 <layout class="QHBoxLayout" name="hLayout_searchBtn">
@@ -276,7 +276,7 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_5">
                <item>
-                <widget class="QListView" name="iwadListView">
+                <widget class="ExtendedListView" name="iwadListView">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -377,7 +377,7 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_6">
                <item>
-                <widget class="EditableListView" name="modListView"/>
+                <widget class="ExtendedListView" name="modListView"/>
                </item>
                <item>
                 <widget class="QCheckBox" name="mapsAfterModsChkBox">
@@ -2279,9 +2279,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>EditableListView</class>
+   <class>ExtendedListView</class>
    <extends>QListView</extends>
-   <header location="global">Sources/Widgets/EditableListView.hpp</header>
+   <header location="global">Sources/Widgets/ExtendedListView.hpp</header>
   </customwidget>
   <customwidget>
    <class>ExtendedTreeView</class>

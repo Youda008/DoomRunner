@@ -11,8 +11,8 @@
 
 #include "Dialogs/DialogCommon.hpp"
 
-#include "Widgets/ListModel.hpp"
-#include "Widgets/EditableListView.hpp"  // DnDType
+#include "DataModels/GenericListModel.hpp"
+#include "Widgets/ExtendedListView.hpp"  // DnDType
 #include "Widgets/SearchPanel.hpp"
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
@@ -73,8 +73,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onPresetToggled( const QItemSelection & selected, const QItemSelection & deselected );
 	void onIWADToggled( const QItemSelection & selected, const QItemSelection & deselected );
 	void onMapPackToggled( const QItemSelection & selected, const QItemSelection & deselected );
-	void onPresetDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
-	void onModDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles );
 
 	void onIWADDoubleClicked( const QModelIndex & index );
 	void onMapPackDoubleClicked( const QModelIndex & index );
@@ -93,6 +91,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void presetMoveToTop();
 	void presetMoveToBottom();
 	void presetInsertSeparator();
+	void onPresetDataChanged( int row, int count, const QVector<int> & roles );
 	void onPresetsReordered();
 
 	void searchPresets( const QString & phrase, bool caseSensitive, bool useRegex );
@@ -106,9 +105,12 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modMoveToTop();
 	void modMoveToBottom();
 	void modInsertSeparator();
+	void onModDataChanged( int row, int count, const QVector<int> & roles );
+	void onModsInserted( int row, int count );
+	void onModsRemoved( int row, int count );
+	void onModsDropped( int row, int count, DnDSources dndSource );
 	void onMapsAfterModsToggled( bool checked );
 	void onModIconsToggled();
-	void onModsDropped( int row, int count, DnDType type );
 
 	void onModeChosen_Default();
 	void onModeChosen_LaunchMap();
@@ -425,7 +427,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	EngineSettings engineSettings;    ///< engine-related preferences (value returned by SetupDialog)
 	ReadOnlyDirectListModel< EngineInfo > engineModel;    ///< user-ordered list of engines (managed by SetupDialog)
 
-	struct ConfigFile : public ReadOnlyListModelItem
+	struct ConfigFile : public AModelItem
 	{
 		QString fileName;
 		ConfigFile() {}
@@ -435,7 +437,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	};
 	ReadOnlyDirectListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
 
-	struct SaveFile : public ReadOnlyListModelItem
+	struct SaveFile : public AModelItem
 	{
 		QString fileName;
 		SaveFile() {}
@@ -445,7 +447,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	};
 	ReadOnlyDirectListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
 
-	struct DemoFile : public ReadOnlyListModelItem
+	struct DemoFile : public AModelItem
 	{
 		QString fileName;
 		DemoFile() {}

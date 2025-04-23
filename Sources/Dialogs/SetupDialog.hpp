@@ -12,8 +12,8 @@
 #include "DialogCommon.hpp"
 
 #include "UserData.hpp"  // Engine, IWAD
-#include "Widgets/ListModel.hpp"
-#include "Widgets/EditableListView.hpp"  // DnDType
+#include "DataModels/GenericListModel.hpp"
+#include "Widgets/ExtendedListView.hpp"  // DnDType
 #include "Utils/EventFilters.hpp"  // ConfirmationFilter
 
 #include <QDialog>
@@ -63,7 +63,7 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 	void engineMoveDown();
 	void engineMoveToTop();
 	void engineMoveToBottom();
-	void onEnginesDropped( int row, int count, DnDType type );
+	void onEnginesInserted( int row, int count );
 
 	void onEngineSelectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
 
@@ -117,7 +117,7 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 	void setupEngineList();
 	void setupIWADList();
 
-	void editEngine( EngineInfo & selectedEngine );
+	void editEngine( int engineIdx );
 
 	void toggleAutoIWADUpdate( bool enabled );
 

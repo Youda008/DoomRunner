@@ -159,12 +159,12 @@ static QJsonObject serialize( const Mod & mod )
 	if (mod.isSeparator)
 	{
 		modJs["separator"] = true;
-		modJs["name"] = mod.fileName;
+		modJs["name"] = mod.name;
 	}
 	else if (mod.isCmdArg)
 	{
 		modJs["cmd_argument"] = true;
-		modJs["value"] = mod.fileName;
+		modJs["value"] = mod.name;
 		modJs["checked"] = mod.checked;
 	}
 	else
@@ -180,17 +180,17 @@ static void deserialize( const JsonObjectCtx & modJs, Mod & mod )
 {
 	if ((mod.isSeparator = modJs.getBool( "separator", false, DontShowError )))
 	{
-		mod.fileName = modJs.getString( "name", InvalidItemName );
+		mod.name = modJs.getString( "name", InvalidItemName );
 	}
 	else if ((mod.isCmdArg = modJs.getBool( "cmd_argument", false, DontShowError )))
 	{
-		mod.fileName = modJs.getString( "value", InvalidItemName );
+		mod.name = modJs.getString( "value", InvalidItemName );
 		mod.checked = modJs.getBool( "checked", mod.checked );
 	}
 	else
 	{
 		mod.path = modJs.getString( "path", InvalidItemPath );
-		mod.fileName = mod.path != InvalidItemPath ? QFileInfo( mod.path ).fileName() : InvalidItemName;
+		mod.name = mod.path != InvalidItemPath ? QFileInfo( mod.path ).fileName() : InvalidItemName;
 		mod.checked = modJs.getBool( "checked", mod.checked );
 	}
 }
@@ -560,7 +560,7 @@ static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const 
 			Mod mod( /*checked*/false );
 			deserialize( modJs, mod );
 
-			bool isValid = mod.fileName != InvalidItemName && mod.path != InvalidItemPath;
+			bool isValid = mod.name != InvalidItemName && mod.path != InvalidItemPath;
 				//&& (mod.path.isEmpty() || PathChecker::checkFilePath( mod.path, true, "a Mod from the saved options", "Please update it in the corresponding preset." ));
 			if (!isValid)
 				highlightListItemAsInvalid( mod );

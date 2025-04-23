@@ -680,26 +680,26 @@ MainWindow::MainWindow()
 	altSaveDirRebaser( fs::currentDir, fs::currentDir ),
 	altDemoDirRebaser( fs::currentDir, fs::currentDir ),
 	altScreenshotDirRebaser( fs::currentDir, fs::currentDir ),
-	engineModel(
+	engineModel( u"engineModel",
 		/*makeDisplayString*/ []( const Engine & engine ) { return engine.name; }
 	),
-	configModel(
+	configModel( u"configModel",
 		/*makeDisplayString*/ []( const ConfigFile & config ) { return config.fileName; }
 	),
-	saveModel(
+	saveModel( u"saveModel",
 		/*makeDisplayString*/ []( const SaveFile & save ) { return save.fileName; }
 	),
-	demoModel(
+	demoModel( u"demoModel",
 		/*makeDisplayString*/ []( const DemoFile & demo ) { return demo.fileName; }
 	),
-	iwadModel(
+	iwadModel( u"iwadModel",
 		/*makeDisplayString*/ []( const IWAD & iwad ) { return iwad.name; }
 	),
 	mapModel(),
-	modModel(
-		/*makeDisplayString*/ []( const Mod & mod ) { return mod.fileName; }
+	modModel( u"modModel",
+		/*makeDisplayString*/ []( const Mod & mod ) { return mod.name; }
 	),
-	presetModel(
+	presetModel( u"presetModel",
 		/*makeDisplayString*/ []( const Preset & preset ) { return preset.name; }
 	)
 {
@@ -873,31 +873,32 @@ void MainWindow::adjustUi()
 
 void MainWindow::setupPresetList()
 {
-	// connect the view with model
+	// connect the view with the model
 	ui->presetListView->setModel( &presetModel );
 
 	// set selection rules
 	ui->presetListView->setSelectionMode( QAbstractItemView::SingleSelection );
 
 	// setup editing and separators
-	presetModel.toggleEditing( true );
-	ui->presetListView->toggleNameEditing( true );
-	ui->presetListView->toggleListModifications( true );
-	connect( &presetModel, &QAbstractListModel::dataChanged, this, &thisClass::onPresetDataChanged );
+	ui->presetListView->toggleItemEditing( true );
+	connect( &presetModel, &AListModel::itemDataChanged, this, &thisClass::onPresetDataChanged );
 
 	// set drag&drop behaviour
-	ui->presetListView->toggleIntraWidgetDragAndDrop( true );
-	ui->presetListView->toggleInterWidgetDragAndDrop( false );
-	ui->presetListView->toggleExternalFileDragAndDrop( false );
-	connect( ui->presetListView, &EditableListView::itemsDropped, this, &thisClass::onPresetsReordered );
+	ui->presetListView->setAllowedDnDSources( DnDSource::ThisWidget );
+	connect( ui->presetListView, &ExtendedListView::dragAndDropFinished, this, &thisClass::onPresetsReordered );
 
 	// set reaction when an item is selected
 	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onPresetToggled );
 
 	// setup reaction to key shortcuts and right click
-	ui->presetListView->toggleContextMenu( true );
-	ui->presetListView->enableItemCloning();
-	ui->presetListView->enableInsertSeparator();
+	ui->presetListView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::AddAndDelete
+		| ExtendedListView::MenuAction::Clone
+		| ExtendedListView::MenuAction::Move
+		| ExtendedListView::MenuAction::InsertSeparator
+		| ExtendedListView::MenuAction::Find
+	);
+	ui->presetListView->toggleListModifications( true );
 	connect( ui->presetListView->addItemAction, &QAction::triggered, this, &thisClass::presetAdd );
 	connect( ui->presetListView->deleteItemAction, &QAction::triggered, this, &thisClass::presetDelete );
 	connect( ui->presetListView->cloneItemAction, &QAction::triggered, this, &thisClass::presetClone );
@@ -916,18 +917,25 @@ void MainWindow::setupPresetList()
 
 	// setup search
 	presetSearchPanel = new SearchPanel( ui->searchShowBtn, ui->searchLine, ui->caseSensitiveChkBox, ui->regexChkBox );
-	ui->presetListView->enableFinding();
 	connect( ui->presetListView->findItemAction, &QAction::triggered, presetSearchPanel, &SearchPanel::expand );
 	connect( presetSearchPanel, &SearchPanel::searchParamsChanged, this, &thisClass::searchPresets );
 }
 
 void MainWindow::setupIWADList()
 {
-	// connect the view with model
+	// connect the view with the model
 	ui->iwadListView->setModel( &iwadModel );
 
 	// set selection rules
 	ui->iwadListView->setSelectionMode( QAbstractItemView::SingleSelection );
+
+	// set drag&drop behaviour
+	ui->iwadListView->setDnDOutputTypes( DnDOutputType::FilePaths );
+
+	// setup reaction to key shortcuts and right click
+	ui->iwadListView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::OpenFileLocation
+	);
 
 	// set reaction when an item is clicked or double-clicked
 	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onIWADToggled );
@@ -936,7 +944,7 @@ void MainWindow::setupIWADList()
 
 void MainWindow::setupMapPackList()
 {
-	// connect the view with model
+	// connect the view with the model
 	ui->mapDirView->setModel( &mapModel );
 
 	// set selection rules
@@ -982,38 +990,40 @@ void MainWindow::setupMapPackList()
 
 void MainWindow::setupModList()
 {
-	// connect the view with model
+	// connect the view with the model
 	ui->modListView->setModel( &modModel );
 
 	// set selection rules
 	ui->modListView->setSelectionMode( QAbstractItemView::ExtendedSelection );
 
 	// setup item checkboxes
-	modModel.toggleCheckableItems( true );
+	ui->modListView->toggleCheckboxes( true );
 
 	// setup editing and separators
-	modModel.toggleEditing( true );
-	ui->modListView->toggleNameEditing( true );  // needed for the custom command line options
-	ui->modListView->toggleListModifications( true );
-
-	// give the model our path convertor, it will need it for converting paths dropped from directory
-	modModel.setPathConvertor( &pathConvertor );
+	ui->modListView->toggleItemEditing( true );  // needed for the custom command line options
 
 	// set drag&drop behaviour
-	ui->modListView->toggleIntraWidgetDragAndDrop( true );
-	ui->modListView->toggleInterWidgetDragAndDrop( true );
-	ui->modListView->toggleExternalFileDragAndDrop( true );
-	connect( ui->modListView, &EditableListView::itemsDropped, this, &thisClass::onModsDropped );
+	modModel.setPathConvertor( pathConvertor );  // the model needs our path convertor for converting paths dropped from a file explorer
+	ui->modListView->setDnDOutputTypes( DnDOutputType::FilePaths );
+	ui->modListView->setAllowedDnDSources( DnDSource::ThisWidget | DnDSource::OtherWidget | DnDSource::ExternalApp );
+	connect( &modModel, &AListModel::itemsInserted, this, &thisClass::onModsInserted );
+	connect( &modModel, &AListModel::itemsRemoved, this, &thisClass::onModsRemoved );
+	connect( ui->modListView, &ExtendedListView::dragAndDropFinished, this, &thisClass::onModsDropped );
 
 	// set reaction when an item is checked or unchecked
-	connect( &modModel, &QAbstractListModel::dataChanged, this, &thisClass::onModDataChanged );
+	connect( &modModel, &AListModel::itemDataChanged, this, &thisClass::onModDataChanged );
 	connect( ui->modListView, &QListView::doubleClicked, this, &thisClass::onModDoubleClicked );
 
 	// setup reaction to key shortcuts and right click
-	ui->modListView->toggleContextMenu( true );
+	ui->modListView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::AddAndDelete
+		| ExtendedListView::MenuAction::Move
+		| ExtendedListView::MenuAction::InsertSeparator
+		| ExtendedListView::MenuAction::OpenFileLocation
+		| ExtendedListView::MenuAction::ToggleIcons  // allow the icons to be toggled via a context-menu
+	);
 	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL | Qt::Key_Asterisk } );
-	ui->modListView->enableInsertSeparator();
-	ui->modListView->enableOpenFileLocation();
+	ui->modListView->toggleListModifications( true );
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &thisClass::modAdd );
 	connect( addCmdArgAction, &QAction::triggered, this, &thisClass::modAddArg );
 	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &thisClass::modDelete );
@@ -1034,7 +1044,6 @@ void MainWindow::setupModList()
 	connect( ui->mapsAfterModsChkBox, &QCheckBox::toggled, this, &thisClass::onMapsAfterModsToggled );
 
 	// setup icons
-	ui->modListView->enableTogglingIcons();  // allow the icons to be toggled via context-menu
 	ui->modListView->toggleIcons( true );  // we need to do this instead of modModel.toggleIcons() in order to update the action text
 	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::onModIconsToggled );
 }
@@ -2508,7 +2517,7 @@ void MainWindow::onPresetToggled( const QItemSelection & /*selected*/, const QIt
 
 	// Optimization: Ignore these calls when the presets are being moved around (for example reordered by the user),
 	//               the presets would get loaded and unloaded back and forth.
-	if (presetModel.isMovingInProgress())
+	if (ui->presetListView->isDragAndDropInProgress())
 		return;
 
 	if (selectedPreset && !selectedPreset->isSeparator)
@@ -2829,59 +2838,6 @@ void MainWindow::onCloneConfigBtnClicked()
 	cloneCurrentEngineConfigFile();
 }
 
-void MainWindow::onPresetDataChanged( const QModelIndex & topLeft, const QModelIndex &, const QVector<int> & roles )
-{
-	int editedIdx = topLeft.row();  // there cannot be more than 1 items edited at a time
-
-	if (roles.contains( Qt::EditRole ))
-	{
-		if (wdg::isSelectedIndex( ui->presetListView, editedIdx ))
-		{
-			// automatic alt dirs are derived from preset name, which has now changed, so this needs to be refreshed
-			restoreAlternativePaths( presetModel[ editedIdx ] );
-		}
-	}
-
-	scheduleSavingOptions( true );  // there's no way to determine if the name has changed, because the value in the model is already modified.
-}
-
-void MainWindow::onModDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight, const QVector<int> & roles )
-{
-	int topModIdx = topLeft.row();
-	int bottomModIdx = bottomRight.row();
-
-	auto updateEachModifiedModInPreset = [ this, topModIdx, bottomModIdx ]( const auto & updateMod )
-	{
-		if (selectedPreset && !restoringPresetInProgress)
-		{
-			for (int idx = topModIdx; idx <= bottomModIdx; idx++)
-			{
-				updateMod( selectedPreset->mods[ idx ], modModel[ idx ] );
-			}
-		}
-	};
-
-	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
-	{
-		// update the current preset
-		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
-		{
-			presetMod.checked = changedMod.checked;
-		});
-	}
-	else if (roles.contains( Qt::EditRole ))  // name of separator or data of custom cmd argument changed
-	{
-		// update the current preset
-		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
-		{
-			presetMod.fileName = changedMod.fileName;
-		});
-	}
-
-	scheduleSavingOptions( true );  // we can assume options storage was modified, otherwise this callback wouldn't be called
-	updateLaunchCommand();
-}
-
 void MainWindow::onMapDirUpdated( const QString & path )
 {
 	// the QFileSystemModel mapModel has finally updated its content from mapSettings.dir
@@ -2957,8 +2913,8 @@ void MainWindow::presetDelete()
 			return;
 	}
 
-	const auto deletedIndexes = wdg::deleteSelectedItems( ui->presetListView, presetModel );
-	if (deletedIndexes.isEmpty())  // no item was selected
+	const auto removedIndexes = wdg::removeSelectedItems( ui->presetListView, presetModel );
+	if (removedIndexes.isEmpty())  // no item was selected
 		return;
 
 	if (selectedPreset)
@@ -3044,6 +3000,23 @@ void MainWindow::presetInsertSeparator()
 	scheduleSavingOptions();
 }
 
+void MainWindow::onPresetDataChanged( int row, int count, const QVector<int> & roles )
+{
+	if (roles.contains( Qt::EditRole ))
+	{
+		for (int idx = row; idx < row + count; idx++)
+		{
+			if (wdg::isSelectedIndex( ui->presetListView, idx ))
+			{
+				// automatic alt dirs are derived from preset name, which has now changed, so this needs to be refreshed
+				restoreAlternativePaths( presetModel[ idx ] );
+			}
+		}
+	}
+
+	scheduleSavingOptions( true );  // there's no way to determine if the name has changed, because the value in the model is already modified.
+}
+
 void MainWindow::onPresetsReordered()
 {
 	scheduleSavingOptions();
@@ -3076,7 +3049,7 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 		ui->presetBtnUp->setEnabled( false );
 		ui->presetBtnDown->setEnabled( false );
 		ui->presetListView->toggleListModifications( false );
-		ui->presetListView->toggleIntraWidgetDragAndDrop( false );
+		ui->presetListView->setAllowedDnDSources( DnDSource::None );
 	}
 	else
 	{
@@ -3103,7 +3076,7 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 		ui->presetBtnUp->setEnabled( true );
 		ui->presetBtnDown->setEnabled( true );
 		ui->presetListView->toggleListModifications( true );
-		ui->presetListView->toggleIntraWidgetDragAndDrop( true );
+		ui->presetListView->setAllowedDnDSources( DnDSource::ThisWidget );
 	}
 }
 
@@ -3180,19 +3153,19 @@ void MainWindow::modAddArg()
 
 void MainWindow::modDelete()
 {
-	const auto deletedIndexes = wdg::deleteSelectedItems( ui->modListView, modModel );
+	const auto removedIndexes = wdg::removeSelectedItems( ui->modListView, modModel );
 
-	if (deletedIndexes.isEmpty())  // no item was selected
+	if (removedIndexes.isEmpty())  // no item was selected
 		return;
 
 	// remove it also from the current preset
 	if (selectedPreset)
 	{
-		int deletedCnt = 0;
-		for (int deletedIdx : deletedIndexes)
+		int removedCnt = 0;
+		for (int removedIdx : removedIndexes)
 		{
-			selectedPreset->mods.removeAt( deletedIdx - deletedCnt );
-			deletedCnt++;
+			selectedPreset->mods.removeAt( removedIdx - removedCnt );
+			removedCnt++;
 		}
 	}
 
@@ -3294,7 +3267,7 @@ void MainWindow::modInsertSeparator()
 {
 	Mod separator( /*checked*/false );
 	separator.isSeparator = true;
-	separator.fileName = "New Separator";
+	separator.name = "New Separator";
 
 	const auto selectedIndexes = wdg::getSelectedItemIndexes( ui->modListView );
 	int insertIdx = selectedIndexes.empty() ? int( modModel.size() ) : selectedIndexes[0];  // append if none
@@ -3313,6 +3286,103 @@ void MainWindow::modInsertSeparator()
 	scheduleSavingOptions();
 }
 
+void MainWindow::onModDataChanged( int row, int count, const QVector<int> & roles )
+{
+	auto updateEachModifiedModInPreset = [ this, row, count ]( const auto & updateMod )
+	{
+		if (selectedPreset && !restoringPresetInProgress)
+		{
+			for (int idx = row; idx < row + count; idx++)
+			{
+				updateMod( selectedPreset->mods[ idx ], modModel[ idx ] );
+			}
+		}
+	};
+
+	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
+	{
+		// update the current preset
+		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
+		{
+			presetMod.checked = changedMod.checked;
+		});
+	}
+	else if (roles.contains( Qt::EditRole ))  // name of separator or data of custom cmd argument changed
+	{
+		// update the current preset
+		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
+		{
+			presetMod.name = changedMod.name;
+		});
+	}
+
+	scheduleSavingOptions( true );  // we can assume options storage was modified, otherwise this callback wouldn't be called
+	updateLaunchCommand();
+}
+
+void MainWindow::onModsInserted( int row, int count )
+{
+	if (selectedPreset)
+	{
+		subrange insertedMods( modModel.cbegin() + row, modModel.cbegin() + row + count );
+		selectedPreset->mods.insertMultiple( row, insertedMods );
+	}
+
+	// Let's not update now, when the state of the model might not be final (rows may be removed soon after).
+	// onModsDropped() will be called when the drag&drop is finished, so that we can update it only once.
+	if (ui->modListView->isDragAndDropInProgress())
+	{
+		return;
+	}
+
+	scheduleSavingOptions();
+	updateLaunchCommand();
+}
+
+void MainWindow::onModsRemoved( int row, int count )
+{
+	if (selectedPreset)
+	{
+		selectedPreset->mods.removeCountAt( row, count );
+	}
+
+	// Let's not update now, when the state of the model might not be final (more rows may be removed soon after).
+	// onModsDropped() will be called when the drag&drop is finished, so that we can update it only once.
+	if (ui->modListView->isDragAndDropInProgress())
+	{
+		return;
+	}
+
+	scheduleSavingOptions();
+	updateLaunchCommand();
+}
+
+// This call will always be preceeded by a call to onModsInserted,
+// and may also be preceeded by onModsDeleted, if the items were dragged from the same list.
+void MainWindow::onModsDropped( int row, int count, DnDSources dndSource )
+{
+	// if these files were dragged here from the map pack list, deselect them there
+	if (dndSource == DnDSource::OtherWidget)
+	{
+		QDir mapRootDir = mapModel.rootDirectory();
+		for (int idx = row; idx < row + count; ++idx)
+		{
+			const Mod & mod = modModel[ idx ];
+			if (fs::isInsideDir( mapRootDir, mod.path ))
+			{
+				QModelIndex mapPackIdx = mapModel.index( mod.path );
+				if (mapPackIdx.isValid())
+				{
+					wdg::deselectItemByIndex( ui->mapDirView, mapPackIdx );
+				}
+			}
+		}
+	}
+
+	scheduleSavingOptions();
+	updateLaunchCommand();
+}
+
 void MainWindow::onMapsAfterModsToggled( bool checked )
 {
 	bool storageModified = STORE_PRESET_OPTION( .loadMapsAfterMods, checked );
@@ -3326,33 +3396,6 @@ void MainWindow::onModIconsToggled()
 	modSettings.showIcons = modModel.areIconsEnabled();
 
 	scheduleSavingOptions();
-}
-
-void MainWindow::onModsDropped( int dropRow, int count, DnDType )
-{
-	// update the preset
-	if (selectedPreset)
-	{
-		selectedPreset->mods = modModel.list();  // not the most optimal way, but the size of the list will be always small
-	}
-
-	// if these files were dragged here from the map pack list, deselect them there
-	QDir mapRootDir = mapModel.rootDirectory();
-	for (int row = dropRow; row < dropRow + count; ++row)
-	{
-		const Mod & mod = modModel[ row ];
-		if (fs::isInsideDir( mapRootDir, mod.path ))
-		{
-			QModelIndex mapPackIdx = mapModel.index( mod.path );
-			if (mapPackIdx.isValid())
-			{
-				wdg::deselectItemByIndex( ui->mapDirView, mapPackIdx );
-			}
-		}
-	}
-
-	scheduleSavingOptions();
-	updateLaunchCommand();
 }
 
 
@@ -4225,15 +4268,15 @@ void MainWindow::presetEnvVarAdd()
 void MainWindow::presetEnvVarDelete()
 {
 	disableEnvVarsCallbacks = true;
-	int deletedIdx = wdg::deleteSelectedRow( ui->presetEnvVarTable );
+	int removedIdx = wdg::removeSelectedRow( ui->presetEnvVarTable );
 	disableEnvVarsCallbacks = false;
-	if (deletedIdx < 0)  // no item was selected
+	if (removedIdx < 0)  // no item was selected
 		return;
 
-	// also delete it from the preset
+	// also remove it from the preset
 	if (selectedPreset)
 	{
-		selectedPreset->envVars.removeAt( deletedIdx );
+		selectedPreset->envVars.removeAt( removedIdx );
 	}
 
 	scheduleSavingOptions();
@@ -4257,13 +4300,13 @@ void MainWindow::globalEnvVarAdd()
 void MainWindow::globalEnvVarDelete()
 {
 	disableEnvVarsCallbacks = true;
-	int deletedIdx = wdg::deleteSelectedRow( ui->globalEnvVarTable );
+	int removedIdx = wdg::removeSelectedRow( ui->globalEnvVarTable );
 	disableEnvVarsCallbacks = false;
-	if (deletedIdx < 0)  // no item was selected
+	if (removedIdx < 0)  // no item was selected
 		return;
 
-	// also delete it from the global options
-	globalOpts.envVars.removeAt( deletedIdx );
+	// also remove it from the global options
+	globalOpts.envVars.removeAt( removedIdx );
 
 	scheduleSavingOptions();
 }
@@ -4948,7 +4991,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 			if (!mod.isSeparator && mod.checked)
 			{
 				if (mod.isCmdArg) {  // this is not a file but a custom command line argument
-					appendCustomArguments( fileArgs, mod.fileName, opts.quotePaths );  // the fileName holds the argument value
+					appendCustomArguments( fileArgs, mod.name, opts.quotePaths );  // the fileName holds the argument value
 				} else {
 					p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
 					addFileAccordingToSuffix( modFiles, mod.path );

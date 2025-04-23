@@ -11,6 +11,7 @@
 
 #include "Essential.hpp"
 
+#include "DataModels/GenericListModel.hpp"
 #include "ContainerUtils.hpp"    // findSuch
 #include "FileSystemUtils.hpp"   // traverseDirectory
 #include "ErrorHandling.hpp"
@@ -203,11 +204,10 @@ int appendItem( QListView * view, ListModel & model, const typename ListModel::I
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.startAppending( 1 );
-
+	model.startAppendingItems( 1 );
 	model.append( item );
-
-	model.finishAppending();
+	model.finishAppendingItems();
+	// we're modifying the model ourselves so we don't need to be notified about it
 
 	selectAndSetCurrentByIndex( view, model.size() - 1 );  // select the appended item
 
@@ -228,11 +228,10 @@ void prependItem( QListView * view, ListModel & model, const typename ListModel:
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.startInserting( 0 );
-
+	model.startInsertingItems( 0 );
 	model.prepend( item );
-
-	model.finishInserting();
+	model.finishInsertingItems();
+	// we're modifying the model ourselves so we don't need to be notified about it
 
 	selectAndSetCurrentByIndex( view, 0 );  // select the prepended item
 }
@@ -251,24 +250,23 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.startInserting( index );
-
+	model.startInsertingItems( index );
 	model.insert( index, item );
-
-	model.finishInserting();
+	model.finishInsertingItems();
+	// we're modifying the model ourselves so we don't need to be notified about it
 
 	selectAndSetCurrentByIndex( view, index );  // select the inserted item
 }
 
-/// Deletes all selected items and attempts to select the item following the deleted ones.
-/** Returns sorted indexes of the deleted items. Pops up a warning box if nothing is selected. */
+/// Removes all selected items and attempts to select the item following the removed ones.
+/** Returns sorted indexes of the removed items. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
-QList<int> deleteSelectedItems( QListView * view, ListModel & model )
+QList<int> removeSelectedItems( QListView * view, ListModel & model )
 {
 	if (!model.canBeModified())
 	{
 		reportLogicError( view->parentWidget(), u"wdg::deleteSelectedItems", "Model cannot be modified",
-			"Cannot delete selected items because the model is locked for changes."
+			"Cannot remove selected items because the model is locked for changes."
 		);
 		return {};
 	}
@@ -282,25 +280,26 @@ QList<int> deleteSelectedItems( QListView * view, ListModel & model )
 	}
 
 	// the list of indexes is not sorted, they are in the order in which user selected them
-	// but for the delete, we need them sorted in ascending order
+	// but for the removal, we need them sorted in ascending order
 	QList<int> selectedRowsAsc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 < i2; } );
 
 	int topMostSelectedIdx = selectedRowsAsc[0];
 
 	deselectAllAndUnsetCurrent( view );
 
-	// delete all the selected items
-	uint deletedCnt = 0;
+	// remove all the selected items
+	uint removedCnt = 0;
 	for (int selectedIdx : std::as_const( selectedRowsAsc ))
 	{
-		model.startDeleting( selectedIdx - deletedCnt );
-		model.removeAt( selectedIdx - deletedCnt );  // every deleted item shifts the indexes of the following items
-		model.finishDeleting();
-		deletedCnt++;
+		model.startRemovingItems( selectedIdx - removedCnt );
+		model.removeAt( selectedIdx - removedCnt );  // every removed item shifts the indexes of the following items
+		model.finishRemovingItems();
+		// we're modifying the model ourselves so we don't need to be notified about it
+		removedCnt++;
 	}
 
 	// try to select some nearest item, so that user can click 'delete' repeatedly to delete all of them
-	if (topMostSelectedIdx < model.size())                       // if the first deleted item index is still within range of existing ones,
+	if (topMostSelectedIdx < model.size())                       // if the first removed item index is still within range of existing ones,
 	{
 		selectAndSetCurrentByIndex( view, topMostSelectedIdx );  // select that one,
 	}
@@ -331,23 +330,23 @@ int cloneSelectedItem( QListView * view, ListModel & model )
 		reportUserError( view->parentWidget(), "No item selected", "No item is selected." );
 		return -1;
 	}
+	auto newItemIdx = model.size();
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.startAppending( 1 );
-
+	model.startAppendingItems( 1 );
 	model.append( model[ selectedIdx ] );
+	model.finishAppendingItems();
+	// we're modifying the model ourselves so we don't need to be notified about it
 
-	model.finishAppending();
+	auto & newItem = model[ newItemIdx ];
 
 	// append some postfix to the item name to distinguish it from the original
-	QModelIndex newItemIdx = model.index( model.size() - 1, 0 );
-	QString origName = model.data( newItemIdx, Qt::EditRole ).toString();
-	model.setData( newItemIdx, origName+" - clone", Qt::EditRole );
+	model.startEditingItemData();
+	newItem.setEditString( newItem.getEditString() + " - clone" );
+	model.finishEditingItemData( newItemIdx, 1, AListModel::onlyEditRole );
 
-	model.contentChanged( newItemIdx.row() );
-
-	selectAndSetCurrentByIndex( view, model.size() - 1 );  // select the new item
+	selectAndSetCurrentByIndex( view, newItemIdx );  // select the new item
 
 	return selectedIdx;
 }
@@ -386,7 +385,7 @@ QList<int> moveSelectedItemsUp( QListView * view, ListModel & model )
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.orderAboutToChange();
+	model.startReorderingItems();
 
 	// do the move and select the new positions
 	for (int selectedIdx : std::as_const( selectedRowsAsc ))
@@ -395,7 +394,8 @@ QList<int> moveSelectedItemsUp( QListView * view, ListModel & model )
 		selectItemByIndex( view, selectedIdx - 1 );
 	}
 
-	model.orderChanged();
+	model.finishReorderingItems();
+	// we're modifying the model ourselves so we don't need to be notified about it
 
 	if (currentIdx >= 1)                                // if the current item was not the first one,
 	{
@@ -443,7 +443,7 @@ QList<int> moveSelectedItemsDown( QListView * view, ListModel & model )
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.orderAboutToChange();
+	model.startReorderingItems();
 
 	// do the move and select the new positions
 	for (int selectedIdx : std::as_const( selectedRowsDesc ))
@@ -452,7 +452,8 @@ QList<int> moveSelectedItemsDown( QListView * view, ListModel & model )
 		selectItemByIndex( view, selectedIdx + 1 );
 	}
 
-	model.orderChanged();
+	model.finishReorderingItems();
+	// we're modifying the model ourselves so we don't need to be notified about it
 
 	if (currentIdx < model.size() - 1)                    // if the current item was not the last one,
 	{
@@ -494,7 +495,7 @@ QList<int> moveSelectedItemsToTop( QListView * view, ListModel & model )
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.orderAboutToChange();
+	model.startReorderingItems();
 
 	// do the move and select the new positions
 	// move the items from top to bottom so that the remaining indexes remain valid
@@ -510,7 +511,8 @@ QList<int> moveSelectedItemsToTop( QListView * view, ListModel & model )
 		movedCnt++;
 	}
 
-	model.orderChanged();
+	model.finishReorderingItems();
+	// we're modifying the model ourselves so we don't need to be notified about it
 
 	return selectedRowsAsc;
 }
@@ -543,7 +545,7 @@ QList<int> moveSelectedItemsToBottom( QListView * view, ListModel & model )
 
 	deselectAllAndUnsetCurrent( view );
 
-	model.orderAboutToChange();
+	model.startReorderingItems();
 
 	// do the move and select the new positions
 	// move the items from bottom to top so that the remaining indexes remain valid
@@ -559,7 +561,8 @@ QList<int> moveSelectedItemsToBottom( QListView * view, ListModel & model )
 		movedCnt++;
 	}
 
-	model.orderChanged();
+	model.finishReorderingItems();
+	// we're modifying the model ourselves so we don't need to be notified about it
 
 	return selectedRowsDesc;
 }
@@ -576,9 +579,9 @@ bool editItemAtIndex( QListView * view, int index );
 /// Adds a row to the end of the table and selects it.
 int appendRow( QTableWidget * widget );
 
-/// Deletes a selected row and attempts to select the row following the deleted one.
-/** Returns the index of the selected and deleted row. Pops up a warning box if nothing is selected. */
-int deleteSelectedRow( QTableWidget * widget );
+/// Removes a selected row and attempts to select the row following the removed one.
+/** Returns the index of the selected and removed row. Pops up a warning box if nothing is selected. */
+int removeSelectedRow( QTableWidget * widget );
 
 void swapTableRows( QTableWidget * widget, int row1, int row2 );
 
@@ -600,7 +603,7 @@ void updateModelFromDir(
 ){
 	using Item = typename ListModel::Item;
 
-	// Doing a differential update (deleting only things that were deleted and adding only things that were added)
+	// Doing a differential update (removing only things that were deleted and adding only things that were added)
 	// is not worth here. It's too complicated and prone to bugs and its advantages are too small.
 	// Instead we just clear everything and then load it from scratch according to the current state of the directory
 	// and update selection and scroll bar.

@@ -1051,8 +1051,6 @@ class GenericListModel : public AListModel, public ListImpl {
 	/// Deserializes items from MIME data and inserts them before \p row.
 	public: virtual bool dropMimeData( const QMimeData * mimeData, Qt::DropAction action, int row, int, const QModelIndex & ) override
 	{
-		qDebug() << "dropMimeData:" << row << action;
-
 		// in edge cases always append to the end of the list
 		if (row < 0 || row > listImpl().size())
 		{
@@ -1226,8 +1224,6 @@ class GenericListModel : public AListModel, public ListImpl {
 
 	public: virtual bool insertRows( int row, int count, const QModelIndex & ) override
 	{
-		qDebug() << "insertRows:" << row << count;
-
 		if (count < 0 || row < 0 || row > listImpl().size())
 		{
 			reportLogicError( u"insertRows", "Cannot insert rows",
@@ -1256,8 +1252,6 @@ class GenericListModel : public AListModel, public ListImpl {
 
 	public: virtual bool removeRows( int row, int count, const QModelIndex & ) override
 	{
-		qDebug() << "removeRows:" << row << count;
-
 		if (count < 0 || row < 0 || row + count > listImpl().size())
 		{
 			reportLogicError( u"removeRows", "Cannot remove rows",

@@ -24,8 +24,6 @@
 #include <QMenu>
 #include <QApplication>
 
-#include <QDebug>
-
 
 //======================================================================================================================
 // When attempting to make a drag&drop from a new source work properly, there are 3 things to remember:
@@ -334,7 +332,6 @@ void ExtendedListView::dragEnterEvent( QDragEnterEvent * event )
 	auto dndSource = getDnDSource( event );
 
 	auto preferredAction = getPreferredDnDAction( dndSource );
-	qDebug() << this->objectName() << "dragEnterEvent: possible" << event->possibleActions() << "proposed" << event->proposedAction() << "chosen" << event->dropAction() << "preferred" << preferredAction;
 	if (preferredAction == Qt::IgnoreAction)  // proposed drop event doesn't comply with our drag&drop settings
 	{
 		event->ignore();
@@ -377,7 +374,6 @@ void ExtendedListView::dropEvent( QDropEvent * event )
 	auto dndSource = getDnDSource( event );
 
 	auto preferredAction = getPreferredDnDAction( dndSource );
-	qDebug() << this->objectName() << "dropEvent begin: possible" << event->possibleActions() << "proposed" << event->proposedAction() << "chosen" << event->dropAction() << "preferred" << preferredAction;
 	if (preferredAction == Qt::IgnoreAction)  // proposed drop event doesn't comply with our drag&drop settings
 	{
 		event->ignore();
@@ -392,8 +388,6 @@ void ExtendedListView::dropEvent( QDropEvent * event )
 	DnDProgressGuard droppedToGuard( isBeingDroppedTo );
 
 	QBaseView::dropEvent( event );
-
-	qDebug() << this->objectName() << "dropEvent end";
 
 	// If the dropped items come from somewhere else, then from this widget's point of view
 	// the drag&drop is already finished (this list won't change anymore).
@@ -411,13 +405,9 @@ void ExtendedListView::dropEvent( QDropEvent * event )
 
 void ExtendedListView::startDrag( Qt::DropActions supportedActions )
 {
-	qDebug() << this->objectName() << "startDrag begin: supported" << supportedActions << "default" << defaultDropAction();
-
 	DnDProgressGuard draggedFromGuard( isBeingDraggedFrom );
 
 	QBaseView::startDrag( supportedActions );
-
-	qDebug() << this->objectName() << "startDrag end";
 
 	if (droppedFrom)
 	{

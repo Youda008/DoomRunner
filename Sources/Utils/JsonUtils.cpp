@@ -458,7 +458,9 @@ const char * jsonTypeToStr( QJsonValue::Type type )
 
 void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
 {
-	QString message = "Element "%elemPath( key )%" is missing in "%_context->fileName()%", using default value.";
+	QString message = "Element "%elemPath( key )%" is missing in "%_context->sourceDesc%", using default value.";
+
+	_context->errorOccured = true;
 
 	if (showError)
 	{
@@ -472,8 +474,10 @@ void JsonArrayCtx::indexOutOfBounds( qsizetype index, bool showError ) const
 {
 	QString message =
 		"JSON array "%getJsonPath()%" does not have index "%QString::number( index )%".\n"
-		"This is a bug. Please make a copy of "%_context->fileName()%" before clicking Ok, "
+		"This is a bug. Please make a copy of "%_context->sourceDesc%" before clicking Ok, "
 		"and then create an issue on Github page with that file attached.";
+
+	_context->errorOccured = true;
 
 	if (showError)
 	{
@@ -487,8 +491,10 @@ void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expec
 {
 	QString actualType = jsonTypeToStr( _wrappedObject[ key ].type() );
 	QString message =
-		"Element "%elemPath( key )%" in "%_context->fileName()%" has invalid type. "
+		"Element "%elemPath( key )%" in "%_context->sourceDesc%" has invalid type. "
 		"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
+
+	_context->errorOccured = true;
 
 	if (showError)
 	{
@@ -502,8 +508,10 @@ void JsonArrayCtx::invalidTypeAtIdx( qsizetype index, const QString & expectedTy
 {
 	QString actualType = jsonTypeToStr( _wrappedArray[ index ].type() );
 	QString message =
-		"Element "%elemPath( index )%" in "%_context->fileName()%" has invalid type. "
+		"Element "%elemPath( index )%" in "%_context->sourceDesc%" has invalid type. "
 		"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
+
+	_context->errorOccured = true;
 
 	if (showError)
 	{
@@ -523,9 +531,9 @@ QString JsonArrayCtx::elemPath( qsizetype index ) const
 	return getJsonPath() + "/[" + QString::number( index ) + ']';
 }
 
-QString impl::ParsingContext::fileName() const
+QString JsonDocumentCtx::fileName() const
 {
-	return fs::getFileNameFromPath( filePath );
+	return fs::getFileNameFromPath( _context.filePath );
 }
 
 

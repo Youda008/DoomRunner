@@ -676,12 +676,14 @@ class AListModel : public QAbstractListModel, public ErrorReportingComponent, pu
 	ExportFormats enabledExportFormats = 0;
 	bool canExportItems() const           { return enabledExportFormats != 0; }
 	bool canExportItemsAsUrls() const     { return areFlagsSet( enabledExportFormats, ExportFormat::FileUrls ); }
+	bool canExportItemsAsJson() const     { return areFlagsSet( enabledExportFormats, ExportFormat::Json ); }
 	bool canExportItemsAsIndexes() const  { return areFlagsSet( enabledExportFormats, ExportFormat::Indexes ); }
 
 	/// Allowed ways how items can be imported into this model when dropping them in or pasting them from clipboard.
 	ExportFormats enabledImportFormats = 0;
 	bool canImportItems() const           { return enabledImportFormats != 0; }
 	bool canImportItemsAsUrls() const     { return areFlagsSet( enabledImportFormats, ExportFormat::FileUrls ); }
+	bool canImportItemsAsJson() const     { return areFlagsSet( enabledImportFormats, ExportFormat::Json ); }
 	bool canImportItemsAsIndexes() const  { return areFlagsSet( enabledImportFormats, ExportFormat::Indexes ); }
 
 	/// optional path convertor that will convert paths dropped from directory to absolute or relative
@@ -761,7 +763,7 @@ class GenericListModel : public AListModel, public ListImpl {
 	public: virtual Qt::DropActions supportedDragActions() const override
 	{
 		Qt::DropActions actions = Qt::IgnoreAction;
-		if (canExportItemsAsUrls())  // can drag items to an external destination
+		if (canExportItemsAsUrls() || canExportItemsAsJson())  // can drag items to an external destination
 			actions |= Qt::CopyAction;
 		if (canExportItems() && !isReadOnly())  // can drag items and remove them from this list
 			actions |= Qt::MoveAction;
@@ -788,6 +790,8 @@ class GenericListModel : public AListModel, public ListImpl {
 
 		if (canExportItemsAsUrls())
 			types << MimeTypes::UriList;  // for drag&drop from an external source
+		if (canExportItemsAsJson())
+			types << MimeTypes::Json;     // for copy&pasting within the same model
 		if (!isReadOnly() && canExportItemsAsIndexes())
 			types << MimeTypes::Indexes;  // for drag&drop reordering within the same model
 
@@ -943,6 +947,10 @@ class GenericListModel : public AListModel, public ListImpl {
 		{
 			mimeData->setUrls( makeMimeUrls( indexes ) );
 		}
+		if (!isReadOnly() && canExportItemsAsJson())
+		{
+			mimeData->setData( MimeTypes::Json, makeMimeJsonItems( indexes ) );
+		}
 		if (!isReadOnly() && canExportItemsAsIndexes())
 		{
 			mimeData->setData( MimeTypes::Indexes, makeMimeRowIndexes( indexes ) );
@@ -1018,6 +1026,10 @@ class GenericListModel : public AListModel, public ListImpl {
 	{
 		return canImportItemsAsUrls() && mimeData->hasUrls() && sourceModel != this;
 	}
+	private: bool hasImportableJson( const QMimeData * mimeData, const AListModel * sourceModel ) const
+	{
+		return canImportItemsAsJson() && mimeData->hasFormat( MimeTypes::Json ) && sourceModel == this;
+	}
 	private: bool hasImportableIndexes( const QMimeData * mimeData, const AListModel * sourceModel, Qt::DropAction action ) const
 	{
 		return canImportItemsAsIndexes() && mimeData->hasFormat( MimeTypes::Indexes ) && sourceModel == this
@@ -1032,7 +1044,8 @@ class GenericListModel : public AListModel, public ListImpl {
 
 		const auto * sourceModel = getMimeModelPtr( mimeData );
 		return hasImportableUrls( mimeData, sourceModel )
-		    || hasImportableIndexes( mimeData, sourceModel, action );
+		    || hasImportableIndexes( mimeData, sourceModel, action )
+		    || hasImportableJson( mimeData, sourceModel );
 	}
 
 	/// Deserializes items from MIME data and inserts them before \p row.
@@ -1063,9 +1076,13 @@ class GenericListModel : public AListModel, public ListImpl {
 		{
 			return dropMimeInternalIndexes( mimeData->data( MimeTypes::Indexes ), row );
 		}
+		else if (hasImportableJson( mimeData, sourceModel ))
+		{
+			return dropMimeSerializedItems( mimeData->data( MimeTypes::Json ), row );
+		}
 		else
 		{
-			reportUserError( "Cannot import data", "Dropped unsupported data type:\n" % mimeData->formats().join('\n') );
+			reportUserError( "Cannot import data", "Inserted unsupported data type:\n" % mimeData->formats().join('\n') );
 			return false;
 		}
 	}
@@ -1101,6 +1118,57 @@ class GenericListModel : public AListModel, public ListImpl {
 		// insert the dropped items in one pass
 		AListModel::startInsertingItems( row, count );
 		listImpl().insertPtrs( row, std::move( validDroppedFiles ) );
+		AListModel::finishInsertingItems();
+
+		// notify the model owner about this external modification
+		AListModel::notifyItemsInserted( row, count );
+
+		// idiotic workaround because Qt is fucking retarded   (read the comment at the top of ExtendedListView.cpp)
+		//
+		// note down the destination drop index, so it can be later retrieved by ListView
+		DropTarget::itemsDropped( row, count );
+
+		return true;
+	}
+
+	private: bool dropMimeSerializedItems( const QByteArray & encodedData, int row )
+	{
+		QJsonParseError parseError;
+		QJsonDocument jsonDoc = QJsonDocument::fromJson( encodedData, &parseError );
+		if (!jsonDoc.isArray())
+		{
+			reportLogicError( u"dropMimeData", "Cannot import data", "dropped serialized items are not a valid JSON" );
+			return false;
+		}
+
+		// verify the dropped items so that we don't drop invalid ones
+		ParsingContext context;
+		context.sourceDesc = "the pasted clipboard content";
+		context.dontShowAgain = true;  // don't show message box errors to the user
+		JsonArrayCtx itemsJs( jsonDoc.array(), &context );
+		std::vector< std::unique_ptr< Item > > validDroppedItems;  // cannot use QVector here because those require copyable objects
+		validDroppedItems.reserve( size_t( itemsJs.size() ) );
+		for (qsizetype i = 0; i < itemsJs.size(); i++)
+		{
+			JsonObjectCtx itemJs = itemsJs.getObject( i );
+			if (!itemJs)  // wrong type on position i - skip this entry
+			{
+				reportLogicError( u"dropMimeData", "Cannot import data", "dropped item "%QString::number(i)%" is not a JSON object" );
+				continue;
+			}
+			auto item = std::make_unique< Item >();
+			if (!item->deserialize( itemJs ))
+			{
+				reportLogicError( u"dropMimeData", "Cannot import data", "dropped item "%QString::number(i)%" doesn't have the expected structure" );
+				continue;
+			}
+			validDroppedItems.push_back( std::move( item ) );
+		}
+		auto count = int( validDroppedItems.size() );
+
+		// insert the dropped items in one pass
+		AListModel::startInsertingItems( row, count );
+		listImpl().insertPtrs( row, std::move( validDroppedItems ) );
 		AListModel::finishInsertingItems();
 
 		// notify the model owner about this external modification

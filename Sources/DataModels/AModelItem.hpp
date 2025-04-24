@@ -123,6 +123,27 @@ struct AModelItem
 			"Either re-implement setChecked() or disable checkable items in the view."
 		);
 	}
+
+	// methods required by models that support drag&drop or copy&pasting
+
+	// When the model is set up to allow copy&pasting, this must serialize this item into a JSON object
+	// from which the item can be reconstructed elsewhere.
+	QJsonObject serialize() const
+	{
+		throw std::logic_error(
+			"Serialization of Item has been requested, but it's not implemented. "
+			"Either re-implement serialize() or disable copy&pasting in the model or view."
+		);
+	}
+
+	// When the model is set up to allow copy&pasting, this must reconstruct the item from the provided JSON object.
+	bool deserialize( const JsonObjectCtx & /*objectJs*/ )
+	{
+		throw std::logic_error(
+			"Deserialization of Item has been requested, but it's not implemented. "
+			"Either re-implement deserialize() or disable copy&pasting in the model or view."
+		);
+	}
 };
 
 #ifdef __GNUC__

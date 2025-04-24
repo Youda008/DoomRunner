@@ -273,6 +273,11 @@ void ExtendedListView::updateModelExportImportFormats()
 	{
 		importFormats |= ExportFormat::FileUrls;
 	}
+	if (cutItemsAction || copyItemsAction || pasteItemsAction)
+	{
+		exportFormats |= ExportFormat::Json;
+		importFormats |= ExportFormat::Json;
+	}
 
 	ownModel->setEnabledExportFormats( exportFormats );
 	ownModel->setEnabledImportFormats( importFormats );
@@ -495,6 +500,21 @@ void ExtendedListView::enableContextMenu( MenuActions actions )
 	{
 		cloneItemAction = addAction( "Clone", { Qt::CTRL | Qt::ALT | Qt::Key_C } );
 	}
+	if (areFlagsSet( actions, MenuAction::CutAndPaste ) && assertCanAddEditAction( "Cut" ))
+	{
+		cutItemsAction = addAction( "Cut",   { Qt::CTRL | Qt::Key_X } );
+		connect( cutItemsAction, &QAction::triggered, this, &thisClass::cutSelectedItems );
+	}
+	if (areFlagsSet( actions, MenuAction::Copy ))
+	{
+		copyItemsAction = addAction( "Copy",  { Qt::CTRL | Qt::Key_C } );
+		connect( copyItemsAction, &QAction::triggered, this, &thisClass::copySelectedItems );
+	}
+	if (areFlagsSet( actions, MenuAction::CutAndPaste ) && assertCanAddEditAction( "Paste" ))
+	{
+		pasteItemsAction = addAction( "Paste", { Qt::CTRL | Qt::Key_V } );
+		connect( pasteItemsAction, &QAction::triggered, this, &thisClass::pasteAboveSelectedItem );
+	}
 	if (areFlagsSet( actions, MenuAction::Move ) && assertCanAddEditAction( "Move up and down" ))
 	{
 		moveItemUpAction = addAction( "Move up", { Qt::CTRL | Qt::Key_Up } );
@@ -538,6 +558,13 @@ void ExtendedListView::contextMenuEvent( QContextMenuEvent * event )
 	if (cloneItemAction)
 		cloneItemAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
 
+	if (cutItemsAction)
+		cutItemsAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+	if (copyItemsAction)
+		copyItemsAction->setEnabled( clickedItemIndex.isValid() );  // read-only
+	if (pasteItemsAction)
+		pasteItemsAction->setEnabled( allowModifyList );
+
 	if (moveItemUpAction)
 		moveItemUpAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
 	if (moveItemDownAction)
@@ -568,6 +595,53 @@ void ExtendedListView::toggleListModifications( bool enabled )
 	}
 
 	allowModifyList = enabled;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// copy&paste
+
+void ExtendedListView::cutSelectedItems()
+{
+	copySelectedItems();
+
+	// remove the selected items
+	const QItemSelection selection = this->selectionModel()->selection();
+	for (const QItemSelectionRange & range : selection)
+		this->model()->removeRows( range.top(), range.height() );
+}
+
+void ExtendedListView::copySelectedItems()
+{
+	QModelIndexList indexes = this->selectionModel()->selectedIndexes();
+	if (indexes.isEmpty())
+	{
+		return;
+	}
+	//std::sort( indexes.begin(), indexes.end(), []( QModelIndex & i1, QModelIndex & i2 ) { return i1.row() < i2.row(); } );
+
+	// serialize the selected items into MIME data
+	QMimeData * mimeData = this->model()->mimeData( indexes );
+
+	// save the serialized data to the system clipboard
+	qApp->clipboard()->setMimeData( mimeData );  // ownership is transferred to the clipboard
+}
+
+void ExtendedListView::pasteAboveSelectedItem()
+{
+	// get the serialized data from the system clipboard
+	const QMimeData * mimeData = qApp->clipboard()->mimeData();  // ownership remains in the clipboard
+	if (!mimeData)
+	{
+		reportUserError( "Clipboard empty", "There is nothing to paste. Copy something first." );
+		return;
+	}
+
+	// deserialize and insert the data above the last selected item
+	QModelIndexList indexes = this->selectionModel()->selectedIndexes();
+	int rowToDrop = !indexes.isEmpty() ? indexes.last().row() : -1;  // if nothing is selected, drop it to the end
+	// Although some people might call the cut&paste combo a "move action", for our model it's a "copy action".
+	this->model()->dropMimeData( mimeData, Qt::CopyAction, rowToDrop, 0, QModelIndex() );
 }
 
 

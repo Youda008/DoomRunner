@@ -12,7 +12,6 @@
 #include "Essential.hpp"
 
 #include <QString>
-#include <QList>
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QJsonObject>
@@ -54,17 +53,14 @@ uint enumSize() { return 0; }
 constexpr bool ShowError = true;
 constexpr bool DontShowError = false;
 
-namespace impl
+/// data related to an ongoing parsing process
+struct ParsingContext
 {
-	/// data related to an ongoing parsing process
-	struct ParsingContext
-	{
-		QString filePath;
-		bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
-
-		QString fileName() const;
-	};
-}
+	QString sourceDesc;  ///< short description of the source of the JSON string that is being parsed, can be file name or something else
+	QString filePath;    ///< path of the file that is being parsed, can be empty if the source is not a file
+	bool errorOccured = false;   ///< true if at least one problem has been encountered during parsing
+	bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
+};
 
 /// mechanisms common for JSON objects and arrays
 class JsonValueCtx {
@@ -89,7 +85,7 @@ class JsonValueCtx {
 		Key( qsizetype idx ) : type( ArrayIndex ), key(), idx( idx ) {}
 	};
 
-	impl::ParsingContext * _context;  ///< document-wide context shared among all elements of that document, the struct is stored in JsonDocumentCtx
+	ParsingContext * _context;  ///< document-wide context shared among all elements of that document, the struct is stored in JsonDocumentCtx
 
 	const JsonValueCtx * _parent;  ///< JSON element that contains this element
 	Key _key;  ///< key or index that this element has in its parent element
@@ -104,15 +100,15 @@ class JsonValueCtx {
 
 	/// Constructs a JSON value with no parent.
 	/** This should only be used for creating a root element. */
-	JsonValueCtx( impl::ParsingContext * context )
+	JsonValueCtx( ParsingContext * context )
 		: _context( context ), _parent( nullptr ), _key() {}
 
 	/// Constructs a JSON value with a parent that is a JSON object.
-	JsonValueCtx( impl::ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+	JsonValueCtx( ParsingContext * context, const JsonValueCtx * parent, const QString & key )
 		: _context( context ), _parent( parent ), _key( key ) {}
 
 	/// Constructs a JSON value with a parent that is a JSON array.
-	JsonValueCtx( impl::ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
+	JsonValueCtx( ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
 		: _context( context ), _parent( parent ), _key( index ) {}
 
 	JsonValueCtx( const JsonValueCtx & ) = default;
@@ -147,13 +143,13 @@ class JsonObjectCtxProxy : public JsonValueCtx {
 	JsonObjectCtxProxy()
 		: JsonValueCtx(), _wrappedObject() {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, impl::ParsingContext * context )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, ParsingContext * context )
 		: JsonValueCtx( context ), _wrappedObject( std::move(wrappedObject) ) {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, impl::ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, ParsingContext * context, const JsonValueCtx * parent, const QString & key )
 		: JsonValueCtx( context, parent, key ), _wrappedObject( std::move(wrappedObject) ) {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, impl::ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
 		: JsonValueCtx( context, parent, index ), _wrappedObject( std::move(wrappedObject) ) {}
 
 	JsonObjectCtxProxy( const JsonObjectCtxProxy & ) = default;
@@ -175,10 +171,13 @@ class JsonArrayCtxProxy : public JsonValueCtx {
 	JsonArrayCtxProxy()
 		: JsonValueCtx(), _wrappedArray() {}
 
-	JsonArrayCtxProxy( QJsonArray wrappedArray, impl::ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+	JsonArrayCtxProxy( QJsonArray wrappedArray, ParsingContext * context )
+		: JsonValueCtx( context ), _wrappedArray( std::move(wrappedArray) ) {}
+
+	JsonArrayCtxProxy( QJsonArray wrappedArray, ParsingContext * context, const JsonValueCtx * parent, const QString & key )
 		: JsonValueCtx( context, parent, key ), _wrappedArray( std::move(wrappedArray) ) {}
 
-	JsonArrayCtxProxy( QJsonArray wrappedArray, impl::ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
+	JsonArrayCtxProxy( QJsonArray wrappedArray, ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
 		: JsonValueCtx( context, parent, index ), _wrappedArray( std::move(wrappedArray) ) {}
 
 	JsonArrayCtxProxy( const JsonArrayCtxProxy & ) = default;
@@ -197,7 +196,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 	JsonObjectCtx() : JsonObjectCtxProxy() {}
 
 	/// Constructs a JSON object wrapper with no parent, this should only be used for creating a root element.
-	JsonObjectCtx( QJsonObject wrappedObject, impl::ParsingContext * context )
+	JsonObjectCtx( QJsonObject wrappedObject, ParsingContext * context )
 		: JsonObjectCtxProxy( std::move(wrappedObject), context ) {}
 
 	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
@@ -281,6 +280,10 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 	/// Constructs invalid JSON array wrapper.
 	JsonArrayCtx() : JsonArrayCtxProxy() {}
 
+	/// Constructs a JSON array wrapper with no parent, this should only be used for creating a root element.
+	JsonArrayCtx( QJsonArray wrappedObject, ParsingContext * context )
+		: JsonArrayCtxProxy( std::move(wrappedObject), context ) {}
+
 	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
 	JsonArrayCtx( JsonArrayCtxProxy proxy ) : JsonArrayCtxProxy( std::move(proxy) ) {}
 
@@ -357,7 +360,7 @@ class JsonDocumentCtx {
 
 	JsonObjectCtx _rootObject;
 
-	mutable impl::ParsingContext _context;  ///< document-wide data related to an ongoing parsing process, each element has a pointer to this
+	mutable ParsingContext _context;  ///< document-wide data related to an ongoing parsing process, each element has a pointer to this
 
  public:
 
@@ -375,15 +378,16 @@ class JsonDocumentCtx {
 	JsonDocumentCtx & operator=( JsonDocumentCtx && ) = delete;
 
 	/// If this returns false, this object must not be used.
-	bool isValid() const   { return _rootObject.isValid(); }
-	operator bool() const  { return isValid(); }
+	bool isValid() const                       { return _rootObject.isValid(); }
+	operator bool() const                      { return isValid(); }
 
-	const QString & filePath() const { return _context.filePath; }
-	      QString   fileName() const { return _context.fileName(); }
+	const QString & sourceDesc() const         { return _context.sourceDesc; }
+	const QString & filePath() const           { return _context.filePath; }
+	      QString   fileName() const;
 
-	const JsonObjectCtx & rootObject() const { return _rootObject; }
+	const JsonObjectCtx & rootObject() const   { return _rootObject; }
 
-	void disableWarnings() const { _context.dontShowAgain = true; }
+	void disableWarnings() const               { _context.dontShowAgain = true; }
 
 };
 

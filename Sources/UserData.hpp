@@ -62,6 +62,8 @@ struct Engine : public AModelItem
 	// requirements of GenericListModel
 	const QString & getFilePath() const   { return executablePath; }
 	const QString & getID() const         { return executablePath; }
+	QJsonObject serialize() const;
+	bool deserialize( const JsonObjectCtx & modJs );
 };
 
 struct IWAD : public AModelItem
@@ -78,6 +80,8 @@ struct IWAD : public AModelItem
 	void setEditString( QString str )       { name = std::move(str); }
 	const QString & getFilePath() const     { return path; }
 	const QString & getID() const           { return path; }
+	QJsonObject serialize() const;
+	bool deserialize( const JsonObjectCtx & modJs );
 };
 
 struct Mod : public AModelItem
@@ -100,6 +104,8 @@ struct Mod : public AModelItem
 	void setChecked( bool checked )         { this->checked = checked; }
 	const QString & getFilePath() const     { return path; }
 	const QIcon & getIcon() const;
+	QJsonObject serialize() const;
+	bool deserialize( const JsonObjectCtx & modJs );
 };
 
 //----------------------------------------------------------------------------------------------------------------------

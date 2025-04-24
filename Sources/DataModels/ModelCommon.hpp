@@ -32,9 +32,10 @@ namespace ExportFormat { enum Values : uint
 	None      = 0,
 
 	FileUrls  = (1 << 0),   ///< List of URLs to local files. Can be imported to any model whose items are constructible from file paths.
-	Indexes   = (1 << 1),   ///< List of indexes where the items are in the current model. Can be imported only to the same model.
+	Json      = (1 << 1),   ///< JSON array of items serialized to JSON objects. Can be imported only to models with the same Item type.
+	Indexes   = (1 << 2),   ///< List of indexes where the items are in the current model. Can be imported only to the same model.
 
-	All       = makeBitMask(3)
+	All       = makeBitMask(4)
 };}
 using ExportFormats = std::underlying_type_t< ExportFormat::Values >;
 
@@ -47,6 +48,7 @@ namespace MimeTypes
 {
 	static constexpr const char * const ModelPtr  = "application/x.qt-model+ptr";
 	static constexpr const char * const UriList   = "text/uri-list";                   ///< MIME type for ExportFormat::FileUrls
+	static constexpr const char * const Json      = "application/x.qt-model+json";     ///< MIME type for ExportFormat::Json
 	static constexpr const char * const Indexes   = "application/x.qt-model+indexes";  ///< MIME type for ExportFormat::Indexes
 }
 

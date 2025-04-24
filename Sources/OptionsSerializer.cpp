@@ -79,7 +79,7 @@ static QColor getColor( const JsonObjectCtx & parentObj, const QString & key )
 //======================================================================================================================
 // user data sub-sections
 
-static QJsonObject serialize( const Engine & engine )
+QJsonObject serialize( const Engine & engine )
 {
 	QJsonObject engineJs;
 
@@ -100,7 +100,7 @@ static QJsonObject serialize( const Engine & engine )
 	return engineJs;
 }
 
-static void deserialize( const JsonObjectCtx & engineJs, Engine & engine )
+void deserialize( const JsonObjectCtx & engineJs, Engine & engine )
 {
 	engine.isSeparator = engineJs.getBool( "separator", false, DontShowError );
 	if (engine.isSeparator)
@@ -120,7 +120,7 @@ static void deserialize( const JsonObjectCtx & engineJs, Engine & engine )
 	}
 }
 
-static QJsonObject serialize( const IWAD & iwad )
+QJsonObject serialize( const IWAD & iwad )
 {
 	QJsonObject iwadJs;
 
@@ -138,7 +138,7 @@ static QJsonObject serialize( const IWAD & iwad )
 	return iwadJs;
 }
 
-static void deserialize( const JsonObjectCtx & engineJs, IWAD & iwad )
+void deserialize( const JsonObjectCtx & engineJs, IWAD & iwad )
 {
 	iwad.isSeparator = engineJs.getBool( "separator", false, DontShowError );
 	if (iwad.isSeparator)
@@ -152,7 +152,7 @@ static void deserialize( const JsonObjectCtx & engineJs, IWAD & iwad )
 	}
 }
 
-static QJsonObject serialize( const Mod & mod )
+QJsonObject serialize( const Mod & mod )
 {
 	QJsonObject modJs;
 
@@ -176,7 +176,7 @@ static QJsonObject serialize( const Mod & mod )
 	return modJs;
 }
 
-static void deserialize( const JsonObjectCtx & modJs, Mod & mod )
+void deserialize( const JsonObjectCtx & modJs, Mod & mod )
 {
 	if ((mod.isSeparator = modJs.getBool( "separator", false, DontShowError )))
 	{

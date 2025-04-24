@@ -38,10 +38,10 @@ void AListModel::finishEditingItemData( int row, int count, const QList<int> & r
 
 void AListModel::setEnabledExportFormats( ExportFormats formats )
 {
-	if (accessStyle() == AccessStyle::ReadOnly && areFlagsSet( formats, ExportFormat::Indexes ))
+	if (accessStyle() == AccessStyle::ReadOnly && areFlagsSet( formats, ExportFormat::Json | ExportFormat::Indexes ))
 	{
 		logLogicError() << "Attempted to enable item export formats not allowed in read-only models: " << Qt::hex << formats;
-		unsetFlags( formats, ExportFormat::Indexes );
+		unsetFlags( formats, ExportFormat::Json | ExportFormat::Indexes );
 	}
 	if (withoutFlags( formats, ExportFormat::All ) != 0)  // there are unknown format flags
 	{

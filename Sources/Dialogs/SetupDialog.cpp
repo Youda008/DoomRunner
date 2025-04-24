@@ -152,6 +152,8 @@ void SetupDialog::setupEngineList()
 	// setup reaction to key shortcuts and right click
 	ui->engineListView->enableContextMenu( 0
 		| ExtendedListView::MenuAction::AddAndDelete
+		| ExtendedListView::MenuAction::Copy
+		| ExtendedListView::MenuAction::CutAndPaste
 		| ExtendedListView::MenuAction::Move
 		| ExtendedListView::MenuAction::OpenFileLocation
 	);
@@ -323,12 +325,12 @@ void SetupDialog::engineMoveToBottom()
 
 void SetupDialog::onEnginesInserted( int row, int count )
 {
-	// Engine (or more of them) got dragged&dropped into this list.
+	// Engine (or more of them) got copy&pasted or dragged&dropped into this list.
 	for (int engineIdx = row; engineIdx < row + count; ++engineIdx)
 	{
 		EngineInfo & engine = engineModel[ engineIdx ];
 
-		// If it was dragged&dropped from this list, it already contains everything.
+		// If it was copy&pasted or dragged&dropped from this list, it already contains everything.
 		// But if it was dragged&dropped from a file explorer, we have to deduce everything automatically.
 		if (!engine.isInitialized())
 		{

@@ -137,6 +137,8 @@ class ExtendedListView : public QListView, protected ErrorReportingComponent {
 
 		AddAndDelete     = (1 << 0),   ///< add a new item and delete the selected items                            (available only in editable views)
 		Clone            = (1 << 1),   ///< add a copy of the selected item with a new name                         (available only in editable views)
+		Copy             = (1 << 2),   ///< copy selected items into the clipboard                                  (available also in read-only views)
+		CutAndPaste      = (1 << 3),   ///< cut selected items into the clipboard or paste them from the clipboard  (available only in editable views)
 		Move             = (1 << 4),   ///< move selected items up or down                                          (available only in editable views)
 		InsertSeparator  = (1 << 5),   ///< insert named visual separator between items                             (available only in editable views)
 		Find             = (1 << 6),   ///< open a search bar to find an existing item by name                      (available also in read-only views)
@@ -189,6 +191,10 @@ class ExtendedListView : public QListView, protected ErrorReportingComponent {
 	public:  QAction * deleteItemAction = nullptr;         ///< corresponds to MenuAction::AddAndDelete
 	public:  QAction * cloneItemAction = nullptr;          ///< corresponds to MenuAction::Clone
 
+	private: QAction * cutItemsAction = nullptr;           ///< corresponds to MenuAction::CutAndPaste
+	private: QAction * copyItemsAction = nullptr;          ///< corresponds to MenuAction::Copy
+	private: QAction * pasteItemsAction = nullptr;         ///< corresponds to MenuAction::CutAndPaste
+
 	public:  QAction * moveItemUpAction = nullptr;         ///< corresponds to MenuAction::Move
 	public:  QAction * moveItemDownAction = nullptr;       ///< corresponds to MenuAction::Move
 	public:  QAction * moveItemToTopAction = nullptr;      ///< corresponds to MenuAction::Move
@@ -212,6 +218,10 @@ class ExtendedListView : public QListView, protected ErrorReportingComponent {
 	virtual void keyReleaseEvent( QKeyEvent * event ) override;
 
  protected slots:
+
+	void cutSelectedItems();
+	void copySelectedItems();
+	void pasteAboveSelectedItem();
 
 	void openCurrentFileLocation();
 	void toggleIcons();

@@ -1017,6 +1017,8 @@ void MainWindow::setupModList()
 	// setup reaction to key shortcuts and right click
 	ui->modListView->enableContextMenu( 0
 		| ExtendedListView::MenuAction::AddAndDelete
+		| ExtendedListView::MenuAction::Copy
+		| ExtendedListView::MenuAction::CutAndPaste
 		| ExtendedListView::MenuAction::Move
 		| ExtendedListView::MenuAction::InsertSeparator
 		| ExtendedListView::MenuAction::OpenFileLocation

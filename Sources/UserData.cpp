@@ -7,6 +7,8 @@
 
 #include "UserData.hpp"
 
+#include "OptionsSerializer.hpp"  // serialization for copy&pasting
+
 #include <QIcon>
 #include <QFileIconProvider>
 #include <QString>
@@ -60,4 +62,43 @@ const QIcon & Mod::getIcon() const
 		iter = g_filesystemIconCache.insert( std::move( entryID ), QIcon( pixmap ) );
 	}
 	return iter.value();
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// serialization
+
+// TODO: Consider inverting dependency between UserData and OptionsSerializer. Maybe the code should be here after all?
+
+QJsonObject Engine::serialize() const
+{
+	return ::serialize( *this );
+}
+
+bool Engine::deserialize( const JsonObjectCtx & modJs )
+{
+	::deserialize( modJs, *this );
+	return name != InvalidItemName && executablePath != InvalidItemPath;
+}
+
+QJsonObject IWAD::serialize() const
+{
+	return ::serialize( *this );
+}
+
+bool IWAD::deserialize( const JsonObjectCtx & modJs )
+{
+	::deserialize( modJs, *this );
+	return name != InvalidItemName && path != InvalidItemPath;
+}
+
+QJsonObject Mod::serialize() const
+{
+	return ::serialize( *this );
+}
+
+bool Mod::deserialize( const JsonObjectCtx & modJs )
+{
+	::deserialize( modJs, *this );
+	return name != InvalidItemName && path != InvalidItemPath;
 }

@@ -139,7 +139,7 @@ struct CorrespondingPair
 };
 
 template< typename Source, typename Result >
-CorrespondingPair< Source, Result > corresponds( Source source, Result result )
+CorrespondingPair< Source, Result > correspondsTo( Source source, Result result )
 {
 	return { source, result };
 }

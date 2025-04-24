@@ -199,9 +199,9 @@ bool PathChecker::s_checkNonEmptyPath(
 	if (!fs::exists( path ))
 	{
 		QString fileOrDir = correspondingValue( expectedType,
-			corresponds( EntryType::File, "File" ),
-			corresponds( EntryType::Dir,  "Directory" ),
-			corresponds( EntryType::Both, "File or directory" )
+			correspondsTo( EntryType::File, "File" ),
+			correspondsTo( EntryType::Dir,  "Directory" ),
+			correspondsTo( EntryType::Both, "File or directory" )
 		);
 		s_maybeShowError( errorMessageDisplayed, parent, fileOrDir%" no longer exists",
 			capitalize(subjectName)%" ("%path%") no longer exists. "%errorPostscript );

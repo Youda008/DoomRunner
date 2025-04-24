@@ -1143,7 +1143,7 @@ class GenericListModel : public AListModel, public ListImpl {
 		ParsingContext context;
 		context.sourceDesc = "the pasted clipboard content";
 		context.dontShowAgain = true;  // don't show message box errors to the user
-		JsonArrayCtx itemsJs( jsonDoc.array(), &context );
+		JsonArrayCtx itemsJs( jsonDoc.array(), context );
 		std::vector< std::unique_ptr< Item > > validDroppedItems;  // cannot use QVector here because those require copyable objects
 		validDroppedItems.reserve( size_t( itemsJs.size() ) );
 		for (qsizetype i = 0; i < itemsJs.size(); i++)

@@ -3272,7 +3272,7 @@ void MainWindow::modInsertSeparator()
 	separator.name = "New Separator";
 
 	const auto selectedIndexes = wdg::getSelectedItemIndexes( ui->modListView );
-	int insertIdx = selectedIndexes.empty() ? int( modModel.size() ) : selectedIndexes[0];  // append if none
+	int insertIdx = selectedIndexes.isEmpty() ? int( modModel.size() ) : selectedIndexes[0];  // append if none
 
 	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );
 

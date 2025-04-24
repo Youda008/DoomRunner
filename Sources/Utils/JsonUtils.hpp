@@ -100,16 +100,16 @@ class JsonValueCtx {
 
 	/// Constructs a JSON value with no parent.
 	/** This should only be used for creating a root element. */
-	JsonValueCtx( ParsingContext * context )
-		: _context( context ), _parent( nullptr ), _key() {}
+	JsonValueCtx( ParsingContext & context )
+		: _context( &context ), _parent( nullptr ), _key() {}
 
 	/// Constructs a JSON value with a parent that is a JSON object.
-	JsonValueCtx( ParsingContext * context, const JsonValueCtx * parent, const QString & key )
-		: _context( context ), _parent( parent ), _key( key ) {}
+	JsonValueCtx( ParsingContext & context, const JsonValueCtx & parent, const QString & key )
+		: _context( &context ), _parent( &parent ), _key( key ) {}
 
 	/// Constructs a JSON value with a parent that is a JSON array.
-	JsonValueCtx( ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
-		: _context( context ), _parent( parent ), _key( index ) {}
+	JsonValueCtx( ParsingContext & context, const JsonValueCtx & parent, qsizetype index )
+		: _context( &context ), _parent( &parent ), _key( index ) {}
 
 	JsonValueCtx( const JsonValueCtx & ) = default;
 	JsonValueCtx( JsonValueCtx && ) = default;
@@ -143,13 +143,13 @@ class JsonObjectCtxProxy : public JsonValueCtx {
 	JsonObjectCtxProxy()
 		: JsonValueCtx(), _wrappedObject() {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, ParsingContext * context )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, ParsingContext & context )
 		: JsonValueCtx( context ), _wrappedObject( std::move(wrappedObject) ) {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, ParsingContext & context, const JsonValueCtx & parent, const QString & key )
 		: JsonValueCtx( context, parent, key ), _wrappedObject( std::move(wrappedObject) ) {}
 
-	JsonObjectCtxProxy( QJsonObject wrappedObject, ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
+	JsonObjectCtxProxy( QJsonObject wrappedObject, ParsingContext & context, const JsonValueCtx & parent, qsizetype index )
 		: JsonValueCtx( context, parent, index ), _wrappedObject( std::move(wrappedObject) ) {}
 
 	JsonObjectCtxProxy( const JsonObjectCtxProxy & ) = default;
@@ -171,13 +171,13 @@ class JsonArrayCtxProxy : public JsonValueCtx {
 	JsonArrayCtxProxy()
 		: JsonValueCtx(), _wrappedArray() {}
 
-	JsonArrayCtxProxy( QJsonArray wrappedArray, ParsingContext * context )
+	JsonArrayCtxProxy( QJsonArray wrappedArray, ParsingContext & context )
 		: JsonValueCtx( context ), _wrappedArray( std::move(wrappedArray) ) {}
 
-	JsonArrayCtxProxy( QJsonArray wrappedArray, ParsingContext * context, const JsonValueCtx * parent, const QString & key )
+	JsonArrayCtxProxy( QJsonArray wrappedArray, ParsingContext & context, const JsonValueCtx & parent, const QString & key )
 		: JsonValueCtx( context, parent, key ), _wrappedArray( std::move(wrappedArray) ) {}
 
-	JsonArrayCtxProxy( QJsonArray wrappedArray, ParsingContext * context, const JsonValueCtx * parent, qsizetype index )
+	JsonArrayCtxProxy( QJsonArray wrappedArray, ParsingContext & context, const JsonValueCtx & parent, qsizetype index )
 		: JsonValueCtx( context, parent, index ), _wrappedArray( std::move(wrappedArray) ) {}
 
 	JsonArrayCtxProxy( const JsonArrayCtxProxy & ) = default;
@@ -196,7 +196,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 	JsonObjectCtx() : JsonObjectCtxProxy() {}
 
 	/// Constructs a JSON object wrapper with no parent, this should only be used for creating a root element.
-	JsonObjectCtx( QJsonObject wrappedObject, ParsingContext * context )
+	JsonObjectCtx( QJsonObject wrappedObject, ParsingContext & context )
 		: JsonObjectCtxProxy( std::move(wrappedObject), context ) {}
 
 	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
@@ -281,7 +281,7 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 	JsonArrayCtx() : JsonArrayCtxProxy() {}
 
 	/// Constructs a JSON array wrapper with no parent, this should only be used for creating a root element.
-	JsonArrayCtx( QJsonArray wrappedObject, ParsingContext * context )
+	JsonArrayCtx( QJsonArray wrappedObject, ParsingContext & context )
 		: JsonArrayCtxProxy( std::move(wrappedObject), context ) {}
 
 	/// Converts the temporary proxy object into the final object - workaround for cyclic dependancy.
@@ -369,7 +369,7 @@ class JsonDocumentCtx {
 	JsonDocumentCtx() : _rootObject() {}
 
 	JsonDocumentCtx( QString filePath, const QJsonDocument & wrappedDoc )
-		: _rootObject( wrappedDoc.object(), &_context )  { _context.filePath = std::move(filePath); }
+		: _rootObject( wrappedDoc.object(), _context )  { _context.filePath = std::move(filePath); }
 
 	// _rootObject has ptr to _context, if this gets moved/copied, it will have pointer to a different (possibly temporary) object
 	JsonDocumentCtx( const JsonDocumentCtx & ) = delete;

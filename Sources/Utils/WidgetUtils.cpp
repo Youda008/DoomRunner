@@ -58,7 +58,7 @@ bool isSomethingSelected( QAbstractItemView * view )
 QModelIndex getSelectedItemIndex( QAbstractItemView * view )
 {
 	QModelIndexList selectedIndexes = view->selectionModel()->selectedIndexes();
-	if (selectedIndexes.empty())
+	if (selectedIndexes.isEmpty())
 	{
 		return {};
 	}

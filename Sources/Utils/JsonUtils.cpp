@@ -76,7 +76,7 @@ JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool showError
 		invalidTypeAtKey( key, "object" );
 		return JsonObjectCtxProxy();
 	}
-	return JsonObjectCtxProxy( val.toObject(), _context, this, key );
+	return JsonObjectCtxProxy( val.toObject(), *_context, *this, key );
 }
 
 JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key, bool showError ) const
@@ -92,7 +92,7 @@ JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key, bool showError )
 		invalidTypeAtKey( key, "array" );
 		return JsonArrayCtxProxy();
 	}
-	return JsonArrayCtxProxy( val.toArray(), _context, this, key );
+	return JsonArrayCtxProxy( val.toArray(), *_context, *this, key );
 }
 
 bool JsonObjectCtx::getBool( const QString & key, bool defaultVal, bool showError ) const
@@ -263,7 +263,7 @@ JsonObjectCtxProxy JsonArrayCtx::getObject( qsizetype index, bool showError ) co
 		invalidTypeAtIdx( index, "object" );
 		return JsonObjectCtxProxy();
 	}
-	return JsonObjectCtxProxy( val.toObject(), _context, this, index );
+	return JsonObjectCtxProxy( val.toObject(), *_context, *this, index );
 }
 
 JsonArrayCtxProxy JsonArrayCtx::getArray( qsizetype index, bool showError ) const
@@ -279,7 +279,7 @@ JsonArrayCtxProxy JsonArrayCtx::getArray( qsizetype index, bool showError ) cons
 		invalidTypeAtIdx( index, "array" );
 		return JsonArrayCtxProxy();
 	}
-	return JsonArrayCtxProxy( val.toArray(), _context, this, index );
+	return JsonArrayCtxProxy( val.toArray(), *_context, *this, index );
 }
 
 bool JsonArrayCtx::getBool( qsizetype index, bool defaultVal, bool showError ) const

@@ -136,7 +136,7 @@ void GameOptsDialog::setFlag( const DMFlag & flag, bool enabled )
 		flags = &gameplayDetails.dmflags1;
 		line = ui->dmflags1_line;
 	}
-	else if (flag.field == Field::DmFlags1)
+	else if (flag.field == Field::DmFlags2)
 	{
 		flags = &gameplayDetails.dmflags2;
 		line = ui->dmflags2_line;

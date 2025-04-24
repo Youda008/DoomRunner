@@ -13,7 +13,7 @@
 
 #include "CommonTypes.hpp"             // PtrList
 #include "DataModels/AModelItem.hpp"   // AModelItem - all list items inherit from this
-#include "Utils/JsonUtils.hpp"         // enumName, enumSize  TODO: separate header
+#include "Utils/EnumTraits.hpp"        // enumName, enumSize
 #include "Utils/FileSystemUtils.hpp"   // PathStyle  TODO: separate header?
 #include "Utils/OSUtils.hpp"           // EnvVar  TODO: separate header?
 #include "EngineTraits.hpp"            // EngineFamily  TODO: separate header?
@@ -121,7 +121,7 @@ enum LaunchMode
 	ResumeDemo,
 };
 template<> inline const char * enumName< LaunchMode >() { return "LaunchMode"; }
-template<> inline uint enumSize< LaunchMode >() { return uint( LaunchMode::ResumeDemo ) + 1; }
+template<> inline size_t enumSize< LaunchMode >() { return size_t( LaunchMode::ResumeDemo ) + 1; }
 
 enum Skill
 {
@@ -133,7 +133,7 @@ enum Skill
 	Custom
 };
 template<> inline const char * enumName< Skill >() { return "Skill"; }
-template<> inline uint enumSize< Skill >() { return uint( Skill::Custom ) + 1; }
+template<> inline size_t enumSize< Skill >() { return size_t( Skill::Custom ) + 1; }
 
 enum MultRole
 {
@@ -141,7 +141,7 @@ enum MultRole
 	Client
 };
 template<> inline const char * enumName< MultRole >() { return "MultRole"; }
-template<> inline uint enumSize< MultRole >() { return uint( MultRole::Client ) + 1; }
+template<> inline size_t enumSize< MultRole >() { return size_t( MultRole::Client ) + 1; }
 
 enum NetMode
 {
@@ -149,7 +149,7 @@ enum NetMode
 	PacketServer
 };
 template<> inline const char * enumName< NetMode >() { return "NetMode"; }
-template<> inline uint enumSize< NetMode >() { return uint( NetMode::PacketServer ) + 1; }
+template<> inline size_t enumSize< NetMode >() { return size_t( NetMode::PacketServer ) + 1; }
 
 enum GameMode
 {
@@ -161,7 +161,7 @@ enum GameMode
 	Cooperative
 };
 template<> inline const char * enumName< GameMode >() { return "GameMode"; }
-template<> inline uint enumSize< GameMode >() { return uint( GameMode::Cooperative ) + 1; }
+template<> inline size_t enumSize< GameMode >() { return size_t( GameMode::Cooperative ) + 1; }
 
 struct LaunchOptions
 {
@@ -337,7 +337,7 @@ enum OptionsStorage
 	StoreToPreset,   ///< Options are stored to the currently selected preset. When a preset is selected, the options are loaded from the preset.
 };
 template<> inline const char * enumName< OptionsStorage >() { return "OptionsStorage"; }
-template<> inline uint enumSize< OptionsStorage >() { return uint( OptionsStorage::StoreToPreset ) + 1; }
+template<> inline size_t enumSize< OptionsStorage >() { return size_t( OptionsStorage::StoreToPreset ) + 1; }
 
 struct StorageSettings
 {

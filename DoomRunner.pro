@@ -54,6 +54,7 @@ HEADERS += \
 	Sources/Dialogs/ProcessOutputWindow.hpp \
 	Sources/Dialogs/SetupDialog.hpp \
 	Sources/Utils/ContainerUtils.hpp \
+	Sources/Utils/EnumTraits.hpp \
 	Sources/Utils/ErrorHandling.hpp \
 	Sources/Utils/EventFilters.hpp \
 	Sources/Utils/ExeReader.hpp \

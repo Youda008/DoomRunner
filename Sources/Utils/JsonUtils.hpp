@@ -11,21 +11,13 @@
 
 #include "Essential.hpp"
 
+#include "EnumTraits.hpp"
+
 #include <QString>
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QJsonObject>
 #include <QJsonArray>
-
-
-//======================================================================================================================
-// in order for the getEnum method to work, the author of the enum must specialize the following templates
-
-template< typename Enum >
-const char * enumName() { return "unknown"; }
-
-template< typename Enum >
-uint enumSize() { return 0; }
 
 
 //======================================================================================================================

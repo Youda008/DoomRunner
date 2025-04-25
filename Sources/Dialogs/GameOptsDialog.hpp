@@ -21,7 +21,10 @@ namespace Ui
 	class GameOptsDialog;
 }
 
-struct DMFlag;
+namespace dmflags
+{
+	struct FlagDef;
+}
 
 
 //======================================================================================================================
@@ -40,49 +43,26 @@ class GameOptsDialog : public QDialog, private DialogCommon {
  private slots:
 
 	// slots named like this don't need to be connected, they are connected automatically
+
+	void on_allowHealth_toggled( bool checked );
+	void on_allowPowerups_toggled( bool checked );
+	void on_weaponsStay_toggled( bool checked );
 	void on_fallingDamage_toggled( bool checked );
-	void on_dropWeapon_toggled( bool checked );
-	void on_doubleAmmo_toggled( bool checked );
+	void on_sameMap_toggled( bool checked );
+	void on_spawnFarthest_toggled( bool checked );
+	void on_forceRespawn_toggled( bool checked );
+	void on_allowArmor_toggled( bool checked );
+	void on_allowExit_toggled( bool checked );
 	void on_infAmmo_toggled( bool checked );
-	void on_infInventory_toggled( bool checked );
 	void on_noMonsters_toggled( bool checked );
-	void on_noMonstersToExit_toggled( bool checked );
 	void on_monstersRespawn_toggled( bool checked );
-	void on_noRespawn_toggled( bool checked );
 	void on_itemsRespawn_toggled( bool checked );
-	void on_bigPowerupsRespawn_toggled( bool checked );
 	void on_fastMonsters_toggled( bool checked );
-	void on_degeneration_toggled( bool checked );
-	void on_allowAutoAim_toggled( bool checked );
-	void on_allowSuicide_toggled( bool checked );
 	void on_allowJump_stateChanged( int state );
-	void on_allowCrouch_stateChanged( int state );
 	void on_allowFreelook_stateChanged( int state );
 	void on_allowFOV_toggled( bool checked );
-	void on_allowBFGAiming_toggled( bool checked );
-	void on_allowAutomap_toggled( bool checked );
-	void on_automapAllies_toggled( bool checked );
-	void on_allowSpying_toggled( bool checked );
-	void on_chasecamCheat_toggled( bool checked );
-	void on_checkAmmoForWeaponSwitch_toggled( bool checked );
-	void on_iconsDeathKillsItsSpawns_toggled( bool checked );
-	void on_endSectorCountsForKill_toggled( bool checked );
-
-	void on_weaponsStay_toggled( bool checked );
-	void on_allowPowerups_toggled( bool checked );
-	void on_allowHealth_toggled( bool checked );
-	void on_allowArmor_toggled( bool checked );
-	void on_spawnFarthest_toggled( bool checked );
-	void on_sameMap_toggled( bool checked );
-	void on_forceRespawn_toggled( bool checked );
-	void on_allowExit_toggled( bool checked );
-	void on_barrelsRespawn_toggled( bool checked );
-	void on_respawnProtection_toggled( bool checked );
-	void on_loseFragIfFragged_toggled( bool checked );
-	void on_keepFragsGained_toggled( bool checked );
-	void on_noTeamSwitching_toggled( bool checked );
-
 	void on_spawnMultiWeapons_toggled( bool checked );
+	void on_allowCrouch_stateChanged( int state );
 	void on_loseEntireInventory_toggled( bool checked );
 	void on_keepKeys_toggled( bool checked );
 	void on_keepWeapons_toggled( bool checked );
@@ -90,7 +70,30 @@ class GameOptsDialog : public QDialog, private DialogCommon {
 	void on_keepPowerups_toggled( bool checked );
 	void on_keepAmmo_toggled( bool checked );
 	void on_loseHalfAmmo_toggled( bool checked );
+
+	void on_dropWeapon_toggled( bool checked );
+	void on_noTeamSwitching_toggled( bool checked );
+	void on_doubleAmmo_toggled( bool checked );
+	void on_degeneration_toggled( bool checked );
+	void on_allowBFGAiming_toggled( bool checked );
+	void on_barrelsRespawn_toggled( bool checked );
+	void on_respawnProtection_toggled( bool checked );
 	void on_spawnWhereDied_toggled( bool checked );
+	void on_keepFragsGained_toggled( bool checked );
+	void on_noRespawn_toggled( bool checked );
+	void on_loseFragIfFragged_toggled( bool checked );
+	void on_infInventory_toggled( bool checked );
+	void on_noMonstersToExit_toggled( bool checked );
+	void on_allowAutomap_toggled( bool checked );
+	void on_automapAllies_toggled( bool checked );
+	void on_allowSpying_toggled( bool checked );
+	void on_chasecamCheat_toggled( bool checked );
+	void on_allowSuicide_toggled( bool checked );
+	void on_allowAutoAim_toggled( bool checked );
+	void on_checkAmmoForWeaponSwitch_toggled( bool checked );
+	void on_iconsDeathKillsItsSpawns_toggled( bool checked );
+	void on_endSectorCountsForKill_toggled( bool checked );
+	void on_bigPowerupsRespawn_toggled( bool checked );
 
 	void on_noPlayerClipping_toggled( bool checked );
 	void on_shareKeys_toggled( bool checked );
@@ -103,8 +106,11 @@ class GameOptsDialog : public QDialog, private DialogCommon {
 
  private: // methods
 
-	void setFlag( const DMFlag & flag, bool enabled );
-	bool isEnabled( const DMFlag & flag ) const;
+	void setupTooltips();
+
+	void toggleFlag( const dmflags::FlagDef & flag, bool checked );
+	bool isChecked( const dmflags::FlagDef & flag ) const;
+
 	void updateCheckboxes();
 
  private: // members

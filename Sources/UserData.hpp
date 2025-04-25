@@ -191,11 +191,13 @@ struct MultiplayerOptions
 	QColor playerColor;
 };
 
+using GameFlags = int32_t;  // ZDoom uses signed int (the highest flag turns the number into negative), so let's be consistent with that
+
 struct GameplayDetails
 {
-	int32_t dmflags1 = 0;
-	int32_t dmflags2 = 0;
-	int32_t dmflags3 = 0;  // only in GZDoom 4.11.0+
+	GameFlags dmflags1 = 0;
+	GameFlags dmflags2 = 0;
+	GameFlags dmflags3 = 0;  // only in GZDoom 4.11.0+
 };
 
 struct GameplayOptions : public GameplayDetails  // inherited instead of included to avoid long identifiers
@@ -213,8 +215,8 @@ struct GameplayOptions : public GameplayDetails  // inherited instead of include
 
 struct CompatibilityDetails
 {
-	int32_t compatflags1 = 0;
-	int32_t compatflags2 = 0;
+	GameFlags compatflags1 = 0;
+	GameFlags compatflags2 = 0;
 };
 
 struct CompatibilityOptions : public CompatibilityDetails  // inherited instead of included to avoid long identifiers

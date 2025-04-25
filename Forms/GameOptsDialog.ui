@@ -32,7 +32,7 @@
    <item>
     <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="0" rowspan="2">
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QGroupBox" name="generalGrpBox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -43,64 +43,120 @@
         <string>General gameplay options</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
-        <item row="7" column="1">
-         <widget class="QCheckBox" name="allowAutomap">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If unchecked, automap is disabled for all players.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="fallingDamage">
           <property name="text">
-           <string>Allow automap</string>
+           <string>Falling damage</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QCheckBox" name="allowFreelook">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Allows or disallows looking up and down. When 'partially checked', it uses the MAPINFO settings, while 'checked' and 'unchecked' override them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="dropWeapon">
           <property name="text">
-           <string>Allow freelook</string>
+           <string>Drop weapon</string>
           </property>
-          <property name="tristate">
-           <bool>true</bool>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="doubleAmmo">
+          <property name="text">
+           <string>Double ammo</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="infAmmo">
+          <property name="text">
+           <string>Infinite ammo</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QCheckBox" name="infInventory">
+          <property name="text">
+           <string>Infinite inventory</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QCheckBox" name="noMonsters">
+          <property name="text">
+           <string>No monsters</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QCheckBox" name="noMonstersToExit">
+          <property name="text">
+           <string>No monsters to exit</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="QCheckBox" name="monstersRespawn">
+          <property name="text">
+           <string>Monsters respawn</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QCheckBox" name="noRespawn">
+          <property name="text">
+           <string>No respawn</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="0">
+         <widget class="QCheckBox" name="itemsRespawn">
+          <property name="text">
+           <string>Items respawn</string>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="0">
+         <widget class="QCheckBox" name="bigPowerupsRespawn">
+          <property name="text">
+           <string>Big powerups respawn</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="0">
+         <widget class="QCheckBox" name="fastMonsters">
+          <property name="text">
+           <string>Fast monsters</string>
+          </property>
+         </widget>
+        </item>
+        <item row="12" column="0">
+         <widget class="QCheckBox" name="degeneration">
+          <property name="text">
+           <string>Degeneration</string>
+          </property>
+         </widget>
+        </item>
+        <item row="13" column="0">
+         <widget class="QCheckBox" name="pistolStart">
+          <property name="text">
+           <string>Pistol start</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="allowAutoAim">
+          <property name="text">
+           <string>Allow autoaim</string>
           </property>
          </widget>
         </item>
         <item row="1" column="1">
          <widget class="QCheckBox" name="allowSuicide">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If disabled, forbids to use the 'kill' command to commit suicide.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Allow suicide</string>
           </property>
          </widget>
         </item>
-        <item row="12" column="1">
-         <widget class="QCheckBox" name="iconsDeathKillsItsSpawns">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This option makes it so the death of the BossBrain kill all monsters created by the BossEye before ending the level, allowing a 100% kill tally on the intermission screen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Icon's death kills its spawns</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QCheckBox" name="allowFOV">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When unchecked, only the arbitrator will be able to set the horizontal field-of-view with the fov command, and the arbitrator's FOV will be used for all players.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Allow FOV</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="1">
          <widget class="QCheckBox" name="allowJump">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Allows or disallows jumping. When 'partially checked', it uses the MAPINFO settings, while 'checked' and 'unchecked' override them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Allow jump</string>
           </property>
@@ -109,31 +165,8 @@
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
-         <widget class="QCheckBox" name="allowBFGAiming">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When unchecked, prevents manual aiming of the BFG9000. It will still aim up or down if you shoot it at something, but you will not be able to, for instance, shoot it at the ground. (A common trick consists in aiming at the ground so the ball explodes sooner and opponents have less time to move away from the hitscan tracers.)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Allow BFG aiming</string>
-          </property>
-         </widget>
-        </item>
-        <item row="13" column="1">
-         <widget class="QCheckBox" name="endSectorCountsForKill">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This option makes monsters placed in sectors with the dDamage_End type (as used in Doom E1M8) not count towards the total.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>End sector counts for kill %</string>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="1">
          <widget class="QCheckBox" name="allowCrouch">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Allows or disallows crouching. When 'partially checked', it uses the MAPINFO settings, while 'checked' and 'unchecked' override them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Allow crouch</string>
           </property>
@@ -142,31 +175,46 @@
           </property>
          </widget>
         </item>
+        <item row="4" column="1">
+         <widget class="QCheckBox" name="allowFreelook">
+          <property name="text">
+           <string>Allow freelook</string>
+          </property>
+          <property name="tristate">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QCheckBox" name="allowFOV">
+          <property name="text">
+           <string>Allow FOV</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QCheckBox" name="allowBFGAiming">
+          <property name="text">
+           <string>Allow BFG aiming</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QCheckBox" name="allowAutomap">
+          <property name="text">
+           <string>Allow automap</string>
+          </property>
+         </widget>
+        </item>
         <item row="8" column="1">
          <widget class="QCheckBox" name="automapAllies">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selects whether allies are shown on the automap.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Automap allies</string>
           </property>
          </widget>
         </item>
-        <item row="11" column="1">
-         <widget class="QCheckBox" name="checkAmmoForWeaponSwitch">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Chooses whether having ammunition in your inventory is needed to be able to switch to a weapon.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Check ammo for weapon switch</string>
-          </property>
-         </widget>
-        </item>
         <item row="9" column="1">
          <widget class="QCheckBox" name="allowSpying">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Allows or disallows spying on other players.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Allow spying</string>
           </property>
@@ -174,296 +222,29 @@
         </item>
         <item row="10" column="1">
          <widget class="QCheckBox" name="chasecamCheat">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Permits to use the chasecam (third-person camera) even if sv_cheats is off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Chasecam cheat</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="allowAutoAim">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If unchecked, autoaim is disabled for all players.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
+        <item row="11" column="1">
+         <widget class="QCheckBox" name="checkAmmoForWeaponSwitch">
           <property name="text">
-           <string>Allow autoaim</string>
+           <string>Check ammo for weapon switch</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="0">
-         <widget class="QCheckBox" name="fallingDamage">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Damages the player when they fall too far; uses old ZDoom damage calculation&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
+        <item row="12" column="1">
+         <widget class="QCheckBox" name="iconsDeathKillsItsSpawns">
           <property name="text">
-           <string>Falling damage</string>
+           <string>Icon's death kills its spawns</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="dropWeapon">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Players will drop their weapons when they die.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
+        <item row="13" column="1">
+         <widget class="QCheckBox" name="endSectorCountsForKill">
           <property name="text">
-           <string>Drop weapon</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QCheckBox" name="doubleAmmo">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ammo pickups provide twice as much ammo as normal. (The actual multiplier can be modified by the DoubleAmmoFactor property of custom skills.)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Double ammo</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QCheckBox" name="infAmmo">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Firing a weapon will not use any ammo.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Infinite ammo</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QCheckBox" name="infInventory">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Using an inventory item will not expend it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Infinite inventory</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QCheckBox" name="noMonsters">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables or disables monsters in the level.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>No monsters</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QCheckBox" name="noMonstersToExit">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Exiting the level is not possible as long as there remain monsters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>No monsters to exit</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
-         <widget class="QCheckBox" name="monstersRespawn">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Monsters will respawn after they have been killed, regardless of skill settings.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Monsters respawn</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="0">
-         <widget class="QCheckBox" name="noRespawn">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dead players are not allowed to respawn.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>No respawn</string>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="0">
-         <widget class="QCheckBox" name="itemsRespawn">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Items will respawn after they have been picked up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Items respawn</string>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="0">
-         <widget class="QCheckBox" name="bigPowerupsRespawn">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Items with the INVENTORY.BIGPOWERUP flag such as Doom's invulnerability sphere and blur sphere will be able to respawn like regular items.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Big powerups respawn</string>
-          </property>
-         </widget>
-        </item>
-        <item row="11" column="0">
-         <widget class="QCheckBox" name="fastMonsters">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Monsters are more aggressive, and both they and projectiles use their FastSpeed property instead of their speed; as if a skill with the FastMonsters property was used.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Fast monsters</string>
-          </property>
-         </widget>
-        </item>
-        <item row="12" column="0">
-         <widget class="QCheckBox" name="degeneration">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A player's health above the normal maximum will decrease every second until it falls back to said normal maximum. Health degeneration is normally one point per second, but if the player's health is less than five points above the maximum, it will snap back instantly.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Degeneration</string>
-          </property>
-         </widget>
-        </item>
-        <item row="13" column="0">
-         <widget class="QCheckBox" name="pistolStart">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(Since GZDoom 4.12.2) Every level is a fresh start, with a pistol only.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Pistol start</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QGroupBox" name="groupBox_3">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string>Cooperative options</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="2" column="0">
-         <widget class="QCheckBox" name="keepKeys">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A respawning player's keys are reset to normal starting conditions in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Keep keys</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QCheckBox" name="loseHalfAmmo">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Players respawn with half the ammo they had when they died (but not less than the normal starting amount).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Lose half ammo</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="loseEntireInventory">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Player's inventory (including ammo, armor, keys, powerups, and weapons) is reset to normal starting conditions when respawning after death.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Lose entire inventory</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QCheckBox" name="keepAmmo">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A respawning player's ammo counts are reset to normal starting conditions in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Keep ammo</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QCheckBox" name="spawnWhereDied">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A player respawns at the place of death (unless it was in an instant-death sector) instead of at the player start.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Spawn where died</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QCheckBox" name="noPlayerClipping">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(Since GZDoom 4.11.0) Players can walk through and shoot through each other.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>No player clipping</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QCheckBox" name="keepWeapons">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A respawning player's weapons are reset to normal starting conditions in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Keep weapons</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="keepPowerups">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A respawning player's powerups are reset to normal starting conditions in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Keep powerups</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QCheckBox" name="spawnMultiWeapons">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Weapons that are flagged to appear only in multiplayer are not spawned when playing in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Spawn multi. weapons</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QCheckBox" name="keepArmor">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A respawning player's armor is reset to normal starting conditions in cooperative mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Keep armor</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QCheckBox" name="shareKeys">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(Since GZDoom 4.12.0) Picking up a key in cooperative mode will distribute it to all players.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Share keys</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QCheckBox" name="localItemPickups">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(Since GZDoom 4.12.0) Items are picked up client-side rather than fully taken by the client who picked it up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Pick up items locally</string>
+           <string>End sector counts for kill %</string>
           </property>
          </widget>
         </item>
@@ -471,7 +252,7 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QGroupBox" name="groupBox_2">
+      <widget class="QGroupBox" name="deathMatchGrpBox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -484,131 +265,191 @@
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="0">
          <widget class="QCheckBox" name="weaponsStay">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Weapons will not disappear when a player picks them up. This does not apply to weapons dropped by monsters or other players.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Weapons stay</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="allowExit">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If exit is disallowed, activating an exit line (switch or teleporter) kills the player instead; the level can only be left once the time limit or frag limit hits.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Allow exit</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="0">
          <widget class="QCheckBox" name="allowPowerups">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When unchecked, no powerups or artifacts will be spawned on the next map loaded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Allow powerups</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QCheckBox" name="barrelsRespawn">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Allows barrels, or any other actor calling A_BarrelDestroy to respawn after destruction.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Barrels respawn</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0">
          <widget class="QCheckBox" name="allowHealth">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When unchecked, no health items will be spawned on the next map loaded. (This also includes the berserk and the megasphere.)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Allow health</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QCheckBox" name="respawnProtection">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This gives a few seconds of invulnerability to respawning players in order to prevent &amp;quot;spawn camping&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Respawn protection</string>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="0">
          <widget class="QCheckBox" name="allowArmor">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When unchecked, no armor will be spawned on the next map loaded. (This also includes the megasphere.)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Allow armor</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QCheckBox" name="loseFragIfFragged">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Player's frag count is decreased each time this player is killed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Lose frag if fragged</string>
-          </property>
-         </widget>
-        </item>
         <item row="4" column="0">
          <widget class="QCheckBox" name="spawnFarthest">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game will attempt to respawn players at the spawn point the farthest away from other players.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Spawn farthest</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QCheckBox" name="keepFragsGained">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Players keep their frag count from one map to the next.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Keep frags gained</string>
-          </property>
-         </widget>
-        </item>
         <item row="5" column="0">
          <widget class="QCheckBox" name="sameMap">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The level is restarted after the exit intermission, instead of moving on to the next map. The only way to go to a different level is with the changemap command.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>Same map</string>
           </property>
          </widget>
         </item>
+        <item row="6" column="0">
+         <widget class="QCheckBox" name="forceRespawn">
+          <property name="text">
+           <string>Force respawn</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="allowExit">
+          <property name="text">
+           <string>Allow exit</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QCheckBox" name="barrelsRespawn">
+          <property name="text">
+           <string>Barrels respawn</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="respawnProtection">
+          <property name="text">
+           <string>Respawn protection</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QCheckBox" name="loseFragIfFragged">
+          <property name="text">
+           <string>Lose frag if fragged</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QCheckBox" name="keepFragsGained">
+          <property name="text">
+           <string>Keep frags gained</string>
+          </property>
+         </widget>
+        </item>
         <item row="5" column="1">
          <widget class="QCheckBox" name="noTeamSwitching">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Players cannot change teams in a teamplay match after the map has started.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
           <property name="text">
            <string>No team switching</string>
           </property>
          </widget>
         </item>
-        <item row="6" column="0">
-         <widget class="QCheckBox" name="forceRespawn">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This automatically respawns players after a few seconds instead of letting them wait as long as they want.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
+       </layout>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QGroupBox" name="coopGrpBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="title">
+        <string>Cooperative options</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="spawnMultiWeapons">
           <property name="text">
-           <string>Force respawn</string>
+           <string>Spawn multi. weapons</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="loseEntireInventory">
+          <property name="text">
+           <string>Lose entire inventory</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="keepKeys">
+          <property name="text">
+           <string>Keep keys</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="keepWeapons">
+          <property name="text">
+           <string>Keep weapons</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QCheckBox" name="keepArmor">
+          <property name="text">
+           <string>Keep armor</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QCheckBox" name="shareKeys">
+          <property name="text">
+           <string>Share keys</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="keepPowerups">
+          <property name="text">
+           <string>Keep powerups</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QCheckBox" name="keepAmmo">
+          <property name="text">
+           <string>Keep ammo</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="loseHalfAmmo">
+          <property name="text">
+           <string>Lose half ammo</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QCheckBox" name="spawnWhereDied">
+          <property name="text">
+           <string>Spawn where died</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QCheckBox" name="noPlayerClipping">
+          <property name="text">
+           <string>No player clipping</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QCheckBox" name="localItemPickups">
+          <property name="text">
+           <string>Pick up items locally</string>
           </property>
          </widget>
         </item>

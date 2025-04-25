@@ -17,7 +17,8 @@
 
 class QRadioButton;
 
-namespace Ui {
+namespace Ui
+{
 	class OptionsStorageDialog;
 }
 

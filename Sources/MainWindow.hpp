@@ -32,7 +32,8 @@ class QShortcut;
 class JsonDocumentCtx;
 struct OptionsToLoad;
 
-namespace Ui {
+namespace Ui
+{
 	class MainWindow;
 }
 

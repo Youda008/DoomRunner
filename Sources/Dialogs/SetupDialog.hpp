@@ -23,7 +23,8 @@ class QLineEdit;
 class QAction;
 class QItemSelection;
 
-namespace Ui {
+namespace Ui
+{
 	class SetupDialog;
 }
 

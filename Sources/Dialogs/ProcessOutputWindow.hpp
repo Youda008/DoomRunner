@@ -20,7 +20,8 @@
 class QPushButton;
 class QCloseEvent;
 
-namespace Ui {
+namespace Ui
+{
 	class ProcessOutputWindow;
 }
 

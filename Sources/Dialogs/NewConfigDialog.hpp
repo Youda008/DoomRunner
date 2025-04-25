@@ -15,7 +15,8 @@
 #include <QString>
 #include <QFileInfo>
 
-namespace Ui {
+namespace Ui
+{
 	class NewConfigDialog;
 }
 

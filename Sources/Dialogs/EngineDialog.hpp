@@ -17,7 +17,8 @@
 
 class PathConvertor;
 
-namespace Ui {
+namespace Ui
+{
 	class EngineDialog;
 }
 

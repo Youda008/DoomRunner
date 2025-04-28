@@ -318,7 +318,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	template< typename Func >
 	void addShortcut( const QKeySequence & keys, const Func & shortcutAction );
 
-	template< typename Functor > void forEachSelectedMapPack( const Functor & loopBody ) const;
 	QStringList getSelectedMapPacks() const;
 
 	static QStringList getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs );

@@ -75,9 +75,10 @@ void MainWindow::addShortcut( const QKeySequence & keys, const Func & shortcutAc
 
 // selected items
 
-template< typename Functor >
-void MainWindow::forEachSelectedMapPack( const Functor & loopBody ) const
+QStringList MainWindow::getSelectedMapPacks() const
 {
+	QStringList selectedMapPacks;
+
 	// clicking on an item in QTreeView with QFileSystemModel selects all elements (columns) of a row,
 	// but we only care about the first one
 	const auto selectedRows = wdg::getSelectedRows( ui->mapDirView );
@@ -86,17 +87,10 @@ void MainWindow::forEachSelectedMapPack( const Functor & loopBody ) const
 	for (const QModelIndex & index : selectedRows)
 	{
 		QString modelPath = mapModel.filePath( index );
-		loopBody( pathConvertor.convertPath( modelPath ) );
+		modelPath = pathConvertor.convertPath( modelPath );
+		selectedMapPacks.append( std::move( modelPath ) );
 	}
-}
 
-QStringList MainWindow::getSelectedMapPacks() const
-{
-	QStringList selectedMapPacks;
-	forEachSelectedMapPack( [&]( const QString & mapPackPath )
-	{
-		selectedMapPacks.append( mapPackPath );
-	});
 	return selectedMapPacks;
 }
 
@@ -1857,15 +1851,15 @@ void MainWindow::restoreSelectedMapPacks( Preset & preset )
 			}
 			else
 			{
-				reportUserError( "Map file no longer exists",
-					"Map file selected for this preset ("%path%") no longer exists."
+				reportUserError( "Map pack no longer exists",
+					"Map pack selected for this preset ("%path%") no longer exists."
 				);
 			}
 		}
 		else
 		{
-			reportUserError( "Map file no longer exists",
-				"Map file selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")."
+			reportUserError( "Map pack no longer exists",
+				"Map pack selected for this preset ("%path%") couldn't be found in the map directory ("%mapRootDir.path()%")."
 			);
 		}
 	}
@@ -4966,39 +4960,46 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 	// So we must somehow build an ordered sequence of mod files and custom arguments in which all the regular files are
 	// grouped together, and the easiest option seems to be by using a placeholder item.
 	{
+		/// Command line arguments constructed from the selected map files and the entries in the mod files list.
+		/** Contains placeholder for the -file list until the last phase. */
 		QStringList fileArgs;
 		bool placeholderPlaced = false;
 
 		auto addFileAccordingToSuffix = [&]( QStringList & fileList, const QString & filePath )
 		{
 			QString suffix = QFileInfo( filePath ).suffix().toLower();
+			// dehacked files are special, they go directly into the arguments with a different command line option
 			if (suffix == "deh" || suffix == "hhe") {
 				fileArgs << "-deh" << runDirRebaser.makeRequiredCmdPath( filePath );
 			} else if (suffix == "bex") {
 				fileArgs << "-bex" << runDirRebaser.makeRequiredCmdPath( filePath );
 			} else {
+				// for now, only insert a placeholder where all the files will be inserted later together
 				if (!placeholderPlaced) {
-					fileArgs << "-file" << "<files>";  // insert placeholder where all the files will be together
+					fileArgs << "-file" << "<files>";
 					placeholderPlaced = true;
 				}
+				// and gather the files in a separate list
 				fileList.append( runDirRebaser.makeRequiredCmdPath( filePath ) );
 			}
 		};
 
+		/// Postponed map files that will be inserted together into the -file list.
 		QStringList mapFiles;
-		forEachSelectedMapPack( [&]( const QString & mapFilePath )
+		for (const QString & mapFilePath : selectedMapPacks)
 		{
 			p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
 			addFileAccordingToSuffix( mapFiles, mapFilePath );
-		});
+		}
 
+		/// Postponed mod files that will be inserted together into the -file list.
 		QStringList modFiles;
 		for (const Mod & mod : modModel)
 		{
 			if (!mod.isSeparator && mod.checked)
 			{
-				if (mod.isCmdArg) {  // this is not a file but a custom command line argument
-					appendCustomArguments( fileArgs, mod.name, opts.quotePaths );  // the fileName holds the argument value
+				if (mod.isCmdArg) {  // this is not a file but a custom command line argument, append it directly to the arguments
+					appendCustomArguments( fileArgs, mod.name, opts.quotePaths );
 				} else {
 					p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
 					addFileAccordingToSuffix( modFiles, mod.path );

@@ -371,6 +371,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QAction * addCmdArgAction = nullptr;
 
+	bool windowAlreadyShown = false;  ///< whether the main window already appeared at least once
 	uint tickCount = 0;
 
 	std::unique_ptr< JsonDocumentCtx > parsedOptionsDoc;  ///< result of first phase of options loading, kept for the second phase

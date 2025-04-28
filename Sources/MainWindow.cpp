@@ -1151,8 +1151,13 @@ void MainWindow::initAppDataDir()
 
 // This is called when the window layout is initialized and widget sizes calculated,
 // but before the window is physically shown (drawn for the first time).
+// It is also called everytime the application is minimized to the task bar and then maximized again.
 void MainWindow::showEvent( QShowEvent * event )
 {
+	if (windowAlreadyShown)
+		return;
+	windowAlreadyShown = true;
+
 	initAppDataDir();
 
 	// Options loading is now split into two phases.

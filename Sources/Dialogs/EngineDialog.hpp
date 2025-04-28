@@ -73,6 +73,8 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 
 	Ui::EngineDialog * ui;
 
+	bool windowAlreadyShown = false;  ///< whether the main window already appeared at least once
+
 	QString suggestedConfigDir;
 	QString suggestedDataDir;
 

@@ -57,7 +57,7 @@ struct Engine : public AModelItem
 
 	Engine() {}
 	// When file is dropped from a file explorer: The other members have to be auto-detected later by EngineTraits.
-	Engine( const QFileInfo & file ) : executablePath( file.filePath() ) {}
+	explicit Engine( const QFileInfo & file ) : executablePath( file.filePath() ) {}
 
 	// requirements of GenericListModel
 	const QString & getFilePath() const   { return executablePath; }
@@ -72,7 +72,8 @@ struct IWAD : public AModelItem
 	QString path;   ///< path to the IWAD file
 
 	IWAD() {}
-	IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
+	explicit IWAD( const QString & filePath ) : IWAD( QFileInfo( filePath ) ) {}
+	explicit IWAD( const QFileInfo & file ) : name( file.fileName() ), path( file.filePath() ) {}
 
 	// requirements of GenericListModel
 	bool isEditable() const                 { return true; }
@@ -91,8 +92,9 @@ struct Mod : public AModelItem
 	bool checked = false;   ///< whether this mod is selected to be loaded
 	bool isCmdArg = false;  ///< indicates that this is a special item used to insert a custom command line argument between the mod files
 
-	Mod( bool checked = false ) : checked( checked ) {}
-	Mod( const QFileInfo & file, bool checked = true )
+	explicit Mod( bool checked = false ) : checked( checked ) {}
+	explicit Mod( const QString & filePath, bool checked = true ) : Mod( QFileInfo( filePath ), checked ) {}
+	explicit Mod( const QFileInfo & file, bool checked = true )
 		: path( file.filePath() ), name( file.fileName() ), checked( checked ) {}
 
 	// requirements of GenericListModel

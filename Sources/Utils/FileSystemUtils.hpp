@@ -263,6 +263,10 @@ QString sanitizePath_strict( const QString & path );
 /** Returns description of an error that might potentially happen, or empty string on success. */
 QString readWholeFile( const QString & filePath, QByteArray & dest );
 
+/// Reads the whole content of a text file into a list of strings.
+/** Returns description of an error that might potentially happen, or empty string on success. */
+QString readAllFileLines( const QString & filePath, QStringList & lines );
+
 /// Safely updates a file in a way that prevents content loss in the event of unexpected OS shutdown.
 /** First saves the new content under a new name, then deletes the old file and then renames the new file to the old name.
   * Returns description of an error that might potentially happen, or empty string on success. */

@@ -406,7 +406,7 @@ void SetupDialog::iwadAdd()
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
-	wdg::appendItem( ui->iwadListView, iwadModel, { QFileInfo( path ) } );
+	wdg::appendItem( ui->iwadListView, iwadModel, IWAD( path ) );
 }
 
 void SetupDialog::iwadDelete()

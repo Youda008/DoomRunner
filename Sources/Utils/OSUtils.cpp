@@ -759,22 +759,24 @@ static int openEntryInFileBrowser( const QString & entryPath, bool openParentAnd
 
 	if constexpr (IS_WINDOWS)
 	{
+		QString program = "explorer.exe";
 		QStringList args;
 		if (openParentAndSelect)
 			args << "/select,";
-		args << QDir::toNativeSeparators( entry.canonicalFilePath() );
-		return QProcess::startDetached( "explorer.exe", args ) ? ProcessStatus::Success : ProcessStatus::FailedToStart;
+		args << fs::toNativePath( entry.canonicalFilePath() );
+		return QProcess::startDetached( program, args ) ? ProcessStatus::Success : ProcessStatus::FailedToStart;
 	}
 	else if constexpr (IS_MACOS)
 	{
+		QString program = "/usr/bin/osascript";
 		QString command = openParentAndSelect ? "select" : "open";
 		QStringList args;
 		args << "-e" << "tell application \"Finder\"";
 		args << "-e" <<     "activate";
-		args << "-e" <<     command%" (\""%entry.canonicalFilePath()%"\" as POSIX file)";
+		args << "-e" <<     command%" (\""%fs::toNativePath( entry.canonicalFilePath() )%"\" as POSIX file)";
 		args << "-e" << "end tell";
 		// https://doc.qt.io/qt-6/qprocess.html#execute
-		return QProcess::execute( "/usr/bin/osascript", args );
+		return QProcess::execute( program, args );
 	}
 	else
 	{
@@ -844,6 +846,61 @@ bool openFileLocation( const QString & filePath )
 	}
 
 	return true;
+}
+
+bool openFileInNotepad( const QString & filePath )
+{
+	QFileInfo fileInfo( filePath );
+	QString nativePath = fs::toNativePath( fileInfo.canonicalFilePath() );
+
+	auto startDetachedOrReportError = [ &filePath ]( const QString & program, const QStringList & args )
+	{
+		bool success = QProcess::startDetached( program, args );
+		if (!success)
+		{
+			QString command = program % ' ' % args.join(' ');
+			reportRuntimeError( nullptr, "Cannot open text file",
+				"Couldn't open file \""%filePath%"\" in a text editor.\n"
+				"Command \""%command%"\" failed."
+			);
+		}
+		return success;
+	};
+
+	if constexpr (IS_WINDOWS)
+	{
+		return startDetachedOrReportError( "notepad", { nativePath } );
+	}
+	else if constexpr (IS_MACOS)
+	{
+		return startDetachedOrReportError( "open", { "-t", nativePath } );
+	}
+	else
+	{
+		bool success = false;
+		QString desktopEnv = getLinuxDesktopEnv();
+		if (desktopEnv == "KDE")
+			success = QProcess::startDetached( "kate", { nativePath } );
+		if (success)
+			return true;
+		success = QProcess::startDetached( "gnome-text-editor", { nativePath } );
+		if (success)
+			return true;
+		success = QProcess::startDetached( "gedit", { nativePath } );
+		if (success)
+			return true;
+		success = QProcess::startDetached( "sublime-text", { nativePath } );
+
+		if (!success)
+		{
+			reportRuntimeError( nullptr, "Cannot open text file",
+				"Couldn't open file \""%filePath%"\" in a text editor.\n"
+				"Neither gnome-text-editor, nor gedit, nor kate, nor sublime-text is installed."
+			);
+		}
+
+		return success;
+	}
 }
 
 

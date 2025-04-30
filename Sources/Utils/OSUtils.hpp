@@ -157,9 +157,7 @@ ShellCommand getRunCommand(
 //======================================================================================================================
 // graphical environment
 
-#if !IS_WINDOWS
 const QString & getLinuxDesktopEnv();
-#endif
 
 struct MonitorInfo
 {
@@ -179,6 +177,9 @@ bool openDirectoryWindow( const QString & dirPath );
 
 /// Opens a directory of a file in a new File Explorer window.
 bool openFileLocation( const QString & filePath );
+
+/// Opens the selected file in the system's main notepad.
+bool openFileInNotepad( const QString & filePath );
 
 struct EnvVar
 {

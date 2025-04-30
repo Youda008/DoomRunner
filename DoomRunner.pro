@@ -54,6 +54,7 @@ HEADERS += \
 	Sources/Dialogs/ProcessOutputWindow.hpp \
 	Sources/Dialogs/SetupDialog.hpp \
 	Sources/Utils/ContainerUtils.hpp \
+	Sources/Utils/DoomRunnerPacks.hpp \
 	Sources/Utils/EnumTraits.hpp \
 	Sources/Utils/ErrorHandling.hpp \
 	Sources/Utils/EventFilters.hpp \
@@ -100,6 +101,7 @@ SOURCES += \
 	Sources/Dialogs/ProcessOutputWindow.cpp \
 	Sources/Dialogs/SetupDialog.cpp \
 	Sources/Utils/ContainerUtils.cpp \
+	Sources/Utils/DoomRunnerPacks.cpp \
 	Sources/Utils/ErrorHandling.cpp \
 	Sources/Utils/EventFilters.cpp \
 	Sources/Utils/ExeReader.cpp \

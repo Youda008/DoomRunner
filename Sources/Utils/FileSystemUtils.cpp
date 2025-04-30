@@ -12,6 +12,7 @@
 #include <QFile>
 #include <QSaveFile>
 #include <QStringBuilder>
+#include <QTextStream>
 #include <QRegularExpression>
 #include <QThread>  // sleep
 
@@ -128,6 +129,29 @@ QString readWholeFile( const QString & filePath, QByteArray & dest )
 	if (file.error() != QFile::NoError)
 	{
 		return "Error occured while reading a file "%filePath%" ("%file.errorString()%")";
+	}
+
+	file.close();
+	return {};
+}
+
+QString readAllFileLines( const QString & filePath, QStringList & lines )
+{
+	QFile file( filePath );
+	if (!file.open( QIODevice::Text | QIODevice::ReadOnly ))
+	{
+		return "Could not open file "%filePath%" for reading ("%file.errorString()%")";
+	}
+
+	QTextStream stream( &file );
+	while (!stream.atEnd())
+	{
+		QString line = stream.readLine();
+		if (file.error() != QFile::NoError)
+		{
+			return "Error occured while reading a file "%filePath%" ("%file.errorString()%")";
+		}
+		lines.append( std::move(line) );
 	}
 
 	file.close();

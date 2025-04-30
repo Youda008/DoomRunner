@@ -8,6 +8,7 @@
 #include "DoomFiles.hpp"
 
 #include "Utils/FileSystemUtils.hpp"
+#include "Utils/DoomRunnerPacks.hpp"  // fileSuffix
 
 #include <QHash>
 #include <QSet>
@@ -48,6 +49,7 @@ QStringList getModFileSuffixes()
 		suffixes.append( "*."+suffix );
 	for (const QString & suffix : dukeSuffixes)
 		suffixes.append( "*."+suffix );
+	suffixes.append( "*."+drp::fileSuffix );
 	return suffixes;
 }
 

@@ -33,11 +33,12 @@
 #include "Utils/OSUtils.hpp"
 #include "Utils/ExeReader.hpp"
 #include "Utils/WADReader.hpp"
+#include "Utils/DoomRunnerPacks.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // areScreenCoordinatesValid, makeFileFilter, splitCommandLineArguments
 #include "Utils/ErrorHandling.hpp"
 
-// showMapPackDesc
+// showTxtDescriptionFor
 #include <QVBoxLayout>
 #include <QPlainTextEdit>
 #include <QFontDatabase>
@@ -92,6 +93,72 @@ QStringList MainWindow::getSelectedMapPacks() const
 	}
 
 	return selectedMapPacks;
+}
+
+// Executes the loopBody functor for every file path in that pack. Sub-packs are expanded recursively.
+template< typename Entry, typename Functor >
+void MainWindow::expandDRP( const QString & filePath, const Functor & loopBody ) const
+{
+	QStringList entries = drp::getEntries( filePath );
+
+	// rebase the paths from the DRP's dir to our working dir and convert the path style according to our settings
+	PathRebaser rebaser( fs::getParentDir( filePath ), pathConvertor.workingDir().path() );
+	rebaser.setRequiredPathStyle( pathConvertor.pathStyle() );
+
+	for (const QString & path : entries)
+	{
+		if (!path.isEmpty())
+		{
+			QString convertedPath = rebaser.rebaseAndConvert( path );
+			if (fs::getFileSuffix( convertedPath ) == drp::fileSuffix)
+			{
+				expandDRP< Entry >( convertedPath, loopBody );
+			}
+			else
+			{
+				loopBody( Entry( convertedPath ) );
+			}
+		}
+	}
+
+	QFileInfo fileInfo( filePath );
+}
+
+// Iterates over a list of selected map files where each DoomRunner Pack (.drp) is fully expanded.
+template< typename Functor >
+void MainWindow::forEachSelectedMapFileWithExpandedDRPs( const Functor & loopBody ) const
+{
+	for (const QString & mapFilePath : selectedMapPacks)
+	{
+		if (fs::getFileSuffix( mapFilePath ) == drp::fileSuffix)
+		{
+			expandDRP< QString >( mapFilePath, loopBody );
+		}
+		else
+		{
+			loopBody( mapFilePath );
+		}
+	}
+}
+
+// Iterates over a list of checked mod files where each DoomRunner Pack (.drp) is fully expanded.
+template< typename Functor >
+void MainWindow::forEachCheckedModFileWithExpandedDRPs( const Functor & loopBody ) const
+{
+	for (const Mod & mod : modModel)
+	{
+		if (!mod.isSeparator && mod.checked)
+		{
+			if (fs::getFileSuffix( mod.path ) == drp::fileSuffix)
+			{
+				expandDRP< Mod >( mod.path, loopBody );
+			}
+			else
+			{
+				loopBody( mod );
+			}
+		}
+	}
 }
 
 QStringList MainWindow::getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs )
@@ -753,7 +820,7 @@ MainWindow::MainWindow()
 	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onEngineSelected );
 	connect( ui->engineDirBtn, &QToolButton::clicked, this, &thisClass::onEngineDirBtnClicked );
 
-	configModel.append({""});  // always have an empty item, so that index doesn't have to switch between -1 and 0
+	configModel.append({});  // always have an empty item, so that index doesn't have to switch between -1 and 0
 	ui->configCmbBox->setModel( &configModel );
 	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onConfigSelected );
 	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::onCloneConfigBtnClicked );
@@ -2362,6 +2429,11 @@ void MainWindow::showTxtDescriptionFor( const QString & filePath, const QString 
 	descDialog.exec();
 }
 
+void MainWindow::editDoomRunnerPack( const QString & filePath )
+{
+	os::openFileInNotepad( filePath );
+}
+
 void MainWindow::openCurrentEngineDataDir()
 {
 	if (!selectedEngine)
@@ -2816,17 +2888,47 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 
 void MainWindow::onIWADDoubleClicked( const QModelIndex & index )
 {
-	showTxtDescriptionFor( iwadModel[ index.row() ].path, "IWAD description" );
+	const QString & filePath = iwadModel[ index.row() ].path;
+
+	showTxtDescriptionFor( filePath, "IWAD description" );
 }
 
 void MainWindow::onMapPackDoubleClicked( const QModelIndex & index )
 {
-	showTxtDescriptionFor( mapModel.filePath( index ), "map description" );
+	QFileInfo fileInfo( mapModel.filePath( index ) );
+
+	if (fileInfo.isDir())
+	{
+		return;
+	}
+
+	if (fileInfo.suffix() == drp::fileSuffix)
+	{
+		editDoomRunnerPack( fileInfo.filePath() );
+	}
+	else
+	{
+		showTxtDescriptionFor( fileInfo.filePath(), "map description" );
+	}
 }
 
 void MainWindow::onModDoubleClicked( const QModelIndex & index )
 {
-	showTxtDescriptionFor( modModel[ index.row() ].path, "mod description" );
+	QFileInfo fileInfo( modModel[ index.row() ].path );
+
+	if (fileInfo.isDir())
+	{
+		return;
+	}
+
+	if (fileInfo.suffix() == drp::fileSuffix)
+	{
+		editDoomRunnerPack( fileInfo.filePath() );
+	}
+	else
+	{
+		showTxtDescriptionFor( fileInfo.filePath(), "mod description" );
+	}
 }
 
 void MainWindow::onEngineDirBtnClicked()
@@ -3090,6 +3192,7 @@ void MainWindow::modAdd()
 	const QStringList paths = DialogWithPaths::browseFiles( this, "mod file", lastUsedDir,
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
+		+ makeFileFilter( "DoomRunner pack files", { drp::fileSuffix } )
 		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel
@@ -4986,26 +5089,23 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 		/// Postponed map files that will be inserted together into the -file list.
 		QStringList mapFiles;
-		for (const QString & mapFilePath : selectedMapPacks)
+		forEachSelectedMapFileWithExpandedDRPs( [&]( const QString & mapFilePath )
 		{
 			p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
 			addFileAccordingToSuffix( mapFiles, mapFilePath );
-		}
+		});
 
 		/// Postponed mod files that will be inserted together into the -file list.
 		QStringList modFiles;
-		for (const Mod & mod : modModel)
+		forEachCheckedModFileWithExpandedDRPs( [&]( const Mod & mod )
 		{
-			if (!mod.isSeparator && mod.checked)
-			{
-				if (mod.isCmdArg) {  // this is not a file but a custom command line argument, append it directly to the arguments
-					appendCustomArguments( fileArgs, mod.name, opts.quotePaths );
-				} else {
-					p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
-					addFileAccordingToSuffix( modFiles, mod.path );
-				}
+			if (mod.isCmdArg) {  // this is not a file but a custom command line argument, append it directly to the arguments
+				appendCustomArguments( fileArgs, mod.name, opts.quotePaths );
+			} else {
+				p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
+				addFileAccordingToSuffix( modFiles, mod.path );
 			}
-		}
+		});
 
 		// output the final sequence to the cmd.arguments
 		for (QString & argument : fileArgs)

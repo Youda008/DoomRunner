@@ -251,6 +251,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void runPlayerColorDialog();
 
 	void showTxtDescriptionFor( const QString & filePath, const QString & contentType );
+	void editDoomRunnerPack( const QString & filePath );
 
 	void openCurrentEngineDataDir();
 	void cloneCurrentEngineConfigFile();
@@ -319,6 +320,10 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void addShortcut( const QKeySequence & keys, const Func & shortcutAction );
 
 	QStringList getSelectedMapPacks() const;
+
+	template< typename Entry, typename Functor > void expandDRP( const QString & filePath, const Functor & loopBody ) const;
+	template< typename Functor > void forEachSelectedMapFileWithExpandedDRPs( const Functor & loopBody ) const;
+	template< typename Functor > void forEachCheckedModFileWithExpandedDRPs( const Functor & loopBody ) const;
 
 	static QStringList getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs );
 
@@ -432,8 +437,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	{
 		QString fileName;
 		ConfigFile() {}
-		ConfigFile( const QString & fileName ) : fileName( fileName ) {}
-		ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
+		explicit ConfigFile( const QString & fileName ) : fileName( fileName ) {}
+		explicit ConfigFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		const QString & getID() const { return fileName; }
 	};
 	ReadOnlyDirectListModel< ConfigFile > configModel;    ///< list of config files found in pre-defined directory
@@ -442,8 +447,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	{
 		QString fileName;
 		SaveFile() {}
-		SaveFile( const QString & fileName ) : fileName( fileName ) {}
-		SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
+		explicit SaveFile( const QString & fileName ) : fileName( fileName ) {}
+		explicit SaveFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		const QString & getID() const { return fileName; }
 	};
 	ReadOnlyDirectListModel< SaveFile > saveModel;    ///< list of save files found in pre-defined directory
@@ -452,8 +457,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	{
 		QString fileName;
 		DemoFile() {}
-		DemoFile( const QString & fileName ) : fileName( fileName ) {}
-		DemoFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
+		explicit DemoFile( const QString & fileName ) : fileName( fileName ) {}
+		explicit DemoFile( const QFileInfo & file ) : fileName( file.fileName() ) {}
 		const QString & getID() const { return fileName; }
 	};
 	ReadOnlyDirectListModel< DemoFile > demoModel;    ///< list of demo files found in pre-defined directory

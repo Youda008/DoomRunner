@@ -61,6 +61,24 @@ QStringList DialogWithPaths::selectFiles( QWidget * parent, const QString & file
 	return paths;
 }
 
+QString DialogWithPaths::selectDestFile( QWidget * parent, const QString & title, QString startingDir, const QString & filter )
+{
+	QString path = OwnFileDialog::getSaveFileName(
+		parent, title, !startingDir.isEmpty() ? startingDir : lastUsedDir, filter
+	);
+	if (path.isEmpty())  // user probably clicked cancel
+		return {};
+
+	// the path comming out of the file dialog is always absolute
+	if (pathConvertor.usingRelativePaths())
+		path = pathConvertor.getRelativePath( path );
+
+	// next time use this dir as the starting dir of the file dialog for convenience
+	lastUsedDir = fs::getParentDir( path );
+
+	return path;
+}
+
 QString DialogWithPaths::selectDir( QWidget * parent, const QString & dirDesc, QString startingDir )
 {
 	QString path = OwnFileDialog::getExistingDirectory(

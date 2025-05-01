@@ -12,7 +12,6 @@
 #include "Dialogs/SetupDialog.hpp"
 #include "Dialogs/OptionsStorageDialog.hpp"
 #include "Dialogs/NewConfigDialog.hpp"
-#include "Dialogs/OwnFileDialog.hpp"
 #include "Dialogs/GameOptsDialog.hpp"
 #include "Dialogs/CompatOptsDialog.hpp"
 #include "Dialogs/ProcessOutputWindow.hpp"
@@ -4889,13 +4888,11 @@ void MainWindow::exportPresetToScript()
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	QString scriptFilePath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, os::scriptFileSuffix );
+	QString scriptFilePath = DialogWithPaths::selectDestFile( this, "Export preset", lastUsedDir, os::scriptFileSuffix );
 	if (scriptFilePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
 	}
-
-	lastUsedDir = fs::getParentDir( scriptFilePath );
 
 	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );
 
@@ -4948,13 +4945,11 @@ void MainWindow::exportPresetToShortcut()
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	QString shortcutPath = OwnFileDialog::getSaveFileName( this, "Export preset", lastUsedDir, os::shortcutFileSuffix );
+	QString shortcutPath = DialogWithPaths::selectDestFile( this, "Export preset", lastUsedDir, os::shortcutFileSuffix );
 	if (shortcutPath.isEmpty())  // user probably clicked cancel
 	{
 		return;
 	}
-
-	lastUsedDir = fs::getParentDir( shortcutPath );
 
 	QString currentWorkingDir = pathConvertor.workingDir().path();
 	QString engineExeDir = fs::getAbsoluteParentDir( selectedEngine->executablePath );

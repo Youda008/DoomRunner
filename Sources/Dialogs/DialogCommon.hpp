@@ -46,6 +46,9 @@ class DialogWithPaths : public DialogCommon {
 	/// Runs a file-system dialog to let the user select multiple files and stores their directory for the next call.
 	QStringList selectFiles( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );
 
+	/// Runs a file-system dialog to let the user select a destination file for saving some data into.
+	QString selectDestFile( QWidget * parent, const QString & title, QString startingDir, const QString & filter );
+
 	/// Runs a file-system dialog to let the user select a directory and stores it for the next call.
 	QString selectDir( QWidget * parent, const QString & dirDesc, QString startingDir = QString() );
 

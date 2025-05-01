@@ -848,6 +848,11 @@ bool openFileLocation( const QString & filePath )
 	return true;
 }
 
+bool openFileInDefaultApp( const QString & filePath )
+{
+	return QDesktopServices::openUrl( QUrl::fromLocalFile( filePath ) );
+}
+
 bool openFileInNotepad( const QString & filePath )
 {
 	QFileInfo fileInfo( filePath );

@@ -75,6 +75,8 @@ HEADERS += \
 	Sources/Utils/WindowsUtils.hpp \
 	Sources/Widgets/ExtendedListView.hpp \
 	Sources/Widgets/ExtendedTreeView.hpp \
+	Sources/Widgets/ExtendedViewCommon.hpp \
+	Sources/Widgets/ExtendedViewCommon.impl.hpp \
 	Sources/Widgets/RightClickableButton.hpp \
 	Sources/Widgets/SearchPanel.hpp \
 	Sources/CommonTypes.hpp \

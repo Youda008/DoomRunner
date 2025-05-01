@@ -97,6 +97,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void searchPresets( const QString & phrase, bool caseSensitive, bool useRegex );
 
+	void onMapIconsToggled();
+
 	void modAdd();
 	void modAddDir();
 	void modAddArg();

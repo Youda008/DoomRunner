@@ -48,7 +48,6 @@
 #include <QFile>
 #include <QDir>
 #include <QStandardPaths>
-#include <QFileIconProvider>  // EmptyIconProvider
 #include <QMessageBox>
 #include <QShortcut>
 #include <QTimer>
@@ -995,6 +994,7 @@ void MainWindow::setupIWADList()
 
 	// setup reaction to key shortcuts and right click
 	ui->iwadListView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::OpenFile
 		| ExtendedListView::MenuAction::OpenFileLocation
 	);
 
@@ -1026,15 +1026,6 @@ void MainWindow::setupMapPackList()
 	// make the view display a horizontal scrollbar rather than clipping the items
 	ui->mapDirView->toggleAutomaticColumnResizing( true );
 
-	// remove icons
-	class EmptyIconProvider : public QFileIconProvider
-	{
-	 public:
-		virtual QIcon icon( IconType ) const override { return QIcon(); }
-		virtual QIcon icon( const QFileInfo & ) const override { return QIcon(); }
-	};
-	mapModel.setIconProvider( new EmptyIconProvider );
-
 	// set drag&drop behaviour
 	ui->mapDirView->setDragEnabled( true );
 	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
@@ -1042,6 +1033,18 @@ void MainWindow::setupMapPackList()
 	// set reaction when an item is clicked or double-clicked
 	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onMapPackToggled );
 	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::onMapPackDoubleClicked );
+
+	// setup reaction to key shortcuts and right click
+	ui->mapDirView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::OpenFile
+		| ExtendedListView::MenuAction::OpenFileLocation
+		| ExtendedListView::MenuAction::Copy
+		| ExtendedListView::MenuAction::ToggleIcons
+	);
+
+	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
+	ui->mapDirView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
+	connect( ui->mapDirView->toggleIconsAction, &QAction::triggered, this, &thisClass::onMapIconsToggled );
 
 	// QFileSystemModel updates its content asynchronously in a separate thread. For this reason,
 	// when the model is set to display a certain directory, we cannot select items from the view right away,
@@ -1077,13 +1080,14 @@ void MainWindow::setupModList()
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::OpenFile
+		| ExtendedListView::MenuAction::OpenFileLocation
 		| ExtendedListView::MenuAction::AddAndDelete
 		| ExtendedListView::MenuAction::Copy
 		| ExtendedListView::MenuAction::CutAndPaste
 		| ExtendedListView::MenuAction::Move
 		| ExtendedListView::MenuAction::InsertSeparator
-		| ExtendedListView::MenuAction::OpenFileLocation
-		| ExtendedListView::MenuAction::ToggleIcons  // allow the icons to be toggled via a context-menu
+		| ExtendedListView::MenuAction::ToggleIcons
 	);
 	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL | Qt::Key_Asterisk } );
 	ui->modListView->toggleListModifications( true );
@@ -1096,6 +1100,10 @@ void MainWindow::setupModList()
 	connect( ui->modListView->moveItemToBottomAction, &QAction::triggered, this, &thisClass::modMoveToBottom );
 	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::modInsertSeparator );
 
+	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
+	ui->modListView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
+	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::onModIconsToggled );
+
 	// setup buttons
 	connect( ui->modBtnAdd, &QToolButton::clicked, this, &thisClass::modAdd );
 	connect( ui->modBtnAddDir, &QToolButton::clicked, this, &thisClass::modAddDir );
@@ -1105,10 +1113,6 @@ void MainWindow::setupModList()
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
 
 	connect( ui->mapsAfterModsChkBox, &QCheckBox::toggled, this, &thisClass::onMapsAfterModsToggled );
-
-	// setup icons
-	ui->modListView->toggleIcons( true );  // we need to do this instead of modModel.toggleIcons() in order to update the action text
-	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::onModIconsToggled );
 }
 
 void MainWindow::setupEnvVarLists()
@@ -1642,6 +1646,8 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		wdg::deselectAllAndUnsetCurrent( ui->mapDirView );
 
 		resetMapDirModelAndView();  // populates the list from mapSettings.dir (asynchronously)
+
+		ui->mapDirView->toggleIcons( mapSettings.showIcons );
 	}
 
 	// mods
@@ -3181,6 +3187,17 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 		ui->presetListView->toggleListModifications( true );
 		ui->presetListView->setAllowedDnDSources( DnDSource::ThisWidget );
 	}
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// map list settings
+
+void MainWindow::onMapIconsToggled()
+{
+	mapSettings.showIcons = ui->mapDirView->areIconsEnabled();
+
+	scheduleSavingOptions();
 }
 
 

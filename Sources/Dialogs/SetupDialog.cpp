@@ -151,11 +151,11 @@ void SetupDialog::setupEngineList()
 
 	// setup reaction to key shortcuts and right click
 	ui->engineListView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::OpenFileLocation
 		| ExtendedListView::MenuAction::AddAndDelete
 		| ExtendedListView::MenuAction::Copy
 		| ExtendedListView::MenuAction::CutAndPaste
 		| ExtendedListView::MenuAction::Move
-		| ExtendedListView::MenuAction::OpenFileLocation
 	);
 	setDefaultEngineAction = ui->engineListView->addAction( "Set as default", {} );
 	ui->engineListView->toggleListModifications( true );
@@ -195,9 +195,9 @@ void SetupDialog::setupIWADList()
 
 	// setup reaction to key shortcuts and right click
 	ui->iwadListView->enableContextMenu( 0
+		| ExtendedListView::MenuAction::OpenFileLocation
 		| ExtendedListView::MenuAction::AddAndDelete
 		| ExtendedListView::MenuAction::Move
-		| ExtendedListView::MenuAction::OpenFileLocation
 	);
 	setDefaultIWADAction = ui->iwadListView->addAction( "Set as default", {} );
 	ui->iwadListView->toggleListModifications( !iwadSettings.updateFromDir );

@@ -12,9 +12,9 @@
 
 #include "Essential.hpp"
 
+#include "ExtendedViewCommon.hpp"
 #include "DataModels/ModelCommon.hpp"  // AccessStyle
 #include "Utils/EventFilters.hpp"      // ModifierHandler
-#include "Utils/ErrorHandling.hpp"     // ErrorReportingComponent
 
 #include <QListView>
 
@@ -23,9 +23,6 @@
 class AListModel;
 class DnDProgressGuard;
 
-class QMenu;
-class QAction;
-class QKeySequence;
 class QString;
 
 
@@ -71,7 +68,7 @@ template<> inline DnDSourcesExp expandToBools< DnDSourcesExp, DnDSources >( DnDS
 /** List view that supports editing of item names and behaves correctly on both internal and external drag&drop actions.
   * Should be used together with GenericListModel. */
 
-class ExtendedListView : public QListView, protected ErrorReportingComponent {
+class ExtendedListView : public QListView, public ExtendedViewCommon< ExtendedListView > {
 
 	Q_OBJECT
 
@@ -130,38 +127,13 @@ class ExtendedListView : public QListView, protected ErrorReportingComponent {
 
 	//-- context menu --------------------------------------------------------------------------------------------------
 
-	/// Available actions for the right-click context menu. Each one is associated with a key shortcut.
-	enum MenuAction : uint
-	{
-		None             = 0,
-
-		AddAndDelete     = (1 << 0),   ///< add a new item and delete the selected items                            (available only in editable views)
-		Clone            = (1 << 1),   ///< add a copy of the selected item with a new name                         (available only in editable views)
-		Copy             = (1 << 2),   ///< copy selected items into the clipboard                                  (available also in read-only views)
-		CutAndPaste      = (1 << 3),   ///< cut selected items into the clipboard or paste them from the clipboard  (available only in editable views)
-		Move             = (1 << 4),   ///< move selected items up or down                                          (available only in editable views)
-		InsertSeparator  = (1 << 5),   ///< insert named visual separator between items                             (available only in editable views)
-		Find             = (1 << 6),   ///< open a search bar to find an existing item by name                      (available also in read-only views)
-		OpenFileLocation = (1 << 7),   ///< open the directory of the last clicked file in a system file explorer   (available also in read-only views)
-		ToggleIcons      = (1 << 8),   ///< show or hide the file or directory icons                                (available also in read-only views)
-
-		All              = makeBitMask(9)
-	};
-	using MenuActions = std::underlying_type_t< MenuAction >;
-
-	/// Enables the ability to open a context menu by clicking with the right mouse button.
-	/**
-	  * \param actions Specifies the entries the context menu will have. Each will create a corresponding QAction object.
-	  */
+	/// \copydoc _enableContextMenu()
 	void enableContextMenu( MenuActions actions );
 
-	/// Creates a custom action and adds it to the context menu.
-	/** The resulting QAction object will emit triggered() signal that needs to be connected to the desired callback.
-	  * The returned pointer is non-owning and must not be deleted, because it will be deleted by its parent view.
-	  * The context menu must be enabled first by calling enableContextMenu(). */
+	/// \copydoc _addAction()
 	QAction * addAction( const QString & text, const QKeySequence & shortcut );
 
-	/// Enables/disables those actions that modify the list (inserting, deleting, reordering)
+	/// \copydoc _toggleListModifications()
 	void toggleListModifications( bool enabled );
 
  signals:
@@ -176,35 +148,6 @@ class ExtendedListView : public QListView, protected ErrorReportingComponent {
 	  */
 	void dragAndDropFinished( int destRowIdx, int itemCount, DnDSources source );
 
- //actions:
-
-	// The following actions will emit triggered() signal when the context menu entry is clicked or when
-	// the corresponding key shortcut is pressed. The signal must be connected to a callback that does the job.
-	//
-	// The public actions must be connected and handled by the owner of this view and its corresponding model,
-	// because in different use cases the operations are performed differently and the callbacks may be re-used
-	// for multiple different signals.
-	//
-	// The private actions are connected and handled internally and work universally in all use cases.
-
-	public:  QAction * addItemAction = nullptr;            ///< corresponds to MenuAction::AddAndDelete
-	public:  QAction * deleteItemAction = nullptr;         ///< corresponds to MenuAction::AddAndDelete
-	public:  QAction * cloneItemAction = nullptr;          ///< corresponds to MenuAction::Clone
-
-	private: QAction * cutItemsAction = nullptr;           ///< corresponds to MenuAction::CutAndPaste
-	private: QAction * copyItemsAction = nullptr;          ///< corresponds to MenuAction::Copy
-	private: QAction * pasteItemsAction = nullptr;         ///< corresponds to MenuAction::CutAndPaste
-
-	public:  QAction * moveItemUpAction = nullptr;         ///< corresponds to MenuAction::Move
-	public:  QAction * moveItemDownAction = nullptr;       ///< corresponds to MenuAction::Move
-	public:  QAction * moveItemToTopAction = nullptr;      ///< corresponds to MenuAction::Move
-	public:  QAction * moveItemToBottomAction = nullptr;   ///< corresponds to MenuAction::Move
-
-	public:  QAction * insertSeparatorAction = nullptr;    ///< corresponds to MenuAction::InsertSeparator
-	public:  QAction * findItemAction = nullptr;           ///< corresponds to MenuAction::Find
-	private: QAction * openFileLocationAction = nullptr;   ///< corresponds to MenuAction::OpenFileLocation
-	public:  QAction * toggleIconsAction = nullptr;        ///< corresponds to MenuAction::ToggleIcons
-
  private: // overriden event callbacks
 
 	virtual void contextMenuEvent( QContextMenuEvent * e ) override;
@@ -217,13 +160,17 @@ class ExtendedListView : public QListView, protected ErrorReportingComponent {
 	virtual void keyPressEvent( QKeyEvent * event ) override;
 	virtual void keyReleaseEvent( QKeyEvent * event ) override;
 
- protected slots:
+ private slots:
+
+	friend class ExtendedViewCommon;
+
+	void openCurrentFile();
+	void openCurrentFileLocation();
 
 	void cutSelectedItems();
 	void copySelectedItems();
 	void pasteAboveSelectedItem();
 
-	void openCurrentFileLocation();
 	void toggleIcons();
 
  private: // helpers
@@ -245,14 +192,13 @@ class ExtendedListView : public QListView, protected ErrorReportingComponent {
 	/// Retrieves drop indexes, updates selection and emits a signal.
 	void onDragAndDropFinished( DnDSources source, DnDProgressGuard & dndProgressGuard );
 
-	bool assertCanAddEditAction( const char * actionDesc ) const;
-
 	void toggleCheckStateOfSelectedItems();
+
+	QString getCurrentFilePath() const;
 
  private: // internal members
 
 	AListModel * ownModel = nullptr;  ///< quick access to our own specialized model
-	QMenu * contextMenu = nullptr;
 	ModifierHandler modifierHandler;
 	bool isBeingDraggedFrom = false;
 	bool isBeingDroppedTo = false;
@@ -262,8 +208,6 @@ class ExtendedListView : public QListView, protected ErrorReportingComponent {
 
 	AccessStyle access = AccessStyle::ReadOnly;
 	bool allowEditNames = false;
-	MenuActions contextMenuActions = 0;
-	bool allowModifyList = false;
 	DnDOutputTypes enabledDnDOutputTypes = 0;
 	DnDSources allowedDnDSources = 0;
 

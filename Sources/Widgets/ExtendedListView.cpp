@@ -8,6 +8,7 @@
 
 #include "ExtendedListView.hpp"
 
+#include "ExtendedViewCommon.impl.hpp"
 #include "DataModels/GenericListModel.hpp"
 #include "Utils/EventFilters.hpp"
 #include "Utils/WidgetUtils.hpp"
@@ -19,9 +20,7 @@
 #include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QMimeData>
-#include <QClipboard>
 #include <QKeyEvent>
-#include <QMenu>
 #include <QApplication>
 
 
@@ -57,7 +56,7 @@ ExtendedListView::ExtendedListView( QWidget * parent )
 	QListView( parent ),
 	// NOTE: We are passing a string view made from a temporary QString.
 	//       But because Qt uses reference counting and copy-on-write, the internal string buffer will keep existing.
-	ErrorReportingComponent( parent, u"ExtendedListView", this->objectName() )
+	ExtendedViewCommon( parent, u"ExtendedListView", this->objectName() )
 {
 	// defaults
 	toggleItemEditing( false );
@@ -66,10 +65,7 @@ ExtendedListView::ExtendedListView( QWidget * parent )
 	setDnDOutputTypes( false );
 }
 
-ExtendedListView::~ExtendedListView()
-{
-	// QAction members get deleted as children of this QListView (their parent)
-}
+ExtendedListView::~ExtendedListView() = default;
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -458,133 +454,26 @@ void ExtendedListView::onDragAndDropFinished( DnDSources source, DnDProgressGuar
 //----------------------------------------------------------------------------------------------------------------------
 // context menu
 
-QAction * ExtendedListView::addAction( const QString & text, const QKeySequence & shortcut )
-{
-	QAction * action = new QAction( text, this );  // will be deleted when this QListView (their parent) is deleted
-	action->setShortcut( shortcut );
-	action->setShortcutContext( Qt::WidgetShortcut );  // only listen to this shortcut when this widget has focus
-	QWidget::addAction( action );  // register it to this widget, so the shortcut is checked
-	contextMenu->addAction( action );  // register it to the menu, so that it appears there when right-clicked
-	return action;
-}
-
-bool ExtendedListView::assertCanAddEditAction( const char * actionDesc ) const
-{
-	if (isReadOnly())
-	{
-		logLogicError() << "attempted to add \""<<actionDesc<<"\" context menu actions to a read-only list view";
-	}
-	return !isReadOnly();
-}
-
 void ExtendedListView::enableContextMenu( MenuActions actions )
 {
-	contextMenu = new QMenu( this );  // will be deleted when this QListView (their parent) is deleted
-
-	if (areFlagsSet( actions, MenuAction::AddAndDelete ) && assertCanAddEditAction( "And and Delete" ))
-	{
-		addItemAction = addAction( "Add", { Qt::Key_Insert } );
-		deleteItemAction = addAction( "Delete", { Qt::Key_Delete } );
-	}
-	if (areFlagsSet( actions, MenuAction::Clone ) && assertCanAddEditAction( "Clone" ))
-	{
-		cloneItemAction = addAction( "Clone", { Qt::CTRL | Qt::ALT | Qt::Key_C } );
-	}
-	if (areFlagsSet( actions, MenuAction::CutAndPaste ) && assertCanAddEditAction( "Cut" ))
-	{
-		cutItemsAction = addAction( "Cut",   { Qt::CTRL | Qt::Key_X } );
-		connect( cutItemsAction, &QAction::triggered, this, &thisClass::cutSelectedItems );
-	}
-	if (areFlagsSet( actions, MenuAction::Copy ))
-	{
-		copyItemsAction = addAction( "Copy",  { Qt::CTRL | Qt::Key_C } );
-		connect( copyItemsAction, &QAction::triggered, this, &thisClass::copySelectedItems );
-	}
-	if (areFlagsSet( actions, MenuAction::CutAndPaste ) && assertCanAddEditAction( "Paste" ))
-	{
-		pasteItemsAction = addAction( "Paste", { Qt::CTRL | Qt::Key_V } );
-		connect( pasteItemsAction, &QAction::triggered, this, &thisClass::pasteAboveSelectedItem );
-	}
-	if (areFlagsSet( actions, MenuAction::Move ) && assertCanAddEditAction( "Move up and down" ))
-	{
-		moveItemUpAction = addAction( "Move up", { Qt::CTRL | Qt::Key_Up } );
-		moveItemDownAction = addAction( "Move down", { Qt::CTRL | Qt::Key_Down } );
-		moveItemToTopAction = addAction( "Move to top", { Qt::CTRL | Qt::ALT | Qt::Key_Up } );
-		moveItemToBottomAction = addAction( "Move to bottom", { Qt::CTRL | Qt::ALT | Qt::Key_Down } );
-	}
-	if (areFlagsSet( actions, MenuAction::InsertSeparator ) && assertCanAddEditAction( "Insert separator" ))
-	{
-		insertSeparatorAction = addAction( "Insert separator", { Qt::CTRL | Qt::Key_Slash } );
-	}
-	if (areFlagsSet( actions, MenuAction::Find ))
-	{
-		findItemAction = addAction( "Find", QKeySequence::Find );
-	}
-	if (areFlagsSet( actions, MenuAction::OpenFileLocation ))
-	{
-		openFileLocationAction = addAction( "Open file location", {} );
-		connect( openFileLocationAction, &QAction::triggered, this, &thisClass::openCurrentFileLocation );
-	}
-	if (areFlagsSet( actions, MenuAction::ToggleIcons ))
-	{
-		toggleIconsAction = addAction( "Show icons", {} );
-		connect( toggleIconsAction, &QAction::triggered, this, QOverload<>::of( &thisClass::toggleIcons ) );
-	}
+	_enableContextMenu( actions );
 
 	updateModelExportImportFormats();
 }
 
-void ExtendedListView::contextMenuEvent( QContextMenuEvent * event )
+QAction * ExtendedListView::addAction( const QString & text, const QKeySequence & shortcut )
 {
-	QModelIndex clickedItemIndex = this->indexAt( event->pos() );
-
-	if (!contextMenu)  // not enabled
-		return;
-
-	if (addItemAction)
-		addItemAction->setEnabled( allowModifyList );
-	if (deleteItemAction)
-		deleteItemAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-	if (cloneItemAction)
-		cloneItemAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-
-	if (cutItemsAction)
-		cutItemsAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-	if (copyItemsAction)
-		copyItemsAction->setEnabled( clickedItemIndex.isValid() );  // read-only
-	if (pasteItemsAction)
-		pasteItemsAction->setEnabled( allowModifyList );
-
-	if (moveItemUpAction)
-		moveItemUpAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-	if (moveItemDownAction)
-		moveItemDownAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-	if (moveItemToTopAction)
-		moveItemToTopAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-	if (moveItemToBottomAction)
-		moveItemToBottomAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
-
-	if (insertSeparatorAction)
-		insertSeparatorAction->setEnabled( allowModifyList );
-	if (findItemAction)
-		findItemAction->setEnabled( true );  // read-only
-	if (openFileLocationAction)
-		openFileLocationAction->setEnabled( clickedItemIndex.isValid() );  // read-only
-	if (toggleIconsAction)
-		toggleIconsAction->setEnabled( true );  // read-only
-
-	contextMenu->popup( event->globalPos() );
+	return _addAction( text, shortcut );
 }
 
 void ExtendedListView::toggleListModifications( bool enabled )
 {
-	if (enabled && isReadOnly())
-	{
-		logLogicError() << "attempted to enable list modifications in a read-only list view.";
-		return;
-	}
+	_toggleListModifications( enabled );
+}
 
-	allowModifyList = enabled;
+void ExtendedListView::contextMenuEvent( QContextMenuEvent * event )
+{
+	return _contextMenuEvent( event );
 }
 
 
@@ -593,68 +482,56 @@ void ExtendedListView::toggleListModifications( bool enabled )
 
 void ExtendedListView::cutSelectedItems()
 {
-	copySelectedItems();
-
-	// remove the selected items
-	const QItemSelection selection = this->selectionModel()->selection();
-	for (const QItemSelectionRange & range : selection)
-		this->model()->removeRows( range.top(), range.height() );
+	_cutSelectedItems();
 }
 
 void ExtendedListView::copySelectedItems()
 {
-	QModelIndexList indexes = this->selectionModel()->selectedIndexes();
-	if (indexes.isEmpty())
-	{
-		return;
-	}
-	//std::sort( indexes.begin(), indexes.end(), []( QModelIndex & i1, QModelIndex & i2 ) { return i1.row() < i2.row(); } );
-
-	// serialize the selected items into MIME data
-	QMimeData * mimeData = this->model()->mimeData( indexes );
-
-	// save the serialized data to the system clipboard
-	qApp->clipboard()->setMimeData( mimeData );  // ownership is transferred to the clipboard
+	_copySelectedItems();
 }
 
 void ExtendedListView::pasteAboveSelectedItem()
 {
-	// get the serialized data from the system clipboard
-	const QMimeData * mimeData = qApp->clipboard()->mimeData();  // ownership remains in the clipboard
-	if (!mimeData)
-	{
-		reportUserError( "Clipboard empty", "There is nothing to paste. Copy something first." );
-		return;
-	}
-
-	// deserialize and insert the data above the last selected item
-	QModelIndexList indexes = this->selectionModel()->selectedIndexes();
-	int rowToDrop = !indexes.isEmpty() ? indexes.last().row() : -1;  // if nothing is selected, drop it to the end
-	// Although some people might call the cut&paste combo a "move action", for our model it's a "copy action".
-	this->model()->dropMimeData( mimeData, Qt::CopyAction, rowToDrop, 0, QModelIndex() );
+	_pasteAboveSelectedItem();
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------
 // other actions
 
-void ExtendedListView::openCurrentFileLocation()
+QString ExtendedListView::getCurrentFilePath() const
 {
 	QModelIndex currentIdx = this->selectionModel()->currentIndex();
 	if (!currentIdx.isValid())
 	{
 		reportUserError( "No item chosen", "You did not click on any file." );
-		return;
+		return {};
 	}
 
 	auto userData = this->model()->data( currentIdx, Qt::UserRole );
 	if (getType( userData ) != QMetaType::Type::QString)  // NOLINT
 	{
-		reportLogicError( u"openCurrentFileLocation", "Unexpected model behaviour", "The model did not return QString for UserRole" );
-		return;
+		reportLogicError( u"getCurrentFilePath", "Unexpected model behaviour", "The model did not return QString for UserRole" );
+		return {};
 	}
 
-	QString filePath = userData.toString();
+	return userData.toString();
+}
+
+void ExtendedListView::openCurrentFile()
+{
+	QString filePath = getCurrentFilePath();
+	if (filePath.isEmpty())
+		return;
+
+	os::openFileInDefaultApp( filePath );  // errors are handled inside
+}
+
+void ExtendedListView::openCurrentFileLocation()
+{
+	QString filePath = getCurrentFilePath();
+	if (filePath.isEmpty())
+		return;
 
 	os::openFileLocation( filePath );  // errors are handled inside
 }

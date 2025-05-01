@@ -327,6 +327,7 @@ struct IwadSettings
 struct MapSettings
 {
 	QString dir;   ///< directory with map packs to automatically load the list from
+	bool showIcons = true;   ///< whether the map list should show file-system icons provided by the OS
 };
 
 struct ModSettings

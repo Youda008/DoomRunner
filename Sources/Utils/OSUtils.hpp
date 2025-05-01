@@ -178,7 +178,10 @@ bool openDirectoryWindow( const QString & dirPath );
 /// Opens a directory of a file in a new File Explorer window.
 bool openFileLocation( const QString & filePath );
 
-/// Opens the selected file in the system's main notepad.
+/// Opens a selected file in the application that's assigned for this file type.
+bool openFileInDefaultApp( const QString & filePath );
+
+/// Opens a selected file in the system's main notepad.
 bool openFileInNotepad( const QString & filePath );
 
 struct EnvVar

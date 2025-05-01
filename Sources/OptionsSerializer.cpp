@@ -234,6 +234,7 @@ static QJsonObject serialize( const MapSettings & mapSettings )
 	QJsonObject mapsJs;
 
 	mapsJs["directory"] = mapSettings.dir;
+	mapsJs["show_icons"] = mapSettings.showIcons;
 
 	return mapsJs;
 }
@@ -241,6 +242,7 @@ static QJsonObject serialize( const MapSettings & mapSettings )
 static void deserialize( const JsonObjectCtx & mapSettingsJs, MapSettings & mapSettings )
 {
 	mapSettings.dir = mapSettingsJs.getString( "directory" );
+	mapSettings.showIcons = mapSettingsJs.getBool( "show_icons", mapSettings.showIcons );
 }
 
 static QJsonObject serialize( const ModSettings & modSettings )
@@ -252,9 +254,9 @@ static QJsonObject serialize( const ModSettings & modSettings )
 	return modsJs;
 }
 
-static void deserialize( const JsonObjectCtx & modsJs, ModSettings & modSettings )
+static void deserialize( const JsonObjectCtx & modSettingsJs, ModSettings & modSettings )
 {
-	modSettings.showIcons = modsJs.getBool( "show_icons", modSettings.showIcons );
+	modSettings.showIcons = modSettingsJs.getBool( "show_icons", modSettings.showIcons );
 }
 
 static QJsonObject serialize( const LaunchOptions & opts )

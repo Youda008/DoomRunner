@@ -67,7 +67,7 @@ QModelIndex getSelectedItemIndex( QAbstractItemView * view )
 		reportLogicError( view->parentWidget(), {}, "Multiple items selected", "Multiple items are selected." );
 		return {};
 	}
-	return selectedIndexes[0];
+	return selectedIndexes.first();
 }
 
 QModelIndexList getSelectedItemIndexes( QAbstractItemView * view )

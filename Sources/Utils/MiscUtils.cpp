@@ -22,7 +22,7 @@ QString makeFileFilter( const char * filterName, const QStringList & suffixes )
 
 	filterStream << filterName << " (";
 	for (const QString & suffix : suffixes)
-		if (&suffix == &suffixes[0])
+		if (&suffix == &suffixes.first())
 			filterStream <<  "*." << suffix << " *." << suffix.toUpper();
 		else
 			filterStream << " *." << suffix << " *." << suffix.toUpper();

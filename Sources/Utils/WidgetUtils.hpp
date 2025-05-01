@@ -283,7 +283,7 @@ QList<int> removeSelectedItems( QListView * view, ListModel & model )
 	// but for the removal, we need them sorted in ascending order
 	QList<int> selectedRowsAsc = impl::getSortedRows( selectedIndexes, []( int i1, int i2 ) { return i1 < i2; } );
 
-	int topMostSelectedIdx = selectedRowsAsc[0];
+	int topMostSelectedIdx = selectedRowsAsc.first();
 
 	deselectAllAndUnsetCurrent( view );
 

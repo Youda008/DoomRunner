@@ -26,7 +26,7 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 	ui = new Ui::EngineDialog;
 	ui->setupUi( this );
 
-	DialogWithPaths::lastUsedDir = lastUsedDir_;
+	DialogWithPaths::lastUsedDir = std::move( lastUsedDir_ );
 
 	// setup input path validators
 	setPathValidator( ui->executableLine );

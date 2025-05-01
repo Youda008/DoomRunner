@@ -13,6 +13,7 @@
 #include "DoomFiles.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/PathCheckUtils.hpp"  // highlightPathIfInvalid
+#include "Utils/StringUtils.hpp"  // emptyString
 #include "Utils/MiscUtils.hpp"  // makeFileFilter
 #include "Utils/ErrorHandling.hpp"
 
@@ -281,7 +282,7 @@ void setSelectedItemAsDefault( QListView * view, ListModel & model, QAction * se
 
 void SetupDialog::engineAdd()
 {
-	EngineDialog dialog( this, pathConvertor, {}, lastUsedDir );
+	EngineDialog dialog( this, pathConvertor, {}, std::move(lastUsedDir) );
 
 	int code = dialog.exec();
 
@@ -299,7 +300,7 @@ void SetupDialog::engineDelete()
 
 	const auto removedIndexes = wdg::removeSelectedItems( ui->engineListView, engineModel );
 
-	if (!removedIndexes.isEmpty() && removedIndexes[0] == defaultIndex)
+	if (removedIndexes.contains( defaultIndex ))
 		engineSettings.defaultEngine.clear();
 }
 
@@ -357,7 +358,7 @@ void SetupDialog::editEngine( int engineIdx )
 {
 	EngineInfo & engine = engineModel[ engineIdx ];
 
-	EngineDialog dialog( this, pathConvertor, engine, lastUsedDir );
+	EngineDialog dialog( this, pathConvertor, engine, std::move(lastUsedDir) );
 
 	int code = dialog.exec();
 
@@ -398,7 +399,7 @@ void SetupDialog::setEngineAsDefault()
 
 void SetupDialog::iwadAdd()
 {
-	QString path = DialogWithPaths::selectFile( this, "IWAD", lastUsedDir,
+	QString path = DialogWithPaths::selectFile( this, "IWAD", emptyString,
 		  makeFileFilter( "Doom data files", doom::iwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ "All files (*)"
@@ -415,7 +416,7 @@ void SetupDialog::iwadDelete()
 
 	const auto removedIndexes = wdg::removeSelectedItems( ui->iwadListView, iwadModel );
 
-	if (!removedIndexes.isEmpty() && removedIndexes[0] == defaultIndex)
+	if (removedIndexes.contains( defaultIndex ))
 		iwadSettings.defaultIWAD.clear();
 }
 

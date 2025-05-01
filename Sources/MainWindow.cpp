@@ -2867,10 +2867,10 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 	updateMapsFromSelectedWADs( selectedIWAD, selectedMapPacks );
 
 	// if this is a known map pack, that starts at different level than the first one, automatically select it
-	if (selectedMapPacks.size() >= 1 && !fs::isDirectory( selectedMapPacks[0] ))
+	if (selectedMapPacks.size() >= 1 && !fs::isDirectory( selectedMapPacks.first() ))
 	{
 		// if there is multiple of them, there isn't really any better solution than to just take the first one
-		QString wadFileName = fs::getFileNameFromPath( selectedMapPacks[0] );
+		QString wadFileName = fs::getFileNameFromPath( selectedMapPacks.first() );
 		QString startingMap = doom::getStartingMap( wadFileName );
 		if (!startingMap.isEmpty())
 		{
@@ -3097,8 +3097,8 @@ void MainWindow::presetInsertSeparator()
 	separator.isSeparator = true;
 	separator.name = "New Separator";
 
-	int selectedIdx = wdg::getSelectedItemIndex( ui->presetListView );
-	int insertIdx = selectedIdx < 0 ? int( presetModel.size() ) : selectedIdx;  // append if none
+	int currentIdx = wdg::getCurrentItemIndex( ui->presetListView );
+	int insertIdx = currentIdx < 0 ? int( presetModel.size() ) : currentIdx;  // append if none
 
 	wdg::insertItem( ui->presetListView, presetModel, separator, insertIdx );
 
@@ -3205,7 +3205,7 @@ void MainWindow::onMapIconsToggled()
 
 void MainWindow::modAdd()
 {
-	const QStringList paths = DialogWithPaths::selectFiles( this, "mod file", lastUsedDir,
+	const QStringList paths = DialogWithPaths::selectFiles( this, "mod file", {},
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ makeFileFilter( "DoomRunner pack files", { drp::fileSuffix } )
@@ -3233,7 +3233,7 @@ void MainWindow::modAdd()
 
 void MainWindow::modAddDir()
 {
-	QString path = DialogWithPaths::selectDir( this, "of the mod", lastUsedDir );
+	QString path = DialogWithPaths::selectDir( this, "of the mod" );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -3389,8 +3389,8 @@ void MainWindow::modInsertSeparator()
 	separator.isSeparator = true;
 	separator.name = "New Separator";
 
-	const auto selectedIndexes = wdg::getSelectedItemIndexes( ui->modListView );
-	int insertIdx = selectedIndexes.isEmpty() ? int( modModel.size() ) : selectedIndexes[0];  // append if none
+	int currentIdx = wdg::getCurrentItemIndex( ui->modListView );
+	int insertIdx = currentIdx >= 0 ? currentIdx : int( modModel.size() );  // append if none
 
 	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );
 
@@ -4888,7 +4888,7 @@ void MainWindow::exportPresetToScript()
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	QString scriptFilePath = DialogWithPaths::selectDestFile( this, "Export preset", lastUsedDir, os::scriptFileSuffix );
+	QString scriptFilePath = DialogWithPaths::selectDestFile( this, "Export preset", {}, os::scriptFileSuffix );
 	if (scriptFilePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
@@ -4945,7 +4945,7 @@ void MainWindow::exportPresetToShortcut()
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	QString shortcutPath = DialogWithPaths::selectDestFile( this, "Export preset", lastUsedDir, os::shortcutFileSuffix );
+	QString shortcutPath = DialogWithPaths::selectDestFile( this, "Export preset", {}, os::shortcutFileSuffix );
 	if (shortcutPath.isEmpty())  // user probably clicked cancel
 	{
 		return;

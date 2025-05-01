@@ -249,6 +249,7 @@ static QJsonObject serialize( const ModSettings & modSettings )
 {
 	QJsonObject modsJs;
 
+	modsJs["last_used_dir"] = modSettings.lastUsedDir;
 	modsJs["show_icons"] = modSettings.showIcons;
 
 	return modsJs;
@@ -256,6 +257,7 @@ static QJsonObject serialize( const ModSettings & modSettings )
 
 static void deserialize( const JsonObjectCtx & modSettingsJs, ModSettings & modSettings )
 {
+	modSettings.lastUsedDir = modSettingsJs.getString( "last_used_dir" );
 	modSettings.showIcons = modSettingsJs.getBool( "show_icons", modSettings.showIcons );
 }
 

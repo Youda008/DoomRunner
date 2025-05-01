@@ -1658,6 +1658,8 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		// mods will be restored to the UI, when a preset is selected
 		modModel.finishCompleteUpdate();
 
+		DialogWithPaths::lastUsedDir = modSettings.lastUsedDir;
+
 		ui->modListView->toggleIcons( modSettings.showIcons );
 	}
 
@@ -3214,6 +3216,8 @@ void MainWindow::modAdd()
 	if (paths.isEmpty())  // user probably clicked cancel
 		return;
 
+	modSettings.lastUsedDir = DialogWithPaths::lastUsedDir;
+
 	for (const QString & path : paths)
 	{
 		Mod mod( QFileInfo( path ), /*checked*/true );
@@ -3236,6 +3240,8 @@ void MainWindow::modAddDir()
 	QString path = DialogWithPaths::selectDir( this, "of the mod" );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
+
+	modSettings.lastUsedDir = DialogWithPaths::lastUsedDir;
 
 	Mod mod( QFileInfo( path ), /*checked*/true );
 

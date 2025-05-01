@@ -332,6 +332,7 @@ struct MapSettings
 
 struct ModSettings
 {
+	QString lastUsedDir;
 	bool showIcons = true;   ///< whether the mod list should show file-system icons provided by the OS
 };
 

@@ -35,7 +35,7 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 
 	Q_OBJECT
 
-	using thisClass = SetupDialog;
+	using ThisClass = SetupDialog;
 
  public:
 
@@ -91,8 +91,8 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 
 	// game file directories
 
-	void browseIWADDir();
-	void browseMapDir();
+	void selectIWADDir();
+	void selectMapDir();
 
 	void onIWADDirChanged( const QString & dir );
 	void onMapDirChanged( const QString & dir );

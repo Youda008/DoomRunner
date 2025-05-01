@@ -21,8 +21,8 @@ class RightClickableButton : public QToolButton {
 
 	Q_OBJECT
 
-	using thisClass = RightClickableButton;
-	using superClass = QToolButton;
+	using ThisClass = RightClickableButton;
+	using SuperClass = QToolButton;
 
  public:
 

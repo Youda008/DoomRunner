@@ -44,8 +44,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	Q_OBJECT
 
-	using thisClass = MainWindow;
-	using superClass = QMainWindow;
+	using ThisClass = MainWindow;
+	using SuperClass = QMainWindow;
 
  public:
 
@@ -161,10 +161,10 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onAltSaveDirChanged( const QString & dir );
 	void onAltDemoDirChanged( const QString & dir );
 	void onAltScreenshotDirChanged( const QString & dir );
-	void browseAltConfigDir();
-	void browseAltSaveDir();
-	void browseAltDemoDir();
-	void browseAltScreenshotDir();
+	void selectAltConfigDir();
+	void selectAltSaveDir();
+	void selectAltDemoDir();
+	void selectAltScreenshotDir();
 
 	void onMonitorSelected( int index );
 	void onResolutionXChanged( const QString & xStr );

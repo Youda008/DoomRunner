@@ -1532,7 +1532,7 @@
                </property>
                <property name="icon">
                 <iconset resource="../Resources/Resources.qrc">
-                 <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+                 <normaloff>:/Browse.png</normaloff>:/Browse.png</iconset>
                </property>
               </widget>
              </item>
@@ -1575,7 +1575,7 @@
                </property>
                <property name="icon">
                 <iconset resource="../Resources/Resources.qrc">
-                 <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+                 <normaloff>:/Browse.png</normaloff>:/Browse.png</iconset>
                </property>
               </widget>
              </item>
@@ -1612,7 +1612,7 @@
                </property>
                <property name="icon">
                 <iconset resource="../Resources/Resources.qrc">
-                 <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+                 <normaloff>:/Browse.png</normaloff>:/Browse.png</iconset>
                </property>
               </widget>
              </item>
@@ -1655,7 +1655,7 @@
                </property>
                <property name="icon">
                 <iconset resource="../Resources/Resources.qrc">
-                 <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+                 <normaloff>:/Browse.png</normaloff>:/Browse.png</iconset>
                </property>
               </widget>
              </item>

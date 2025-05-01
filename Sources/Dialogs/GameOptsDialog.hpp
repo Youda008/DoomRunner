@@ -33,7 +33,7 @@ class GameOptsDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 
-	using thisClass = GameOptsDialog;
+	using ThisClass = GameOptsDialog;
 
  public:
 

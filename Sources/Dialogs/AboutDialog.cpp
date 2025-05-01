@@ -31,8 +31,8 @@ AboutDialog::AboutDialog( QWidget * parent, bool checkForUpdates )
 
 	ui->checkUpdatesChkBox->setChecked( checkForUpdates );
 
-	connect( ui->checkUpdatesChkBox, &QCheckBox::toggled, this, &thisClass::onUpdateCheckingToggled );
-	connect( ui->checkUpdateBtn, &QPushButton::clicked, this, &thisClass::checkForUpdate );
+	connect( ui->checkUpdatesChkBox, &QCheckBox::toggled, this, &ThisClass::onUpdateCheckingToggled );
+	connect( ui->checkUpdateBtn, &QPushButton::clicked, this, &ThisClass::checkForUpdate );
 }
 
 AboutDialog::~AboutDialog()

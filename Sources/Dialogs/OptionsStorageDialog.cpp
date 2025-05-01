@@ -31,25 +31,25 @@ OptionsStorageDialog::OptionsStorageDialog( QWidget * parent, const StorageSetti
 
 	// setup buttons
 
-	connect( ui->launchBtn_none, &QRadioButton::clicked, this, &thisClass::onLaunchStorageChosen_none );
-	connect( ui->launchBtn_global, &QRadioButton::clicked, this, &thisClass::onLaunchStorageChosen_global );
-	connect( ui->launchBtn_preset, &QRadioButton::clicked, this, &thisClass::onLaunchStorageChosen_preset );
+	connect( ui->launchBtn_none, &QRadioButton::clicked, this, &ThisClass::onLaunchStorageChosen_none );
+	connect( ui->launchBtn_global, &QRadioButton::clicked, this, &ThisClass::onLaunchStorageChosen_global );
+	connect( ui->launchBtn_preset, &QRadioButton::clicked, this, &ThisClass::onLaunchStorageChosen_preset );
 
-	connect( ui->gameplayBtn_none, &QRadioButton::clicked, this, &thisClass::onGameplayStorageChosen_none );
-	connect( ui->gameplayBtn_global, &QRadioButton::clicked, this, &thisClass::onGameplayStorageChosen_global );
-	connect( ui->gameplayBtn_preset, &QRadioButton::clicked, this, &thisClass::onGameplayStorageChosen_preset );
+	connect( ui->gameplayBtn_none, &QRadioButton::clicked, this, &ThisClass::onGameplayStorageChosen_none );
+	connect( ui->gameplayBtn_global, &QRadioButton::clicked, this, &ThisClass::onGameplayStorageChosen_global );
+	connect( ui->gameplayBtn_preset, &QRadioButton::clicked, this, &ThisClass::onGameplayStorageChosen_preset );
 
-	connect( ui->compatBtn_none, &QRadioButton::clicked, this, &thisClass::onCompatStorageChosen_none );
-	connect( ui->compatBtn_global, &QRadioButton::clicked, this, &thisClass::onCompatStorageChosen_global );
-	connect( ui->compatBtn_preset, &QRadioButton::clicked, this, &thisClass::onCompatStorageChosen_preset );
+	connect( ui->compatBtn_none, &QRadioButton::clicked, this, &ThisClass::onCompatStorageChosen_none );
+	connect( ui->compatBtn_global, &QRadioButton::clicked, this, &ThisClass::onCompatStorageChosen_global );
+	connect( ui->compatBtn_preset, &QRadioButton::clicked, this, &ThisClass::onCompatStorageChosen_preset );
 
-	connect( ui->videoBtn_none, &QRadioButton::clicked, this, &thisClass::onVideoStorageChosen_none );
-	connect( ui->videoBtn_global, &QRadioButton::clicked, this, &thisClass::onVideoStorageChosen_global );
-	connect( ui->videoBtn_preset, &QRadioButton::clicked, this, &thisClass::onVideoStorageChosen_preset );
+	connect( ui->videoBtn_none, &QRadioButton::clicked, this, &ThisClass::onVideoStorageChosen_none );
+	connect( ui->videoBtn_global, &QRadioButton::clicked, this, &ThisClass::onVideoStorageChosen_global );
+	connect( ui->videoBtn_preset, &QRadioButton::clicked, this, &ThisClass::onVideoStorageChosen_preset );
 
-	connect( ui->audioBtn_none, &QRadioButton::clicked, this, &thisClass::onAudioStorageChosen_none );
-	connect( ui->audioBtn_global, &QRadioButton::clicked, this, &thisClass::onAudioStorageChosen_global );
-	connect( ui->audioBtn_preset, &QRadioButton::clicked, this, &thisClass::onAudioStorageChosen_preset );
+	connect( ui->audioBtn_none, &QRadioButton::clicked, this, &ThisClass::onAudioStorageChosen_none );
+	connect( ui->audioBtn_global, &QRadioButton::clicked, this, &ThisClass::onAudioStorageChosen_global );
+	connect( ui->audioBtn_preset, &QRadioButton::clicked, this, &ThisClass::onAudioStorageChosen_preset );
 }
 
 void OptionsStorageDialog::restoreStorage( OptionsStorage storage, QRadioButton * noneBtn, QRadioButton * globalBtn, QRadioButton * presetBtn )

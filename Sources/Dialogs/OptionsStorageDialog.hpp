@@ -29,7 +29,7 @@ class OptionsStorageDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 
-	using thisClass = OptionsStorageDialog;
+	using ThisClass = OptionsStorageDialog;
 
  public:
 

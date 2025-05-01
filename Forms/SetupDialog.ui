@@ -163,7 +163,7 @@
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">
-                <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+                <normaloff>:/Browse.png</normaloff>:/Browse.png</iconset>
               </property>
               <property name="autoDefault">
                <bool>false</bool>
@@ -244,7 +244,7 @@
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">
-                <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+                <normaloff>:/Browse.png</normaloff>:/Browse.png</iconset>
               </property>
              </widget>
             </item>

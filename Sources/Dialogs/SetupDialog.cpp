@@ -101,28 +101,28 @@ SetupDialog::SetupDialog(
 
 	// setup buttons
 
-	connect( ui->manageIWADs_manual, &QRadioButton::clicked, this, &thisClass::onManageIWADsManuallySelected );
-	connect( ui->manageIWADs_auto, &QRadioButton::clicked, this, &thisClass::onManageIWADsAutomaticallySelected );
+	connect( ui->manageIWADs_manual, &QRadioButton::clicked, this, &ThisClass::onManageIWADsManuallySelected );
+	connect( ui->manageIWADs_auto, &QRadioButton::clicked, this, &ThisClass::onManageIWADsAutomaticallySelected );
 
-	connect( ui->iwadDirBtn, &QPushButton::clicked, this, &thisClass::browseIWADDir );
-	connect( ui->mapDirBtn, &QPushButton::clicked, this, &thisClass::browseMapDir );
+	connect( ui->iwadDirBtn, &QPushButton::clicked, this, &ThisClass::selectIWADDir );
+	connect( ui->mapDirBtn, &QPushButton::clicked, this, &ThisClass::selectMapDir );
 
-	connect( ui->iwadDirLine, &QLineEdit::textChanged, this, &thisClass::onIWADDirChanged );
-	connect( ui->mapDirLine, &QLineEdit::textChanged, this, &thisClass::onMapDirChanged );
+	connect( ui->iwadDirLine, &QLineEdit::textChanged, this, &ThisClass::onIWADDirChanged );
+	connect( ui->mapDirLine, &QLineEdit::textChanged, this, &ThisClass::onMapDirChanged );
 
-	connect( ui->iwadSubdirs, &QCheckBox::toggled, this, &thisClass::onIWADSubdirsToggled );
+	connect( ui->iwadSubdirs, &QCheckBox::toggled, this, &ThisClass::onIWADSubdirsToggled );
 
-	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &thisClass::onAbsolutePathsToggled );
+	connect( ui->absolutePathsChkBox, &QCheckBox::toggled, this, &ThisClass::onAbsolutePathsToggled );
 
-	connect( ui->styleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onAppStyleSelected );
-	connect( ui->schemeBtn_system, &QRadioButton::clicked, this, &thisClass::onDefaultSchemeChosen );
-	connect( ui->schemeBtn_dark, &QRadioButton::clicked, this, &thisClass::onDarkSchemeChosen );
-	connect( ui->schemeBtn_light, &QRadioButton::clicked, this, &thisClass::onLightSchemeChosen );
+	connect( ui->styleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onAppStyleSelected );
+	connect( ui->schemeBtn_system, &QRadioButton::clicked, this, &ThisClass::onDefaultSchemeChosen );
+	connect( ui->schemeBtn_dark, &QRadioButton::clicked, this, &ThisClass::onDarkSchemeChosen );
+	connect( ui->schemeBtn_light, &QRadioButton::clicked, this, &ThisClass::onLightSchemeChosen );
 
-	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &thisClass::onShowEngineOutputToggled );
-	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &thisClass::onCloseOnLaunchToggled );
+	connect( ui->showEngineOutputChkBox, &QCheckBox::toggled, this, &ThisClass::onShowEngineOutputToggled );
+	connect( ui->closeOnLaunchChkBox, &QCheckBox::toggled, this, &ThisClass::onCloseOnLaunchToggled );
 
-	connect( ui->doneBtn, &QPushButton::clicked, this, &thisClass::accept );
+	connect( ui->doneBtn, &QPushButton::clicked, this, &ThisClass::accept );
 
 	// setup an update timer
 	startTimer( 1000 );
@@ -139,15 +139,15 @@ void SetupDialog::setupEngineList()
 	// set drag&drop behaviour
 	engineModel.setPathConvertor( pathConvertor );  // the model needs our path convertor for converting paths dropped from a file explorer
 	ui->engineListView->setAllowedDnDSources( DnDSource::ThisWidget | DnDSource::ExternalApp );
-	connect( &engineModel, &AListModel::itemsInserted, this, &thisClass::onEnginesInserted );
+	connect( &engineModel, &AListModel::itemsInserted, this, &ThisClass::onEnginesInserted );
 
 	// set reaction to clicks inside the view
-	connect( ui->engineListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onEngineSelectionChanged );
-	connect( ui->engineListView, &QListView::doubleClicked, this, &thisClass::onEngineDoubleClicked );
+	connect( ui->engineListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ThisClass::onEngineSelectionChanged );
+	connect( ui->engineListView, &QListView::doubleClicked, this, &ThisClass::onEngineDoubleClicked );
 
 	// setup enter key detection and reaction
 	ui->engineListView->installEventFilter( &engineConfirmationFilter );
-	connect( &engineConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &thisClass::onEngineConfirmed );
+	connect( &engineConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &ThisClass::onEngineConfirmed );
 
 	// setup reaction to key shortcuts and right click
 	ui->engineListView->enableContextMenu( 0
@@ -159,19 +159,19 @@ void SetupDialog::setupEngineList()
 	);
 	setDefaultEngineAction = ui->engineListView->addAction( "Set as default", {} );
 	ui->engineListView->toggleListModifications( true );
-	connect( ui->engineListView->addItemAction, &QAction::triggered, this, &thisClass::engineAdd );
-	connect( ui->engineListView->deleteItemAction, &QAction::triggered, this, &thisClass::engineDelete );
-	connect( ui->engineListView->moveItemUpAction, &QAction::triggered, this, &thisClass::engineMoveUp );
-	connect( ui->engineListView->moveItemDownAction, &QAction::triggered, this, &thisClass::engineMoveDown );
-	connect( ui->engineListView->moveItemToTopAction, &QAction::triggered, this, &thisClass::engineMoveToTop );
-	connect( ui->engineListView->moveItemToBottomAction, &QAction::triggered, this, &thisClass::engineMoveToBottom );
-	connect( setDefaultEngineAction, &QAction::triggered, this, &thisClass::setEngineAsDefault );
+	connect( ui->engineListView->addItemAction, &QAction::triggered, this, &ThisClass::engineAdd );
+	connect( ui->engineListView->deleteItemAction, &QAction::triggered, this, &ThisClass::engineDelete );
+	connect( ui->engineListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::engineMoveUp );
+	connect( ui->engineListView->moveItemDownAction, &QAction::triggered, this, &ThisClass::engineMoveDown );
+	connect( ui->engineListView->moveItemToTopAction, &QAction::triggered, this, &ThisClass::engineMoveToTop );
+	connect( ui->engineListView->moveItemToBottomAction, &QAction::triggered, this, &ThisClass::engineMoveToBottom );
+	connect( setDefaultEngineAction, &QAction::triggered, this, &ThisClass::setEngineAsDefault );
 
 	// setup buttons
-	connect( ui->engineBtnAdd, &QPushButton::clicked, this, &thisClass::engineAdd );
-	connect( ui->engineBtnDel, &QPushButton::clicked, this, &thisClass::engineDelete );
-	connect( ui->engineBtnUp, &QPushButton::clicked, this, &thisClass::engineMoveUp );
-	connect( ui->engineBtnDown, &QPushButton::clicked, this, &thisClass::engineMoveDown );
+	connect( ui->engineBtnAdd, &QPushButton::clicked, this, &ThisClass::engineAdd );
+	connect( ui->engineBtnDel, &QPushButton::clicked, this, &ThisClass::engineDelete );
+	connect( ui->engineBtnUp, &QPushButton::clicked, this, &ThisClass::engineMoveUp );
+	connect( ui->engineBtnDown, &QPushButton::clicked, this, &ThisClass::engineMoveDown );
 }
 
 void SetupDialog::setupIWADList()
@@ -191,7 +191,7 @@ void SetupDialog::setupIWADList()
 		ui->iwadListView->setAllowedDnDSources( DnDSource::ThisWidget | DnDSource::ExternalApp );
 
 	// set reaction to clicks inside the view
-	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onIWADSelectionChanged );
+	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ThisClass::onIWADSelectionChanged );
 
 	// setup reaction to key shortcuts and right click
 	ui->iwadListView->enableContextMenu( 0
@@ -201,19 +201,19 @@ void SetupDialog::setupIWADList()
 	);
 	setDefaultIWADAction = ui->iwadListView->addAction( "Set as default", {} );
 	ui->iwadListView->toggleListModifications( !iwadSettings.updateFromDir );
-	connect( ui->iwadListView->addItemAction, &QAction::triggered, this, &thisClass::iwadAdd );
-	connect( ui->iwadListView->deleteItemAction, &QAction::triggered, this, &thisClass::iwadDelete );
-	connect( ui->iwadListView->moveItemUpAction, &QAction::triggered, this, &thisClass::iwadMoveUp );
-	connect( ui->iwadListView->moveItemDownAction, &QAction::triggered, this, &thisClass::iwadMoveDown );
-	connect( ui->iwadListView->moveItemToTopAction, &QAction::triggered, this, &thisClass::iwadMoveToTop );
-	connect( ui->iwadListView->moveItemToBottomAction, &QAction::triggered, this, &thisClass::iwadMoveToBottom );
-	connect( setDefaultIWADAction, &QAction::triggered, this, &thisClass::setIWADAsDefault );
+	connect( ui->iwadListView->addItemAction, &QAction::triggered, this, &ThisClass::iwadAdd );
+	connect( ui->iwadListView->deleteItemAction, &QAction::triggered, this, &ThisClass::iwadDelete );
+	connect( ui->iwadListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::iwadMoveUp );
+	connect( ui->iwadListView->moveItemDownAction, &QAction::triggered, this, &ThisClass::iwadMoveDown );
+	connect( ui->iwadListView->moveItemToTopAction, &QAction::triggered, this, &ThisClass::iwadMoveToTop );
+	connect( ui->iwadListView->moveItemToBottomAction, &QAction::triggered, this, &ThisClass::iwadMoveToBottom );
+	connect( setDefaultIWADAction, &QAction::triggered, this, &ThisClass::setIWADAsDefault );
 
 	// setup buttons
-	connect( ui->iwadBtnAdd, &QPushButton::clicked, this, &thisClass::iwadAdd );
-	connect( ui->iwadBtnDel, &QPushButton::clicked, this, &thisClass::iwadDelete );
-	connect( ui->iwadBtnUp, &QPushButton::clicked, this, &thisClass::iwadMoveUp );
-	connect( ui->iwadBtnDown, &QPushButton::clicked, this, &thisClass::iwadMoveDown );
+	connect( ui->iwadBtnAdd, &QPushButton::clicked, this, &ThisClass::iwadAdd );
+	connect( ui->iwadBtnDel, &QPushButton::clicked, this, &ThisClass::iwadDelete );
+	connect( ui->iwadBtnUp, &QPushButton::clicked, this, &ThisClass::iwadMoveUp );
+	connect( ui->iwadBtnDown, &QPushButton::clicked, this, &ThisClass::iwadMoveDown );
 }
 
 void SetupDialog::timerEvent( QTimerEvent * event )  // called once per second
@@ -398,7 +398,7 @@ void SetupDialog::setEngineAsDefault()
 
 void SetupDialog::iwadAdd()
 {
-	QString path = DialogWithPaths::browseFile( this, "IWAD", lastUsedDir,
+	QString path = DialogWithPaths::selectFile( this, "IWAD", lastUsedDir,
 		  makeFileFilter( "Doom data files", doom::iwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ "All files (*)"
@@ -508,14 +508,14 @@ void SetupDialog::onIWADSubdirsToggled( bool checked )
 //----------------------------------------------------------------------------------------------------------------------
 // game file directories
 
-void SetupDialog::browseIWADDir()
+void SetupDialog::selectIWADDir()
 {
-	DialogWithPaths::browseDir( this, "with IWADs", ui->iwadDirLine );
+	DialogWithPaths::selectDir( this, "with IWADs", ui->iwadDirLine );
 }
 
-void SetupDialog::browseMapDir()
+void SetupDialog::selectMapDir()
 {
-	DialogWithPaths::browseDir( this, "with maps", ui->mapDirLine );
+	DialogWithPaths::selectDir( this, "with maps", ui->mapDirLine );
 }
 
 void SetupDialog::onIWADDirChanged( const QString & dir )

@@ -9,7 +9,7 @@
         <file alias="CopyFile.png">Buttons/CopyFile.png</file>
         <file alias="MoveUp.png">Buttons/MoveUp.png</file>
         <file alias="MoveDown.png">Buttons/MoveDown.png</file>
-        <file alias="BrowseDir.png">Buttons/BrowseDir.png</file>
+        <file alias="Browse.png">Buttons/Browse.png</file>
         <file alias="File.png">Buttons/File.png</file>
         <file alias="Dir.png">Buttons/Dir.png</file>
         <file alias="Terminal.png">Buttons/Terminal.png</file>

@@ -27,7 +27,7 @@ class AboutDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 
-	using thisClass = AboutDialog;
+	using ThisClass = AboutDialog;
 
  public:
 

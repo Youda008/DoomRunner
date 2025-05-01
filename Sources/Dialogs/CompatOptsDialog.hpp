@@ -33,7 +33,7 @@ class CompatOptsDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 
-	using thisClass = CompatOptsDialog;
+	using ThisClass = CompatOptsDialog;
 
  public:
 

@@ -27,7 +27,7 @@ class NewConfigDialog : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 
-	using thisClass = NewConfigDialog;
+	using ThisClass = NewConfigDialog;
 
  public:
 

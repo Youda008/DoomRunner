@@ -74,16 +74,16 @@ ProcessOutputWindow::ProcessOutputWindow( QWidget * parent, bool closeOnSuccess 
 	// capture key presses so that we can send them to the process
 	keyPressFilter.toggleKeyPressSupression( true );  // stop Enter/Esc key events, otherwise they would close the window
 	ui->textEdit->installEventFilter( &keyPressFilter );
-	connect( &keyPressFilter, &KeyPressFilter::keyPressed, this, &thisClass::onKeyPressed );
+	connect( &keyPressFilter, &KeyPressFilter::keyPressed, this, &ThisClass::onKeyPressed );
 
 	ui->closeOnSuccessChkBox->setChecked( closeOnSuccess );
 
 	closeBtn->setText("Close");
-	connect( abortBtn, &QPushButton::clicked, this, &thisClass::onAbortClicked );
-	connect( closeBtn, &QPushButton::clicked, this, &thisClass::reject );
+	connect( abortBtn, &QPushButton::clicked, this, &ThisClass::onAbortClicked );
+	connect( closeBtn, &QPushButton::clicked, this, &ThisClass::reject );
 
 	// closeEvent() is not called when the dialog is closed, we have to connect this to the finished() signal
-	connect( this, &QDialog::finished, this, &thisClass::onDialogClosed );
+	connect( this, &QDialog::finished, this, &ThisClass::onDialogClosed );
 
 	setOwnStatus( ProcessStatus::NotStarted );
 }
@@ -207,10 +207,10 @@ ProcessStatus ProcessOutputWindow::runProcess(
 	}
 	process.setProcessEnvironment( env );
 
-	connect( &process, &QProcess::started, this, &thisClass::onProcessStarted );
-	connect( &process, &QProcess::readyReadStandardOutput, this, &thisClass::readProcessOutput );
-	connect( &process, QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ), this, &thisClass::onProcessFinished );
-	connect( &process, &QProcess::errorOccurred, this, &thisClass::onErrorOccurred );
+	connect( &process, &QProcess::started, this, &ThisClass::onProcessStarted );
+	connect( &process, &QProcess::readyReadStandardOutput, this, &ThisClass::readProcessOutput );
+	connect( &process, QOverload< int, QProcess::ExitStatus >::of( &QProcess::finished ), this, &ThisClass::onProcessFinished );
+	connect( &process, &QProcess::errorOccurred, this, &ThisClass::onErrorOccurred );
 
 	setOwnStatus( ProcessStatus::Starting );
 

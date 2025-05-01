@@ -41,21 +41,21 @@ class DialogWithPaths : public DialogCommon {
 		: DialogCommon( self, dialogName ), pathConvertor( std::move(pathConvertor) ) {}
 
 	/// Runs a file-system dialog to let the user select a file and stores its directory for the next call.
-	QString browseFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );
+	QString selectFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );
 
 	/// Runs a file-system dialog to let the user select multiple files and stores their directory for the next call.
-	QStringList browseFiles( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );
+	QStringList selectFiles( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter );
 
 	/// Runs a file-system dialog to let the user select a directory and stores it for the next call.
-	QString browseDir( QWidget * parent, const QString & dirDesc, QString startingDir = QString() );
+	QString selectDir( QWidget * parent, const QString & dirDesc, QString startingDir = QString() );
 
 	/// Convenience wrapper that also stores the result into a text line.
 	/** Returns true if the dialog was confirmed or false if it was cancelled. */
-	bool browseFile( QWidget * parent, const QString & fileDesc, QLineEdit * targetLine, const QString & filter );
+	bool selectFile( QWidget * parent, const QString & fileDesc, QLineEdit * targetLine, const QString & filter );
 
 	/// Convenience wrapper that also stores the result into a text line.
 	/** Returns true if the dialog was confirmed or false if it was cancelled. */
-	bool browseDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine );
+	bool selectDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine );
 
  public:
 

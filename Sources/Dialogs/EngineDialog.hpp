@@ -29,8 +29,8 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 
 	Q_OBJECT
 
-	using thisClass = EngineDialog;
-	using superClass = QDialog;
+	using ThisClass = EngineDialog;
+	using SuperClass = QDialog;
 
  public:
 
@@ -53,9 +53,9 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 
  private slots:
 
-	void browseExecutable();
-	void browseConfigDir();
-	void browseDataDir();
+	void selectExecutable();
+	void selectConfigDir();
+	void selectDataDir();
 
 	void onNameChanged( const QString & text );
 	void onExecutableChanged( const QString & text );

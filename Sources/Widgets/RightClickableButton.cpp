@@ -18,7 +18,7 @@ RightClickableButton::~RightClickableButton() {}
 
 void RightClickableButton::mousePressEvent( QMouseEvent * e )
 {
-	superClass::mousePressEvent( e );
+	SuperClass::mousePressEvent( e );
 
 	if (e->button() == Qt::RightButton)
 		emit rightClicked();

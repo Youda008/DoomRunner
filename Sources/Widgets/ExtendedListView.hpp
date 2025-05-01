@@ -72,7 +72,7 @@ class ExtendedListView : public QListView, public ExtendedViewCommon< ExtendedLi
 
 	Q_OBJECT
 
-	using thisClass = ExtendedListView;
+	using ThisClass = ExtendedListView;
 	using QBaseView = QListView;  ///< The Qt's abstract view class we inherit from
 
  public:

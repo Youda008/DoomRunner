@@ -9,7 +9,7 @@ class SearchPanel : public QObject {
 
 	Q_OBJECT
 
-	using thisClass = SearchPanel;
+	using ThisClass = SearchPanel;
 
  public:
 

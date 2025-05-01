@@ -57,7 +57,7 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 
 	Q_OBJECT
 
-	using thisClass = ProcessOutputWindow;
+	using ThisClass = ProcessOutputWindow;
 
  public:
 

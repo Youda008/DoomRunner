@@ -38,8 +38,8 @@ void ExtendedTreeView::setModel( QAbstractItemModel * model )
 	fsModel = dynamic_cast< QFileSystemModel * >( model );
 
 	updateColumnSize();  // adapt view to the current state of the new model
-	connect( model, &QAbstractItemModel::dataChanged, this, &thisClass::onDataChanged );  // prepare for future changes
-	connect( model, &QAbstractItemModel::layoutChanged, this, &thisClass::onLayoutChanged );  // prepare for future changes
+	connect( model, &QAbstractItemModel::dataChanged, this, &ThisClass::onDataChanged );  // prepare for future changes
+	connect( model, &QAbstractItemModel::layoutChanged, this, &ThisClass::onLayoutChanged );  // prepare for future changes
 }
 
 

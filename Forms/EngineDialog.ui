@@ -61,7 +61,7 @@
       <widget class="QLineEdit" name="executableLine"/>
      </item>
      <item>
-      <widget class="QPushButton" name="browseExecutableBtn">
+      <widget class="QPushButton" name="selectExecutableBtn">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -73,7 +73,7 @@
        </property>
        <property name="icon">
         <iconset resource="../Resources/Resources.qrc">
-         <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+         <normaloff>:/Browse.png</normaloff>:/Browse.png</iconset>
        </property>
       </widget>
      </item>
@@ -98,7 +98,7 @@
       <widget class="QLineEdit" name="configDirLine"/>
      </item>
      <item>
-      <widget class="QPushButton" name="browseConfigDirBtn">
+      <widget class="QPushButton" name="selectConfigDirBtn">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -110,7 +110,7 @@
        </property>
        <property name="icon">
         <iconset resource="../Resources/Resources.qrc">
-         <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+         <normaloff>:/Browse.png</normaloff>:/Browse.png</iconset>
        </property>
       </widget>
      </item>
@@ -135,13 +135,13 @@
       <widget class="QLineEdit" name="dataDirLine"/>
      </item>
      <item>
-      <widget class="QPushButton" name="browseDataDirBtn">
+      <widget class="QPushButton" name="selectDataDirBtn">
        <property name="text">
         <string>Browse</string>
        </property>
        <property name="icon">
         <iconset resource="../Resources/Resources.qrc">
-         <normaloff>:/BrowseDir.png</normaloff>:/BrowseDir.png</iconset>
+         <normaloff>:/Browse.png</normaloff>:/Browse.png</iconset>
        </property>
       </widget>
      </item>

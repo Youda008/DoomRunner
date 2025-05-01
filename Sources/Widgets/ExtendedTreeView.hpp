@@ -26,7 +26,7 @@ class ExtendedTreeView : public QTreeView, public ExtendedViewCommon< ExtendedTr
 
 	Q_OBJECT
 
-	using thisClass = ExtendedTreeView;
+	using ThisClass = ExtendedTreeView;
 	using QBaseView = QTreeView;
 
  public:

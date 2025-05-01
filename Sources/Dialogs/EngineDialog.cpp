@@ -52,18 +52,18 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 	highlightDirPathIfInvalid( ui->configDirLine, engine.configDir );
 	highlightDirPathIfInvalid( ui->dataDirLine, engine.dataDir );
 
-	connect( ui->browseExecutableBtn, &QPushButton::clicked, this, &thisClass::browseExecutable );
-	connect( ui->browseConfigDirBtn, &QPushButton::clicked, this, &thisClass::browseConfigDir );
-	connect( ui->browseDataDirBtn, &QPushButton::clicked, this, &thisClass::browseDataDir );
+	connect( ui->selectExecutableBtn, &QPushButton::clicked, this, &ThisClass::selectExecutable );
+	connect( ui->selectConfigDirBtn, &QPushButton::clicked, this, &ThisClass::selectConfigDir );
+	connect( ui->selectDataDirBtn, &QPushButton::clicked, this, &ThisClass::selectDataDir );
 
-	connect( ui->autoDetectBtn, &QPushButton::clicked, this, &thisClass::onAutoDetectBtnClicked );
+	connect( ui->autoDetectBtn, &QPushButton::clicked, this, &ThisClass::onAutoDetectBtnClicked );
 
-	//connect( ui->nameLine, &QLineEdit::textChanged, this, &thisClass::onNameChanged );
-	connect( ui->executableLine, &QLineEdit::textChanged, this, &thisClass::onExecutableChanged );
-	connect( ui->configDirLine, &QLineEdit::textChanged, this, &thisClass::onConfigDirChanged );
-	connect( ui->dataDirLine, &QLineEdit::textChanged, this, &thisClass::onDataDirChanged );
+	//connect( ui->nameLine, &QLineEdit::textChanged, this, &ThisClass::onNameChanged );
+	connect( ui->executableLine, &QLineEdit::textChanged, this, &ThisClass::onExecutableChanged );
+	connect( ui->configDirLine, &QLineEdit::textChanged, this, &ThisClass::onConfigDirChanged );
+	connect( ui->dataDirLine, &QLineEdit::textChanged, this, &ThisClass::onDataDirChanged );
 
-	//connect( ui->familyCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onFamilySelected );
+	//connect( ui->familyCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onFamilySelected );
 }
 
 void EngineDialog::adjustUi()
@@ -106,10 +106,10 @@ void EngineDialog::showEvent( QShowEvent * event )
 	// and then switch to the adjusted layout in the next frame.
 	adjustUi();
 
-	superClass::showEvent( event );
+	SuperClass::showEvent( event );
 
 	// This will be called after the window is fully initialized and physically shown (drawn for the first time).
-	QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection );
+	QMetaObject::invokeMethod( this, &ThisClass::onWindowShown, Qt::ConnectionType::QueuedConnection );
 }
 
 // This is called after the window is fully initialized and physically shown (drawn for the first time).
@@ -120,9 +120,9 @@ void EngineDialog::onWindowShown()
 	// Even showEvent() is too early for this.
 
 	if (engine.executablePath.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())
-		browseExecutable();
+		selectExecutable();
 
-	if (engine.executablePath.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())  // user closed the browseEngine dialog
+	if (engine.executablePath.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())  // user closed the selectExecutable dialog
 		done( QDialog::Rejected );
 }
 
@@ -158,9 +158,9 @@ void EngineDialog::autofillEngineFields()
 	ui->familyCmbBox->setCurrentIndex( int( engine.family ) );
 }
 
-void EngineDialog::browseExecutable()
+void EngineDialog::selectExecutable()
 {
-	bool confirmed = DialogWithPaths::browseFile( this, "engine's executable", ui->executableLine,
+	bool confirmed = DialogWithPaths::selectFile( this, "engine's executable", ui->executableLine,
  #if IS_WINDOWS
 		"Executable files (*.exe);;"
  #endif
@@ -174,14 +174,14 @@ void EngineDialog::browseExecutable()
 	}
 }
 
-void EngineDialog::browseConfigDir()
+void EngineDialog::selectConfigDir()
 {
-	DialogWithPaths::browseDir( this, "where engine stores configs", ui->configDirLine );
+	DialogWithPaths::selectDir( this, "where engine stores configs", ui->configDirLine );
 }
 
-void EngineDialog::browseDataDir()
+void EngineDialog::selectDataDir()
 {
-	DialogWithPaths::browseDir( this, "where engine stores data files", ui->dataDirLine );
+	DialogWithPaths::selectDir( this, "where engine stores data files", ui->dataDirLine );
 }
 
 void EngineDialog::onNameChanged( const QString & /*text*/ )
@@ -319,5 +319,5 @@ void EngineDialog::accept()
 	assert( engine.isCorrectlyInitialized() );
 
 	// accept the user's confirmation
-	superClass::accept();
+	SuperClass::accept();
 }

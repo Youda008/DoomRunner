@@ -785,13 +785,13 @@ MainWindow::MainWindow()
 
 	// setup main menu actions
 
-	connect( ui->initialSetupAction, &QAction::triggered, this, &thisClass::onSetupActionTriggered );
-	connect( ui->optionsStorageAction, &QAction::triggered, this, &thisClass::onOptsStorageActionTriggered );
-	connect( ui->exportPresetToScriptAction, &QAction::triggered, this, &thisClass::onExportToScriptTriggered );
-	connect( ui->exportPresetToShortcutAction, &QAction::triggered, this, &thisClass::onExportToShortcutTriggered );
-	//connect( ui->importPresetAction, &QAction::triggered, this, &thisClass::onImportFromScriptTriggered );
-	connect( ui->aboutAction, &QAction::triggered, this, &thisClass::onAboutActionTriggered );
-	connect( ui->exitAction, &QAction::triggered, this, &thisClass::close );
+	connect( ui->initialSetupAction, &QAction::triggered, this, &ThisClass::onSetupActionTriggered );
+	connect( ui->optionsStorageAction, &QAction::triggered, this, &ThisClass::onOptsStorageActionTriggered );
+	connect( ui->exportPresetToScriptAction, &QAction::triggered, this, &ThisClass::onExportToScriptTriggered );
+	connect( ui->exportPresetToShortcutAction, &QAction::triggered, this, &ThisClass::onExportToShortcutTriggered );
+	//connect( ui->importPresetAction, &QAction::triggered, this, &ThisClass::onImportFromScriptTriggered );
+	connect( ui->aboutAction, &QAction::triggered, this, &ThisClass::onAboutActionTriggered );
+	connect( ui->exitAction, &QAction::triggered, this, &ThisClass::close );
 
 	ui->exportPresetToShortcutAction->setEnabled( IS_WINDOWS );  // Windows-only feature
 
@@ -816,28 +816,28 @@ MainWindow::MainWindow()
 
 	// we use custom model for engines, because we want to display the same list differently in different window
 	ui->engineCmbBox->setModel( &engineModel );
-	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onEngineSelected );
-	connect( ui->engineDirBtn, &QToolButton::clicked, this, &thisClass::onEngineDirBtnClicked );
+	connect( ui->engineCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onEngineSelected );
+	connect( ui->engineDirBtn, &QToolButton::clicked, this, &ThisClass::onEngineDirBtnClicked );
 
 	configModel.append({});  // always have an empty item, so that index doesn't have to switch between -1 and 0
 	ui->configCmbBox->setModel( &configModel );
-	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onConfigSelected );
-	connect( ui->configCloneBtn, &QToolButton::clicked, this, &thisClass::onCloneConfigBtnClicked );
+	connect( ui->configCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onConfigSelected );
+	connect( ui->configCloneBtn, &QToolButton::clicked, this, &ThisClass::onCloneConfigBtnClicked );
 
 	ui->saveFileCmbBox->setModel( &saveModel );
-	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onSavedGameSelected );
+	connect( ui->saveFileCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onSavedGameSelected );
 
 	// we can re-use the same model for these two combo boxes
 	ui->demoFileCmbBox_replay->setModel( &demoModel );
-	connect( ui->demoFileCmbBox_replay, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onDemoFileSelected_replay );
+	connect( ui->demoFileCmbBox_replay, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onDemoFileSelected_replay );
 	ui->demoFileCmbBox_resume->setModel( &demoModel );
-	connect( ui->demoFileCmbBox_resume, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onDemoFileSelected_resume );
+	connect( ui->demoFileCmbBox_resume, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onDemoFileSelected_resume );
 
-	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &thisClass::onMapChanged );
-	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &thisClass::onMapChanged_demo );
+	connect( ui->mapCmbBox, &QComboBox::currentTextChanged, this, &ThisClass::onMapChanged );
+	connect( ui->mapCmbBox_demo, &QComboBox::currentTextChanged, this, &ThisClass::onMapChanged_demo );
 
-	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &thisClass::onDemoFileChanged_record );
-	connect( ui->demoFileLine_resume, &QLineEdit::textChanged, this, &thisClass::onDemoFileChanged_resume );
+	connect( ui->demoFileLine_record, &QLineEdit::textChanged, this, &ThisClass::onDemoFileChanged_record );
+	connect( ui->demoFileLine_resume, &QLineEdit::textChanged, this, &ThisClass::onDemoFileChanged_resume );
 
 	ui->compatModeCmbBox->addItem("");  // always have this empty item there, so that we can restore index 0
 
@@ -851,72 +851,72 @@ MainWindow::MainWindow()
 	// setup launch options callbacks
 
 	// launch mode
-	connect( ui->launchMode_default, &QRadioButton::clicked, this, &thisClass::onModeChosen_Default );
-	connect( ui->launchMode_map, &QRadioButton::clicked, this, &thisClass::onModeChosen_LaunchMap );
-	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &thisClass::onModeChosen_SavedGame );
-	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &thisClass::onModeChosen_RecordDemo );
-	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &thisClass::onModeChosen_ReplayDemo );
-	connect( ui->launchMode_resumeDemo, &QRadioButton::clicked, this, &thisClass::onModeChosen_ResumeDemo );
+	connect( ui->launchMode_default, &QRadioButton::clicked, this, &ThisClass::onModeChosen_Default );
+	connect( ui->launchMode_map, &QRadioButton::clicked, this, &ThisClass::onModeChosen_LaunchMap );
+	connect( ui->launchMode_savefile, &QRadioButton::clicked, this, &ThisClass::onModeChosen_SavedGame );
+	connect( ui->launchMode_recordDemo, &QRadioButton::clicked, this, &ThisClass::onModeChosen_RecordDemo );
+	connect( ui->launchMode_replayDemo, &QRadioButton::clicked, this, &ThisClass::onModeChosen_ReplayDemo );
+	connect( ui->launchMode_resumeDemo, &QRadioButton::clicked, this, &ThisClass::onModeChosen_ResumeDemo );
 
 	// mutiplayer
-	connect( ui->multiplayerGrpBox, &QGroupBox::toggled, this, &thisClass::onMultiplayerToggled );
-	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onMultRoleSelected );
-	connect( ui->hostnameLine, &QLineEdit::textChanged, this, &thisClass::onHostChanged );
-	connect( ui->portSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onPortChanged );
-	connect( ui->netModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onNetModeSelected );
-	connect( ui->gameModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onGameModeSelected );
-	connect( ui->playerCountSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onPlayerCountChanged );
-	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &thisClass::onTeamDamageChanged );
-	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onTimeLimitChanged );
-	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onFragLimitChanged );
-	connect( ui->playerNameLine, &QLineEdit::textChanged, this, &thisClass::onPlayerNameChanged );
-	connect( ui->playerColorBtn, &RightClickableButton::clicked, this, &thisClass::runPlayerColorDialog );
-	connect( ui->playerColorBtn, &RightClickableButton::rightClicked, this, &thisClass::onPlayerColorRightClicked );
+	connect( ui->multiplayerGrpBox, &QGroupBox::toggled, this, &ThisClass::onMultiplayerToggled );
+	connect( ui->multRoleCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onMultRoleSelected );
+	connect( ui->hostnameLine, &QLineEdit::textChanged, this, &ThisClass::onHostChanged );
+	connect( ui->portSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &ThisClass::onPortChanged );
+	connect( ui->netModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onNetModeSelected );
+	connect( ui->gameModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onGameModeSelected );
+	connect( ui->playerCountSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &ThisClass::onPlayerCountChanged );
+	connect( ui->teamDmgSpinBox, QOverload<double>::of( &QDoubleSpinBox::valueChanged ), this, &ThisClass::onTeamDamageChanged );
+	connect( ui->timeLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &ThisClass::onTimeLimitChanged );
+	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &ThisClass::onFragLimitChanged );
+	connect( ui->playerNameLine, &QLineEdit::textChanged, this, &ThisClass::onPlayerNameChanged );
+	connect( ui->playerColorBtn, &RightClickableButton::clicked, this, &ThisClass::runPlayerColorDialog );
+	connect( ui->playerColorBtn, &RightClickableButton::rightClicked, this, &ThisClass::onPlayerColorRightClicked );
 
 	// gameplay
-	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onSkillSelected );
-	connect( ui->skillSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &thisClass::onSkillNumChanged );
-	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &thisClass::onNoMonstersToggled );
-	connect( ui->fastMonstersChkBox, &QCheckBox::toggled, this, &thisClass::onFastMonstersToggled );
-	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &thisClass::onMonstersRespawnToggled );
-	connect( ui->pistolStartChkBox, &QCheckBox::toggled, this, &thisClass::onPistolStartToggled );
-	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &thisClass::onAllowCheatsToggled );
-	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &thisClass::onGameOptsBtnClicked );
-	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &thisClass::onCompatOptsBtnClicked );
-	connect( ui->compatModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onCompatModeSelected );
+	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onSkillSelected );
+	connect( ui->skillSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &ThisClass::onSkillNumChanged );
+	connect( ui->noMonstersChkBox, &QCheckBox::toggled, this, &ThisClass::onNoMonstersToggled );
+	connect( ui->fastMonstersChkBox, &QCheckBox::toggled, this, &ThisClass::onFastMonstersToggled );
+	connect( ui->monstersRespawnChkBox, &QCheckBox::toggled, this, &ThisClass::onMonstersRespawnToggled );
+	connect( ui->pistolStartChkBox, &QCheckBox::toggled, this, &ThisClass::onPistolStartToggled );
+	connect( ui->allowCheatsChkBox, &QCheckBox::toggled, this, &ThisClass::onAllowCheatsToggled );
+	connect( ui->gameOptsBtn, &QPushButton::clicked, this, &ThisClass::onGameOptsBtnClicked );
+	connect( ui->compatOptsBtn, &QPushButton::clicked, this, &ThisClass::onCompatOptsBtnClicked );
+	connect( ui->compatModeCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onCompatModeSelected );
 
 	// alternative paths
-	connect( ui->altConfigDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForConfigsToggled );
-	connect( ui->altSaveDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForSavesToggled );
-	connect( ui->altDemoDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForDemosToggled );
-	connect( ui->altScreenshotDirPresetChkBox, &QCheckBox::toggled, this, &thisClass::onUsePresetNameForScreenshotsToggled );
-	connect( ui->altConfigDirLine, &QLineEdit::textChanged, this, &thisClass::onAltConfigDirChanged );
-	connect( ui->altSaveDirLine, &QLineEdit::textChanged, this, &thisClass::onAltSaveDirChanged );
-	connect( ui->altDemoDirLine, &QLineEdit::textChanged, this, &thisClass::onAltDemoDirChanged );
-	connect( ui->altScreenshotDirLine, &QLineEdit::textChanged, this, &thisClass::onAltScreenshotDirChanged );
-	connect( ui->altConfigDirBtn, &QPushButton::clicked, this, &thisClass::browseAltConfigDir );
-	connect( ui->altSaveDirBtn, &QPushButton::clicked, this, &thisClass::browseAltSaveDir );
-	connect( ui->altDemoDirBtn, &QPushButton::clicked, this, &thisClass::browseAltDemoDir );
-	connect( ui->altScreenshotDirBtn, &QPushButton::clicked, this, &thisClass::browseAltScreenshotDir );
+	connect( ui->altConfigDirPresetChkBox, &QCheckBox::toggled, this, &ThisClass::onUsePresetNameForConfigsToggled );
+	connect( ui->altSaveDirPresetChkBox, &QCheckBox::toggled, this, &ThisClass::onUsePresetNameForSavesToggled );
+	connect( ui->altDemoDirPresetChkBox, &QCheckBox::toggled, this, &ThisClass::onUsePresetNameForDemosToggled );
+	connect( ui->altScreenshotDirPresetChkBox, &QCheckBox::toggled, this, &ThisClass::onUsePresetNameForScreenshotsToggled );
+	connect( ui->altConfigDirLine, &QLineEdit::textChanged, this, &ThisClass::onAltConfigDirChanged );
+	connect( ui->altSaveDirLine, &QLineEdit::textChanged, this, &ThisClass::onAltSaveDirChanged );
+	connect( ui->altDemoDirLine, &QLineEdit::textChanged, this, &ThisClass::onAltDemoDirChanged );
+	connect( ui->altScreenshotDirLine, &QLineEdit::textChanged, this, &ThisClass::onAltScreenshotDirChanged );
+	connect( ui->altConfigDirBtn, &QPushButton::clicked, this, &ThisClass::selectAltConfigDir );
+	connect( ui->altSaveDirBtn, &QPushButton::clicked, this, &ThisClass::selectAltSaveDir );
+	connect( ui->altDemoDirBtn, &QPushButton::clicked, this, &ThisClass::selectAltDemoDir );
+	connect( ui->altScreenshotDirBtn, &QPushButton::clicked, this, &ThisClass::selectAltScreenshotDir );
 
 	// video
 	loadMonitorInfo( ui->monitorCmbBox );
-	connect( ui->monitorCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &thisClass::onMonitorSelected );
-	connect( ui->resolutionXLine, &QLineEdit::textChanged, this, &thisClass::onResolutionXChanged );
-	connect( ui->resolutionYLine, &QLineEdit::textChanged, this, &thisClass::onResolutionYChanged );
-	connect( ui->showFpsChkBox, &QCheckBox::toggled, this, &thisClass::onShowFpsToggled );
+	connect( ui->monitorCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onMonitorSelected );
+	connect( ui->resolutionXLine, &QLineEdit::textChanged, this, &ThisClass::onResolutionXChanged );
+	connect( ui->resolutionYLine, &QLineEdit::textChanged, this, &ThisClass::onResolutionYChanged );
+	connect( ui->showFpsChkBox, &QCheckBox::toggled, this, &ThisClass::onShowFpsToggled );
 
 	// audio
-	connect( ui->noSoundChkBox, &QCheckBox::toggled, this, &thisClass::onNoSoundToggled );
-	connect( ui->noSfxChkBox, &QCheckBox::toggled, this, &thisClass::onNoSFXToggled);
-	connect( ui->noMusicChkBox, &QCheckBox::toggled, this, &thisClass::onNoMusicToggled );
+	connect( ui->noSoundChkBox, &QCheckBox::toggled, this, &ThisClass::onNoSoundToggled );
+	connect( ui->noSfxChkBox, &QCheckBox::toggled, this, &ThisClass::onNoSFXToggled);
+	connect( ui->noMusicChkBox, &QCheckBox::toggled, this, &ThisClass::onNoMusicToggled );
 
 	// setup the rest of widgets
 
-	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onPresetCmdArgsChanged );
-	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &thisClass::onGlobalCmdArgsChanged );
-	connect( ui->cmdPrefixLine, &QLineEdit::textChanged, this, &thisClass::onCmdPrefixChanged );
-	connect( ui->launchBtn, &QPushButton::clicked, this, &thisClass::onLaunchBtnClicked );
+	connect( ui->presetCmdArgsLine, &QLineEdit::textChanged, this, &ThisClass::onPresetCmdArgsChanged );
+	connect( ui->globalCmdArgsLine, &QLineEdit::textChanged, this, &ThisClass::onGlobalCmdArgsChanged );
+	connect( ui->cmdPrefixLine, &QLineEdit::textChanged, this, &ThisClass::onCmdPrefixChanged );
+	connect( ui->launchBtn, &QPushButton::clicked, this, &ThisClass::onLaunchBtnClicked );
 }
 
 void MainWindow::adjustUi()
@@ -941,14 +941,14 @@ void MainWindow::setupPresetList()
 
 	// setup editing and separators
 	ui->presetListView->toggleItemEditing( true );
-	connect( &presetModel, &AListModel::itemDataChanged, this, &thisClass::onPresetDataChanged );
+	connect( &presetModel, &AListModel::itemDataChanged, this, &ThisClass::onPresetDataChanged );
 
 	// set drag&drop behaviour
 	ui->presetListView->setAllowedDnDSources( DnDSource::ThisWidget );
-	connect( ui->presetListView, &ExtendedListView::dragAndDropFinished, this, &thisClass::onPresetsReordered );
+	connect( ui->presetListView, &ExtendedListView::dragAndDropFinished, this, &ThisClass::onPresetsReordered );
 
 	// set reaction when an item is selected
-	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onPresetToggled );
+	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ThisClass::onPresetToggled );
 
 	// setup reaction to key shortcuts and right click
 	ui->presetListView->enableContextMenu( 0
@@ -959,26 +959,26 @@ void MainWindow::setupPresetList()
 		| ExtendedListView::MenuAction::Find
 	);
 	ui->presetListView->toggleListModifications( true );
-	connect( ui->presetListView->addItemAction, &QAction::triggered, this, &thisClass::presetAdd );
-	connect( ui->presetListView->deleteItemAction, &QAction::triggered, this, &thisClass::presetDelete );
-	connect( ui->presetListView->cloneItemAction, &QAction::triggered, this, &thisClass::presetClone );
-	connect( ui->presetListView->moveItemUpAction, &QAction::triggered, this, &thisClass::presetMoveUp );
-	connect( ui->presetListView->moveItemDownAction, &QAction::triggered, this, &thisClass::presetMoveDown );
-	connect( ui->presetListView->moveItemToTopAction, &QAction::triggered, this, &thisClass::presetMoveToTop );
-	connect( ui->presetListView->moveItemToBottomAction, &QAction::triggered, this, &thisClass::presetMoveToBottom );
-	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::presetInsertSeparator );
+	connect( ui->presetListView->addItemAction, &QAction::triggered, this, &ThisClass::presetAdd );
+	connect( ui->presetListView->deleteItemAction, &QAction::triggered, this, &ThisClass::presetDelete );
+	connect( ui->presetListView->cloneItemAction, &QAction::triggered, this, &ThisClass::presetClone );
+	connect( ui->presetListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::presetMoveUp );
+	connect( ui->presetListView->moveItemDownAction, &QAction::triggered, this, &ThisClass::presetMoveDown );
+	connect( ui->presetListView->moveItemToTopAction, &QAction::triggered, this, &ThisClass::presetMoveToTop );
+	connect( ui->presetListView->moveItemToBottomAction, &QAction::triggered, this, &ThisClass::presetMoveToBottom );
+	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::presetInsertSeparator );
 
 	// setup buttons
-	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &thisClass::presetAdd );
-	connect( ui->presetBtnDel, &QToolButton::clicked, this, &thisClass::presetDelete );
-	connect( ui->presetBtnClone, &QToolButton::clicked, this, &thisClass::presetClone );
-	connect( ui->presetBtnUp, &QToolButton::clicked, this, &thisClass::presetMoveUp );
-	connect( ui->presetBtnDown, &QToolButton::clicked, this, &thisClass::presetMoveDown );
+	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &ThisClass::presetAdd );
+	connect( ui->presetBtnDel, &QToolButton::clicked, this, &ThisClass::presetDelete );
+	connect( ui->presetBtnClone, &QToolButton::clicked, this, &ThisClass::presetClone );
+	connect( ui->presetBtnUp, &QToolButton::clicked, this, &ThisClass::presetMoveUp );
+	connect( ui->presetBtnDown, &QToolButton::clicked, this, &ThisClass::presetMoveDown );
 
 	// setup search
 	presetSearchPanel = new SearchPanel( ui->searchShowBtn, ui->searchLine, ui->caseSensitiveChkBox, ui->regexChkBox );
 	connect( ui->presetListView->findItemAction, &QAction::triggered, presetSearchPanel, &SearchPanel::expand );
-	connect( presetSearchPanel, &SearchPanel::searchParamsChanged, this, &thisClass::searchPresets );
+	connect( presetSearchPanel, &SearchPanel::searchParamsChanged, this, &ThisClass::searchPresets );
 }
 
 void MainWindow::setupIWADList()
@@ -999,8 +999,8 @@ void MainWindow::setupIWADList()
 	);
 
 	// set reaction when an item is clicked or double-clicked
-	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onIWADToggled );
-	connect( ui->iwadListView, &QListView::doubleClicked, this, &thisClass::onIWADDoubleClicked );
+	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ThisClass::onIWADToggled );
+	connect( ui->iwadListView, &QListView::doubleClicked, this, &ThisClass::onIWADDoubleClicked );
 }
 
 void MainWindow::setupMapPackList()
@@ -1031,8 +1031,8 @@ void MainWindow::setupMapPackList()
 	ui->mapDirView->setDragDropMode( QAbstractItemView::DragOnly );
 
 	// set reaction when an item is clicked or double-clicked
-	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &thisClass::onMapPackToggled );
-	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &thisClass::onMapPackDoubleClicked );
+	connect( ui->mapDirView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ThisClass::onMapPackToggled );
+	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &ThisClass::onMapPackDoubleClicked );
 
 	// setup reaction to key shortcuts and right click
 	ui->mapDirView->enableContextMenu( 0
@@ -1044,12 +1044,12 @@ void MainWindow::setupMapPackList()
 
 	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
 	ui->mapDirView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
-	connect( ui->mapDirView->toggleIconsAction, &QAction::triggered, this, &thisClass::onMapIconsToggled );
+	connect( ui->mapDirView->toggleIconsAction, &QAction::triggered, this, &ThisClass::onMapIconsToggled );
 
 	// QFileSystemModel updates its content asynchronously in a separate thread. For this reason,
 	// when the model is set to display a certain directory, we cannot select items from the view right away,
 	// but must wait until the list is populated.
-	connect( &mapModel, &QFileSystemModel::directoryLoaded, this, &thisClass::onMapDirUpdated );
+	connect( &mapModel, &QFileSystemModel::directoryLoaded, this, &ThisClass::onMapDirUpdated );
 }
 
 void MainWindow::setupModList()
@@ -1070,13 +1070,13 @@ void MainWindow::setupModList()
 	modModel.setPathConvertor( pathConvertor );  // the model needs our path convertor for converting paths dropped from a file explorer
 	ui->modListView->setDnDOutputTypes( DnDOutputType::FilePaths );
 	ui->modListView->setAllowedDnDSources( DnDSource::ThisWidget | DnDSource::OtherWidget | DnDSource::ExternalApp );
-	connect( &modModel, &AListModel::itemsInserted, this, &thisClass::onModsInserted );
-	connect( &modModel, &AListModel::itemsRemoved, this, &thisClass::onModsRemoved );
-	connect( ui->modListView, &ExtendedListView::dragAndDropFinished, this, &thisClass::onModsDropped );
+	connect( &modModel, &AListModel::itemsInserted, this, &ThisClass::onModsInserted );
+	connect( &modModel, &AListModel::itemsRemoved, this, &ThisClass::onModsRemoved );
+	connect( ui->modListView, &ExtendedListView::dragAndDropFinished, this, &ThisClass::onModsDropped );
 
 	// set reaction when an item is checked or unchecked
-	connect( &modModel, &AListModel::itemDataChanged, this, &thisClass::onModDataChanged );
-	connect( ui->modListView, &QListView::doubleClicked, this, &thisClass::onModDoubleClicked );
+	connect( &modModel, &AListModel::itemDataChanged, this, &ThisClass::onModDataChanged );
+	connect( ui->modListView, &QListView::doubleClicked, this, &ThisClass::onModDoubleClicked );
 
 	// setup reaction to key shortcuts and right click
 	ui->modListView->enableContextMenu( 0
@@ -1091,41 +1091,41 @@ void MainWindow::setupModList()
 	);
 	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL | Qt::Key_Asterisk } );
 	ui->modListView->toggleListModifications( true );
-	connect( ui->modListView->addItemAction, &QAction::triggered, this, &thisClass::modAdd );
-	connect( addCmdArgAction, &QAction::triggered, this, &thisClass::modAddArg );
-	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &thisClass::modDelete );
-	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &thisClass::modMoveUp );
-	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &thisClass::modMoveDown );
-	connect( ui->modListView->moveItemToTopAction, &QAction::triggered, this, &thisClass::modMoveToTop );
-	connect( ui->modListView->moveItemToBottomAction, &QAction::triggered, this, &thisClass::modMoveToBottom );
-	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &thisClass::modInsertSeparator );
+	connect( ui->modListView->addItemAction, &QAction::triggered, this, &ThisClass::modAdd );
+	connect( addCmdArgAction, &QAction::triggered, this, &ThisClass::modAddArg );
+	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &ThisClass::modDelete );
+	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::modMoveUp );
+	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &ThisClass::modMoveDown );
+	connect( ui->modListView->moveItemToTopAction, &QAction::triggered, this, &ThisClass::modMoveToTop );
+	connect( ui->modListView->moveItemToBottomAction, &QAction::triggered, this, &ThisClass::modMoveToBottom );
+	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::modInsertSeparator );
 
 	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
 	ui->modListView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
-	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &thisClass::onModIconsToggled );
+	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &ThisClass::onModIconsToggled );
 
 	// setup buttons
-	connect( ui->modBtnAdd, &QToolButton::clicked, this, &thisClass::modAdd );
-	connect( ui->modBtnAddDir, &QToolButton::clicked, this, &thisClass::modAddDir );
-	connect( ui->modBtnAddArg, &QToolButton::clicked, this, &thisClass::modAddArg );
-	connect( ui->modBtnDel, &QToolButton::clicked, this, &thisClass::modDelete );
-	connect( ui->modBtnUp, &QToolButton::clicked, this, &thisClass::modMoveUp );
-	connect( ui->modBtnDown, &QToolButton::clicked, this, &thisClass::modMoveDown );
+	connect( ui->modBtnAdd, &QToolButton::clicked, this, &ThisClass::modAdd );
+	connect( ui->modBtnAddDir, &QToolButton::clicked, this, &ThisClass::modAddDir );
+	connect( ui->modBtnAddArg, &QToolButton::clicked, this, &ThisClass::modAddArg );
+	connect( ui->modBtnDel, &QToolButton::clicked, this, &ThisClass::modDelete );
+	connect( ui->modBtnUp, &QToolButton::clicked, this, &ThisClass::modMoveUp );
+	connect( ui->modBtnDown, &QToolButton::clicked, this, &ThisClass::modMoveDown );
 
-	connect( ui->mapsAfterModsChkBox, &QCheckBox::toggled, this, &thisClass::onMapsAfterModsToggled );
+	connect( ui->mapsAfterModsChkBox, &QCheckBox::toggled, this, &ThisClass::onMapsAfterModsToggled );
 }
 
 void MainWindow::setupEnvVarLists()
 {
 	// setup buttons
-	connect( ui->presetEnvVarBtnAdd, &QToolButton::clicked, this, &thisClass::presetEnvVarAdd );
-	connect( ui->presetEnvVarBtnDel, &QToolButton::clicked, this, &thisClass::presetEnvVarDelete );
-	connect( ui->globalEnvVarBtnAdd, &QToolButton::clicked, this, &thisClass::globalEnvVarAdd );
-	connect( ui->globalEnvVarBtnDel, &QToolButton::clicked, this, &thisClass::globalEnvVarDelete );
+	connect( ui->presetEnvVarBtnAdd, &QToolButton::clicked, this, &ThisClass::presetEnvVarAdd );
+	connect( ui->presetEnvVarBtnDel, &QToolButton::clicked, this, &ThisClass::presetEnvVarDelete );
+	connect( ui->globalEnvVarBtnAdd, &QToolButton::clicked, this, &ThisClass::globalEnvVarAdd );
+	connect( ui->globalEnvVarBtnDel, &QToolButton::clicked, this, &ThisClass::globalEnvVarDelete );
 
 	// setup edit callbacks
-	connect( ui->presetEnvVarTable, &QTableWidget::cellChanged, this, &thisClass::onPresetEnvVarDataChanged );
-	connect( ui->globalEnvVarTable, &QTableWidget::cellChanged, this, &thisClass::onGlobalEnvVarDataChanged );
+	connect( ui->presetEnvVarTable, &QTableWidget::cellChanged, this, &ThisClass::onPresetEnvVarDataChanged );
+	connect( ui->globalEnvVarTable, &QTableWidget::cellChanged, this, &ThisClass::onGlobalEnvVarDataChanged );
 }
 
 void MainWindow::loadMonitorInfo( QComboBox * box )
@@ -1254,10 +1254,10 @@ void MainWindow::showEvent( QShowEvent * event )
 	// and then switch to the adjusted layout in the next frame.
 	adjustUi();
 
-	superClass::showEvent( event );
+	SuperClass::showEvent( event );
 
 	// This will be called after the window is fully initialized and physically shown (drawn for the first time).
-	QMetaObject::invokeMethod( this, &thisClass::onWindowShown, Qt::ConnectionType::QueuedConnection );
+	QMetaObject::invokeMethod( this, &ThisClass::onWindowShown, Qt::ConnectionType::QueuedConnection );
 }
 
 // This is called after the window is fully initialized and physically shown (drawn for the first time).
@@ -1336,7 +1336,7 @@ void MainWindow::onWindowShown()
 
 void MainWindow::timerEvent( QTimerEvent * event )  // called once per second
 {
-	superClass::timerEvent( event );
+	SuperClass::timerEvent( event );
 
 	tickCount++;
 
@@ -1379,7 +1379,7 @@ void MainWindow::closeEvent( QCloseEvent * event )
 	systemThemeWatcher.stop(500);
  #endif
 
-	superClass::closeEvent( event );
+	SuperClass::closeEvent( event );
 }
 
 MainWindow::~MainWindow()
@@ -3206,7 +3206,7 @@ void MainWindow::onMapIconsToggled()
 
 void MainWindow::modAdd()
 {
-	const QStringList paths = DialogWithPaths::browseFiles( this, "mod file", lastUsedDir,
+	const QStringList paths = DialogWithPaths::selectFiles( this, "mod file", lastUsedDir,
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
 		+ makeFileFilter( "DoomRunner pack files", { drp::fileSuffix } )
@@ -3234,7 +3234,7 @@ void MainWindow::modAdd()
 
 void MainWindow::modAddDir()
 {
-	QString path = DialogWithPaths::browseDir( this, "of the mod", lastUsedDir );
+	QString path = DialogWithPaths::selectDir( this, "of the mod", lastUsedDir );
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -4248,11 +4248,11 @@ void MainWindow::onAltScreenshotDirChanged( const QString & rebasedDir )
 	updateLaunchCommand();
 }
 
-void MainWindow::browseAltConfigDir()
+void MainWindow::selectAltConfigDir()
 {
 	const QString & currentConfigDir = activeConfigDir;
 
-	QString newConfigDir = DialogWithPaths::browseDir( this, "with config files", currentConfigDir );
+	QString newConfigDir = DialogWithPaths::selectDir( this, "with config files", currentConfigDir );
 	if (newConfigDir.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -4261,11 +4261,11 @@ void MainWindow::browseAltConfigDir()
 	ui->altConfigDirLine->setText( altConfigDirRebaser.rebaseAndMakeRelative( newConfigDir ) );
 }
 
-void MainWindow::browseAltSaveDir()
+void MainWindow::selectAltSaveDir()
 {
 	const QString & currentSaveDir = activeSaveDir;
 
-	QString newSaveDir = DialogWithPaths::browseDir( this, "with save files", currentSaveDir );
+	QString newSaveDir = DialogWithPaths::selectDir( this, "with save files", currentSaveDir );
 	if (newSaveDir.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -4274,11 +4274,11 @@ void MainWindow::browseAltSaveDir()
 	ui->altSaveDirLine->setText( altSaveDirRebaser.rebaseAndMakeRelative( newSaveDir ) );
 }
 
-void MainWindow::browseAltDemoDir()
+void MainWindow::selectAltDemoDir()
 {
 	const QString & currentDemoDir = activeDemoDir;
 
-	QString newDemoDir = DialogWithPaths::browseDir( this, "with demo files", currentDemoDir );
+	QString newDemoDir = DialogWithPaths::selectDir( this, "with demo files", currentDemoDir );
 	if (newDemoDir.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -4287,11 +4287,11 @@ void MainWindow::browseAltDemoDir()
 	ui->altDemoDirLine->setText( altDemoDirRebaser.rebaseAndMakeRelative( newDemoDir ) );
 }
 
-void MainWindow::browseAltScreenshotDir()
+void MainWindow::selectAltScreenshotDir()
 {
 	const QString & currentScreenshotDir = activeScreenshotDir;
 
-	QString newScreenshotDir = DialogWithPaths::browseDir( this, "for screenshots", currentScreenshotDir );
+	QString newScreenshotDir = DialogWithPaths::selectDir( this, "for screenshots", currentScreenshotDir );
 	if (newScreenshotDir.isEmpty())  // user probably clicked cancel
 		return;
 

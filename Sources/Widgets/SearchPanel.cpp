@@ -11,10 +11,10 @@ SearchPanel::SearchPanel(
 ) :
 	showBtn( showBtn ), searchLine( searchLine ), caseChkBox( caseChkBox ), regexChkBox( regexChkBox )
 {
-	connect( showBtn, &QToolButton::clicked, this, &thisClass::toggleExpanded );
-	connect( searchLine, &QLineEdit::textChanged, this, &thisClass::changeSearchPhrase );
-	connect( caseChkBox, &QCheckBox::toggled, this, &thisClass::toggleCaseSensitive );
-	connect( regexChkBox, &QCheckBox::toggled, this, &thisClass::toggleUseRegex );
+	connect( showBtn, &QToolButton::clicked, this, &ThisClass::toggleExpanded );
+	connect( searchLine, &QLineEdit::textChanged, this, &ThisClass::changeSearchPhrase );
+	connect( caseChkBox, &QCheckBox::toggled, this, &ThisClass::toggleCaseSensitive );
+	connect( regexChkBox, &QCheckBox::toggled, this, &ThisClass::toggleUseRegex );
 }
 
 void SearchPanel::setExpanded( bool expanded )

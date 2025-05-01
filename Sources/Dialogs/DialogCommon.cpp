@@ -24,7 +24,7 @@ DialogCommon::DialogCommon( QWidget * self, QStringView dialogName )
 	themes::updateWindowBorder( self );
 }
 
-QString DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter )
+QString DialogWithPaths::selectFile( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter )
 {
 	QString path = OwnFileDialog::getOpenFileName(
 		parent, "Locate the "+fileDesc, !startingDir.isEmpty() ? startingDir : lastUsedDir, filter
@@ -42,7 +42,7 @@ QString DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc,
 	return path;
 }
 
-QStringList DialogWithPaths::browseFiles( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter )
+QStringList DialogWithPaths::selectFiles( QWidget * parent, const QString & fileDesc, QString startingDir, const QString & filter )
 {
 	QStringList paths = OwnFileDialog::getOpenFileNames(
 		parent, "Locate the "+fileDesc, !startingDir.isEmpty() ? startingDir : lastUsedDir, filter
@@ -61,7 +61,7 @@ QStringList DialogWithPaths::browseFiles( QWidget * parent, const QString & file
 	return paths;
 }
 
-QString DialogWithPaths::browseDir( QWidget * parent, const QString & dirDesc, QString startingDir )
+QString DialogWithPaths::selectDir( QWidget * parent, const QString & dirDesc, QString startingDir )
 {
 	QString path = OwnFileDialog::getExistingDirectory(
 		parent, "Locate the directory "+dirDesc, !startingDir.isEmpty() ? startingDir : lastUsedDir
@@ -79,9 +79,9 @@ QString DialogWithPaths::browseDir( QWidget * parent, const QString & dirDesc, Q
 	return path;
 }
 
-bool DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc, QLineEdit * targetLine, const QString & filter )
+bool DialogWithPaths::selectFile( QWidget * parent, const QString & fileDesc, QLineEdit * targetLine, const QString & filter )
 {
-	QString path = browseFile( parent, fileDesc, targetLine->text(), filter );
+	QString path = selectFile( parent, fileDesc, targetLine->text(), filter );
 	bool confirmed = !path.isEmpty();  // user may have clicked cancel
 	if (confirmed)
 	{
@@ -90,9 +90,9 @@ bool DialogWithPaths::browseFile( QWidget * parent, const QString & fileDesc, QL
 	return confirmed;
 }
 
-bool DialogWithPaths::browseDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine )
+bool DialogWithPaths::selectDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine )
 {
-	QString path = browseDir( parent, dirDesc, targetLine->text() );
+	QString path = selectDir( parent, dirDesc, targetLine->text() );
 	bool confirmed = !path.isEmpty();  // user may have clicked cancel
 	if (confirmed)
 	{

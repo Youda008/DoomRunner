@@ -46,6 +46,7 @@ HEADERS += \
 	Sources/Dialogs/AboutDialog.hpp \
 	Sources/Dialogs/CompatOptsDialog.hpp \
 	Sources/Dialogs/DialogCommon.hpp \
+	Sources/Dialogs/DRPEditor.hpp \
 	Sources/Dialogs/EngineDialog.hpp \
 	Sources/Dialogs/GameOptsDialog.hpp \
 	Sources/Dialogs/NewConfigDialog.hpp \
@@ -53,6 +54,7 @@ HEADERS += \
 	Sources/Dialogs/OwnFileDialog.hpp \
 	Sources/Dialogs/ProcessOutputWindow.hpp \
 	Sources/Dialogs/SetupDialog.hpp \
+	Sources/Dialogs/WADDescViewer.hpp \
 	Sources/Utils/ContainerUtils.hpp \
 	Sources/Utils/DoomRunnerPacks.hpp \
 	Sources/Utils/EnumTraits.hpp \
@@ -86,6 +88,7 @@ HEADERS += \
 	Sources/DoomFiles.hpp \
 	Sources/EngineTraits.hpp \
 	Sources/Essential.hpp \
+	Sources/MainWindowPtr.hpp \
 	Sources/MainWindow.hpp \
 	Sources/OptionsSerializer.hpp \
 	Sources/Themes.hpp \
@@ -98,6 +101,7 @@ SOURCES += \
 	Sources/Dialogs/AboutDialog.cpp \
 	Sources/Dialogs/CompatOptsDialog.cpp \
 	Sources/Dialogs/DialogCommon.cpp \
+	Sources/Dialogs/DRPEditor.cpp \
 	Sources/Dialogs/EngineDialog.cpp \
 	Sources/Dialogs/GameOptsDialog.cpp \
 	Sources/Dialogs/NewConfigDialog.cpp \
@@ -105,6 +109,7 @@ SOURCES += \
 	Sources/Dialogs/OwnFileDialog.cpp \
 	Sources/Dialogs/ProcessOutputWindow.cpp \
 	Sources/Dialogs/SetupDialog.cpp \
+	Sources/Dialogs/WADDescViewer.cpp \
 	Sources/Utils/ContainerUtils.cpp \
 	Sources/Utils/DoomRunnerPacks.cpp \
 	Sources/Utils/ErrorHandling.cpp \
@@ -142,6 +147,7 @@ SOURCES += \
 FORMS += \
 	Forms/AboutDialog.ui \
 	Forms/CompatOptsDialog.ui \
+	Forms/DRPEditor.ui \
 	Forms/EngineDialog.ui \
 	Forms/GameOptsDialog.ui \
 	Forms/MainWindow.ui \

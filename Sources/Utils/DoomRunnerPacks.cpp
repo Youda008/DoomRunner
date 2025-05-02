@@ -7,6 +7,7 @@
 
 #include "DoomRunnerPacks.hpp"
 
+#include "FileSystemUtils.hpp"
 #include "FileInfoCache.hpp"
 #include "ErrorHandling.hpp"
 
@@ -24,6 +25,7 @@ const QString fileSuffix = "drp";
 
 //----------------------------------------------------------------------------------------------------------------------
 
+// TODO: optimize
 struct DrpContent
 {
 	QStringList entries;
@@ -31,7 +33,7 @@ struct DrpContent
 
 using UncertainDrpContent = UncertainFileInfo< DrpContent >;
 
-UncertainDrpContent readContent( const QString & filePath )
+static UncertainDrpContent readContent( const QString & filePath )
 {
 	UncertainDrpContent content;
 
@@ -42,6 +44,8 @@ UncertainDrpContent readContent( const QString & filePath )
 		content.status = ReadStatus::CantOpen;
 		return content;
 	}
+
+	PathRebaser rebaser( fs::getParentDir( filePath ), fs::currentDir );
 
 	QTextStream stream( &file );
 	while (!stream.atEnd())
@@ -59,7 +63,10 @@ UncertainDrpContent readContent( const QString & filePath )
 		{
 			continue;
 		}
-		content.entries.append( std::move(line) );
+		// rebase the paths from the DRP's dir to our working dir
+		QString entryPath = rebaser.rebase( line );
+
+		content.entries.append( std::move(entryPath) );
 	}
 
 	file.close();
@@ -67,7 +74,33 @@ UncertainDrpContent readContent( const QString & filePath )
 	return content;
 }
 
-static FileInfoCache< DrpContent > g_cachedDrpInfo( readContent );
+static bool writeContent( const QString & filePath, const DrpContent & content )
+{
+	QFileInfo fileInfo( filePath );
+
+	QFile file( filePath );
+	if (!file.open( QIODevice::Text | QIODevice::WriteOnly ))
+	{
+		reportRuntimeError( nullptr, "Cannot save DoomRunner Pack", "Could not open file "%filePath%" for writing ("%file.errorString()%")" );
+		return false;
+	}
+
+	PathRebaser rebaser( fs::currentDir, fileInfo.dir().path() );
+
+	QTextStream stream( &file );
+	for (const auto & entry : content.entries)
+	{
+		QString rebasedPath = rebaser.rebase( entry );
+		stream << rebasedPath << '\n';
+	}
+
+	stream.flush();
+	file.close();
+	return true;
+}
+
+
+static FileInfoCache< DrpContent > g_cachedDrpInfo( readContent, writeContent );
 
 QStringList getEntries( const QString & filePath )
 {
@@ -77,6 +110,13 @@ QStringList getEntries( const QString & filePath )
 		return std::move( uncertainContent.entries );
 	else
 		return {};
+}
+
+bool saveEntries( const QString & filePath, QStringList entries )
+{
+	DrpContent content;
+	content.entries = std::move( entries );
+	return g_cachedDrpInfo.setFileInfo( filePath, std::move(content) );
 }
 
 

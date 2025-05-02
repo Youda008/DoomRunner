@@ -272,6 +272,9 @@ QString readAllFileLines( const QString & filePath, QStringList & lines );
   * Returns description of an error that might potentially happen, or empty string on success. */
 QString updateFileSafely( const QString & filePath, const QByteArray & newContent );
 
+/// Renames or moved a file originally located at \p origPath to be located at \p newPath.
+bool renameOrMoveFile( const QString & origPath, const QString & newPath );
+
 } // namespace fs
 
 

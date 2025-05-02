@@ -180,6 +180,13 @@ QString updateFileSafely( const QString & filePath, const QByteArray & newConten
 	return {};
 }
 
+bool renameOrMoveFile( const QString & origPath, const QString & newPath )
+{
+	QFileInfo origInfo( origPath );
+	QDir origDir = origInfo.dir();
+	return origDir.rename( origInfo.fileName(), newPath );
+}
+
 void traverseDirectory(
 	const QString & dir, bool recursively, EntryTypes typesToVisit,
 	const PathConvertor & pathConvertor, const std::function< void ( const QFileInfo & entry ) > & visitEntry

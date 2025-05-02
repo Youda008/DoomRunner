@@ -60,6 +60,10 @@ class DialogWithPaths : public DialogCommon {
 	/** Returns true if the dialog was confirmed or false if it was cancelled. */
 	bool selectDir( QWidget * parent, const QString & dirDesc, QLineEdit * targetLine );
 
+	/// Convenience wrapper that also stores the result into a text line.
+	/** Returns true if the dialog was confirmed or false if it was cancelled. */
+	bool selectDestFile( QWidget * parent, const QString & title, QLineEdit * targetLine, const QString & filter );
+
  public:
 
 	/// Configures the provided QLineEdit to accept only valid file-system paths.

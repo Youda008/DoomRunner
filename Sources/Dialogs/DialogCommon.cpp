@@ -119,6 +119,17 @@ bool DialogWithPaths::selectDir( QWidget * parent, const QString & dirDesc, QLin
 	return confirmed;
 }
 
+bool DialogWithPaths::selectDestFile( QWidget * parent, const QString & title, QLineEdit * targetLine, const QString & filter )
+{
+	QString path = selectDestFile( parent, title, targetLine->text(), filter );
+	bool confirmed = !path.isEmpty();  // user may have clicked cancel
+	if (confirmed)
+	{
+		targetLine->setText( path );
+	}
+	return confirmed;
+}
+
 void DialogWithPaths::setPathValidator( QLineEdit * pathLine )
 {
 	pathLine->setValidator( new QRegularExpressionValidator( fs::getPathRegex(), pathLine ) );

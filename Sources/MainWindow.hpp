@@ -103,6 +103,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modAdd();
 	void modAddDir();
 	void modAddArg();
+	void modAddExistingDRP();
+	void modCreateNewDRP();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
@@ -253,8 +255,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void runCompatOptsDialog();
 	void runPlayerColorDialog();
 
-	void showTxtDescriptionFor( const QString & filePath, const QString & contentType );
 	void editDoomRunnerPack( const QString & filePath );
+	void createDoomRunnerPack();
 
 	void openCurrentEngineDataDir();
 	void cloneCurrentEngineConfigFile();
@@ -379,6 +381,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QAction * hideLabelAction = nullptr;
 
 	QAction * addCmdArgAction = nullptr;
+	QAction * addExistingDRP = nullptr;
+	QAction * createNewDRP = nullptr;
 
 	QAction * resetPlayerColorAction = nullptr;
 

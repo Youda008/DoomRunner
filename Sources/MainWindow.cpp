@@ -11,6 +11,8 @@
 #include "Dialogs/AboutDialog.hpp"
 #include "Dialogs/SetupDialog.hpp"
 #include "Dialogs/OptionsStorageDialog.hpp"
+#include "Dialogs/WADDescViewer.hpp"
+#include "Dialogs/DRPEditor.hpp"
 #include "Dialogs/NewConfigDialog.hpp"
 #include "Dialogs/GameOptsDialog.hpp"
 #include "Dialogs/CompatOptsDialog.hpp"
@@ -36,11 +38,6 @@
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // areScreenCoordinatesValid, makeFileFilter, splitCommandLineArguments
 #include "Utils/ErrorHandling.hpp"
-
-// showTxtDescriptionFor
-#include <QVBoxLayout>
-#include <QPlainTextEdit>
-#include <QFontDatabase>
 
 #include <QStringBuilder>
 #include <QTextStream>  // exportPresetToScript, loadMonitorInfo
@@ -99,23 +96,15 @@ void MainWindow::expandDRP( const QString & filePath, const Functor & loopBody )
 {
 	QStringList entries = drp::getEntries( filePath );
 
-	// rebase the paths from the DRP's dir to our working dir and convert the path style according to our settings
-	PathRebaser rebaser( fs::getParentDir( filePath ), pathConvertor.workingDir().path() );
-	rebaser.setRequiredPathStyle( pathConvertor.pathStyle() );
-
 	for (const QString & path : entries)
 	{
-		if (!path.isEmpty())
+		if (fs::getFileSuffix( path ) == drp::fileSuffix)
 		{
-			QString convertedPath = rebaser.rebaseAndConvert( path );
-			if (fs::getFileSuffix( convertedPath ) == drp::fileSuffix)
-			{
-				expandDRP< Entry >( convertedPath, loopBody );
-			}
-			else
-			{
-				loopBody( Entry( convertedPath ) );
-			}
+			expandDRP< Entry >( path, loopBody );
+		}
+		else
+		{
+			loopBody( Entry( path ) );
 		}
 	}
 
@@ -131,11 +120,11 @@ void MainWindow::forEachSelectedMapFileWithExpandedDRPs( const Functor & loopBod
 		if (fs::getFileSuffix( mapFilePath ) == drp::fileSuffix)
 		{
 			expandDRP< QString >( mapFilePath, loopBody );
-		}
+	}
 		else
 		{
 			loopBody( mapFilePath );
-		}
+}
 	}
 }
 
@@ -1094,15 +1083,19 @@ void MainWindow::setupModList()
 		| ExtendedListView::MenuAction::ToggleIcons
 	);
 	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL | Qt::Key_Asterisk } );
+	addExistingDRP = ui->modListView->addAction( "Add existing DR pack", {} );
+	createNewDRP = ui->modListView->addAction( "Create new DR pack", {} );
 	ui->modListView->toggleListModifications( true );
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &ThisClass::modAdd );
-	connect( addCmdArgAction, &QAction::triggered, this, &ThisClass::modAddArg );
 	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &ThisClass::modDelete );
 	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::modMoveUp );
 	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &ThisClass::modMoveDown );
 	connect( ui->modListView->moveItemToTopAction, &QAction::triggered, this, &ThisClass::modMoveToTop );
 	connect( ui->modListView->moveItemToBottomAction, &QAction::triggered, this, &ThisClass::modMoveToBottom );
 	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::modInsertSeparator );
+	connect( addCmdArgAction, &QAction::triggered, this, &ThisClass::modAddArg );
+	connect( addExistingDRP, &QAction::triggered, this, &ThisClass::modAddExistingDRP );
+	connect( createNewDRP, &QAction::triggered, this, &ThisClass::modCreateNewDRP );
 
 	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
 	ui->modListView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
@@ -2380,73 +2373,49 @@ void MainWindow::runPlayerColorDialog()
 	}
 }
 
-void MainWindow::showTxtDescriptionFor( const QString & filePath, const QString & contentType )
-{
-	QFileInfo dataFileInfo( filePath );
-
-	if (!dataFileInfo.isFile())  // user could click on a directory
-	{
-		return;
-	}
-
-	// get the corresponding file with txt suffix
-	QFileInfo descFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "txt" ) );
-	if (!descFileInfo.isFile())
-	{
-		// try TXT in case we are in a case-sensitive file-system such as Linux
-		descFileInfo = QFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "TXT" ) );
-		if (!descFileInfo.isFile())
-		{
-			reportUserError( "Cannot open "%contentType,
-				capitalize( contentType )%" file \""%descFileInfo.fileName()%"\" does not exist" );
-			return;
-		}
-	}
-
-	QFile descFile( descFileInfo.filePath() );
-	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
-	{
-		reportRuntimeError( "Cannot open "%contentType,
-			"Failed to open map "%contentType%" \""%descFileInfo.fileName()%"\" ("%descFile.errorString()%")" );
-		return;
-	}
-
-	QByteArray desc = descFile.readAll();
-
-	QDialog descDialog( this );
-	descDialog.setObjectName( "FileDescription" );
-	descDialog.setWindowTitle( descFileInfo.fileName() );
-	descDialog.setWindowModality( Qt::WindowModal );
-
-	QVBoxLayout * layout = new QVBoxLayout( &descDialog );
-
-	QPlainTextEdit * textEdit = new QPlainTextEdit( &descDialog );
-	textEdit->setReadOnly( true );
-	textEdit->setWordWrapMode( QTextOption::NoWrap );
-	QFont font = QFontDatabase::systemFont( QFontDatabase::FixedFont );
-	font.setPointSize( 10 );
-	textEdit->setFont( font );
-
-	textEdit->setPlainText( desc );
-
-	layout->addWidget( textEdit );
-
-	// estimate the optimal window size
-	int dialogWidth  = int( 75.0f * float( font.pointSize() ) * 0.84f ) + 30;
-	int dialogHeight = int( 40.0f * float( font.pointSize() ) * 1.62f ) + 30;
-	descDialog.resize( dialogWidth, dialogHeight );
-
-	// position it to the right of map widget
-	int windowCenterX = this->pos().x() + (this->width() / 2);
-	int windowCenterY = this->pos().y() + (this->height() / 2);
-	descDialog.move( windowCenterX, windowCenterY - (descDialog.height() / 2) );
-
-	descDialog.exec();
-}
-
 void MainWindow::editDoomRunnerPack( const QString & filePath )
 {
-	os::openFileInNotepad( filePath );
+	//os::openFileInNotepad( filePath );
+
+	DRPEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, filePath );
+
+	int code = editor.exec();
+
+	// update the data only if user clicked Ok
+	if (code == QDialog::Accepted)
+	{
+		modSettings.lastUsedDir = lastUsedDir = editor.takeLastUsedDir();
+		modSettings.showIcons = editor.areIconsEnabled();
+		updateLaunchCommand();
+	}
+}
+
+void MainWindow::createDoomRunnerPack()
+{
+	DRPEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, {} );
+
+	int code = editor.exec();
+
+	// update the data only if user clicked Ok and the save was successful
+	if (code != QDialog::Accepted || editor.savedFilePath.isEmpty())
+	{
+		return;
+	}
+
+	modSettings.lastUsedDir = lastUsedDir = editor.takeLastUsedDir();
+	modSettings.showIcons = editor.areIconsEnabled();
+
+	Mod mod( QFileInfo( editor.savedFilePath ), /*checked*/true );
+
+	wdg::appendItem( ui->modListView, modModel, mod );
+
+	// add it also to the current preset
+	if (selectedPreset)
+	{
+		selectedPreset->mods.append( mod );
+	}
+
+	updateLaunchCommand();
 }
 
 void MainWindow::openCurrentEngineDataDir()
@@ -2905,7 +2874,7 @@ void MainWindow::onIWADDoubleClicked( const QModelIndex & index )
 {
 	const QString & filePath = iwadModel[ index.row() ].path;
 
-	showTxtDescriptionFor( filePath, "IWAD description" );
+	showTxtDescriptionFor( this, filePath, "IWAD description" );
 }
 
 void MainWindow::onMapPackDoubleClicked( const QModelIndex & index )
@@ -2923,7 +2892,7 @@ void MainWindow::onMapPackDoubleClicked( const QModelIndex & index )
 	}
 	else
 	{
-		showTxtDescriptionFor( fileInfo.filePath(), "map description" );
+		showTxtDescriptionFor( this, fileInfo.filePath(), "map description" );
 	}
 }
 
@@ -2942,7 +2911,7 @@ void MainWindow::onModDoubleClicked( const QModelIndex & index )
 	}
 	else
 	{
-		showTxtDescriptionFor( fileInfo.filePath(), "mod description" );
+		showTxtDescriptionFor( this, fileInfo.filePath(), "mod description" );
 	}
 }
 
@@ -3225,7 +3194,7 @@ void MainWindow::modAdd()
 	const QStringList paths = DialogWithPaths::selectFiles( this, "mod file", {},
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
-		+ makeFileFilter( "DoomRunner pack files", { drp::fileSuffix } )
+		+ makeFileFilter( "DoomRunner Pack files", { drp::fileSuffix } )
 		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel
@@ -3290,6 +3259,39 @@ void MainWindow::modAddArg()
 
 	scheduleSavingOptions();
 	updateLaunchCommand();
+}
+
+void MainWindow::modAddExistingDRP()
+{
+	const QStringList paths = DialogWithPaths::selectFiles( this, "DoomRunner Pack", {},
+		makeFileFilter( "DoomRunner Pack files", { drp::fileSuffix } )
+		+ "All files (*)"
+	);
+	if (paths.isEmpty())  // user probably clicked cancel
+		return;
+
+	modSettings.lastUsedDir = DialogWithPaths::lastUsedDir;
+
+	for (const QString & path : paths)
+	{
+		Mod mod( QFileInfo( path ), /*checked*/true );
+
+		wdg::appendItem( ui->modListView, modModel, mod );
+
+		// add it also to the current preset
+		if (selectedPreset)
+		{
+			selectedPreset->mods.append( mod );
+		}
+	}
+
+	scheduleSavingOptions();
+	updateLaunchCommand();
+}
+
+void MainWindow::modCreateNewDRP()
+{
+	createDoomRunnerPack();
 }
 
 void MainWindow::modDelete()
@@ -4909,7 +4911,7 @@ void MainWindow::exportPresetToScript()
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	QString scriptFilePath = DialogWithPaths::selectDestFile( this, "Export preset", {}, os::scriptFileSuffix );
+	QString scriptFilePath = DialogWithPaths::selectDestFile( this, "Export preset", emptyString, os::scriptFileSuffix );
 	if (scriptFilePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
@@ -4966,7 +4968,7 @@ void MainWindow::exportPresetToShortcut()
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	QString shortcutPath = DialogWithPaths::selectDestFile( this, "Export preset", {}, os::shortcutFileSuffix );
+	QString shortcutPath = DialogWithPaths::selectDestFile( this, "Export preset", emptyString, os::shortcutFileSuffix );
 	if (shortcutPath.isEmpty())  // user probably clicked cancel
 	{
 		return;
@@ -5132,12 +5134,12 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QStringList modFiles;
 		forEachCheckedModFileWithExpandedDRPs( [&]( const Mod & mod )
 		{
-			if (mod.isCmdArg) {  // this is not a file but a custom command line argument, append it directly to the arguments
-				appendCustomArguments( fileArgs, mod.name, opts.quotePaths );
-			} else {
-				p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
-				addFileAccordingToSuffix( modFiles, mod.path );
-			}
+				if (mod.isCmdArg) {  // this is not a file but a custom command line argument, append it directly to the arguments
+					appendCustomArguments( fileArgs, mod.name, opts.quotePaths );
+				} else {
+					p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
+					addFileAccordingToSuffix( modFiles, mod.path );
+				}
 		});
 
 		// output the final sequence to the cmd.arguments

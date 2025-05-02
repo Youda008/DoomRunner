@@ -6,6 +6,7 @@
 //======================================================================================================================
 
 #include "MainWindow.hpp"
+#include "MainWindowPtr.hpp"
 #include "Themes.hpp"
 #include "Utils/StandardOutput.hpp"
 
@@ -13,7 +14,8 @@
 #include <QDir>
 
 
-//======================================================================================================================
+QMainWindow * qMainWindow = nullptr;
+
 
 int main( int argc, char * argv [] )
 {
@@ -27,8 +29,10 @@ int main( int argc, char * argv [] )
 
 	themes::init();
 
-	auto w = std::make_unique< MainWindow >();  // don't consume so much stack
-	w->show();
+	auto mainWindow = std::make_unique< MainWindow >();  // don't consume so much stack
+	qMainWindow = mainWindow.get();
+
+	mainWindow->show();
 	int exitCode = a.exec();
 
 	return exitCode;

@@ -55,17 +55,19 @@ class FileInfoCache : protected LoggingComponent {
 	};
 
 	using ReadFileInfoFunc = UncertainFileInfo< FileInfo > (*)( const QString & );
+	using WriteFileInfoFunc = bool (*)( const QString &, const FileInfo & );
 
 	QHash< QString, Entry > _cache;
 	ReadFileInfoFunc _readFileInfo;
+	WriteFileInfoFunc _writeFileInfo;
 	mutable bool _dirty = false;
 
 	QElapsedTimer _timer;
 
  public:
 
-	FileInfoCache( ReadFileInfoFunc readFileInfo )
-		: LoggingComponent( u"FileInfoCache" ), _readFileInfo( readFileInfo ) {}
+	FileInfoCache( ReadFileInfoFunc readFileInfo, WriteFileInfoFunc writeFileInfo = nullptr )
+		: LoggingComponent( u"FileInfoCache" ), _readFileInfo( readFileInfo ), _writeFileInfo( writeFileInfo ) {}
 
 	/// Reads selected information from a file and stores it into a cache.
 	/** If the file was already read earlier and was not modified since, it returns the cached info. */
@@ -101,6 +103,21 @@ class FileInfoCache : protected LoggingComponent {
 		}
 
 		return cacheIter->fileInfo;
+	}
+
+	/// Manually updates a record in the cache and writes the content to the corresponding file.
+	/** Returns false if the content couldn't be written to the file. */
+	bool setFileInfo( const QString & filePath, FileInfo fileInfo )
+	{
+		logDebug() << "writing info to cache and file: " << filePath;
+
+		Entry newEntry;
+		static_cast< FileInfo & >( newEntry.fileInfo ) = std::move(fileInfo);
+		newEntry.fileInfo.status = ReadStatus::Success;
+		newEntry.lastModified = QDateTime::currentDateTime().toSecsSinceEpoch();
+		auto cacheIter = _cache.insert( filePath, std::move(newEntry) );
+
+		return _writeFileInfo( filePath, cacheIter->fileInfo );
 	}
 
 	/// Indicates whether the cache has been modified since the last time it was loaded from file or dumped to file.

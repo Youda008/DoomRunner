@@ -25,13 +25,12 @@ const QString fileSuffix = "drp";
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// TODO: optimize
-struct DrpContent
+struct DRPContent
 {
 	QStringList entries;
 };
 
-using UncertainDrpContent = UncertainFileInfo< DrpContent >;
+using UncertainDrpContent = UncertainFileInfo< DRPContent >;
 
 static UncertainDrpContent readContent( const QString & filePath )
 {
@@ -45,7 +44,7 @@ static UncertainDrpContent readContent( const QString & filePath )
 		return content;
 	}
 
-	PathRebaser rebaser( fs::getParentDir( filePath ), fs::currentDir );
+	PathRebaser rebaser( fs::currentDir, fs::getParentDir( filePath ) );
 
 	QTextStream stream( &file );
 	while (!stream.atEnd())
@@ -64,7 +63,7 @@ static UncertainDrpContent readContent( const QString & filePath )
 			continue;
 		}
 		// rebase the paths from the DRP's dir to our working dir
-		QString entryPath = rebaser.rebase( line );
+		QString entryPath = rebaser.rebaseBack( line );
 
 		content.entries.append( std::move(entryPath) );
 	}
@@ -74,10 +73,8 @@ static UncertainDrpContent readContent( const QString & filePath )
 	return content;
 }
 
-static bool writeContent( const QString & filePath, const DrpContent & content )
+static bool writeContent( const QString & filePath, const DRPContent & content )
 {
-	QFileInfo fileInfo( filePath );
-
 	QFile file( filePath );
 	if (!file.open( QIODevice::Text | QIODevice::WriteOnly ))
 	{
@@ -85,12 +82,12 @@ static bool writeContent( const QString & filePath, const DrpContent & content )
 		return false;
 	}
 
-	PathRebaser rebaser( fs::currentDir, fileInfo.dir().path() );
+	PathRebaser rebaser( fs::currentDir, fs::getParentDir( filePath ) );
 
 	QTextStream stream( &file );
-	for (const auto & entry : content.entries)
+	for (const auto & entryPath : content.entries)
 	{
-		QString rebasedPath = rebaser.rebase( entry );
+		QString rebasedPath = rebaser.rebase( entryPath );
 		stream << rebasedPath << '\n';
 	}
 
@@ -100,7 +97,7 @@ static bool writeContent( const QString & filePath, const DrpContent & content )
 }
 
 
-static FileInfoCache< DrpContent > g_cachedDrpInfo( readContent, writeContent );
+static FileInfoCache< DRPContent > g_cachedDrpInfo( readContent, writeContent );
 
 QStringList getEntries( const QString & filePath )
 {
@@ -114,9 +111,7 @@ QStringList getEntries( const QString & filePath )
 
 bool saveEntries( const QString & filePath, QStringList entries )
 {
-	DrpContent content;
-	content.entries = std::move( entries );
-	return g_cachedDrpInfo.setFileInfo( filePath, std::move(content) );
+	return g_cachedDrpInfo.setFileInfo( filePath, DRPContent{ std::move( entries ) } );
 }
 
 

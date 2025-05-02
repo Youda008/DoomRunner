@@ -76,33 +76,35 @@ class FileInfoCache : protected LoggingComponent {
 		auto fileLastModified = QFileInfo( filePath ).lastModified().toSecsSinceEpoch();
 
 		auto cacheIter = _cache.find( filePath );
-		if (cacheIter == _cache.end())
+		Entry * cacheEntry = cacheIter != _cache.end() ? &cacheIter.value() : nullptr;
+
+		if (cacheEntry == nullptr)
 		{
 			logDebug() << "entry not found, reading info from file: " << filePath;
-			cacheIter = readFileInfoToCache( filePath, fileLastModified );
+			cacheEntry = readFileInfoToCache( filePath, fileLastModified );
 		}
-		else if (cacheIter->lastModified != fileLastModified)
+		else if (cacheEntry->lastModified != fileLastModified)
 		{
 			logDebug() << "entry is outdated, reading info from file: " << filePath;
-			cacheIter = readFileInfoToCache( filePath, fileLastModified );
+			cacheEntry = readFileInfoToCache( filePath, fileLastModified );
 		}
-		else if (cacheIter->fileInfo.status == ReadStatus::CantOpen
-			  || cacheIter->fileInfo.status == ReadStatus::FailedToRead)
+		else if (cacheEntry->fileInfo.status == ReadStatus::CantOpen
+			  || cacheEntry->fileInfo.status == ReadStatus::FailedToRead)
 		{
 			logDebug() << "reading file failed last time, trying again: " << filePath;
-			cacheIter = readFileInfoToCache( filePath, fileLastModified );
+			cacheEntry = readFileInfoToCache( filePath, fileLastModified );
 		}
-		else if (cacheIter->fileInfo.status == ReadStatus::Uninitialized)
+		else if (cacheEntry->fileInfo.status == ReadStatus::Uninitialized)
 		{
 			logRuntimeError() << "entry is corrupted, reading info from file: " << filePath;
-			cacheIter = readFileInfoToCache( filePath, fileLastModified );
+			cacheEntry = readFileInfoToCache( filePath, fileLastModified );
 		}
 		else
 		{
 			//logDebug() << "using cached info: " << filePath;
 		}
 
-		return cacheIter->fileInfo;
+		return cacheEntry->fileInfo;
 	}
 
 	/// Manually updates a record in the cache and writes the content to the corresponding file.
@@ -111,13 +113,13 @@ class FileInfoCache : protected LoggingComponent {
 	{
 		logDebug() << "writing info to cache and file: " << filePath;
 
-		Entry newEntry;
-		static_cast< FileInfo & >( newEntry.fileInfo ) = std::move(fileInfo);
-		newEntry.fileInfo.status = ReadStatus::Success;
-		newEntry.lastModified = QDateTime::currentDateTime().toSecsSinceEpoch();
-		auto cacheIter = _cache.insert( filePath, std::move(newEntry) );
+		Entry & newEntry = _cache.insert( filePath, {} ).value();
 
-		return _writeFileInfo( filePath, cacheIter->fileInfo );
+		static_cast< FileInfo & >( newEntry.fileInfo ) = std::move( fileInfo );
+		newEntry.fileInfo.status = ReadStatus::Success;
+		newEntry.lastModified = QDateTime::currentSecsSinceEpoch();
+
+		return _writeFileInfo( filePath, newEntry.fileInfo );
 	}
 
 	/// Indicates whether the cache has been modified since the last time it was loaded from file or dumped to file.
@@ -180,9 +182,9 @@ class FileInfoCache : protected LoggingComponent {
 
  private:
 
-	auto readFileInfoToCache( const QString & filePath, qint64 fileModifiedTimestamp )
+	Entry * readFileInfoToCache( const QString & filePath, qint64 fileModifiedTimestamp )
 	{
-		Entry newEntry;
+		Entry & newEntry = _cache.insert( filePath, {} ).value();
 
 		_timer.restart();
 		newEntry.fileInfo = _readFileInfo( filePath );
@@ -205,9 +207,10 @@ class FileInfoCache : protected LoggingComponent {
 			logDebug() << " -> not implemented";
 		}
 
-		_dirty = true;
 		newEntry.lastModified = fileModifiedTimestamp;
-		return _cache.insert( filePath, std::move(newEntry) );
+		_dirty = true;
+
+		return &newEntry;
 	}
 
 	static QJsonObject serialize( const Entry & cacheEntry )

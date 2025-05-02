@@ -255,7 +255,7 @@ void DRPEditor::loadModsFromDRP( const QString & filePath )
 	modModel.clear();
 	for (const QString & filePath : entries)
 	{
-		modModel.append( Mod( QFileInfo( filePath ) ) );
+		modModel.append( Mod( filePath ) );
 	}
 	modModel.finishCompleteUpdate();
 }
@@ -268,7 +268,7 @@ bool DRPEditor::saveModsToDRP( const QString & filePath )
 		entries.append( mod.path );
 	}
 
-	return drp::saveEntries( filePath, entries );
+	return drp::saveEntries( filePath, std::move(entries) );
 }
 
 void DRPEditor::accept()

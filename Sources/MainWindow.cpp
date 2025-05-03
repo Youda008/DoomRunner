@@ -3244,7 +3244,7 @@ void MainWindow::modAdd()
 
 	for (const QString & path : paths)
 	{
-		Mod mod( QFileInfo( path ), /*checked*/true );
+		Mod mod( path, /*checked*/true );
 
 		wdg::appendItem( ui->modListView, modModel, mod );
 
@@ -3267,7 +3267,7 @@ void MainWindow::modAddDir()
 
 	modSettings.lastUsedDir = DialogWithPaths::lastUsedDir;
 
-	Mod mod( QFileInfo( path ), /*checked*/true );
+	Mod mod( path, /*checked*/true );
 
 	wdg::appendItem( ui->modListView, modModel, mod );
 

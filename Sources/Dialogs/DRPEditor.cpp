@@ -165,7 +165,7 @@ void DRPEditor::modAdd()
 
 	for (const QString & path : paths)
 	{
-		Mod mod{ QFileInfo( path ) };
+		Mod mod( path );
 
 		wdg::appendItem( ui->modListView, modModel, mod );
 	}
@@ -177,7 +177,7 @@ void DRPEditor::modAddDir()
 	if (path.isEmpty())  // user probably clicked cancel
 		return;
 
-	Mod mod{ QFileInfo( path ) };
+	Mod mod( path );
 
 	wdg::appendItem( ui->modListView, modModel, mod );
 }

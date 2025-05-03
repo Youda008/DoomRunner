@@ -168,7 +168,7 @@ void LogStream::writeLineOpening( LogLevel level, QStringView locationTag )
 
 QString LoggingComponent::makeLocationTag( QStringView funcName ) const
 {
-	QString tag( _componentType );
+	QString tag = _componentType.toString();
 	if (!_componentName.isEmpty())
 		tag = tag%"("%_componentName%")";
 	if (!funcName.isEmpty())

@@ -1283,7 +1283,7 @@ class GenericListModel : public AListModel, public ListImpl {
 
  private: // helpers
 
-	constexpr bool isReadOnly() const
+	static constexpr bool isReadOnly()
 	{
 		return access == AccessStyle::ReadOnly;
 	}

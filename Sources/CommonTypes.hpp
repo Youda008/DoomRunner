@@ -34,7 +34,7 @@ class DerefIterator
 
 	using iterator_category = typename WrappedIter::iterator_category;
 	using difference_type = typename WrappedIter::difference_type;
-	using value_type = std::remove_cv< underlying_element_type >;
+	using value_type = std::remove_cv_t< underlying_element_type >;
 	using element_type = types::maybe_add_const< std::is_const_v< underlying_pointer_type >, underlying_element_type >;
 	using pointer = value_type *;
 	using reference = value_type &;

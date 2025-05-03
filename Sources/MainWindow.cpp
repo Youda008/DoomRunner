@@ -4980,7 +4980,7 @@ void MainWindow::exportPresetToShortcut()
 
  #else
 
-	reportUserError( this, "Not supported", "This feature only works on Windows." );
+	reportUserError( "Not supported", "This feature only works on Windows." );
 
  #endif
 }
@@ -4988,7 +4988,7 @@ void MainWindow::exportPresetToShortcut()
 /*
 void MainWindow::importPresetFromScript()
 {
-	reportUserError( this, "Not implemented", "Sorry, this feature is not implemented yet." );
+	reportUserError( "Not implemented", "Sorry, this feature is not implemented yet." );
 }
 */
 

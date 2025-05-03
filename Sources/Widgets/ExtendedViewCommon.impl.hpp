@@ -16,6 +16,7 @@
 #include <QModelIndex>
 #include <QItemSelection>
 #include <QClipboard>
+#include <QGuiApplication>
 
 
 //======================================================================================================================

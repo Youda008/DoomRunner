@@ -126,8 +126,8 @@ template< typename List >
 void removeCountAt( List & list, const qsizetype from, const qsizetype count )
 {
 	const auto listSize = qsizetype( list.size() );
-	const auto removeRangeBeg = from;
-	const auto removeRangeEnd = from + count;
+	[[maybe_unused]] const auto removeRangeBeg = from;
+	[[maybe_unused]] const auto removeRangeEnd = from + count;
 	assert( removeRangeBeg < removeRangeEnd );     // the remove range is valid
 	assert( removeRangeBeg >= 0 );                 // beginning of the remove range is within the list range
 	assert( removeRangeEnd <= listSize );          //       end of the remove range is within the list range

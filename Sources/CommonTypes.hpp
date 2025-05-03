@@ -11,6 +11,7 @@
 
 #include "Essential.hpp"
 
+#include "Utils/TypeTraits.hpp"      // maybe_add_const, ...
 #include "Utils/ContainerUtils.hpp"  // reserveSpace, insertCopies, insertMultiple, removeCountAt
 
 #include <QVector>
@@ -32,8 +33,8 @@ class DerefIterator
 
  public:
 
-	using iterator_category = typename WrappedIter::iterator_category;
-	using difference_type = typename WrappedIter::difference_type;
+	using iterator_category = types::iterator_category< WrappedIter >;
+	using difference_type = types::difference_type< WrappedIter >;
 	using value_type = std::remove_cv_t< underlying_element_type >;
 	using element_type = types::maybe_add_const< std::is_const_v< underlying_pointer_type >, underlying_element_type >;
 	using pointer = value_type *;

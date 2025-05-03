@@ -15,6 +15,7 @@
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // makeFileFilter
 
+#include <QAction>
 #include <QFileInfo>
 #include <QGuiApplication>
 

@@ -552,16 +552,16 @@ class AListModel : public QAbstractListModel, public ErrorReportingComponent, pu
 	}
 
 	// pre-defined commonly used lists of data roles
-	static const QList<int> onlyDisplayRole;
-	static const QList<int> onlyEditRole;
-	static const QList<int> onlyCheckStateRole;
-	static const QList<int> allDataRoles;         ///< all the data roles our models use
+	static const QVector<int> onlyDisplayRole;
+	static const QVector<int> onlyEditRole;
+	static const QVector<int> onlyCheckStateRole;
+	static const QVector<int> allDataRoles;         ///< all the data roles our models use
 
 	// One of the following functions must always be called before and after doing any modifications to the list,
 	// otherwise the list might not update correctly or it might even crash trying to access items that no longer exist.
 
 	void startEditingItemData() {}
-	void finishEditingItemData( int row = 0, int count = -1, const QList<int> & roles = allDataRoles );
+	void finishEditingItemData( int row = 0, int count = -1, const QVector<int> & roles = allDataRoles );
 
 	void startReorderingItems()
 	{
@@ -620,7 +620,7 @@ class AListModel : public QAbstractListModel, public ErrorReportingComponent, pu
 	// which means modifications requested by a view object via the QAbstractItemModel's methods
 	// (setData, insertRows, removeRows, ...), commonly due to some user action like drag&drop.
 
-	void notifyDataChanged( int row = 0, int count = -1, const QList<int> & roles = allDataRoles )
+	void notifyDataChanged( int row = 0, int count = -1, const QVector<int> & roles = allDataRoles )
 	{
 		if (count < 0)
 			count = this->rowCount();
@@ -652,7 +652,7 @@ class AListModel : public QAbstractListModel, public ErrorReportingComponent, pu
  signals:
 
 	// customized variants of QAbstractItemModel's generic signals that are emitted only on externally triggered operations
-	void itemDataChanged( int row, int count, const QList<int> & roles );
+	void itemDataChanged( int row, int count, const QVector<int> & roles );
 	void itemsReordered();
 	void itemsInserted( int row, int count );
 	void itemsRemoved( int row, int count );

@@ -101,6 +101,29 @@ namespace impl
 template< typename T, typename E >
 inline constexpr bool is_range_of = impl::is_range_of< T, E >();
 
+namespace impl
+{
+	template< typename T, REQUIRES( !std::is_pointer_v<T> ) >
+	typename T::iterator_category get_iterator_category( const T & );
+
+	template< typename T, REQUIRES( std::is_pointer_v<T> ) >
+	std::random_access_iterator_tag get_iterator_category( const T & );
+}
+template< typename T >
+using iterator_category = decltype( impl::get_iterator_category( std::declval<T>() ) );
+
+namespace impl
+{
+	template< typename T, REQUIRES( !std::is_pointer_v<T> ) >
+	typename T::difference_type get_difference_type( const T & );
+
+	template< typename T, REQUIRES( std::is_pointer_v<T> ) >
+	decltype( std::declval<T>() - std::declval<T>() ) get_difference_type( const T & );
+}
+template< typename T >
+using difference_type = decltype( impl::get_difference_type( std::declval<T>() ) );
+
+
 } // namespace types
 
 

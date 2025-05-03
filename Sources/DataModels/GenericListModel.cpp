@@ -16,14 +16,14 @@
 AListModel::~AListModel() = default;
 
 // pre-defined commonly used lists of data roles
-const QList<int> AListModel::onlyDisplayRole = { Qt::DisplayRole };
-const QList<int> AListModel::onlyEditRole = { Qt::EditRole };
-const QList<int> AListModel::onlyCheckStateRole = { Qt::CheckStateRole };
-const QList<int> AListModel::allDataRoles = {
+const QVector<int> AListModel::onlyDisplayRole = { Qt::DisplayRole };
+const QVector<int> AListModel::onlyEditRole = { Qt::EditRole };
+const QVector<int> AListModel::onlyCheckStateRole = { Qt::CheckStateRole };
+const QVector<int> AListModel::allDataRoles = {
 	Qt::DisplayRole, Qt::EditRole, Qt::CheckStateRole, Qt::ForegroundRole, Qt::BackgroundRole, Qt::TextAlignmentRole
 };
 
-void AListModel::finishEditingItemData( int row, int count, const QList<int> & roles )
+void AListModel::finishEditingItemData( int row, int count, const QVector<int> & roles )
 {
 	if (count == 0)
 		return;

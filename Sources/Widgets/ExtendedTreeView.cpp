@@ -46,7 +46,7 @@ void ExtendedTreeView::setModel( QAbstractItemModel * model )
 //----------------------------------------------------------------------------------------------------------------------
 // icons
 
-struct EmptyIconProvider : public QAbstractFileIconProvider
+struct EmptyIconProvider : public QFileIconProvider
 {
 	virtual QIcon icon( IconType ) const override { return QIcon(); }
 	virtual QIcon icon( const QFileInfo & ) const override { return QIcon(); }

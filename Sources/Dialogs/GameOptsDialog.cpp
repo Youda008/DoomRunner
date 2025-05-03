@@ -79,11 +79,11 @@ FLAG_DEF Spawn_multi_weapons            = { DmFlags1, (1 << 21), Inverted, u"Wea
 FLAG_DEF Allow_crouch_always_off        = { DmFlags1, (1 << 22), Direct,   u"Allows or disallows crouching. When 'partially checked', it uses the MAPINFO settings, while 'checked' and 'unchecked' override them." };
 FLAG_DEF Allow_crouch_always_on         = { DmFlags1, (1 << 23), Direct,   u"" };
 FLAG_DEF Lose_entire_inventory          = { DmFlags1, (1 << 24), Direct,   u"Player's inventory (including ammo, armor, keys, powerups, and weapons) is reset to normal starting conditions when respawning after death." };
-FLAG_DEF Keep_keys                      = { DmFlags1, (1 << 25), Inverted, u"A respawning player's keys are reset to normal starting conditions in cooperative mode." };
-FLAG_DEF Keep_weapons                   = { DmFlags1, (1 << 26), Inverted, u"A respawning player's weapons are reset to normal starting conditions in cooperative mode." };
-FLAG_DEF Keep_armor                     = { DmFlags1, (1 << 27), Inverted, u"A respawning player's armor is reset to normal starting conditions in cooperative mode." };
-FLAG_DEF Keep_powerups                  = { DmFlags1, (1 << 28), Inverted, u"A respawning player's powerups are reset to normal starting conditions in cooperative mode." };
-FLAG_DEF Keep_ammo                      = { DmFlags1, (1 << 29), Inverted, u"A respawning player's ammo counts are reset to normal starting conditions in cooperative mode." };
+FLAG_DEF Keep_keys                      = { DmFlags1, (1 << 25), Inverted, u"If unchecked, the respawning player's keys are reset to normal starting conditions in cooperative mode." };
+FLAG_DEF Keep_weapons                   = { DmFlags1, (1 << 26), Inverted, u"If unchecked, the respawning player's weapons are reset to normal starting conditions in cooperative mode." };
+FLAG_DEF Keep_armor                     = { DmFlags1, (1 << 27), Inverted, u"If unchecked, the respawning player's armor is reset to normal starting conditions in cooperative mode." };
+FLAG_DEF Keep_powerups                  = { DmFlags1, (1 << 28), Inverted, u"If unchecked, the respawning player's powerups are reset to normal starting conditions in cooperative mode." };
+FLAG_DEF Keep_ammo                      = { DmFlags1, (1 << 29), Inverted, u"If unchecked, the respawning player's ammo counts are reset to normal starting conditions in cooperative mode." };
 FLAG_DEF Lose_half_ammo                 = { DmFlags1, (1 << 30), Direct,   u"Players respawn with half the ammo they had when they died (but not less than the normal starting amount)." };
 
 // dmflags2

@@ -992,6 +992,7 @@ void MainWindow::setupIWADList()
 	ui->iwadListView->enableContextMenu( 0
 		| ExtendedListView::MenuAction::OpenFile
 		| ExtendedListView::MenuAction::OpenFileLocation
+		| ExtendedListView::MenuAction::Copy
 	);
 
 	// set reaction when an item is clicked or double-clicked

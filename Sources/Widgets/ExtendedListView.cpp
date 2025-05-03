@@ -258,7 +258,7 @@ void ExtendedListView::updateModelExportImportFormats()
 
 	ExportFormats exportFormats = 0;
 	ExportFormats importFormats = 0;
-	if (dragItemsAsFiles)
+	if (dragItemsAsFiles || copyItemsAction)
 	{
 		exportFormats |= ExportFormat::FileUrls;
 	}
@@ -271,9 +271,12 @@ void ExtendedListView::updateModelExportImportFormats()
 	{
 		importFormats |= ExportFormat::FileUrls;
 	}
-	if (cutItemsAction || copyItemsAction || pasteItemsAction)
+	if (cutItemsAction || copyItemsAction)
 	{
 		exportFormats |= ExportFormat::Json;
+	}
+	if (pasteItemsAction)
+	{
 		importFormats |= ExportFormat::Json;
 	}
 

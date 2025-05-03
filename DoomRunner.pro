@@ -77,6 +77,7 @@ HEADERS += \
 	Sources/Widgets/ExtendedTreeView.hpp \
 	Sources/Widgets/ExtendedViewCommon.hpp \
 	Sources/Widgets/ExtendedViewCommon.impl.hpp \
+	Sources/Widgets/RightClickableLabel.hpp \
 	Sources/Widgets/RightClickableButton.hpp \
 	Sources/Widgets/SearchPanel.hpp \
 	Sources/CommonTypes.hpp \
@@ -122,6 +123,7 @@ SOURCES += \
 	Sources/Utils/WindowsUtils.cpp \
 	Sources/Widgets/ExtendedListView.cpp \
 	Sources/Widgets/ExtendedTreeView.cpp \
+	Sources/Widgets/RightClickableLabel.cpp \
 	Sources/Widgets/RightClickableButton.cpp \
 	Sources/Widgets/SearchPanel.cpp \
 	Sources/CommonTypes.cpp \

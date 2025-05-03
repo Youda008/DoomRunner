@@ -98,6 +98,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void searchPresets( const QString & phrase, bool caseSensitive, bool useRegex );
 
 	void onMapIconsToggled();
+	void onMapHelpLabelHideTriggered();
 
 	void modAdd();
 	void modAddDir();
@@ -374,6 +375,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	Ui::MainWindow * ui = nullptr;
 	SearchPanel * presetSearchPanel = nullptr;
+
+	QAction * hideLabelAction = nullptr;
 
 	QAction * addCmdArgAction = nullptr;
 

@@ -304,7 +304,7 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_7">
                <item>
-                <widget class="QLabel" name="label">
+                <widget class="RightClickableLabel" name="mapDirHelpLabel">
                  <property name="font">
                   <font>
                    <pointsize>7</pointsize>
@@ -2292,6 +2292,11 @@
    <class>RightClickableButton</class>
    <extends>QToolButton</extends>
    <header location="global">Sources/Widgets/RightClickableButton.hpp</header>
+  </customwidget>
+  <customwidget>
+   <class>RightClickableLabel</class>
+   <extends>QLabel</extends>
+   <header location="global">Sources/Widgets/RightClickableLabel.hpp</header>
   </customwidget>
  </customwidgets>
  <resources>

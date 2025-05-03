@@ -19,6 +19,7 @@
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
+#include <QContextMenuEvent>
 #include <QMimeData>
 #include <QKeyEvent>
 #include <QApplication>

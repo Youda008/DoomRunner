@@ -1045,6 +1045,10 @@ void MainWindow::setupMapPackList()
 	ui->mapDirView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
 	connect( ui->mapDirView->toggleIconsAction, &QAction::triggered, this, &ThisClass::onMapIconsToggled );
 
+	// allow hiding the the help label
+	hideLabelAction = ui->mapDirHelpLabel->addAction( "Hide this label", {} );
+	connect( hideLabelAction, &QAction::triggered, this, &ThisClass::onMapHelpLabelHideTriggered );
+
 	// QFileSystemModel updates its content asynchronously in a separate thread. For this reason,
 	// when the model is set to display a certain directory, we cannot select items from the view right away,
 	// but must wait until the list is populated.
@@ -1713,6 +1717,9 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		restoreAudioOptions( audioOpts );
 
 	restoreGlobalOptions( globalOpts );
+
+	if (settings.hideMapHelpLabel)
+		ui->mapDirHelpLabel->setHidden( true );
 
 	restoringOptionsInProgress = false;
 
@@ -3197,7 +3204,14 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 void MainWindow::onMapIconsToggled()
 {
 	mapSettings.showIcons = ui->mapDirView->areIconsEnabled();
+	scheduleSavingOptions();
+}
 
+void MainWindow::onMapHelpLabelHideTriggered()
+{
+	ui->mapDirHelpLabel->setHidden( true );
+
+	settings.hideMapHelpLabel = true;
 	scheduleSavingOptions();
 }
 

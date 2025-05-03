@@ -363,6 +363,7 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	bool closeOutputOnSuccess = false;
 	bool checkForUpdates = true;
 	bool askForSandboxPermissions = true;
+	bool hideMapHelpLabel = false;
 
 	void assign( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
 };

@@ -102,7 +102,10 @@ void ExtendedListView::toggleIcons( bool enabled )
 	if (ownModel)
 	{
 		ownModel->toggleIcons( enabled );
-		toggleIconsAction->setText( enabled ? "Hide icons" : "Show icons" );
+		if (toggleIconsAction)
+		{
+			toggleIconsAction->setText( enabled ? "Hide icons" : "Show icons" );
+		}
 	}
 }
 

@@ -949,13 +949,13 @@ void MainWindow::setupPresetList()
 	);
 	ui->presetListView->toggleListModifications( true );
 	connect( ui->presetListView->addItemAction, &QAction::triggered, this, &ThisClass::presetAdd );
+	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::presetInsertSeparator );
 	connect( ui->presetListView->deleteItemAction, &QAction::triggered, this, &ThisClass::presetDelete );
 	connect( ui->presetListView->cloneItemAction, &QAction::triggered, this, &ThisClass::presetClone );
 	connect( ui->presetListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::presetMoveUp );
 	connect( ui->presetListView->moveItemDownAction, &QAction::triggered, this, &ThisClass::presetMoveDown );
 	connect( ui->presetListView->moveItemToTopAction, &QAction::triggered, this, &ThisClass::presetMoveToTop );
 	connect( ui->presetListView->moveItemToBottomAction, &QAction::triggered, this, &ThisClass::presetMoveToBottom );
-	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::presetInsertSeparator );
 
 	// setup buttons
 	connect( ui->presetBtnAdd, &QToolButton::clicked, this, &ThisClass::presetAdd );
@@ -1083,19 +1083,19 @@ void MainWindow::setupModList()
 		| ExtendedListView::MenuAction::ToggleIcons
 	);
 	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL | Qt::Key_Asterisk } );
-	addExistingDRP = ui->modListView->addAction( "Add existing DR pack", {} );
-	createNewDRP = ui->modListView->addAction( "Create new DR pack", {} );
+	createNewDRPAction = ui->modListView->addAction( "Create new DR pack", {} );
+	addExistingDRPAction = ui->modListView->addAction( "Add existing DR pack", {} );
 	ui->modListView->toggleListModifications( true );
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &ThisClass::modAdd );
+	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::modInsertSeparator );
 	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &ThisClass::modDelete );
 	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::modMoveUp );
 	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &ThisClass::modMoveDown );
 	connect( ui->modListView->moveItemToTopAction, &QAction::triggered, this, &ThisClass::modMoveToTop );
 	connect( ui->modListView->moveItemToBottomAction, &QAction::triggered, this, &ThisClass::modMoveToBottom );
-	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::modInsertSeparator );
 	connect( addCmdArgAction, &QAction::triggered, this, &ThisClass::modAddArg );
-	connect( addExistingDRP, &QAction::triggered, this, &ThisClass::modAddExistingDRP );
-	connect( createNewDRP, &QAction::triggered, this, &ThisClass::modCreateNewDRP );
+	connect( createNewDRPAction, &QAction::triggered, this, &ThisClass::modCreateNewDRP );
+	connect( addExistingDRPAction, &QAction::triggered, this, &ThisClass::modAddExistingDRP );
 
 	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
 	ui->modListView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
@@ -2373,49 +2373,53 @@ void MainWindow::runPlayerColorDialog()
 	}
 }
 
-void MainWindow::editDoomRunnerPack( const QString & filePath )
-{
-	//os::openFileInNotepad( filePath );
-
-	DRPEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, filePath );
-
-	int code = editor.exec();
-
-	// update the data only if user clicked Ok
-	if (code == QDialog::Accepted)
-	{
-		modSettings.lastUsedDir = lastUsedDir = editor.takeLastUsedDir();
-		modSettings.showIcons = editor.areIconsEnabled();
-		updateLaunchCommand();
-	}
-}
-
-void MainWindow::createDoomRunnerPack()
+QString MainWindow::createNewDRP()
 {
 	DRPEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, {} );
 
 	int code = editor.exec();
 
-	// update the data only if user clicked Ok and the save was successful
-	if (code != QDialog::Accepted || editor.savedFilePath.isEmpty())
+	if (code != QDialog::Accepted || editor.savedFilePath.isEmpty())  // dialog cancelled or saving the file failed
 	{
-		return;
+		return {};
 	}
 
 	modSettings.lastUsedDir = lastUsedDir = editor.takeLastUsedDir();
-	modSettings.showIcons = editor.areIconsEnabled();
 
-	Mod mod( QFileInfo( editor.savedFilePath ), /*checked*/true );
+	return editor.savedFilePath;
+}
 
-	wdg::appendItem( ui->modListView, modModel, mod );
+QStringList MainWindow::addExistingDRP()
+{
+	QStringList filePaths = DialogWithPaths::selectFiles( this, "DoomRunner Pack", {},
+		makeFileFilter( "DoomRunner Pack files", { drp::fileSuffix } )
+		+ "All files (*)"
+	);
 
-	// add it also to the current preset
-	if (selectedPreset)
+	if (filePaths.isEmpty())  // user probably clicked cancel
 	{
-		selectedPreset->mods.append( mod );
+		return {};
 	}
 
-	updateLaunchCommand();
+	modSettings.lastUsedDir = DialogWithPaths::lastUsedDir;
+
+	return filePaths;
+}
+
+DRPEditor::Result MainWindow::editDRP( const QString & filePath )
+{
+	DRPEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, filePath );
+
+	int code = editor.exec();
+
+	if (code != QDialog::Accepted)
+	{
+		return { DRPEditor::Outcome::Cancelled, {} };
+	}
+
+	modSettings.lastUsedDir = lastUsedDir = editor.takeLastUsedDir();
+
+	return { editor.outcome, std::move( editor.savedFilePath ) };
 }
 
 void MainWindow::openCurrentEngineDataDir()
@@ -2888,7 +2892,9 @@ void MainWindow::onMapPackDoubleClicked( const QModelIndex & index )
 
 	if (fileInfo.suffix() == drp::fileSuffix)
 	{
-		editDoomRunnerPack( fileInfo.filePath() );
+		editDRP( fileInfo.filePath() );
+
+		updateLaunchCommand();
 	}
 	else
 	{
@@ -2907,7 +2913,41 @@ void MainWindow::onModDoubleClicked( const QModelIndex & index )
 
 	if (fileInfo.suffix() == drp::fileSuffix)
 	{
-		editDoomRunnerPack( fileInfo.filePath() );
+		auto result = editDRP( fileInfo.filePath() );
+
+		// update the mod list
+		if (result.outcome == DRPEditor::Outcome::SavedAsNew)
+		{
+			Mod newDRP( result.savedFilePath, /*checked*/true );
+
+			modModel.startAppendingItems( 1 );
+			modModel.append( newDRP );
+			modModel.finishAppendingItems();
+
+			// add it also to the current preset
+			if (selectedPreset)
+			{
+				selectedPreset->mods.append( newDRP );
+			}
+
+			scheduleSavingOptions();
+		}
+		else if (result.outcome == DRPEditor::Outcome::Deleted)
+		{
+			modModel.startRemovingItems( index.row(), 1 );
+			modModel.removeAt( index.row() );
+			modModel.finishRemovingItems();
+
+			// remove it also from the current preset
+			if (selectedPreset)
+			{
+				selectedPreset->mods.removeAt( index.row() );
+			}
+
+			scheduleSavingOptions();
+		}
+
+		updateLaunchCommand();
 	}
 	else
 	{
@@ -2984,6 +3024,23 @@ void MainWindow::presetAdd()
 
 	// open edit mode so that user can name the preset
 	wdg::editItemAtIndex( ui->presetListView, appendedIdx );
+
+	scheduleSavingOptions();
+}
+
+void MainWindow::presetInsertSeparator()
+{
+	Preset separator;
+	separator.isSeparator = true;
+	separator.name = "New Separator";
+
+	int currentIdx = wdg::getCurrentItemIndex( ui->presetListView );
+	int insertIdx = currentIdx < 0 ? int( presetModel.size() ) : currentIdx;  // append if none
+
+	wdg::insertItem( ui->presetListView, presetModel, separator, insertIdx );
+
+	// open edit mode so that user can name the preset
+	wdg::editItemAtIndex( ui->presetListView, insertIdx );
 
 	scheduleSavingOptions();
 }
@@ -3068,23 +3125,6 @@ void MainWindow::presetMoveToBottom()
 	{
 		scheduleSavingOptions();
 	}
-}
-
-void MainWindow::presetInsertSeparator()
-{
-	Preset separator;
-	separator.isSeparator = true;
-	separator.name = "New Separator";
-
-	int currentIdx = wdg::getCurrentItemIndex( ui->presetListView );
-	int insertIdx = currentIdx < 0 ? int( presetModel.size() ) : currentIdx;  // append if none
-
-	wdg::insertItem( ui->presetListView, presetModel, separator, insertIdx );
-
-	// open edit mode so that user can name the preset
-	wdg::editItemAtIndex( ui->presetListView, insertIdx );
-
-	scheduleSavingOptions();
 }
 
 void MainWindow::onPresetDataChanged( int row, int count, const QVector<int> & roles )
@@ -3261,20 +3301,35 @@ void MainWindow::modAddArg()
 	updateLaunchCommand();
 }
 
+void MainWindow::modCreateNewDRP()
+{
+	QString newFilePath = createNewDRP();
+	if (newFilePath.isEmpty())
+		return;  // update the data only if user clicked Ok and the save was successful
+
+	Mod mod( newFilePath, /*checked*/true );
+
+	wdg::appendItem( ui->modListView, modModel, mod );
+
+	// add it also to the current preset
+	if (selectedPreset)
+	{
+		selectedPreset->mods.append( mod );
+	}
+
+	scheduleSavingOptions();
+	updateLaunchCommand();
+}
+
 void MainWindow::modAddExistingDRP()
 {
-	const QStringList paths = DialogWithPaths::selectFiles( this, "DoomRunner Pack", {},
-		makeFileFilter( "DoomRunner Pack files", { drp::fileSuffix } )
-		+ "All files (*)"
-	);
-	if (paths.isEmpty())  // user probably clicked cancel
+	const QStringList filePaths = addExistingDRP();
+	if (filePaths.isEmpty())  // user probably clicked cancel
 		return;
 
-	modSettings.lastUsedDir = DialogWithPaths::lastUsedDir;
-
-	for (const QString & path : paths)
+	for (const QString & path : filePaths)
 	{
-		Mod mod( QFileInfo( path ), /*checked*/true );
+		Mod mod( path, /*checked*/true );
 
 		wdg::appendItem( ui->modListView, modModel, mod );
 
@@ -3289,9 +3344,27 @@ void MainWindow::modAddExistingDRP()
 	updateLaunchCommand();
 }
 
-void MainWindow::modCreateNewDRP()
+void MainWindow::modInsertSeparator()
 {
-	createDoomRunnerPack();
+	Mod separator( /*checked*/false );
+	separator.isSeparator = true;
+	separator.name = "New Separator";
+
+	int currentIdx = wdg::getCurrentItemIndex( ui->modListView );
+	int insertIdx = currentIdx >= 0 ? currentIdx : int( modModel.size() );  // append if none
+
+	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );
+
+	// insert it also to the current preset
+	if (selectedPreset)
+	{
+		selectedPreset->mods.insert( insertIdx, separator );
+	}
+
+	// open edit mode so that user can name the preset
+	wdg::editItemAtIndex( ui->modListView, insertIdx );
+
+	scheduleSavingOptions();
 }
 
 void MainWindow::modDelete()
@@ -3404,29 +3477,6 @@ void MainWindow::modMoveToBottom()
 
 	scheduleSavingOptions();
 	updateLaunchCommand();
-}
-
-void MainWindow::modInsertSeparator()
-{
-	Mod separator( /*checked*/false );
-	separator.isSeparator = true;
-	separator.name = "New Separator";
-
-	int currentIdx = wdg::getCurrentItemIndex( ui->modListView );
-	int insertIdx = currentIdx >= 0 ? currentIdx : int( modModel.size() );  // append if none
-
-	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );
-
-	// insert it also to the current preset
-	if (selectedPreset)
-	{
-		selectedPreset->mods.insert( insertIdx, separator );
-	}
-
-	// open edit mode so that user can name the preset
-	wdg::editItemAtIndex( ui->modListView, insertIdx );
-
-	scheduleSavingOptions();
 }
 
 void MainWindow::onModDataChanged( int row, int count, const QVector<int> & roles )

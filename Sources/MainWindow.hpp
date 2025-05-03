@@ -14,6 +14,7 @@
 #include "DataModels/GenericListModel.hpp"
 #include "Widgets/ExtendedListView.hpp"  // DnDType
 #include "Widgets/SearchPanel.hpp"
+#include "Dialogs/DRPEditor.hpp"  // DRPEditor::Result
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
 #include "Themes.hpp"  // SystemThemeWatcher
@@ -85,13 +86,13 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onCloneConfigBtnClicked();
 
 	void presetAdd();
+	void presetInsertSeparator();
 	void presetDelete();
 	void presetClone();
 	void presetMoveUp();
 	void presetMoveDown();
 	void presetMoveToTop();
 	void presetMoveToBottom();
-	void presetInsertSeparator();
 	void onPresetDataChanged( int row, int count, const QVector<int> & roles );
 	void onPresetsReordered();
 
@@ -103,14 +104,14 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modAdd();
 	void modAddDir();
 	void modAddArg();
-	void modAddExistingDRP();
 	void modCreateNewDRP();
+	void modAddExistingDRP();
+	void modInsertSeparator();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
 	void modMoveToTop();
 	void modMoveToBottom();
-	void modInsertSeparator();
 	void onModDataChanged( int row, int count, const QVector<int> & roles );
 	void onModsInserted( int row, int count );
 	void onModsRemoved( int row, int count );
@@ -255,8 +256,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void runCompatOptsDialog();
 	void runPlayerColorDialog();
 
-	void editDoomRunnerPack( const QString & filePath );
-	void createDoomRunnerPack();
+	QString createNewDRP();
+	QStringList addExistingDRP();
+	DRPEditor::Result editDRP( const QString & filePath );
 
 	void openCurrentEngineDataDir();
 	void cloneCurrentEngineConfigFile();
@@ -381,8 +383,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QAction * hideLabelAction = nullptr;
 
 	QAction * addCmdArgAction = nullptr;
-	QAction * addExistingDRP = nullptr;
-	QAction * createNewDRP = nullptr;
+	QAction * createNewDRPAction = nullptr;
+	QAction * addExistingDRPAction = nullptr;
 
 	QAction * resetPlayerColorAction = nullptr;
 

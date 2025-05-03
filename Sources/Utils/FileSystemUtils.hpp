@@ -241,12 +241,6 @@ inline bool isValidEntry( const QString & entryPath )
 //----------------------------------------------------------------------------------------------------------------------
 // other
 
-/// Creates directory if it doesn't exist already, returns false if it doesn't exist and cannot be created.
-inline bool createDirIfDoesntExist( const QString & dirPath )
-{
-	return QDir( dirPath ).mkpath(".");
-}
-
 /// Returns if it's possible to write files into a directory.
 bool isDirectoryWritable( const QString & dirPath );
 
@@ -274,6 +268,15 @@ QString updateFileSafely( const QString & filePath, const QByteArray & newConten
 
 /// Renames or moved a file originally located at \p origPath to be located at \p newPath.
 bool renameOrMoveFile( const QString & origPath, const QString & newPath );
+
+/// Deletes the file from disc.
+bool deleteFile( const QString & filePath );
+
+/// Creates directory if it doesn't exist already, returns false if it doesn't exist and cannot be created.
+inline bool createDirIfDoesntExist( const QString & dirPath )
+{
+	return QDir( dirPath ).mkpath(".");
+}
 
 } // namespace fs
 

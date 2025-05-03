@@ -187,6 +187,13 @@ bool renameOrMoveFile( const QString & origPath, const QString & newPath )
 	return origDir.rename( origInfo.fileName(), newPath );
 }
 
+bool deleteFile( const QString & filePath )
+{
+	QFileInfo fileInfo( filePath );
+	QDir parentDir = fileInfo.dir();
+	return parentDir.remove( fileInfo.fileName() );
+}
+
 void traverseDirectory(
 	const QString & dir, bool recursively, EntryTypes typesToVisit,
 	const PathConvertor & pathConvertor, const std::function< void ( const QFileInfo & entry ) > & visitEntry

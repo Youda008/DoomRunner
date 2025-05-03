@@ -37,12 +37,14 @@ DRPEditor::DRPEditor(
 
 	origFilePath = std::move( filePath );
 
-	// setup and populate path line
-	setPathValidator( ui->destFileLine );
+	// set window title
 	if (!origFilePath.isEmpty())
-		ui->destFileLine->setText( origFilePath );
+		this->setWindowTitle( fs::getFileNameFromPath( origFilePath ) );
 	else
-		ui->destFileLine->setText( fs::getPathFromFileName( lastUsedDir, "NewPack.drp" ) );
+		this->setWindowTitle( "New DoomRunner Pack" );
+
+	ui->saveBtn->setEnabled( !origFilePath.isEmpty() );
+	ui->deleteBtn->setEnabled( !origFilePath.isEmpty() );
 
 	// setup and populate mod list
 	setupModList( showIcons );
@@ -53,17 +55,15 @@ DRPEditor::DRPEditor(
 	QPoint globalPos = parentWidget->mapToGlobal( QPoint( 40, 0 ) );
 	this->move( globalPos.x(), globalPos.y() );
 
-	connect( ui->saveBtn, &QPushButton::clicked, this, &ThisClass::accept );
+	connect( ui->saveBtn, &QPushButton::clicked, this, &ThisClass::onSaveBtnClicked );
+	connect( ui->saveAsBtn, &QPushButton::clicked, this, &ThisClass::onSaveAsBtnClicked );
+	connect( ui->deleteBtn, &QPushButton::clicked, this, &ThisClass::onDeleteBtnClicked );
 }
 
 DRPEditor::~DRPEditor()
 {
 	delete ui;
 }
-
-
-//----------------------------------------------------------------------------------------------------------------------
-// mod list manipulation
 
 void DRPEditor::setupModList( bool showIcons )
 {
@@ -89,10 +89,9 @@ void DRPEditor::setupModList( bool showIcons )
 		| ExtendedListView::MenuAction::Copy
 		| ExtendedListView::MenuAction::CutAndPaste
 		| ExtendedListView::MenuAction::Move
-		| ExtendedListView::MenuAction::ToggleIcons
 	);
-	addExistingDRP = ui->modListView->addAction( "Add existing DR pack", {} );
-	createNewDRP = ui->modListView->addAction( "Create new DR pack", {} );
+	createNewDRPAction = ui->modListView->addAction( "Create new DR pack", {} );
+	addExistingDRPAction = ui->modListView->addAction( "Add existing DR pack", {} );
 	ui->modListView->toggleListModifications( true );
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &ThisClass::modAdd );
 	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &ThisClass::modDelete );
@@ -100,14 +99,13 @@ void DRPEditor::setupModList( bool showIcons )
 	connect( ui->modListView->moveItemDownAction, &QAction::triggered, this, &ThisClass::modMoveDown );
 	connect( ui->modListView->moveItemToTopAction, &QAction::triggered, this, &ThisClass::modMoveToTop );
 	connect( ui->modListView->moveItemToBottomAction, &QAction::triggered, this, &ThisClass::modMoveToBottom );
-	connect( addExistingDRP, &QAction::triggered, this, &ThisClass::modAddExistingDRP );
-	connect( createNewDRP, &QAction::triggered, this, &ThisClass::modCreateNewDRP );
+	connect( createNewDRPAction, &QAction::triggered, this, &ThisClass::modCreateNewDRP );
+	connect( addExistingDRPAction, &QAction::triggered, this, &ThisClass::modAddExistingDRP );
 
 	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
 	ui->modListView->toggleIcons( showIcons );  // we need to do this instead of model.toggleIcons() in order to update the action text
 
 	// setup buttons
-	connect( ui->destFileBtn, &QPushButton::clicked, this, &ThisClass::selectDestinationFile );
 	connect( ui->modBtnAdd, &QToolButton::clicked, this, &ThisClass::modAdd );
 	connect( ui->modBtnAddDir, &QToolButton::clicked, this, &ThisClass::modAddDir );
 	connect( ui->modBtnDel, &QToolButton::clicked, this, &ThisClass::modDelete );
@@ -115,10 +113,44 @@ void DRPEditor::setupModList( bool showIcons )
 	connect( ui->modBtnDown, &QToolButton::clicked, this, &ThisClass::modMoveDown );
 }
 
-void DRPEditor::selectDestinationFile()
+
+//----------------------------------------------------------------------------------------------------------------------
+// mod list loading and saving
+
+void DRPEditor::loadModsFromDRP( const QString & filePath )
 {
-	DialogWithPaths::selectDestFile( this, "Save DoomRunner Pack", ui->destFileLine, drp::fileSuffix );
+	const QStringList entries = drp::getEntries( filePath );
+
+	wdg::deselectAllAndUnsetCurrent( ui->modListView );
+	modModel.startCompleteUpdate();
+	modModel.clear();
+	for (const QString & filePath : entries)
+	{
+		modModel.append( Mod( filePath ) );
+	}
+	modModel.finishCompleteUpdate();
 }
+
+bool DRPEditor::saveModsToDRP( const QString & filePath )
+{
+	QStringList entries;
+	for (const Mod & mod : modModel)
+	{
+		entries.append( mod.path );
+	}
+
+	bool saved = drp::saveEntries( filePath, std::move(entries) );
+	if (saved)
+	{
+		savedFilePath = filePath;
+	}
+
+	return saved;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// mod list manipulation
 
 void DRPEditor::modAdd()
 {
@@ -150,23 +182,6 @@ void DRPEditor::modAddDir()
 	wdg::appendItem( ui->modListView, modModel, mod );
 }
 
-void DRPEditor::modAddExistingDRP()
-{
-	const QStringList paths = DialogWithPaths::selectFiles( this, "DoomRunner Pack", {},
-		makeFileFilter( "DoomRunner Pack files", { drp::fileSuffix } )
-		+ "All files (*)"
-	);
-	if (paths.isEmpty())  // user probably clicked cancel
-		return;
-
-	for (const QString & path : paths)
-	{
-		Mod mod{ QFileInfo( path ) };
-
-		wdg::appendItem( ui->modListView, modModel, mod );
-	}
-}
-
 void DRPEditor::modDelete()
 {
 	wdg::removeSelectedItems( ui->modListView, modModel );
@@ -194,22 +209,27 @@ void DRPEditor::modMoveToBottom()
 
 void DRPEditor::modCreateNewDRP()
 {
-	DRPEditor editor( ui->modListView, pathConvertor, lastUsedDir, ui->modListView->areIconsEnabled(), {} );
+	QString newFilePath = createNewDRP();
+	if (newFilePath.isEmpty())
+		return;  // update the data only if user clicked Ok and the save was successful
 
-	int code = editor.exec();
-
-	// update the data only if user clicked Ok and the save was successful
-	if (code != QDialog::Accepted || editor.savedFilePath.isEmpty())
-	{
-		return;
-	}
-
-	lastUsedDir = editor.takeLastUsedDir();
-	ui->modListView->toggleIcons( editor.areIconsEnabled() );
-
-	Mod mod( QFileInfo( editor.savedFilePath ) );
+	Mod mod( newFilePath );
 
 	wdg::appendItem( ui->modListView, modModel, mod );
+}
+
+void DRPEditor::modAddExistingDRP()
+{
+	const QStringList filePaths = addExistingDRP();
+	if (filePaths.isEmpty())  // user probably clicked cancel
+		return;
+
+	for (const QString & path : filePaths)
+	{
+		Mod mod( path );
+
+		wdg::appendItem( ui->modListView, modModel, mod );
+	}
 }
 
 void DRPEditor::onModDoubleClicked( const QModelIndex & index )
@@ -223,15 +243,22 @@ void DRPEditor::onModDoubleClicked( const QModelIndex & index )
 
 	if (fileInfo.suffix() == drp::fileSuffix)
 	{
-		DRPEditor editor( this, pathConvertor, lastUsedDir, ui->modListView->areIconsEnabled(), fileInfo.filePath() );
+		auto result = editDRP( fileInfo.filePath() );
 
-		int code = editor.exec();
-
-		// update the data only if user clicked Ok
-		if (code == QDialog::Accepted)
+		// update the mod list
+		if (result.outcome == DRPEditor::Outcome::SavedAsNew)
 		{
-			lastUsedDir = editor.takeLastUsedDir();
-			ui->modListView->toggleIcons( editor.areIconsEnabled() );
+			Mod newDRP( result.savedFilePath, /*checked*/true );
+
+			modModel.startAppendingItems( 1 );
+			modModel.append( newDRP );
+			modModel.finishAppendingItems();
+		}
+		else if (result.outcome == DRPEditor::Outcome::Deleted)
+		{
+			modModel.startRemovingItems( index.row(), 1 );
+			modModel.removeAt( index.row() );
+			modModel.finishRemovingItems();
 		}
 	}
 	else
@@ -240,91 +267,96 @@ void DRPEditor::onModDoubleClicked( const QModelIndex & index )
 	}
 }
 
+QString DRPEditor::createNewDRP()
+{
+	DRPEditor editor( ui->modListView, pathConvertor, lastUsedDir, ui->modListView->areIconsEnabled(), {} );
+
+	int code = editor.exec();
+
+	if (code != QDialog::Accepted || editor.savedFilePath.isEmpty())  // dialog cancelled or saving the file failed
+	{
+		return {};
+	}
+
+	lastUsedDir = editor.takeLastUsedDir();
+
+	return editor.savedFilePath;
+}
+
+QStringList DRPEditor::addExistingDRP()
+{
+	const QStringList filePaths = DialogWithPaths::selectFiles( this, "DoomRunner Pack", {},
+		makeFileFilter( "DoomRunner Pack files", { drp::fileSuffix } )
+		+ "All files (*)"
+	);
+
+	if (filePaths.isEmpty())  // user probably clicked cancel
+	{
+		return {};
+	}
+
+	return filePaths;
+}
+
+DRPEditor::Result DRPEditor::editDRP( const QString & filePath )
+{
+	DRPEditor editor( this, pathConvertor, lastUsedDir, ui->modListView->areIconsEnabled(), filePath );
+
+	int code = editor.exec();
+
+	if (code != QDialog::Accepted)
+	{
+		return { DRPEditor::Outcome::Cancelled, {} };
+	}
+
+	lastUsedDir = editor.takeLastUsedDir();
+
+	return { editor.outcome, std::move( editor.savedFilePath ) };
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
-// mod list loading and saving
+// dialog finalization
 
-void DRPEditor::loadModsFromDRP( const QString & filePath )
+void DRPEditor::onSaveBtnClicked()
 {
-	QFileInfo fileInfo( filePath );
+	bool saved = saveModsToDRP( origFilePath );
+	outcome = saved ? Outcome::SavedToExisting : Outcome::Failed;
 
-	const QStringList entries = drp::getEntries( filePath );
-
-	wdg::deselectAllAndUnsetCurrent( ui->modListView );
-	modModel.startCompleteUpdate();
-	modModel.clear();
-	for (const QString & filePath : entries)
-	{
-		modModel.append( Mod( filePath ) );
-	}
-	modModel.finishCompleteUpdate();
+	SuperClass::accept();  // regardless if the save was successful, close the dialog
 }
 
-bool DRPEditor::saveModsToDRP( const QString & filePath )
+void DRPEditor::onSaveAsBtnClicked()
 {
-	QStringList entries;
-	for (const Mod & mod : modModel)
-	{
-		entries.append( mod.path );
-	}
-
-	return drp::saveEntries( filePath, std::move(entries) );
-}
-
-void DRPEditor::accept()
-{
-	// verify requirements
-	QString destFilePath = sanitizeInputPath( ui->destFileLine->text() );
+	QString destFilePath = DialogWithPaths::selectDestFile( this, "Save DoomRunner Pack", lastUsedDir,
+		makeFileFilter( "DoomRunner Pack files", { drp::fileSuffix } )
+		+ "All files (*)"
+	);
 	if (destFilePath.isEmpty())
 	{
-		reportUserError( "Destination file path is empty",
-			"Please specify where to save this DoomRunner Pack."
-		);
-		return;  // refuse the user's confirmation
-	}
-	else if (fs::isValidDir( destFilePath ))
-	{
-		reportUserError( "Destination file is invalid",
-			"The destination path is a directory. Please choose another name."
-		);
-		return;  // refuse the user's confirmation
+		return;  // user clicked cancel, return back to the dialog
 	}
 
-	// save the mod list content to the file
-	if (!origFilePath.isEmpty() && destFilePath != origFilePath)  // the DRP already exists, but new path has been requested
-	{
-		bool written = saveModsToDRP( origFilePath );
-		if (written)
-		{
-			savedFilePath = origFilePath;
+	bool saved = saveModsToDRP( destFilePath );
+	outcome = saved ? Outcome::SavedAsNew : Outcome::Failed;
 
-			bool renamedOrMoved = fs::renameOrMoveFile( origFilePath, destFilePath );
-			if (renamedOrMoved)
-			{
-				savedFilePath = destFilePath;
-			}
-			else
-			{
-				reportRuntimeError( "Failed to relocate file",
-					"Couldn't rename of move the file \""%origFilePath%"\" to \""%destFilePath%"\"."
-				);
-			}
-		}
-	}
-	else  // this is a new DRP
-	{
-		bool written = saveModsToDRP( destFilePath );
-		if (written)
-		{
-			savedFilePath = destFilePath;
-		}
-	}
-
-	// accept the user's confirmation
-	SuperClass::accept();
+	SuperClass::accept();  // regardless if the save was successful, close the dialog
 }
 
-bool DRPEditor::areIconsEnabled() const
+void DRPEditor::onDeleteBtnClicked()
 {
-	return ui->modListView->areIconsEnabled();
+	bool fileDeleted = fs::deleteFile( origFilePath );
+	if (fileDeleted)
+	{
+		outcome = Outcome::Deleted;
+	}
+	else
+	{
+		reportRuntimeError( "Cannot delete DoomRunner Pack",
+			"Failed to delete the current DoomRunner Pack \""%origFilePath%"\""
+		);
+		outcome = Outcome::Failed;
+	}
+
+	SuperClass::accept();  // regardless if the save was successful, close the dialog
 }

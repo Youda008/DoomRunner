@@ -41,16 +41,27 @@ class DRPEditor : public QDialog, public DialogWithPaths {
 	);
 	virtual ~DRPEditor() override;
 
-	bool areIconsEnabled() const;
+	enum class Outcome
+	{
+		Cancelled,        ///< user cancelled this dialog, no change has been made
+		Failed,           ///< saving or deleting the file failed, no change has been made
+		SavedToExisting,  ///< the content has been successfully saved to the original file
+		SavedAsNew,       ///< the content has been successfully saved to a new file
+		Deleted,          ///< the existing file has been successfully deleted
+	};
+
+	struct Result
+	{
+		Outcome outcome;
+		QString savedFilePath;
+	};
 
  private slots:
 
-	void selectDestinationFile();
-
 	void modAdd();
 	void modAddDir();
-	void modAddExistingDRP();
 	void modCreateNewDRP();
+	void modAddExistingDRP();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
@@ -58,30 +69,37 @@ class DRPEditor : public QDialog, public DialogWithPaths {
 	void modMoveToBottom();
 	void onModDoubleClicked( const QModelIndex & index );
 
- private slots: // overridden slots
-
-	virtual void accept() override;
+	void onSaveBtnClicked();
+	void onSaveAsBtnClicked();
+	void onDeleteBtnClicked();
 
  private: // internal methods
 
 	void setupModList( bool showIcons );
+
 	void loadModsFromDRP( const QString & filePath );
 	bool saveModsToDRP( const QString & filePath );
+
+	QString createNewDRP();
+	QStringList addExistingDRP();
+	Result editDRP( const QString & filePath );
 
  private: // internal members
 
 	Ui::DRPEditor * ui;
 	bool windowAlreadyShown = false;  ///< whether the main window already appeared at least once
 
-	QString origFilePath;
 	EditableDirectListModel< Mod > modModel;
 
-	QAction * addExistingDRP = nullptr;
-	QAction * createNewDRP = nullptr;
+	QAction * createNewDRPAction = nullptr;
+	QAction * addExistingDRPAction = nullptr;
 
  public: // return values from this dialog
 
+	QString origFilePath;
 	QString savedFilePath;
+
+	Outcome outcome;
 
 };
 

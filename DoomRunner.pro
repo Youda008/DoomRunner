@@ -79,6 +79,8 @@ HEADERS += \
 	Sources/Widgets/ExtendedViewCommon.impl.hpp \
 	Sources/Widgets/RightClickableLabel.hpp \
 	Sources/Widgets/RightClickableButton.hpp \
+	Sources/Widgets/RightClickableWidget.hpp \
+	Sources/Widgets/RightClickableWidget.impl.hpp \
 	Sources/Widgets/SearchPanel.hpp \
 	Sources/CommonTypes.hpp \
 	Sources/DoomFiles.hpp \

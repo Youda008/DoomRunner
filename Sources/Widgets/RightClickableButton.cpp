@@ -2,24 +2,29 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: QToolButton that emits a signal when right-clicked
+// Description: QToolButton that pops up a context menu when right-clicked
 //======================================================================================================================
 
 #include "RightClickableButton.hpp"
 
-#include <QMouseEvent>
+#include "RightClickableWidget.impl.hpp"
 
 
 //======================================================================================================================
 
-RightClickableButton::RightClickableButton( QWidget * parent ) : QToolButton( parent ) {}
+RightClickableButton::RightClickableButton( QWidget * parent ) : RightClickableWidget( parent ) {}
 
-RightClickableButton::~RightClickableButton() {}
-
-void RightClickableButton::mousePressEvent( QMouseEvent * e )
+QAction * RightClickableButton::addAction( const QString & text, const QKeySequence & shortcut )
 {
-	SuperClass::mousePressEvent( e );
+	return _addAction( text, shortcut );
+}
 
-	if (e->button() == Qt::RightButton)
-		emit rightClicked();
+/*void RightClickableButton::mousePressEvent( QMouseEvent * event )
+{
+	return _mousePressEvent( event );
+}*/
+
+void RightClickableButton::contextMenuEvent( QContextMenuEvent * event )
+{
+	return _contextMenuEvent( event );
 }

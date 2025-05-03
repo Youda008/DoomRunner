@@ -152,7 +152,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onTimeLimitChanged( int limit );
 	void onFragLimitChanged( int limit );
 	void onPlayerNameChanged( const QString & name );
-	void onPlayerColorRightClicked();
+	void onPlayerColorResetTriggered();
 
 	void onUsePresetNameForConfigsToggled( bool checked );
 	void onUsePresetNameForSavesToggled( bool checked );
@@ -379,6 +379,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QAction * hideLabelAction = nullptr;
 
 	QAction * addCmdArgAction = nullptr;
+
+	QAction * resetPlayerColorAction = nullptr;
 
 	bool windowAlreadyShown = false;  ///< whether the main window already appeared at least once
 	uint tickCount = 0;

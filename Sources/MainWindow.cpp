@@ -870,7 +870,8 @@ MainWindow::MainWindow()
 	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &ThisClass::onFragLimitChanged );
 	connect( ui->playerNameLine, &QLineEdit::textChanged, this, &ThisClass::onPlayerNameChanged );
 	connect( ui->playerColorBtn, &RightClickableButton::clicked, this, &ThisClass::runPlayerColorDialog );
-	connect( ui->playerColorBtn, &RightClickableButton::rightClicked, this, &ThisClass::onPlayerColorRightClicked );
+	resetPlayerColorAction = ui->playerColorBtn->addAction( "Reset", {} );
+	connect( resetPlayerColorAction, &QAction::triggered, this, &ThisClass::onPlayerColorResetTriggered );
 
 	// gameplay
 	connect( ui->skillCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onSkillSelected );
@@ -4047,7 +4048,7 @@ void MainWindow::onPlayerNameChanged( const QString & name )
 	updateLaunchCommand();
 }
 
-void MainWindow::onPlayerColorRightClicked()
+void MainWindow::onPlayerColorResetTriggered()
 {
 	bool storageModified = STORE_MULT_OPTION( .playerColor, QColor() );
 

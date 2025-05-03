@@ -150,7 +150,7 @@ class ExtendedListView : public QListView, public ExtendedViewCommon< ExtendedLi
 
  private: // overriden event callbacks
 
-	virtual void contextMenuEvent( QContextMenuEvent * e ) override;
+	virtual void contextMenuEvent( QContextMenuEvent * event ) override;
 
 	virtual void dragEnterEvent( QDragEnterEvent * event ) override;
 	virtual void dragMoveEvent( QDragMoveEvent * event ) override;

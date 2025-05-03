@@ -63,7 +63,7 @@ class ExtendedTreeView : public QTreeView, public ExtendedViewCommon< ExtendedTr
 
  private: // overriden event callbacks
 
-	virtual void contextMenuEvent( QContextMenuEvent * e ) override;
+	virtual void contextMenuEvent( QContextMenuEvent * event ) override;
 
  public slots:
 

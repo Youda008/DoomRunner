@@ -63,8 +63,8 @@ class KeyPressFilter : public QObject {
 
  public:
 
-	KeyPressFilter() {}
-	virtual ~KeyPressFilter() override {}
+	KeyPressFilter() = default;
+	virtual ~KeyPressFilter() override = default;
 
 	/// Toggles suppression of key events - stop them from propagating to the parent window.
 	void toggleKeyPressSupression( bool enabled )  { suppressKeyEvents = enabled; }
@@ -98,8 +98,8 @@ class ConfirmationFilter : public QObject {
 
  public:
 
-	ConfirmationFilter() {}
-	virtual ~ConfirmationFilter() override {}
+	ConfirmationFilter() = default;
+	virtual ~ConfirmationFilter() override = default;
 
  protected:
 

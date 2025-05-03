@@ -176,7 +176,7 @@ class FilteredList {
 	using Item = Item_;
 	using Container = PtrList< Item_ >;
 
-	FilteredList() {}
+	FilteredList() = default;
 	FilteredList( const Container &  list ) : _fullList( list ) { restore(); }
 	FilteredList(       Container && list ) : _fullList( std::move(list) ) { restore(); }
 

@@ -24,7 +24,7 @@ RightClickableWidget< SuperClass >::RightClickableWidget( QWidget * parent )
 
 /*
 template< typename SuperClass >
-void RightClickableWidget< SuperClass >::_mousePressEvent( QMouseEvent * e )
+void RightClickableWidget< SuperClass >::_mousePressEvent( QMouseEvent * event )
 {
 	SuperClass::mousePressEvent( e );
 

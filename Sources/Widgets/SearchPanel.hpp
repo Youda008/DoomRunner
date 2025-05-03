@@ -14,7 +14,7 @@ class SearchPanel : public QObject {
  public:
 
 	SearchPanel( QToolButton * showBtn, QLineEdit * searchPhraseLine, QCheckBox * caseChkBox, QCheckBox * regexChkBox );
-	~SearchPanel() override {}
+	~SearchPanel() override = default;
 
  public slots:
 

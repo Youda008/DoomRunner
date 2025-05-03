@@ -41,7 +41,7 @@ UpdateChecker::UpdateChecker()
 	QObject::connect( &manager, &QNetworkAccessManager::finished, this, &UpdateChecker::requestFinished );
 }
 
-UpdateChecker::~UpdateChecker() {}
+UpdateChecker::~UpdateChecker() = default;
 
 void UpdateChecker::checkForUpdates_async( ResultCallback && callback )
 {

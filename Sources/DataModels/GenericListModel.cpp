@@ -13,7 +13,7 @@
 //======================================================================================================================
 
 // Prevents generating VTable in every translation where these classes are included and used.
-AListModel::~AListModel() {}
+AListModel::~AListModel() = default;
 
 // pre-defined commonly used lists of data roles
 const QList<int> AListModel::onlyDisplayRole = { Qt::DisplayRole };

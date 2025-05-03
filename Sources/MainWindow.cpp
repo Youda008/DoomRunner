@@ -4961,7 +4961,10 @@ void MainWindow::exportPresetToScript()
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	QString scriptFilePath = DialogWithPaths::selectDestFile( this, "Export preset", emptyString, os::scriptFileSuffix );
+	QString scriptFilePath = DialogWithPaths::selectDestFile( this, "Export preset", emptyString,
+		makeFileFilter( "Shell script files", { os::scriptFileSuffix } )
+		+ "All files (*)"
+	);
 	if (scriptFilePath.isEmpty())  // user probably clicked cancel
 	{
 		return;
@@ -5018,7 +5021,10 @@ void MainWindow::exportPresetToShortcut()
 		return;  // no point in generating a command if we don't even know the engine, it determines everything
 	}
 
-	QString shortcutPath = DialogWithPaths::selectDestFile( this, "Export preset", emptyString, os::shortcutFileSuffix );
+	QString shortcutPath = DialogWithPaths::selectDestFile( this, "Export preset", emptyString,
+		makeFileFilter( "Windows file shortcuts", { os::shortcutFileSuffix } )
+		+ "All files (*)"
+	);
 	if (shortcutPath.isEmpty())  // user probably clicked cancel
 	{
 		return;

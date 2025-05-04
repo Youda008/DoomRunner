@@ -19,6 +19,7 @@
 #include <QAction>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QMessageBox>
 
 
 //======================================================================================================================
@@ -121,12 +122,19 @@ void DMBEditor::setupModList( bool showIcons )
 
 void DMBEditor::loadModsFromDMB( const QString & filePath )
 {
-	const QStringList entries = dmb::getEntries( filePath );
+	const std::optional< QStringList > entries = dmb::getEntries( filePath );
+	if (!entries)
+	{
+		// More detailed error message is logged internally, here we just tell the user that we can't proceed.
+		QMessageBox::warning( this, "Cannot read Mod Bundle", "Couldn't load the Mod Bundle. Check errors.txt for details." );
+		SuperClass::reject();  // close the dialog as if user clicked Cancel
+		return;
+	}
 
 	wdg::deselectAllAndUnsetCurrent( ui->modListView );
 	modModel.startCompleteUpdate();
 	modModel.clear();
-	for (const QString & filePath : entries)
+	for (const QString & filePath : *entries)
 	{
 		modModel.append( Mod( filePath ) );
 	}

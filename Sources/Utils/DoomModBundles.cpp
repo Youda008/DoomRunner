@@ -39,7 +39,8 @@ static UncertainDMBContent readContent( const QString & filePath )
 	QFile file( filePath );
 	if (!file.open( QIODevice::Text | QIODevice::ReadOnly ))
 	{
-		reportRuntimeError( nullptr, "Cannot read Mod Bundle", "Could not open file "%filePath%" for reading ("%file.errorString()%")" );
+		// Here we don't want to pop up a message box, because that would show up too often and would be annoying.
+		logRuntimeError() << "could not open file "%filePath%" for reading ("%file.errorString()%")";
 		content.status = ReadStatus::CantOpen;
 		return content;
 	}
@@ -53,7 +54,7 @@ static UncertainDMBContent readContent( const QString & filePath )
 		// abort on error
 		if (file.error() != QFile::NoError)
 		{
-			reportRuntimeError( nullptr, "Cannot read Mod Bundle", "Error occured while reading a file "%filePath%" ("%file.errorString()%")" );
+			logRuntimeError() << "error occured while reading a file "%filePath%" ("%file.errorString()%")";
 			content.status = ReadStatus::FailedToRead;
 			return content;
 		}
@@ -99,14 +100,14 @@ static bool writeContent( const QString & filePath, const DMBContent & content )
 
 static FileInfoCache< DMBContent > g_cachedDMBInfo( readContent, writeContent );
 
-QStringList getEntries( const QString & filePath )
+std::optional< QStringList > getEntries( const QString & filePath )
 {
 	// We need this everytime the command is re-generated, which is pretty often, so we better cache it.
 	auto uncertainContent = g_cachedDMBInfo.getFileInfo( filePath );
 	if (uncertainContent.status == ReadStatus::Success)
 		return std::move( uncertainContent.entries );
 	else
-		return {};
+		return std::nullopt;
 }
 
 bool saveEntries( const QString & filePath, QStringList entries )

@@ -94,9 +94,18 @@ QStringList MainWindow::getSelectedMapPacks() const
 template< typename Entry, typename Functor >
 void MainWindow::expandDMB( const QString & filePath, const Functor & loopBody ) const
 {
-	QStringList entries = dmb::getEntries( filePath );
+	const std::optional< QStringList > entries = dmb::getEntries( filePath );
+	if (!entries)
+	{
+		// This is called everytime the launch command is re-generated, so we don't want to pop up a message box here,
+		// because that would be annoying. However by calling the loopBody on the un-expanded bundle file
+		// we can let the PathChecker decide whether to show an error or not.
+		// The detailed error message about what went wrong is logged to errors.txt.
+		loopBody( Entry( filePath ) );
+		return;
+	}
 
-	for (const QString & path : entries)
+	for (const QString & path : *entries)
 	{
 		if (fs::getFileSuffix( path ) == dmb::fileSuffix)
 		{
@@ -107,8 +116,6 @@ void MainWindow::expandDMB( const QString & filePath, const Functor & loopBody )
 			loopBody( Entry( path ) );
 		}
 	}
-
-	QFileInfo fileInfo( filePath );
 }
 
 // Iterates over a list of selected map files where each Doom Mod Bundle (.dmb) is fully expanded.
@@ -120,11 +127,11 @@ void MainWindow::forEachSelectedMapFileWithExpandedDMBs( const Functor & loopBod
 		if (fs::getFileSuffix( mapFilePath ) == dmb::fileSuffix)
 		{
 			expandDMB< QString >( mapFilePath, loopBody );
-	}
+		}
 		else
 		{
 			loopBody( mapFilePath );
-}
+		}
 	}
 }
 

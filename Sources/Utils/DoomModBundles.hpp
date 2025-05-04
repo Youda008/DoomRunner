@@ -21,8 +21,8 @@ namespace dmb {
 extern const QString fileSuffix;   ///< Doom Mod Bundle - a batch of paths of files to load
 
 /// Reads all entries from a Doom Mod Bundle specified by \p filePath.
-/** On error it pops up a message box and returns an empty list. */
-QStringList getEntries( const QString & filePath );
+/** On error it pops up a message box and returns a nullopt. */
+std::optional< QStringList > getEntries( const QString & filePath );
 
 /// Saves the given entries into a Doom Mod Bundle specified by \p filePath.
 /** On error it pops up a message box and returns false. */

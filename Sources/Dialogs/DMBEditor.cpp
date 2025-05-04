@@ -12,6 +12,7 @@
 #include "Dialogs/WADDescViewer.hpp"
 #include "Utils/DoomModBundles.hpp"
 #include "Utils/FileSystemUtils.hpp"
+#include "Utils/PathCheckUtils.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // makeFileFilter
 
@@ -244,6 +245,11 @@ void DMBEditor::onModDoubleClicked( const QModelIndex & index )
 
 	if (fileInfo.suffix() == dmb::fileSuffix)
 	{
+		if (!PathChecker::checkItemFilePath( modModel[ index.row() ], true, "selected Mod Bundle", "" ))
+		{
+			return;  // do not open the dialog for non-existing file
+		}
+
 		auto result = editDMB( fileInfo.filePath() );
 
 		// update the mod list

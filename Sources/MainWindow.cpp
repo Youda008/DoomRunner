@@ -2913,6 +2913,11 @@ void MainWindow::onModDoubleClicked( const QModelIndex & index )
 
 	if (fileInfo.suffix() == dmb::fileSuffix)
 	{
+		if (!PathChecker::checkItemFilePath( modModel[ index.row() ], true, "selected Mod Bundle", "" ))
+		{
+			return;  // do not open the dialog for non-existing file
+		}
+
 		auto result = editDMB( fileInfo.filePath() );
 
 		// update the mod list

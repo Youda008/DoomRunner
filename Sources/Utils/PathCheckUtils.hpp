@@ -116,6 +116,45 @@ class PathChecker {
 		cStrRef subjectName, cStrRef errorPostscript
 	);
 
+	// TODO: finish all combinations and de-duplicate
+
+	static bool s_checkLinePath(
+		cStrRef path, QLineEdit * line, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	){
+		bool verified = s_checkPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+		if (!verified)
+			highlightPathLineAsInvalid( line );
+		else
+			unhighlightPathLine( line );
+		return verified;
+	}
+
+	static bool s_checkLineCollision(
+		cStrRef path, QLineEdit * line, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	){
+		bool verified = s_checkCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+		if (!verified)
+			highlightPathLineAsInvalid( line );
+		else
+			unhighlightPathLine( line );
+		return verified;
+	}
+
+	template< typename ListItem >
+	static bool s_checkItemPath(
+		ListItem & item, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	){
+		bool verified = s_checkPath( item.getFilePath(), expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+		if (!verified)
+			highlightListItemAsInvalid( item );
+		else
+			unhighlightListItem( item );
+		return verified;
+	}
+
 	bool m_maybeCheckPath( cStrRef path, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript )
 	{
 		if (!verificationRequired)
@@ -146,12 +185,7 @@ class PathChecker {
 		if (!verificationRequired)
 			return true;
 
-		bool verified = s_checkPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-		if (!verified)
-			highlightPathLineAsInvalid( line );
-		else
-			unhighlightPathLine( line );
-		return verified;
+		return s_checkLinePath( path, line, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
 	}
 
 	bool m_maybeCheckLineCollision(
@@ -160,12 +194,7 @@ class PathChecker {
 		if (!verificationRequired)
 			return true;
 
-		bool verified = s_checkCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-		if (!verified)
-			highlightPathLineAsInvalid( line );
-		else
-			unhighlightPathLine( line );
-		return verified;
+		return s_checkLineCollision( path, line, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
 	}
 
 	template< typename ListItem >
@@ -174,12 +203,7 @@ class PathChecker {
 		if (!verificationRequired)
 			return true;
 
-		bool verified = s_checkPath( item.getFilePath(), expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-		if (!verified)
-			highlightListItemAsInvalid( item );
-		else
-			unhighlightListItem( item );
-		return verified;
+		return s_checkItemPath( item, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
 	}
 
  public: // context-free
@@ -189,7 +213,6 @@ class PathChecker {
 		bool errorMessageDisplayed = !showError;
 		return s_checkPath( path, EntryType::File, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
 	}
-
 	static bool checkDirPath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
 	{
 		bool errorMessageDisplayed = !showError;
@@ -204,7 +227,6 @@ class PathChecker {
 		bool errorMessageDisplayed = !showError;
 		return s_checkNonEmptyPath( path, EntryType::File, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
 	}
-
 	static bool checkNonEmptyDirPath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
 	{
 		if (path.isEmpty())
@@ -212,6 +234,19 @@ class PathChecker {
 
 		bool errorMessageDisplayed = !showError;
 		return s_checkNonEmptyPath( path, EntryType::Dir, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
+	}
+
+	template< typename ListItem >
+	static bool checkItemFilePath( ListItem & item, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		bool errorMessageDisplayed = !showError;
+		return s_checkItemPath( item, EntryType::File, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
+	}
+	template< typename ListItem >
+	static bool checkItemDirPath( ListItem & item, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		bool errorMessageDisplayed = !showError;
+		return s_checkItemPath( item, EntryType::Dir, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
 	}
 
  public: // context-sensitive (depend on settings from constructor)

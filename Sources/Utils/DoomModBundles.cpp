@@ -2,10 +2,10 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: support for DoomRunner Packs - a batch of paths of files to load
+// Description: support for Doom Mod Bundles - a batch of paths of files to load
 //======================================================================================================================
 
-#include "DoomRunnerPacks.hpp"
+#include "DoomModBundles.hpp"
 
 #include "FileSystemUtils.hpp"
 #include "FileInfoCache.hpp"
@@ -15,31 +15,31 @@
 #include <QTextStream>
 
 
-namespace drp {
+namespace dmb {
 
 
 //======================================================================================================================
 
-const QString fileSuffix = "drp";
+const QString fileSuffix = "dmb";
 
 
 //----------------------------------------------------------------------------------------------------------------------
 
-struct DRPContent
+struct DMBContent
 {
 	QStringList entries;
 };
 
-using UncertainDrpContent = UncertainFileInfo< DRPContent >;
+using UncertainDMBContent = UncertainFileInfo< DMBContent >;
 
-static UncertainDrpContent readContent( const QString & filePath )
+static UncertainDMBContent readContent( const QString & filePath )
 {
-	UncertainDrpContent content;
+	UncertainDMBContent content;
 
 	QFile file( filePath );
 	if (!file.open( QIODevice::Text | QIODevice::ReadOnly ))
 	{
-		reportRuntimeError( nullptr, "Cannot read DoomRunner Pack", "Could not open file "%filePath%" for reading ("%file.errorString()%")" );
+		reportRuntimeError( nullptr, "Cannot read Mod Bundle", "Could not open file "%filePath%" for reading ("%file.errorString()%")" );
 		content.status = ReadStatus::CantOpen;
 		return content;
 	}
@@ -53,7 +53,7 @@ static UncertainDrpContent readContent( const QString & filePath )
 		// abort on error
 		if (file.error() != QFile::NoError)
 		{
-			reportRuntimeError( nullptr, "Cannot read DoomRunner Pack", "Error occured while reading a file "%filePath%" ("%file.errorString()%")" );
+			reportRuntimeError( nullptr, "Cannot read Mod Bundle", "Error occured while reading a file "%filePath%" ("%file.errorString()%")" );
 			content.status = ReadStatus::FailedToRead;
 			return content;
 		}
@@ -62,7 +62,7 @@ static UncertainDrpContent readContent( const QString & filePath )
 		{
 			continue;
 		}
-		// rebase the paths from the DRP's dir to our working dir
+		// rebase the paths from the DMB's dir to our working dir
 		QString entryPath = rebaser.rebaseBack( line );
 
 		content.entries.append( std::move(entryPath) );
@@ -73,12 +73,12 @@ static UncertainDrpContent readContent( const QString & filePath )
 	return content;
 }
 
-static bool writeContent( const QString & filePath, const DRPContent & content )
+static bool writeContent( const QString & filePath, const DMBContent & content )
 {
 	QFile file( filePath );
 	if (!file.open( QIODevice::Text | QIODevice::WriteOnly ))
 	{
-		reportRuntimeError( nullptr, "Cannot save DoomRunner Pack", "Could not open file "%filePath%" for writing ("%file.errorString()%")" );
+		reportRuntimeError( nullptr, "Cannot save Mod Bundle", "Could not open file "%filePath%" for writing ("%file.errorString()%")" );
 		return false;
 	}
 
@@ -97,12 +97,12 @@ static bool writeContent( const QString & filePath, const DRPContent & content )
 }
 
 
-static FileInfoCache< DRPContent > g_cachedDrpInfo( readContent, writeContent );
+static FileInfoCache< DMBContent > g_cachedDMBInfo( readContent, writeContent );
 
 QStringList getEntries( const QString & filePath )
 {
 	// We need this everytime the command is re-generated, which is pretty often, so we better cache it.
-	auto uncertainContent = g_cachedDrpInfo.getFileInfo( filePath );
+	auto uncertainContent = g_cachedDMBInfo.getFileInfo( filePath );
 	if (uncertainContent.status == ReadStatus::Success)
 		return std::move( uncertainContent.entries );
 	else
@@ -111,8 +111,8 @@ QStringList getEntries( const QString & filePath )
 
 bool saveEntries( const QString & filePath, QStringList entries )
 {
-	return g_cachedDrpInfo.setFileInfo( filePath, DRPContent{ std::move( entries ) } );
+	return g_cachedDMBInfo.setFileInfo( filePath, DMBContent{ std::move( entries ) } );
 }
 
 
-} // namespace drp
+} // namespace dmb

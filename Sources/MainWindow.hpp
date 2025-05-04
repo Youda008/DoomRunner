@@ -14,7 +14,7 @@
 #include "DataModels/GenericListModel.hpp"
 #include "Widgets/ExtendedListView.hpp"  // DnDType
 #include "Widgets/SearchPanel.hpp"
-#include "Dialogs/DRPEditor.hpp"  // DRPEditor::Result
+#include "Dialogs/DMBEditor.hpp"  // DMBEditor::Result
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
 #include "Themes.hpp"  // SystemThemeWatcher
@@ -104,8 +104,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modAdd();
 	void modAddDir();
 	void modAddArg();
-	void modCreateNewDRP();
-	void modAddExistingDRP();
+	void modCreateNewDMB();
+	void modAddExistingDMB();
 	void modInsertSeparator();
 	void modDelete();
 	void modMoveUp();
@@ -256,9 +256,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void runCompatOptsDialog();
 	void runPlayerColorDialog();
 
-	QString createNewDRP();
-	QStringList addExistingDRP();
-	DRPEditor::Result editDRP( const QString & filePath );
+	QString createNewDMB();
+	QStringList addExistingDMB();
+	DMBEditor::Result editDMB( const QString & filePath );
 
 	void openCurrentEngineDataDir();
 	void cloneCurrentEngineConfigFile();
@@ -328,9 +328,9 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QStringList getSelectedMapPacks() const;
 
-	template< typename Entry, typename Functor > void expandDRP( const QString & filePath, const Functor & loopBody ) const;
-	template< typename Functor > void forEachSelectedMapFileWithExpandedDRPs( const Functor & loopBody ) const;
-	template< typename Functor > void forEachCheckedModFileWithExpandedDRPs( const Functor & loopBody ) const;
+	template< typename Entry, typename Functor > void expandDMB( const QString & filePath, const Functor & loopBody ) const;
+	template< typename Functor > void forEachSelectedMapFileWithExpandedDMBs( const Functor & loopBody ) const;
+	template< typename Functor > void forEachCheckedModFileWithExpandedDMBs( const Functor & loopBody ) const;
 
 	static QStringList getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs );
 
@@ -383,8 +383,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QAction * hideLabelAction = nullptr;
 
 	QAction * addCmdArgAction = nullptr;
-	QAction * createNewDRPAction = nullptr;
-	QAction * addExistingDRPAction = nullptr;
+	QAction * createNewDMBAction = nullptr;
+	QAction * addExistingDMBAction = nullptr;
 
 	QAction * resetPlayerColorAction = nullptr;
 

@@ -2,18 +2,17 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: internal editor of DoomRunner Packs
+// Description: internal editor of Doom Mod Bundles
 //======================================================================================================================
 
-#ifndef DRP_EDITOR_INCLUDED
-#define DRP_EDITOR_INCLUDED
+#ifndef DMB_EDITOR_INCLUDED
+#define DMB_EDITOR_INCLUDED
 
 
 #include "DialogCommon.hpp"
 
 #include "UserData.hpp"  // Mod
 #include "DataModels/GenericListModel.hpp"  // for modModel
-#include "Widgets/ExtendedListView.hpp"  // DnDSources
 
 #include <QDialog>
 
@@ -21,25 +20,25 @@ class PathConvertor;
 
 namespace Ui
 {
-	class DRPEditor;
+	class DMBEditor;
 }
 
 
 //======================================================================================================================
 
-class DRPEditor : public QDialog, public DialogWithPaths {
+class DMBEditor : public QDialog, public DialogWithPaths {
 
 	Q_OBJECT
 
-	using ThisClass = DRPEditor;
+	using ThisClass = DMBEditor;
 	using SuperClass = QDialog;
 
  public:
 
-	explicit DRPEditor(
+	explicit DMBEditor(
 		QWidget * parentWidget, const PathConvertor & pathConvertor, QString lastUsedDir, bool showIcons, QString filePath
 	);
-	virtual ~DRPEditor() override;
+	virtual ~DMBEditor() override;
 
 	enum class Outcome
 	{
@@ -60,8 +59,8 @@ class DRPEditor : public QDialog, public DialogWithPaths {
 
 	void modAdd();
 	void modAddDir();
-	void modCreateNewDRP();
-	void modAddExistingDRP();
+	void modCreateNewDMB();
+	void modAddExistingDMB();
 	void modDelete();
 	void modMoveUp();
 	void modMoveDown();
@@ -77,22 +76,22 @@ class DRPEditor : public QDialog, public DialogWithPaths {
 
 	void setupModList( bool showIcons );
 
-	void loadModsFromDRP( const QString & filePath );
-	bool saveModsToDRP( const QString & filePath );
+	void loadModsFromDMB( const QString & filePath );
+	bool saveModsToDMB( const QString & filePath );
 
-	QString createNewDRP();
-	QStringList addExistingDRP();
-	Result editDRP( const QString & filePath );
+	QString createNewDMB();
+	QStringList addExistingDMB();
+	Result editDMB( const QString & filePath );
 
  private: // internal members
 
-	Ui::DRPEditor * ui;
+	Ui::DMBEditor * ui;
 	bool windowAlreadyShown = false;  ///< whether the main window already appeared at least once
 
 	EditableDirectListModel< Mod > modModel;
 
-	QAction * createNewDRPAction = nullptr;
-	QAction * addExistingDRPAction = nullptr;
+	QAction * createNewDMBAction = nullptr;
+	QAction * addExistingDMBAction = nullptr;
 
  public: // return values from this dialog
 
@@ -104,4 +103,4 @@ class DRPEditor : public QDialog, public DialogWithPaths {
 };
 
 
-#endif // DRP_EDITOR_INCLUDED
+#endif // DMB_EDITOR_INCLUDED

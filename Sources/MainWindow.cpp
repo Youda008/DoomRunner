@@ -12,7 +12,7 @@
 #include "Dialogs/SetupDialog.hpp"
 #include "Dialogs/OptionsStorageDialog.hpp"
 #include "Dialogs/WADDescViewer.hpp"
-#include "Dialogs/DRPEditor.hpp"
+#include "Dialogs/DMBEditor.hpp"
 #include "Dialogs/NewConfigDialog.hpp"
 #include "Dialogs/GameOptsDialog.hpp"
 #include "Dialogs/CompatOptsDialog.hpp"
@@ -34,7 +34,7 @@
 #include "Utils/OSUtils.hpp"
 #include "Utils/ExeReader.hpp"
 #include "Utils/WADReader.hpp"
-#include "Utils/DoomRunnerPacks.hpp"
+#include "Utils/DoomModBundles.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // areScreenCoordinatesValid, makeFileFilter, splitCommandLineArguments
 #include "Utils/ErrorHandling.hpp"
@@ -92,15 +92,15 @@ QStringList MainWindow::getSelectedMapPacks() const
 
 // Executes the loopBody functor for every file path in that pack. Sub-packs are expanded recursively.
 template< typename Entry, typename Functor >
-void MainWindow::expandDRP( const QString & filePath, const Functor & loopBody ) const
+void MainWindow::expandDMB( const QString & filePath, const Functor & loopBody ) const
 {
-	QStringList entries = drp::getEntries( filePath );
+	QStringList entries = dmb::getEntries( filePath );
 
 	for (const QString & path : entries)
 	{
-		if (fs::getFileSuffix( path ) == drp::fileSuffix)
+		if (fs::getFileSuffix( path ) == dmb::fileSuffix)
 		{
-			expandDRP< Entry >( path, loopBody );
+			expandDMB< Entry >( path, loopBody );
 		}
 		else
 		{
@@ -111,15 +111,15 @@ void MainWindow::expandDRP( const QString & filePath, const Functor & loopBody )
 	QFileInfo fileInfo( filePath );
 }
 
-// Iterates over a list of selected map files where each DoomRunner Pack (.drp) is fully expanded.
+// Iterates over a list of selected map files where each Doom Mod Bundle (.dmb) is fully expanded.
 template< typename Functor >
-void MainWindow::forEachSelectedMapFileWithExpandedDRPs( const Functor & loopBody ) const
+void MainWindow::forEachSelectedMapFileWithExpandedDMBs( const Functor & loopBody ) const
 {
 	for (const QString & mapFilePath : selectedMapPacks)
 	{
-		if (fs::getFileSuffix( mapFilePath ) == drp::fileSuffix)
+		if (fs::getFileSuffix( mapFilePath ) == dmb::fileSuffix)
 		{
-			expandDRP< QString >( mapFilePath, loopBody );
+			expandDMB< QString >( mapFilePath, loopBody );
 	}
 		else
 		{
@@ -128,17 +128,17 @@ void MainWindow::forEachSelectedMapFileWithExpandedDRPs( const Functor & loopBod
 	}
 }
 
-// Iterates over a list of checked mod files where each DoomRunner Pack (.drp) is fully expanded.
+// Iterates over a list of checked mod files where each Doom Mod Bundle (.dmb) is fully expanded.
 template< typename Functor >
-void MainWindow::forEachCheckedModFileWithExpandedDRPs( const Functor & loopBody ) const
+void MainWindow::forEachCheckedModFileWithExpandedDMBs( const Functor & loopBody ) const
 {
 	for (const Mod & mod : modModel)
 	{
 		if (!mod.isSeparator && mod.checked)
 		{
-			if (fs::getFileSuffix( mod.path ) == drp::fileSuffix)
+			if (fs::getFileSuffix( mod.path ) == dmb::fileSuffix)
 			{
-				expandDRP< Mod >( mod.path, loopBody );
+				expandDMB< Mod >( mod.path, loopBody );
 			}
 			else
 			{
@@ -1083,8 +1083,8 @@ void MainWindow::setupModList()
 		| ExtendedListView::MenuAction::ToggleIcons
 	);
 	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL | Qt::Key_Asterisk } );
-	createNewDRPAction = ui->modListView->addAction( "Create new DR pack", {} );
-	addExistingDRPAction = ui->modListView->addAction( "Add existing DR pack", {} );
+	createNewDMBAction = ui->modListView->addAction( "Create new Mod Bundle", {} );
+	addExistingDMBAction = ui->modListView->addAction( "Add existing Mod Bundle", {} );
 	ui->modListView->toggleListModifications( true );
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &ThisClass::modAdd );
 	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::modInsertSeparator );
@@ -1094,8 +1094,8 @@ void MainWindow::setupModList()
 	connect( ui->modListView->moveItemToTopAction, &QAction::triggered, this, &ThisClass::modMoveToTop );
 	connect( ui->modListView->moveItemToBottomAction, &QAction::triggered, this, &ThisClass::modMoveToBottom );
 	connect( addCmdArgAction, &QAction::triggered, this, &ThisClass::modAddArg );
-	connect( createNewDRPAction, &QAction::triggered, this, &ThisClass::modCreateNewDRP );
-	connect( addExistingDRPAction, &QAction::triggered, this, &ThisClass::modAddExistingDRP );
+	connect( createNewDMBAction, &QAction::triggered, this, &ThisClass::modCreateNewDMB );
+	connect( addExistingDMBAction, &QAction::triggered, this, &ThisClass::modAddExistingDMB );
 
 	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
 	ui->modListView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
@@ -2373,9 +2373,9 @@ void MainWindow::runPlayerColorDialog()
 	}
 }
 
-QString MainWindow::createNewDRP()
+QString MainWindow::createNewDMB()
 {
-	DRPEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, {} );
+	DMBEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, {} );
 
 	int code = editor.exec();
 
@@ -2389,10 +2389,10 @@ QString MainWindow::createNewDRP()
 	return editor.savedFilePath;
 }
 
-QStringList MainWindow::addExistingDRP()
+QStringList MainWindow::addExistingDMB()
 {
-	QStringList filePaths = DialogWithPaths::selectFiles( this, "DoomRunner Pack", {},
-		makeFileFilter( "DoomRunner Pack files", { drp::fileSuffix } )
+	QStringList filePaths = DialogWithPaths::selectFiles( this, "Mod Bundle", {},
+		makeFileFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
 		+ "All files (*)"
 	);
 
@@ -2406,15 +2406,15 @@ QStringList MainWindow::addExistingDRP()
 	return filePaths;
 }
 
-DRPEditor::Result MainWindow::editDRP( const QString & filePath )
+DMBEditor::Result MainWindow::editDMB( const QString & filePath )
 {
-	DRPEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, filePath );
+	DMBEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, filePath );
 
 	int code = editor.exec();
 
 	if (code != QDialog::Accepted)
 	{
-		return { DRPEditor::Outcome::Cancelled, {} };
+		return { DMBEditor::Outcome::Cancelled, {} };
 	}
 
 	modSettings.lastUsedDir = lastUsedDir = editor.takeLastUsedDir();
@@ -2890,9 +2890,9 @@ void MainWindow::onMapPackDoubleClicked( const QModelIndex & index )
 		return;
 	}
 
-	if (fileInfo.suffix() == drp::fileSuffix)
+	if (fileInfo.suffix() == dmb::fileSuffix)
 	{
-		editDRP( fileInfo.filePath() );
+		editDMB( fileInfo.filePath() );
 
 		updateLaunchCommand();
 	}
@@ -2911,28 +2911,28 @@ void MainWindow::onModDoubleClicked( const QModelIndex & index )
 		return;
 	}
 
-	if (fileInfo.suffix() == drp::fileSuffix)
+	if (fileInfo.suffix() == dmb::fileSuffix)
 	{
-		auto result = editDRP( fileInfo.filePath() );
+		auto result = editDMB( fileInfo.filePath() );
 
 		// update the mod list
-		if (result.outcome == DRPEditor::Outcome::SavedAsNew)
+		if (result.outcome == DMBEditor::Outcome::SavedAsNew)
 		{
-			Mod newDRP( result.savedFilePath, /*checked*/true );
+			Mod newDMB( result.savedFilePath, /*checked*/true );
 
 			modModel.startAppendingItems( 1 );
-			modModel.append( newDRP );
+			modModel.append( newDMB );
 			modModel.finishAppendingItems();
 
 			// add it also to the current preset
 			if (selectedPreset)
 			{
-				selectedPreset->mods.append( newDRP );
+				selectedPreset->mods.append( newDMB );
 			}
 
 			scheduleSavingOptions();
 		}
-		else if (result.outcome == DRPEditor::Outcome::Deleted)
+		else if (result.outcome == DMBEditor::Outcome::Deleted)
 		{
 			modModel.startRemovingItems( index.row(), 1 );
 			modModel.removeAt( index.row() );
@@ -3234,7 +3234,7 @@ void MainWindow::modAdd()
 	const QStringList paths = DialogWithPaths::selectFiles( this, "mod file", {},
 		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
 		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
-		+ makeFileFilter( "DoomRunner Pack files", { drp::fileSuffix } )
+		+ makeFileFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
 		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel
@@ -3301,9 +3301,9 @@ void MainWindow::modAddArg()
 	updateLaunchCommand();
 }
 
-void MainWindow::modCreateNewDRP()
+void MainWindow::modCreateNewDMB()
 {
-	QString newFilePath = createNewDRP();
+	QString newFilePath = createNewDMB();
 	if (newFilePath.isEmpty())
 		return;  // update the data only if user clicked Ok and the save was successful
 
@@ -3321,9 +3321,9 @@ void MainWindow::modCreateNewDRP()
 	updateLaunchCommand();
 }
 
-void MainWindow::modAddExistingDRP()
+void MainWindow::modAddExistingDMB()
 {
-	const QStringList filePaths = addExistingDRP();
+	const QStringList filePaths = addExistingDMB();
 	if (filePaths.isEmpty())  // user probably clicked cancel
 		return;
 
@@ -5180,7 +5180,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 		/// Postponed map files that will be inserted together into the -file list.
 		QStringList mapFiles;
-		forEachSelectedMapFileWithExpandedDRPs( [&]( const QString & mapFilePath )
+		forEachSelectedMapFileWithExpandedDMBs( [&]( const QString & mapFilePath )
 		{
 			p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
 			addFileAccordingToSuffix( mapFiles, mapFilePath );
@@ -5188,7 +5188,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 		/// Postponed mod files that will be inserted together into the -file list.
 		QStringList modFiles;
-		forEachCheckedModFileWithExpandedDRPs( [&]( const Mod & mod )
+		forEachCheckedModFileWithExpandedDMBs( [&]( const Mod & mod )
 		{
 				if (mod.isCmdArg) {  // this is not a file but a custom command line argument, append it directly to the arguments
 					appendCustomArguments( fileArgs, mod.name, opts.quotePaths );

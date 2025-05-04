@@ -46,7 +46,7 @@ HEADERS += \
 	Sources/Dialogs/AboutDialog.hpp \
 	Sources/Dialogs/CompatOptsDialog.hpp \
 	Sources/Dialogs/DialogCommon.hpp \
-	Sources/Dialogs/DRPEditor.hpp \
+    Sources/Dialogs/DMBEditor.hpp \
 	Sources/Dialogs/EngineDialog.hpp \
 	Sources/Dialogs/GameOptsDialog.hpp \
 	Sources/Dialogs/NewConfigDialog.hpp \
@@ -56,7 +56,7 @@ HEADERS += \
 	Sources/Dialogs/SetupDialog.hpp \
 	Sources/Dialogs/WADDescViewer.hpp \
 	Sources/Utils/ContainerUtils.hpp \
-	Sources/Utils/DoomRunnerPacks.hpp \
+    Sources/Utils/DoomModBundles.hpp \
 	Sources/Utils/EnumTraits.hpp \
 	Sources/Utils/ErrorHandling.hpp \
 	Sources/Utils/EventFilters.hpp \
@@ -101,7 +101,7 @@ SOURCES += \
 	Sources/Dialogs/AboutDialog.cpp \
 	Sources/Dialogs/CompatOptsDialog.cpp \
 	Sources/Dialogs/DialogCommon.cpp \
-	Sources/Dialogs/DRPEditor.cpp \
+    Sources/Dialogs/DMBEditor.cpp \
 	Sources/Dialogs/EngineDialog.cpp \
 	Sources/Dialogs/GameOptsDialog.cpp \
 	Sources/Dialogs/NewConfigDialog.cpp \
@@ -111,7 +111,7 @@ SOURCES += \
 	Sources/Dialogs/SetupDialog.cpp \
 	Sources/Dialogs/WADDescViewer.cpp \
 	Sources/Utils/ContainerUtils.cpp \
-	Sources/Utils/DoomRunnerPacks.cpp \
+    Sources/Utils/DoomModBundles.cpp \
 	Sources/Utils/ErrorHandling.cpp \
 	Sources/Utils/EventFilters.cpp \
 	Sources/Utils/ExeReader.cpp \
@@ -147,7 +147,7 @@ SOURCES += \
 FORMS += \
 	Forms/AboutDialog.ui \
 	Forms/CompatOptsDialog.ui \
-	Forms/DRPEditor.ui \
+    Forms/DMBEditor.ui \
 	Forms/EngineDialog.ui \
 	Forms/GameOptsDialog.ui \
 	Forms/MainWindow.ui \

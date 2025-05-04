@@ -33,15 +33,15 @@ void showTxtDescriptionFor( QWidget * parentWindow, const QString & filePath, co
 	}
 
 	// get the corresponding file with txt suffix
-	QFileInfo descFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "txt" ) );
+	QFileInfo descFileInfo( fs::replaceFileSuffix( filePath, "txt" ) );
 	if (!descFileInfo.isFile())
 	{
 		// try TXT in case we are in a case-sensitive file-system such as Linux
-		descFileInfo = QFileInfo( fs::replaceFileSuffix( dataFileInfo.filePath(), "TXT" ) );
+		descFileInfo = QFileInfo( fs::replaceFileSuffix( filePath, "TXT" ) );
 		if (!descFileInfo.isFile())
 		{
 			reportUserError( parentWindow, "Cannot open "%contentType,
-				capitalize( contentType )%" file \""%descFileInfo.fileName()%"\" does not exist" );
+				capitalize( contentType )%" file \""%fs::replaceFileSuffix( filePath, "txt" )%"\" does not exist" );
 			return;
 		}
 	}

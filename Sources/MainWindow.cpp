@@ -19,8 +19,8 @@
 #include "Dialogs/ProcessOutputWindow.hpp"
 #include <QColorDialog>
 
+#include "AppVersion.hpp"  // window title
 #include "OptionsSerializer.hpp"
-#include "Version.hpp"  // window title
 #include "UpdateChecker.hpp"
 #include "Themes.hpp"
 #include "EngineTraits.hpp"

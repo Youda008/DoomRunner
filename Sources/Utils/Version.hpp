@@ -2,7 +2,7 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: information about application version
+// Description: version number parsing and comparison
 //======================================================================================================================
 
 #ifndef VERSION_INCLUDED
@@ -11,17 +11,10 @@
 
 #include "Essential.hpp"
 
-#include <QtGlobal>  // QT_VERSION_STR
 #include <QString>
 
 
 //======================================================================================================================
-
-constexpr const char appVersion [] =
-	#include "../version.txt"
-;
-
-constexpr const char qtVersion [] = QT_VERSION_STR;
 
 struct Version
 {

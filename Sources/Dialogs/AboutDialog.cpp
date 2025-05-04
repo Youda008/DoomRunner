@@ -8,7 +8,7 @@
 #include "AboutDialog.hpp"
 #include "ui_AboutDialog.h"
 
-#include "Version.hpp"
+#include "AppVersion.hpp"
 #include "UpdateChecker.hpp"
 #include "Utils/ErrorHandling.hpp"
 

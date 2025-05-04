@@ -2,7 +2,7 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: information about application version
+// Description: version number parsing and comparison
 //======================================================================================================================
 
 #include "Version.hpp"

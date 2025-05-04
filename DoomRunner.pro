@@ -72,6 +72,7 @@ HEADERS += \
 	Sources/Utils/StringUtils.hpp \
 	Sources/Utils/TimeStats.hpp \
 	Sources/Utils/TypeTraits.hpp \
+	Sources/Utils/Version.hpp \
 	Sources/Utils/WADReader.hpp \
 	Sources/Utils/WidgetUtils.hpp \
 	Sources/Utils/WindowsUtils.hpp \
@@ -84,6 +85,7 @@ HEADERS += \
 	Sources/Widgets/RightClickableWidget.hpp \
 	Sources/Widgets/RightClickableWidget.impl.hpp \
 	Sources/Widgets/SearchPanel.hpp \
+	Sources/AppVersion.hpp \
 	Sources/CommonTypes.hpp \
 	Sources/DoomFiles.hpp \
 	Sources/EngineTraits.hpp \
@@ -94,7 +96,6 @@ HEADERS += \
 	Sources/Themes.hpp \
 	Sources/UpdateChecker.hpp \
 	Sources/UserData.hpp \
-	Sources/Version.hpp \
 
 SOURCES += \
 	Sources/DataModels/GenericListModel.cpp \
@@ -125,6 +126,7 @@ SOURCES += \
 	Sources/Utils/StandardOutput.cpp \
 	Sources/Utils/StringUtils.cpp \
 	Sources/Utils/TypeTraitsTest.cpp \
+	Sources/Utils/Version.cpp \
 	Sources/Utils/WADReader.cpp \
 	Sources/Utils/WidgetUtils.cpp \
 	Sources/Utils/WindowsUtils.cpp \
@@ -141,7 +143,6 @@ SOURCES += \
 	Sources/Themes.cpp \
 	Sources/UpdateChecker.cpp \
 	Sources/UserData.cpp \
-	Sources/Version.cpp \
 	Sources/main.cpp \
 
 FORMS += \

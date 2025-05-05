@@ -169,7 +169,9 @@ void unmarkItemAsDefault( const AModelItem & item )
 //----------------------------------------------------------------------------------------------------------------------
 // PathChecker
 
-void PathChecker::s_maybeShowError( bool & errorMessageDisplayed, QWidget * parent, cStrRef title, cStrRef message )
+using cStrRef = const QString &;
+
+static void s_maybeShowError( bool & errorMessageDisplayed, QWidget * parent, cStrRef title, cStrRef message )
 {
 	if (!errorMessageDisplayed)
 	{

@@ -162,7 +162,7 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 
 		if (opts.iwadSettings.updateFromDir)
 		{
-			PathChecker::checkNonEmptyDirPath( opts.iwadSettings.dir, true, "IWAD directory from the saved options", "Please update it in Menu -> Setup." );
+			PathChecker::checkOnlyNonEmptyDirPath( opts.iwadSettings.dir, true, "IWAD directory from the saved options", "Please update it in Menu -> Setup." );
 		}
 		else
 		{
@@ -193,7 +193,7 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 	{
 		deserialize( mapsJs, opts.mapSettings );
 
-		PathChecker::checkNonEmptyDirPath( opts.mapSettings.dir, true, "map directory from the saved options", "Please update it in Menu -> Setup." );
+		PathChecker::checkOnlyNonEmptyDirPath( opts.mapSettings.dir, true, "map directory from the saved options", "Please update it in Menu -> Setup." );
 	}
 
 	if (JsonObjectCtx modsJs = optsJs.getObject( "mods" ))

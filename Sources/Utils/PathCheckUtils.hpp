@@ -76,8 +76,6 @@ class PathChecker {
 	bool verificationRequired;
 	bool errorMessageDisplayed = false;
 
- private: // internal D.R.Y. helpers
-
 	enum class EntryType
 	{
 		File,
@@ -87,172 +85,15 @@ class PathChecker {
 
 	using cStrRef = const QString &;  // for shorter function signatures
 
-	static void s_maybeShowError(
-		bool & errorMessageDisplayed, QWidget * parent, cStrRef title, cStrRef message
-	);
-
-	static bool s_checkPath(
-		cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
-		cStrRef subjectName, cStrRef errorPostscript
-	);
-
-	static bool s_checkNonEmptyPath(
-		cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
-		cStrRef subjectName, cStrRef errorPostscript
-	);
-
-	static bool s_checkCollision(
-		cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
-		cStrRef subjectName, cStrRef errorPostscript
-	);
-
-	static bool s_checkExistingPathForCollision(
-		cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
-		cStrRef subjectName, cStrRef errorPostscript
-	);
-
-	static bool s_checkOverwrite(
-		cStrRef path, bool & errorMessageDisplayed, QWidget * parent,
-		cStrRef subjectName, cStrRef errorPostscript
-	);
-
-	// TODO: finish all combinations and de-duplicate
-
-	static bool s_checkLinePath(
-		cStrRef path, QLineEdit * line, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
-		cStrRef subjectName, cStrRef errorPostscript
-	){
-		bool verified = s_checkPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-		if (!verified)
-			highlightPathLineAsInvalid( line );
-		else
-			unhighlightPathLine( line );
-		return verified;
-	}
-
-	static bool s_checkLineCollision(
-		cStrRef path, QLineEdit * line, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
-		cStrRef subjectName, cStrRef errorPostscript
-	){
-		bool verified = s_checkCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-		if (!verified)
-			highlightPathLineAsInvalid( line );
-		else
-			unhighlightPathLine( line );
-		return verified;
-	}
-
-	template< typename ListItem >
-	static bool s_checkItemPath(
-		ListItem & item, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
-		cStrRef subjectName, cStrRef errorPostscript
-	){
-		bool verified = s_checkPath( item.getFilePath(), expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-		if (!verified)
-			highlightListItemAsInvalid( item );
-		else
-			unhighlightListItem( item );
-		return verified;
-	}
-
-	bool m_maybeCheckPath( cStrRef path, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		if (!verificationRequired)
-			return true;
-
-		return s_checkPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-	}
-
-	bool m_maybeCheckCollision( cStrRef path, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		if (!verificationRequired)
-			return true;
-
-		return s_checkCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-	}
-
-	bool m_maybeCheckOverwrite( cStrRef path, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		if (!verificationRequired)
-			return true;
-
-		return s_checkOverwrite( path, errorMessageDisplayed, parent, subjectName, errorPostscript );
-	}
-
-	bool m_maybeCheckLinePath(
-		cStrRef path, QLineEdit * line, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript
-	){
-		if (!verificationRequired)
-			return true;
-
-		return s_checkLinePath( path, line, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-	}
-
-	bool m_maybeCheckLineCollision(
-		cStrRef path, QLineEdit * line, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript
-	){
-		if (!verificationRequired)
-			return true;
-
-		return s_checkLineCollision( path, line, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-	}
-
-	template< typename ListItem >
-	bool m_maybeCheckItemPath( ListItem & item, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		if (!verificationRequired)
-			return true;
-
-		return s_checkItemPath( item, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
-	}
-
- public: // context-free
-
-	static bool checkFilePath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		bool errorMessageDisplayed = !showError;
-		return s_checkPath( path, EntryType::File, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
-	}
-	static bool checkDirPath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		bool errorMessageDisplayed = !showError;
-		return s_checkPath( path, EntryType::Dir, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
-	}
-
-	static bool checkNonEmptyFilePath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		if (path.isEmpty())
-			return true;
-
-		bool errorMessageDisplayed = !showError;
-		return s_checkNonEmptyPath( path, EntryType::File, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
-	}
-	static bool checkNonEmptyDirPath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		if (path.isEmpty())
-			return true;
-
-		bool errorMessageDisplayed = !showError;
-		return s_checkNonEmptyPath( path, EntryType::Dir, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
-	}
-
-	template< typename ListItem >
-	static bool checkItemFilePath( ListItem & item, bool showError, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		bool errorMessageDisplayed = !showError;
-		return s_checkItemPath( item, EntryType::File, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
-	}
-	template< typename ListItem >
-	static bool checkItemDirPath( ListItem & item, bool showError, cStrRef subjectName, cStrRef errorPostscript )
-	{
-		bool errorMessageDisplayed = !showError;
-		return s_checkItemPath( item, EntryType::Dir, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
-	}
-
  public: // context-sensitive (depend on settings from constructor)
 
 	PathChecker( QWidget * parent, bool verificationRequired )
 		: parent( parent ), verificationRequired( verificationRequired ) {}
+
+	bool gotSomeInvalidPaths() const
+	{
+		return errorMessageDisplayed;
+	}
 
 	bool checkAnyPath( cStrRef path, cStrRef subjectName, cStrRef errorPostscript )
 	{
@@ -319,9 +160,201 @@ class PathChecker {
 		return m_maybeCheckItemPath( item, EntryType::Dir, subjectName, errorPostscript );
 	}
 
-	bool gotSomeInvalidPaths() const
+ public: // context-free
+
+	static bool checkAnyPath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
 	{
-		return errorMessageDisplayed;
+		return s_checkPath( path, EntryType::Both, showError, subjectName, errorPostscript );
+	}
+	static bool checkFilePath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		return s_checkPath( path, EntryType::File, showError, subjectName, errorPostscript );
+	}
+	static bool checkDirPath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		return s_checkPath( path, EntryType::Dir, showError, subjectName, errorPostscript );
+	}
+
+	static bool checkOnlyNonEmptyAnyPath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		return s_checkOnlyNonEmptyAnyPath( path, EntryType::Both, showError, subjectName, errorPostscript );
+	}
+	static bool checkOnlyNonEmptyFilePath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		return s_checkOnlyNonEmptyAnyPath( path, EntryType::File, showError, subjectName, errorPostscript );
+	}
+	static bool checkOnlyNonEmptyDirPath( cStrRef path, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		return s_checkOnlyNonEmptyAnyPath( path, EntryType::Dir, showError, subjectName, errorPostscript );
+	}
+
+	template< typename ListItem >
+	static bool checkItemAnyPath( ListItem & item, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		return s_checkItemPath( item, EntryType::Both, showError, subjectName, errorPostscript );
+	}
+	template< typename ListItem >
+	static bool checkItemFilePath( ListItem & item, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		return s_checkItemPath( item, EntryType::File, showError, subjectName, errorPostscript );
+	}
+	template< typename ListItem >
+	static bool checkItemDirPath( ListItem & item, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		return s_checkItemPath( item, EntryType::Dir, showError, subjectName, errorPostscript );
+	}
+
+ private: // wrappers using verificationRequired
+
+	bool m_maybeCheckPath( cStrRef path, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		if (!verificationRequired)
+			return true;
+
+		return s_checkPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	}
+
+	bool m_maybeCheckNonEmptyPath( cStrRef path, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		if (!verificationRequired)
+			return true;
+
+		return s_checkNonEmptyPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	}
+
+	bool m_maybeCheckCollision( cStrRef path, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		if (!verificationRequired)
+			return true;
+
+		return s_checkCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	}
+
+	bool m_maybeCheckOverwrite( cStrRef path, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		if (!verificationRequired)
+			return true;
+
+		return s_checkOverwrite( path, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	}
+
+	bool m_maybeCheckLinePath(
+		cStrRef path, QLineEdit * line, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript
+	){
+		if (!verificationRequired)
+			return true;
+
+		return s_checkLinePath( path, line, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	}
+
+	bool m_maybeCheckLineCollision(
+		cStrRef path, QLineEdit * line, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript
+	){
+		if (!verificationRequired)
+			return true;
+
+		return s_checkLineCollision( path, line, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	}
+
+	template< typename ListItem >
+	bool m_maybeCheckItemPath( ListItem & item, EntryType expectedType, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		if (!verificationRequired)
+			return true;
+
+		return s_checkItemPath( item, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+	}
+
+ private: // code de-duplication helpers
+
+	// the actual checks, with error reporting
+
+	static bool s_checkPath(
+		cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	);
+
+	static bool s_checkNonEmptyPath(
+		cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	);
+
+	static bool s_checkCollision(
+		cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	);
+
+	static bool s_checkExistingPathForCollision(
+		cStrRef path, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	);
+
+	static bool s_checkOverwrite(
+		cStrRef path, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	);
+
+	// wrappers with invalid path highlighting
+
+	static bool s_checkLinePath(
+		cStrRef path, QLineEdit * line, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	){
+		bool verified = s_checkPath( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+		if (!verified)
+			highlightPathLineAsInvalid( line );
+		else
+			unhighlightPathLine( line );
+		return verified;
+	}
+
+	static bool s_checkLineCollision(
+		cStrRef path, QLineEdit * line, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	){
+		bool verified = s_checkCollision( path, expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+		if (!verified)
+			highlightPathLineAsInvalid( line );
+		else
+			unhighlightPathLine( line );
+		return verified;
+	}
+
+	template< typename ListItem >
+	static bool s_checkItemPath(
+		ListItem & item, EntryType expectedType, bool & errorMessageDisplayed, QWidget * parent,
+		cStrRef subjectName, cStrRef errorPostscript
+	){
+		bool verified = s_checkPath( item.getFilePath(), expectedType, errorMessageDisplayed, parent, subjectName, errorPostscript );
+		if (!verified)
+			highlightListItemAsInvalid( item );
+		else
+			unhighlightListItem( item );
+		return verified;
+	}
+
+	// even more code de-duplication
+
+	static bool s_checkPath( cStrRef path, EntryType expectedType, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		bool errorMessageDisplayed = !showError;
+		return s_checkPath( path, expectedType, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
+	}
+
+	static bool s_checkOnlyNonEmptyAnyPath( cStrRef path, EntryType expectedType, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		if (path.isEmpty())
+			return true;
+
+		bool errorMessageDisplayed = !showError;
+		return s_checkNonEmptyPath( path, expectedType, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
+	}
+
+	template< typename ListItem >
+	static bool s_checkItemPath( ListItem & item, EntryType expectedType, bool showError, cStrRef subjectName, cStrRef errorPostscript )
+	{
+		bool errorMessageDisplayed = !showError;
+		return s_checkItemPath( item, expectedType, errorMessageDisplayed, nullptr, subjectName, errorPostscript );
 	}
 
 };

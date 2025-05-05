@@ -388,30 +388,6 @@
       <string>Visual theme</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
-       <widget class="QLabel" name="schemeLabel">
-        <property name="text">
-         <string>Color scheme</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QRadioButton" name="schemeBtn_dark">
-        <property name="text">
-         <string>Dark (override)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QRadioButton" name="schemeBtn_system">
-        <property name="text">
-         <string>System default</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="styleLabel">
         <property name="text">
@@ -426,6 +402,30 @@
           <width>140</width>
           <height>0</height>
          </size>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="schemeLabel">
+        <property name="text">
+         <string>Color scheme</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="schemeBtn_system">
+        <property name="text">
+         <string>System default</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QRadioButton" name="schemeBtn_dark">
+        <property name="text">
+         <string>Dark (override)</string>
         </property>
        </widget>
       </item>

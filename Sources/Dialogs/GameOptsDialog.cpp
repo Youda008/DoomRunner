@@ -156,6 +156,9 @@ GameOptsDialog::GameOptsDialog( QWidget * parent, const GameplayDetails & gamepl
 	ui->dmflags3_line->setText( QString::number( gameplayDetails.dmflags3 ) );
 
 	updateCheckboxes();
+
+	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &ThisClass::accept );
+	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &ThisClass::reject );
 }
 
 GameOptsDialog::~GameOptsDialog()

@@ -25,6 +25,8 @@ NewConfigDialog::NewConfigDialog( QWidget * parent, const QFileInfo & origConfig
 	ui->suffixLabel->setText( ui->suffixLabel->text().replace( "{config_suffix}", origConfigFile.suffix() ) );
 	ui->configNameLine->setText( origConfigFile.completeBaseName() );
 
+	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &ThisClass::accept /* emits QDialog::accepted */ );
+	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &ThisClass::reject );
 	connect( this, &QDialog::accepted, this, &ThisClass::confirmed );
 }
 

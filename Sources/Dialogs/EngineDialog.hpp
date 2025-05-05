@@ -65,9 +65,7 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 
 	void onAutoDetectBtnClicked();
 
- private slots: // overridden slots
-
-	virtual void accept() override;
+	void onAcceptBtnClicked();
 
  private: // internal members
 

@@ -360,18 +360,14 @@ void DMBEditor::onSaveAsBtnClicked()
 
 void DMBEditor::onDeleteBtnClicked()
 {
-	bool fileDeleted = fs::deleteFile( origFilePath );
-	if (fileDeleted)
-	{
-		outcome = Outcome::Deleted;
-	}
-	else
+	bool deleted = fs::deleteFile( origFilePath );
+	if (!deleted)
 	{
 		reportRuntimeError( "Cannot delete Mod Bundle",
 			"Failed to delete the current Mod Bundle \""%origFilePath%"\""
 		);
-		outcome = Outcome::Failed;
 	}
+	outcome = deleted ? Outcome::Deleted : Outcome::Failed;
 
 	SuperClass::accept();  // regardless if the save was successful, close the dialog
 }

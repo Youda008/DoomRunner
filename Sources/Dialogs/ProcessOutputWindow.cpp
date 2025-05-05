@@ -82,7 +82,6 @@ ProcessOutputWindow::ProcessOutputWindow( QWidget * parent, bool closeOnSuccess 
 	connect( abortBtn, &QPushButton::clicked, this, &ThisClass::onAbortClicked );
 	connect( closeBtn, &QPushButton::clicked, this, &ThisClass::reject );
 
-	// closeEvent() is not called when the dialog is closed, we have to connect this to the finished() signal
 	connect( this, &QDialog::finished, this, &ThisClass::onDialogClosed );
 
 	setOwnStatus( ProcessStatus::NotStarted );

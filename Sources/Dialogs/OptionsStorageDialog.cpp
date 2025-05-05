@@ -50,6 +50,9 @@ OptionsStorageDialog::OptionsStorageDialog( QWidget * parent, const StorageSetti
 	connect( ui->audioBtn_none, &QRadioButton::clicked, this, &ThisClass::onAudioStorageChosen_none );
 	connect( ui->audioBtn_global, &QRadioButton::clicked, this, &ThisClass::onAudioStorageChosen_global );
 	connect( ui->audioBtn_preset, &QRadioButton::clicked, this, &ThisClass::onAudioStorageChosen_preset );
+
+	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &ThisClass::accept );
+	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &ThisClass::reject );
 }
 
 void OptionsStorageDialog::restoreStorage( OptionsStorage storage, QRadioButton * noneBtn, QRadioButton * globalBtn, QRadioButton * presetBtn )

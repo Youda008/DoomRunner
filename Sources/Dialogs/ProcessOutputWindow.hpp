@@ -92,7 +92,6 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 
 	void onAbortClicked( bool checked );
 
-	// closeEvent() is not called when the dialog is closed, we have to connect this to the finished() signal
 	void onDialogClosed( int result );
 
  private: // methods

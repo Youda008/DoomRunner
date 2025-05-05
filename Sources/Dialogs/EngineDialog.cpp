@@ -64,6 +64,9 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 	connect( ui->dataDirLine, &QLineEdit::textChanged, this, &ThisClass::onDataDirChanged );
 
 	//connect( ui->familyCmbBox, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &ThisClass::onFamilySelected );
+
+	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &ThisClass::onAcceptBtnClicked );
+	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &ThisClass::reject );
 }
 
 void EngineDialog::adjustUi()
@@ -123,7 +126,7 @@ void EngineDialog::onWindowShown()
 		selectExecutable();
 
 	if (engine.executablePath.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())  // user closed the selectExecutable dialog
-		done( QDialog::Rejected );
+		this->reject();
 }
 
 void EngineDialog::autofillEngineInfo( EngineInfo & engine, const QString & executablePath )
@@ -228,7 +231,7 @@ void EngineDialog::onAutoDetectBtnClicked()
 	autofillEngineFields();
 }
 
-void EngineDialog::accept()
+void EngineDialog::onAcceptBtnClicked()
 {
 	// verify requirements
 
@@ -311,7 +314,7 @@ void EngineDialog::accept()
 	if (familyIdx < 0 || familyIdx >= int( EngineFamily::_EnumEnd ))
 	{
 		reportLogicError( u"accept" ,"Invalid engine family index", "Family combo-box index is out of bounds." );
-		return;
+		return;  // refuse the user's confirmation
 	}
 	engine.family = EngineFamily( familyIdx );
 	engine.setFamilyTraits( engine.family );
@@ -319,5 +322,5 @@ void EngineDialog::accept()
 	assert( engine.isCorrectlyInitialized() );
 
 	// accept the user's confirmation
-	SuperClass::accept();
+	this->accept();
 }

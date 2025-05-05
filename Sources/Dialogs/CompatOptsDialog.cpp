@@ -112,6 +112,9 @@ CompatOptsDialog::CompatOptsDialog( QWidget * parent, const CompatibilityDetails
 	ui->compatflags2_line->setText( QString::number( compatDetails.compatflags2 ) );
 
 	updateCheckboxes();
+
+	connect( ui->buttonBox, &QDialogButtonBox::accepted, this, &ThisClass::accept );
+	connect( ui->buttonBox, &QDialogButtonBox::rejected, this, &ThisClass::reject );
 }
 
 CompatOptsDialog::~CompatOptsDialog()

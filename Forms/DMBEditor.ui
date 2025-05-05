@@ -34,7 +34,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Add a mod file (Ins)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Add a mod file (Ins)</string>
        </property>
        <property name="icon">
         <iconset resource="../Resources/Resources.qrc">
@@ -57,7 +57,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Add a directory with an extracted mod&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Add a directory with an extracted mod</string>
        </property>
        <property name="icon">
         <iconset resource="../Resources/Resources.qrc">
@@ -80,7 +80,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Remove the selected mod file/directory (Del)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Remove the selected mod file/directory (Del)</string>
        </property>
        <property name="icon">
         <iconset resource="../Resources/Resources.qrc">
@@ -103,7 +103,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Move the selected mod up (Ctrl+Up)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Move the selected mod up (Ctrl+Up)</string>
        </property>
        <property name="icon">
         <iconset resource="../Resources/Resources.qrc">
@@ -126,7 +126,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Move the selected mod down (Ctrl+Down)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Move the selected mod down (Ctrl+Down)</string>
        </property>
        <property name="icon">
         <iconset resource="../Resources/Resources.qrc">
@@ -166,7 +166,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Delete this Mod Bundle&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Delete this Mod Bundle</string>
        </property>
        <property name="text">
         <string>Delete</string>
@@ -192,7 +192,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Save this Mod Bundle as a new file&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Save this Mod Bundle as a new file</string>
        </property>
        <property name="text">
         <string>Save as</string>
@@ -218,7 +218,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Save the existing Mod Bundle&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Save the existing Mod Bundle</string>
        </property>
        <property name="text">
         <string>Save</string>

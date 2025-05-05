@@ -38,6 +38,12 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
       </spacer>
      </item>
     </layout>
@@ -177,6 +183,12 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
       </spacer>
      </item>
     </layout>
@@ -186,7 +198,7 @@
      <item>
       <widget class="QPushButton" name="autoDetectBtn">
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attempt to automatically detect the paths and properties from the currently set Executable path.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>Attempt to automatically detect the paths and properties from the currently set Executable path.</string>
        </property>
        <property name="whatsThis">
         <string>Attempt to automatically detect the paths and properties from the currently set Executable path.</string>

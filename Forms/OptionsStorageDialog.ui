@@ -190,6 +190,9 @@
       </item>
       <item>
        <widget class="QRadioButton" name="videoBtn_preset">
+        <property name="toolTip">
+         <string>Each preset will have its own options. Everytime you select a preset, these options will be restored from it.</string>
+        </property>
         <property name="text">
          <string>Stored in preset</string>
         </property>

@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="infoLabel">
      <property name="text">
-      <string>Creating a copy of &lt;orig_config_file_name&gt;</string>
+      <string>Creating a copy of {orig_config_file_name}</string>
      </property>
     </widget>
    </item>
@@ -36,7 +36,7 @@
      <item>
       <widget class="QLabel" name="suffixLabel">
        <property name="text">
-        <string>.&lt;config_suffix&gt;</string>
+        <string>.{config_suffix}</string>
        </property>
       </widget>
      </item>

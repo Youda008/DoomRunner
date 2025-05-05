@@ -106,7 +106,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Create a new preset (Ins)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Create a new preset (Ins)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -129,7 +129,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Delete the selected preset (Del)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Delete the selected preset (Del)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -152,7 +152,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Clone the selected preset (Ctrl+C)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Clone the selected preset (Ctrl+C)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -175,7 +175,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Move the selected preset up (Ctrl+Up)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Move the selected preset up (Ctrl+Up)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -198,7 +198,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Move the selected preset down (Ctrl+Down)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Move the selected preset down (Ctrl+Down)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -359,7 +359,7 @@
                <item>
                 <widget class="QToolButton" name="configCloneBtn">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create a copy of the current config with a new name.&lt;br/&gt;If no config is selected, it will clone the current engine's default config.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>Create a copy of the current config with a new name. If no config is selected, it will clone the current engine's default config.</string>
                  </property>
                  <property name="icon">
                   <iconset resource="../Resources/Resources.qrc">
@@ -406,7 +406,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Add a mod file (Ins)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Add a mod file (Ins)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -432,7 +432,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Add a directory with an extracted mod&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Add a directory with an extracted mod</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -455,7 +455,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Add a custom command line argument (Ctrl+*)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Add a custom command line argument (Ctrl+*)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -481,7 +481,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Remove the selected mod file/directory (Del)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Remove the selected mod file/directory (Del)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -507,7 +507,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Move the selected mod up (Ctrl+Up)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Move the selected mod up (Ctrl+Up)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -533,7 +533,7 @@
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Move the selected mod down (Ctrl+Down)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>Move the selected mod down (Ctrl+Down)</string>
                    </property>
                    <property name="icon">
                     <iconset resource="../Resources/Resources.qrc">
@@ -2293,7 +2293,7 @@
          </size>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Execute the final launch command (F10)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Execute the final launch command (F10)</string>
         </property>
         <property name="text">
          <string>Launch!</string>

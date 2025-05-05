@@ -52,7 +52,7 @@
                </font>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;add new engine (Ins)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>add new engine (Ins)</string>
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">
@@ -80,7 +80,7 @@
                </font>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;remove selected engine (Del)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>remove selected engine (Del)</string>
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">
@@ -103,7 +103,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;move selected engine up (Ctrl+Up)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>move selected engine up (Ctrl+Up)</string>
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">
@@ -126,7 +126,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;move selected engine down (Ctrl+Down)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>move selected engine down (Ctrl+Down)</string>
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">
@@ -285,7 +285,7 @@
                </font>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;add new IWAD&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>add new IWAD</string>
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">
@@ -313,7 +313,7 @@
                </font>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;remove selected IWAD&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>remove selected IWAD</string>
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">
@@ -336,7 +336,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;move selected IWAD up (Ctrl+Up)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>move selected IWAD up (Ctrl+Up)</string>
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">
@@ -359,7 +359,7 @@
                </size>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;move selected mod down (Ctrl+Down)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>move selected mod down (Ctrl+Down)</string>
               </property>
               <property name="icon">
                <iconset resource="../Resources/Resources.qrc">

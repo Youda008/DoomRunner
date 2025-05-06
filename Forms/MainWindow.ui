@@ -26,7 +26,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_12">
         <item>
-         <layout class="QHBoxLayout" name="hLayout_presetFiles" stretch="100,95,120">
+         <layout class="QHBoxLayout" name="hLayout_presetFiles" stretch="100,90,120">
           <item>
            <layout class="QVBoxLayout" name="vLayout_filesLeft">
             <item>

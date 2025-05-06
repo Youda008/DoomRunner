@@ -1040,7 +1040,7 @@ void MainWindow::setupMapPackList()
 	);
 
 	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
-	ui->mapDirView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
+	ui->mapDirView->toggleIcons( MapSettings{}.showIcons );  // we need to do this instead of model.toggleIcons() in order to update the action text
 	connect( ui->mapDirView->toggleIconsAction, &QAction::triggered, this, &ThisClass::onMapIconsToggled );
 
 	// allow hiding the the help label
@@ -1106,7 +1106,7 @@ void MainWindow::setupModList()
 	connect( addExistingDMBAction, &QAction::triggered, this, &ThisClass::modAddExistingDMB );
 
 	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
-	ui->modListView->toggleIcons( false );  // we need to do this instead of model.toggleIcons() in order to update the action text
+	ui->modListView->toggleIcons( ModSettings{}.showIcons );  // we need to do this instead of model.toggleIcons() in order to update the action text
 	connect( ui->modListView->toggleIconsAction, &QAction::triggered, this, &ThisClass::onModIconsToggled );
 
 	// setup buttons

@@ -44,6 +44,7 @@
     <content_attribute id="violence-bloodshed">moderate</content_attribute>
   </content_rating>
   <releases>
+	<release version="1.9.1" date="2025-05-08"><url>https://github.com/Youda008/DoomRunner/releases/tag/v1.9.1</url></release>
     <release version="1.9.0" date="2025-02-03"><url>https://github.com/Youda008/DoomRunner/releases/tag/v1.9.0</url></release>
     <release version="1.8.3" date="2024-12-08"><url>https://github.com/Youda008/DoomRunner/releases/tag/v1.8.3</url></release>
     <release version="1.8.2" date="2024-01-15"><url>https://github.com/Youda008/DoomRunner/releases/tag/v1.8.2</url></release>

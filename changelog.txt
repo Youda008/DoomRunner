@@ -1,3 +1,19 @@
+1.9.1
+- fixed crash when reordering mods on some operating systems
+- fixed all dmflags2 being mistakenly put into dmflags3
+- fixed broken layout with Qt versions older than 6.8
+- fixed compatibility with the KEX-based Doom re-release (the file paths will be absolute)
+- fixed tooltips for the Custom data sub-directories and some gameplay flags
+- only use -pistolstart and +sv_cheats in the command if the engine supports it (to prevent errors when starting)
+- allowed entering absolute paths into the "Custom data sub-directories" fields
+- Demo directory is now a separate directory from Save directory with its own override
+- added possibility to hide the map list help label via a right click
+- added "Open file" action to the right-click menu
+- added "Move to top/bottom" actions to the right-click menu
+- added the possibility to copy&paste mods from one preset to another
+- introduced "Doom Mod Bundles" - sub-lists of mods that can be shared between presets
+- minor bug-fixes and optimizations
+
 1.9.0
 - new application icon
 - reworked the way the launcher detects where the engines store their data (configs, saves, ...)

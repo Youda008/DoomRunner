@@ -3,6 +3,7 @@
 - fixed all dmflags2 being mistakenly put into dmflags3
 - fixed broken layout with Qt versions older than 6.8
 - fixed compatibility with the KEX-based Doom re-release (the file paths will be absolute)
+- fixed the special character escaping in the "Additional arguments" lines
 - fixed tooltips for the Custom data sub-directories and some gameplay flags
 - only use -pistolstart and +sv_cheats in the command if the engine supports it (to prevent errors when starting)
 - allowed entering absolute paths into the "Custom data sub-directories" fields

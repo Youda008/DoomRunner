@@ -37,55 +37,121 @@ QList< Argument > splitCommandLineArguments( const QString & argsStr )
 	QList< Argument > args;
 
 	QString currentArg;
+	currentArg.reserve( 32 );
 
-	bool escaped = false;
-	bool inQuotes = false;
-	for (qsizetype currentPos = 0; currentPos < argsStr.size(); ++currentPos)
+	auto flushCurrentArg = [ &currentArg, &args ]( bool wasQuoted )
 	{
-		QChar currentChar = argsStr[ currentPos ];
+		args.append( Argument{ std::move(currentArg), wasQuoted } );
+		currentArg.resize( 0 );  // clear the content without freeing the allocated buffer
+	};
 
-		if (escaped)
+	if constexpr (IS_WINDOWS)  // parse according to the Windows cmd escaping rules
+	{
+		bool insideQuotes = false;
+		bool wasClosingQuotesChar = false;
+
+		for (qsizetype currentPos = 0; currentPos < argsStr.size(); ++currentPos)
 		{
-			escaped = false;
-			currentArg += currentChar;
-			// We should handle all the special characters like '\n', '\t', '\b', but screw it, it's not needed.
-		}
-		else if (inQuotes) // and not escaped
-		{
-			if (currentChar == '\\') {
-				escaped = true;
-			} else if (currentChar == '"') {
-				inQuotes = false;
-				args.append( Argument{ std::move(currentArg), true } );
-				currentArg.clear();
-			} else {
-				currentArg += currentChar;
+			QChar currentChar = argsStr[ currentPos ];
+
+			if (insideQuotes)
+			{
+				if (currentChar == '"') {
+					insideQuotes = false;
+					wasClosingQuotesChar = true;
+				} else {
+					currentArg += currentChar;
+				}
+			}
+			else // not inside quotes
+			{
+				if (currentChar == '"') {
+					insideQuotes = true;
+					if (wasClosingQuotesChar) {
+						// 2 consequent quote characters produce 1 quote character inside the quoted string
+						currentArg += '"';
+					}
+				} else if (currentChar == ' ') {
+					if (!currentArg.isEmpty() || wasClosingQuotesChar) {
+						flushCurrentArg( wasClosingQuotesChar );
+					}
+				} else {
+					currentArg += currentChar;
+				}
+				wasClosingQuotesChar = false;
 			}
 		}
-		else // not escaped and not in quotes
+
+		// We reached the end of the command line without encountering the final terminating space, flush the last word.
+		if (!currentArg.isEmpty())
 		{
-			if (currentChar == '\\') {
-				escaped = true;
-			} else if (currentChar == '"') {
-				inQuotes = true;
-				if (!currentArg.isEmpty()) {
-					args.append( Argument{ std::move(currentArg), false } );
-					currentArg.clear();
-				}
-			} else if (currentChar == ' ') {
-				if (!currentArg.isEmpty()) {
-					args.append( Argument{ std::move(currentArg), false } );
-					currentArg.clear();
-				}
-			} else {
-				currentArg += currentChar;
-			}
+			// accept also unterminated quoted argument
+			flushCurrentArg( insideQuotes || wasClosingQuotesChar );
 		}
 	}
-
-	if (!currentArg.isEmpty())
+	else  // parse according to the bash escaping rules
 	{
-		args.append( Argument{ std::move(currentArg), (inQuotes && argsStr.back() != '"') } );
+		bool insideSingleQuotes = false;
+		bool insideDoubleQuotes = false;
+		bool wasClosingQuotesChar = false;
+		bool wasEscapeChar = false;
+
+		for (qsizetype currentPos = 0; currentPos < argsStr.size(); ++currentPos)
+		{
+			QChar currentChar = argsStr[ currentPos ];
+
+			if (insideSingleQuotes)
+			{
+				if (currentChar == '\'') {
+					insideSingleQuotes = false;
+					wasClosingQuotesChar = true;
+				} else {
+					currentArg += currentChar;
+				}
+			}
+			else if (wasEscapeChar)
+			{
+				// 2 consequent escape characters produce 1 escape character inside the quoted string and don't escape any further
+				wasEscapeChar = false;
+				currentArg += currentChar;
+				// We should handle all the special characters like '\n', '\t', '\b', but screw it, it's not needed.
+			}
+			else if (insideDoubleQuotes) // and wasn't escape char
+			{
+				if (currentChar == '\\') {
+					wasEscapeChar = true;
+				} else if (currentChar == '"') {
+					insideDoubleQuotes = false;
+					wasClosingQuotesChar = true;
+				} else {
+					currentArg += currentChar;
+				}
+			}
+			else // wasn't escape char and not in quotes
+			{
+				if (currentChar == '\\') {
+					wasEscapeChar = true;
+				} else if (currentChar == '\'') {
+					insideSingleQuotes = true;
+				} else if (currentChar == '"') {
+					insideDoubleQuotes = true;
+				} else if (currentChar == ' ') {
+					if (!currentArg.isEmpty() || wasClosingQuotesChar) {
+						flushCurrentArg( wasClosingQuotesChar );
+					}
+				} else {
+					currentArg += currentChar;
+				}
+				wasClosingQuotesChar = false;
+			}
+		}
+
+		// We reached the end of the command line without encountering the final terminating space, flush the last word.
+		if (!currentArg.isEmpty())
+		{
+			// accept also unterminated quoted argument
+			flushCurrentArg( insideSingleQuotes || insideDoubleQuotes || wasClosingQuotesChar );
+		}
 	}
 
 	return args;

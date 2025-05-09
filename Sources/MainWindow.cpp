@@ -55,8 +55,19 @@
 static const char defaultOptionsFileName [] = "options.json";
 static const char defaultCacheFileName [] = "file_info_cache.json";
 
-static constexpr int VarNameColumn = 0;
-static constexpr int VarValueColumn = 1;
+enum EnvVarsColumn
+{
+	VarName = 0,
+	VarValue = 1,
+};
+
+enum FSTreeColumn
+{
+	FileName = 0,
+	FileSize = 1,
+	FileType = 2,
+	TimeModified = 3,
+};
 
 
 //======================================================================================================================
@@ -1012,6 +1023,9 @@ void MainWindow::setupMapPackList()
 	mapModel.setFilter( QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot | QDir::NoSymLinks );
 	mapModel.setNameFilters( doom::getModFileSuffixes() );
 	mapModel.setNameFilterDisables( false );
+
+	// make the list sorted by file name
+	mapModel.sort( FSTreeColumn::FileName );
 
 	// remove the column names at the top
 	ui->mapDirView->setHeaderHidden( true );
@@ -2159,8 +2173,8 @@ void MainWindow::restoreEnvVars( const EnvVars & envVars, QTableWidget * table )
 	{
 		int newRowIdx = table->rowCount();
 		table->insertRow( newRowIdx );
-		table->setItem( newRowIdx, VarNameColumn, new QTableWidgetItem( envVar.name ) );
-		table->setItem( newRowIdx, VarValueColumn, new QTableWidgetItem( envVar.value ) );
+		table->setItem( newRowIdx, EnvVarsColumn::VarName, new QTableWidgetItem( envVar.name ) );
+		table->setItem( newRowIdx, EnvVarsColumn::VarValue, new QTableWidgetItem( envVar.value ) );
 	}
 
 	disableEnvVarsCallbacks = false;
@@ -4466,7 +4480,7 @@ void MainWindow::presetEnvVarAdd()
 	}
 
 	// open edit mode so that user can start writing the variable name
-	wdg::editCellAtIndex( ui->presetEnvVarTable, appendedIdx, VarNameColumn );
+	wdg::editCellAtIndex( ui->presetEnvVarTable, appendedIdx, EnvVarsColumn::VarName );
 
 	//scheduleSavingOptions();
 }
@@ -4498,7 +4512,7 @@ void MainWindow::globalEnvVarAdd()
 	globalOpts.envVars.append( os::EnvVar{} );
 
 	// open edit mode so that user can start writing the variable name
-	wdg::editCellAtIndex( ui->globalEnvVarTable, appendedIdx, VarNameColumn );
+	wdg::editCellAtIndex( ui->globalEnvVarTable, appendedIdx, EnvVarsColumn::VarName );
 
 	//scheduleSavingOptions();
 }
@@ -4519,19 +4533,19 @@ void MainWindow::globalEnvVarDelete()
 
 static void swapEnvVarTableRows( QTableWidget * table, int row1, int row2 )
 {
-	QTableWidgetItem * nameItem1  = table->takeItem( row1, VarNameColumn );
-	QTableWidgetItem * valueItem1 = table->takeItem( row1, VarValueColumn );
-	QTableWidgetItem * nameItem2  = table->takeItem( row2, VarNameColumn );
-	QTableWidgetItem * valueItem2 = table->takeItem( row2, VarValueColumn );
-	table->setItem( row1, VarNameColumn,  nameItem2 );
-	table->setItem( row1, VarValueColumn, valueItem2 );
-	table->setItem( row2, VarNameColumn,  nameItem1 );
-	table->setItem( row2, VarValueColumn, valueItem1 );
+	QTableWidgetItem * nameItem1  = table->takeItem( row1, EnvVarsColumn::VarName );
+	QTableWidgetItem * valueItem1 = table->takeItem( row1, EnvVarsColumn::VarValue );
+	QTableWidgetItem * nameItem2  = table->takeItem( row2, EnvVarsColumn::VarName );
+	QTableWidgetItem * valueItem2 = table->takeItem( row2, EnvVarsColumn::VarValue );
+	table->setItem( row1, EnvVarsColumn::VarName,  nameItem2 );
+	table->setItem( row1, EnvVarsColumn::VarValue, valueItem2 );
+	table->setItem( row2, EnvVarsColumn::VarName,  nameItem1 );
+	table->setItem( row2, EnvVarsColumn::VarValue, valueItem1 );
 }
 
 void MainWindow::moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx )
 {
-	QString newVarName = table->item( rowIdx, VarNameColumn )->text();
+	QString newVarName = table->item( rowIdx, EnvVarsColumn::VarName )->text();
 
 	// This must be done, otherwise table->takeItem() / table->setItem() will call onPresetEnvVarDataChanged(),
 	// and this function will be recursively called again.
@@ -4539,14 +4553,14 @@ void MainWindow::moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * en
 
 	wdg::deselectAllAndUnsetCurrent( table );
 
-	while (rowIdx > 0 && newVarName < table->item( rowIdx - 1, VarNameColumn )->text())
+	while (rowIdx > 0 && newVarName < table->item( rowIdx - 1, EnvVarsColumn::VarName )->text())
 	{
 		swapEnvVarTableRows( table, rowIdx, rowIdx - 1 );
 		if (envVars)
 			std::swap( (*envVars)[ rowIdx ], (*envVars)[ rowIdx - 1 ] );
 		rowIdx -= 1;
 	}
-	while (rowIdx < table->rowCount() - 1 && newVarName > table->item( rowIdx + 1, VarNameColumn )->text())
+	while (rowIdx < table->rowCount() - 1 && newVarName > table->item( rowIdx + 1, EnvVarsColumn::VarName )->text())
 	{
 		swapEnvVarTableRows( table, rowIdx, rowIdx + 1 );
 		if (envVars)
@@ -4566,13 +4580,13 @@ void MainWindow::onPresetEnvVarDataChanged( int row, int column )
 
 	if (selectedPreset)
 	{
-		if (column == VarNameColumn)
+		if (column == EnvVarsColumn::VarName)
 			selectedPreset->envVars[ row ].name = ui->presetEnvVarTable->item( row, column )->text();
-		else if (column == VarValueColumn)
+		else if (column == EnvVarsColumn::VarValue)
 			selectedPreset->envVars[ row ].value = ui->presetEnvVarTable->item( row, column )->text();
 	}
 
-	if (column == VarNameColumn)
+	if (column == EnvVarsColumn::VarName)
 	{
 		// the sort key has changed, move the entry so that the table remains sorted
 		moveEnvVarToKeepTableSorted( ui->presetEnvVarTable, selectedPreset ? &selectedPreset->envVars : nullptr, row );
@@ -4584,12 +4598,12 @@ void MainWindow::onGlobalEnvVarDataChanged( int row, int column )
 	if (disableEnvVarsCallbacks)
 		return;
 
-	if (column == VarNameColumn)
+	if (column == EnvVarsColumn::VarName)
 		globalOpts.envVars[ row ].name = ui->globalEnvVarTable->item( row, column )->text();
-	else if (column == VarValueColumn)
+	else if (column == EnvVarsColumn::VarValue)
 		globalOpts.envVars[ row ].value = ui->globalEnvVarTable->item( row, column )->text();
 
-	if (column == VarNameColumn)
+	if (column == EnvVarsColumn::VarName)
 	{
 		// the sort key has changed, move the entry so that the table remains sorted
 		moveEnvVarToKeepTableSorted( ui->globalEnvVarTable, &globalOpts.envVars, row );

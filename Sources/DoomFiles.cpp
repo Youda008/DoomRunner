@@ -45,6 +45,7 @@ bool canBeMapPack( const QFileInfo & file )
 QStringList getModFileSuffixes()
 {
 	QStringList suffixes;
+	suffixes.reserve( pwadSuffixes.size() + dukeSuffixes.size() + 1 );
 	for (const QString & suffix : pwadSuffixes)
 		suffixes.append( "*."+suffix );
 	for (const QString & suffix : dukeSuffixes)
@@ -518,14 +519,16 @@ QStringList getStandardMapNames( const QString & iwadFileName )
 
 	if (iwadFileBaseNameLower == "doom" || iwadFileBaseNameLower == "doom1")
 	{
+		mapNames.reserve( 4 * 9 );
 		for (int e = 1; e <= 4; e++)
 			for (int m = 1; m <= 9; m++)
-				mapNames.push_back( QStringLiteral("E%1M%2").arg(e).arg(m) );
+				mapNames.append( QStringLiteral("E%1M%2").arg(e).arg(m) );
 	}
 	else
 	{
+		mapNames.reserve( 32 );
 		for (int i = 1; i <= 32; i++)
-			mapNames.push_back( QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') ) );
+			mapNames.append( QStringLiteral("MAP%1").arg( i, 2, 10, QChar('0') ) );
 	}
 
 	return mapNames;

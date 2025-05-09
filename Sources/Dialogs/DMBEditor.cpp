@@ -134,6 +134,7 @@ void DMBEditor::loadModsFromDMB( const QString & filePath )
 	wdg::deselectAllAndUnsetCurrent( ui->modListView );
 	modModel.startCompleteUpdate();
 	modModel.clear();
+	modModel.reserve( entries->size() );
 	for (const QString & filePath : *entries)
 	{
 		modModel.append( Mod( filePath ) );
@@ -144,6 +145,7 @@ void DMBEditor::loadModsFromDMB( const QString & filePath )
 bool DMBEditor::saveModsToDMB( const QString & filePath )
 {
 	QStringList entries;
+	entries.reserve( modModel.size() );
 	for (const Mod & mod : modModel)
 	{
 		entries.append( mod.path );

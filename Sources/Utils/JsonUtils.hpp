@@ -387,26 +387,27 @@ class JsonDocumentCtx {
 //======================================================================================================================
 // generic utils
 
-inline QJsonArray serializeStringVec( const QStringList & vec )
+inline QJsonArray serializeStringList( const QStringList & list )
 {
 	QJsonArray jsArray;
-	for (const auto & elem : vec)
+	for (const auto & elem : list)
 	{
 		jsArray.append( elem );
 	}
 	return jsArray;
 }
 
-inline QStringList deserializeStringVec( const JsonArrayCtx & jsVec )
+inline QStringList deserializeStringList( const JsonArrayCtx & jsArray )
 {
-	QStringList vec;
-	for (qsizetype i = 0; i < jsVec.size(); i++)
+	QStringList list;
+	list.reserve( jsArray.size() );
+	for (qsizetype i = 0; i < jsArray.size(); i++)
 	{
-		QString elem = jsVec.getString( i );
+		QString elem = jsArray.getString( i );
 		if (!elem.isEmpty())
-			vec.append( std::move(elem) );
+			list.append( std::move(elem) );
 	}
-	return vec;
+	return list;
 }
 
 template< typename List >

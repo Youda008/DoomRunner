@@ -388,7 +388,7 @@ class FilteredList {
 	/// Filters the list model entries to display only those that match a given criteria.
 	void search( const QString & phrase, bool caseSensitive, bool useRegex )
 	{
-		_filteredList.clear();
+		clearButKeepAllocated( _filteredList );
 
 		if (useRegex)
 		{
@@ -409,7 +409,7 @@ class FilteredList {
 	/// Restores the list model to display the full unfiltered content.
 	void restore()
 	{
-		_filteredList.clear();
+		clearButKeepAllocated( _filteredList );
 		for (auto & item : _fullList)
 			_filteredList.append( &item );
 	}
@@ -968,6 +968,7 @@ class GenericListModel : public AListModel, public ListImpl {
 	private: QList< QUrl > makeMimeUrls( const QModelIndexList & indexes ) const
 	{
 		QList< QUrl > urls;
+		urls.reserve( indexes.size() );
 		for (const QModelIndex & index : indexes)
 		{
 			if (index.row() < 0 || index.row() >= listImpl().size())

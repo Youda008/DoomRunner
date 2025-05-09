@@ -721,7 +721,8 @@ QList< MonitorInfo > listMonitors()
 	QList< MonitorInfo > monitors;
 
 	// in the end this work well for both platforms, just ZDoom indexes the monitors from 1 while GZDoom from 0
-	QList< QScreen * > screens = QGuiApplication::screens();
+	const QList< QScreen * > screens = QGuiApplication::screens();
+	monitors.reserve( screens.size() );
 	for (qsizetype monitorIdx = 0; monitorIdx < screens.size(); monitorIdx++)
 	{
 		MonitorInfo myInfo;
@@ -729,7 +730,7 @@ QList< MonitorInfo > listMonitors()
 		myInfo.width = screens[ monitorIdx ]->size().width();
 		myInfo.height = screens[ monitorIdx ]->size().height();
 		myInfo.isPrimary = monitorIdx == 0;
-		monitors.push_back( myInfo );
+		monitors.append( myInfo );
 	}
 
 	return monitors;

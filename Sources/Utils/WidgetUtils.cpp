@@ -176,6 +176,7 @@ QList< int > getSelectedItemIndexes( QListView * view )
 {
 	QList< int > selectedRowIndexes;
 	const QModelIndexList selectedModelIndexes = getSelectedItemIndexes( toAbstract( view ) );
+	selectedRowIndexes.reserve( selectedModelIndexes.size() );
 	for (const QModelIndex & index : selectedModelIndexes)
 		selectedRowIndexes.append( index.row() );
 	return selectedRowIndexes;

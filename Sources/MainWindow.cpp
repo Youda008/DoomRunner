@@ -91,6 +91,7 @@ QStringList MainWindow::getSelectedMapPacks() const
 	const auto selectedRows = wdg::getSelectedRows( ui->mapDirView );
 
 	// extract the file paths
+	selectedMapPacks.reserve( selectedRows.size() );
 	for (const QModelIndex & index : selectedRows)
 	{
 		QString modelPath = mapModel.filePath( index );
@@ -1936,6 +1937,7 @@ void MainWindow::restoreSelectedMapPacks( Preset & preset )
 
 	const QStringList mapPacksCopy = preset.selectedMapPacks;
 	preset.selectedMapPacks.clear();  // clear the list in the preset and let it repopulate only with valid items
+	preset.selectedMapPacks.reserve( mapPacksCopy.size() );
 	for (const QString & path : mapPacksCopy)
 	{
 		QModelIndex mapIdx = mapModel.index( path );
@@ -1976,7 +1978,8 @@ void MainWindow::restoreSelectedMods( Preset & preset )
 	wdg::deselectAllAndUnsetCurrent( ui->modListView );  // this actually doesn't call a toggle callback, because the list is checkbox-based
 
 	modModel.startCompleteUpdate();
-	modModel.clear();
+	clearButKeepAllocated( modModel );
+	modModel.reserve( preset.mods.size() );
 	for (Mod & mod : preset.mods)
 	{
 		modModel.append( mod );
@@ -5217,12 +5220,12 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 		QStringList modFiles;
 		forEachCheckedModFileWithExpandedDMBs( [&]( const Mod & mod )
 		{
-				if (mod.isCmdArg) {  // this is not a file but a custom command line argument, append it directly to the arguments
-					appendCustomArguments( fileArgs, mod.name, opts.quotePaths );
-				} else {
-					p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
-					addFileAccordingToSuffix( modFiles, mod.path );
-				}
+			if (mod.isCmdArg) {  // this is not a file but a custom command line argument, append it directly to the arguments
+				appendCustomArguments( fileArgs, mod.name, opts.quotePaths );
+			} else {
+				p.checkItemAnyPath( mod, "the selected mod", "Please update the mod list." );
+				addFileAccordingToSuffix( modFiles, mod.path );
+			}
 		});
 
 		// output the final sequence to the cmd.arguments

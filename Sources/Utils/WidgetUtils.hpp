@@ -181,8 +181,9 @@ template< typename IsLessThan >
 QList<int> getSortedRows( const QModelIndexList & selectedIndexes, const IsLessThan & isLessThan )
 {
 	QList<int> selectedRowsAsc;
+	selectedRowsAsc.reserve( selectedIndexes.size() );
 	for (const QModelIndex & index : selectedIndexes)
-		selectedRowsAsc.push_back( index.row() );
+		selectedRowsAsc.append( index.row() );
 	std::sort( selectedRowsAsc.begin(), selectedRowsAsc.end(), isLessThan );
 	return selectedRowsAsc;
 }
@@ -610,7 +611,7 @@ void updateModelFromDir(
 
 	model.startCompleteUpdate();  // this resets the highlighted item pointed to by a mouse cursor,
 	                              // but that's an acceptable drawback, instead of making differential update
-	model.clear();
+	clearButKeepAllocated( model );
 
 	// in combo-box item cannot be deselected, so we provide an empty item to express "no selection"
 	if (includeEmptyItem)
@@ -704,6 +705,7 @@ auto getSelectedItemIDs( QListView * view, const ListModel & model ) -> QStringL
 {
 	QStringList itemIDs;
 	const auto selectedIndexes = getSelectedItemIndexes( view );
+	itemIDs.reserve( selectedIndexes.size() );
 	for (int selectedItemIdx : selectedIndexes)
 		itemIDs.append( model[ selectedItemIdx ].getID() );
 	return itemIDs;
@@ -731,13 +733,15 @@ bool areSelectionsEqual( const QList< ItemID > & selection1, const QList< ItemID
 	// So to be able to compare them we need to normalize the order first.
 
 	QList< ItemID > orderedSelection1;
+	orderedSelection1.reserve( selection1.size() );
 	for (const ItemID & id : selection1)
-		orderedSelection1.push_back( id );
+		orderedSelection1.append( id );
 	std::sort( orderedSelection1.begin(), orderedSelection1.end() );
 
 	QList< ItemID > orderedSelection2;
+	orderedSelection2.reserve( selection2.size() );
 	for (const ItemID & id : selection2)
-		orderedSelection2.push_back( id );
+		orderedSelection2.append( id );
 	std::sort( orderedSelection2.begin(), orderedSelection2.end() );
 
 	return orderedSelection1 == orderedSelection2;

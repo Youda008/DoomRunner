@@ -284,7 +284,7 @@ FileInfoCache< WadInfo > g_cachedWadInfo( readWadInfo );
 void WadInfo::serialize( QJsonObject & jsWadInfo ) const
 {
 	jsWadInfo["type"] = int( type );
-	jsWadInfo["map_names"] = serializeStringVec( mapNames );
+	jsWadInfo["map_names"] = serializeStringList( mapNames );
 	// TODO: game identification
 }
 
@@ -292,7 +292,7 @@ void WadInfo::deserialize( const JsonObjectCtx & jsWadInfo )
 {
 	type = jsWadInfo.getEnum< doom::WadType >( "type", doom::WadType::Neither );
 	if (JsonArrayCtx jsMapNames = jsWadInfo.getArray( "map_names" ))
-		mapNames = deserializeStringVec( jsMapNames );
+		mapNames = deserializeStringList( jsMapNames );
 	// TODO: game identification
 }
 

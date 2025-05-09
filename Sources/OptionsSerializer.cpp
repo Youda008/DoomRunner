@@ -496,7 +496,7 @@ static QJsonObject serialize( const Preset & preset, const StorageSettings & set
 	presetJs["selected_config"] = preset.selectedConfig;
 	presetJs["selected_IWAD"] = preset.selectedIWAD;
 
-	presetJs["selected_mappacks"] = serializeStringVec( preset.selectedMapPacks );
+	presetJs["selected_mappacks"] = serializeStringList( preset.selectedMapPacks );
 
 	presetJs["mods"] = serializeList( preset.mods );
 
@@ -550,15 +550,16 @@ static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const 
 
 	if (JsonArrayCtx selectedMapPacksJs = presetJs.getArray( "selected_mappacks" ))
 	{
-		preset.selectedMapPacks = deserializeStringVec( selectedMapPacksJs );
+		preset.selectedMapPacks = deserializeStringList( selectedMapPacksJs );
 	}
 
-	if (JsonArrayCtx modsJs = presetJs.getArray( "mods" ))
+	if (JsonArrayCtx modArrayJs = presetJs.getArray( "mods" ))
 	{
 		// iterate manually, so that we can filter-out invalid items
-		for (qsizetype i = 0; i < modsJs.size(); i++)
+		preset.mods.reserve( modArrayJs.size() );
+		for (qsizetype i = 0; i < modArrayJs.size(); i++)
 		{
-			JsonObjectCtx modJs = modsJs.getObject( i );
+			JsonObjectCtx modJs = modArrayJs.getObject( i );
 			if (!modJs)  // wrong type on position i - skip this entry
 				continue;
 
@@ -799,6 +800,7 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 		if (JsonArrayCtx engineArrayJs = enginesJs.getArray( "engine_list" ))
 		{
 			// iterate manually, so that we can filter-out invalid items
+			opts.engines.reserve( engineArrayJs.size() );
 			for (qsizetype i = 0; i < engineArrayJs.size(); i++)
 			{
 				JsonObjectCtx engineJs = engineArrayJs.getObject( i );
@@ -831,6 +833,7 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 			if (JsonArrayCtx iwadArrayJs = iwadsJs.getArray( "IWAD_list" ))
 			{
 				// iterate manually, so that we can filter-out invalid items
+				opts.iwads.reserve( iwadArrayJs.size() );
 				for (qsizetype i = 0; i < iwadArrayJs.size(); i++)
 				{
 					JsonObjectCtx iwadJs = iwadArrayJs.getObject( i );
@@ -896,6 +899,7 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 
 	if (JsonArrayCtx presetArrayJs = rootJs.getArray( "presets" ))
 	{
+		opts.presets.reserve( presetArrayJs.size() );
 		for (qsizetype i = 0; i < presetArrayJs.size(); i++)
 		{
 			JsonObjectCtx presetJs = presetArrayJs.getObject( i );

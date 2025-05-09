@@ -75,6 +75,21 @@ void reverse( Range & range )
 	std::reverse( std::begin(range), std::end(range) );
 }
 
+/// Clears the content of the container and forces it to free its main buffer.
+template< typename Container >
+void clearAndDeallocate( Container & cont )
+{
+	Container empty;
+	cont.swap( empty );
+}
+
+/// In most container implementations, this clears the content of the container but keeps the main buffer allocated.
+template< typename Container >
+void clearButKeepAllocated( Container & cont )
+{
+	cont.resize( 0 );
+}
+
 /** Shifts existing elements in the list towards the end,
   * so that there is \p count elements starting from index \p where which are moved from,
   * which means they are unusable, but ready to be assigned to. */

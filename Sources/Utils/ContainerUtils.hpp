@@ -13,11 +13,20 @@
 
 #include "TypeTraits.hpp"
 
-#include <QtGlobal>  // qsizetype
+#include <QList>  // decltype( size() )
 
 #include <algorithm>
 #include <iterator>
 #include <cassert>
+
+
+//======================================================================================================================
+
+// While Qt5 uses int where the std library would use size_t (size(), resize(), reserve(), operator[], ...),
+// the Qt6 uses qsizetype which is a signed size_t.
+// Commiting fully to one or another in our code causes compilation warnings about implicit integer conversion,
+// so the best solution is to declare our own type alias that represents the correct type for the current Qt version.
+using qsize_t = decltype( std::declval< QList<int> >().size() );
 
 
 //======================================================================================================================
@@ -79,9 +88,9 @@ void reverse( Range & range )
   * so that there is \p count elements starting from index \p where which are moved from,
   * which means they are unusable, but ready to be assigned to. */
 template< typename List >
-void reserveSpace( List & list, const qsizetype where, const qsizetype count )
+void reserveSpace( List & list, const qsize_t where, const qsize_t count )
 {
-	const auto origSize = qsizetype( list.size() );
+	const auto origSize = qsize_t( list.size() );
 	assert( size_t( where ) <= size_t( origSize ) );
 	assert( count > 0 );
 
@@ -89,18 +98,18 @@ void reserveSpace( List & list, const qsizetype where, const qsizetype count )
 	list.resize( origSize + count );
 
 	// reserve space by shifting the existing elements count steps towards the end
-	for (qsizetype idx = origSize - 1; idx >= where; idx--)
+	for (qsize_t idx = origSize - 1; idx >= where; idx--)
 		list[ idx + count ] = std::move( list[ idx ] );
 }
 
 /// Inserts \p count copies of \p val to the list at index \p where.
 /** The \p val is copied \p count - 1 times and then moved to the last slot. */
 template< typename List, typename Value >
-void insertCopies( List & list, const qsizetype where, const qsizetype count, Value val )
+void insertCopies( List & list, const qsize_t where, const qsize_t count, Value val )
 {
 	reserveSpace( list, where, count );
 
-	for (qsizetype i = 0; i < count - 1; i++)
+	for (qsize_t i = 0; i < count - 1; i++)
 		list[ where + i ] = val;  // copy the val to all but the last slot
 	list[ where + count - 1 ] = std::move( val );  // then move the original val to the last slot to save 1 copy
 }
@@ -108,10 +117,10 @@ void insertCopies( List & list, const qsizetype where, const qsizetype count, Va
 /** Inserts elements from \p range into the \p list at index \p where.
   * If the \p range is an rvalue, the elements are moved from the range. If it's an lvalue, the elements are copied. */
 template< typename List, typename Range >
-void insertMultiple( List & list, qsizetype where, Range && range )
+void insertMultiple( List & list, qsize_t where, Range && range )
 {
 	using Elem = types::range_element< Range >;
-	const auto rangeSize = qsizetype( std::size( range ) );
+	const auto rangeSize = qsize_t( std::size( range ) );
 
 	reserveSpace( list, where, rangeSize );
 
@@ -123,9 +132,9 @@ void insertMultiple( List & list, qsizetype where, Range && range )
 }
 
 template< typename List >
-void removeCountAt( List & list, const qsizetype from, const qsizetype count )
+void removeCountAt( List & list, const qsize_t from, const qsize_t count )
 {
-	const auto listSize = qsizetype( list.size() );
+	const auto listSize = qsize_t( list.size() );
 	[[maybe_unused]] const auto removeRangeBeg = from;
 	[[maybe_unused]] const auto removeRangeEnd = from + count;
 	assert( removeRangeBeg < removeRangeEnd );     // the remove range is valid
@@ -133,7 +142,7 @@ void removeCountAt( List & list, const qsizetype from, const qsizetype count )
 	assert( removeRangeEnd <= listSize );          //       end of the remove range is within the list range
 
 	// shift the existing elements <count> steps towards the beginning
-	for (qsizetype idx = removeRangeEnd; idx < listSize; idx++)
+	for (qsize_t idx = removeRangeEnd; idx < listSize; idx++)
 		list[ idx - count ] = std::move( list[ idx ] );
 
 	// cut the last empty elements from the list
@@ -154,15 +163,15 @@ class span
 
 	span() : _begin( nullptr ), _end( nullptr ) {}
 	span( Elem * begin, Elem * end ) : _begin( begin ), _end( end ) {}
-	span( Elem * data, qsizetype size ) : _begin( data ), _end( data + size ) {}
+	span( Elem * data, qsize_t size ) : _begin( data ), _end( data + size ) {}
 	span( Elem * data, size_t size ) : _begin( data ), _end( data + size ) {}
 
 	Elem * begin() const                         { return _begin; }
 	Elem * end() const                           { return _end; }
 	Elem * data() const                          { return _begin; }
-	qsizetype size() const                       { return _end - _begin; }
+	qsize_t size() const                         { return _end - _begin; }
 	bool empty() const                           { return _begin == _end; }
-	Elem & operator[]( qsizetype index ) const   { return _begin[ index ]; }
+	Elem & operator[]( qsize_t index ) const     { return _begin[ index ]; }
 };
 
 template< typename Iter >
@@ -181,7 +190,7 @@ class subrange
 	const Iter & cbegin() const                  { return _begin; }
 	const Iter & cend() const                    { return _end; }
 
-	qsizetype size() const                       { return _end - _begin; }
+	qsize_t size() const                         { return _end - _begin; }
 	bool empty() const                           { return _begin == _end; }
 };
 

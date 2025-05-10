@@ -250,7 +250,7 @@ QString LoggingExeReader::getVerInfoValue( const Resource & res, const LangInfo 
 		return {};
 	}
 
-	return QString::fromWCharArray( reinterpret_cast< const wchar_t * >( lpBuffer ), qsizetype( cchLen ) - 1 );
+	return QString::fromWCharArray( reinterpret_cast< const wchar_t * >( lpBuffer ), qsize_t( cchLen ) - 1 );
 }
 
 void LoggingExeReader::extractVersionInfo( const Resource & res, ExeVersionInfo & verInfo )

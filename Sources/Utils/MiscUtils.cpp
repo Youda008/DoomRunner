@@ -7,6 +7,8 @@
 
 #include "MiscUtils.hpp"
 
+#include "Utils/ContainerUtils.hpp"  // qsize_t
+
 #include <QTextStream>
 #include <QIODevice>  // QIODevice::OpenMode
 #include <QGuiApplication>
@@ -50,7 +52,7 @@ QList< Argument > splitCommandLineArguments( const QString & argsStr )
 		bool insideQuotes = false;
 		bool wasClosingQuotesChar = false;
 
-		for (qsizetype currentPos = 0; currentPos < argsStr.size(); ++currentPos)
+		for (qsize_t currentPos = 0; currentPos < argsStr.size(); ++currentPos)
 		{
 			QChar currentChar = argsStr[ currentPos ];
 
@@ -96,7 +98,7 @@ QList< Argument > splitCommandLineArguments( const QString & argsStr )
 		bool wasClosingQuotesChar = false;
 		bool wasEscapeChar = false;
 
-		for (qsizetype currentPos = 0; currentPos < argsStr.size(); ++currentPos)
+		for (qsize_t currentPos = 0; currentPos < argsStr.size(); ++currentPos)
 		{
 			QChar currentChar = argsStr[ currentPos ];
 

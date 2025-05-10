@@ -87,8 +87,8 @@ class DirectList {
 	auto size() const                                  { return _list.size(); }
 	auto isEmpty() const                               { return _list.isEmpty(); }
 
-	      auto & operator[]( qsizetype idx )           { return _list[ idx ]; }
-	const auto & operator[]( qsizetype idx ) const     { return _list[ idx ]; }
+	      auto & operator[]( qsize_t idx )             { return _list[ idx ]; }
+	const auto & operator[]( qsize_t idx ) const       { return _list[ idx ]; }
 
 	      iterator begin()                             { return _list.begin(); }
 	const_iterator begin() const                       { return _list.begin(); }
@@ -104,8 +104,8 @@ class DirectList {
 
 	// list modification
 
-	void reserve( qsizetype size )                     { _list.reserve( size ); }
-	void resize( qsizetype size )                      { _list.resize( size ); }
+	void reserve( qsize_t size )                       { _list.reserve( size ); }
+	void resize( qsize_t size )                        { _list.resize( size ); }
 
 	void clear()                                       { _list.clear(); }
 
@@ -113,18 +113,18 @@ class DirectList {
 	void append(       Item && item )                  { _list.append( std::move(item) ); }
 	void prepend( const Item &  item )                 { _list.prepend( item ); }
 	void prepend(       Item && item )                 { _list.prepend( std::move(item) ); }
-	void insert( qsizetype idx, const Item &  item )   { _list.insert( idx, item ); }
-	void insert( qsizetype idx,       Item && item )   { _list.insert( idx, std::move(item) ); }
+	void insert( qsize_t idx, const Item &  item )     { _list.insert( idx, item ); }
+	void insert( qsize_t idx,       Item && item )     { _list.insert( idx, std::move(item) ); }
 
-	void removeAt( qsizetype idx )                     { _list.removeAt( idx ); }
+	void removeAt( qsize_t idx )                       { _list.removeAt( idx ); }
 
-	void move( qsizetype from, qsizetype to )          { _list.move( from, to ); }
-	void moveToFront( qsizetype from )                 { _list.move( from, 0 ); }
-	void moveToBack( qsizetype from )                  { _list.move( from, size() - 1 ); }
+	void move( qsize_t from, qsize_t to )              { _list.move( from, to ); }
+	void moveToFront( qsize_t from )                   { _list.move( from, 0 ); }
+	void moveToBack( qsize_t from )                    { _list.move( from, size() - 1 ); }
 
 	template< typename Range, REQUIRES( types::is_range_of< Range, Item > ) >
-	void insertMultiple( qsizetype where, Range && range ) { _list.insertMultiple( where, std::forward< Range >( range ) ); }
-	void removeCountAt( qsizetype idx, qsizetype cnt ) { _list.removeCountAt( idx, cnt ); }
+	void insertMultiple( qsize_t where, Range && range ) { _list.insertMultiple( where, std::forward< Range >( range ) ); }
+	void removeCountAt( qsize_t idx, qsize_t cnt ) { _list.removeCountAt( idx, cnt ); }
 
 	//-- custom access helpers -----------------------------------------------------------------------------------------
 
@@ -144,14 +144,14 @@ class DirectList {
 
 	// low-level pointer manipulation for implementing optimized high-level operations
 
-	std::unique_ptr< Item > takePtr( qsizetype idx )               { return _list.takePtr( idx ); }
-	void assignPtr( qsizetype idx, std::unique_ptr< Item > ptr )   { _list.assignPtr( idx, std::move(ptr) ); }
+	std::unique_ptr< Item > takePtr( qsize_t idx )               { return _list.takePtr( idx ); }
+	void assignPtr( qsize_t idx, std::unique_ptr< Item > ptr )   { _list.assignPtr( idx, std::move(ptr) ); }
 
-	void insertDefaults( qsizetype where, qsizetype count )        { _list.insertDefaults( where, count ); }
+	void insertDefaults( qsize_t where, qsize_t count )          { _list.insertDefaults( where, count ); }
 	template< typename PtrRange, REQUIRES( types::is_range_of< PtrRange, std::unique_ptr< Item > > ) >
-	void insertPtrs( qsizetype where, PtrRange && ptrs )           { _list.insertPtrs( where, std::forward< PtrRange >( ptrs ) ); }
+	void insertPtrs( qsize_t where, PtrRange && ptrs )           { _list.insertPtrs( where, std::forward< PtrRange >( ptrs ) ); }
 
-	bool isNull( qsizetype idx ) const                             { return _list.isNull( idx ); }
+	bool isNull( qsize_t idx ) const                             { return _list.isNull( idx ); }
 
 	//-- special -------------------------------------------------------------------------------------------------------
 
@@ -198,8 +198,8 @@ class FilteredList {
 	auto size() const                                  { return _filteredList.size(); }
 	auto isEmpty() const                               { return _filteredList.isEmpty(); }
 
-	      auto & operator[]( qsizetype idx )           { return *_filteredList[ idx ]; }
-	const auto & operator[]( qsizetype idx ) const     { return *_filteredList[ idx ]; }
+	      auto & operator[]( qsize_t idx )             { return *_filteredList[ idx ]; }
+	const auto & operator[]( qsize_t idx ) const       { return *_filteredList[ idx ]; }
 
 	      iterator begin()                             { return DerefIterator( _filteredList.begin() ); }
 	const_iterator begin() const                       { return DerefIterator( _filteredList.begin() ); }
@@ -215,14 +215,14 @@ class FilteredList {
 
 	// list modification - only when the list is not filtered
 
-	void reserve( qsizetype newSize )
+	void reserve( qsize_t newSize )
 	{
 		ensureCanBeModified();
 		_fullList.reserve( newSize );
 		_filteredList.reserve( newSize );
 	}
 
-	void resize( qsizetype newSize )
+	void resize( qsize_t newSize )
 	{
 		ensureCanBeModified();
 		const auto oldSize = _fullList.size();
@@ -265,20 +265,20 @@ class FilteredList {
 		_filteredList.prepend( &_fullList.first() );
 	}
 
-	void insert( qsizetype idx, const Item & item )
+	void insert( qsize_t idx, const Item & item )
 	{
 		ensureCanBeModified();
 		_fullList.insert( idx, item );
 		_filteredList.insert( idx, &_fullList[ idx ] );
 	}
-	void insert( qsizetype idx, Item && item )
+	void insert( qsize_t idx, Item && item )
 	{
 		ensureCanBeModified();
 		_fullList.insert( idx, std::move(item) );
 		_filteredList.insert( idx, &_fullList[ idx ] );
 	}
 
-	void removeAt( qsizetype idx )
+	void removeAt( qsize_t idx )
 	{
 		if (!isFiltered())
 		{
@@ -289,27 +289,27 @@ class FilteredList {
 		{
 			// can be allowed for filtered list, but the fullList entry needs to be found and removed too
 			auto * ptr = _filteredList.takeAt( idx );
-			for (qsizetype i = 0; i < _fullList.size(); ++i)
+			for (qsize_t i = 0; i < _fullList.size(); ++i)
 				if (&_fullList[i] == ptr)
 					_fullList.removeAt( i );
 		}
 	}
 
-	void move( qsizetype from, qsizetype to )
+	void move( qsize_t from, qsize_t to )
 	{
 		ensureCanBeModified();
 		_fullList.move( from, to );
 		_filteredList.move( from, to );
 	}
 
-	void moveToFront( qsizetype from )
+	void moveToFront( qsize_t from )
 	{
 		ensureCanBeModified();
 		_fullList.move( from, 0 );
 		_filteredList.move( from, 0 );
 	}
 
-	void moveToBack( qsizetype from )
+	void moveToBack( qsize_t from )
 	{
 		ensureCanBeModified();
 		_fullList.move( from, size() - 1 );
@@ -317,14 +317,14 @@ class FilteredList {
 	}
 
 	template< typename Range, REQUIRES( types::is_range_of< Range, Item > ) >
-	void insertMultiple( qsizetype where, Range && range )
+	void insertMultiple( qsize_t where, Range && range )
 	{
 		ensureCanBeModified();
 		_fullList.insertMultiple( where, std::forward< Range >( range ) );
-		insertUpdatedPtrs( where, qsizetype( std::size(range) ) );
+		insertUpdatedPtrs( where, qsize_t( std::size(range) ) );
 	}
 
-	void removeCountAt( qsizetype idx, qsizetype cnt )
+	void removeCountAt( qsize_t idx, qsize_t cnt )
 	{
 		ensureCanBeModified();
 		_fullList.removeCountAt( idx, cnt );
@@ -349,21 +349,21 @@ class FilteredList {
 
 	// low-level pointer manipulation for implementing optimized high-level operations
 
-	std::unique_ptr< Item > takePtr( qsizetype idx )
+	std::unique_ptr< Item > takePtr( qsize_t idx )
 	{
 		ensureCanBeModified();
 		_filteredList[ idx ] = nullptr;
 		return _fullList.takePtr( idx );
 	}
 
-	void assignPtr( qsizetype idx, std::unique_ptr< Item > ptr )
+	void assignPtr( qsize_t idx, std::unique_ptr< Item > ptr )
 	{
 		ensureCanBeModified();
 		_fullList.assignPtr( idx, std::move(ptr) );
 		_filteredList[ idx ] = &_fullList[ idx ];
 	}
 
-	void insertDefaults( qsizetype where, qsizetype count )
+	void insertDefaults( qsize_t where, qsize_t count )
 	{
 		ensureCanBeModified();
 		_fullList.insertDefaults( where, count );
@@ -371,14 +371,14 @@ class FilteredList {
 	}
 
 	template< typename PtrRange, REQUIRES( types::is_range_of< PtrRange, std::unique_ptr< Item > > ) >
-	void insertPtrs( qsizetype where, PtrRange && ptrs )
+	void insertPtrs( qsize_t where, PtrRange && ptrs )
 	{
 		ensureCanBeModified();
 		_fullList.insertPtrs( where, std::forward< PtrRange >( ptrs ) );
-		insertUpdatedPtrs( where, qsizetype( ptrs.size() ) );
+		insertUpdatedPtrs( where, qsize_t( ptrs.size() ) );
 	}
 
-	bool isNull( qsizetype idx ) const
+	bool isNull( qsize_t idx ) const
 	{
 		return _fullList.isNull( idx );
 	}
@@ -441,10 +441,10 @@ class FilteredList {
 	}
 
 	// Takes addresses of {count} items starting at {where} in the _fullList and inserts them into _filteredList.
-	void insertUpdatedPtrs( qsizetype where, qsizetype count )
+	void insertUpdatedPtrs( qsize_t where, qsize_t count )
 	{
 		reserveSpace( _filteredList, where, count );
-		for (qsizetype i = 0; i < count; i++)
+		for (qsize_t i = 0; i < count; i++)
 			_filteredList[ where + i ] = &_fullList[ where + i ];
 	}
 
@@ -962,7 +962,7 @@ class GenericListModel : public AListModel, public ListImpl {
 	private: QByteArray makeMimeModelPtr() const
 	{
 		const auto * aModelPtr = static_cast< const AListModel * >( this );
-		return QByteArray( reinterpret_cast< const char * >( &aModelPtr ), qsizetype( sizeof( &aModelPtr ) ) );
+		return QByteArray( reinterpret_cast< const char * >( &aModelPtr ), qsize_t( sizeof( &aModelPtr ) ) );
 	}
 
 	private: QList< QUrl > makeMimeUrls( const QModelIndexList & indexes ) const
@@ -999,7 +999,7 @@ class GenericListModel : public AListModel, public ListImpl {
 		// and then use them in dropMimeData to find the original items and move them to the target position.
 		// BEWARE that these MIME data are only usable within the same list.
 		//        Outside of this list we must use the other MIME types.
-		QByteArray encodedData( indexes.size() * qsizetype( sizeof(int) ), 0 );
+		QByteArray encodedData( indexes.size() * qsize_t( sizeof(int) ), 0 );
 		int * rawData = reinterpret_cast< int * >( encodedData.data() );
 		for (const QModelIndex & index : indexes)
 		{
@@ -1014,7 +1014,7 @@ class GenericListModel : public AListModel, public ListImpl {
 		if (mimeData->hasFormat( MimeTypes::ModelPtr ))
 		{
 			QByteArray data = mimeData->data( MimeTypes::ModelPtr );
-			if (data.size() == qsizetype( sizeof( AListModel * ) ))
+			if (data.size() == qsize_t( sizeof( AListModel * ) ))
 			{
 				return *reinterpret_cast< const AListModel * * >( data.data() );
 			}
@@ -1146,7 +1146,7 @@ class GenericListModel : public AListModel, public ListImpl {
 		JsonArrayCtx itemsJs( jsonDoc.array(), context );
 		std::vector< std::unique_ptr< Item > > validDroppedItems;  // cannot use QVector here because those require copyable objects
 		validDroppedItems.reserve( size_t( itemsJs.size() ) );
-		for (qsizetype i = 0; i < itemsJs.size(); i++)
+		for (qsize_t i = 0; i < itemsJs.size(); i++)
 		{
 			JsonObjectCtx itemJs = itemsJs.getObject( i );
 			if (!itemJs)  // wrong type on position i - skip this entry
@@ -1184,7 +1184,7 @@ class GenericListModel : public AListModel, public ListImpl {
 	{
 		// retrieve the original row indexes of the items to be moved
 		const int * rawData = reinterpret_cast< const int * >( encodedData.data() );
-		qsizetype count = encodedData.size() / qsizetype( sizeof(int) );
+		qsize_t count = encodedData.size() / qsize_t( sizeof(int) );
 
 		// The indexes of selected items can come in arbitrary order, but we need to drop them in ascending order.
 		std::vector< int > sortedItemIndexes( rawData, rawData + count );

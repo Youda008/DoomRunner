@@ -124,8 +124,8 @@ class PtrList {
 	auto size() const                                  { return _list.size(); }
 	auto isEmpty() const                               { return _list.isEmpty(); }
 
-	      Elem & operator[]( qsizetype idx )           { return *_list[ idx ]; }
-	const Elem & operator[]( qsizetype idx ) const     { return *_list[ idx ]; }
+	      Elem & operator[]( qsize_t idx )             { return *_list[ idx ]; }
+	const Elem & operator[]( qsize_t idx ) const       { return *_list[ idx ]; }
 
 	      iterator begin()                             { return { _list.begin() }; }
 	const_iterator begin() const                       { return { _list.begin() }; }
@@ -141,8 +141,8 @@ class PtrList {
 
 	// list modification
 
-	void reserve( qsizetype newSize )                  { _list.reserve( newSize ); }
-	void resize( qsizetype newSize )
+	void reserve( qsize_t newSize )                    { _list.reserve( newSize ); }
+	void resize( qsize_t newSize )
 	{
 		const auto oldSize = _list.size();
 		_list.resize( newSize );
@@ -157,49 +157,49 @@ class PtrList {
 	void append(       Elem && elem )                  { _list.append( DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
 	void prepend( const Elem &  elem )                 { _list.prepend( DeepCopyableUniquePtr< Elem >::allocNew( elem ) ); }
 	void prepend(       Elem && elem )                 { _list.prepend( DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
-	void insert( qsizetype idx, const Elem &  elem )   { _list.insert( idx, DeepCopyableUniquePtr< Elem >::allocNew( elem ) ); }
-	void insert( qsizetype idx,       Elem && elem )   { _list.insert( idx, DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
+	void insert( qsize_t idx, const Elem &  elem )     { _list.insert( idx, DeepCopyableUniquePtr< Elem >::allocNew( elem ) ); }
+	void insert( qsize_t idx,       Elem && elem )     { _list.insert( idx, DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
 
-	void removeAt( qsizetype idx )                     { _list.removeAt( idx ); }
+	void removeAt( qsize_t idx )                       { _list.removeAt( idx ); }
 
-	void move( qsizetype from, qsizetype to )          { _list.move( from, to ); }
+	void move( qsize_t from, qsize_t to )              { _list.move( from, to ); }
 
 	// custom high-level operations
 
 	template< typename Range, REQUIRES( types::is_range_of< Range, Elem > ) >
-	void insertMultiple( qsizetype where, Range && range ) { ::insertMultiple( *this, where, std::forward< Range >( range ) ); }
+	void insertMultiple( qsize_t where, Range && range ) { ::insertMultiple( *this, where, std::forward< Range >( range ) ); }
 
-	void removeCountAt( qsizetype idx, qsizetype cnt ) { ::removeCountAt( _list, idx, cnt ); }
+	void removeCountAt( qsize_t idx, qsize_t cnt ) { ::removeCountAt( _list, idx, cnt ); }
 
 	// low-level pointer manipulation for implementing optimized high-level operations
 
 	/// Moves the pointer at \p idx out of the list, leaving null at its original position.
-	std::unique_ptr< Elem > takePtr( qsizetype idx )
+	std::unique_ptr< Elem > takePtr( qsize_t idx )
 	{
 		return std::move( _list[ idx ] ).to_unique_ptr();
 	}
 
 	/// Assigns the given pointer to position at \p idx, replacing the original pointer.
 	/** If the original pointer is not null, the original item is deleted. */
-	void assignPtr( qsizetype idx, std::unique_ptr< Elem > ptr )
+	void assignPtr( qsize_t idx, std::unique_ptr< Elem > ptr )
 	{
 		_list[ idx ] = DeepCopyableUniquePtr< Elem >( std::move(ptr) );
 	}
 
 	/// Inserts \p count allocated and default-constructed elements to position at \p idx, shifting the existing pointers count steps towards the end.
-	void insertDefaults( qsizetype where, qsizetype count )
+	void insertDefaults( qsize_t where, qsize_t count )
 	{
 		::insertCopies( _list, where, count, DeepCopyableUniquePtr< Elem >::allocNew() );
 	}
 
 	/// Inserts the given pointers to position at \p idx, shifting the existing pointers ptrs.size() steps towards the end.
 	template< typename PtrRange, REQUIRES( types::is_range_of< PtrRange, std::unique_ptr< Elem > > ) >
-	void insertPtrs( qsizetype where, PtrRange && ptrs )
+	void insertPtrs( qsize_t where, PtrRange && ptrs )
 	{
 		::insertMultiple( _list, where, std::forward< PtrRange >( ptrs ) );
 	}
 
-	bool isNull( qsizetype idx ) const
+	bool isNull( qsize_t idx ) const
 	{
 		return _list[ idx ].get() == nullptr;
 	}

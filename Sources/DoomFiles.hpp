@@ -13,7 +13,6 @@
 
 #include <QString>
 #include <QStringList>
-
 class QFileInfo;
 
 

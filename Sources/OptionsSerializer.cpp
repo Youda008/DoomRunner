@@ -8,8 +8,8 @@
 #include "OptionsSerializer.hpp"
 
 #include "AppVersion.hpp"
-#include "CommonTypes.hpp"  // PtrList
 #include "Utils/JsonUtils.hpp"
+#include "Utils/FileSystemUtils.hpp"
 #include "Utils/PathCheckUtils.hpp"  // checkPath, highlightInvalidListItem
 #include "Utils/ErrorHandling.hpp"
 

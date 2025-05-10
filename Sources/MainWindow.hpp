@@ -18,20 +18,20 @@
 #include "UserData.hpp"
 #include "UpdateChecker.hpp"
 #include "Themes.hpp"  // SystemThemeWatcher
+class JsonDocumentCtx;
+struct OptionsToLoad;
 
 #include <QMainWindow>
 #include <QString>
 #include <QFileInfo>
 #include <QFileSystemModel>
-
 class QTableWidget;
 class QItemSelection;
 class QComboBox;
 class QLineEdit;
 class QShortcut;
 
-class JsonDocumentCtx;
-struct OptionsToLoad;
+#include <memory>
 
 namespace Ui
 {

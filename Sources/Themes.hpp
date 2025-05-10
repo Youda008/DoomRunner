@@ -16,10 +16,10 @@
 #include <QThread>
 #include <QStringList>
 #include <QPalette>
-
-#include <mutex>
-
 class QWidget;
+
+#include <memory>
+#include <mutex>
 
 
 //======================================================================================================================

@@ -8,7 +8,6 @@
 #include "WADReader.hpp"
 
 #include "DoomFiles.hpp"  // identifyGame
-#include "JsonUtils.hpp"
 #include "ErrorHandling.hpp"
 
 #include <QSet>
@@ -19,6 +18,7 @@
 #include <QRegularExpression>
 
 #include <cctype>
+#include <memory>
 
 
 namespace doom {
@@ -276,25 +276,6 @@ UncertainWadInfo readWadInfo( const QString & filePath )
 }
 
 FileInfoCache< WadInfo > g_cachedWadInfo( readWadInfo );
-
-
-//----------------------------------------------------------------------------------------------------------------------
-// serialization
-
-void WadInfo::serialize( QJsonObject & jsWadInfo ) const
-{
-	jsWadInfo["type"] = int( type );
-	jsWadInfo["map_names"] = serializeStringList( mapNames );
-	// TODO: game identification
-}
-
-void WadInfo::deserialize( const JsonObjectCtx & jsWadInfo )
-{
-	type = jsWadInfo.getEnum< doom::WadType >( "type", doom::WadType::Neither );
-	if (JsonArrayCtx jsMapNames = jsWadInfo.getArray( "map_names" ))
-		mapNames = deserializeStringList( jsMapNames );
-	// TODO: game identification
-}
 
 
 } // namespace doom

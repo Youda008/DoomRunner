@@ -11,14 +11,16 @@
 
 #include "Essential.hpp"
 
+#include "CommonTypes.hpp"  // qsize_t
 #include "EnumTraits.hpp"
-#include "Utils/ContainerUtils.hpp"  // qsize_t
 
 #include <QString>
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QJsonObject>
 #include <QJsonArray>
+
+#include <memory>
 
 
 //======================================================================================================================

@@ -11,30 +11,13 @@
 
 #include "Essential.hpp"
 
-#include "Version.hpp"
+#include "ExeReaderTypes.hpp"
+
 #include "FileInfoCache.hpp"
-
-#include <QString>
-
-class QJsonObject;
-class JsonObjectCtx;
 
 
 namespace os {
 
-
-/// Executable version information
-struct ExeVersionInfo
-{
-	QString appName;
-	QString description;
-	Version version;
-
-	void serialize( QJsonObject & jsExeInfo ) const;
-	void deserialize( const JsonObjectCtx & jsExeInfo );
-};
-
-using UncertainExeVersionInfo = UncertainFileInfo< ExeVersionInfo >;
 
 /// Reads executable version info from the file's built-in resource.
 /** Even if status == Success, not all the fields have to be filled. If the version info resource was found,

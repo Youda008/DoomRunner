@@ -15,7 +15,6 @@
 
 #include <QTreeView>
 #include <QList>
-
 class QFileSystemModel;
 
 

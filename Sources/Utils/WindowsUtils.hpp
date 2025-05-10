@@ -12,7 +12,7 @@
 
 #include "Essential.hpp"
 
-#include "LangUtils.hpp"
+#include "LangUtils.hpp"  // ValueOrError
 
 #include <windows.h>
 

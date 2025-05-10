@@ -18,8 +18,9 @@
 #include <QtCore/qdebug.h>
 #include <QTextStream>
 #include <QFile>
-
 class QWidget;
+
+#include <memory>
 
 
 //======================================================================================================================

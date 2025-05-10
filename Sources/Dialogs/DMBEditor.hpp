@@ -13,10 +13,9 @@
 
 #include "UserData.hpp"  // Mod
 #include "DataModels/GenericListModel.hpp"  // for modModel
+class PathConvertor;
 
 #include <QDialog>
-
-class PathConvertor;
 
 namespace Ui
 {

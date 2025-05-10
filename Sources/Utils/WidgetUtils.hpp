@@ -26,7 +26,6 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QFileInfo>
-
 class QTableWidget;
 class QAbstractButton;
 

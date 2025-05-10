@@ -16,7 +16,6 @@
 
 #include <QString>
 #include <QStringView>
-
 class QWidget;
 class QLineEdit;
 
@@ -26,7 +25,7 @@ class QLineEdit;
 /// Functionality common for all dialogs and windows.
 class DialogCommon : public ErrorReportingComponent {
 
-protected:
+ protected:
 
 	DialogCommon( QWidget * self, QStringView dialogName );
 

@@ -12,10 +12,9 @@
 #include "DialogCommon.hpp"
 
 #include "UserData.hpp"  // EngineInfo
+class PathConvertor;
 
 #include <QDialog>
-
-class PathConvertor;
 
 namespace Ui
 {

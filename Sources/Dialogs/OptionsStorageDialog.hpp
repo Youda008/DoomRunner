@@ -14,7 +14,6 @@
 #include "UserData.hpp"  // StorageSettings
 
 #include <QDialog>
-
 class QRadioButton;
 
 namespace Ui

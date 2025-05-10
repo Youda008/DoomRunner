@@ -16,7 +16,6 @@
 
 #include <QDialog>
 #include <QProcess>
-
 class QPushButton;
 class QCloseEvent;
 

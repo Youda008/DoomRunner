@@ -11,6 +11,8 @@
 
 #include "Essential.hpp"
 
+#include "FileInfoCacheTypes.hpp"
+
 #include "JsonUtils.hpp"
 #include "FileSystemUtils.hpp"  // isValidFile
 #include "ErrorHandling.hpp"
@@ -24,26 +26,6 @@
 
 //======================================================================================================================
 // templates for arbitrary file info cache
-
-enum class ReadStatus
-{
-	Success,
-	NotSupported,
-	CantOpen,
-	FailedToRead,
-	InvalidFormat,
-	InfoNotPresent,
-
-	Uninitialized,
-};
-const char * statusToStr( ReadStatus status );
-ReadStatus statusFromStr( const QString & statusStr );
-
-template< typename FileInfo >
-struct UncertainFileInfo : public FileInfo
-{
-	ReadStatus status = ReadStatus::Uninitialized;
-};
 
 template< typename FileInfo >
 class FileInfoCache : protected LoggingComponent {

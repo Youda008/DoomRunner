@@ -2,25 +2,7 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: essential includes, types and constants
+// Description: types used by FileSystemUtils.hpp, separated for less recompilation
 //======================================================================================================================
 
-#ifndef ESSENTIAL_INCLUDED
-#define ESSENTIAL_INCLUDED
-
-
-#include <utility>
-#include <cstdint>
-#include <climits>
-
-using uint = unsigned int;
-using ushort = unsigned short;
-using byte = uint8_t;
-
-using std::move;
-using std::as_const;
-
-//using namespace std;  // we're working with Qt, so not a good idea
-
-
-#endif // ESSENTIAL_INCLUDED
+//#include "FileSystemUtilsTypes.hpp"

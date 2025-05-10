@@ -8,6 +8,7 @@
 #include "OSUtils.hpp"
 
 #include "FileSystemUtils.hpp"
+#include "ExeReader.hpp"
 #include "ErrorHandling.hpp"
 
 #include <QStandardPaths>
@@ -24,6 +25,8 @@
 	#include <windows.h>
 	#include <shlobj.h>
 #endif
+
+#include <memory>
 
 
 namespace os {
@@ -533,16 +536,6 @@ bool isInSearchPath( const QString & filePath )
 
 
 //-- installation properties -----------------------------------------------------------------------
-
-QString getSandboxName( SandboxType sandbox )
-{
-	switch (sandbox)
-	{
-		case SandboxType::Snap:    return "Snap";
-		case SandboxType::Flatpak: return "Flatpak";
-		default:                  return "<invalid>";
-	}
-}
 
 static const QRegularExpression snapPathRegex("^/snap/([^/]+)/");
 static const QRegularExpression flatpakPathRegex("^/var/lib/flatpak/app/([^/]+)/");

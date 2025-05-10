@@ -17,7 +17,6 @@
 #include "Utils/EventFilters.hpp"  // ConfirmationFilter
 
 #include <QDialog>
-
 class QDir;
 class QLineEdit;
 class QAction;

@@ -15,15 +15,14 @@
 
 #include <QDialog>
 
+namespace compatflags
+{
+	struct FlagDef;
+}
 
 namespace Ui
 {
 	class CompatOptsDialog;
-}
-
-namespace compatflags
-{
-	struct FlagDef;
 }
 
 

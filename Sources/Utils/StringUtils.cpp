@@ -7,7 +7,7 @@
 
 #include "StringUtils.hpp"
 
-#include "Utils/ContainerUtils.hpp"  // size_t
+#include "CommonTypes.hpp"  // qsize_t
 
 #include <QStringList>
 #include <QTextStream>

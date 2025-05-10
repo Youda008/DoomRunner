@@ -15,15 +15,14 @@
 #include "ExtendedViewCommon.hpp"
 #include "DataModels/ModelCommon.hpp"  // AccessStyle
 #include "Utils/EventFilters.hpp"      // ModifierHandler
-
-#include <QListView>
-
-#include <type_traits>  // underlying_type
-
 class AListModel;
 class DnDProgressGuard;
 
+#include <QListView>
 class QString;
+
+#include <type_traits>  // underlying_type
+#include <optional>
 
 
 //======================================================================================================================

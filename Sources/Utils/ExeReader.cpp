@@ -9,7 +9,6 @@
 
 #include "LangUtils.hpp"  // atScopeEndDo
 #include "ContainerUtils.hpp"  // span
-#include "JsonUtils.hpp"
 #include "ErrorHandling.hpp"
 
 #include <QFile>
@@ -318,24 +317,6 @@ UncertainExeVersionInfo readExeVersionInfo( [[maybe_unused]] const QString & fil
 }
 
 FileInfoCache< ExeVersionInfo > g_cachedExeInfo( readExeVersionInfo );
-
-
-//----------------------------------------------------------------------------------------------------------------------
-// serialization
-
-void ExeVersionInfo::serialize( QJsonObject & jsExeInfo ) const
-{
-	jsExeInfo["app_name"] = appName;
-	jsExeInfo["description"] = description;
-	jsExeInfo["version"] = version.toString();
-}
-
-void ExeVersionInfo::deserialize( const JsonObjectCtx & jsExeInfo )
-{
-	appName = jsExeInfo.getString("app_name");
-	description = jsExeInfo.getString("description");
-	version = Version( jsExeInfo.getString("version") );
-}
 
 
 } // namespace os

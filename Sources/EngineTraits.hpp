@@ -11,15 +11,15 @@
 
 #include "Essential.hpp"
 
-#include "Utils/OSUtils.hpp"  // AppInfo
+#include "Utils/OSUtilsTypes.hpp"  // AppInfo
+struct Engine;
+class PathRebaser;
 
 #include <QString>
 #include <QStringList>
 
+#include <optional>
 #include <cassert>
-
-struct Engine;
-class PathRebaser;
 
 
 //----------------------------------------------------------------------------------------------------------------------

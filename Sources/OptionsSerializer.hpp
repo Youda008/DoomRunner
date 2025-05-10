@@ -11,7 +11,6 @@
 
 #include "Essential.hpp"
 
-#include "CommonTypes.hpp"  // PtrList
 #include "UserData.hpp"
 #include "Utils/Version.hpp"
 #include "Utils/JsonUtils.hpp"  // JsonDocumentCtx

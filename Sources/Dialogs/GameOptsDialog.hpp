@@ -15,15 +15,14 @@
 
 #include <QDialog>
 
+namespace dmflags
+{
+	struct FlagDef;
+}
 
 namespace Ui
 {
 	class GameOptsDialog;
-}
-
-namespace dmflags
-{
-	struct FlagDef;
 }
 
 

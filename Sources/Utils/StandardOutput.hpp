@@ -9,8 +9,6 @@
 #define STANDARD_OUTPUT_INCLUDED
 
 
-#include "Essential.hpp"
-
 #include <QTextStream>
 
 

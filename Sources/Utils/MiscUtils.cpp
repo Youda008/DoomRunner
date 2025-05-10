@@ -7,7 +7,7 @@
 
 #include "MiscUtils.hpp"
 
-#include "Utils/ContainerUtils.hpp"  // qsize_t
+#include "CommonTypes.hpp"  // qsize_t
 
 #include <QTextStream>
 #include <QIODevice>  // QIODevice::OpenMode

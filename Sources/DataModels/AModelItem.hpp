@@ -11,15 +11,15 @@
 
 #include "Essential.hpp"
 
-#include <QColor>
-#include <QJsonObject>
-
-#include <stdexcept>
-
 class JsonObjectCtx;
 
+#include <QColor>
+#include <QJsonObject>
 class QString;
 class QIcon;
+
+#include <optional>
+#include <stdexcept>
 
 
 //======================================================================================================================

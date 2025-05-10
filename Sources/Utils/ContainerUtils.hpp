@@ -11,22 +11,12 @@
 
 #include "Essential.hpp"
 
+#include "CommonTypes.hpp"  // qsize_t
 #include "TypeTraits.hpp"
-
-#include <QList>  // decltype( size() )
 
 #include <algorithm>
 #include <iterator>
 #include <cassert>
-
-
-//======================================================================================================================
-
-// While Qt5 uses int where the std library would use size_t (size(), resize(), reserve(), operator[], ...),
-// the Qt6 uses qsizetype which is a signed size_t.
-// Commiting fully to one or another in our code causes compilation warnings about implicit integer conversion,
-// so the best solution is to declare our own type alias that represents the correct type for the current Qt version.
-using qsize_t = decltype( std::declval< QList<int> >().size() );
 
 
 //======================================================================================================================

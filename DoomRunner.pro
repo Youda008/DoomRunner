@@ -61,19 +61,25 @@ HEADERS += \
 	Sources/Utils/ErrorHandling.hpp \
 	Sources/Utils/EventFilters.hpp \
 	Sources/Utils/ExeReader.hpp \
+	Sources/Utils/ExeReaderTypes.hpp \
 	Sources/Utils/FileInfoCache.hpp \
+	Sources/Utils/FileInfoCacheTypes.hpp \
 	Sources/Utils/FileSystemUtils.hpp \
+	Sources/Utils/FileSystemUtilsTypes.hpp \
 	Sources/Utils/JsonUtils.hpp \
 	Sources/Utils/LangUtils.hpp \
 	Sources/Utils/MiscUtils.hpp \
 	Sources/Utils/OSUtils.hpp \
+	Sources/Utils/OSUtilsTypes.hpp \
 	Sources/Utils/PathCheckUtils.hpp \
+	Sources/Utils/PtrList.hpp \
 	Sources/Utils/StandardOutput.hpp \
 	Sources/Utils/StringUtils.hpp \
 	Sources/Utils/TimeStats.hpp \
 	Sources/Utils/TypeTraits.hpp \
 	Sources/Utils/Version.hpp \
 	Sources/Utils/WADReader.hpp \
+	Sources/Utils/WADReaderTypes.hpp \
 	Sources/Utils/WidgetUtils.hpp \
 	Sources/Utils/WindowsUtils.hpp \
 	Sources/Widgets/ExtendedListView.hpp \
@@ -116,18 +122,24 @@ SOURCES += \
 	Sources/Utils/ErrorHandling.cpp \
 	Sources/Utils/EventFilters.cpp \
 	Sources/Utils/ExeReader.cpp \
+	Sources/Utils/ExeReaderTypes.cpp \
 	Sources/Utils/FileInfoCache.cpp \
+	Sources/Utils/FileInfoCacheTypes.cpp \
 	Sources/Utils/FileSystemUtils.cpp \
+	Sources/Utils/FileSystemUtilsTypes.cpp \
 	Sources/Utils/LangUtils.cpp \
 	Sources/Utils/JsonUtils.cpp \
 	Sources/Utils/MiscUtils.cpp \
 	Sources/Utils/OSUtils.cpp \
+	Sources/Utils/OSUtilsTypes.cpp \
 	Sources/Utils/PathCheckUtils.cpp \
+	Sources/Utils/PtrList.cpp \
 	Sources/Utils/StandardOutput.cpp \
 	Sources/Utils/StringUtils.cpp \
 	Sources/Utils/TypeTraitsTest.cpp \
 	Sources/Utils/Version.cpp \
 	Sources/Utils/WADReader.cpp \
+	Sources/Utils/WADReaderTypes.cpp \
 	Sources/Utils/WidgetUtils.cpp \
 	Sources/Utils/WindowsUtils.cpp \
 	Sources/Widgets/ExtendedListView.cpp \

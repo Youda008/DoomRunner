@@ -14,6 +14,8 @@
 #include <QString>
 #include <QStringList>
 
+#include <optional>
+
 
 namespace dmb {
 

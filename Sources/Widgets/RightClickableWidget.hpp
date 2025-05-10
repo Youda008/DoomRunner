@@ -14,9 +14,10 @@
 class QString;
 class QWidget;
 class QAction;
-class QKeySequence;
 class QMenu;
 class QContextMenuEvent;
+class QKeySequence;
+class QMouseEvent;
 
 
 //======================================================================================================================

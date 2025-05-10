@@ -7,8 +7,7 @@
 
 #include "ErrorHandling.hpp"
 
-#include "WidgetUtils.hpp"  // HYPERLINK
-//#include "StandardOutput.hpp"
+#include "WidgetUtils.hpp"      // HYPERLINK
 #include "OSUtils.hpp"          // getThisLauncherDataDir
 #include "FileSystemUtils.hpp"  // getPathFromFileName
 

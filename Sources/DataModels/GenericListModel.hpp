@@ -13,7 +13,7 @@
 
 #include "AModelItem.hpp"
 #include "ModelCommon.hpp"
-#include "CommonTypes.hpp"             // PtrList, DerefIterator
+#include "Utils/PtrList.hpp"
 #include "Utils/JsonUtils.hpp"         // for mimeData, dropMimeData
 #include "Utils/FileSystemUtils.hpp"   // PathConvertor
 #include "Utils/ErrorHandling.hpp"     // LoggingComponent
@@ -31,6 +31,7 @@
 #include <QBrush>
 
 #include <functional>
+#include <memory>
 #include <vector>
 #include <stdexcept>
 

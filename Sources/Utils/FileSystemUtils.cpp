@@ -7,7 +7,7 @@
 
 #include "FileSystemUtils.hpp"
 
-#include "ContainerUtils.hpp"  // size_t
+#include "CommonTypes.hpp"  // qsize_t
 #include "StringUtils.hpp"
 
 #include <QDirIterator>

@@ -7,11 +7,11 @@
 
 #include "PathCheckUtils.hpp"
 
-#include "Utils/LangUtils.hpp"       // correspondingValue
-#include "Utils/StringUtils.hpp"     // capitalize
-#include "Utils/WidgetUtils.hpp"     // setTextColor, restoreColors
-#include "Utils/ErrorHandling.hpp"   // reportUserError
-#include "Themes.hpp"                // getCurrentPalette
+#include "LangUtils.hpp"       // correspondingValue
+#include "StringUtils.hpp"     // capitalize
+#include "WidgetUtils.hpp"     // setTextColor, restoreColors
+#include "ErrorHandling.hpp"   // reportUserError
+#include "Themes.hpp"          // getCurrentPalette
 
 #include <QString>
 #include <QFileInfo>

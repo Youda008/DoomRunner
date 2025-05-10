@@ -11,16 +11,17 @@
 
 #include "Essential.hpp"
 
-#include "CommonTypes.hpp"             // PtrList
-#include "DataModels/AModelItem.hpp"   // AModelItem - all list items inherit from this
-#include "Utils/EnumTraits.hpp"        // enumName, enumSize
-#include "Utils/FileSystemUtils.hpp"   // PathStyle  TODO: separate header?
-#include "Utils/OSUtils.hpp"           // EnvVar  TODO: separate header?
-#include "EngineTraits.hpp"            // EngineFamily  TODO: separate header?
-#include "Themes.hpp"                  // Theme
+#include "DataModels/AModelItem.hpp"        // AModelItem - all list items inherit from this
+#include "Utils/PtrList.hpp"                // PtrList
+#include "Utils/EnumTraits.hpp"             // enumName, enumSize
+#include "Utils/FileSystemUtilsTypes.hpp"   // PathStyle
+#include "Utils/OSUtilsTypes.hpp"           // EnvVar
+#include "EngineTraits.hpp"                 // EngineFamily
+#include "Themes.hpp"                       // Theme
 
 #include <QString>
 #include <QFileInfo>
+#include <QDir>
 #include <QRect>  // WindowGeometry
 #include <QColor>  // player color in multiplayer
 

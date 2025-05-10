@@ -47,4 +47,7 @@ class NewConfigDialog : public QDialog, private DialogCommon {
 };
 
 
+//======================================================================================================================
+
+
 #endif // CONFIG_DIALOG_INCLUDED

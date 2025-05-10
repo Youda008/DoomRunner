@@ -123,4 +123,7 @@ class GameOptsDialog : public QDialog, private DialogCommon {
 };
 
 
+//======================================================================================================================
+
+
 #endif // GAME_OPTS_DIALOG_INCLUDED

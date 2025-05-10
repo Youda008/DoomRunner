@@ -72,4 +72,7 @@ class OptionsStorageDialog : public QDialog, private DialogCommon {
 };
 
 
+//======================================================================================================================
+
+
 #endif // OPTIONS_STORAGE_DIALOG_INCLUDED

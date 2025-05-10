@@ -107,4 +107,7 @@ class CompatOptsDialog : public QDialog, private DialogCommon {
 };
 
 
+//======================================================================================================================
+
+
 #endif // COMPAT_OPTS_DIALOG_INCLUDED

@@ -14,7 +14,7 @@
 #endif
 
 
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 
 QTextStream stdoutStream;//( stdout ); // undefined behavior due to non-deterministic order of static initializations
 QTextStream stderrStream;//( stderr );

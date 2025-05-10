@@ -52,4 +52,7 @@ class AboutDialog : public QDialog, private DialogCommon {
 };
 
 
+//======================================================================================================================
+
+
 #endif // ABOUT_DIALOG_INCLUDED

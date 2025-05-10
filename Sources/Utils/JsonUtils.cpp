@@ -20,6 +20,8 @@
 //======================================================================================================================
 // JsonValueContext
 
+namespace impl {
+
 void JsonValueCtx::constructJsonPathRecursively( QString & path ) const
 {
 	// start the path construction at the root element (the bottom of the recursion)
@@ -48,6 +50,8 @@ QString JsonValueCtx::getJsonPath() const
 	return path;
 }
 
+} // namespace impl
+
 
 //======================================================================================================================
 // JsonObjectCtx
@@ -62,7 +66,7 @@ QJsonValue JsonObjectCtx::getMember( const QString & key, bool showError ) const
 	return _wrappedObject[ key ];
 }
 
-JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool showError ) const
+impl::JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool showError ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
@@ -79,20 +83,20 @@ JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool showError
 	return JsonObjectCtxProxy( val.toObject(), *_context, *this, key );
 }
 
-JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key, bool showError ) const
+impl::JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key, bool showError ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
 		missingKey( key, showError );
-		return JsonArrayCtxProxy();
+		return impl::JsonArrayCtxProxy();
 	}
 	QJsonValue val = _wrappedObject[ key ];
 	if (!val.isArray())
 	{
 		invalidTypeAtKey( key, "array" );
-		return JsonArrayCtxProxy();
+		return impl::JsonArrayCtxProxy();
 	}
-	return JsonArrayCtxProxy( val.toArray(), *_context, *this, key );
+	return impl::JsonArrayCtxProxy( val.toArray(), *_context, *this, key );
 }
 
 bool JsonObjectCtx::getBool( const QString & key, bool defaultVal, bool showError ) const
@@ -250,23 +254,23 @@ QJsonValue JsonArrayCtx::getMember( qsize_t index, bool showError ) const
 	return _wrappedArray[ index ];
 }
 
-JsonObjectCtxProxy JsonArrayCtx::getObject( qsize_t index, bool showError ) const
+impl::JsonObjectCtxProxy JsonArrayCtx::getObject( qsize_t index, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
 		indexOutOfBounds( index, showError );
-		return JsonObjectCtxProxy();
+		return impl::JsonObjectCtxProxy();
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (!val.isObject())
 	{
 		invalidTypeAtIdx( index, "object" );
-		return JsonObjectCtxProxy();
+		return impl::JsonObjectCtxProxy();
 	}
-	return JsonObjectCtxProxy( val.toObject(), *_context, *this, index );
+	return impl::JsonObjectCtxProxy( val.toObject(), *_context, *this, index );
 }
 
-JsonArrayCtxProxy JsonArrayCtx::getArray( qsize_t index, bool showError ) const
+impl::JsonArrayCtxProxy JsonArrayCtx::getArray( qsize_t index, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -439,7 +443,8 @@ static bool checkableMessageBox( QMessageBox::Icon icon, const QString & title, 
 	return chkBox->isChecked();
 }
 
-static const char * JsonTypeStrings [] = {
+static const char * JsonTypeStrings [] =
+{
 	"Null",
 	"Bool",
 	"Double",
@@ -538,7 +543,7 @@ QString JsonDocumentCtx::fileName() const
 
 
 //======================================================================================================================
-// file writing helpers
+// high-level file I/O helpers
 
 #include "FileSystemUtils.hpp"
 

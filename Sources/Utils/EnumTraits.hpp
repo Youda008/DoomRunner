@@ -9,13 +9,11 @@
 #define ENUM_TRAITS_INCLUDED
 
 
-//======================================================================================================================
-
 template< typename Enum >
 const char * enumName() { return "unknown"; }
 
 template< typename Enum >
-decltype(sizeof(int))/* instead of including size_t */ enumSize() { return 0; }
+decltype( sizeof(int) )/* instead of including size_t */ enumSize() { return 0; }
 
 
 #endif // ENUM_TRAITS_INCLUDED

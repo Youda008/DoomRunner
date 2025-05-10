@@ -18,6 +18,136 @@
 
 
 //======================================================================================================================
+// utils from the standard library of a newer C++ standard
+
+namespace fut {
+
+// C++23
+template< typename Enum >
+constexpr auto to_underlying( Enum e ) noexcept
+{
+	return static_cast< std::underlying_type_t< Enum > >( e );
+}
+
+} // namespace fut
+
+
+//======================================================================================================================
+// general utility functions
+
+template< typename Type >
+Type & unconst( const Type & obj ) noexcept
+{
+	return const_cast< std::remove_const_t< Type > & >( obj );
+}
+template< typename Type >
+Type * unconst( const Type * obj ) noexcept
+{
+	return const_cast< std::remove_const_t< Type > * >( obj );
+}
+
+// just to be little more explicit when needed
+template< typename Type >
+bool isSet( const Type & obj )
+{
+	return static_cast< bool >( obj );
+}
+
+template< typename Type >
+Type * optToPtr( std::optional< Type > & opt )
+{
+	return opt.has_value() ? &opt.value() : nullptr;
+}
+template< typename Type >
+const Type * optToPtr( const std::optional< Type > & opt )
+{
+	return opt.has_value() ? &opt.value() : nullptr;
+}
+
+template< typename Float, std::enable_if_t< std::is_floating_point_v<Float>, int > = 0 >
+bool isFloatEqual( Float a, Float b )
+{
+	Float diff = a - b;
+	return diff > 0.0001 && diff < 0.0001;
+}
+
+template< typename Type >
+Type takeAndReplace( Type & variable, Type newVal )
+{
+	Type oldVal = std::move( variable );
+	variable = std::move( newVal );
+	return oldVal;
+}
+
+
+//======================================================================================================================
+// flag utils
+
+template< typename Flags >
+bool areFlagsSet( Flags targetFlags, types::identity< Flags > flagsToTest )
+{
+	return (targetFlags & flagsToTest) != 0;
+}
+
+template< typename Flags >
+Flags withAddedFlags( Flags origFlags, types::identity< Flags > flagsToAdd )
+{
+	return origFlags | flagsToAdd;
+}
+
+template< typename Flags >
+Flags withoutFlags( Flags origFlags, types::identity< Flags > flagsToRemove )
+{
+	return origFlags & ~flagsToRemove;
+}
+
+template< typename Flags >
+Flags withToggledFlags( Flags origFlags, types::identity< Flags > flagsToSwitch, bool enabled )
+{
+	if (enabled)
+		return withAddedFlags( origFlags, flagsToSwitch );
+	else
+		return withoutFlags( origFlags, flagsToSwitch );
+}
+
+template< typename Flags >
+Flags withFlippedFlags( Flags origFlags, types::identity< Flags > flagsToFlip )
+{
+	return (origFlags & ~flagsToFlip) | ((origFlags & flagsToFlip) ^ flagsToFlip);
+}
+
+template< typename Flags >
+void setFlags( Flags & targetFlags, types::identity< Flags > flagsToSet )
+{
+	targetFlags |= flagsToSet;
+}
+
+template< typename Flags >
+void unsetFlags( Flags & targetFlags, types::identity< Flags > flagsToUnset )
+{
+	targetFlags &= ~flagsToUnset;
+}
+
+template< typename Flags >
+void toggleFlags( Flags & targetFlags, types::identity< Flags > flagsToSwitch, bool enabled )
+{
+	targetFlags = withToggledFlags( targetFlags, flagsToSwitch, enabled );
+}
+
+template< typename Flags >
+void flipFlags( Flags & targetFlags, types::identity< Flags > flagsToFlip )
+{
+	targetFlags = withFlippedFlags( targetFlags, flagsToFlip );
+}
+
+template< typename Flags = uint >
+constexpr Flags makeBitMask( uint length )
+{
+	return (1 << length) - 1;
+}
+
+
+//======================================================================================================================
 // scope guards
 
 template< typename EndFunc >
@@ -165,133 +295,6 @@ Result correspondingValue( Source source, CorrespondingPair< Source, Result > &&
 
 
 //======================================================================================================================
-// flag utils
-
-template< typename Flags >
-bool areFlagsSet( Flags targetFlags, types::identity< Flags > flagsToTest )
-{
-	return (targetFlags & flagsToTest) != 0;
-}
-
-template< typename Flags >
-Flags withAddedFlags( Flags origFlags, types::identity< Flags > flagsToAdd )
-{
-	return origFlags | flagsToAdd;
-}
-
-template< typename Flags >
-Flags withoutFlags( Flags origFlags, types::identity< Flags > flagsToRemove )
-{
-	return origFlags & ~flagsToRemove;
-}
-
-template< typename Flags >
-Flags withToggledFlags( Flags origFlags, types::identity< Flags > flagsToSwitch, bool enabled )
-{
-	if (enabled)
-		return withAddedFlags( origFlags, flagsToSwitch );
-	else
-		return withoutFlags( origFlags, flagsToSwitch );
-}
-
-template< typename Flags >
-Flags withFlippedFlags( Flags origFlags, types::identity< Flags > flagsToFlip )
-{
-	return (origFlags & ~flagsToFlip) | ((origFlags & flagsToFlip) ^ flagsToFlip);
-}
-
-template< typename Flags >
-void setFlags( Flags & targetFlags, types::identity< Flags > flagsToSet )
-{
-	targetFlags |= flagsToSet;
-}
-
-template< typename Flags >
-void unsetFlags( Flags & targetFlags, types::identity< Flags > flagsToUnset )
-{
-	targetFlags &= ~flagsToUnset;
-}
-
-template< typename Flags >
-void toggleFlags( Flags & targetFlags, types::identity< Flags > flagsToSwitch, bool enabled )
-{
-	targetFlags = withToggledFlags( targetFlags, flagsToSwitch, enabled );
-}
-
-template< typename Flags >
-void flipFlags( Flags & targetFlags, types::identity< Flags > flagsToFlip )
-{
-	targetFlags = withFlippedFlags( targetFlags, flagsToFlip );
-}
-
-template< typename Flags = uint >
-constexpr Flags makeBitMask( uint length )
-{
-	return (1 << length) - 1;
-}
-
-
-//======================================================================================================================
-// other
-
-// just to be little more explicit when needed
-template< typename Type >
-bool isSet( const Type & obj )
-{
-	return static_cast< bool >( obj );
-}
-
-template< typename Type >
-Type * optToPtr( std::optional< Type > & opt )
-{
-	return opt.has_value() ? &opt.value() : nullptr;
-}
-template< typename Type >
-const Type * optToPtr( const std::optional< Type > & opt )
-{
-	return opt.has_value() ? &opt.value() : nullptr;
-}
-
-template< typename Type >
-Type & unconst( const Type & obj ) noexcept
-{
-	return const_cast< std::remove_const_t< Type > & >( obj );
-}
-template< typename Type >
-Type * unconst( const Type * obj ) noexcept
-{
-	return const_cast< std::remove_const_t< Type > * >( obj );
-}
-
-template< typename Float, std::enable_if_t< std::is_floating_point_v<Float>, int > = 0 >
-bool isFloatEqual( Float a, Float b )
-{
-	Float diff = a - b;
-	return diff > 0.0001 && diff < 0.0001;
-}
-
-template< typename Type >
-Type takeAndReplace( Type & variable, Type newVal )
-{
-	Type oldVal = std::move( variable );
-	variable = std::move( newVal );
-	return oldVal;
-}
-
-
-//======================================================================================================================
-// utils from standard library of a newer C++ standard
-
-namespace fut {
-
-// C++23
-template< typename Enum >
-constexpr auto to_underlying( Enum e ) noexcept
-{
-	return static_cast< std::underlying_type_t< Enum > >( e );
-}
-
-}
 
 
 #endif // LANG_UTILS_INCLUDED

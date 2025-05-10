@@ -69,4 +69,7 @@ namespace MimeTypes
 	const auto & storageShortName##Impl() const { return static_cast< const StorageImplClass & >( *this ); } \
 
 
+//======================================================================================================================
+
+
 #endif // MODEL_COMMON_INCLUDED

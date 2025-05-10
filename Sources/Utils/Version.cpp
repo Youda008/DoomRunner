@@ -11,6 +11,8 @@
 #include <QRegularExpression>
 
 
+//======================================================================================================================
+
 Version::Version( const char * versionStr ) : Version( QString( versionStr ) ) {}
 
 Version::Version( const QString & versionStr )

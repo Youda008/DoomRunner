@@ -42,4 +42,7 @@ QList< Argument > splitCommandLineArguments( const QString & argsStr );
 bool areScreenCoordinatesValid( int x, int y );
 
 
+//----------------------------------------------------------------------------------------------------------------------
+
+
 #endif // MISC_UTILS_INCLUDED

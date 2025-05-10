@@ -57,7 +57,12 @@ struct ParsingContext
 	bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
 };
 
-/// mechanisms common for JSON objects and arrays
+
+//----------------------------------------------------------------------------------------------------------------------
+// mechanisms common for JSON objects and arrays
+
+namespace impl {
+
 class JsonValueCtx {
 
  protected:
@@ -126,8 +131,16 @@ class JsonValueCtx {
 
 };
 
+} // namespace impl
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// proxy classes solving cyclic dependancies
+
+namespace impl {
+
 /// proxy class that solves cyclic dependancy between JsonObjectCtx and JsonArrayCtx
-class JsonObjectCtxProxy : public JsonValueCtx {
+class JsonObjectCtxProxy : public impl::JsonValueCtx {
 
  protected:
 
@@ -155,7 +168,7 @@ class JsonObjectCtxProxy : public JsonValueCtx {
 };
 
 /// proxy class that solves cyclic dependancy between JsonObjectCtx and JsonArrayCtx
-class JsonArrayCtxProxy : public JsonValueCtx {
+class JsonArrayCtxProxy : public impl::JsonValueCtx {
 
  protected:
 
@@ -182,8 +195,14 @@ class JsonArrayCtxProxy : public JsonValueCtx {
 
 };
 
+} // namespace impl
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// the main public API classes
+
 /** Wrapper around QJsonObject that knows its position in the JSON document and pops up an error messsage on invalid operations. */
-class JsonObjectCtx : public JsonObjectCtxProxy {
+class JsonObjectCtx : public impl::JsonObjectCtxProxy {
 
  public:
 
@@ -208,11 +227,11 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 
 	/// Returns a sub-object at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
-	JsonObjectCtxProxy getObject( const QString & key, bool showError = true ) const;
+	impl::JsonObjectCtxProxy getObject( const QString & key, bool showError = true ) const;
 
 	/// Returns a sub-array at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
-	JsonArrayCtxProxy getArray( const QString & key, bool showError = true ) const;
+	impl::JsonArrayCtxProxy getArray( const QString & key, bool showError = true ) const;
 
 	/// Returns a bool at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
@@ -268,7 +287,7 @@ class JsonObjectCtx : public JsonObjectCtxProxy {
 };
 
 /** Wrapper around QJsonArray that knows its position in the JSON document and pops up an error messsage on invalid operations. */
-class JsonArrayCtx : public JsonArrayCtxProxy {
+class JsonArrayCtx : public impl::JsonArrayCtxProxy {
 
  public:
 
@@ -292,11 +311,11 @@ class JsonArrayCtx : public JsonArrayCtxProxy {
 
 	/// Returns a sub-object at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid array. */
-	JsonObjectCtxProxy getObject( qsize_t index, bool showError = true ) const;
+	impl::JsonObjectCtxProxy getObject( qsize_t index, bool showError = true ) const;
 
 	/// Returns a sub-array at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid array. */
-	JsonArrayCtxProxy getArray( qsize_t index, bool showError = true ) const;
+	impl::JsonArrayCtxProxy getArray( qsize_t index, bool showError = true ) const;
 
 	/// Returns a bool at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
@@ -477,6 +496,9 @@ inline constexpr bool CheckIfEmpty = false;
 /// Reads a text file and attempts to parse it as a JSON.
 /** Returns nullptr if the file could not be opened or read, or invalid JsonDocument if it could not be parsed. */
 std::unique_ptr< JsonDocumentCtx > readJsonFromFile( const QString & filePath, const QString & fileDesc, bool ignoreEmpty = false );
+
+
+//======================================================================================================================
 
 
 #endif // JSON_UTILS_INCLUDED

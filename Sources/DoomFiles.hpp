@@ -64,4 +64,7 @@ QString getStartingMap( const QString & wadFileName );
 } // namespace doom
 
 
+//======================================================================================================================
+
+
 #endif // DOOM_FILE_INFO_INCLUDED

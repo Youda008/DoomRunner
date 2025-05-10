@@ -213,4 +213,7 @@ class ExtendedListView : public QListView, public ExtendedViewCommon< ExtendedLi
 };
 
 
+//======================================================================================================================
+
+
 #endif // EXTENDED_LIST_VIEW_INCLUDED

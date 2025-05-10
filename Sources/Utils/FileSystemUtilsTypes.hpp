@@ -13,10 +13,10 @@
 
 
 //======================================================================================================================
-
 // Convenience wrapper around enum for shorter code. Simplifies:
 //  * if (pathStyle == PathStyle::Relative)
 //  * pathStyle = isAbsolute ? PathStyle::Absolute : PathStyle::Relative;
+
 struct PathStyle
 {
 	enum Value : uint8_t
@@ -47,6 +47,9 @@ struct PathStyle
 };
 
 
+//======================================================================================================================
+// file-system entry type selection
+
 namespace fs {
 
 // Plain enum just makes the elements polute global namespace and makes the FILE collide with declaration in stdio.h,
@@ -67,6 +70,9 @@ struct EntryType
 };
 
 } // namespace fs
+
+
+//======================================================================================================================
 
 
 #endif // FILE_SYSTEM_UTILS_TYPES_INCLUDED

@@ -39,4 +39,7 @@ class RightClickableLabel : public RightClickableWidget< QLabel > {
 };
 
 
+//======================================================================================================================
+
+
 #endif // RIGHTCLICKABLE_LABEL_INCLUDED

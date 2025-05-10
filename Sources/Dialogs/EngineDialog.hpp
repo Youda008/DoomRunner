@@ -82,4 +82,7 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 };
 
 
+//======================================================================================================================
+
+
 #endif // ENGINE_DIALOG_INCLUDED

@@ -22,15 +22,13 @@ class PathRebaser;
 #include <cassert>
 
 
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 
 enum class MapParamStyle
 {
 	Warp,  // -warp 1 8
 	Map,   // +map E1M8
 };
-
-//----------------------------------------------------------------------------------------------------------------------
 
 enum class CompatModeStyle
 {
@@ -40,8 +38,6 @@ enum class CompatModeStyle
 };
 
 const QStringList & getCompatModes( CompatModeStyle style );
-
-//----------------------------------------------------------------------------------------------------------------------
 
 // https://upload.wikimedia.org/wikipedia/commons/a/a8/Doom-ports.svg
 enum class EngineFamily
@@ -58,7 +54,9 @@ enum class EngineFamily
 const char * familyToStr( EngineFamily family );
 EngineFamily familyFromStr( const QString & familyStr );
 
-//----------------------------------------------------------------------------------------------------------------------
+
+//======================================================================================================================
+// engine traits
 
 /// Traits that are shared among different engines belonging to the same family.
 struct EngineFamilyTraits
@@ -234,6 +232,9 @@ class EngineTraits {
 	QString getSaveNumberFromFileName( const QString & saveFileName ) const;
 
 };
+
+
+//======================================================================================================================
 
 
 #endif // ENGINE_TRAITS_INCLUDED

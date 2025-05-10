@@ -23,7 +23,7 @@
 
 
 //======================================================================================================================
-// type traits from standard library of a newer C++ standard
+// type traits from the standard library of a newer C++ standard
 
 namespace fut {
 
@@ -43,6 +43,7 @@ using remove_cvref_t = typename remove_cvref<T>::type;
 // custom type traits
 
 namespace types {
+
 
 /// To make a template type non-deducible from a function parameter
 namespace impl
@@ -125,6 +126,9 @@ using difference_type = decltype( impl::get_difference_type( std::declval<T>() )
 
 
 } // namespace types
+
+
+//======================================================================================================================
 
 
 #endif // TYPE_TRAITS_INCLUDED

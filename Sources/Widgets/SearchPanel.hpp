@@ -1,9 +1,25 @@
-#include <QObject>
+//======================================================================================================================
+// Project: DoomRunner
+//----------------------------------------------------------------------------------------------------------------------
+// Author:      Jan Broz (Youda008)
+// Description: Panel allowing the user to enter search criteria
+//======================================================================================================================
 
+#ifndef SEARCH_PANEL_INCLUDED
+#define SEARCH_PANEL_INCLUDED
+
+
+#include "Essential.hpp"
+
+#include <QObject>
 class QString;
 class QToolButton;
 class QLineEdit;
 class QCheckBox;
+
+
+//======================================================================================================================
+/// Panel allowing the user to enter search criteria
 
 class SearchPanel : public QObject {
 
@@ -39,3 +55,9 @@ class SearchPanel : public QObject {
 	QCheckBox * regexChkBox;
 
 };
+
+
+//======================================================================================================================
+
+
+#endif // SEARCH_PANEL_INCLUDED

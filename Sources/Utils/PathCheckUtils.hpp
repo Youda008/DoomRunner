@@ -18,7 +18,7 @@ class QWidget;
 class QLineEdit;
 
 
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 // path highlighting
 
 /// Highlights a path in a QLineEdit as being invalid.
@@ -67,8 +67,8 @@ void markItemAsDefault( const AModelItem & item );
 void unmarkItemAsDefault( const AModelItem & item );
 
 
-//----------------------------------------------------------------------------------------------------------------------
-// PathChecker
+//======================================================================================================================
+/// Helper class that validates the given file-system path and notifies the user when it's wrong.
 
 class PathChecker {
 
@@ -358,6 +358,9 @@ class PathChecker {
 	}
 
 };
+
+
+//======================================================================================================================
 
 
 #endif // PATH_CHECK_UTILS_INCLUDED

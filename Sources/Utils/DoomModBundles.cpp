@@ -22,15 +22,15 @@ namespace dmb {
 
 const QString fileSuffix = "dmb";
 
-
-//----------------------------------------------------------------------------------------------------------------------
-
 struct DMBContent
 {
 	QStringList entries;
 };
 
 using UncertainDMBContent = UncertainFileInfo< DMBContent >;
+
+
+//----------------------------------------------------------------------------------------------------------------------
 
 static UncertainDMBContent readContent( const QString & filePath )
 {
@@ -97,7 +97,6 @@ static bool writeContent( const QString & filePath, const DMBContent & content )
 	return true;
 }
 
-
 static FileInfoCache< DMBContent > g_cachedDMBInfo( readContent, writeContent );
 
 std::optional< QStringList > getEntries( const QString & filePath )
@@ -114,6 +113,9 @@ bool saveEntries( const QString & filePath, QStringList entries )
 {
 	return g_cachedDMBInfo.setFileInfo( filePath, DMBContent{ std::move( entries ) } );
 }
+
+
+//======================================================================================================================
 
 
 } // namespace dmb

@@ -18,8 +18,6 @@
 const QString emptyString;
 
 
-//----------------------------------------------------------------------------------------------------------------------
-
 QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith )
 {
 	qsize_t startIdx = source.indexOf( startingChar );

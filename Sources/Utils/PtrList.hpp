@@ -20,7 +20,7 @@
 #include <memory>
 
 
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 /// Wrapper around iterator to container of pointers that skips the additional needed dereference and returns a reference directly
 
 template< typename WrappedIter >
@@ -62,7 +62,7 @@ class DerefIterator
 };
 
 
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 // Extended unique_ptr that can be copied by allocating a new copy of the element and binding the new pointer to it.
 
 template< typename Elem >
@@ -108,7 +108,7 @@ class DeepCopyableUniquePtr {
 };
 
 
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 /// Replacement for QList from Qt5 with some enhancements.
 /** Stores pointers to elements internally, so that reallocation or moving the elements does not invalidate references. */
 
@@ -213,6 +213,9 @@ class PtrList {
 	}
 
 };
+
+
+//======================================================================================================================
 
 
 #endif // PTR_LIST_INCLUDED

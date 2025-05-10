@@ -11,10 +11,6 @@
 
 class QString;
 
-
-//======================================================================================================================
-// templates for arbitrary file info cache
-
 enum class ReadStatus
 {
 	Success,

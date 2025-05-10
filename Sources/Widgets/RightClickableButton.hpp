@@ -39,4 +39,7 @@ class RightClickableButton : public RightClickableWidget< QToolButton > {
 };
 
 
+//======================================================================================================================
+
+
 #endif // RIGHTCLICKABLE_BUTTON_INCLUDED

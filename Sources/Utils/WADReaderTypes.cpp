@@ -13,9 +13,6 @@
 namespace doom {
 
 
-//----------------------------------------------------------------------------------------------------------------------
-// serialization
-
 void WadInfo::serialize( QJsonObject & jsWadInfo ) const
 {
 	jsWadInfo["type"] = int( type );

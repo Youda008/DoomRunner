@@ -36,8 +36,7 @@ inline QString quoted( const QString & path )
 
 namespace fs {
 
-//----------------------------------------------------------------------------------------------------------------------
-// paths and file names
+//-- paths and file names ----------------------------------------------------------------------------------------------
 
 extern const QString currentDir;
 
@@ -162,8 +161,7 @@ inline QString toNativePath( const QString & path )
 	return QDir::toNativeSeparators( path );
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-// file-system entry validation
+//-- file-system entry validation --------------------------------------------------------------------------------------
 
 inline bool exists( const QString & entryPath )
 {
@@ -205,8 +203,7 @@ inline bool isValidEntry( const QString & entryPath )
 	return !entryPath.isEmpty() && QFileInfo::exists( entryPath );
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-// other
+//-- other -------------------------------------------------------------------------------------------------------------
 
 /// Returns if it's possible to write files into a directory.
 bool isDirectoryWritable( const QString & dirPath );
@@ -245,20 +242,14 @@ inline bool createDirIfDoesntExist( const QString & dirPath )
 	return QDir( dirPath ).mkpath(".");
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-
-} // namespace fs
-
-
-//======================================================================================================================
-// traversing directory content
-
-namespace fs {
+//-- traversing directory content --------------------------------------------------------------------------------------
 
 void traverseDirectory(
 	const QString & dir, bool recursively, EntryTypes typesToVisit,
 	const PathConvertor & pathConvertor, const std::function< void ( const QFileInfo & entry ) > & visitEntry
 );
+
+//----------------------------------------------------------------------------------------------------------------------
 
 } // namespace fs
 
@@ -489,6 +480,9 @@ class PathRebaser {
 	}
 
 };
+
+
+//======================================================================================================================
 
 
 #endif // FILE_SYSTEM_UTILS_INCLUDED

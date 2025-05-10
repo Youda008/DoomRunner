@@ -273,6 +273,7 @@ class LoggingComponent {
 
 };
 
+/// Abstract component that can both silently log errors and report errors to the user.
 class ErrorReportingComponent : public LoggingComponent {
 
  protected:
@@ -296,6 +297,9 @@ class ErrorReportingComponent : public LoggingComponent {
 	QWidget * _self;
 
 };
+
+
+//----------------------------------------------------------------------------------------------------------------------
 
 
 #endif // ERROR_HANDLING_INCLUDED

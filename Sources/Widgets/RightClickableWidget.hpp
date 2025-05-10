@@ -44,4 +44,7 @@ class RightClickableWidget : public SuperClass {
 };
 
 
+//======================================================================================================================
+
+
 #endif // RIGHTCLICKABLE_WIDGET_INCLUDED

@@ -45,12 +45,12 @@
 
 
 //======================================================================================================================
+// general helper functions
 
 namespace fs {
 
 
 const QString currentDir(".");
-
 
 void forEachParentDir( const QString & path, const std::function< void ( const QString & parentDir ) > & loopBody )
 {

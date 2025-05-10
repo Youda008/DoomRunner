@@ -278,4 +278,7 @@ UncertainWadInfo readWadInfo( const QString & filePath )
 FileInfoCache< WadInfo > g_cachedWadInfo( readWadInfo );
 
 
+//======================================================================================================================
+
+
 } // namespace doom

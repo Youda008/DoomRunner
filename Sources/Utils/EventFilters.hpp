@@ -32,7 +32,7 @@ enum Modifier : uint8_t
 
 
 //======================================================================================================================
-// this is extracted into a separate class so it can be used inside individual widgets
+// This is extracted into a separate class so it can be used inside individual widgets.
 
 class ModifierHandler {
 
@@ -110,6 +110,9 @@ class ConfirmationFilter : public QObject {
 	void choiceConfirmed();
 
 };
+
+
+//======================================================================================================================
 
 
 #endif // EVENT_FILTERS_INCLUDED

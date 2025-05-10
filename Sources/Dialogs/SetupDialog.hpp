@@ -151,4 +151,7 @@ class SetupDialog : public QDialog, public DialogWithPaths {
 };
 
 
+//======================================================================================================================
+
+
 #endif // SETUP_DIALOG_INCLUDED

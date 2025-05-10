@@ -178,7 +178,7 @@ static inline const GameFlags & getFlagsField( const CompatibilityDetails & comp
 }
 static inline GameFlags & getFlagsField( CompatibilityDetails & compatDetails, const FlagDef & flag )
 {
-	return unconst( getFlagsField( std::as_const( compatDetails ), flag ) );
+	return unconst( getFlagsField( as_const( compatDetails ), flag ) );
 }
 
 static inline QLineEdit * getFlagsLine( Ui::CompatOptsDialog * ui, const FlagDef & flag )

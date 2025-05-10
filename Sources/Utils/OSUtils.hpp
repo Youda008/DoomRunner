@@ -34,6 +34,8 @@ extern const QString shortcutFileSuffix;
 //======================================================================================================================
 // standard directories and installation properties
 
+//-- standard system directories ---------------------------------------------------------------------------------------
+
 /// Returns the name of the OS user who started this process.
 const QString & getUserName();
 
@@ -94,15 +96,7 @@ QString getDataDirForApp( const QString & executablePath );
 /// Returns directory where this launcher should store its data files.
 const QString & getThisLauncherDataDir();
 
-
-// other
-
-/// Returns whether an executable is inside one of the directories where the system will find it.
-/** True means the executable can be started directly by using only its name without its path. */
-bool isInSearchPath( const QString & filePath );
-
-
-// installation properties
+//-- installation properties -------------------------------------------------------------------------------------------
 
 /// Returns application info that can be deduced from the executable path or extracted from the executable file.
 /** This may open and read the executable file, which may be a time-expensive operation. */
@@ -119,6 +113,12 @@ ShellCommand getRunCommand(
 	const QString & executablePath, const PathRebaser & runnersDirRebaser, bool forceExeName,
 	const QStringList & dirsToBeAccessed = {}
 );
+
+//-- other -------------------------------------------------------------------------------------------------------------
+
+/// Returns whether an executable is inside one of the directories where the system will find it.
+/** True means the executable can be started directly by using only its name without its path. */
+bool isInSearchPath( const QString & filePath );
 
 
 //======================================================================================================================
@@ -143,6 +143,9 @@ bool openFileInDefaultApp( const QString & filePath );
 
 /// Opens a selected file in the system's main notepad.
 bool openFileInNotepad( const QString & filePath );
+
+
+//======================================================================================================================
 
 
 } // namespace os

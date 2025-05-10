@@ -25,7 +25,8 @@
 
 
 //======================================================================================================================
-// templates for arbitrary file info cache
+/// Template for arbitrary file info cache.
+/** Implements caching of arbitrary data read from a file according to the file's last modification time. */
 
 template< typename FileInfo >
 class FileInfoCache : protected LoggingComponent {
@@ -216,6 +217,9 @@ class FileInfoCache : protected LoggingComponent {
 	}
 
 };
+
+
+//======================================================================================================================
 
 
 #endif // FILE_INFO_CACHE

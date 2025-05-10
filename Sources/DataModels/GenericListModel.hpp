@@ -1203,7 +1203,7 @@ class GenericListModel : public AListModel, public ListImpl {
 		// take the Item pointers out of the list
 		std::vector< std::unique_ptr< Item > > movedPointers;  // cannot use QVector here because those require copyable objects
 		movedPointers.reserve( size_t( count ) );
-		for (int idx : std::as_const( sortedItemIndexes ))
+		for (int idx : as_const( sortedItemIndexes ))
 			movedPointers.push_back( listImpl().takePtr( idx ) );  // leaves null at idx
 
 		// insert them to the new positions
@@ -1322,6 +1322,9 @@ template< typename Item > using ReadOnlyDirectListModel   = GenericListModel< Di
 template< typename Item > using ReadOnlyFilteredListModel = GenericListModel< FilteredList< Item >, AccessStyle::ReadOnly >;
 template< typename Item > using EditableDirectListModel   = GenericListModel< DirectList< Item >, AccessStyle::Editable >;
 template< typename Item > using EditableFilteredListModel = GenericListModel< FilteredList< Item >, AccessStyle::Editable >;
+
+
+//======================================================================================================================
 
 
 #endif // GENERIC_LIST_MODEL_INCLUDED

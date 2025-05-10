@@ -120,10 +120,15 @@ class ProcessOutputWindow : public QDialog, private DialogCommon {
 };
 
 
+//----------------------------------------------------------------------------------------------------------------------
+
 /// Alternative to ProcessOutputWindow::runProcess(). Starts the process, detaches from it, and ignores its output.
 bool startDetachedProcess(
 	const QString & executable, const QStringList & arguments, const QString & workingDir = {}, const EnvVars & envVars = {}
 );
+
+
+//======================================================================================================================
 
 
 #endif // ENGINE_OUTPUT_WINDOW_INCLUDED

@@ -240,7 +240,7 @@ static inline const GameFlags & getFlagsField( const GameplayDetails & gameplayD
 }
 static inline GameFlags & getFlagsField( GameplayDetails & gameplayDetails, const FlagDef & flag )
 {
-	return unconst( getFlagsField( std::as_const( gameplayDetails ), flag ) );
+	return unconst( getFlagsField( as_const( gameplayDetails ), flag ) );
 }
 
 static inline QLineEdit * getFlagsLine( Ui::GameOptsDialog * ui, const FlagDef & flag )

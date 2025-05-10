@@ -147,7 +147,6 @@ SOURCES += \
 	Sources/Widgets/RightClickableLabel.cpp \
 	Sources/Widgets/RightClickableButton.cpp \
 	Sources/Widgets/SearchPanel.cpp \
-	Sources/CommonTypes.cpp \
 	Sources/DoomFiles.cpp \
 	Sources/EngineTraits.cpp \
 	Sources/MainWindow.cpp \

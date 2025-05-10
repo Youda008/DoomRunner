@@ -44,7 +44,7 @@ namespace os {
 
 
 //======================================================================================================================
-// standard directories
+// standard system directories
 
 #if IS_FLATPAK_BUILD && IS_WINDOWS
 	#error "Flatpak build on Windows is not supported"
@@ -282,7 +282,7 @@ QString getThisLauncherDataDir()
 } // namespace impl
 
 
-//-- result caching --------------------------------------------------------------------------------
+//-- result caching ----------------------------------------------------------------------------------------------------
 // These directories are unlikely to change, so we init them once and then re-use the result.
 // We don't use local static variables, because those use a mutex to prevent initialization by multiple threads.
 // These functions will however always be used from the main thread only, so mutex is not needed.
@@ -527,15 +527,8 @@ QString getDataDirForApp( const QString & executablePath )
 }
 
 
-//-- misc ------------------------------------------------------------------------------------------
-
-bool isInSearchPath( const QString & filePath )
-{
-	return QStandardPaths::findExecutable( fs::getFileNameFromPath( filePath ) ) == filePath;
-}
-
-
-//-- installation properties -----------------------------------------------------------------------
+//======================================================================================================================
+// installation properties
 
 static const QRegularExpression snapPathRegex("^/snap/([^/]+)/");
 static const QRegularExpression flatpakPathRegex("^/var/lib/flatpak/app/([^/]+)/");
@@ -697,6 +690,15 @@ ShellCommand getRunCommand(
 	cmd.arguments = std::move( cmdParts );
 	cmd.extraPermissions = std::move( extraPermissions );
 	return cmd;
+}
+
+
+//======================================================================================================================
+// standard directories - other
+
+bool isInSearchPath( const QString & filePath )
+{
+	return QStandardPaths::findExecutable( fs::getFileNameFromPath( filePath ) ) == filePath;
 }
 
 
@@ -901,6 +903,9 @@ bool openFileInNotepad( const QString & filePath )
 		return success;
 	}
 }
+
+
+//======================================================================================================================
 
 
 } // namespace os

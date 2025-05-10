@@ -127,4 +127,7 @@ class ExtendedViewCommon : protected ErrorReportingComponent {
 };
 
 
+//======================================================================================================================
+
+
 #endif // EXTENDED_VIEW_COMMON_INCLUDED

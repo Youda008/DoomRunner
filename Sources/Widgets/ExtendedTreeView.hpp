@@ -101,4 +101,7 @@ class ExtendedTreeView : public QTreeView, public ExtendedViewCommon< ExtendedTr
 };
 
 
+//======================================================================================================================
+
+
 #endif // EXTENDED_TREE_VIEW_INCLUDED

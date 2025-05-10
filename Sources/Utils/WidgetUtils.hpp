@@ -289,7 +289,7 @@ QList<int> removeSelectedItems( QListView * view, ListModel & model )
 
 	// remove all the selected items
 	uint removedCnt = 0;
-	for (int selectedIdx : std::as_const( selectedRowsAsc ))
+	for (int selectedIdx : as_const( selectedRowsAsc ))
 	{
 		model.startRemovingItems( selectedIdx - removedCnt );
 		model.removeAt( selectedIdx - removedCnt );  // every removed item shifts the indexes of the following items
@@ -388,7 +388,7 @@ QList<int> moveSelectedItemsUp( QListView * view, ListModel & model )
 	model.startReorderingItems();
 
 	// do the move and select the new positions
-	for (int selectedIdx : std::as_const( selectedRowsAsc ))
+	for (int selectedIdx : as_const( selectedRowsAsc ))
 	{
 		model.move( selectedIdx, selectedIdx - 1 );
 		selectItemByIndex( view, selectedIdx - 1 );
@@ -446,7 +446,7 @@ QList<int> moveSelectedItemsDown( QListView * view, ListModel & model )
 	model.startReorderingItems();
 
 	// do the move and select the new positions
-	for (int selectedIdx : std::as_const( selectedRowsDesc ))
+	for (int selectedIdx : as_const( selectedRowsDesc ))
 	{
 		model.move( selectedIdx, selectedIdx + 1 );
 		selectItemByIndex( view, selectedIdx + 1 );
@@ -500,7 +500,7 @@ QList<int> moveSelectedItemsToTop( QListView * view, ListModel & model )
 	// do the move and select the new positions
 	// move the items from top to bottom so that the remaining indexes remain valid
 	int movedCnt = 0;
-	for (int selectedIdx : std::as_const( selectedRowsAsc ))
+	for (int selectedIdx : as_const( selectedRowsAsc ))
 	{
 		int destIdx = movedCnt;  // move below the already moved items
 		if (selectedIdx != destIdx)
@@ -550,7 +550,7 @@ QList<int> moveSelectedItemsToBottom( QListView * view, ListModel & model )
 	// do the move and select the new positions
 	// move the items from bottom to top so that the remaining indexes remain valid
 	int movedCnt = 0;
-	for (int selectedIdx : std::as_const( selectedRowsDesc ))
+	for (int selectedIdx : as_const( selectedRowsDesc ))
 	{
 		int destIdx = model.size() - 1 - movedCnt;  // move above the already moved items
 		if (selectedIdx != destIdx)
@@ -863,6 +863,11 @@ void restoreButtonColor( QAbstractButton * button );
 /// makes a hyperlink for a widget's text
 #define HYPERLINK( text, url ) \
 	"<a href=\""%url%"\"><span style=\"\">"%text%"</span></a>"
+
+
+
+
+//======================================================================================================================
 
 
 } // namespace wdg

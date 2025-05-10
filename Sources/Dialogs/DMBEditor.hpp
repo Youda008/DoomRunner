@@ -102,4 +102,7 @@ class DMBEditor : public QDialog, public DialogWithPaths {
 };
 
 
+//======================================================================================================================
+
+
 #endif // DMB_EDITOR_INCLUDED

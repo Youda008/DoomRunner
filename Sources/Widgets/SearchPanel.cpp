@@ -1,3 +1,10 @@
+//======================================================================================================================
+// Project: DoomRunner
+//----------------------------------------------------------------------------------------------------------------------
+// Author:      Jan Broz (Youda008)
+// Description: Panel allowing the user to enter search criteria
+//======================================================================================================================
+
 #include "SearchPanel.hpp"
 
 #include <QString>
@@ -5,6 +12,8 @@
 #include <QLineEdit>
 #include <QCheckBox>
 
+
+//======================================================================================================================
 
 SearchPanel::SearchPanel(
 	QToolButton * showBtn, QLineEdit * searchLine, QCheckBox * caseChkBox, QCheckBox * regexChkBox

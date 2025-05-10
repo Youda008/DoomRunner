@@ -7,7 +7,9 @@
 
 #include "FileInfoCacheTypes.hpp"
 
-#include "ContainerUtils.hpp"
+#include "ContainerUtils.hpp"  // find
+
+#include <QString>
 
 
 static const char * const ReadStatusStrings [] =

@@ -13,9 +13,6 @@
 namespace os {
 
 
-//----------------------------------------------------------------------------------------------------------------------
-// serialization
-
 void ExeVersionInfo::serialize( QJsonObject & jsExeInfo ) const
 {
 	jsExeInfo["app_name"] = appName;

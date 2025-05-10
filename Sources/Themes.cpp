@@ -414,7 +414,7 @@ static void initStyles()
 	// So we need to convert it to the right case, otherwise it can't be found in the c_availableStyleNames.
 	if constexpr (!IS_WINDOWS)
 	{
-		for (const auto & styleName : std::as_const( c_availableStyleNames ))
+		for (const auto & styleName : as_const( c_availableStyleNames ))
 			if (c_defaultStyleName.toLower() == styleName.toLower())
 				c_defaultStyleName = styleName;
 	}

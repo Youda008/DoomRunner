@@ -16,6 +16,8 @@
 class QTextStream;
 
 
+//----------------------------------------------------------------------------------------------------------------------
+
 // to be used when we want to pass empty string, but a reference or pointer is required
 extern const QString emptyString;
 
@@ -32,6 +34,7 @@ inline QString & capitalize( QString & str )
 	return str;
 }
 
+/// Makes the first letter of a string capital.
 inline QString capitalize( const QString & str )
 {
 	auto strCopy = str;
@@ -42,6 +45,9 @@ inline QString capitalize( const QString & str )
 QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith );
 
 QTextStream & operator<<( QTextStream & stream, const QStringList & list );
+
+
+//----------------------------------------------------------------------------------------------------------------------
 
 
 #endif // STRING_UTILS_INCLUDED

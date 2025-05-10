@@ -6,6 +6,8 @@
 //======================================================================================================================
 
 #include "FileSystemUtils.hpp"
+
+#include "ContainerUtils.hpp"  // size_t
 #include "StringUtils.hpp"
 
 #include <QDirIterator>
@@ -53,7 +55,7 @@ const QString currentDir(".");
 void forEachParentDir( const QString & path, const std::function< void ( const QString & parentDir ) > & loopBody )
 {
 	QString parentDirPath = fs::getNormalizedPath( path );
-	qsizetype lastSlashPos = 0;
+	qsize_t lastSlashPos = 0;
 	while ((lastSlashPos = parentDirPath.lastIndexOf( '/', lastSlashPos - 1 )) >= 0)
 	{
 		parentDirPath.resize( lastSlashPos );

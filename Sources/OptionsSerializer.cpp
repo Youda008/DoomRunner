@@ -557,7 +557,7 @@ static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const 
 	{
 		// iterate manually, so that we can filter-out invalid items
 		preset.mods.reserve( modArrayJs.size() );
-		for (qsizetype i = 0; i < modArrayJs.size(); i++)
+		for (qsize_t i = 0; i < modArrayJs.size(); i++)
 		{
 			JsonObjectCtx modJs = modArrayJs.getObject( i );
 			if (!modJs)  // wrong type on position i - skip this entry
@@ -801,7 +801,7 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 		{
 			// iterate manually, so that we can filter-out invalid items
 			opts.engines.reserve( engineArrayJs.size() );
-			for (qsizetype i = 0; i < engineArrayJs.size(); i++)
+			for (qsize_t i = 0; i < engineArrayJs.size(); i++)
 			{
 				JsonObjectCtx engineJs = engineArrayJs.getObject( i );
 				if (!engineJs)  // wrong type on position i -> skip this entry
@@ -834,7 +834,7 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 			{
 				// iterate manually, so that we can filter-out invalid items
 				opts.iwads.reserve( iwadArrayJs.size() );
-				for (qsizetype i = 0; i < iwadArrayJs.size(); i++)
+				for (qsize_t i = 0; i < iwadArrayJs.size(); i++)
 				{
 					JsonObjectCtx iwadJs = iwadArrayJs.getObject( i );
 					if (!iwadJs)  // wrong type on position i - skip this entry
@@ -900,7 +900,7 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 	if (JsonArrayCtx presetArrayJs = rootJs.getArray( "presets" ))
 	{
 		opts.presets.reserve( presetArrayJs.size() );
-		for (qsizetype i = 0; i < presetArrayJs.size(); i++)
+		for (qsize_t i = 0; i < presetArrayJs.size(); i++)
 		{
 			JsonObjectCtx presetJs = presetArrayJs.getObject( i );
 			if (!presetJs)  // wrong type on position i - skip this entry

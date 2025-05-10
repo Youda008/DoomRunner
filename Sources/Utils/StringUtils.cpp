@@ -7,6 +7,8 @@
 
 #include "StringUtils.hpp"
 
+#include "Utils/ContainerUtils.hpp"  // size_t
+
 #include <QStringList>
 #include <QTextStream>
 
@@ -20,10 +22,10 @@ const QString emptyString;
 
 QString replaceStringBetween( QString source, char startingChar, char endingChar, const QString & replaceWith )
 {
-	qsizetype startIdx = source.indexOf( startingChar );
+	qsize_t startIdx = source.indexOf( startingChar );
 	if (startIdx < 0 || startIdx == source.size() - 1)
 		return source;
-	qsizetype endIdx = source.indexOf( endingChar, startIdx + 1 );
+	qsize_t endIdx = source.indexOf( endingChar, startIdx + 1 );
 	if (endIdx < 0)
 		return source;
 

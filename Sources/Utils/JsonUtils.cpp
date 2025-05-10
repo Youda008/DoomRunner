@@ -240,7 +240,7 @@ QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool 
 //======================================================================================================================
 // JsonArrayCtx
 
-QJsonValue JsonArrayCtx::getMember( qsizetype index, bool showError ) const
+QJsonValue JsonArrayCtx::getMember( qsize_t index, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -250,7 +250,7 @@ QJsonValue JsonArrayCtx::getMember( qsizetype index, bool showError ) const
 	return _wrappedArray[ index ];
 }
 
-JsonObjectCtxProxy JsonArrayCtx::getObject( qsizetype index, bool showError ) const
+JsonObjectCtxProxy JsonArrayCtx::getObject( qsize_t index, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -266,7 +266,7 @@ JsonObjectCtxProxy JsonArrayCtx::getObject( qsizetype index, bool showError ) co
 	return JsonObjectCtxProxy( val.toObject(), *_context, *this, index );
 }
 
-JsonArrayCtxProxy JsonArrayCtx::getArray( qsizetype index, bool showError ) const
+JsonArrayCtxProxy JsonArrayCtx::getArray( qsize_t index, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -282,7 +282,7 @@ JsonArrayCtxProxy JsonArrayCtx::getArray( qsizetype index, bool showError ) cons
 	return JsonArrayCtxProxy( val.toArray(), *_context, *this, index );
 }
 
-bool JsonArrayCtx::getBool( qsizetype index, bool defaultVal, bool showError ) const
+bool JsonArrayCtx::getBool( qsize_t index, bool defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -299,7 +299,7 @@ bool JsonArrayCtx::getBool( qsizetype index, bool defaultVal, bool showError ) c
 
 }
 
-int JsonArrayCtx::getInt( qsizetype index, int defaultVal, bool showError ) const
+int JsonArrayCtx::getInt( qsize_t index, int defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -321,7 +321,7 @@ int JsonArrayCtx::getInt( qsizetype index, int defaultVal, bool showError ) cons
 	return int(d);
 }
 
-uint JsonArrayCtx::getUInt( qsizetype index, uint defaultVal, bool showError ) const
+uint JsonArrayCtx::getUInt( qsize_t index, uint defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -343,7 +343,7 @@ uint JsonArrayCtx::getUInt( qsizetype index, uint defaultVal, bool showError ) c
 	return uint(d);
 }
 
-uint16_t JsonArrayCtx::getUInt16( qsizetype index, uint16_t defaultVal, bool showError ) const
+uint16_t JsonArrayCtx::getUInt16( qsize_t index, uint16_t defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -365,7 +365,7 @@ uint16_t JsonArrayCtx::getUInt16( qsizetype index, uint16_t defaultVal, bool sho
 	return uint16_t(d);
 }
 
-int64_t JsonArrayCtx::getInt64( qsizetype index, int64_t defaultVal, bool showError ) const
+int64_t JsonArrayCtx::getInt64( qsize_t index, int64_t defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -387,7 +387,7 @@ int64_t JsonArrayCtx::getInt64( qsizetype index, int64_t defaultVal, bool showEr
 	return int64_t(d);
 }
 
-double JsonArrayCtx::getDouble( qsizetype index, double defaultVal, bool showError ) const
+double JsonArrayCtx::getDouble( qsize_t index, double defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -403,7 +403,7 @@ double JsonArrayCtx::getDouble( qsizetype index, double defaultVal, bool showErr
 	return val.toDouble();
 }
 
-QString JsonArrayCtx::getString( qsizetype index, QString defaultVal, bool showError ) const
+QString JsonArrayCtx::getString( qsize_t index, QString defaultVal, bool showError ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -470,7 +470,7 @@ void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
 	}
 }
 
-void JsonArrayCtx::indexOutOfBounds( qsizetype index, bool showError ) const
+void JsonArrayCtx::indexOutOfBounds( qsize_t index, bool showError ) const
 {
 	QString message =
 		"JSON array "%getJsonPath()%" does not have index "%QString::number( index )%".\n"
@@ -504,7 +504,7 @@ void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expec
 	}
 }
 
-void JsonArrayCtx::invalidTypeAtIdx( qsizetype index, const QString & expectedType, bool showError ) const
+void JsonArrayCtx::invalidTypeAtIdx( qsize_t index, const QString & expectedType, bool showError ) const
 {
 	QString actualType = jsonTypeToStr( _wrappedArray[ index ].type() );
 	QString message =
@@ -526,7 +526,7 @@ QString JsonObjectCtx::elemPath( const QString & elemName ) const
 	return getJsonPath() + '/' + elemName;
 }
 
-QString JsonArrayCtx::elemPath( qsizetype index ) const
+QString JsonArrayCtx::elemPath( qsize_t index ) const
 {
 	return getJsonPath() + "/[" + QString::number( index ) + ']';
 }

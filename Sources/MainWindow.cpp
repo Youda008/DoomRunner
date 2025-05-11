@@ -3069,8 +3069,7 @@ void MainWindow::presetInsertSeparator()
 	separator.isSeparator = true;
 	separator.name = "New Separator";
 
-	int currentIdx = wdg::getCurrentItemIndex( ui->presetListView );
-	int insertIdx = currentIdx < 0 ? int( presetModel.size() ) : currentIdx;  // append if none
+	int insertIdx = wdg::getRowIndexToInsertTo( ui->presetListView );
 
 	wdg::insertItem( ui->presetListView, presetModel, separator, insertIdx );
 
@@ -3392,8 +3391,7 @@ void MainWindow::modInsertSeparator()
 	separator.isSeparator = true;
 	separator.name = "New Separator";
 
-	int currentIdx = wdg::getCurrentItemIndex( ui->modListView );
-	int insertIdx = currentIdx >= 0 ? currentIdx : int( modModel.size() );  // append if none
+	int insertIdx = wdg::getRowIndexToInsertTo( ui->modListView );
 
 	wdg::insertItem( ui->modListView, modModel, separator, insertIdx );
 

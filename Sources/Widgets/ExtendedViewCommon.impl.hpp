@@ -8,6 +8,7 @@
 #include "ExtendedViewCommon.hpp"
 
 #include "Utils/ErrorHandling.hpp"
+#include "Utils/WidgetUtils.hpp"  // getRowIndexToInsertTo
 
 #include <QMenu>
 #include <QAction>
@@ -259,8 +260,7 @@ void ExtendedViewCommon< SubClass >::_pasteAboveSelectedItem()
 	}
 
 	// deserialize and insert the data above the last selected item
-	QModelIndexList indexes = thisAsSubClass()->selectionModel()->selectedIndexes();
-	int rowToDrop = !indexes.isEmpty() ? indexes.last().row() : -1;  // if nothing is selected, drop it to the end
+	auto rowToDrop = wdg::getRowIndexToInsertTo( thisAsSubClass() );
 	// Although some people might call the cut&paste combo a "move action", for our model it's a "copy action".
 	thisAsSubClass()->model()->dropMimeData( mimeData, Qt::CopyAction, rowToDrop, 0, QModelIndex() );
 }

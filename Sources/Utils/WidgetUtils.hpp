@@ -836,6 +836,9 @@ void updateComboBoxFromDir(
 // miscellaneous
 
 
+/// Determines where to insert new items based on the currently selected items.
+int getRowIndexToInsertTo( QAbstractItemView * view );
+
 /// Expands all parent nodes from the selected node up to the root node, so that the selected node is immediately visible.
 void expandParentsOfNode( QTreeView * view, const QModelIndex & index );
 

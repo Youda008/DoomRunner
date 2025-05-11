@@ -399,6 +399,15 @@ void swapTableRows( QTableWidget * widget, int row1, int row2 )
 // miscellaneous
 
 
+int getRowIndexToInsertTo( QAbstractItemView * view )
+{
+	QModelIndexList selected = view->selectionModel()->selectedIndexes();
+	if (!selected.isEmpty())
+		return selected.last().row();
+	else
+		return view->model()->rowCount();  // if nothing is selected, insert it to the end
+}
+
 void expandParentsOfNode( QTreeView * view, const QModelIndex & modelIindex )
 {
 	for (QModelIndex currentIndex = modelIindex.parent(); currentIndex.isValid(); currentIndex = currentIndex.parent())

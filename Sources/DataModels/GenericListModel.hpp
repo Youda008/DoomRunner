@@ -676,16 +676,16 @@ class AListModel : public QAbstractListModel, public ErrorReportingComponent, pu
 	/// Allowed ways how items can be exported from this model when dragging them out or copying them to clipboard.
 	ExportFormats enabledExportFormats = 0;
 	bool canExportItems() const           { return enabledExportFormats != 0; }
-	bool canExportItemsAsUrls() const     { return areFlagsSet( enabledExportFormats, ExportFormat::FileUrls ); }
-	bool canExportItemsAsJson() const     { return areFlagsSet( enabledExportFormats, ExportFormat::Json ); }
-	bool canExportItemsAsIndexes() const  { return areFlagsSet( enabledExportFormats, ExportFormat::Indexes ); }
+	bool canExportItemsAsUrls() const     { return isFlagSet( enabledExportFormats, ExportFormat::FileUrls ); }
+	bool canExportItemsAsJson() const     { return isFlagSet( enabledExportFormats, ExportFormat::Json ); }
+	bool canExportItemsAsIndexes() const  { return isFlagSet( enabledExportFormats, ExportFormat::Indexes ); }
 
 	/// Allowed ways how items can be imported into this model when dropping them in or pasting them from clipboard.
 	ExportFormats enabledImportFormats = 0;
 	bool canImportItems() const           { return enabledImportFormats != 0; }
-	bool canImportItemsAsUrls() const     { return areFlagsSet( enabledImportFormats, ExportFormat::FileUrls ); }
-	bool canImportItemsAsJson() const     { return areFlagsSet( enabledImportFormats, ExportFormat::Json ); }
-	bool canImportItemsAsIndexes() const  { return areFlagsSet( enabledImportFormats, ExportFormat::Indexes ); }
+	bool canImportItemsAsUrls() const     { return isFlagSet( enabledImportFormats, ExportFormat::FileUrls ); }
+	bool canImportItemsAsJson() const     { return isFlagSet( enabledImportFormats, ExportFormat::Json ); }
+	bool canImportItemsAsIndexes() const  { return isFlagSet( enabledImportFormats, ExportFormat::Indexes ); }
 
 	/// optional path convertor that will convert paths dropped from directory to absolute or relative
 	const PathConvertor * pathConvertor = nullptr;

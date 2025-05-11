@@ -50,56 +50,56 @@ void ExtendedViewCommon< SubClass >::_enableContextMenu( MenuActions actions )
 
 	contextMenu = new QMenu( thisAsSubclass );  // will be deleted when this view (its parent) is deleted
 
-	if (areFlagsSet( actions, MenuAction::OpenFile ))
+	if (isFlagSet( actions, MenuAction::OpenFile ))
 	{
 		openFileAction = _addAction( "Open file", {} );
 		thisAsSubclass->connect( openFileAction, &QAction::triggered, thisAsSubclass, &SubClass::openCurrentFile );
 	}
-	if (areFlagsSet( actions, MenuAction::OpenFileLocation ))
+	if (isFlagSet( actions, MenuAction::OpenFileLocation ))
 	{
 		openFileLocationAction = _addAction( "Open file location", {} );
 		thisAsSubclass->connect( openFileLocationAction, &QAction::triggered, thisAsSubclass, &SubClass::openCurrentFileLocation );
 	}
-	if (areFlagsSet( actions, MenuAction::AddAndDelete ) && _assertCanAddEditAction( "And and Delete" ))
+	if (isFlagSet( actions, MenuAction::AddAndDelete ) && _assertCanAddEditAction( "And and Delete" ))
 	{
 		addItemAction = _addAction( "Add", { Qt::Key_Insert } );
 		deleteItemAction = _addAction( "Delete", { Qt::Key_Delete } );
 	}
-	if (areFlagsSet( actions, MenuAction::Clone ) && _assertCanAddEditAction( "Clone" ))
+	if (isFlagSet( actions, MenuAction::Clone ) && _assertCanAddEditAction( "Clone" ))
 	{
 		cloneItemAction = _addAction( "Clone", { Qt::CTRL | Qt::ALT | Qt::Key_C } );
 	}
-	if (areFlagsSet( actions, MenuAction::CutAndPaste ) && _assertCanAddEditAction( "Cut" ))
+	if (isFlagSet( actions, MenuAction::CutAndPaste ) && _assertCanAddEditAction( "Cut" ))
 	{
 		cutItemsAction = _addAction( "Cut",   { Qt::CTRL | Qt::Key_X } );
 		thisAsSubclass->connect( cutItemsAction, &QAction::triggered, thisAsSubclass, &SubClass::cutSelectedItems );
 	}
-	if (areFlagsSet( actions, MenuAction::Copy ))
+	if (isFlagSet( actions, MenuAction::Copy ))
 	{
 		copyItemsAction = _addAction( "Copy",  { Qt::CTRL | Qt::Key_C } );
 		thisAsSubclass->connect( copyItemsAction, &QAction::triggered, thisAsSubclass, &SubClass::copySelectedItems );
 	}
-	if (areFlagsSet( actions, MenuAction::CutAndPaste ) && _assertCanAddEditAction( "Paste" ))
+	if (isFlagSet( actions, MenuAction::CutAndPaste ) && _assertCanAddEditAction( "Paste" ))
 	{
 		pasteItemsAction = _addAction( "Paste", { Qt::CTRL | Qt::Key_V } );
 		thisAsSubclass->connect( pasteItemsAction, &QAction::triggered, thisAsSubclass, &SubClass::pasteAboveSelectedItem );
 	}
-	if (areFlagsSet( actions, MenuAction::Move ) && _assertCanAddEditAction( "Move up and down" ))
+	if (isFlagSet( actions, MenuAction::Move ) && _assertCanAddEditAction( "Move up and down" ))
 	{
 		moveItemUpAction = _addAction( "Move up", { Qt::CTRL | Qt::Key_Up } );
 		moveItemDownAction = _addAction( "Move down", { Qt::CTRL | Qt::Key_Down } );
 		moveItemToTopAction = _addAction( "Move to top", { Qt::CTRL | Qt::ALT | Qt::Key_Up } );
 		moveItemToBottomAction = _addAction( "Move to bottom", { Qt::CTRL | Qt::ALT | Qt::Key_Down } );
 	}
-	if (areFlagsSet( actions, MenuAction::InsertSeparator ) && _assertCanAddEditAction( "Insert separator" ))
+	if (isFlagSet( actions, MenuAction::InsertSeparator ) && _assertCanAddEditAction( "Insert separator" ))
 	{
 		insertSeparatorAction = _addAction( "Insert separator", { Qt::CTRL | Qt::Key_Slash } );
 	}
-	if (areFlagsSet( actions, MenuAction::Find ))
+	if (isFlagSet( actions, MenuAction::Find ))
 	{
 		findItemAction = _addAction( "Find", QKeySequence::Find );
 	}
-	if (areFlagsSet( actions, MenuAction::ToggleIcons ))
+	if (isFlagSet( actions, MenuAction::ToggleIcons ))
 	{
 		toggleIconsAction = _addAction( "Show icons", {} );
 		thisAsSubclass->connect( toggleIconsAction, &QAction::triggered, thisAsSubclass, QOverload<>::of( &SubClass::toggleIcons ) );

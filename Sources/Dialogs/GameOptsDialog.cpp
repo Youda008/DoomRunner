@@ -269,7 +269,7 @@ bool GameOptsDialog::isChecked( const FlagDef & flag ) const
 {
 	const GameFlags & dmflagsField = getFlagsField( gameplayDetails, flag );
 
-	bool flagState = areFlagsSet( dmflagsField, flag.bit );
+	bool flagState = isAnyOfFlagsSet( dmflagsField, flag.bit );
 	return flagState != (flag.effect == Inverted);  // if flag inverts, then !flagState, else flagState
 }
 

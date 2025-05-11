@@ -205,7 +205,7 @@ static bool isEnabled( const CompatibilityDetails & compatDetails, const FlagDef
 {
 	const GameFlags & dmflagsField = getFlagsField( compatDetails, flag );
 
-	return areFlagsSet( dmflagsField, flag.bit );
+	return isAnyOfFlagsSet( dmflagsField, flag.bit );
 }
 
 bool CompatOptsDialog::isEnabled( const FlagDef & flag ) const

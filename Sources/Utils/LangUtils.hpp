@@ -83,10 +83,22 @@ Type takeAndReplace( Type & variable, Type newVal )
 //======================================================================================================================
 // flag utils
 
+template< typename Flag >
+bool isFlagSet( std::underlying_type_t< Flag > targetFlags, Flag flagToTest )
+{
+	return (targetFlags & flagToTest) != 0;
+}
+
 template< typename Flags >
-bool areFlagsSet( Flags targetFlags, types::identity< Flags > flagsToTest )
+bool isAnyOfFlagsSet( Flags targetFlags, types::identity< Flags > flagsToTest )
 {
 	return (targetFlags & flagsToTest) != 0;
+}
+
+template< typename Flags >
+bool areAllFlagsSet( Flags targetFlags, types::identity< Flags > flagsToTest )
+{
+	return (targetFlags & flagsToTest) == flagsToTest;
 }
 
 template< typename Flags >

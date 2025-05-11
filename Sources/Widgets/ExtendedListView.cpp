@@ -253,7 +253,7 @@ void ExtendedListView::updateModelExportImportFormats()
 		return;
 	}
 
-	bool dragItemsAsFiles = areFlagsSet( enabledDnDOutputTypes, DnDOutputType::FilePaths );
+	bool dragItemsAsFiles = isFlagSet( enabledDnDOutputTypes, DnDOutputType::FilePaths );
 	auto allowedDndSources_ = expandToBools< DnDSourcesExp >( allowedDnDSources );
 
 	ExportFormats exportFormats = 0;
@@ -340,7 +340,7 @@ void ExtendedListView::dragEnterEvent( QDragEnterEvent * event )
 		event->ignore();
 		return;
 	}
-	else if (areFlagsSet( event->possibleActions(), preferredAction ))
+	else if (isAnyOfFlagsSet( event->possibleActions(), preferredAction ))
 	{
 		// The drop action proposed by Qt is often not suitable, we'll rather choose it on our own.
 		event->setDropAction( preferredAction );
@@ -382,7 +382,7 @@ void ExtendedListView::dropEvent( QDropEvent * event )
 		event->ignore();
 		return;
 	}
-	else if (areFlagsSet( event->possibleActions(), preferredAction ))
+	else if (isAnyOfFlagsSet( event->possibleActions(), preferredAction ))
 	{
 		// The drop action proposed by Qt is often not suitable, we'll rather choose it on our own.
 		event->setDropAction( preferredAction );

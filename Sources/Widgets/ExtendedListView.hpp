@@ -56,9 +56,9 @@ template<> inline DnDSourcesExp expandToBools< DnDSourcesExp, DnDSources >( DnDS
 {
 	return
 	{
-		areFlagsSet( dndSources, DnDSource::ThisWidget ),
-		areFlagsSet( dndSources, DnDSource::OtherWidget ),
-		areFlagsSet( dndSources, DnDSource::ExternalApp ),
+		isFlagSet( dndSources, DnDSource::ThisWidget ),
+		isFlagSet( dndSources, DnDSource::OtherWidget ),
+		isFlagSet( dndSources, DnDSource::ExternalApp ),
 	};
 }
 

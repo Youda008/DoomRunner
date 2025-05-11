@@ -37,7 +37,7 @@ void RightClickableWidget< SuperClass >::_mousePressEvent( QMouseEvent * event )
 */
 
 template< typename SuperClass >
-QAction * RightClickableWidget< SuperClass >::_addAction( const QString & text, const QKeySequence & shortcut )
+QAction * RightClickableWidget< SuperClass >::_addMenuAction( const QString & text, const QKeySequence & shortcut )
 {
 	QAction * action = new QAction( text, this );  // will be deleted when this view (its parent) is deleted
 	action->setShortcut( shortcut );

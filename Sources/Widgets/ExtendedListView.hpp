@@ -127,15 +127,24 @@ class ExtendedListView : public QListView, public ExtendedViewCommon< ExtendedLi
 	//-- context menu --------------------------------------------------------------------------------------------------
 
 	/// \copydoc _enableContextMenu()
-	void enableContextMenu( MenuActions actions );
+	void enableContextMenu();
 
-	/// \copydoc _addAction()
-	QAction * addAction( const QString & text, const QKeySequence & shortcut );
+	/// \copydoc _addStandardMenuActions()
+	void addStandardMenuActions( MenuActions actions );
+
+	/// \copydoc _addMenuAction()
+	QAction * addCustomMenuAction( const QString & text, const QKeySequence & shortcut );
+
+	/// \copydoc _addMenuSeparator()
+	void addMenuSeparator();
 
 	/// \copydoc _toggleListModifications()
 	void toggleListModifications( bool enabled );
 
  signals:
+
+	/// Emitted when one of the sorting actions are triggered via a context menu.
+	void sortActionTriggered( SortKey key, Qt::SortOrder order );
 
 	/// Emitted either when items are dropped to this view from another widget or just moved within this view itself.
 	/** This is always preceeded by signal rowsInserted() (or itemsInserted() in case of GenericListModel)
@@ -169,6 +178,15 @@ class ExtendedListView : public QListView, public ExtendedViewCommon< ExtendedLi
 	void cutSelectedItems();
 	void copySelectedItems();
 	void pasteAboveSelectedItem();
+
+	void onSortByNameAscTriggered();
+	void onSortByNameDscTriggered();
+	void onSortByTypeAscTriggered();
+	void onSortByTypeDscTriggered();
+	void onSortBySizeAscTriggered();
+	void onSortBySizeDscTriggered();
+	void onSortByDateAscTriggered();
+	void onSortByDateDscTriggered();
 
 	void toggleIcons();
 

@@ -14,9 +14,9 @@
 
 RightClickableButton::RightClickableButton( QWidget * parent ) : RightClickableWidget( parent ) {}
 
-QAction * RightClickableButton::addAction( const QString & text, const QKeySequence & shortcut )
+QAction * RightClickableButton::addMenuAction( const QString & text, const QKeySequence & shortcut )
 {
-	return _addAction( text, shortcut );
+	return _addMenuAction( text, shortcut );
 }
 
 /*void RightClickableButton::mousePressEvent( QMouseEvent * event )

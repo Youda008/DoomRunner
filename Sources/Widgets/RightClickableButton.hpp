@@ -25,7 +25,7 @@ class RightClickableButton : public RightClickableWidget< QToolButton > {
 
 	RightClickableButton( QWidget * parent );
 
-	QAction * addAction( const QString & text, const QKeySequence & shortcut );
+	QAction * addMenuAction( const QString & text, const QKeySequence & shortcut );
 
  private: // overriden event callbacks
 

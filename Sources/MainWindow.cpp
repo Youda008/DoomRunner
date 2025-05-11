@@ -61,14 +61,6 @@ enum EnvVarsColumn
 	VarValue = 1,
 };
 
-enum FSTreeColumn
-{
-	FileName = 0,
-	FileSize = 1,
-	FileType = 2,
-	TimeModified = 3,
-};
-
 
 //======================================================================================================================
 // MainWindow-specific utils
@@ -878,7 +870,7 @@ MainWindow::MainWindow()
 	connect( ui->fragLimitSpinBox, QOverload<int>::of( &QSpinBox::valueChanged ), this, &ThisClass::onFragLimitChanged );
 	connect( ui->playerNameLine, &QLineEdit::textChanged, this, &ThisClass::onPlayerNameChanged );
 	connect( ui->playerColorBtn, &RightClickableButton::clicked, this, &ThisClass::runPlayerColorDialog );
-	resetPlayerColorAction = ui->playerColorBtn->addAction( "Reset", {} );
+	resetPlayerColorAction = ui->playerColorBtn->addMenuAction( "Reset", {} );
 	connect( resetPlayerColorAction, &QAction::triggered, this, &ThisClass::onPlayerColorResetTriggered );
 
 	// gameplay
@@ -959,14 +951,18 @@ void MainWindow::setupPresetList()
 	connect( ui->presetListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ThisClass::onPresetToggled );
 
 	// setup reaction to key shortcuts and right click
-	ui->presetListView->enableContextMenu( 0
-		| ExtendedListView::MenuAction::AddAndDelete
-		| ExtendedListView::MenuAction::Clone
-		| ExtendedListView::MenuAction::Move
-		| ExtendedListView::MenuAction::InsertSeparator
-		| ExtendedListView::MenuAction::Find
-	);
+	ui->presetListView->enableContextMenu();
+	ui->presetListView->addStandardMenuActions( ExtendedListView::MenuAction::AddAndDelete );
+	ui->presetListView->addStandardMenuActions( ExtendedListView::MenuAction::Clone );
+	ui->presetListView->addMenuSeparator();
+	ui->presetListView->addStandardMenuActions( ExtendedListView::MenuAction::InsertSeparator );
+	ui->presetListView->addMenuSeparator();
+	ui->presetListView->addStandardMenuActions( ExtendedListView::MenuAction::Move );
+	ui->presetListView->addMenuSeparator();
+	ui->presetListView->addStandardMenuActions( ExtendedListView::MenuAction::Find );
+
 	ui->presetListView->toggleListModifications( true );
+
 	connect( ui->presetListView->addItemAction, &QAction::triggered, this, &ThisClass::presetAdd );
 	connect( ui->presetListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::presetInsertSeparator );
 	connect( ui->presetListView->deleteItemAction, &QAction::triggered, this, &ThisClass::presetDelete );
@@ -1001,11 +997,11 @@ void MainWindow::setupIWADList()
 	ui->iwadListView->setDnDOutputTypes( DnDOutputType::FilePaths );
 
 	// setup reaction to key shortcuts and right click
-	ui->iwadListView->enableContextMenu( 0
-		| ExtendedListView::MenuAction::OpenFile
-		| ExtendedListView::MenuAction::OpenFileLocation
-		| ExtendedListView::MenuAction::Copy
-	);
+	ui->iwadListView->enableContextMenu();
+	ui->iwadListView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFile );
+	ui->iwadListView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFileLocation );
+	ui->iwadListView->addMenuSeparator();
+	ui->iwadListView->addStandardMenuActions( ExtendedListView::MenuAction::Copy );
 
 	// set reaction when an item is clicked or double-clicked
 	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ThisClass::onIWADToggled );
@@ -1026,7 +1022,7 @@ void MainWindow::setupMapPackList()
 	mapModel.setNameFilterDisables( false );
 
 	// make the list sorted by file name
-	mapModel.sort( FSTreeColumn::FileName );
+	mapModel.sort( int( ExtendedTreeView::SortKey::Name ) );
 
 	// remove the column names at the top
 	ui->mapDirView->setHeaderHidden( true );
@@ -1047,19 +1043,24 @@ void MainWindow::setupMapPackList()
 	connect( ui->mapDirView, &QTreeView::doubleClicked, this, &ThisClass::onMapPackDoubleClicked );
 
 	// setup reaction to key shortcuts and right click
-	ui->mapDirView->enableContextMenu( 0
-		| ExtendedListView::MenuAction::OpenFile
-		| ExtendedListView::MenuAction::OpenFileLocation
-		| ExtendedListView::MenuAction::Copy
-		| ExtendedListView::MenuAction::ToggleIcons
-	);
+	ui->mapDirView->enableContextMenu();
+	ui->mapDirView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFile );
+	ui->mapDirView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFileLocation );
+	ui->mapDirView->addMenuSeparator();
+	ui->mapDirView->addStandardMenuActions( ExtendedListView::MenuAction::Copy );
+	ui->mapDirView->addMenuSeparator();
+	ui->mapDirView->addStandardMenuActions( ExtendedListView::MenuAction::SortFilesBy );
+	ui->mapDirView->addMenuSeparator();
+	ui->mapDirView->addStandardMenuActions( ExtendedListView::MenuAction::ToggleIcons );
+
+	connect( ui->mapDirView, &ExtendedTreeView::sortActionTriggered, this, &ThisClass::onSortActionTriggered );
 
 	// setup icons (must be set called after enableContextMenu, because it requires toggleIconsAction)
 	ui->mapDirView->toggleIcons( MapSettings{}.showIcons );  // we need to do this instead of model.toggleIcons() in order to update the action text
 	connect( ui->mapDirView->toggleIconsAction, &QAction::triggered, this, &ThisClass::onMapIconsToggled );
 
 	// allow hiding the the help label
-	hideLabelAction = ui->mapDirHelpLabel->addAction( "Hide this label", {} );
+	hideLabelAction = ui->mapDirHelpLabel->addMenuAction( "Hide this label", {} );
 	connect( hideLabelAction, &QAction::triggered, this, &ThisClass::onMapHelpLabelHideTriggered );
 
 	// QFileSystemModel updates its content asynchronously in a separate thread. For this reason,
@@ -1095,20 +1096,24 @@ void MainWindow::setupModList()
 	connect( ui->modListView, &QListView::doubleClicked, this, &ThisClass::onModDoubleClicked );
 
 	// setup reaction to key shortcuts and right click
-	ui->modListView->enableContextMenu( 0
-		| ExtendedListView::MenuAction::OpenFile
-		| ExtendedListView::MenuAction::OpenFileLocation
-		| ExtendedListView::MenuAction::AddAndDelete
-		| ExtendedListView::MenuAction::Copy
-		| ExtendedListView::MenuAction::CutAndPaste
-		| ExtendedListView::MenuAction::Move
-		| ExtendedListView::MenuAction::InsertSeparator
-		| ExtendedListView::MenuAction::ToggleIcons
-	);
-	addCmdArgAction = ui->modListView->addAction( "Add command line argument", { Qt::CTRL | Qt::Key_Asterisk } );
-	createNewDMBAction = ui->modListView->addAction( "Create new Mod Bundle", {} );
-	addExistingDMBAction = ui->modListView->addAction( "Add existing Mod Bundle", {} );
+	ui->modListView->enableContextMenu();
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFile );
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFileLocation );
+	ui->modListView->addMenuSeparator();
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::AddAndDelete );
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::InsertSeparator );
+	addCmdArgAction = ui->modListView->addCustomMenuAction( "Add command line argument", { Qt::CTRL | Qt::Key_Asterisk } );
+	createNewDMBAction = ui->modListView->addCustomMenuAction( "Create new Mod Bundle", {} );
+	addExistingDMBAction = ui->modListView->addCustomMenuAction( "Add existing Mod Bundle", {} );
+	ui->modListView->addMenuSeparator();
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::CutCopyPaste );
+	ui->modListView->addMenuSeparator();
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::Move );
+	ui->modListView->addMenuSeparator();
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::ToggleIcons );
+
 	ui->modListView->toggleListModifications( true );
+
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &ThisClass::modAdd );
 	connect( ui->modListView->insertSeparatorAction, &QAction::triggered, this, &ThisClass::modInsertSeparator );
 	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &ThisClass::modDelete );
@@ -3245,6 +3250,13 @@ void MainWindow::onMapIconsToggled()
 {
 	mapSettings.showIcons = ui->mapDirView->areIconsEnabled();
 	scheduleSavingOptions();
+}
+
+void MainWindow::onSortActionTriggered( ExtendedTreeView::SortKey key, Qt::SortOrder order )
+{
+	// Our sort keys correspond to the column indexes in the QFileSystemModel, so we can convert it directly.
+	mapModel.sort( int(key), order );
+	//resetMapDirModelAndView();
 }
 
 void MainWindow::onMapHelpLabelHideTriggered()

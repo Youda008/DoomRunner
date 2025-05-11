@@ -85,17 +85,20 @@ void DMBEditor::setupModList( bool showIcons )
 	connect( ui->modListView, &QListView::doubleClicked, this, &ThisClass::onModDoubleClicked );
 
 	// setup reaction to key shortcuts and right click
-	ui->modListView->enableContextMenu( 0
-		| ExtendedListView::MenuAction::OpenFile
-		| ExtendedListView::MenuAction::OpenFileLocation
-		| ExtendedListView::MenuAction::AddAndDelete
-		| ExtendedListView::MenuAction::Copy
-		| ExtendedListView::MenuAction::CutAndPaste
-		| ExtendedListView::MenuAction::Move
-	);
-	createNewDMBAction = ui->modListView->addAction( "Create new Mod Bundle", {} );
-	addExistingDMBAction = ui->modListView->addAction( "Add existing Mod Bundle", {} );
+	ui->modListView->enableContextMenu();
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFile );
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFileLocation );
+	ui->modListView->addMenuSeparator();
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::AddAndDelete );
+	createNewDMBAction = ui->modListView->addCustomMenuAction( "Create new Mod Bundle", {} );
+	addExistingDMBAction = ui->modListView->addCustomMenuAction( "Add existing Mod Bundle", {} );
+	ui->modListView->addMenuSeparator();
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::CutCopyPaste );
+	ui->modListView->addMenuSeparator();
+	ui->modListView->addStandardMenuActions( ExtendedListView::MenuAction::Move );
+
 	ui->modListView->toggleListModifications( true );
+
 	connect( ui->modListView->addItemAction, &QAction::triggered, this, &ThisClass::modAdd );
 	connect( ui->modListView->deleteItemAction, &QAction::triggered, this, &ThisClass::modDelete );
 	connect( ui->modListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::modMoveUp );

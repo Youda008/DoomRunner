@@ -461,16 +461,26 @@ void ExtendedListView::onDragAndDropFinished( DnDSources source, DnDProgressGuar
 //----------------------------------------------------------------------------------------------------------------------
 // context menu
 
-void ExtendedListView::enableContextMenu( MenuActions actions )
+void ExtendedListView::enableContextMenu()
 {
-	_enableContextMenu( actions );
+	_enableContextMenu();
+}
+
+void ExtendedListView::addStandardMenuActions( MenuActions actions )
+{
+	_addStandardMenuActions( actions );
 
 	updateModelExportImportFormats();
 }
 
-QAction * ExtendedListView::addAction( const QString & text, const QKeySequence & shortcut )
+QAction * ExtendedListView::addCustomMenuAction( const QString & text, const QKeySequence & shortcut )
 {
-	return _addAction( text, shortcut );
+	return _addCustomMenuAction( contextMenu, text, shortcut );
+}
+
+void ExtendedListView::addMenuSeparator()
+{
+	return _addMenuSeparator();
 }
 
 void ExtendedListView::toggleListModifications( bool enabled )
@@ -500,6 +510,43 @@ void ExtendedListView::copySelectedItems()
 void ExtendedListView::pasteAboveSelectedItem()
 {
 	_pasteAboveSelectedItem();
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// sort actions
+
+void ExtendedListView::onSortByNameAscTriggered()
+{
+	emit sortActionTriggered( SortKey::Name, Qt::SortOrder::AscendingOrder );
+}
+void ExtendedListView::onSortByNameDscTriggered()
+{
+	emit sortActionTriggered( SortKey::Name, Qt::SortOrder::DescendingOrder );
+}
+void ExtendedListView::onSortByTypeAscTriggered()
+{
+	emit sortActionTriggered( SortKey::Type, Qt::SortOrder::AscendingOrder );
+}
+void ExtendedListView::onSortByTypeDscTriggered()
+{
+	emit sortActionTriggered( SortKey::Type, Qt::SortOrder::DescendingOrder );
+}
+void ExtendedListView::onSortBySizeAscTriggered()
+{
+	emit sortActionTriggered( SortKey::Size, Qt::SortOrder::AscendingOrder );
+}
+void ExtendedListView::onSortBySizeDscTriggered()
+{
+	emit sortActionTriggered( SortKey::Size, Qt::SortOrder::DescendingOrder );
+}
+void ExtendedListView::onSortByDateAscTriggered()
+{
+	emit sortActionTriggered( SortKey::Date, Qt::SortOrder::AscendingOrder );
+}
+void ExtendedListView::onSortByDateDscTriggered()
+{
+	emit sortActionTriggered( SortKey::Date, Qt::SortOrder::DescendingOrder );
 }
 
 

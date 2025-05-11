@@ -32,7 +32,7 @@ class RightClickableWidget : public SuperClass {
 
 	RightClickableWidget( QWidget * parent );
 
-	QAction * _addAction( const QString & text, const QKeySequence & shortcut );
+	QAction * _addMenuAction( const QString & text, const QKeySequence & shortcut );
 
 	//void _mousePressEvent( QMouseEvent * event );
 	void _contextMenuEvent( QContextMenuEvent * event );

@@ -13,6 +13,7 @@
 
 #include "DataModels/GenericListModel.hpp"
 #include "Widgets/ExtendedListView.hpp"  // DnDType
+#include "Widgets/ExtendedTreeView.hpp"  // SortKey
 #include "Widgets/SearchPanel.hpp"
 #include "Dialogs/DMBEditor.hpp"  // DMBEditor::Result
 #include "UserData.hpp"
@@ -99,6 +100,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void searchPresets( const QString & phrase, bool caseSensitive, bool useRegex );
 
 	void onMapIconsToggled();
+	void onSortActionTriggered( ExtendedTreeView::SortKey key, Qt::SortOrder order );
 	void onMapHelpLabelHideTriggered();
 
 	void modAdd();

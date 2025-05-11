@@ -151,15 +151,19 @@ void SetupDialog::setupEngineList()
 	connect( &engineConfirmationFilter, &ConfirmationFilter::choiceConfirmed, this, &ThisClass::onEngineConfirmed );
 
 	// setup reaction to key shortcuts and right click
-	ui->engineListView->enableContextMenu( 0
-		| ExtendedListView::MenuAction::OpenFileLocation
-		| ExtendedListView::MenuAction::AddAndDelete
-		| ExtendedListView::MenuAction::Copy
-		| ExtendedListView::MenuAction::CutAndPaste
-		| ExtendedListView::MenuAction::Move
-	);
-	setDefaultEngineAction = ui->engineListView->addAction( "Set as default", {} );
+	ui->engineListView->enableContextMenu();
+	ui->engineListView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFileLocation );
+	ui->engineListView->addMenuSeparator();
+	ui->engineListView->addStandardMenuActions( ExtendedListView::MenuAction::AddAndDelete );
+	ui->engineListView->addMenuSeparator();
+	ui->engineListView->addStandardMenuActions( ExtendedListView::MenuAction::CutCopyPaste );
+	ui->engineListView->addMenuSeparator();
+	ui->engineListView->addStandardMenuActions( ExtendedListView::MenuAction::Move );
+	ui->engineListView->addMenuSeparator();
+	setDefaultEngineAction = ui->engineListView->addCustomMenuAction( "Set as default", {} );
+
 	ui->engineListView->toggleListModifications( true );
+
 	connect( ui->engineListView->addItemAction, &QAction::triggered, this, &ThisClass::engineAdd );
 	connect( ui->engineListView->deleteItemAction, &QAction::triggered, this, &ThisClass::engineDelete );
 	connect( ui->engineListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::engineMoveUp );
@@ -195,13 +199,17 @@ void SetupDialog::setupIWADList()
 	connect( ui->iwadListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ThisClass::onIWADSelectionChanged );
 
 	// setup reaction to key shortcuts and right click
-	ui->iwadListView->enableContextMenu( 0
-		| ExtendedListView::MenuAction::OpenFileLocation
-		| ExtendedListView::MenuAction::AddAndDelete
-		| ExtendedListView::MenuAction::Move
-	);
-	setDefaultIWADAction = ui->iwadListView->addAction( "Set as default", {} );
+	ui->iwadListView->enableContextMenu();
+	ui->iwadListView->addStandardMenuActions( ExtendedListView::MenuAction::OpenFileLocation );
+	ui->iwadListView->addMenuSeparator();
+	ui->iwadListView->addStandardMenuActions( ExtendedListView::MenuAction::AddAndDelete );
+	ui->iwadListView->addMenuSeparator();
+	ui->iwadListView->addStandardMenuActions( ExtendedListView::MenuAction::Move );
+	ui->iwadListView->addMenuSeparator();
+	setDefaultIWADAction = ui->iwadListView->addCustomMenuAction( "Set as default", {} );
+
 	ui->iwadListView->toggleListModifications( !iwadSettings.updateFromDir );
+
 	connect( ui->iwadListView->addItemAction, &QAction::triggered, this, &ThisClass::iwadAdd );
 	connect( ui->iwadListView->deleteItemAction, &QAction::triggered, this, &ThisClass::iwadDelete );
 	connect( ui->iwadListView->moveItemUpAction, &QAction::triggered, this, &ThisClass::iwadMoveUp );

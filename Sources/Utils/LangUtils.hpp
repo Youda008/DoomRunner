@@ -153,9 +153,9 @@ void flipFlags( Flags & targetFlags, types::identity< Flags > flagsToFlip )
 }
 
 template< typename Flags = uint >
-constexpr Flags makeBitMask( uint length )
+constexpr Flags makeBitMask( uint numOfBits )
 {
-	return (1 << length) - 1;
+	return (1 << numOfBits) - 1;
 }
 
 

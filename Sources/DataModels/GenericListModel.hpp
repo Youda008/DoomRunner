@@ -1068,6 +1068,7 @@ class GenericListModel : public AListModel, public ListImpl {
 
 		const auto * sourceModel = getMimeModelPtr( mimeData );
 
+		const auto formats = mimeData->formats();  // keep here for debugging
 		if (hasImportableUrls( mimeData, sourceModel ))
 		{
 			return dropMimeUrls( mimeData->urls(), row );
@@ -1082,7 +1083,7 @@ class GenericListModel : public AListModel, public ListImpl {
 		}
 		else
 		{
-			reportUserError( "Cannot import data", "Inserted unsupported data type:\n" % mimeData->formats().join('\n') );
+			reportUserError( "Cannot import data", "Inserted unsupported data type:\n" % formats.join('\n') );
 			return false;
 		}
 	}

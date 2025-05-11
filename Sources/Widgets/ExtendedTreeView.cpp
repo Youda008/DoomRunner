@@ -109,14 +109,24 @@ void ExtendedTreeView::updateColumnSize()
 //----------------------------------------------------------------------------------------------------------------------
 // context menu
 
-void ExtendedTreeView::enableContextMenu( MenuActions actions )
+void ExtendedTreeView::enableContextMenu()
 {
-	_enableContextMenu( actions );
+	_enableContextMenu();
 }
 
-QAction * ExtendedTreeView::addAction( const QString & text, const QKeySequence & shortcut )
+void ExtendedTreeView::addStandardMenuActions( MenuActions actions )
 {
-	return _addAction( text, shortcut );
+	return _addStandardMenuActions( actions );
+}
+
+QAction * ExtendedTreeView::addCustomMenuAction( const QString & text, const QKeySequence & shortcut )
+{
+	return _addCustomMenuAction( contextMenu, text, shortcut );
+}
+
+void ExtendedTreeView::addMenuSeparator()
+{
+	return _addMenuSeparator();
 }
 
 void ExtendedTreeView::toggleListModifications( bool enabled )
@@ -146,6 +156,43 @@ void ExtendedTreeView::copySelectedItems()
 void ExtendedTreeView::pasteAboveSelectedItem()
 {
 	_pasteAboveSelectedItem();
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+// sort actions
+
+void ExtendedTreeView::onSortByNameAscTriggered()
+{
+	emit sortActionTriggered( SortKey::Name, Qt::SortOrder::AscendingOrder );
+}
+void ExtendedTreeView::onSortByNameDscTriggered()
+{
+	emit sortActionTriggered( SortKey::Name, Qt::SortOrder::DescendingOrder );
+}
+void ExtendedTreeView::onSortByTypeAscTriggered()
+{
+	emit sortActionTriggered( SortKey::Type, Qt::SortOrder::AscendingOrder );
+}
+void ExtendedTreeView::onSortByTypeDscTriggered()
+{
+	emit sortActionTriggered( SortKey::Type, Qt::SortOrder::DescendingOrder );
+}
+void ExtendedTreeView::onSortBySizeAscTriggered()
+{
+	emit sortActionTriggered( SortKey::Size, Qt::SortOrder::AscendingOrder );
+}
+void ExtendedTreeView::onSortBySizeDscTriggered()
+{
+	emit sortActionTriggered( SortKey::Size, Qt::SortOrder::DescendingOrder );
+}
+void ExtendedTreeView::onSortByDateAscTriggered()
+{
+	emit sortActionTriggered( SortKey::Date, Qt::SortOrder::AscendingOrder );
+}
+void ExtendedTreeView::onSortByDateDscTriggered()
+{
+	emit sortActionTriggered( SortKey::Date, Qt::SortOrder::DescendingOrder );
 }
 
 

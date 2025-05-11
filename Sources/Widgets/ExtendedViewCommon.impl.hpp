@@ -22,6 +22,12 @@
 //======================================================================================================================
 
 template< typename SubClass >
+void ExtendedViewCommon< SubClass >::_enableContextMenu()
+{
+	contextMenu = new QMenu( thisAsSubClass() );  // will be deleted when this view (its parent) is deleted
+}
+
+template< typename SubClass >
 bool ExtendedViewCommon< SubClass >::_assertCanAddEditAction( const char * actionDesc ) const
 {
 	bool isReadOnly = thisAsSubClass()->isReadOnly();
@@ -33,77 +39,120 @@ bool ExtendedViewCommon< SubClass >::_assertCanAddEditAction( const char * actio
 }
 
 template< typename SubClass >
-QAction * ExtendedViewCommon< SubClass >::_addAction( const QString & text, const QKeySequence & shortcut )
+QAction * ExtendedViewCommon< SubClass >::_addCustomMenuAction( QMenu * menu, const QString & text, const QKeySequence & shortcut )
 {
 	QAction * action = new QAction( text, thisAsSubClass() );  // will be deleted when this view (its parent) is deleted
 	action->setShortcut( shortcut );
 	action->setShortcutContext( Qt::WidgetShortcut );  // only listen to this shortcut when this widget has focus
 	static_cast< QWidget * >( static_cast< SubClass * >( this ) )->addAction( action );  // register it to this widget, so the shortcut is checked
-	contextMenu->addAction( action );  // register it to the menu, so that it appears there when right-clicked
+	menu->addAction( action );  // register it to the menu, so that it appears there when right-clicked
 	return action;
 }
 
 template< typename SubClass >
-void ExtendedViewCommon< SubClass >::_enableContextMenu( MenuActions actions )
+void ExtendedViewCommon< SubClass >::_addStandardMenuActions( MenuActions actions )
 {
 	auto * thisAsSubclass = thisAsSubClass();
 
-	contextMenu = new QMenu( thisAsSubclass );  // will be deleted when this view (its parent) is deleted
-
 	if (isFlagSet( actions, MenuAction::OpenFile ))
 	{
-		openFileAction = _addAction( "Open file", {} );
+		openFileAction = _addCustomMenuAction( contextMenu, "Open file", {} );
 		thisAsSubclass->connect( openFileAction, &QAction::triggered, thisAsSubclass, &SubClass::openCurrentFile );
 	}
 	if (isFlagSet( actions, MenuAction::OpenFileLocation ))
 	{
-		openFileLocationAction = _addAction( "Open file location", {} );
+		openFileLocationAction = _addCustomMenuAction( contextMenu, "Open file location", {} );
 		thisAsSubclass->connect( openFileLocationAction, &QAction::triggered, thisAsSubclass, &SubClass::openCurrentFileLocation );
 	}
+
 	if (isFlagSet( actions, MenuAction::AddAndDelete ) && _assertCanAddEditAction( "And and Delete" ))
 	{
-		addItemAction = _addAction( "Add", { Qt::Key_Insert } );
-		deleteItemAction = _addAction( "Delete", { Qt::Key_Delete } );
+		addItemAction = _addCustomMenuAction( contextMenu, "Add", { Qt::Key_Insert } );
+		deleteItemAction = _addCustomMenuAction( contextMenu, "Delete", { Qt::Key_Delete } );
 	}
 	if (isFlagSet( actions, MenuAction::Clone ) && _assertCanAddEditAction( "Clone" ))
 	{
-		cloneItemAction = _addAction( "Clone", { Qt::CTRL | Qt::ALT | Qt::Key_C } );
+		cloneItemAction = _addCustomMenuAction( contextMenu, "Clone", { Qt::CTRL | Qt::ALT | Qt::Key_C } );
 	}
+
+	if (isFlagSet( actions, MenuAction::InsertSeparator ) && _assertCanAddEditAction( "Insert separator" ))
+	{
+		insertSeparatorAction = _addCustomMenuAction( contextMenu, "Insert separator", { Qt::CTRL | Qt::Key_Slash } );
+	}
+
 	if (isFlagSet( actions, MenuAction::CutAndPaste ) && _assertCanAddEditAction( "Cut" ))
 	{
-		cutItemsAction = _addAction( "Cut",   { Qt::CTRL | Qt::Key_X } );
+		cutItemsAction = _addCustomMenuAction( contextMenu, "Cut",   { Qt::CTRL | Qt::Key_X } );
 		thisAsSubclass->connect( cutItemsAction, &QAction::triggered, thisAsSubclass, &SubClass::cutSelectedItems );
 	}
 	if (isFlagSet( actions, MenuAction::Copy ))
 	{
-		copyItemsAction = _addAction( "Copy",  { Qt::CTRL | Qt::Key_C } );
+		copyItemsAction = _addCustomMenuAction( contextMenu, "Copy",  { Qt::CTRL | Qt::Key_C } );
 		thisAsSubclass->connect( copyItemsAction, &QAction::triggered, thisAsSubclass, &SubClass::copySelectedItems );
 	}
 	if (isFlagSet( actions, MenuAction::CutAndPaste ) && _assertCanAddEditAction( "Paste" ))
 	{
-		pasteItemsAction = _addAction( "Paste", { Qt::CTRL | Qt::Key_V } );
+		pasteItemsAction = _addCustomMenuAction( contextMenu, "Paste", { Qt::CTRL | Qt::Key_V } );
 		thisAsSubclass->connect( pasteItemsAction, &QAction::triggered, thisAsSubclass, &SubClass::pasteAboveSelectedItem );
 	}
+
 	if (isFlagSet( actions, MenuAction::Move ) && _assertCanAddEditAction( "Move up and down" ))
 	{
-		moveItemUpAction = _addAction( "Move up", { Qt::CTRL | Qt::Key_Up } );
-		moveItemDownAction = _addAction( "Move down", { Qt::CTRL | Qt::Key_Down } );
-		moveItemToTopAction = _addAction( "Move to top", { Qt::CTRL | Qt::ALT | Qt::Key_Up } );
-		moveItemToBottomAction = _addAction( "Move to bottom", { Qt::CTRL | Qt::ALT | Qt::Key_Down } );
+		moveItemUpAction = _addCustomMenuAction( contextMenu, "Move up", { Qt::CTRL | Qt::Key_Up } );
+		moveItemDownAction = _addCustomMenuAction( contextMenu, "Move down", { Qt::CTRL | Qt::Key_Down } );
+		moveItemToTopAction = _addCustomMenuAction( contextMenu, "Move to top", { Qt::CTRL | Qt::ALT | Qt::Key_Up } );
+		moveItemToBottomAction = _addCustomMenuAction( contextMenu, "Move to bottom", { Qt::CTRL | Qt::ALT | Qt::Key_Down } );
 	}
-	if (isFlagSet( actions, MenuAction::InsertSeparator ) && _assertCanAddEditAction( "Insert separator" ))
+
+	if (isAnyOfFlagsSet( actions, MenuAction::SortByName | MenuAction::SortByType | MenuAction::SortBySize | MenuAction::SortByDate ))
 	{
-		insertSeparatorAction = _addAction( "Insert separator", { Qt::CTRL | Qt::Key_Slash } );
+		sortItemsSubmenu = contextMenu->addMenu( "Sort by" );
+		if (isFlagSet( actions, MenuAction::SortByName ))
+		{
+			sortByNameAscAction = _addCustomMenuAction( sortItemsSubmenu, "Name (ascending)", {} );
+			sortByNameDscAction = _addCustomMenuAction( sortItemsSubmenu, "Name (descending)", {} );
+			thisAsSubclass->connect( sortByNameAscAction, &QAction::triggered, thisAsSubclass, &SubClass::onSortByNameAscTriggered );
+			thisAsSubclass->connect( sortByNameDscAction, &QAction::triggered, thisAsSubclass, &SubClass::onSortByNameDscTriggered );
+		}
+		if (isFlagSet( actions, MenuAction::SortByType ))
+		{
+			sortByTypeAscAction = _addCustomMenuAction( sortItemsSubmenu, "Type (ascending)", {} );
+			sortByTypeDscAction = _addCustomMenuAction( sortItemsSubmenu, "Type (descending)", {} );
+			thisAsSubclass->connect( sortByTypeAscAction, &QAction::triggered, thisAsSubclass, &SubClass::onSortByTypeAscTriggered );
+			thisAsSubclass->connect( sortByTypeDscAction, &QAction::triggered, thisAsSubclass, &SubClass::onSortByTypeDscTriggered );
+		}
+		if (isFlagSet( actions, MenuAction::SortBySize ))
+		{
+			sortBySizeAscAction = _addCustomMenuAction( sortItemsSubmenu, "Size (ascending)", {} );
+			sortBySizeDscAction = _addCustomMenuAction( sortItemsSubmenu, "Size (descending)", {} );
+			thisAsSubclass->connect( sortBySizeAscAction, &QAction::triggered, thisAsSubclass, &SubClass::onSortBySizeAscTriggered );
+			thisAsSubclass->connect( sortBySizeDscAction, &QAction::triggered, thisAsSubclass, &SubClass::onSortBySizeDscTriggered );
+		}
+		if (isFlagSet( actions, MenuAction::SortByDate ))
+		{
+			sortByDateAscAction = _addCustomMenuAction( sortItemsSubmenu, "Date modified (ascending)", {} );
+			sortByDateDscAction = _addCustomMenuAction( sortItemsSubmenu, "Date modified (descending)", {} );
+			thisAsSubclass->connect( sortByDateAscAction, &QAction::triggered, thisAsSubclass, &SubClass::onSortByDateAscTriggered );
+			thisAsSubclass->connect( sortByDateDscAction, &QAction::triggered, thisAsSubclass, &SubClass::onSortByDateDscTriggered );
+		}
 	}
+
 	if (isFlagSet( actions, MenuAction::Find ))
 	{
-		findItemAction = _addAction( "Find", QKeySequence::Find );
+		findItemAction = _addCustomMenuAction( contextMenu, "Find", QKeySequence::Find );
 	}
+
 	if (isFlagSet( actions, MenuAction::ToggleIcons ))
 	{
-		toggleIconsAction = _addAction( "Show icons", {} );
+		toggleIconsAction = _addCustomMenuAction( contextMenu, "Show icons", {} );
 		thisAsSubclass->connect( toggleIconsAction, &QAction::triggered, thisAsSubclass, QOverload<>::of( &SubClass::toggleIcons ) );
 	}
+}
+
+template< typename SubClass >
+void ExtendedViewCommon< SubClass >::_addMenuSeparator()
+{
+	contextMenu->addSeparator();
 }
 
 template< typename SubClass >
@@ -114,12 +163,20 @@ void ExtendedViewCommon< SubClass >::_contextMenuEvent( QContextMenuEvent * even
 	if (!contextMenu)  // not enabled
 		return;
 
+	if (openFileAction)
+		openFileAction->setEnabled( clickedItemIndex.isValid() );  // read-only
+	if (openFileLocationAction)
+		openFileLocationAction->setEnabled( clickedItemIndex.isValid() );  // read-only
+
 	if (addItemAction)
 		addItemAction->setEnabled( allowModifyList );
 	if (deleteItemAction)
 		deleteItemAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
 	if (cloneItemAction)
 		cloneItemAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
+
+	if (insertSeparatorAction)
+		insertSeparatorAction->setEnabled( allowModifyList );
 
 	if (cutItemsAction)
 		cutItemsAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
@@ -137,12 +194,9 @@ void ExtendedViewCommon< SubClass >::_contextMenuEvent( QContextMenuEvent * even
 	if (moveItemToBottomAction)
 		moveItemToBottomAction->setEnabled( allowModifyList && clickedItemIndex.isValid() );
 
-	if (insertSeparatorAction)
-		insertSeparatorAction->setEnabled( allowModifyList );
 	if (findItemAction)
 		findItemAction->setEnabled( true );  // read-only
-	if (openFileLocationAction)
-		openFileLocationAction->setEnabled( clickedItemIndex.isValid() );  // read-only
+
 	if (toggleIconsAction)
 		toggleIconsAction->setEnabled( true );  // read-only
 

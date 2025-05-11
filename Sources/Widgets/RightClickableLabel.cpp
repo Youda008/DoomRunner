@@ -14,9 +14,9 @@
 
 RightClickableLabel::RightClickableLabel( QWidget * parent ) : RightClickableWidget( parent ) {}
 
-QAction * RightClickableLabel::addAction( const QString & text, const QKeySequence & shortcut )
+QAction * RightClickableLabel::addMenuAction( const QString & text, const QKeySequence & shortcut )
 {
-	return _addAction( text, shortcut );
+	return _addMenuAction( text, shortcut );
 }
 
 /*void RightClickableLabel::mousePressEvent( QMouseEvent * event )

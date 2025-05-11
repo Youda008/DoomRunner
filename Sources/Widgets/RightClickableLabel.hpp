@@ -25,7 +25,7 @@ class RightClickableLabel : public RightClickableWidget< QLabel > {
 
 	RightClickableLabel( QWidget * parent );
 
-	QAction * addAction( const QString & text, const QKeySequence & shortcut );
+	QAction * addMenuAction( const QString & text, const QKeySequence & shortcut );
 
  private: // overriden event callbacks
 

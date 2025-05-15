@@ -167,6 +167,7 @@ FORMS += \
 	Forms/OptionsStorageDialog.ui \
 	Forms/ProcessOutputWindow.ui \
 	Forms/SetupDialog.ui \
+	Forms/WADDescViewer.ui \
 
 RESOURCES += \
 	Resources/Resources.qrc

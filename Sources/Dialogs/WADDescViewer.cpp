@@ -6,22 +6,65 @@
 //======================================================================================================================
 
 #include "WADDescViewer.hpp"
+#include "ui_WADDescViewer.h"
 
 #include "Utils/FileSystemUtils.hpp"  // replaceFileSuffix
 #include "Utils/StringUtils.hpp"      // capitalize
 #include "Utils/ErrorHandling.hpp"
 
 #include <QString>
-#include <QDialog>
 #include <QFileInfo>
 #include <QFile>
-#include <QVBoxLayout>
-#include <QPlainTextEdit>
 #include <QFont>
 #include <QFontDatabase>
 
 
 //======================================================================================================================
+
+WADDescViewer::WADDescViewer( QWidget * parent, const QString & fileName, const QString & content )
+:
+	QDialog( parent ),
+	DialogCommon( this, u"WADDescViewer" )
+{
+	ui = new Ui::WADDescViewer;
+	ui->setupUi( this );
+	adjustUi( parent );
+
+	this->setWindowTitle( fileName );
+	ui->textEdit->setPlainText( content );
+}
+
+void WADDescViewer::adjustUi( QWidget * parent )
+{
+	this->setWindowModality( Qt::WindowModal );
+
+	// setup the text edit area
+	ui->textEdit->setReadOnly( true );
+	ui->textEdit->setWordWrapMode( QTextOption::NoWrap );
+	QFont font = QFontDatabase::systemFont( QFontDatabase::FixedFont );
+	font.setPointSize( 10 );
+	ui->textEdit->setFont( font );
+
+	// estimate the optimal window size
+	int dialogWidth  = int( 75.0f * float( font.pointSize() ) * 0.84f ) + 30;
+	int dialogHeight = int( 40.0f * float( font.pointSize() ) * 1.62f ) + 30;
+	this->resize( dialogWidth, dialogHeight );
+
+	// position it to the right of the center of the parent widget
+	QRect parentGeometry = parent->geometry();
+	int parentCenterX = parentGeometry.x() + (parentGeometry.width() / 2);
+	int parentCenterY = parentGeometry.y() + (parentGeometry.height() / 2);
+	QPoint globalPos( parentCenterX, parentCenterY );  //parentWindow->mapToGlobal( QPoint( parentCenterX, parentCenterY ) );
+	this->move( globalPos.x(), globalPos.y() - (this->height() / 2) );
+}
+
+WADDescViewer::~WADDescViewer()
+{
+	delete ui;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void showTxtDescriptionFor( QWidget * parentWindow, const QString & filePath, const QString & contentType )
 {
@@ -56,35 +99,7 @@ void showTxtDescriptionFor( QWidget * parentWindow, const QString & filePath, co
 
 	QByteArray desc = descFile.readAll();
 
-	QDialog descDialog( parentWindow );
-	descDialog.setObjectName( "FileDescription" );
-	descDialog.setWindowTitle( descFileInfo.fileName() );
-	descDialog.setWindowModality( Qt::WindowModal );
-
-	QVBoxLayout * layout = new QVBoxLayout( &descDialog );
-
-	QPlainTextEdit * textEdit = new QPlainTextEdit( &descDialog );
-	textEdit->setReadOnly( true );
-	textEdit->setWordWrapMode( QTextOption::NoWrap );
-	QFont font = QFontDatabase::systemFont( QFontDatabase::FixedFont );
-	font.setPointSize( 10 );
-	textEdit->setFont( font );
-
-	textEdit->setPlainText( desc );
-
-	layout->addWidget( textEdit );
-
-	// estimate the optimal window size
-	int dialogWidth  = int( 75.0f * float( font.pointSize() ) * 0.84f ) + 30;
-	int dialogHeight = int( 40.0f * float( font.pointSize() ) * 1.62f ) + 30;
-	descDialog.resize( dialogWidth, dialogHeight );
-
-	// position it to the right of the center of the parent widget
-	QRect parentGeometry = parentWindow->geometry();
-	int parentCenterX = parentGeometry.x() + (parentGeometry.width() / 2);
-	int parentCenterY = parentGeometry.y() + (parentGeometry.height() / 2);
-	QPoint globalPos( parentCenterX, parentCenterY );  //parentWindow->mapToGlobal( QPoint( parentCenterX, parentCenterY ) );
-	descDialog.move( globalPos.x(), globalPos.y() - (descDialog.height() / 2) );
+	WADDescViewer descDialog( parentWindow, descFileInfo.fileName(), desc );
 
 	descDialog.exec();
 }

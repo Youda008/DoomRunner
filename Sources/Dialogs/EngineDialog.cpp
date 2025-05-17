@@ -20,13 +20,11 @@
 EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, const EngineInfo & engine, QString lastUsedDir_ )
 :
 	QDialog( parent ),
-	DialogWithPaths( this, u"EngineDialog", pathConv ),
+	DialogWithPaths( this, u"EngineDialog", pathConv, std::move( lastUsedDir_ ) ),
 	engine( engine )
 {
 	ui = new Ui::EngineDialog;
 	ui->setupUi( this );
-
-	DialogWithPaths::lastUsedDir = std::move( lastUsedDir_ );
 
 	// setup input path validators
 	setPathValidator( ui->executableLine );

@@ -732,7 +732,7 @@ MainWindow::MainWindow()
 	DialogWithPaths(
 		// All relative paths will internally be stored relative to the current working dir,
 		// so that all file-system operations instantly work without the need to rebase the paths first.
-		this, u"MainWindow", PathConvertor( defaultPathStyle, fs::currentDir )
+		this, u"MainWindow", PathConvertor( defaultPathStyle, fs::currentDir ), {}
 	),
 	// rebase to current working dir (don't rebase at all) until engine is selected
 	altConfigDirRebaser( fs::currentDir, fs::currentDir ),

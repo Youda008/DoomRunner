@@ -30,7 +30,7 @@ DMBEditor::DMBEditor(
 	QString filePath
 ) :
 	QDialog( parentWidget ),
-	DialogWithPaths( this, u"EngineDialog", pathConv ),
+	DialogWithPaths( this, u"EngineDialog", pathConv, std::move( lastUsedDir_ ) ),
 	modModel( u"modModel",
 		/*makeDisplayString*/ []( const Mod & mod ) { return mod.name; }
 	),
@@ -38,8 +38,6 @@ DMBEditor::DMBEditor(
 {
 	ui = new Ui::DMBEditor;
 	ui->setupUi( this );
-
-	DialogWithPaths::lastUsedDir = std::move( lastUsedDir_ );
 
 	origFilePath = std::move( filePath );
 

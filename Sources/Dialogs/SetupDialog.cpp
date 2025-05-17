@@ -38,7 +38,7 @@ SetupDialog::SetupDialog(
 )
 :
 	QDialog( parent ),
-	DialogWithPaths( this, u"SetupDialog", pathConv ),
+	DialogWithPaths( this, u"SetupDialog", pathConv, iwadSettings.dir ),
 	engineSettings( engineSettings ),
 	engineModel( u"engineModel", engineList,
 		/*makeDisplayString*/ []( const Engine & engine ) -> QString { return engine.name % "   [" % engine.executablePath % "]"; }
@@ -54,8 +54,6 @@ SetupDialog::SetupDialog(
 {
 	ui = new Ui::SetupDialog;
 	ui->setupUi( this );
-
-	lastUsedDir = iwadSettings.dir;
 
 	// setup input path validators
 

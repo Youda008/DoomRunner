@@ -260,7 +260,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	QString createNewDMB();
 	QStringList addExistingDMB();
-	DMBEditor::Result editDMB( const QString & filePath );
+	DMBEditor::Result editDMB( QString filePath );
 
 	void openCurrentEngineDataDir();
 	void cloneCurrentEngineConfigFile();

@@ -35,7 +35,9 @@ class DMBEditor : public QDialog, public DialogWithPaths {
  public:
 
 	explicit DMBEditor(
-		QWidget * parentWidget, const PathConvertor & pathConvertor, QString lastUsedDir, bool showIcons, QString filePath
+		QWidget * parentWidget, const PathConvertor & pathConvertor, QString lastUsedDir,
+		bool showIcons, bool wrapLinesInTxtViewer,
+		QString filePath
 	);
 	virtual ~DMBEditor() override;
 
@@ -80,7 +82,7 @@ class DMBEditor : public QDialog, public DialogWithPaths {
 
 	QString createNewDMB();
 	QStringList addExistingDMB();
-	Result editDMB( const QString & filePath );
+	Result editDMB( QString filePath );
 
  private: // internal members
 
@@ -98,6 +100,8 @@ class DMBEditor : public QDialog, public DialogWithPaths {
 	QString savedFilePath;
 
 	Outcome outcome;
+
+	bool wrapLinesInTxtViewer;
 
 };
 

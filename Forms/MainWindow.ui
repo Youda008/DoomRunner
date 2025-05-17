@@ -2323,7 +2323,7 @@
    <property name="nativeMenuBar">
     <bool>false</bool>
    </property>
-   <widget class="QMenu" name="menuItemMenu">
+   <widget class="QMenu" name="mainMenu">
     <property name="title">
      <string>Menu</string>
     </property>
@@ -2334,7 +2334,7 @@
     <addaction name="aboutAction"/>
     <addaction name="exitAction"/>
    </widget>
-   <addaction name="menuItemMenu"/>
+   <addaction name="mainMenu"/>
   </widget>
   <action name="initialSetupAction">
    <property name="text">

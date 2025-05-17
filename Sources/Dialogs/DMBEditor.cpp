@@ -25,13 +25,16 @@
 //======================================================================================================================
 
 DMBEditor::DMBEditor(
-	QWidget * parentWidget, const PathConvertor & pathConv, QString lastUsedDir_, bool showIcons, QString filePath
+	QWidget * parentWidget, const PathConvertor & pathConv, QString lastUsedDir_,
+	bool showIcons, bool wrapLinesInTxtViewer,
+	QString filePath
 ) :
 	QDialog( parentWidget ),
 	DialogWithPaths( this, u"EngineDialog", pathConv ),
 	modModel( u"modModel",
 		/*makeDisplayString*/ []( const Mod & mod ) { return mod.name; }
-	)
+	),
+	wrapLinesInTxtViewer( wrapLinesInTxtViewer )
 {
 	ui = new Ui::DMBEditor;
 	ui->setupUi( this );
@@ -283,13 +286,16 @@ void DMBEditor::onModDoubleClicked( const QModelIndex & index )
 	}
 	else
 	{
-		showTxtDescriptionFor( this, fileInfo.filePath(), "mod description" );
+		showTxtDescriptionFor( this, fileInfo.filePath(), "mod description", wrapLinesInTxtViewer );
 	}
 }
 
 QString DMBEditor::createNewDMB()
 {
-	DMBEditor editor( ui->modListView, pathConvertor, lastUsedDir, ui->modListView->areIconsEnabled(), {} );
+	DMBEditor editor(
+		ui->modListView, pathConvertor, std::move(lastUsedDir), ui->modListView->areIconsEnabled(), wrapLinesInTxtViewer,
+		{}
+	);
 
 	int code = editor.exec();
 
@@ -299,6 +305,7 @@ QString DMBEditor::createNewDMB()
 	}
 
 	lastUsedDir = editor.takeLastUsedDir();
+	wrapLinesInTxtViewer = editor.wrapLinesInTxtViewer;
 
 	return editor.savedFilePath;
 }
@@ -318,9 +325,12 @@ QStringList DMBEditor::addExistingDMB()
 	return filePaths;
 }
 
-DMBEditor::Result DMBEditor::editDMB( const QString & filePath )
+DMBEditor::Result DMBEditor::editDMB( QString filePath )
 {
-	DMBEditor editor( this, pathConvertor, lastUsedDir, ui->modListView->areIconsEnabled(), filePath );
+	DMBEditor editor(
+		this /*TODO*/, pathConvertor, std::move(lastUsedDir), ui->modListView->areIconsEnabled(), wrapLinesInTxtViewer,
+		std::move(filePath)
+	);
 
 	int code = editor.exec();
 
@@ -330,6 +340,7 @@ DMBEditor::Result DMBEditor::editDMB( const QString & filePath )
 	}
 
 	lastUsedDir = editor.takeLastUsedDir();
+	wrapLinesInTxtViewer = editor.wrapLinesInTxtViewer;
 
 	return { editor.outcome, std::move( editor.savedFilePath ) };
 }

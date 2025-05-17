@@ -2405,7 +2405,10 @@ void MainWindow::runPlayerColorDialog()
 
 QString MainWindow::createNewDMB()
 {
-	DMBEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, {} );
+	DMBEditor editor(
+		ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, settings.wrapLinesInTxtViewer,
+		{}
+	);
 
 	int code = editor.exec();
 
@@ -2415,6 +2418,7 @@ QString MainWindow::createNewDMB()
 	}
 
 	modSettings.lastUsedDir = lastUsedDir = editor.takeLastUsedDir();
+	settings.wrapLinesInTxtViewer = editor.wrapLinesInTxtViewer;
 
 	return editor.savedFilePath;
 }
@@ -2436,9 +2440,12 @@ QStringList MainWindow::addExistingDMB()
 	return filePaths;
 }
 
-DMBEditor::Result MainWindow::editDMB( const QString & filePath )
+DMBEditor::Result MainWindow::editDMB( QString filePath )
 {
-	DMBEditor editor( ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, filePath );
+	DMBEditor editor(
+		ui->modListView, pathConvertor, modSettings.lastUsedDir, modSettings.showIcons, settings.wrapLinesInTxtViewer,
+		std::move(filePath)
+	);
 
 	int code = editor.exec();
 
@@ -2448,6 +2455,7 @@ DMBEditor::Result MainWindow::editDMB( const QString & filePath )
 	}
 
 	modSettings.lastUsedDir = lastUsedDir = editor.takeLastUsedDir();
+	settings.wrapLinesInTxtViewer = editor.wrapLinesInTxtViewer;
 
 	return { editor.outcome, std::move( editor.savedFilePath ) };
 }
@@ -2908,7 +2916,7 @@ void MainWindow::onIWADDoubleClicked( const QModelIndex & index )
 {
 	const QString & filePath = iwadModel[ index.row() ].path;
 
-	showTxtDescriptionFor( this, filePath, "IWAD description" );
+	showTxtDescriptionFor( this, filePath, "IWAD description", settings.wrapLinesInTxtViewer );
 }
 
 void MainWindow::onMapPackDoubleClicked( const QModelIndex & index )
@@ -2928,7 +2936,7 @@ void MainWindow::onMapPackDoubleClicked( const QModelIndex & index )
 	}
 	else
 	{
-		showTxtDescriptionFor( this, fileInfo.filePath(), "map description" );
+		showTxtDescriptionFor( this, fileInfo.filePath(), "map description", settings.wrapLinesInTxtViewer );
 	}
 }
 
@@ -2986,7 +2994,7 @@ void MainWindow::onModDoubleClicked( const QModelIndex & index )
 	}
 	else
 	{
-		showTxtDescriptionFor( this, fileInfo.filePath(), "mod description" );
+		showTxtDescriptionFor( this, fileInfo.filePath(), "mod description", settings.wrapLinesInTxtViewer );
 	}
 }
 

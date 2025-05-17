@@ -644,6 +644,7 @@ static void serialize( QJsonObject & settingsJs, const LauncherSettings & settin
 	settingsJs["check_for_updates"] = settings.checkForUpdates;
 	settingsJs["ask_for_sandbox_permissions"] = settings.askForSandboxPermissions;
 	settingsJs["hide_map_label"] = settings.hideMapHelpLabel;
+	settingsJs["wrap_lines_in_txt_viewer"] = settings.wrapLinesInTxtViewer;
 
 	settingsJs["options_storage"] = serialize( static_cast< const StorageSettings & >( settings ) );
 }
@@ -658,6 +659,7 @@ static void deserialize( const JsonObjectCtx & settingsJs, LauncherSettings & se
 	settings.checkForUpdates = settingsJs.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
 	settings.askForSandboxPermissions = settingsJs.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
 	settings.hideMapHelpLabel = settingsJs.getBool( "hide_map_label", settings.hideMapHelpLabel, DontShowError );
+	settings.wrapLinesInTxtViewer = settingsJs.getBool( "wrap_lines_in_txt_viewer", settings.wrapLinesInTxtViewer, DontShowError );
 
 	if (JsonObjectCtx optsStorageJs = settingsJs.getObject( "options_storage" ))
 	{

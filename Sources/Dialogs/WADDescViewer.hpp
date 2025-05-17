@@ -30,23 +30,31 @@ class WADDescViewer : public QDialog, private DialogCommon {
 
  public:
 
-	explicit WADDescViewer( QWidget * parent, const QString & fileName, const QString & content );
+	explicit WADDescViewer( QWidget * parent, const QString & fileName, const QString & content, bool wrapLines );
 	virtual ~WADDescViewer() override;
 
  private:
 
-	void adjustUi( QWidget * parent );
+	void setupUi_custom( QWidget * parent, bool wrapLines );
 
- private:
+ private slots:
+
+	void toggleLineWrap();
+
+ private: // internal members
 
 	Ui::WADDescViewer * ui;
+
+ public: // return value from this dialog
+
+	bool wrapLines;
 
 };
 
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void showTxtDescriptionFor( QWidget * parent, const QString & filePath, const QString & contentType );
+void showTxtDescriptionFor( QWidget * parent, const QString & filePath, const QString & contentType, bool & wrapLines );
 
 
 //======================================================================================================================

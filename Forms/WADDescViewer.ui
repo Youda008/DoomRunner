@@ -15,9 +15,75 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QMenuBar" name="menuBar">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="nativeMenuBar">
+        <bool>false</bool>
+       </property>
+       <widget class="QMenu" name="viewMenu">
+        <property name="title">
+         <string>View</string>
+        </property>
+        <addaction name="wrapLinesAction"/>
+       </widget>
+       <widget class="QMenu" name="fileMenu">
+        <property name="title">
+         <string>File</string>
+        </property>
+        <addaction name="closeAction"/>
+       </widget>
+       <addaction name="fileMenu"/>
+       <addaction name="viewMenu"/>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QTextEdit" name="textEdit"/>
    </item>
   </layout>
+  <action name="closeAction">
+   <property name="text">
+    <string>Close</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::QuitRole</enum>
+   </property>
+  </action>
+  <action name="wrapLinesAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Wrap lines</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::PreferencesRole</enum>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

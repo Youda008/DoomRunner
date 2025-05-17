@@ -21,26 +21,32 @@
 
 //======================================================================================================================
 
-WADDescViewer::WADDescViewer( QWidget * parent, const QString & fileName, const QString & content )
+WADDescViewer::WADDescViewer( QWidget * parent, const QString & fileName, const QString & content, bool wrapLines )
 :
 	QDialog( parent ),
-	DialogCommon( this, u"WADDescViewer" )
+	DialogCommon( this, u"WADDescViewer" ),
+	wrapLines( wrapLines )
 {
 	ui = new Ui::WADDescViewer;
 	ui->setupUi( this );
-	adjustUi( parent );
+	setupUi_custom( parent, wrapLines );
 
 	this->setWindowTitle( fileName );
 	ui->textEdit->setPlainText( content );
+
+	ui->wrapLinesAction->setChecked( wrapLines );
+
+	connect( ui->closeAction, &QAction::triggered, this, &QDialog::accept );
+	connect( ui->wrapLinesAction, &QAction::triggered, this, &ThisClass::toggleLineWrap );
 }
 
-void WADDescViewer::adjustUi( QWidget * parent )
+void WADDescViewer::setupUi_custom( QWidget * parent, bool wrapLines )
 {
 	this->setWindowModality( Qt::WindowModal );
 
 	// setup the text edit area
 	ui->textEdit->setReadOnly( true );
-	ui->textEdit->setWordWrapMode( QTextOption::NoWrap );
+	ui->textEdit->setWordWrapMode( wrapLines ? QTextOption::WordWrap : QTextOption::NoWrap );
 	QFont font = QFontDatabase::systemFont( QFontDatabase::FixedFont );
 	font.setPointSize( 10 );
 	ui->textEdit->setFont( font );
@@ -63,10 +69,19 @@ WADDescViewer::~WADDescViewer()
 	delete ui;
 }
 
+void WADDescViewer::toggleLineWrap()
+{
+	auto currentMode = ui->textEdit->wordWrapMode();
+	auto newMode = currentMode == QTextOption::NoWrap ? QTextOption::WordWrap : QTextOption::NoWrap;
+	wrapLines = newMode != QTextOption::NoWrap;
+	ui->textEdit->setWordWrapMode( newMode );
+	ui->wrapLinesAction->setChecked( wrapLines );
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------
 
-void showTxtDescriptionFor( QWidget * parentWindow, const QString & filePath, const QString & contentType )
+void showTxtDescriptionFor( QWidget * parentWindow, const QString & filePath, const QString & contentType, bool & wrapLines )
 {
 	QFileInfo dataFileInfo( filePath );
 
@@ -99,7 +114,9 @@ void showTxtDescriptionFor( QWidget * parentWindow, const QString & filePath, co
 
 	QByteArray desc = descFile.readAll();
 
-	WADDescViewer descDialog( parentWindow, descFileInfo.fileName(), desc );
+	WADDescViewer descDialog( parentWindow, descFileInfo.fileName(), desc, wrapLines );
 
 	descDialog.exec();
+
+	wrapLines = descDialog.wrapLines;
 }

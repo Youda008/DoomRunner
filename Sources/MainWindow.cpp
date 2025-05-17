@@ -1673,6 +1673,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		resetMapDirModelAndView();  // populates the list from mapSettings.dir (asynchronously)
 
 		ui->mapDirView->toggleIcons( mapSettings.showIcons );
+		mapModel.sort( mapSettings.sortColumn, mapSettings.sortOrder );
 	}
 
 	// mods
@@ -3256,21 +3257,27 @@ void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool
 void MainWindow::onMapIconsToggled()
 {
 	mapSettings.showIcons = ui->mapDirView->areIconsEnabled();
-	scheduleSavingOptions();
+
+	//scheduleSavingOptions();
 }
 
 void MainWindow::onSortActionTriggered( ExtendedTreeView::SortKey key, Qt::SortOrder order )
 {
+	mapSettings.sortColumn = int(key);
+	mapSettings.sortOrder = order;
+
 	// Our sort keys correspond to the column indexes in the QFileSystemModel, so we can convert it directly.
 	mapModel.sort( int(key), order );
-	//resetMapDirModelAndView();
+
+	//scheduleSavingOptions();
 }
 
 void MainWindow::onMapHelpLabelHideTriggered()
 {
+	settings.hideMapHelpLabel = true;
+
 	ui->mapDirHelpLabel->setHidden( true );
 
-	settings.hideMapHelpLabel = true;
 	scheduleSavingOptions();
 }
 

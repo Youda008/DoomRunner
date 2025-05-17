@@ -235,6 +235,8 @@ static QJsonObject serialize( const MapSettings & mapSettings )
 	QJsonObject mapsJs;
 
 	mapsJs["directory"] = mapSettings.dir;
+	mapsJs["sort_column"] = mapSettings.sortColumn;
+	mapsJs["sort_order"] = int( mapSettings.sortOrder );
 	mapsJs["show_icons"] = mapSettings.showIcons;
 
 	return mapsJs;
@@ -243,6 +245,8 @@ static QJsonObject serialize( const MapSettings & mapSettings )
 static void deserialize( const JsonObjectCtx & mapSettingsJs, MapSettings & mapSettings )
 {
 	mapSettings.dir = mapSettingsJs.getString( "directory" );
+	mapSettings.sortColumn = mapSettingsJs.getInt( "sort_column", mapSettings.sortColumn );
+	mapSettings.sortOrder = mapSettingsJs.getEnum< Qt::SortOrder >( "sort_order", mapSettings.sortOrder );
 	mapSettings.showIcons = mapSettingsJs.getBool( "show_icons", mapSettings.showIcons );
 }
 

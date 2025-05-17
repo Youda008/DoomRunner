@@ -266,7 +266,7 @@ class JsonObjectCtx : public impl::JsonObjectCtxProxy {
 	template< typename Enum >
 	Enum getEnum( const QString & key, Enum defaultVal, bool showError = true ) const
 	{
-		uint intVal = getUInt( key, uint(defaultVal), showError );
+		int intVal = getInt( key, int(defaultVal), showError );
 		if (intVal <= enumSize< Enum >()) {
 			return Enum( intVal );
 		} else {
@@ -350,11 +350,11 @@ class JsonArrayCtx : public impl::JsonArrayCtxProxy {
 	template< typename Enum >
 	Enum getEnum( qsize_t index, Enum defaultVal, bool showError = true ) const
 	{
-		uint intVal = getUInt( index, defaultVal, showError );
+		int intVal = getInt( index, int(defaultVal), showError );
 		if (intVal <= enumSize< Enum >()) {
 			return Enum( intVal );
 		} else {
-			invalidTypeAtKey( index, enumName< Enum >() );
+			invalidTypeAtIdx( index, enumName< Enum >() );
 			return defaultVal;
 		}
 	}

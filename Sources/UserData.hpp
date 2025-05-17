@@ -25,6 +25,9 @@
 #include <QRect>  // WindowGeometry
 #include <QColor>  // player color in multiplayer
 
+template<> inline const char * enumName< Qt::SortOrder >() { return "Qt::SortOrder"; }
+template<> inline int enumSize< Qt::SortOrder >() { return 2; }
+
 
 //======================================================================================================================
 // OS-specific defaults
@@ -124,7 +127,7 @@ enum LaunchMode
 	ResumeDemo,
 };
 template<> inline const char * enumName< LaunchMode >() { return "LaunchMode"; }
-template<> inline size_t enumSize< LaunchMode >() { return size_t( LaunchMode::ResumeDemo ) + 1; }
+template<> inline int enumSize< LaunchMode >() { return size_t( LaunchMode::ResumeDemo ) + 1; }
 
 enum Skill
 {
@@ -136,7 +139,7 @@ enum Skill
 	Custom
 };
 template<> inline const char * enumName< Skill >() { return "Skill"; }
-template<> inline size_t enumSize< Skill >() { return size_t( Skill::Custom ) + 1; }
+template<> inline int enumSize< Skill >() { return size_t( Skill::Custom ) + 1; }
 
 enum MultRole
 {
@@ -144,7 +147,7 @@ enum MultRole
 	Client
 };
 template<> inline const char * enumName< MultRole >() { return "MultRole"; }
-template<> inline size_t enumSize< MultRole >() { return size_t( MultRole::Client ) + 1; }
+template<> inline int enumSize< MultRole >() { return size_t( MultRole::Client ) + 1; }
 
 enum NetMode
 {
@@ -152,7 +155,7 @@ enum NetMode
 	PacketServer
 };
 template<> inline const char * enumName< NetMode >() { return "NetMode"; }
-template<> inline size_t enumSize< NetMode >() { return size_t( NetMode::PacketServer ) + 1; }
+template<> inline int enumSize< NetMode >() { return size_t( NetMode::PacketServer ) + 1; }
 
 enum GameMode
 {
@@ -164,7 +167,7 @@ enum GameMode
 	Cooperative
 };
 template<> inline const char * enumName< GameMode >() { return "GameMode"; }
-template<> inline size_t enumSize< GameMode >() { return size_t( GameMode::Cooperative ) + 1; }
+template<> inline int enumSize< GameMode >() { return size_t( GameMode::Cooperative ) + 1; }
 
 struct LaunchOptions
 {
@@ -328,6 +331,8 @@ struct IwadSettings
 struct MapSettings
 {
 	QString dir;   ///< directory with map packs to automatically load the list from
+	int sortColumn = 0;
+	Qt::SortOrder sortOrder = Qt::AscendingOrder;
 	bool showIcons = false;   ///< whether the map list should show file-system icons provided by the OS
 };
 
@@ -344,7 +349,7 @@ enum OptionsStorage
 	StoreToPreset,   ///< Options are stored to the currently selected preset. When a preset is selected, the options are loaded from the preset.
 };
 template<> inline const char * enumName< OptionsStorage >() { return "OptionsStorage"; }
-template<> inline size_t enumSize< OptionsStorage >() { return size_t( OptionsStorage::StoreToPreset ) + 1; }
+template<> inline int enumSize< OptionsStorage >() { return size_t( OptionsStorage::StoreToPreset ) + 1; }
 
 struct StorageSettings
 {

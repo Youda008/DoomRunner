@@ -328,7 +328,7 @@ QStringList DMBEditor::addExistingDMB()
 DMBEditor::Result DMBEditor::editDMB( QString filePath )
 {
 	DMBEditor editor(
-		this /*TODO*/, pathConvertor, std::move(lastUsedDir), ui->modListView->areIconsEnabled(), wrapLinesInTxtViewer,
+		ui->modListView, pathConvertor, std::move(lastUsedDir), ui->modListView->areIconsEnabled(), wrapLinesInTxtViewer,
 		std::move(filePath)
 	);
 

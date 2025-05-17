@@ -8,6 +8,7 @@
 #include "WADDescViewer.hpp"
 #include "ui_WADDescViewer.h"
 
+#include "MainWindowPtr.hpp"
 #include "Utils/FileSystemUtils.hpp"  // replaceFileSuffix
 #include "Utils/StringUtils.hpp"      // capitalize
 #include "Utils/ErrorHandling.hpp"
@@ -29,7 +30,7 @@ WADDescViewer::WADDescViewer( QWidget * parent, const QString & fileName, const 
 {
 	ui = new Ui::WADDescViewer;
 	ui->setupUi( this );
-	setupUi_custom( parent, wrapLines );
+	setupUi_custom( wrapLines );
 
 	this->setWindowTitle( fileName );
 	ui->textEdit->setPlainText( content );
@@ -40,7 +41,7 @@ WADDescViewer::WADDescViewer( QWidget * parent, const QString & fileName, const 
 	connect( ui->wrapLinesAction, &QAction::triggered, this, &ThisClass::toggleLineWrap );
 }
 
-void WADDescViewer::setupUi_custom( QWidget * parent, bool wrapLines )
+void WADDescViewer::setupUi_custom( bool wrapLines )
 {
 	this->setWindowModality( Qt::WindowModal );
 
@@ -56,8 +57,8 @@ void WADDescViewer::setupUi_custom( QWidget * parent, bool wrapLines )
 	int dialogHeight = int( 40.0f * float( font.pointSize() ) * 1.62f ) + 30;
 	this->resize( dialogWidth, dialogHeight );
 
-	// position it to the right of the center of the parent widget
-	QRect parentGeometry = parent->geometry();
+	// position it to the right of the center of the main window
+	QRect parentGeometry = qMainWindow->geometry();
 	int parentCenterX = parentGeometry.x() + (parentGeometry.width() / 2);
 	int parentCenterY = parentGeometry.y() + (parentGeometry.height() / 2);
 	QPoint globalPos( parentCenterX, parentCenterY );  //parentWindow->mapToGlobal( QPoint( parentCenterX, parentCenterY ) );

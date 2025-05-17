@@ -35,7 +35,7 @@ class WADDescViewer : public QDialog, private DialogCommon {
 
  private:
 
-	void setupUi_custom( QWidget * parent, bool wrapLines );
+	void setupUi_custom( bool wrapLines );
 
  private slots:
 

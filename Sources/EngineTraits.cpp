@@ -75,6 +75,7 @@ static const QHash< QString, EngineFamily > knownEngineFamilies =
 	{ "lzdoom",            EngineFamily::ZDoom },
 	{ "gzdoom",            EngineFamily::ZDoom },
 	{ "qzdoom",            EngineFamily::ZDoom },
+	{ "uzdoom",            EngineFamily::ZDoom },
 	{ "vkdoom",            EngineFamily::ZDoom },
 	{ "skulltag",          EngineFamily::ZDoom },
 	{ "zandronum",         EngineFamily::ZDoom },

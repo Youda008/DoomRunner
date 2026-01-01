@@ -22,18 +22,16 @@ namespace doom {
 //======================================================================================================================
 // file type recognition
 
+/// Initializes the file name suffix storage. Must be called before any of the following declarations is used.
+void initFileNameSuffixes();
+
 extern const QString demoFileSuffix;
 
-extern const QStringList iwadSuffixes;
-extern const QStringList pwadSuffixes;
-extern const QStringList dukeSuffixes;
+const QStringList & getIWADSuffixes();
+const QStringList & getModSuffixes();
 
 // convenience wrappers to be used, where otherwise lambda would have to be written
 bool canBeIWAD( const QFileInfo & file );
-bool canBeMapPack( const QFileInfo & file );
-
-// used to setup file filter in QFileSystemModel
-QStringList getModFileSuffixes();
 
 
 //======================================================================================================================

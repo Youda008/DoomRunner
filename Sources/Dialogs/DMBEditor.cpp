@@ -171,9 +171,7 @@ bool DMBEditor::saveModsToDMB( const QString & filePath )
 void DMBEditor::modAdd()
 {
 	const QStringList paths = DialogWithPaths::selectFiles( this, "mod file", {},
-		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
-		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
-		+ makeFileFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
+		  makeFileDialogFilter( "Doom mod files", doom::getModSuffixes() )
 		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel
@@ -311,7 +309,7 @@ QString DMBEditor::createNewDMB()
 QStringList DMBEditor::addExistingDMB()
 {
 	const QStringList filePaths = DialogWithPaths::selectFiles( this, "Mod Bundle", {},
-		makeFileFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
+		makeFileDialogFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
 		+ "All files (*)"
 	);
 
@@ -358,7 +356,7 @@ void DMBEditor::onSaveBtnClicked()
 void DMBEditor::onSaveAsBtnClicked()
 {
 	QString destFilePath = DialogWithPaths::selectDestFile( this, "Save the Mod Bundle", lastUsedDir,
-		makeFileFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
+		makeFileDialogFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
 		+ "All files (*)"
 	);
 	if (destFilePath.isEmpty())

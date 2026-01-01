@@ -8,6 +8,7 @@
 #include "MainWindow.hpp"
 #include "MainWindowPtr.hpp"
 #include "Themes.hpp"
+#include "DoomFiles.hpp"
 #include "Utils/StandardOutput.hpp"
 
 #include <QApplication>
@@ -29,7 +30,9 @@ int main( int argc, char * argv [] )
 
 	themes::init();
 
-	auto mainWindow = std::make_unique< MainWindow >();  // don't consume so much stack
+	doom::initFileNameSuffixes();
+
+	auto mainWindow = std::make_unique< MainWindow >();  // allocate dynamically to not consume too much stack
 	qMainWindow = mainWindow.get();
 
 	mainWindow->show();

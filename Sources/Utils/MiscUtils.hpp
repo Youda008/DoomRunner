@@ -27,8 +27,11 @@ inline auto getType( const QVariant & variant )
  #endif
 }
 
+/// Creates a file filter for the QFileSystemModel.
+QStringList makeFileSystemModelFilter( const QStringList & suffixes );
+
 /// Creates a file filter for the QFileDialog::getOpenFileNames.
-QString makeFileFilter( const char * filterName, const QStringList & suffixes );
+QString makeFileDialogFilter( const char * filterName, const QStringList & suffixes );
 
 struct Argument
 {

@@ -406,8 +406,7 @@ void SetupDialog::setEngineAsDefault()
 void SetupDialog::iwadAdd()
 {
 	QString path = DialogWithPaths::selectFile( this, "IWAD", emptyString,
-		  makeFileFilter( "Doom data files", doom::iwadSuffixes )
-		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
+		  makeFileDialogFilter( "Doom data files", doom::getIWADSuffixes() )
 		+ "All files (*)"
 	);
 	if (path.isEmpty())  // user probably clicked cancel

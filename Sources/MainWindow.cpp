@@ -1018,7 +1018,7 @@ void MainWindow::setupMapPackList()
 
 	// set item filters
 	mapModel.setFilter( QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot | QDir::NoSymLinks );
-	mapModel.setNameFilters( doom::getModFileSuffixes() );
+	mapModel.setNameFilters( makeFileSystemModelFilter( doom::getModSuffixes() ) );
 	mapModel.setNameFilterDisables( false );
 
 	// make the list sorted by file name
@@ -2427,7 +2427,7 @@ QString MainWindow::createNewDMB()
 QStringList MainWindow::addExistingDMB()
 {
 	QStringList filePaths = DialogWithPaths::selectFiles( this, "Mod Bundle", {},
-		makeFileFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
+		makeFileDialogFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
 		+ "All files (*)"
 	);
 
@@ -3288,9 +3288,7 @@ void MainWindow::onMapHelpLabelHideTriggered()
 void MainWindow::modAdd()
 {
 	const QStringList paths = DialogWithPaths::selectFiles( this, "mod file", {},
-		  makeFileFilter( "Doom mod files", doom::pwadSuffixes )
-		+ makeFileFilter( "DukeNukem data files", doom::dukeSuffixes )
-		+ makeFileFilter( "Doom Mod Bundles", { dmb::fileSuffix } )
+		  makeFileDialogFilter( "Doom mod files", doom::getModSuffixes() )
 		+ "All files (*)"
 	);
 	if (paths.isEmpty())  // user probably clicked cancel
@@ -5017,7 +5015,7 @@ void MainWindow::exportPresetToScript()
 	}
 
 	QString scriptFilePath = DialogWithPaths::selectDestFile( this, "Export preset", emptyString,
-		makeFileFilter( "Shell script files", { os::scriptFileSuffix } )
+		makeFileDialogFilter( "Shell script files", { os::scriptFileSuffix } )
 		+ "All files (*)"
 	);
 	if (scriptFilePath.isEmpty())  // user probably clicked cancel
@@ -5077,7 +5075,7 @@ void MainWindow::exportPresetToShortcut()
 	}
 
 	QString shortcutPath = DialogWithPaths::selectDestFile( this, "Export preset", emptyString,
-		makeFileFilter( "Windows file shortcuts", { os::shortcutFileSuffix } )
+		makeFileDialogFilter( "Windows file shortcuts", { os::shortcutFileSuffix } )
 		+ "All files (*)"
 	);
 	if (shortcutPath.isEmpty())  // user probably clicked cancel

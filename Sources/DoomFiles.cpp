@@ -7,8 +7,9 @@
 
 #include "DoomFiles.hpp"
 
-#include "Utils/FileSystemUtils.hpp"
 #include "Utils/DoomModBundles.hpp"  // fileSuffix
+#include "Utils/FileSystemUtils.hpp"
+#include "Utils/LangUtils.hpp"
 
 #include <QHash>
 #include <QSet>
@@ -24,34 +25,58 @@ namespace doom {
 
 const QString demoFileSuffix = "lmp";  // this seems to be universal across different engines
 
-const QStringList iwadSuffixes = {"wad", "iwad", "pk3", "ipk3", "pk7", "ipk7", "pkz", "pke", "epk", "vwad"};
-const QStringList pwadSuffixes = {"wad", "pwad", "pk3", "pk7", "pkz", "pke", "zip", "7z", "deh", "bex", "hhe", "epk", "vwad"};
-const QStringList dukeSuffixes = {"grp", "rff"};
+// elemental lists of suffixes of known Doom file types
+static const QString wadSuffix = "wad";
+static const QString iwadSuffix = "iwad";
+static const QString pwadSuffix = "pwad";
+static const QStringList patchSuffixes = { "deh"/* DeHackEd patch */, "bex"/* deh for Boom */, "hhe"/* Heretic Hack Editor */ };
+static const QStringList basicModSuffixes = { "pk3", "pk7", "pkz", "zip", "7z" };
+static const QStringList iwadModSuffixes = { "ipk3", "ipk7" };
+static const QStringList extraModSuffixes = {
+    "pke"/* pk3 for Eternity */, "epk"/* pk3 for EDGE and 3DGE */, "vwad"/* pk3 for K8Vavoom */
+};
+static const QStringList dukeSuffixes = { "grp", "rff" };
+
+// top-level lists for main application logic like filtering files on the drive
+// Because these static lists depend on other static variables, which in C++ are not guaranteed to be initialized
+// before these ones, we cannot initialize these lists here, and have to do it manually later.
+static QStringList iwadSuffixes;
+static QStringList modSuffixes;
+
+// optimization for faster search
+static QSet< QString > iwadSuffixes_set;
+
+QSet< QString > makeStringSet( const QStringList & list )
+{
+	return { list.begin(), list.end() };
+}
+
+void initFileNameSuffixes()
+{
+	using L = QStringList;
+	iwadSuffixes = L{ wadSuffix, iwadSuffix } + iwadModSuffixes + dukeSuffixes;
+	modSuffixes  = L{ wadSuffix, pwadSuffix } + patchSuffixes + basicModSuffixes + extraModSuffixes + dukeSuffixes
+	             + L{dmb::fileSuffix};
+
+	iwadSuffixes_set = makeStringSet( iwadSuffixes );
+}
+
+const QStringList & getIWADSuffixes()
+{
+	return iwadSuffixes;
+}
+
+const QStringList & getModSuffixes()
+{
+	return modSuffixes;
+}
 
 // The correct way would be to recognize the type by file header, but there are incorrectly made mods
 // that present themselfs as IWADs, so in order to support those we need to use the file suffix
+
 bool canBeIWAD( const QFileInfo & file )
 {
-	return (iwadSuffixes.contains( file.suffix().toLower() ))
-	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
-}
-
-bool canBeMapPack( const QFileInfo & file )
-{
-	return (pwadSuffixes.contains( file.suffix().toLower() ))
-	     || dukeSuffixes.contains( file.suffix().toLower() );  // i did not want this, but the guy was insisting on it
-}
-
-QStringList getModFileSuffixes()
-{
-	QStringList suffixes;
-	suffixes.reserve( pwadSuffixes.size() + dukeSuffixes.size() + 1 );
-	for (const QString & suffix : pwadSuffixes)
-		suffixes.append( "*."+suffix );
-	for (const QString & suffix : dukeSuffixes)
-		suffixes.append( "*."+suffix );
-	suffixes.append( "*."+dmb::fileSuffix );
-	return suffixes;
+	return iwadSuffixes_set.contains( file.suffix().toLower() );
 }
 
 

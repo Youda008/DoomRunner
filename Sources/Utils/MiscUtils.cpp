@@ -17,7 +17,16 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 
-QString makeFileFilter( const char * filterName, const QStringList & suffixes )
+QStringList makeFileSystemModelFilter( const QStringList & suffixes )
+{
+	QStringList filter;
+	filter.reserve( suffixes.size() );
+	for (const QString & suffix : suffixes)
+		filter.append( "*."+suffix );
+	return filter;
+}
+
+QString makeFileDialogFilter( const char * filterName, const QStringList & suffixes )
 {
 	QString filter;
 	QTextStream filterStream( &filter, QIODevice::WriteOnly );

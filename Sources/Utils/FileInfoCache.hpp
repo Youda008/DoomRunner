@@ -185,6 +185,14 @@ class FileInfoCache : protected LoggingComponent {
 		{
 			logDebug() << " -> failed to read file";
 		}
+		else if (newEntry.fileInfo.status == ReadStatus::InvalidFormat)
+		{
+			logDebug() << " -> unexpected format";
+		}
+		else if (newEntry.fileInfo.status == ReadStatus::InfoNotPresent)
+		{
+			logDebug() << " -> info not present";
+		}
 		else if (newEntry.fileInfo.status == ReadStatus::NotSupported)
 		{
 			logDebug() << " -> not implemented";

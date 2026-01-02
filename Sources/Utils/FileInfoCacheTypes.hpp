@@ -14,13 +14,13 @@ class QString;
 enum class ReadStatus
 {
 	Success,
-	NotSupported,
-	CantOpen,
-	FailedToRead,
-	InvalidFormat,
-	InfoNotPresent,
+	NotSupported,     ///< reading this information is not implemented on this operating system
+	CantOpen,         ///< the file could not be opened for reading
+	FailedToRead,     ///< the content of the file could not be read
+	InvalidFormat,    ///< the file does not have the expected format
+	InfoNotPresent,   ///< the requested information is not present in this file
 
-	Uninitialized,
+	Uninitialized,    ///< this read status has not been set properly
 };
 const char * statusToStr( ReadStatus status );
 ReadStatus statusFromStr( const QString & statusStr );

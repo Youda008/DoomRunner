@@ -64,27 +64,32 @@ class FileInfoCache : protected LoggingComponent {
 		if (cacheEntry == nullptr)
 		{
 			logDebug() << "entry not found, reading info from file: " << filePath;
-			cacheEntry = readFileInfoToCache( filePath, fileLastModified );
+			cacheEntry = nullptr;
 		}
 		else if (cacheEntry->lastModified != fileLastModified)
 		{
 			logDebug() << "entry is outdated, reading info from file: " << filePath;
-			cacheEntry = readFileInfoToCache( filePath, fileLastModified );
+			cacheEntry = nullptr;
 		}
 		else if (cacheEntry->fileInfo.status == ReadStatus::CantOpen
 			  || cacheEntry->fileInfo.status == ReadStatus::FailedToRead)
 		{
 			logDebug() << "reading file failed last time, trying again: " << filePath;
-			cacheEntry = readFileInfoToCache( filePath, fileLastModified );
+			cacheEntry = nullptr;
 		}
 		else if (cacheEntry->fileInfo.status == ReadStatus::Uninitialized)
 		{
 			logRuntimeError() << "entry is corrupted, reading info from file: " << filePath;
-			cacheEntry = readFileInfoToCache( filePath, fileLastModified );
+			cacheEntry = nullptr;
 		}
 		else
 		{
 			//logDebug() << "using cached info: " << filePath;
+		}
+
+		if (cacheEntry == nullptr)
+		{
+			cacheEntry = readFileInfoToCache( filePath, fileLastModified );
 		}
 
 		return cacheEntry->fileInfo;
@@ -173,29 +178,30 @@ class FileInfoCache : protected LoggingComponent {
 		newEntry.fileInfo = _readFileInfo( filePath );
 		auto elapsed = _timer.elapsed();
 
-		if (newEntry.fileInfo.status == ReadStatus::Success)
+		switch (newEntry.fileInfo.status)
 		{
-			logDebug() << " -> success (took "<<elapsed<<"ms)";
-		}
-		if (newEntry.fileInfo.status == ReadStatus::CantOpen)
-		{
-			logDebug() << " -> couldn't open file";
-		}
-		else if (newEntry.fileInfo.status == ReadStatus::FailedToRead)
-		{
-			logDebug() << " -> failed to read file";
-		}
-		else if (newEntry.fileInfo.status == ReadStatus::InvalidFormat)
-		{
-			logDebug() << " -> unexpected format";
-		}
-		else if (newEntry.fileInfo.status == ReadStatus::InfoNotPresent)
-		{
-			logDebug() << " -> info not present";
-		}
-		else if (newEntry.fileInfo.status == ReadStatus::NotSupported)
-		{
-			logDebug() << " -> not implemented";
+			case ReadStatus::Success:
+				logDebug() << " -> success (took "<<elapsed<<"ms)";
+				break;
+			case ReadStatus::NotSupported:
+				logDebug() << " -> not implemented";
+				break;
+			case ReadStatus::CantOpen:
+				logDebug() << " -> couldn't open file";
+				break;
+			case ReadStatus::FailedToRead:
+				logDebug() << " -> failed to read file";
+				break;
+			case ReadStatus::InvalidFormat:
+				logDebug() << " -> unexpected format";
+				break;
+			case ReadStatus::InfoNotPresent:
+				logDebug() << " -> info not present";
+				break;
+			default:
+				logLogicError() << " -> read function returned unrecognized status: "
+				                << fut::to_underlying( newEntry.fileInfo.status );
+				break;
 		}
 
 		newEntry.lastModified = fileModifiedTimestamp;

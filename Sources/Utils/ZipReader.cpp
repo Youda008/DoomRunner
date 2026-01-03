@@ -147,4 +147,4 @@ UncertainZipInfo readZipInfo( const QString & filePath )
 } // namespace doom
 
 
-FileInfoCache< doom::ZipInfo > g_cachedZipInfo( doom::readZipInfo );
+FileInfoCache< doom::ZipInfo > g_cachedZipInfo( u"cachedZipInfo", doom::readZipInfo );

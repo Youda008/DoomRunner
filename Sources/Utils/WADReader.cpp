@@ -265,4 +265,4 @@ UncertainWadInfo readWadInfo( const QString & filePath )
 } // namespace doom
 
 
-FileInfoCache< doom::WadInfo > g_cachedWadInfo( doom::readWadInfo );
+FileInfoCache< doom::WadInfo > g_cachedWadInfo( u"cachedWadInfo", doom::readWadInfo );

@@ -49,8 +49,8 @@ class FileInfoCache : protected LoggingComponent {
 
  public:
 
-	FileInfoCache( ReadFileInfoFunc readFileInfo, WriteFileInfoFunc writeFileInfo = nullptr )
-		: LoggingComponent( u"FileInfoCache" ), _readFileInfo( readFileInfo ), _writeFileInfo( writeFileInfo ) {}
+	FileInfoCache( QStringView cacheName, ReadFileInfoFunc readFileInfo, WriteFileInfoFunc writeFileInfo = nullptr )
+		: LoggingComponent( u"FileInfoCache", cacheName ), _readFileInfo( readFileInfo ), _writeFileInfo( writeFileInfo ) {}
 
 	/// Reads selected information from a file and stores it into a cache.
 	/** If the file was already read earlier and was not modified since, it returns the cached info. */

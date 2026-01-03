@@ -97,7 +97,7 @@ static bool writeContent( const QString & filePath, const DMBContent & content )
 	return true;
 }
 
-static FileInfoCache< DMBContent > g_cachedDMBInfo( readContent, writeContent );
+static FileInfoCache< DMBContent > g_cachedDMBInfo( u"cachedDMBInfo", readContent, writeContent );
 
 std::optional< QStringList > getEntries( const QString & filePath )
 {

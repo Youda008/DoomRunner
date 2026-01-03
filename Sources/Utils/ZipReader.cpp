@@ -21,6 +21,21 @@ namespace doom {
 
 
 //======================================================================================================================
+// JSON serialization
+
+void ZipInfo::serialize( QJsonObject & jsZipInfo ) const
+{
+	jsZipInfo["map_info"] = mapInfo.serialize();
+}
+
+void ZipInfo::deserialize( const JsonObjectCtx & jsZipInfo )
+{
+	if (JsonObjectCtx jsMapInfo = jsZipInfo.getObject( "map_info" ))
+		mapInfo.deserialize( jsMapInfo );
+}
+
+
+//======================================================================================================================
 // implementation
 
 // logging helper

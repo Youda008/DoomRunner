@@ -80,11 +80,9 @@ HEADERS += \
 	Sources/Utils/TypeTraits.hpp \
 	Sources/Utils/Version.hpp \
 	Sources/Utils/WADReader.hpp \
-	Sources/Utils/WADReaderTypes.hpp \
 	Sources/Utils/WidgetUtils.hpp \
 	Sources/Utils/WindowsUtils.hpp \
 	Sources/Utils/ZipReader.hpp \
-	Sources/Utils/ZipReaderTypes.hpp \
 	Sources/Widgets/ExtendedListView.hpp \
 	Sources/Widgets/ExtendedTreeView.hpp \
 	Sources/Widgets/ExtendedViewCommon.hpp \
@@ -143,11 +141,9 @@ SOURCES += \
 	Sources/Utils/TypeTraitsTest.cpp \
 	Sources/Utils/Version.cpp \
 	Sources/Utils/WADReader.cpp \
-	Sources/Utils/WADReaderTypes.cpp \
 	Sources/Utils/WidgetUtils.cpp \
 	Sources/Utils/WindowsUtils.cpp \
 	Sources/Utils/ZipReader.cpp \
-	Sources/Utils/ZipReaderTypes.cpp \
 	Sources/Widgets/ExtendedListView.cpp \
 	Sources/Widgets/ExtendedTreeView.cpp \
 	Sources/Widgets/RightClickableLabel.cpp \

@@ -22,6 +22,26 @@
 namespace doom {
 
 
+
+//======================================================================================================================
+// JSON serialization
+
+void WadInfo::serialize( QJsonObject & jsWadInfo ) const
+{
+	jsWadInfo["type"] = int( type );
+	jsWadInfo["map_info"] = mapInfo.serialize();
+	// TODO: game identification
+}
+
+void WadInfo::deserialize( const JsonObjectCtx & jsWadInfo )
+{
+	type = jsWadInfo.getEnum< doom::WadType >( "type", doom::WadType::Neither );
+	if (JsonObjectCtx jsMapInfo = jsWadInfo.getObject( "map_info" ))
+		mapInfo.deserialize( jsMapInfo );
+	// TODO: game identification
+}
+
+
 //======================================================================================================================
 // implementation
 

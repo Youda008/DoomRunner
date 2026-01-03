@@ -543,7 +543,7 @@ QString EngineTraits::getDefaultSaveSubdir( const QString & IWADPath ) const
 		QString gameID;
 		if (!IWADPath.isEmpty())
 		{
-			const auto & iwadInfo = doom::g_cachedWadInfo.getFileInfo( IWADPath );
+			const auto & iwadInfo = g_cachedWadInfo.getFileInfo( IWADPath );
 			if (iwadInfo.status == ReadStatus::Success)
 			{
 				if (_family == EngineFamily::ChocolateDoom && iwadInfo.game.chocolateID != nullptr)

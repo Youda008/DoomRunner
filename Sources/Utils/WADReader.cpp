@@ -261,10 +261,8 @@ UncertainWadInfo readWadInfo( const QString & filePath )
 	return wadReader.readWadInfo();
 }
 
-FileInfoCache< WadInfo > g_cachedWadInfo( readWadInfo );
-
-
-//======================================================================================================================
-
 
 } // namespace doom
+
+
+FileInfoCache< doom::WadInfo > g_cachedWadInfo( doom::readWadInfo );

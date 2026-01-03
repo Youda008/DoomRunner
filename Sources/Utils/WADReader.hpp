@@ -24,11 +24,11 @@ namespace doom {
 UncertainWadInfo readWadInfo( const QString & filePath );
 
 
-// cache global for the whole process, because why not
-extern FileInfoCache< WadInfo > g_cachedWadInfo;
-
-
 } // namespace doom
+
+
+// cache global for the whole process, because why not
+extern FileInfoCache< doom::WadInfo > g_cachedWadInfo;
 
 
 #endif // WAD_READER_INCLUDED

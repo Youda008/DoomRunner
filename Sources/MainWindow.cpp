@@ -444,14 +444,14 @@ QStringList MainWindow::getUniqueMapNamesFromSelectedFiles()
 		// TODO: support extracted dirs
 		if (doom::isWAD( fileInfo ))
 		{
-			const doom::UncertainWadInfo & wadInfo = doom::g_cachedWadInfo.getFileInfo( filePath );
+			const doom::UncertainWadInfo & wadInfo = g_cachedWadInfo.getFileInfo( filePath );
 			if (wadInfo.status != ReadStatus::Success)
 				return;
 			mapInfo = std::move( wadInfo.mapInfo );
 		}
 		else if (doom::isZip( fileInfo ))
 		{
-			const doom::UncertainZipInfo & zipInfo = doom::g_cachedZipInfo.getFileInfo( filePath );
+			const doom::UncertainZipInfo & zipInfo = g_cachedZipInfo.getFileInfo( filePath );
 			if (zipInfo.status != ReadStatus::Success)
 				return;
 			mapInfo = std::move( zipInfo.mapInfo );
@@ -1628,18 +1628,18 @@ int MainWindow::askForEngineInfoRefresh()
 
 bool MainWindow::isCacheDirty() const
 {
-	return os::g_cachedExeInfo.isDirty()
-	//	|| doom::g_cachedWadInfo.isDirty()
-	    || doom::g_cachedZipInfo.isDirty()
+	return g_cachedExeInfo.isDirty()
+	//	|| g_cachedWadInfo.isDirty()
+	    || g_cachedZipInfo.isDirty()
 	;
 }
 
 bool MainWindow::saveCache( const QString & filePath )
 {
 	QJsonObject jsRoot;
-	jsRoot["exe_info"] = os::g_cachedExeInfo.serialize();
-	//jsRoot["wad_info"] = doom::g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
-	jsRoot["zip_info"] = doom::g_cachedZipInfo.serialize();
+	jsRoot["exe_info"] = g_cachedExeInfo.serialize();
+	//jsRoot["wad_info"] = g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
+	jsRoot["zip_info"] = g_cachedZipInfo.serialize();
 
 	QJsonDocument jsonDoc( jsRoot );
 	return writeJsonToFile( jsonDoc, filePath, "file-info cache" );
@@ -1655,11 +1655,11 @@ bool MainWindow::loadCache( const QString & filePath )
 
 	const JsonObjectCtx & jsRoot = jsonDoc->rootObject();
 	if (JsonObjectCtx jsExeCache = jsRoot.getObject( "exe_info", DontShowError ))
-		os::g_cachedExeInfo.deserialize( jsExeCache );
+		g_cachedExeInfo.deserialize( jsExeCache );
 	//if (JsonObjectCtx jsWadCache = jsRoot.getObject( "wad_info", DontShowError ))
 	//	doom::g_cachedWadInfo.deserialize( jsWadCache );  // not needed, WAD parsing is probably faster than JSON parsing
 	if (JsonObjectCtx jsZipCache = jsRoot.getObject( "zip_info", DontShowError ))
-		doom::g_cachedZipInfo.deserialize( jsZipCache );
+		g_cachedZipInfo.deserialize( jsZipCache );
 
 	return true;
 }

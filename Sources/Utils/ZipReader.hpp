@@ -31,11 +31,11 @@ UncertainFileContent readOneOfFilesInsideZip( const QString & zipFilePath, const
 UncertainZipInfo readZipInfo( const QString & filePath );
 
 
-// cache global for the whole process, because why not
-extern FileInfoCache< ZipInfo > g_cachedZipInfo;
-
-
 } // namespace doom
+
+
+// cache global for the whole process, because why not
+extern FileInfoCache< doom::ZipInfo > g_cachedZipInfo;
 
 
 #endif // ZIP_READER_INCLUDED

@@ -26,11 +26,11 @@ namespace os {
 UncertainExeVersionInfo readExeVersionInfo( const QString & filePath );
 
 
-// cache global for the whole process, because why not
-extern FileInfoCache< ExeVersionInfo > g_cachedExeInfo;
-
-
 } // namespace os
+
+
+// cache global for the whole process, because why not
+extern FileInfoCache< os::ExeVersionInfo > g_cachedExeInfo;
 
 
 #endif // EXE_READER_INCLUDED

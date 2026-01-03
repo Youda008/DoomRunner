@@ -322,10 +322,8 @@ UncertainExeVersionInfo readExeVersionInfo( [[maybe_unused]] const QString & fil
  #endif
 }
 
-FileInfoCache< ExeVersionInfo > g_cachedExeInfo( readExeVersionInfo );
-
-
-//======================================================================================================================
-
 
 } // namespace os
+
+
+FileInfoCache< os::ExeVersionInfo > g_cachedExeInfo( os::readExeVersionInfo );

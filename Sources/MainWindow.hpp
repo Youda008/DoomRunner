@@ -76,6 +76,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onPresetToggled( const QItemSelection & selected, const QItemSelection & deselected );
 	void onIWADToggled( const QItemSelection & selected, const QItemSelection & deselected );
 	void onMapPackToggled( const QItemSelection & selected, const QItemSelection & deselected );
+	void onModDataChanged( int row, int count, const QVector<int> & roles );
 
 	void onIWADDoubleClicked( const QModelIndex & index );
 	void onMapPackDoubleClicked( const QModelIndex & index );
@@ -114,7 +115,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void modMoveDown();
 	void modMoveToTop();
 	void modMoveToBottom();
-	void onModDataChanged( int row, int count, const QVector<int> & roles );
 	void onModsInserted( int row, int count );
 	void onModsRemoved( int row, int count );
 	void onModsDropped( int row, int count, DnDSources dndSource );
@@ -279,8 +279,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateConfigFilesFromDir();
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
-	void updateCompatModes();
 	void updateMapNamesFromSelectedFiles();
+	void updateCompatModes();
 
 	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
 
@@ -335,13 +335,6 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	template< typename Functor > void forEachCheckedModItemWithExpandedDMBs( const Functor & loopBody ) const;
 	template< typename Functor > void forEachSelectedFileWithExpandedDMBs( const Functor & loopBody ) const;
 
-	static bool canContainMapNames( const QString & filePath );
-	static bool canContainMapNames( const Mod & mod );
-	static bool canAnyOfTheFilesContainMapNames( const QStringList & filePaths );
-	static bool canAnyOfTheModsContainMapNames( const QList< IndexValue< Mod > > & mods );
-	static bool canAnyOfTheModsContainMapNames( const PtrList<Mod> & mods, int row, int count );
-	QStringList getUniqueMapNamesFromSelectedFiles();
-
 	static QString getEngineDefaultConfigDir( const EngineInfo * selectedEngine );
 	static QString getEngineDefaultSaveDir( const EngineInfo * selectedEngine, const IWAD * selectedIWAD );
 	static QString getEngineDefaultDemoDir( const EngineInfo * selectedEngine );
@@ -353,6 +346,13 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	template< typename Functor > void forEachDirToBeAccessed( const Functor & loopBody ) const;
 	QStringList getDirsToBeAccessed() const;
+
+	static bool canContainMapNames( const QString & filePath );
+	static bool canContainMapNames( const Mod & mod );
+	static bool canAnyOfTheFilesContainMapNames( const QStringList & filePaths );
+	static bool canAnyOfTheModsContainMapNames( const QList< IndexValue< Mod > > & mods );
+	static bool canAnyOfTheModsContainMapNames( const PtrList<Mod> & mods, int row, int count );
+	QStringList getUniqueMapNamesFromSelectedFiles();
 
 	LaunchOptions & activeLaunchOptions();
 	MultiplayerOptions & activeMultiplayerOptions();

@@ -180,77 +180,6 @@ void MainWindow::forEachSelectedFileWithExpandedDMBs( const Functor & loopBody )
 	});
 }
 
-bool MainWindow::canContainMapNames( const QString & filePath )
-{
-	QFileInfo fileInfo( filePath );
-	return !filePath.isEmpty() && fileInfo.isFile() && (doom::isWAD( fileInfo ) || doom::isZip( fileInfo ));
-}
-
-bool MainWindow::canContainMapNames( const Mod & mod )
-{
-	return !mod.isSeparator && !mod.isCmdArg && canContainMapNames( mod.path );
-}
-
-bool MainWindow::canAnyOfTheFilesContainMapNames( const QStringList & filePaths )
-{
-	return containsSuch( filePaths, []( const QString & filePath ) { return canContainMapNames( filePath ); } );
-}
-
-bool MainWindow::canAnyOfTheModsContainMapNames( const QList< IndexValue< Mod > > & mods )
-{
-	return containsSuch( mods, []( const auto & mod ) { return canContainMapNames( mod.value ); } );
-}
-
-bool MainWindow::canAnyOfTheModsContainMapNames( const PtrList<Mod> & mods, int row, int count )
-{
-	for (int idx = row; idx < row + count; idx++)
-		if (canContainMapNames( mods[ idx ] ))
-			return true;
-	return false;
-}
-
-QStringList MainWindow::getUniqueMapNamesFromSelectedFiles()
-{
-	QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
-
-	forEachSelectedFileWithExpandedDMBs( [ &uniqueMapNames ]( const QString & filePath )
-	{
-		QFileInfo fileInfo( filePath );
-
-		if (filePath.isEmpty() || !fileInfo.isFile())
-			return;
-
-		doom::MapInfo mapInfo;
-
-		// TODO: support extracted dirs
-		if (doom::isWAD( fileInfo ))
-		{
-			const doom::UncertainWadInfo & wadInfo = doom::g_cachedWadInfo.getFileInfo( filePath );
-			if (wadInfo.status != ReadStatus::Success)
-				return;
-			mapInfo = std::move( wadInfo.mapInfo );
-		}
-		else if (doom::isZip( fileInfo ))
-		{
-			const doom::UncertainZipInfo & zipInfo = doom::g_cachedZipInfo.getFileInfo( filePath );
-			if (zipInfo.status != ReadStatus::Success)
-				return;
-			mapInfo = std::move( zipInfo.mapInfo );
-		}
-		else
-		{
-			return;  // cannot read map names from this file type
-		}
-
-		for (const QString & mapName : as_const( mapInfo.mapNames ))
-		{
-			uniqueMapNames.insert( mapName.toUpper(), 0 );  // the 0 doesn't matter
-		}
-	});
-
-	return uniqueMapNames.keys();
-}
-
 // paths of data dirs
 
 // Returns config dir configured for the current engine, or empty string if engine is not selected.
@@ -466,6 +395,79 @@ QStringList MainWindow::getDirsToBeAccessed() const
 	});
 
 	return QStringList( normDirPaths.begin(), normDirPaths.end() );
+}
+
+// map names extraction
+
+bool MainWindow::canContainMapNames( const QString & filePath )
+{
+	QFileInfo fileInfo( filePath );
+	return !filePath.isEmpty() && fileInfo.isFile() && (doom::isWAD( fileInfo ) || doom::isZip( fileInfo ));
+}
+
+bool MainWindow::canContainMapNames( const Mod & mod )
+{
+	return !mod.isSeparator && !mod.isCmdArg && canContainMapNames( mod.path );
+}
+
+bool MainWindow::canAnyOfTheFilesContainMapNames( const QStringList & filePaths )
+{
+	return containsSuch( filePaths, []( const QString & filePath ) { return canContainMapNames( filePath ); } );
+}
+
+bool MainWindow::canAnyOfTheModsContainMapNames( const QList< IndexValue< Mod > > & mods )
+{
+	return containsSuch( mods, []( const auto & mod ) { return canContainMapNames( mod.value ); } );
+}
+
+bool MainWindow::canAnyOfTheModsContainMapNames( const PtrList<Mod> & mods, int row, int count )
+{
+	for (int idx = row; idx < row + count; idx++)
+		if (canContainMapNames( mods[ idx ] ))
+			return true;
+	return false;
+}
+
+QStringList MainWindow::getUniqueMapNamesFromSelectedFiles()
+{
+	QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
+
+	forEachSelectedFileWithExpandedDMBs( [ &uniqueMapNames ]( const QString & filePath )
+	{
+		QFileInfo fileInfo( filePath );
+
+		if (filePath.isEmpty() || !fileInfo.isFile())
+			return;
+
+		doom::MapInfo mapInfo;
+
+		// TODO: support extracted dirs
+		if (doom::isWAD( fileInfo ))
+		{
+			const doom::UncertainWadInfo & wadInfo = doom::g_cachedWadInfo.getFileInfo( filePath );
+			if (wadInfo.status != ReadStatus::Success)
+				return;
+			mapInfo = std::move( wadInfo.mapInfo );
+		}
+		else if (doom::isZip( fileInfo ))
+		{
+			const doom::UncertainZipInfo & zipInfo = doom::g_cachedZipInfo.getFileInfo( filePath );
+			if (zipInfo.status != ReadStatus::Success)
+				return;
+			mapInfo = std::move( zipInfo.mapInfo );
+		}
+		else
+		{
+			return;  // cannot read map names from this file type
+		}
+
+		for (const QString & mapName : as_const( mapInfo.mapNames ))
+		{
+			uniqueMapNames.insert( mapName.toUpper(), 0 );  // the 0 doesn't matter
+		}
+	});
+
+	return uniqueMapNames.keys();
 }
 
 // internal options storage
@@ -2956,9 +2958,9 @@ void MainWindow::onIWADToggled( const QItemSelection & /*selected*/, const QItem
 	// activeSaveDir may depend on IWAD -> update it
 	activeSaveDir = getActiveSaveDir( selectedEngine, selectedIWAD, ui->altSaveDirLine->text() );
 
-	updateMapNamesFromSelectedFiles();   // IWAD determines the maps we can choose from
 	updateSaveFilesFromDir();   // IWAD determines the directory in which the save files and demo files are stored
 	updateDemoFilesFromDir();
+	updateMapNamesFromSelectedFiles();   // IWAD determines the maps we can choose from
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3002,6 +3004,45 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 	}
 
 	//scheduleSavingOptions( storageModified );
+	updateLaunchCommand();
+}
+
+void MainWindow::onModDataChanged( int row, int count, const QVector<int> & roles )
+{
+	auto updateEachModifiedModInPreset = [ this, row, count ]( const auto & updateMod )
+	{
+		if (selectedPreset && !restoringPresetInProgress)
+		{
+			for (int idx = row; idx < row + count; idx++)
+			{
+				updateMod( selectedPreset->mods[ idx ], modModel[ idx ] );
+			}
+		}
+	};
+
+	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
+	{
+		// update the current preset
+		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
+		{
+			presetMod.checked = changedMod.checked;
+		});
+	}
+	else if (roles.contains( Qt::EditRole ))  // name of separator or data of custom cmd argument changed
+	{
+		// update the current preset
+		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
+		{
+			presetMod.name = changedMod.name;
+		});
+	}
+
+	if (canAnyOfTheModsContainMapNames( modModel.list(), row, count ))
+	{
+		updateMapNamesFromSelectedFiles();
+	}
+
+	scheduleSavingOptions( true );  // we can assume options storage was modified, otherwise this callback wouldn't be called
 	updateLaunchCommand();
 }
 
@@ -3645,45 +3686,6 @@ void MainWindow::modMoveToBottom()
 	}
 
 	scheduleSavingOptions();
-	updateLaunchCommand();
-}
-
-void MainWindow::onModDataChanged( int row, int count, const QVector<int> & roles )
-{
-	auto updateEachModifiedModInPreset = [ this, row, count ]( const auto & updateMod )
-	{
-		if (selectedPreset && !restoringPresetInProgress)
-		{
-			for (int idx = row; idx < row + count; idx++)
-			{
-				updateMod( selectedPreset->mods[ idx ], modModel[ idx ] );
-			}
-		}
-	};
-
-	if (roles.contains( Qt::CheckStateRole ))  // check state of some checkboxes changed
-	{
-		// update the current preset
-		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
-		{
-			presetMod.checked = changedMod.checked;
-		});
-	}
-	else if (roles.contains( Qt::EditRole ))  // name of separator or data of custom cmd argument changed
-	{
-		// update the current preset
-		updateEachModifiedModInPreset( []( Mod & presetMod, const Mod & changedMod )
-		{
-			presetMod.name = changedMod.name;
-		});
-	}
-
-	if (canAnyOfTheModsContainMapNames( modModel.list(), row, count ))
-	{
-		updateMapNamesFromSelectedFiles();
-	}
-
-	scheduleSavingOptions( true );  // we can assume options storage was modified, otherwise this callback wouldn't be called
 	updateLaunchCommand();
 }
 
@@ -5017,42 +5019,6 @@ void MainWindow::updateDemoFilesFromDir()
 	}
 }
 
-/// Updates the compat mode combo-box according to the currently selected engine.
-void MainWindow::updateCompatModes()
-{
-	CompatModeStyle currentCompLvlStyle = selectedEngine ? selectedEngine->compatModeStyle() : CompatModeStyle::None;
-
-	if (currentCompLvlStyle != lastCompLvlStyle)
-	{
-		disableSelectionCallbacks = true;  // workaround (read the big comment above)
-
-		ui->compatModeCmbBox->setCurrentIndex( -1 );
-
-		// automatically initialize compat mode combox fox according to the selected engine (its compat mode options)
-		ui->compatModeCmbBox->clear();
-		ui->compatModeCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
-		if (currentCompLvlStyle != CompatModeStyle::None)
-		{
-			ui->compatModeCmbBox->addItems( getCompatModes( currentCompLvlStyle ) );
-		}
-
-		ui->compatModeCmbBox->setCurrentIndex( 0 );
-
-		disableSelectionCallbacks = false;
-
-		// available compat modes changed -> reset the compat mode index, because the previous one is no longer valid
-		onCompatModeSelected( 0 );
-
-		// keep the widget enabled only if the engine supports compatibility levels
-		LaunchMode launchMode = getLaunchModeFromUI();
-		bool enableCompatModeSelector = shouldEnableCompatModeCmbBox( launchMode, selectedEngine );
-		ui->compatModeLabel->setEnabled( enableCompatModeSelector );
-		ui->compatModeCmbBox->setEnabled( enableCompatModeSelector );
-
-		lastCompLvlStyle = currentCompLvlStyle;
-	}
-}
-
 // this is not called regularly, but only when an IWAD or map WAD is selected or deselected
 void MainWindow::updateMapNamesFromSelectedFiles()
 {
@@ -5116,6 +5082,42 @@ void MainWindow::updateMapNamesFromSelectedFiles()
 	{
 		// selection changed while the callbacks were disabled, we need to call them manually
 		onMapChanged_demo( ui->mapCmbBox->currentText() );
+	}
+}
+
+/// Updates the compat mode combo-box according to the currently selected engine.
+void MainWindow::updateCompatModes()
+{
+	CompatModeStyle currentCompLvlStyle = selectedEngine ? selectedEngine->compatModeStyle() : CompatModeStyle::None;
+
+	if (currentCompLvlStyle != lastCompLvlStyle)
+	{
+		disableSelectionCallbacks = true;  // workaround (read the big comment above)
+
+		ui->compatModeCmbBox->setCurrentIndex( -1 );
+
+		// automatically initialize compat mode combox fox according to the selected engine (its compat mode options)
+		ui->compatModeCmbBox->clear();
+		ui->compatModeCmbBox->addItem("");  // keep one empty item to allow explicitly deselecting
+		if (currentCompLvlStyle != CompatModeStyle::None)
+		{
+			ui->compatModeCmbBox->addItems( getCompatModes( currentCompLvlStyle ) );
+		}
+
+		ui->compatModeCmbBox->setCurrentIndex( 0 );
+
+		disableSelectionCallbacks = false;
+
+		// available compat modes changed -> reset the compat mode index, because the previous one is no longer valid
+		onCompatModeSelected( 0 );
+
+		// keep the widget enabled only if the engine supports compatibility levels
+		LaunchMode launchMode = getLaunchModeFromUI();
+		bool enableCompatModeSelector = shouldEnableCompatModeCmbBox( launchMode, selectedEngine );
+		ui->compatModeLabel->setEnabled( enableCompatModeSelector );
+		ui->compatModeCmbBox->setEnabled( enableCompatModeSelector );
+
+		lastCompLvlStyle = currentCompLvlStyle;
 	}
 }
 

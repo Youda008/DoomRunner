@@ -169,6 +169,12 @@ class PtrList {
 	void insert( qsize_t idx,       Elem && elem )     { _list.insert( idx, DeepCopyableUniquePtr< Elem >::allocNew( std::move(elem) ) ); }
 
 	void removeAt( qsize_t idx )                       { _list.removeAt( idx ); }
+	auto takeAt( qsize_t idx )
+	{
+		auto ptr = std::move( _list[ idx ] );
+		_list.removeAt( idx );
+		return std::move( *ptr );
+	}
 
 	void move( qsize_t from, qsize_t to )              { _list.move( from, to ); }
 

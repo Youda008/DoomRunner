@@ -100,7 +100,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void searchPresets( const QString & phrase, bool caseSensitive, bool useRegex );
 
 	void onMapIconsToggled();
-	void onSortActionTriggered( ExtendedTreeView::SortKey key, Qt::SortOrder order );
+	void onSortActionTriggered( ExtendedViewCommon<ExtendedTreeView>::SortKey key, Qt::SortOrder order );
 	void onMapHelpLabelHideTriggered();
 
 	void modAdd();
@@ -280,7 +280,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
 	void updateCompatModes();
-	void updateMapsFromSelectedWADs( const IWAD * selectedIWAD, const QStringList & selectedMapPacks );
+	void updateMapNamesFromSelectedFiles();
 
 	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
 
@@ -331,10 +331,16 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	QStringList getSelectedMapPacks() const;
 
 	template< typename Entry, typename Functor > void expandDMB( const QString & filePath, const Functor & loopBody ) const;
-	template< typename Functor > void forEachSelectedMapFileWithExpandedDMBs( const Functor & loopBody ) const;
-	template< typename Functor > void forEachCheckedModFileWithExpandedDMBs( const Functor & loopBody ) const;
+	template< typename Functor > void forEachSelectedMapPackWithExpandedDMBs( const Functor & loopBody ) const;
+	template< typename Functor > void forEachCheckedModItemWithExpandedDMBs( const Functor & loopBody ) const;
+	template< typename Functor > void forEachSelectedFileWithExpandedDMBs( const Functor & loopBody ) const;
 
-	static QStringList getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs );
+	static bool canContainMapNames( const QString & filePath );
+	static bool canContainMapNames( const Mod & mod );
+	static bool canAnyOfTheFilesContainMapNames( const QStringList & filePaths );
+	static bool canAnyOfTheModsContainMapNames( const QList< IndexValue< Mod > > & mods );
+	static bool canAnyOfTheModsContainMapNames( const PtrList<Mod> & mods, int row, int count );
+	QStringList getUniqueMapNamesFromSelectedFiles();
 
 	static QString getEngineDefaultConfigDir( const EngineInfo * selectedEngine );
 	static QString getEngineDefaultSaveDir( const EngineInfo * selectedEngine, const IWAD * selectedIWAD );
@@ -401,6 +407,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	bool disableEnvVarsCallbacks = false;     ///< flag that temporarily disables environment variable callbacks when the list is manually messed with
 	bool restoringOptionsInProgress = false;  ///< flag used to temporarily prevent storing selected values to a preset or global launch options
 	bool restoringPresetInProgress = false;   ///< flag used to temporarily prevent storing selected values to a preset or global launch options
+	bool restoringPresetFilesInProgress = false;   ///< flag used to temporarily prevent updating widgets that depend on files to be loaded
 
 	QString selectedPresetBeforeSearch;   ///< which preset was selected before the search results were displayed
 

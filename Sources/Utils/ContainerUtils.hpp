@@ -204,6 +204,44 @@ subrange( Iter begin, Iter end ) -> subrange< Iter >;
 
 
 //======================================================================================================================
+// sequence generation
+
+template< typename Type >
+QList< Type > makeSequence( const Type & first, size_t count )
+{
+	QList< Type > sequence;
+	sequence.reserve( count );
+
+	Type current = first;
+	while (count-- > 0)
+	{
+		sequence.append( current );
+		++current;
+	}
+
+	return sequence;
+}
+
+
+//======================================================================================================================
+// miscellaneous
+
+template< typename Type >
+struct IndexValue
+{
+	int index;
+	Type value;
+};
+
+template< typename Type >
+struct IndexValueRef
+{
+	int index;
+	Type & value;
+};
+
+
+//======================================================================================================================
 
 
 #endif // CONTAINER_UTILS_INCLUDED

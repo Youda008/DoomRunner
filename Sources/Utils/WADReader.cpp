@@ -14,8 +14,6 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDateTime>
-#include <QTextStream>
-#include <QRegularExpression>
 
 #include <cctype>
 #include <memory>
@@ -104,26 +102,15 @@ static bool isMapMarker( const LumpEntry & lump, const QString & lumpName )
 		&& !blacklistedNames.contains( lumpName );
 }
 
-static void getMapNamesFromMAPINFO( const QByteArray & lumpData, QStringList & mapNames )
-{
-	QTextStream lumpText( lumpData, QIODevice::ReadOnly );
-
-	static const QRegularExpression mapDefRegex("map\\s+(\\w+)\\s+\"([^\"]+)\"");
-
-	QString line;
-	while (lumpText.readLineInto( &line ))
-	{
-		auto match = mapDefRegex.match( line );
-		if (match.hasMatch())
-		{
-			mapNames.append( match.captured(1) );
-		}
-	}
-}
-
 UncertainWadInfo LoggingWadReader::readWadInfo()
 {
 	UncertainWadInfo wadInfo;
+
+	if (!fs::isValidFile( _filePath ))
+	{
+		wadInfo.status = ReadStatus::NotFound;
+		return wadInfo;
+	}
 
 	QFile file( _filePath );
 	if (!file.open( QIODevice::ReadOnly ))
@@ -222,7 +209,7 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 
 		if (isMapMarker( lump, lumpName ))
 		{
-			wadInfo.mapNames.append( lumpName );
+			wadInfo.mapInfo.mapNames.append( lumpName );
 		}
 
 		if (lumpName == "MAPINFO")
@@ -243,8 +230,7 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 				continue;
 			}
 
-			wadInfo.mapNames.clear();
-			getMapNamesFromMAPINFO( lumpData, wadInfo.mapNames );
+			wadInfo.mapInfo = parseMapInfo( lumpData );
 
 			// If it's PWAD, we are done, list of maps is all we need.
 			// If it's IWAD, we need to go through all the lumps, in order to identify the game.

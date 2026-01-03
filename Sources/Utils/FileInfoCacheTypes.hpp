@@ -14,7 +14,9 @@ class QString;
 enum class ReadStatus
 {
 	Success,
+
 	NotSupported,     ///< reading this information is not implemented on this operating system
+	NotFound,         ///< file with this path or name does not exist
 	CantOpen,         ///< the file could not be opened for reading
 	FailedToRead,     ///< the content of the file could not be read
 	InvalidFormat,    ///< the file does not have the expected format

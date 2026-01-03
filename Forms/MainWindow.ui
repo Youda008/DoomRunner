@@ -629,17 +629,14 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
-                   <property name="editable">
-                    <bool>true</bool>
-                   </property>
-                   <property name="currentText">
-                    <string>MAP32</string>
-                   </property>
                    <property name="maxVisibleItems">
                     <number>30</number>
                    </property>
                    <property name="sizeAdjustPolicy">
-                    <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+                    <enum>QComboBox::AdjustToContents</enum>
+                   </property>
+                   <property name="minimumContentsLength">
+                    <number>5</number>
                    </property>
                   </widget>
                  </item>
@@ -704,17 +701,14 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
-                   <property name="editable">
-                    <bool>true</bool>
-                   </property>
-                   <property name="currentText">
-                    <string>MAP32</string>
-                   </property>
                    <property name="maxVisibleItems">
                     <number>30</number>
                    </property>
                    <property name="sizeAdjustPolicy">
-                    <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+                    <enum>QComboBox::AdjustToContents</enum>
+                   </property>
+                   <property name="minimumContentsLength">
+                    <number>5</number>
                    </property>
                   </widget>
                  </item>

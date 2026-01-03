@@ -31,6 +31,8 @@ const QStringList & getIWADSuffixes();
 const QStringList & getModSuffixes();
 
 // convenience wrappers to be used, where otherwise lambda would have to be written
+bool isWAD( const QFileInfo & file );
+bool isZip( const QFileInfo & file );
 bool canBeIWAD( const QFileInfo & file );
 
 
@@ -52,7 +54,7 @@ namespace game
 }
 
 // fallback in case the map names cannot be read from the WAD
-QStringList getStandardMapNames( const QString & iwadFileName );
+QStringList getStandardMapNames( const QString & iwadFilePath );
 
 // Some WADs (map packs) don't start at the first map of the list defined by IWADs (MAP01, E1M1, ...).
 /// If it's a known WAD and it's known to start from a non-first map, returns that map, otherwise returns empty string.

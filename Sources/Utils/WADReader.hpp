@@ -20,7 +20,7 @@ namespace doom {
 
 
 /// Reads selected information from a WAD file.
-/** BEWARE that on file I/O operations may sometimes be expensive, caching the info is adviced. */
+/** BEWARE that these file I/O operations may sometimes be expensive, caching the info is adviced. */
 UncertainWadInfo readWadInfo( const QString & filePath );
 
 

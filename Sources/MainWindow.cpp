@@ -34,6 +34,7 @@
 #include "Utils/OSUtils.hpp"
 #include "Utils/ExeReader.hpp"
 #include "Utils/WADReader.hpp"
+#include "Utils/ZipReader.hpp"
 #include "Utils/DoomModBundles.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // areScreenCoordinatesValid, makeFileFilter, splitCommandLineArguments
@@ -124,7 +125,7 @@ void MainWindow::expandDMB( const QString & filePath, const Functor & loopBody )
 
 // Iterates over a list of selected map files where each Doom Mod Bundle (.dmb) is fully expanded.
 template< typename Functor >
-void MainWindow::forEachSelectedMapFileWithExpandedDMBs( const Functor & loopBody ) const
+void MainWindow::forEachSelectedMapPackWithExpandedDMBs( const Functor & loopBody ) const
 {
 	for (const QString & mapFilePath : selectedMapPacks)
 	{
@@ -139,9 +140,9 @@ void MainWindow::forEachSelectedMapFileWithExpandedDMBs( const Functor & loopBod
 	}
 }
 
-// Iterates over a list of checked mod files where each Doom Mod Bundle (.dmb) is fully expanded.
+// Iterates over a list of checked mod list items where each Doom Mod Bundle (.dmb) is fully expanded.
 template< typename Functor >
-void MainWindow::forEachCheckedModFileWithExpandedDMBs( const Functor & loopBody ) const
+void MainWindow::forEachCheckedModItemWithExpandedDMBs( const Functor & loopBody ) const
 {
 	for (const Mod & mod : modModel)
 	{
@@ -159,21 +160,94 @@ void MainWindow::forEachCheckedModFileWithExpandedDMBs( const Functor & loopBody
 	}
 }
 
-QStringList MainWindow::getUniqueMapNamesFromWADs( const QList<QString> & selectedWADs )
+// Iterates over all files selected to be loaded, including an IWAD, map packs and checked mod files.
+template< typename Functor >
+void MainWindow::forEachSelectedFileWithExpandedDMBs( const Functor & loopBody ) const
+{
+	if (selectedIWAD)
+	{
+		loopBody( selectedIWAD->path );
+	}
+
+	forEachSelectedMapPackWithExpandedDMBs( loopBody );
+
+	forEachCheckedModItemWithExpandedDMBs( [ &loopBody ]( const Mod & mod )
+	{
+		if (!mod.isCmdArg)
+		{
+			loopBody( mod.path );
+		}
+	});
+}
+
+bool MainWindow::canContainMapNames( const QString & filePath )
+{
+	QFileInfo fileInfo( filePath );
+	return !filePath.isEmpty() && fileInfo.isFile() && (doom::isWAD( fileInfo ) || doom::isZip( fileInfo ));
+}
+
+bool MainWindow::canContainMapNames( const Mod & mod )
+{
+	return !mod.isSeparator && !mod.isCmdArg && canContainMapNames( mod.path );
+}
+
+bool MainWindow::canAnyOfTheFilesContainMapNames( const QStringList & filePaths )
+{
+	return containsSuch( filePaths, []( const QString & filePath ) { return canContainMapNames( filePath ); } );
+}
+
+bool MainWindow::canAnyOfTheModsContainMapNames( const QList< IndexValue< Mod > > & mods )
+{
+	return containsSuch( mods, []( const auto & mod ) { return canContainMapNames( mod.value ); } );
+}
+
+bool MainWindow::canAnyOfTheModsContainMapNames( const PtrList<Mod> & mods, int row, int count )
+{
+	for (int idx = row; idx < row + count; idx++)
+		if (canContainMapNames( mods[ idx ] ))
+			return true;
+	return false;
+}
+
+QStringList MainWindow::getUniqueMapNamesFromSelectedFiles()
 {
 	QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
-	for (const QString & selectedWAD : selectedWADs)
+
+	forEachSelectedFileWithExpandedDMBs( [ &uniqueMapNames ]( const QString & filePath )
 	{
-		if (!fs::isValidFile( selectedWAD ))
-			continue;
+		QFileInfo fileInfo( filePath );
 
-		const doom::UncertainWadInfo & wadInfo = doom::g_cachedWadInfo.getFileInfo( selectedWAD );
-		if (wadInfo.status != ReadStatus::Success)
-			continue;
+		if (filePath.isEmpty() || !fileInfo.isFile())
+			return;
 
-		for (const QString & mapName : wadInfo.mapNames)
+		doom::MapInfo mapInfo;
+
+		// TODO: support extracted dirs
+		if (doom::isWAD( fileInfo ))
+		{
+			const doom::UncertainWadInfo & wadInfo = doom::g_cachedWadInfo.getFileInfo( filePath );
+			if (wadInfo.status != ReadStatus::Success)
+				return;
+			mapInfo = std::move( wadInfo.mapInfo );
+		}
+		else if (doom::isZip( fileInfo ))
+		{
+			const doom::UncertainZipInfo & zipInfo = doom::g_cachedZipInfo.getFileInfo( filePath );
+			if (zipInfo.status != ReadStatus::Success)
+				return;
+			mapInfo = std::move( zipInfo.mapInfo );
+		}
+		else
+		{
+			return;  // cannot read map names from this file type
+		}
+
+		for (const QString & mapName : as_const( mapInfo.mapNames ))
+		{
 			uniqueMapNames.insert( mapName.toUpper(), 0 );  // the 0 doesn't matter
-	}
+		}
+	});
+
 	return uniqueMapNames.keys();
 }
 
@@ -1552,8 +1626,10 @@ int MainWindow::askForEngineInfoRefresh()
 
 bool MainWindow::isCacheDirty() const
 {
-	return os::g_cachedExeInfo.isDirty();
-	//	|| doom::g_cachedWadInfo.isDirty();
+	return os::g_cachedExeInfo.isDirty()
+	//	|| doom::g_cachedWadInfo.isDirty()
+	    || doom::g_cachedZipInfo.isDirty()
+	;
 }
 
 bool MainWindow::saveCache( const QString & filePath )
@@ -1561,6 +1637,7 @@ bool MainWindow::saveCache( const QString & filePath )
 	QJsonObject jsRoot;
 	jsRoot["exe_info"] = os::g_cachedExeInfo.serialize();
 	//jsRoot["wad_info"] = doom::g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
+	jsRoot["zip_info"] = doom::g_cachedZipInfo.serialize();
 
 	QJsonDocument jsonDoc( jsRoot );
 	return writeJsonToFile( jsonDoc, filePath, "file-info cache" );
@@ -1575,10 +1652,12 @@ bool MainWindow::loadCache( const QString & filePath )
 	}
 
 	const JsonObjectCtx & jsRoot = jsonDoc->rootObject();
-	if (JsonObjectCtx jsExeCache = jsRoot.getObject("exe_info"))
+	if (JsonObjectCtx jsExeCache = jsRoot.getObject( "exe_info", DontShowError ))
 		os::g_cachedExeInfo.deserialize( jsExeCache );
-	//if (JsonObjectCtx jsWadCache = jsRoot.getObject("wad_info"))
+	//if (JsonObjectCtx jsWadCache = jsRoot.getObject( "wad_info", DontShowError ))
 	//	doom::g_cachedWadInfo.deserialize( jsWadCache );  // not needed, WAD parsing is probably faster than JSON parsing
+	if (JsonObjectCtx jsZipCache = jsRoot.getObject( "zip_info", DontShowError ))
+		doom::g_cachedZipInfo.deserialize( jsZipCache );
 
 	return true;
 }
@@ -1761,7 +1840,25 @@ void MainWindow::restorePreset( Preset & preset )
 
 	restoringPresetInProgress = true;
 
+	// Don't update widgets that depend on files to load on every single change,
+	// We will rather do it manually when all files to load are restored.
+	restoringPresetFilesInProgress = true;
+
 	restoreSelectedEngine( preset );
+
+	restoreSelectedIWAD( preset );
+
+	// Beware that when calling this from restoreLoadedOptions, the mapModel might not have been populated yet,
+	// because it's done asynchronously in a separate thread. In that case this needs to be called again
+	// in a callback connected to QFileSystem event, when the mapModel is finally populated.
+	restoreSelectedMapPacks( preset );
+
+	restoreSelectedMods( preset );
+
+	restoringPresetFilesInProgress = false;
+
+	// generate map names after all files to load are already restored but before restoring launch options
+	updateMapNamesFromSelectedFiles();
 
 	// This must be restored before restoring any of the data files (configs, saves, demos, ...)
 	// because these alt paths override the engine default data paths,
@@ -1769,13 +1866,6 @@ void MainWindow::restorePreset( Preset & preset )
 	restoreAlternativePaths( preset );
 
 	restoreSelectedConfig( preset );
-	restoreSelectedIWAD( preset );
-	restoreSelectedMods( preset );
-
-	// Beware that when calling this from restoreLoadedOptions, the mapModel might not have been populated yet,
-	// because it's done asynchronously in a separate thread. In that case this needs to be called again
-	// in a callback connected to QFileSystem event, when the mapModel is finally populated.
-	restoreSelectedMapPacks( preset );
 
 	ui->mapsAfterModsChkBox->setChecked( preset.loadMapsAfterMods );
 
@@ -2778,6 +2868,8 @@ void MainWindow::onEngineSelected( int index )
 	updateConfigFilesFromDir();
 	updateSaveFilesFromDir();
 	updateDemoFilesFromDir();
+	// engine capabilities determine what map names and compatibility modes we can offer
+	updateMapNamesFromSelectedFiles();
 	updateCompatModes();
 
 	scheduleSavingOptions( storageModified );
@@ -2864,7 +2956,7 @@ void MainWindow::onIWADToggled( const QItemSelection & /*selected*/, const QItem
 	// activeSaveDir may depend on IWAD -> update it
 	activeSaveDir = getActiveSaveDir( selectedEngine, selectedIWAD, ui->altSaveDirLine->text() );
 
-	updateMapsFromSelectedWADs( selectedIWAD, selectedMapPacks );   // IWAD determines the maps we can choose from
+	updateMapNamesFromSelectedFiles();   // IWAD determines the maps we can choose from
 	updateSaveFilesFromDir();   // IWAD determines the directory in which the save files and demo files are stored
 	updateDemoFilesFromDir();
 
@@ -2886,7 +2978,7 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 	for (const QModelIndex & index : selectedRows)
 		wdg::expandParentsOfNode( ui->mapDirView, index );
 
-	updateMapsFromSelectedWADs( selectedIWAD, selectedMapPacks );
+	updateMapNamesFromSelectedFiles();  // map packs can contain custom map names, we must reload the list
 
 	// if this is a known map pack, that starts at different level than the first one, automatically select it
 	if (selectedMapPacks.size() >= 1 && !fs::isDirectory( selectedMapPacks.first() ))
@@ -3309,6 +3401,12 @@ void MainWindow::modAdd()
 		}
 	}
 
+	// some mods contain custom map names, we must reload the list
+	if (canAnyOfTheFilesContainMapNames( paths ))
+	{
+		updateMapNamesFromSelectedFiles();
+	}
+
 	scheduleSavingOptions();
 	updateLaunchCommand();
 }
@@ -3329,6 +3427,12 @@ void MainWindow::modAddDir()
 	if (selectedPreset)
 	{
 		selectedPreset->mods.append( mod );
+	}
+
+	// some mods contain custom map names, we must reload the list
+	if (canAnyOfTheFilesContainMapNames({ path }))
+	{
+		updateMapNamesFromSelectedFiles();
 	}
 
 	scheduleSavingOptions();
@@ -3371,6 +3475,9 @@ void MainWindow::modCreateNewDMB()
 		selectedPreset->mods.append( mod );
 	}
 
+	// some mods contain custom map names, we must reload the list
+	updateMapNamesFromSelectedFiles();
+
 	scheduleSavingOptions();
 	updateLaunchCommand();
 }
@@ -3393,6 +3500,9 @@ void MainWindow::modAddExistingDMB()
 			selectedPreset->mods.append( mod );
 		}
 	}
+
+	// some mods contain custom map names, we must reload the list
+	updateMapNamesFromSelectedFiles();
 
 	scheduleSavingOptions();
 	updateLaunchCommand();
@@ -3422,20 +3532,26 @@ void MainWindow::modInsertSeparator()
 
 void MainWindow::modDelete()
 {
-	const auto removedIndexes = wdg::removeSelectedItems( ui->modListView, modModel );
+	const auto removedItems = wdg::removeSelectedItems( ui->modListView, modModel );
 
-	if (removedIndexes.isEmpty())  // no item was selected
+	if (removedItems.isEmpty())  // no item was selected
 		return;
 
 	// remove it also from the current preset
 	if (selectedPreset)
 	{
 		int removedCnt = 0;
-		for (int removedIdx : removedIndexes)
+		for (const auto & removedItem : removedItems)
 		{
-			selectedPreset->mods.removeAt( removedIdx - removedCnt );
+			selectedPreset->mods.removeAt( removedItem.index - removedCnt );
 			removedCnt++;
 		}
+	}
+
+	// some mods contain custom map names, we must reload the list
+	if (canAnyOfTheModsContainMapNames( removedItems ))
+	{
+		updateMapNamesFromSelectedFiles();
 	}
 
 	scheduleSavingOptions();
@@ -3560,6 +3676,11 @@ void MainWindow::onModDataChanged( int row, int count, const QVector<int> & role
 		{
 			presetMod.name = changedMod.name;
 		});
+	}
+
+	if (canAnyOfTheModsContainMapNames( modModel.list(), row, count ))
+	{
+		updateMapNamesFromSelectedFiles();
 	}
 
 	scheduleSavingOptions( true );  // we can assume options storage was modified, otherwise this callback wouldn't be called
@@ -4933,8 +5054,12 @@ void MainWindow::updateCompatModes()
 }
 
 // this is not called regularly, but only when an IWAD or map WAD is selected or deselected
-void MainWindow::updateMapsFromSelectedWADs( const IWAD * selectedIWAD, const QStringList & selectedMapPacks )
+void MainWindow::updateMapNamesFromSelectedFiles()
 {
+	// do not update the map names for every single file change during preset restoration, that would be too expensive
+	if (restoringPresetFilesInProgress)
+		return;
+
 	// note down the currently selected items
 	QString origText = ui->mapCmbBox->currentText();
 	QString origText_demo = ui->mapCmbBox_demo->currentText();
@@ -4957,14 +5082,11 @@ void MainWindow::updateMapsFromSelectedWADs( const IWAD * selectedIWAD, const QS
 			break;  // if no IWAD is selected, let's leave this empty, it cannot be launched anyway
 		}
 
-		const QString & selectedIwadPath = selectedIWAD ? selectedIWAD->path : emptyString;
-		auto selectedWADs = QStringList{ selectedIwadPath } + selectedMapPacks;
-
 		// read the map names from the selected files and merge them so that entries are not duplicated
-		auto uniqueMapNames = getUniqueMapNamesFromWADs( selectedWADs );
+		auto uniqueMapNames = getUniqueMapNamesFromSelectedFiles();
 
 		// fill the combox-box
-		if (!uniqueMapNames.isEmpty())
+		if (selectedEngine && selectedEngine->supportsCustomMapNames() && !uniqueMapNames.isEmpty())
 		{
 			auto mapNames = uniqueMapNames;
 			ui->mapCmbBox->addItems( mapNames );
@@ -4972,7 +5094,7 @@ void MainWindow::updateMapsFromSelectedWADs( const IWAD * selectedIWAD, const QS
 		}
 		else  // if we haven't found any map names in the WADs, fallback to the standard names based on IWAD name
 		{
-			auto mapNames = doom::getStandardMapNames( fs::getFileNameFromPath( selectedIwadPath ) );
+			auto mapNames = doom::getStandardMapNames( selectedIWAD->path );
 			ui->mapCmbBox->addItems( mapNames );
 			ui->mapCmbBox_demo->addItems( mapNames );
 		}
@@ -5233,7 +5355,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 		/// Postponed map files that will be inserted together into the -file list.
 		QStringList mapFiles;
-		forEachSelectedMapFileWithExpandedDMBs( [&]( const QString & mapFilePath )
+		forEachSelectedMapPackWithExpandedDMBs( [&]( const QString & mapFilePath )
 		{
 			p.checkAnyPath( mapFilePath, "the selected map pack", "Please select another one." );
 			addFileAccordingToSuffix( mapFiles, mapFilePath );
@@ -5241,7 +5363,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 
 		/// Postponed mod files that will be inserted together into the -file list.
 		QStringList modFiles;
-		forEachCheckedModFileWithExpandedDMBs( [&]( const Mod & mod )
+		forEachCheckedModItemWithExpandedDMBs( [&]( const Mod & mod )
 		{
 			if (mod.isCmdArg) {  // this is not a file but a custom command line argument, append it directly to the arguments
 				appendCustomArguments( fileArgs, mod.name, opts.quotePaths );

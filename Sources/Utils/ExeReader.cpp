@@ -276,6 +276,12 @@ UncertainExeVersionInfo LoggingExeReader::readVersionInfo()
 {
 	UncertainExeVersionInfo verInfo;
 
+	if (!fs::isValidFile( _filePath ))
+	{
+		verInfo.status = ReadStatus::NotFound;
+		return verInfo;
+	}
+
 	// this can take up to 1 second sometimes, whyyy?! antivirus?
 	HMODULE hExeModule = LoadLibraryEx( _filePath.toStdWString().c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE );
 	if (!hExeModule)

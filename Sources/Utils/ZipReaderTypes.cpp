@@ -2,10 +2,10 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: types used by WADReader.hpp, separated for less recompilation
+// Description: types used by ZipReader.hpp, separated for less recompilation
 //======================================================================================================================
 
-#include "WADReaderTypes.hpp"
+#include "ZipReaderTypes.hpp"
 
 #include "JsonUtils.hpp"
 
@@ -13,19 +13,15 @@
 namespace doom {
 
 
-void WadInfo::serialize( QJsonObject & jsWadInfo ) const
+void ZipInfo::serialize( QJsonObject & jsZipInfo ) const
 {
-	jsWadInfo["type"] = int( type );
-	jsWadInfo["map_info"] = mapInfo.serialize();
-	// TODO: game identification
+	jsZipInfo["map_info"] = mapInfo.serialize();
 }
 
-void WadInfo::deserialize( const JsonObjectCtx & jsWadInfo )
+void ZipInfo::deserialize( const JsonObjectCtx & jsZipInfo )
 {
-	type = jsWadInfo.getEnum< doom::WadType >( "type", doom::WadType::Neither );
-	if (JsonObjectCtx jsMapInfo = jsWadInfo.getObject( "map_info" ))
+	if (JsonObjectCtx jsMapInfo = jsZipInfo.getObject( "map_info" ))
 		mapInfo.deserialize( jsMapInfo );
-	// TODO: game identification
 }
 
 

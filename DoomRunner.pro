@@ -46,7 +46,7 @@ HEADERS += \
 	Sources/Dialogs/AboutDialog.hpp \
 	Sources/Dialogs/CompatOptsDialog.hpp \
 	Sources/Dialogs/DialogCommon.hpp \
-    Sources/Dialogs/DMBEditor.hpp \
+	Sources/Dialogs/DMBEditor.hpp \
 	Sources/Dialogs/EngineDialog.hpp \
 	Sources/Dialogs/GameOptsDialog.hpp \
 	Sources/Dialogs/NewConfigDialog.hpp \
@@ -56,7 +56,7 @@ HEADERS += \
 	Sources/Dialogs/SetupDialog.hpp \
 	Sources/Dialogs/WADDescViewer.hpp \
 	Sources/Utils/ContainerUtils.hpp \
-    Sources/Utils/DoomModBundles.hpp \
+	Sources/Utils/DoomModBundles.hpp \
 	Sources/Utils/EnumTraits.hpp \
 	Sources/Utils/ErrorHandling.hpp \
 	Sources/Utils/EventFilters.hpp \
@@ -68,6 +68,7 @@ HEADERS += \
 	Sources/Utils/FileSystemUtilsTypes.hpp \
 	Sources/Utils/JsonUtils.hpp \
 	Sources/Utils/LangUtils.hpp \
+	Sources/Utils/MapInfo.hpp \
 	Sources/Utils/MiscUtils.hpp \
 	Sources/Utils/OSUtils.hpp \
 	Sources/Utils/OSUtilsTypes.hpp \
@@ -82,6 +83,8 @@ HEADERS += \
 	Sources/Utils/WADReaderTypes.hpp \
 	Sources/Utils/WidgetUtils.hpp \
 	Sources/Utils/WindowsUtils.hpp \
+	Sources/Utils/ZipReader.hpp \
+	Sources/Utils/ZipReaderTypes.hpp \
 	Sources/Widgets/ExtendedListView.hpp \
 	Sources/Widgets/ExtendedTreeView.hpp \
 	Sources/Widgets/ExtendedViewCommon.hpp \
@@ -108,7 +111,7 @@ SOURCES += \
 	Sources/Dialogs/AboutDialog.cpp \
 	Sources/Dialogs/CompatOptsDialog.cpp \
 	Sources/Dialogs/DialogCommon.cpp \
-    Sources/Dialogs/DMBEditor.cpp \
+	Sources/Dialogs/DMBEditor.cpp \
 	Sources/Dialogs/EngineDialog.cpp \
 	Sources/Dialogs/GameOptsDialog.cpp \
 	Sources/Dialogs/NewConfigDialog.cpp \
@@ -118,7 +121,7 @@ SOURCES += \
 	Sources/Dialogs/SetupDialog.cpp \
 	Sources/Dialogs/WADDescViewer.cpp \
 	Sources/Utils/ContainerUtils.cpp \
-    Sources/Utils/DoomModBundles.cpp \
+	Sources/Utils/DoomModBundles.cpp \
 	Sources/Utils/ErrorHandling.cpp \
 	Sources/Utils/EventFilters.cpp \
 	Sources/Utils/ExeReader.cpp \
@@ -129,6 +132,7 @@ SOURCES += \
 	Sources/Utils/FileSystemUtilsTypes.cpp \
 	Sources/Utils/LangUtils.cpp \
 	Sources/Utils/JsonUtils.cpp \
+	Sources/Utils/MapInfo.cpp \
 	Sources/Utils/MiscUtils.cpp \
 	Sources/Utils/OSUtils.cpp \
 	Sources/Utils/OSUtilsTypes.cpp \
@@ -142,6 +146,8 @@ SOURCES += \
 	Sources/Utils/WADReaderTypes.cpp \
 	Sources/Utils/WidgetUtils.cpp \
 	Sources/Utils/WindowsUtils.cpp \
+	Sources/Utils/ZipReader.cpp \
+	Sources/Utils/ZipReaderTypes.cpp \
 	Sources/Widgets/ExtendedListView.cpp \
 	Sources/Widgets/ExtendedTreeView.cpp \
 	Sources/Widgets/RightClickableLabel.cpp \
@@ -159,7 +165,7 @@ SOURCES += \
 FORMS += \
 	Forms/AboutDialog.ui \
 	Forms/CompatOptsDialog.ui \
-    Forms/DMBEditor.ui \
+	Forms/DMBEditor.ui \
 	Forms/EngineDialog.ui \
 	Forms/GameOptsDialog.ui \
 	Forms/MainWindow.ui \
@@ -202,6 +208,7 @@ win32 {
 
 #-- libraries ------------------------------------
 
+LIBS += -lminizip -lbz2 -lz
 win32: LIBS += -lole32 -luuid -ldwmapi -lversion
 
 

@@ -7,7 +7,7 @@ The second half describes how you can start actively developing the application,
 To get started, you generally need these things:
 1. C++ build tools (compiler: GCC, Clang, MSVC, ...; debugger: gdb, cdb, ...; make)
 2. Qt development tools (qmake, moc, uic, ...)
-3. Qt libraries built with your chosen compiler
+3. Qt and other libraries built with your chosen compiler
 4. (optional) Integrated Development Environment (Qt Creator, Visual Studio, ...)
 
 I present detailed instructions for Windows, for Ubuntu and its derivatives and for MacOS. If you use a different operating system or distribution, you will have to experiment.
@@ -45,12 +45,16 @@ NOTE: From now forward we use `pacboy`, not `pacman`.
 pacboy -S gcc gdb make
 ```
 
-##### 3. Install Qt
+##### 3. Install Qt and other libraries
 Choose Qt version based on your OS: For Windows 10 or later use Qt 6, for Windows 8 or older you have to use Qt 5, because Qt 6 no longer supports older Windows versions.  
 Choose library linking style based on your preferences: Dynamically linked version means Qt DLLs need to be provided together with DoomRunner.exe, which means more files in your installation directory. Statically linked version means Qt libraries are integrated into DoomRunner.exe, but it can produce quite large exe files (up to 40 MB).  
 The possible package names are `qt5`, `qt5-static`, `qt6`, `qt6-static`, install it using the following command:
 ```
 pacboy -S {qt package name}
+```
+Additionally to that you also need to install the minizip library required to read zip files within the application:
+```
+pacboy -S minizip
 ```
 
 ##### 4. Build the project
@@ -151,9 +155,9 @@ In Ubuntu you can use the following commands.
 sudo apt install g++ gdb make
 ```
 
-##### 2. Install Qt
+##### 2. Install Qt and other libraries
 ```
-sudo apt install qt6-base-dev
+sudo apt install qt6-base-dev libminizip-dev
 ```
 
 ##### 3. Build the project

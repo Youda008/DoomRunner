@@ -194,7 +194,7 @@ DismissableScopeGuard< EndFunc > atScopeEndMaybeDo( EndFunc && endFunc )
 	return DismissableScopeGuard< EndFunc >( std::forward< EndFunc >( endFunc ) );
 }
 
-template< typename Handle, typename CloseFunc >
+template< typename Handle, typename CloseFunc, fut::remove_cvref_t<Handle> InvalidHandle = nullptr >
 class AutoClosable
 {
 	Handle _handle;
@@ -202,13 +202,14 @@ class AutoClosable
 
  public:
 
-	AutoClosable( Handle handle, CloseFunc closeFunc ) : _handle( handle ), _closeFunc( closeFunc ) {}
+	AutoClosable( Handle && handle, CloseFunc && closeFunc )
+	    : _handle( std::forward<Handle>(handle) ), _closeFunc( std::forward<CloseFunc>(closeFunc) ) {}
 	AutoClosable( const AutoClosable & other ) = delete;
 
 	void dismiss()
 	{
-		_handle = Handle(0);
-		_closeFunc = nullptr;
+		_handle = InvalidHandle;
+		_closeFunc = {};
 	}
 
 	AutoClosable( AutoClosable && other )
@@ -225,10 +226,12 @@ class AutoClosable
 	}
 };
 
-template< typename Handle, typename CloseFunc >
-AutoClosable< Handle, CloseFunc > autoClosable( Handle handle, CloseFunc closeFunc )
+template< typename Handle, typename CloseFunc, fut::remove_cvref_t<Handle> InvalidHandle = nullptr >
+AutoClosable< Handle, CloseFunc > autoClosable( Handle && handle, CloseFunc && closeFunc )
 {
-	return AutoClosable< Handle, CloseFunc >( handle, closeFunc );
+	return AutoClosable< Handle, CloseFunc, InvalidHandle >(
+		std::forward<Handle>(handle), std::forward<CloseFunc>(closeFunc)
+	);
 }
 
 

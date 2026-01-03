@@ -13,6 +13,7 @@
 
 #include "FileInfoCacheTypes.hpp"  // UncertainFileInfo
 #include "DoomFiles.hpp"  // GameIdentification
+#include "MapInfo.hpp"  // MapInfo
 
 #include <QString>
 
@@ -34,7 +35,7 @@ struct WadInfo
 {
 	WadType type = WadType::Neither;
 	GameIdentification game;   ///< which game it probably is, only present if the type == IWAD
-	QStringList mapNames;       ///< list of map names usable for the +map command
+	MapInfo mapInfo;           ///< content extracted from a MAPINFO file
 
 	void serialize( QJsonObject & jsWadInfo ) const;
 	void deserialize( const JsonObjectCtx & jsWadInfo );

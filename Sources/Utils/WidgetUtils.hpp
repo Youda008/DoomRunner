@@ -259,9 +259,9 @@ void insertItem( QListView * view, ListModel & model, const typename ListModel::
 }
 
 /// Removes all selected items and attempts to select the item following the removed ones.
-/** Returns sorted indexes of the removed items. Pops up a warning box if nothing is selected. */
+/** Returns the removed items sorted by their indexes. Pops up a warning box if nothing is selected. */
 template< typename ListModel >
-QList<int> removeSelectedItems( QListView * view, ListModel & model )
+auto removeSelectedItems( QListView * view, ListModel & model ) -> QList< IndexValue< typename ListModel::Item > >
 {
 	if (!model.canBeModified())
 	{
@@ -287,12 +287,17 @@ QList<int> removeSelectedItems( QListView * view, ListModel & model )
 
 	deselectAllAndUnsetCurrent( view );
 
+	using ListItem = typename ListModel::Item;
+
+	QList< IndexValue< ListItem > > deletedItems;
+
 	// remove all the selected items
 	uint removedCnt = 0;
 	for (int selectedIdx : as_const( selectedRowsAsc ))
 	{
 		model.startRemovingItems( selectedIdx - removedCnt );
-		model.removeAt( selectedIdx - removedCnt );  // every removed item shifts the indexes of the following items
+		auto item = model.takeAt( selectedIdx - removedCnt );  // every removed item shifts the indexes of the following items
+		deletedItems.append( IndexValue< ListItem >{ selectedIdx, std::move(item) } );
 		model.finishRemovingItems();
 		// we're modifying the model ourselves so we don't need to be notified about it
 		removedCnt++;
@@ -308,7 +313,7 @@ QList<int> removeSelectedItems( QListView * view, ListModel & model )
 		selectAndSetCurrentByIndex( view, topMostSelectedIdx - 1 );
 	}
 
-	return selectedRowsAsc;
+	return deletedItems;
 }
 
 /// Creates a copy of a selected item and selects the newly created one.

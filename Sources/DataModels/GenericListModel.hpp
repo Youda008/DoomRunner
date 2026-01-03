@@ -118,6 +118,7 @@ class DirectList {
 	void insert( qsize_t idx,       Item && item )     { _list.insert( idx, std::move(item) ); }
 
 	void removeAt( qsize_t idx )                       { _list.removeAt( idx ); }
+	auto takeAt( qsize_t idx )                         { return _list.takeAt( idx ); }
 
 	void move( qsize_t from, qsize_t to )              { _list.move( from, to ); }
 	void moveToFront( qsize_t from )                   { _list.move( from, 0 ); }
@@ -294,6 +295,13 @@ class FilteredList {
 				if (&_fullList[i] == ptr)
 					_fullList.removeAt( i );
 		}
+	}
+
+	auto takeAt( qsize_t idx )
+	{
+		auto val = std::move( (*this)[idx] );
+		removeAt( idx );
+		return val;
 	}
 
 	void move( qsize_t from, qsize_t to )

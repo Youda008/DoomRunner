@@ -304,9 +304,9 @@ void SetupDialog::engineDelete()
 {
 	int defaultIndex = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
 
-	const auto removedIndexes = wdg::removeSelectedItems( ui->engineListView, engineModel );
+	const auto removedItems = wdg::removeSelectedItems( ui->engineListView, engineModel );
 
-	if (removedIndexes.contains( defaultIndex ))
+	if (containsSuch( removedItems, [ defaultIndex ]( const auto & item ) { return item.index == defaultIndex; } ))
 		engineSettings.defaultEngine.clear();
 }
 
@@ -419,9 +419,9 @@ void SetupDialog::iwadDelete()
 {
 	int defaultIndex = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
 
-	const auto removedIndexes = wdg::removeSelectedItems( ui->iwadListView, iwadModel );
+	const auto removedItems = wdg::removeSelectedItems( ui->iwadListView, iwadModel );
 
-	if (removedIndexes.contains( defaultIndex ))
+	if (containsSuch( removedItems, [ defaultIndex ]( const auto & item ) { return item.index == defaultIndex; } ))
 		iwadSettings.defaultIWAD.clear();
 }
 

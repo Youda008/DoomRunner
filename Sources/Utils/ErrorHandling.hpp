@@ -24,7 +24,7 @@ class QWidget;
 
 
 //======================================================================================================================
-// misc
+// miscellaneous
 
 #define assert_msg( condition, message ) assert(( (void)message, (condition) ))
 

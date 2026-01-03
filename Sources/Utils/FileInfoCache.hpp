@@ -71,7 +71,8 @@ class FileInfoCache : protected LoggingComponent {
 			logDebug() << "entry is outdated, reading info from file: " << filePath;
 			cacheEntry = nullptr;
 		}
-		else if (cacheEntry->fileInfo.status == ReadStatus::CantOpen
+		else if (cacheEntry->fileInfo.status == ReadStatus::NotFound
+		      || cacheEntry->fileInfo.status == ReadStatus::CantOpen
 			  || cacheEntry->fileInfo.status == ReadStatus::FailedToRead)
 		{
 			logDebug() << "reading file failed last time, trying again: " << filePath;
@@ -185,6 +186,9 @@ class FileInfoCache : protected LoggingComponent {
 				break;
 			case ReadStatus::NotSupported:
 				logDebug() << " -> not implemented";
+				break;
+			case ReadStatus::NotFound:
+				logDebug() << " -> file not found";
 				break;
 			case ReadStatus::CantOpen:
 				logDebug() << " -> couldn't open file";

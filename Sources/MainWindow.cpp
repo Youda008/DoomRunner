@@ -34,7 +34,7 @@
 #include "Utils/OSUtils.hpp"
 #include "Utils/ExeReader.hpp"
 #include "Utils/WADReader.hpp"
-#include "Utils/ZipReader.hpp"
+#include "Utils/Pk3Reader.hpp"
 #include "Utils/DoomModBundles.hpp"
 #include "Utils/WidgetUtils.hpp"
 #include "Utils/MiscUtils.hpp"  // areScreenCoordinatesValid, makeFileFilter, splitCommandLineArguments
@@ -451,10 +451,10 @@ QStringList MainWindow::getUniqueMapNamesFromSelectedFiles()
 		}
 		else if (doom::isZip( fileInfo ))
 		{
-			const doom::UncertainZipInfo & zipInfo = g_cachedZipInfo.getFileInfo( filePath );
-			if (zipInfo.status != ReadStatus::Success)
+			const doom::UncertainPk3Info & pk3Info = g_cachedPk3Info.getFileInfo( filePath );
+			if (pk3Info.status != ReadStatus::Success)
 				return;
-			mapInfo = std::move( zipInfo.mapInfo );
+			mapInfo = std::move( pk3Info.mapInfo );
 		}
 		else
 		{
@@ -1630,7 +1630,7 @@ bool MainWindow::isCacheDirty() const
 {
 	return g_cachedExeInfo.isDirty()
 	//	|| g_cachedWadInfo.isDirty()
-	    || g_cachedZipInfo.isDirty()
+	    || g_cachedPk3Info.isDirty()
 	;
 }
 
@@ -1639,7 +1639,7 @@ bool MainWindow::saveCache( const QString & filePath )
 	QJsonObject jsRoot;
 	jsRoot["exe_info"] = g_cachedExeInfo.serialize();
 	//jsRoot["wad_info"] = g_cachedWadInfo.serialize();  // not needed, WAD parsing is probably faster than JSON parsing
-	jsRoot["zip_info"] = g_cachedZipInfo.serialize();
+	jsRoot["pk3_info"] = g_cachedPk3Info.serialize();
 
 	QJsonDocument jsonDoc( jsRoot );
 	return writeJsonToFile( jsonDoc, filePath, "file-info cache" );
@@ -1658,8 +1658,8 @@ bool MainWindow::loadCache( const QString & filePath )
 		g_cachedExeInfo.deserialize( jsExeCache );
 	//if (JsonObjectCtx jsWadCache = jsRoot.getObject( "wad_info", DontShowError ))
 	//	doom::g_cachedWadInfo.deserialize( jsWadCache );  // not needed, WAD parsing is probably faster than JSON parsing
-	if (JsonObjectCtx jsZipCache = jsRoot.getObject( "zip_info", DontShowError ))
-		g_cachedZipInfo.deserialize( jsZipCache );
+	if (JsonObjectCtx jsPk3Cache = jsRoot.getObject( "pk3_info", DontShowError ))
+		g_cachedPk3Info.deserialize( jsPk3Cache );
 
 	return true;
 }

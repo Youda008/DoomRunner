@@ -2,37 +2,17 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: WAD file parsing and information extraction
+// Description: zip file parsing
 //======================================================================================================================
 
 #include "ZipReader.hpp"
 
-#include "LangUtils.hpp"
-#include "StringUtils.hpp"  // operator<<( QTextStream &, const QStringList & )
+#include "LangUtils.hpp"        // autoClosable
+#include "StringUtils.hpp"      // operator<<( QTextStream &, const QStringList & )
+#include "FileSystemUtils.hpp"  // isValidFile
 #include "ErrorHandling.hpp"
 
-#include <QFile>
-#include <QFileInfo>
-
 #include <minizip/unzip.h>
-
-
-namespace doom {
-
-
-//======================================================================================================================
-// JSON serialization
-
-void ZipInfo::serialize( QJsonObject & jsZipInfo ) const
-{
-	jsZipInfo["map_info"] = mapInfo.serialize();
-}
-
-void ZipInfo::deserialize( const JsonObjectCtx & jsZipInfo )
-{
-	if (JsonObjectCtx jsMapInfo = jsZipInfo.getObject( "map_info" ))
-		mapInfo.deserialize( jsMapInfo );
-}
 
 
 //======================================================================================================================
@@ -139,27 +119,3 @@ UncertainFileContent readOneOfFilesInsideZip( const QString & zipFilePath, const
 	LoggingZipReader zipReader( zipFilePath );
 	return zipReader.readOneOfFilesInsideZip( innerFileNames );
 }
-
-UncertainZipInfo readZipInfo( const QString & filePath )
-{
-	UncertainZipInfo zipInfo;
-
-	LoggingZipReader zipReader( filePath );
-	auto mapInfoContent = zipReader.readOneOfFilesInsideZip({ "MAPINFO", "MAPINFO.txt" });
-	if (!mapInfoContent)
-	{
-		zipInfo.status = mapInfoContent.error();
-		return zipInfo;
-	}
-
-	zipInfo.mapInfo = doom::parseMapInfo( *mapInfoContent );
-
-	zipInfo.status = !zipInfo.mapInfo.mapNames.isEmpty() ? ReadStatus::Success : ReadStatus::InfoNotPresent;
-	return zipInfo;
-}
-
-
-} // namespace doom
-
-
-FileInfoCache< doom::ZipInfo > g_cachedZipInfo( u"cachedZipInfo", doom::readZipInfo );

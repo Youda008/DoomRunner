@@ -73,6 +73,7 @@ HEADERS += \
 	Sources/Utils/OSUtils.hpp \
 	Sources/Utils/OSUtilsTypes.hpp \
 	Sources/Utils/PathCheckUtils.hpp \
+	Sources/Utils/Pk3Reader.hpp \
 	Sources/Utils/PtrList.hpp \
 	Sources/Utils/StandardOutput.hpp \
 	Sources/Utils/StringUtils.hpp \
@@ -135,6 +136,7 @@ SOURCES += \
 	Sources/Utils/OSUtils.cpp \
 	Sources/Utils/OSUtilsTypes.cpp \
 	Sources/Utils/PathCheckUtils.cpp \
+	Sources/Utils/Pk3Reader.cpp \
 	Sources/Utils/PtrList.cpp \
 	Sources/Utils/StandardOutput.cpp \
 	Sources/Utils/StringUtils.cpp \

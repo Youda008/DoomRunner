@@ -2,7 +2,7 @@
 // Project: DoomRunner
 //----------------------------------------------------------------------------------------------------------------------
 // Author:      Jan Broz (Youda008)
-// Description: zip file parsing and information extraction
+// Description: zip file parsing
 //======================================================================================================================
 
 #ifndef ZIP_READER_INCLUDED
@@ -11,19 +11,12 @@
 
 #include "Essential.hpp"
 
+#include "FileInfoCacheTypes.hpp"  // ReadStatus
 #include "LangUtils.hpp"           // ValueOrError
-#include "MapInfo.hpp"             // MapInfo
-#include "FileInfoCache.hpp"
 
 #include <QString>
-
-
-class QJsonObject;
-class JsonObjectCtx;
-
-
-
-namespace doom {
+#include <QStringList>
+#include <QByteArray>
 
 
 using UncertainFileContent = ValueOrError<QByteArray, ReadStatus, ReadStatus::Success>;
@@ -34,28 +27,6 @@ using UncertainFileContent = ValueOrError<QByteArray, ReadStatus, ReadStatus::Su
   * The returned status will be NotFound when the zip file is not found,
   * but InfoNotPresent when none of the innerFileNames is found. */
 UncertainFileContent readOneOfFilesInsideZip( const QString & zipFilePath, const QStringList & innerFileNames );
-
-
-struct ZipInfo
-{
-	MapInfo mapInfo;   ///< content extracted from a MAPINFO file
-
-	void serialize( QJsonObject & jsZipInfo ) const;
-	void deserialize( const JsonObjectCtx & jsZipInfo );
-};
-
-using UncertainZipInfo = UncertainFileInfo< ZipInfo >;
-
-/// Reads selected information from a zip file.
-/** BEWARE that these file I/O operations may sometimes be expensive, caching the info is adviced. */
-UncertainZipInfo readZipInfo( const QString & filePath );
-
-
-} // namespace doom
-
-
-// cache global for the whole process, because why not
-extern FileInfoCache< doom::ZipInfo > g_cachedZipInfo;
 
 
 #endif // ZIP_READER_INCLUDED

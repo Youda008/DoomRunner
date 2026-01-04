@@ -581,54 +581,62 @@ QStringList getStandardMapNames( const QString & iwadFilePath )
 // fast lookup table that can be used for WADs whose name can be matched exactly
 static const QHash< QString, QString > startingMapsLookup =
 {
+	// Include at least the most common WADs that start with E1M1 or MAP01,
+	// so that we can avoid the regex comparion where-ever possible.
+	{ "doom.wad",        "E1M1"  },
+	{ "doom2.wad",       "MAP01" },
+	{ "plutonia.wad",    "MAP01" },
+	{ "tnt.wad",         "MAP01" },
+	{ "freedoom.wad",    "E1M1"  },
+	{ "freedoom1.wad",   "E1M1"  },
+	{ "freedoom2.wad",   "MAP01" },
+	{ "heretic.wad",     "E1M1"  },
+	{ "hexen.wad",       "MAP01" },
+	{ "hexdd.wad",       "MAP01" },
+
 	// MasterLevels
-	{ "virgil.wad",    "MAP03" },
-	{ "minos.wad",     "MAP05" },
-	{ "bloodsea.wad",  "MAP07" },
-	{ "mephisto.wad",  "MAP07" },
-	{ "nessus.wad",    "MAP07" },
-	{ "geryon.wad",    "MAP08" },
-	{ "vesperas.wad",  "MAP09" },
-	{ "blacktwr.wad",  "MAP25" },
-	{ "teeth.wad",     "MAP31" },
+	{ "attack.wad",      "MAP01" },
+	{ "blacktwr.wad",    "MAP25" },
+	{ "bloodsea.wad",    "MAP07" },
+	{ "canyon.wad",      "MAP01" },
+	{ "catwalk.wad",     "MAP01" },
+	{ "combine.wad",     "MAP01" },
+	{ "fistula.wad",     "MAP01" },
+	{ "garrison.wad",    "MAP01" },
+	{ "geryon.wad",      "MAP08" },
+	{ "manor.wad",       "MAP01" },
+	{ "mephisto.wad",    "MAP07" },
+	{ "minos.wad",       "MAP05" },
+	{ "nessus.wad",      "MAP07" },
+	{ "paradox.wad",     "MAP01" },
+	{ "subspace.wad",    "MAP01" },
+	{ "subterra.wad",    "MAP01" },
+	{ "teeth.wad",       "MAP31" },
+	{ "ttrap.wad",       "MAP01" },
+	{ "vesperas.wad",    "MAP09" },
+	{ "virgil.wad",      "MAP03" },
 
 	// unofficial MasterLevels
-	{ "dante25.wad",   "MAP02" },
-	{ "derelict.wad",  "MAP02" },
-	{ "achron22.wad",  "MAP03" },
-	{ "flood.wad",     "MAP03" },
-	{ "twm01.wad",     "MAP03" },
-	{ "watchtwr.wad",  "MAP04" },
-	{ "todeath.wad",   "MAP05" },
-	{ "arena.wad",     "MAP06" },
-	{ "storm.wad",     "MAP09" },
-	{ "the_evil.wad",  "MAP30" },
-
-	// Also include the MasterLevels that start from MAP01, because otherwise when user switches from non-MAP01 level
-	// to MAP01 level, the launcher will retain its previous values, which will be incorrect.
-	{ "attack.wad",    "MAP01" },
-	{ "canyon.wad",    "MAP01" },
-	{ "catwalk.wad",   "MAP01" },
-	{ "combine.wad",   "MAP01" },
-	{ "fistula.wad",   "MAP01" },
-	{ "garrison.wad",  "MAP01" },
-	{ "manor.wad",     "MAP01" },
-	{ "paradox.wad",   "MAP01" },
-	{ "subspace.wad",  "MAP01" },
-	{ "subterra.wad",  "MAP01" },
-	{ "ttrap.wad",     "MAP01" },
-
-	// unofficial MasterLevels starting from MAP01
-	{ "anomaly.wad",   "MAP01" },
-	{ "cdk_fury.wad",  "MAP01" },
-	{ "cpu.wad",       "MAP01" },
-	{ "device_1.wad",  "MAP01" },
-	{ "dmz.wad",       "MAP01" },
-	{ "e_inside.wad",  "MAP01" },
-	{ "farside.wad",   "MAP01" },
-	{ "hive.wad",      "MAP01" },
-	{ "mines.wad",     "MAP01" },
-	{ "trouble.wad",   "MAP01" },
+	{ "achron22.wad",    "MAP03" },
+	{ "anomaly.wad",     "MAP01" },
+	{ "arena.wad",       "MAP06" },
+	{ "cdk_fury.wad",    "MAP01" },
+	{ "cpu.wad",         "MAP01" },
+	{ "dante25.wad",     "MAP02" },
+	{ "derelict.wad",    "MAP02" },
+	{ "device_1.wad",    "MAP01" },
+	{ "dmz.wad",         "MAP01" },
+	{ "e_inside.wad",    "MAP01" },
+	{ "farside.wad",     "MAP01" },
+	{ "flood.wad",       "MAP03" },
+	{ "hive.wad",        "MAP01" },
+	{ "mines.wad",       "MAP01" },
+	{ "storm.wad",       "MAP09" },
+	{ "the_evil.wad",    "MAP30" },
+	{ "todeath.wad",     "MAP05" },
+	{ "trouble.wad",     "MAP01" },
+	{ "twm01.wad",       "MAP03" },
+	{ "watchtwr.wad",    "MAP04" },
 };
 
 // slow regex search for WADs whose name follows specfic format, for example those with postfixed version number
@@ -636,9 +644,11 @@ inline constexpr auto CaseSensitive   = QRegularExpression::NoPatternOption;
 inline constexpr auto CaseInsensitive = QRegularExpression::CaseInsensitiveOption;
 static const QPair< QRegularExpression, QString > startingMapsRegexes [] =
 {
-	{ QRegularExpression("SIGIL_COMPAT[^.]*\\.wad",  CaseInsensitive), "E3M1" },  // SIGIL_COMPAT_v1_21.wad, SIGIL_COMPAT_95.WAD
-	{ QRegularExpression("SIGIL_II[^.]*\\.wad",      CaseInsensitive), "E6M1" },  // SIGIL_II_V1_0.WAD
-	{ QRegularExpression("SIGIL[^.]*\\.wad",         CaseInsensitive), "E5M1" },  // SIGIL_v1_21.wad
+	// NOTE: These entries must be sorted from the most specific to the most generic,
+	//       otherwise the generic will always match first.
+	{ QRegularExpression( "SIGIL_COMPAT[^.]*\\.wad",  CaseInsensitive ), "E3M1" },  // SIGIL_COMPAT_v1_21.wad, SIGIL_COMPAT_95.WAD
+	{ QRegularExpression( "SIGIL_II[^.]*\\.wad",      CaseInsensitive ), "E6M1" },  // SIGIL_II_V1_0.WAD
+	{ QRegularExpression( "SIGIL[^.]*\\.wad",         CaseInsensitive ), "E5M1" },  // SIGIL_v1_21.wad
 };
 
 QString getStartingMap( const QString & wadFilePath )
@@ -650,7 +660,7 @@ QString getStartingMap( const QString & wadFilePath )
 	if (iter != startingMapsLookup.end())
 		return iter.value();
 
-	// if not found, do a slow search if it's in one of known formats
+	// if not found, do a slow search if it's in one of the known formats
 	for (const auto & regexPair : startingMapsRegexes)
 		if (regexPair.first.match( wadFileNameLower ).hasMatch())
 			return regexPair.second;

@@ -428,7 +428,7 @@ bool MainWindow::canAnyOfTheModsContainMapNames( const PtrList<Mod> & mods, int 
 	return false;
 }
 
-QStringList MainWindow::getUniqueMapNamesFromSelectedFiles()
+QStringList MainWindow::getUniqueMapNamesFromSelectedFiles() const
 {
 	QMap< QString, int > uniqueMapNames;  // we cannot use QSet because that one is unordered and we need to retain order
 
@@ -468,6 +468,34 @@ QStringList MainWindow::getUniqueMapNamesFromSelectedFiles()
 	});
 
 	return uniqueMapNames.keys();
+}
+
+int MainWindow::getStartingMapIndexFromSelectedFiles() const
+{
+	int finalStartingMapIdx = -1;
+
+	forEachSelectedFileWithExpandedDMBs( [ this, &finalStartingMapIdx ]( const QString & filePath )
+	{
+		QFileInfo fileInfo( filePath );
+
+		if (filePath.isEmpty() || !fileInfo.isFile() || !doom::isWAD( fileInfo ))
+			return;
+
+		QString startingMap = doom::getStartingMap( filePath );
+
+		if (!startingMap.isEmpty())
+		{
+			int startingMapIdx = ui->mapCmbBox->findText( startingMap );
+			if (startingMapIdx >= 0)
+			{
+				// Overwrite the previous starting map if it already exists, use the last one available.
+				// This corresponds with the fact that WADs loaded later overwrite the maps in the WADs loaded earlier.
+				finalStartingMapIdx = startingMapIdx;
+			}
+		}
+	});
+
+	return finalStartingMapIdx;
 }
 
 // internal options storage
@@ -1861,6 +1889,7 @@ void MainWindow::restorePreset( Preset & preset )
 
 	// generate map names after all files to load are already restored but before restoring launch options
 	updateMapNamesFromSelectedFiles();
+	selectStartingMapFromSelectedFiles();
 
 	// This must be restored before restoring any of the data files (configs, saves, demos, ...)
 	// because these alt paths override the engine default data paths,
@@ -2666,7 +2695,7 @@ void MainWindow::onImportFromScriptTriggered()
 //----------------------------------------------------------------------------------------------------------------------
 // item selection
 
-/// Automatically selects essential items (like engine of IWAD) marked as default, or those that are alone in their list.
+/// Automatically selects essential items (like engine or IWAD) marked as default, or those that are alone in their list.
 void MainWindow::autoselectItems()
 {
 	if (ui->engineCmbBox->currentIndex() < 0)
@@ -2960,7 +2989,8 @@ void MainWindow::onIWADToggled( const QItemSelection & /*selected*/, const QItem
 
 	updateSaveFilesFromDir();   // IWAD determines the directory in which the save files and demo files are stored
 	updateDemoFilesFromDir();
-	updateMapNamesFromSelectedFiles();   // IWAD determines the maps we can choose from
+	updateMapNamesFromSelectedFiles();   // IWAD determines the maps we can choose from, we must reload the combo-box
+	selectStartingMapFromSelectedFiles();
 
 	scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -2980,28 +3010,9 @@ void MainWindow::onMapPackToggled( const QItemSelection & /*selected*/, const QI
 	for (const QModelIndex & index : selectedRows)
 		wdg::expandParentsOfNode( ui->mapDirView, index );
 
-	updateMapNamesFromSelectedFiles();  // map packs can contain custom map names, we must reload the list
-
-	// if this is a known map pack, that starts at different level than the first one, automatically select it
-	if (selectedMapPacks.size() >= 1 && !fs::isDirectory( selectedMapPacks.first() ))
-	{
-		// if there is multiple of them, there isn't really any better solution than to just take the first one
-		QString wadFileName = fs::getFileNameFromPath( selectedMapPacks.first() );
-		QString startingMap = doom::getStartingMap( wadFileName );
-		if (!startingMap.isEmpty())
-		{
-			if (ui->mapCmbBox->findText( startingMap ) >= 0)
-			{
-				ui->mapCmbBox->setCurrentText( startingMap );
-				ui->mapCmbBox_demo->setCurrentText( startingMap );
-			}
-			else
-			{
-				ui->mapCmbBox->clear();
-				ui->mapCmbBox_demo->clear();
-			}
-		}
-	}
+	// map packs can contain custom map names and custom starting map -> update the corresponding combo-boxes
+	updateMapNamesFromSelectedFiles();
+	selectStartingMapFromSelectedFiles();
 
 	//scheduleSavingOptions( storageModified );
 	updateLaunchCommand();
@@ -3037,9 +3048,11 @@ void MainWindow::onModDataChanged( int row, int count, const QVector<int> & role
 		});
 	}
 
+	// mods can contain custom map names and custom starting map -> update the corresponding combo-boxes
 	if (canAnyOfTheModsContainMapNames( modModel.list(), row, count ))
 	{
 		updateMapNamesFromSelectedFiles();
+		selectStartingMapFromSelectedFiles();
 	}
 
 	scheduleSavingOptions( true );  // we can assume options storage was modified, otherwise this callback wouldn't be called
@@ -3442,10 +3455,11 @@ void MainWindow::modAdd()
 		}
 	}
 
-	// some mods contain custom map names, we must reload the list
+	// some mods contain custom map names -> update the corresponding combo-boxes
 	if (canAnyOfTheFilesContainMapNames( paths ))
 	{
 		updateMapNamesFromSelectedFiles();
+		selectStartingMapFromSelectedFiles();
 	}
 
 	scheduleSavingOptions();
@@ -3470,10 +3484,11 @@ void MainWindow::modAddDir()
 		selectedPreset->mods.append( mod );
 	}
 
-	// some mods contain custom map names, we must reload the list
+	// some mods contain custom map names -> update the corresponding combo-boxes
 	if (canAnyOfTheFilesContainMapNames({ path }))
 	{
 		updateMapNamesFromSelectedFiles();
+		selectStartingMapFromSelectedFiles();
 	}
 
 	scheduleSavingOptions();
@@ -3516,8 +3531,9 @@ void MainWindow::modCreateNewDMB()
 		selectedPreset->mods.append( mod );
 	}
 
-	// some mods contain custom map names, we must reload the list
+	// some mods contain custom map names -> update the corresponding combo-boxes
 	updateMapNamesFromSelectedFiles();
+	selectStartingMapFromSelectedFiles();
 
 	scheduleSavingOptions();
 	updateLaunchCommand();
@@ -3542,7 +3558,7 @@ void MainWindow::modAddExistingDMB()
 		}
 	}
 
-	// some mods contain custom map names, we must reload the list
+	// some mods contain custom map names -> update the corresponding combo-boxes
 	updateMapNamesFromSelectedFiles();
 
 	scheduleSavingOptions();
@@ -3589,7 +3605,7 @@ void MainWindow::modDelete()
 		}
 	}
 
-	// some mods contain custom map names, we must reload the list
+	// some mods contain custom map names -> update the corresponding combo-boxes
 	if (canAnyOfTheModsContainMapNames( removedItems ))
 	{
 		updateMapNamesFromSelectedFiles();
@@ -5022,7 +5038,7 @@ void MainWindow::updateDemoFilesFromDir()
 // this is not called regularly, but only when an IWAD or map WAD is selected or deselected
 void MainWindow::updateMapNamesFromSelectedFiles()
 {
-	// do not update the map names for every single file change during preset restoration, that would be too expensive
+	// don't update the map names for every single file change during preset restoration, that would be too expensive
 	if (restoringPresetFilesInProgress)
 		return;
 
@@ -5083,6 +5099,26 @@ void MainWindow::updateMapNamesFromSelectedFiles()
 		// selection changed while the callbacks were disabled, we need to call them manually
 		onMapChanged_demo( ui->mapCmbBox->currentText() );
 	}
+}
+
+void MainWindow::selectStartingMapFromSelectedFiles()
+{
+	// don't update the starting map for every single file change during preset restoration, that would be too expensive
+	if (restoringPresetFilesInProgress)
+		return;
+
+	int startingMapIdx = getStartingMapIndexFromSelectedFiles();
+
+	if (startingMapIdx < 0)  // we don't know the starting map, but we still have to select something
+	{
+		if (ui->mapCmbBox->count() > 0)
+			startingMapIdx = 0;
+		else  // there are no map names in the combo-box (probably shouldn't happen, but it's better to be safe)
+			startingMapIdx = -1;
+	}
+
+	ui->mapCmbBox->setCurrentIndex( startingMapIdx );
+	ui->mapCmbBox_demo->setCurrentIndex( startingMapIdx );
 }
 
 /// Updates the compat mode combo-box according to the currently selected engine.

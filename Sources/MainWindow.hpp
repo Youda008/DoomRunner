@@ -280,6 +280,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void updateSaveFilesFromDir();
 	void updateDemoFilesFromDir();
 	void updateMapNamesFromSelectedFiles();
+	void selectStartingMapFromSelectedFiles();
 	void updateCompatModes();
 
 	void moveEnvVarToKeepTableSorted( QTableWidget * table, EnvVars * envVars, int rowIdx );
@@ -352,7 +353,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	static bool canAnyOfTheFilesContainMapNames( const QStringList & filePaths );
 	static bool canAnyOfTheModsContainMapNames( const QList< IndexValue< Mod > > & mods );
 	static bool canAnyOfTheModsContainMapNames( const PtrList<Mod> & mods, int row, int count );
-	QStringList getUniqueMapNamesFromSelectedFiles();
+	QStringList getUniqueMapNamesFromSelectedFiles() const;
+	int getStartingMapIndexFromSelectedFiles() const;
 
 	LaunchOptions & activeLaunchOptions();
 	MultiplayerOptions & activeMultiplayerOptions();

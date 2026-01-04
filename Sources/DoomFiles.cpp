@@ -641,9 +641,9 @@ static const QPair< QRegularExpression, QString > startingMapsRegexes [] =
 	{ QRegularExpression("SIGIL[^.]*\\.wad",         CaseInsensitive), "E5M1" },  // SIGIL_v1_21.wad
 };
 
-QString getStartingMap( const QString & wadFileName )
+QString getStartingMap( const QString & wadFilePath )
 {
-	QString wadFileNameLower = wadFileName.toLower();
+	QString wadFileNameLower = fs::getFileNameFromPath( wadFilePath ).toLower();
 
 	// first do a fast search if the file name can be matched directly
 	auto iter = startingMapsLookup.find( wadFileNameLower );

@@ -9,6 +9,7 @@
 #include "ui_WADDescViewer.h"
 
 #include "MainWindowPtr.hpp"
+#include "Utils/ZipReader.hpp"
 #include "Utils/FileSystemUtils.hpp"  // replaceFileSuffix
 #include "Utils/StringUtils.hpp"      // capitalize
 #include "Utils/ErrorHandling.hpp"
@@ -91,31 +92,52 @@ void showTxtDescriptionFor( QWidget * parentWindow, const QString & filePath, co
 		return;
 	}
 
-	// get the corresponding file with txt suffix
-	QFileInfo descFileInfo( fs::replaceFileSuffix( filePath, "txt" ) );
-	if (!descFileInfo.isFile())
+	QString descFileName;
+	QByteArray descContent;
+
+	if (dataFileInfo.suffix() == "zip")
 	{
-		// try TXT in case we are in a case-sensitive file-system such as Linux
-		descFileInfo = QFileInfo( fs::replaceFileSuffix( filePath, "TXT" ) );
+		// try a txt file within the zip file
+		QString descFileName_txt = fs::getFileNameFromPath( fs::replaceFileSuffix( filePath, "txt" ) );
+		QString descFileName_TXT = fs::getFileNameFromPath( fs::replaceFileSuffix( filePath, "TXT" ) );
+		auto content = readOneOfFilesInsideZip( dataFileInfo.filePath(), { descFileName_txt, descFileName_TXT } );
+		if (content)
+		{
+			descFileName = descFileName_txt;
+			descContent = std::move( *content );
+		}
+		// else continue to try the txt file next to the zip file
+	}
+
+	if (descContent.isNull())
+	{
+		// get the corresponding file with txt suffix
+		QFileInfo descFileInfo( fs::replaceFileSuffix( filePath, "txt" ) );
 		if (!descFileInfo.isFile())
 		{
-			reportUserError( parentWindow, "Cannot open "%contentType,
-				capitalize( contentType )%" file \""%fs::replaceFileSuffix( filePath, "txt" )%"\" does not exist" );
+			// try TXT in case we are in a case-sensitive file-system such as Linux
+			descFileInfo = QFileInfo( fs::replaceFileSuffix( filePath, "TXT" ) );
+			if (!descFileInfo.isFile())
+			{
+				reportUserError( parentWindow, "Cannot open "%contentType,
+					capitalize( contentType )%" file \""%fs::replaceFileSuffix( filePath, "txt" )%"\" does not exist" );
+				return;
+			}
+		}
+
+		QFile descFile( descFileInfo.filePath() );
+		if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
+		{
+			reportRuntimeError( parentWindow, "Cannot open "%contentType,
+				"Failed to open map "%contentType%" \""%descFileInfo.fileName()%"\" ("%descFile.errorString()%")" );
 			return;
 		}
+
+		descFileName = descFileInfo.fileName();
+		descContent = descFile.readAll();
 	}
 
-	QFile descFile( descFileInfo.filePath() );
-	if (!descFile.open( QIODevice::Text | QIODevice::ReadOnly ))
-	{
-		reportRuntimeError( parentWindow, "Cannot open "%contentType,
-			"Failed to open map "%contentType%" \""%descFileInfo.fileName()%"\" ("%descFile.errorString()%")" );
-		return;
-	}
-
-	QByteArray desc = descFile.readAll();
-
-	WADDescViewer descDialog( parentWindow, descFileInfo.fileName(), desc, wrapLines );
+	WADDescViewer descDialog( parentWindow, descFileName, descContent, wrapLines );
 
 	descDialog.exec();
 

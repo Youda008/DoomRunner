@@ -501,7 +501,7 @@ QString EngineTraits::getCommonSaveSubdir() const
 	}
 	else if (_family == EngineFamily::ChocolateDoom)
 	{
-		if (!IS_WINDOWS /* Chocolate/Crispy Doom */ || name == "doomretro")
+		if (name == "doomretro" || /* Chocolate/Crispy Doom */ !IS_WINDOWS)
 		{
 			saveSubdirBase = "savegames";
 		}
@@ -538,7 +538,7 @@ QString EngineTraits::getDefaultSaveSubdir( const QString & IWADPath ) const
 
 	// Some engines store their save files in a subdirectory named after the IWAD in use.
 	if ((isBasedOnGZDoomVersionOrLater({4,9,0}))
-	 || (_family == EngineFamily::ChocolateDoom && (!IS_WINDOWS /* Chocolate/Crispy Doom */ || name == "doomretro")))
+	 || (_family == EngineFamily::ChocolateDoom && (name == "doomretro" || /* Chocolate/Crispy Doom */ !IS_WINDOWS)))
 	{
 		QString gameID;
 		if (!IWADPath.isEmpty())
@@ -584,7 +584,7 @@ bool EngineTraits::saveDirDependsOnIWAD() const
 	const QString & name = normalizedName();
 
 	return (isBasedOnGZDoomVersionOrLater({4,9,0}))
-        || (_family == EngineFamily::ChocolateDoom && (!IS_WINDOWS /* Chocolate/Crispy Doom */ || name == "doomretro"))
+        || (_family == EngineFamily::ChocolateDoom && (name == "doomretro" || /* Chocolate/Crispy Doom */ !IS_WINDOWS))
         || (_family == EngineFamily::PrBoom && name == "dsda-doom")
         || (_family == EngineFamily::MBF && name == "woof");
 }
@@ -688,7 +688,8 @@ const char * EngineTraits::getPistolStartOption() const
 const char * EngineTraits::getScreenshotDirParam() const
 {
 	// https://doomwiki.org/wiki/Source_port_parameters#-shotdir_.3Cdirectory.3E
-	if (_family == EngineFamily::ZDoom || _family == EngineFamily::PrBoom || normalizedName() == "doomretro")
+	const QString & name = normalizedName();
+	if (_family == EngineFamily::ZDoom || _family == EngineFamily::PrBoom || name == "doomretro")
 		return "-shotdir";
 	else
 		return nullptr;

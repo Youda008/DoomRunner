@@ -102,6 +102,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 	{
 		.configFileSuffix = "ini",
 		.saveFileSuffix = "zds",
+		.loadFileParam = "-file",
 		.saveDirParam = "-savedir",
 		.multHostParam = nullptr,         // the player count is added to the host parameter:  -host <player count>
 		.multPlayerCountParam = "-host",  // instead of having separate parameters like:       -host -players <count>
@@ -114,6 +115,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 	{
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "dsg",
+		.loadFileParam = "-merge",
 		.saveDirParam = "-savedir",
 		.multHostParam = nullptr,
 		.multPlayerCountParam = nullptr,
@@ -126,6 +128,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 	{
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "dsg",
+		.loadFileParam = "-file",
 		.saveDirParam = "-save",
 		.multHostParam = nullptr,         // PrBoom has a separate executable for a multiplayer server
 		.multPlayerCountParam = nullptr,  // with completely different parameters.
@@ -138,6 +141,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 	{
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "dsg",
+		.loadFileParam = "-file",
 		.saveDirParam = "-save",
 		.multHostParam = "-server",
 		.multPlayerCountParam = nullptr,  // there is no player count here, the number of players is arbitrary
@@ -150,6 +154,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 	{
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "esg",  // EDGE stores saves completely differently than all the other engines, but screw it
+		.loadFileParam = "-file",
 		.saveDirParam = nullptr,
 		.multHostParam = nullptr,
 		.multPlayerCountParam = nullptr,
@@ -163,6 +168,7 @@ static const EngineFamilyTraits engineFamilyTraits [] =
 		// TODO: Where do i find any documentation for this?
 		.configFileSuffix = "cfg",
 		.saveFileSuffix = "sav",
+		.loadFileParam = "-file",
 		.saveDirParam = nullptr,
 		.multHostParam = nullptr,
 		.multPlayerCountParam = nullptr,

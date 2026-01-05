@@ -5383,7 +5383,7 @@ os::ShellCommand MainWindow::generateLaunchCommand( LaunchCommandOptions opts )
 			} else {
 				// for now, only insert a placeholder where all the files will be inserted later together
 				if (!placeholderPlaced) {
-					fileArgs << "-file" << "<files>";
+					fileArgs << engine.loadFileParam() << "<files>";
 					placeholderPlaced = true;
 				}
 				// and gather the files in a separate list

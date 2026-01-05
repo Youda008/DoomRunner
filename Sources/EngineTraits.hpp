@@ -63,6 +63,7 @@ struct EngineFamilyTraits
 {
 	const char * configFileSuffix;    ///< which file name suffix the engine uses for its save files
 	const char * saveFileSuffix;      ///< which file name suffix the engine uses for its save files
+	const char * loadFileParam;       ///< which command line parameter is used to load a file with game assets
 	const char * saveDirParam;        ///< which command line parameter is used for overriding the save directory
 	const char * multHostParam;       ///< which command line parameter is used to host a multiplayer game
 	const char * multPlayerCountParam;///< which command line parameter is used to limit the number of players
@@ -161,6 +162,9 @@ class EngineTraits {
 
 	/// Whether this engine requires data paths to be always absolute. (Thanks Bethesda)
 	bool requiresAbsolutePaths() const             { assert( hasFamily() ); return _family == EngineFamily::KEX; }
+
+	/// Command line parameter for loading a file with game assets like maps or mods, it's never a nullptr.
+	const char * loadFileParam() const             { assert( _familyTraits ); return _familyTraits->loadFileParam; }
 
 	/// Command line parameter for specifying a custom save directory, can be nullptr if the engine doesn't support it.
 	const char * saveDirParam() const              { assert( _familyTraits ); return _familyTraits->saveDirParam; }

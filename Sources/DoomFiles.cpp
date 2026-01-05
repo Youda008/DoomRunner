@@ -35,7 +35,8 @@ static const QStringList _7zSuffixes = { "pk7", "7z" };
 static const QStringList patchSuffixes = { "deh"/* DeHackEd patch */, "bex"/* deh for Boom */, "hhe"/* Heretic Hack Editor */ };
 static const QStringList archIWADSuffixes = { "ipk3", "ipk7" };
 static const QStringList extraModSuffixes = {
-    "pke"/* pk3 for Eternity */, "epk"/* pk3 for EDGE and 3DGE */, "vwad"/* pk3 for K8Vavoom */
+    "pke"/* pk3 for Eternity */, "epk"/* pk3 for EDGE and 3DGE */, "vwad"/* pk3 for K8Vavoom */,
+    "sod", "sd2", "sd3", "wl3", "wl6" /* Wolf3D data files */
 };
 static const QStringList dukeSuffixes = { "grp", "rff" };
 

@@ -351,7 +351,8 @@ bool EngineTraits::isBasedOnGZDoomVersionOrLater( Version atLeastVersion ) const
 
 	return _family == EngineFamily::ZDoom && (
 		(name == "gzdoom" && version >= atLeastVersion) ||
-		(name == "vkdoom")
+		(name == "uzdoom") || (name == "vkdoom")
+		// TODO: investigate behaviour of LZDoom and possibly add it here
 	);
 }
 
@@ -647,7 +648,7 @@ QString EngineTraits::getDefaultConfigFileName() const
 		else
 			firstPart = exeBaseName();
 
-		if ((name == "gzdoom" && version >= v{4,9,0}) || (name == "vkdoom"))
+		if ((name == "gzdoom" && version >= v{4,9,0}) || (name == "uzdoom") || (name == "vkdoom"))
 			if (isPortableZDoom())
 				return firstPart%"_portable.ini";
 			else

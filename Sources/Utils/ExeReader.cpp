@@ -207,7 +207,10 @@ span< LangInfo > LoggingExeReader::getLangInfo( const Resource & res )
 	if (!VerQueryValue( res.data(), TEXT("\\VarFileInfo\\Translation"), (LPVOID*)&lpTranslate, &cbTranslate ))
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot read language info of "<<_filePath<<", VerQueryValue(\"\\VarFileInfo\\Translation\") failed with error "<<lastError;
+		if (lastError == ERROR_RESOURCE_NAME_NOT_FOUND || lastError == ERROR_RESOURCE_TYPE_NOT_FOUND)
+			logDebug() << "Language info of "<<_filePath<<" is missing (error "<<lastError<<")";
+		else
+			logRuntimeError() << "Cannot read language info of "<<_filePath<<", VerQueryValue(\"\\VarFileInfo\\Translation\") failed with error "<<lastError;
 		return {};
 	}
 	else if (lpTranslate == nullptr || cbTranslate < sizeof(LangInfo))
@@ -235,7 +238,10 @@ QString LoggingExeReader::getVerInfoValue( const Resource & res, const LangInfo 
 	if (!VerQueryValue( res.data(), subBlock, &lpBuffer, &cchLen ))
 	{
 		auto lastError = GetLastError();
-		logRuntimeError() << "Cannot read file info value "<<QStr(valueName)<<" of "<<_filePath<<", VerQueryValue("<<QStr(subBlock)<<") failed with error "<<lastError;
+		if (lastError == ERROR_RESOURCE_NAME_NOT_FOUND || lastError == ERROR_RESOURCE_TYPE_NOT_FOUND)
+			logDebug() << "File info value "<<QStr(valueName)<<" of "<<_filePath<<" is missing (error "<<lastError<<")";
+		else
+			logRuntimeError() << "Cannot read file info value "<<QStr(valueName)<<" of "<<_filePath<<", VerQueryValue("<<QStr(subBlock)<<") failed with error "<<lastError;
 		return {};
 	}
 	else if (lpBuffer == nullptr)

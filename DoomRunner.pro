@@ -206,7 +206,8 @@ win32 {
 
 #-- libraries ------------------------------------
 
-LIBS += -lminizip -lbz2 -lz
+LIBS += -lminizip
+equals(QT_MAJOR_VERSION, 5): LIBS += -lbz2
 win32: LIBS += -lole32 -luuid -ldwmapi -lversion
 
 

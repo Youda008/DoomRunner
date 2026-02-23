@@ -1738,7 +1738,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		int defaultIdx = findSuch( engineModel, [&]( const Engine & e ){ return e.getID() == engineSettings.defaultEngine; } );
 		if (defaultIdx >= 0)
 		{
-			engineModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
+			markItemAsDefault( engineModel[ defaultIdx ] );
 		}
 		else if (!engineSettings.defaultEngine.isEmpty())
 		{
@@ -1766,7 +1766,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		int defaultIdx = findSuch( iwadModel, [&]( const IWAD & i ){ return i.getID() == iwadSettings.defaultIWAD; } );
 		if (defaultIdx >= 0)
 		{
-			iwadModel[ defaultIdx ].textColor = themes::getCurrentPalette().defaultEntryText;
+			markItemAsDefault( iwadModel[ defaultIdx ] );
 		}
 		else if (!iwadSettings.defaultIWAD.isEmpty())
 		{
@@ -4978,6 +4978,8 @@ void MainWindow::updateSaveFilesFromDir()
 	wdg::updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
 		/*isDesiredFile*/[&]( const QFileInfo & file ) { return file.suffix().toLower() == selectedEngine->saveFileSuffix(); }
 	);
+	
+	// TODO: select the latest one if nothing selected
 
 	disableSelectionCallbacks = false;
 	int newSaveIdx = ui->saveFileCmbBox->currentIndex();

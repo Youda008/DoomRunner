@@ -168,6 +168,11 @@ inline bool exists( const QString & entryPath )
 	return QFileInfo::exists( entryPath );
 }
 
+inline bool parentDirExists( const QString & entryPath )
+{
+	return QFileInfo::exists( QFileInfo( entryPath ).path() );
+}
+
 inline bool isDirectory( const QString & entryPath )
 {
 	return QFileInfo( entryPath ).isDir();
@@ -311,7 +316,7 @@ class PathConvertor {
 		// baseDir.absoluteFilePath( inputPath ) only appends inputPath to the absolute path of baseDir,
 		// QDir::cleanPath() gets rid of any redundant "/./" or "/../" in the middle of the input path.
 		// Works even if the inputPath is already absolute.
-		return  QDir::cleanPath( baseDir.absoluteFilePath( inputPath ) );
+		return QDir::cleanPath( baseDir.absoluteFilePath( inputPath ) );
 	}
 
 	static QString makePathRelativeTo( const QString & inputPath, const QDir & baseDir )

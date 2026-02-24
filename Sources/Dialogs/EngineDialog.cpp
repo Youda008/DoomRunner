@@ -38,17 +38,24 @@ EngineDialog::EngineDialog( QWidget * parent, const PathConvertor & pathConv, co
 	}
 	ui->familyCmbBox->setCurrentIndex( 0 );  // set this right at the start so that index is never -1
 
-	// fill existing engine properties
-	ui->nameLine->setText( engine.name );
-	ui->executableLine->setText( engine.executablePath );
-	ui->configDirLine->setText( engine.configDir );
-	ui->dataDirLine->setText( engine.dataDir );
-	ui->familyCmbBox->setCurrentIndex( int(engine.family) );
+	if (engine.isInitialized())
+	{
+		// fill existing engine properties
+		ui->nameLine->setText( engine.name );
+		ui->executableLine->setText( engine.executablePath );
+		ui->configDirLine->setText( engine.configDir );
+		ui->dataDirLine->setText( engine.dataDir );
+		ui->familyCmbBox->setCurrentIndex( int(engine.family) );
 
-	// mark invalid paths
-	highlightFilePathIfInvalid( ui->executableLine, engine.executablePath  );
-	highlightDirPathIfInvalid( ui->configDirLine, engine.configDir );
-	highlightDirPathIfInvalid( ui->dataDirLine, engine.dataDir );
+		// init auto-detected directories for path highlighting
+		autoDetectedConfigDir = engine.getDefaultConfigDir();
+		autoDetectedDataDir = engine.getDefaultDataDir();
+
+		// mark invalid paths
+		highlightFilePathIfInvalid( ui->executableLine, engine.executablePath );
+		highlightDataDirPath( ui->configDirLine, autoDetectedConfigDir );
+		highlightDataDirPath( ui->dataDirLine, autoDetectedDataDir );
+	}
 
 	connect( ui->selectExecutableBtn, &QPushButton::clicked, this, &ThisClass::selectExecutable );
 	connect( ui->selectConfigDirBtn, &QPushButton::clicked, this, &ThisClass::selectConfigDir );
@@ -149,14 +156,35 @@ void EngineDialog::autofillEngineFields()
 	// fill the initial values with some auto-detected suggestions
 	autofillEngineInfo( engine, ui->executableLine->text() );  // the path in executableLine is already converted by DialogWithPaths
 
-	// store the automatically suggested directories for path highlighting later
-	suggestedConfigDir = engine.configDir;
-	suggestedDataDir = engine.dataDir;
+	// store the automatically detected directories for path highlighting later
+	autoDetectedConfigDir = engine.configDir;
+	autoDetectedDataDir = engine.dataDir;
 
 	ui->nameLine->setText( engine.name );
 	ui->configDirLine->setText( engine.configDir );
 	ui->dataDirLine->setText( engine.dataDir );
 	ui->familyCmbBox->setCurrentIndex( int( engine.family ) );
+}
+
+bool EngineDialog::canBeAutoCreated( const QString & dirPath, const QString & autoDetectedPath )
+{
+	const QString absDirPath = pathConvertor.getAbsolutePath( dirPath );
+
+	return absDirPath == autoDetectedPath  // auto-detected paths are always absolute
+		&& !fs::isFile( absDirPath )
+		&& fs::parentDirExists( absDirPath );  // reject the path if our auto-detection is clearly a non-sense
+}
+
+void EngineDialog::highlightDataDirPath( QLineEdit * lineEdit, const QString & autoDetectedPath )
+{
+	QString enteredPath = fs::sanitizePath( lineEdit->text() );
+
+	if (enteredPath.isEmpty() || fs::isDirectory( enteredPath ))
+		unhighlightPathLine( lineEdit );
+	else if (canBeAutoCreated( enteredPath, autoDetectedPath ))
+		highlightPathLineAsToBeCreated( lineEdit );
+	else
+		highlightPathLineAsInvalid( lineEdit );
 }
 
 void EngineDialog::selectExecutable()
@@ -197,26 +225,18 @@ void EngineDialog::onExecutableChanged( const QString & text )
 	highlightFilePathIfInvalid( ui->executableLine, text );
 }
 
-void EngineDialog::onConfigDirChanged( const QString & text )
+void EngineDialog::onConfigDirChanged( const QString & )
 {
 	// We don't have to store the UI data on every change, doing it once after confirmation is enough.
 
-	if (pathConvertor.convertPath( text ) == pathConvertor.convertPath( suggestedConfigDir )
-	 && QFileInfo( suggestedDataDir ).dir().exists())  // don't highlight with green if our suggestion is nonsense
-		highlightDirPathIfFileOrCanBeCreated( ui->configDirLine, text );
-	else
-		highlightDirPathIfInvalid( ui->configDirLine, text );
+	highlightDataDirPath( ui->configDirLine, autoDetectedConfigDir );
 }
 
-void EngineDialog::onDataDirChanged( const QString & text )
+void EngineDialog::onDataDirChanged( const QString & )
 {
 	// We don't have to store the UI data on every change, doing it once after confirmation is enough.
 
-	if (pathConvertor.convertPath( text ) == pathConvertor.convertPath( suggestedDataDir )
-	 && QFileInfo( suggestedDataDir ).dir().exists())  // don't highlight with green if our suggestion is nonsense
-		highlightDirPathIfFileOrCanBeCreated( ui->dataDirLine, text );
-	else
-		highlightDirPathIfInvalid( ui->dataDirLine, text );
+	highlightDataDirPath( ui->dataDirLine, autoDetectedDataDir );
 }
 
 void EngineDialog::onFamilySelected( int /*familyIdx*/ )
@@ -264,7 +284,7 @@ void EngineDialog::onAcceptBtnClicked()
 		);
 		return;  // refuse the user's confirmation
 	}
-	else if (configDirPath != suggestedConfigDir && fs::isInvalidDir( configDirPath ))
+	else if (!fs::isDirectory( configDirPath ) && !canBeAutoCreated( configDirPath, autoDetectedConfigDir ))
 	{
 		reportUserError( "Config dir doesn't exist",
 			"Please fix the engine's config directory, such directory doesn't exist."
@@ -272,15 +292,15 @@ void EngineDialog::onAcceptBtnClicked()
 		return;  // refuse the user's confirmation
 	}
 
-	QString dataDirLineText = sanitizeInputPath( ui->dataDirLine->text() );
-	if (dataDirLineText.isEmpty())
+	QString dataDirPath = sanitizeInputPath( ui->dataDirLine->text() );
+	if (dataDirPath.isEmpty())
 	{
 		reportUserError( "Data dir cannot be empty",
 			"Please specify the engine's data directory, this launcher cannot operate without it."
 		);
 		return;  // refuse the user's confirmation
 	}
-	else if (dataDirLineText != suggestedDataDir && fs::isInvalidDir( dataDirLineText ))
+	else if (!fs::isDirectory( dataDirPath ) && !canBeAutoCreated( dataDirPath, autoDetectedDataDir ))
 	{
 		reportUserError( "Data dir doesn't exist",
 			"Please fix the engine's data directory, such directory doesn't exist."
@@ -306,7 +326,7 @@ void EngineDialog::onAcceptBtnClicked()
 	}
 
 	engine.configDir = std::move( configDirPath );
-	engine.dataDir = std::move( dataDirLineText );
+	engine.dataDir = std::move( dataDirPath );
 
 	int familyIdx = ui->familyCmbBox->currentIndex();
 	if (familyIdx < 0 || familyIdx >= int( EngineFamily::_EnumEnd ))

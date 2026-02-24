@@ -48,6 +48,9 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 	void adjustUi();
 	void onWindowShown();
 
+	bool canBeAutoCreated( const QString & dirPath, const QString & autoDetectedPath );
+	void highlightDataDirPath( QLineEdit * lineEdit, const QString & autoDetectedPath );
+
 	void autofillEngineFields();
 
  private slots:
@@ -70,10 +73,10 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 
 	Ui::EngineDialog * ui;
 
-	bool windowAlreadyShown = false;  ///< whether the main window already appeared at least once
+	bool windowAlreadyShown = false;   ///< whether the main window already appeared at least once
 
-	QString suggestedConfigDir;
-	QString suggestedDataDir;
+	QString autoDetectedConfigDir;   // always absolute
+	QString autoDetectedDataDir;
 
  public: // return values from this dialog
 

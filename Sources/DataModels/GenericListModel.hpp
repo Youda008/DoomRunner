@@ -1144,17 +1144,16 @@ class GenericListModel : public AListModel, public ListImpl {
 	{
 		QJsonParseError parseError;
 		QJsonDocument jsonDoc = QJsonDocument::fromJson( encodedData, &parseError );
-		if (!jsonDoc.isArray())
+		JsonDocumentCtx jsonDocCtx( std::move(jsonDoc), "the pasted clipboard content", {} );
+		if (!jsonDocCtx.isArray())
 		{
 			reportLogicError( u"dropMimeData", "Cannot import data", "dropped serialized items are not a valid JSON" );
 			return false;
 		}
 
 		// verify the dropped items so that we don't drop invalid ones
-		ParsingContext context;
-		context.sourceDesc = "the pasted clipboard content";
-		context.dontShowAgain = true;  // don't show message box errors to the user
-		JsonArrayCtx itemsJs( jsonDoc.array(), context );
+		jsonDocCtx.disableErrorPopUps();  // skip reporting errors, we'll report them ourselfs in a custom way
+		JsonArrayCtx itemsJs = jsonDocCtx.getRootArray();
 		std::vector< std::unique_ptr< Item > > validDroppedItems;  // cannot use QVector here because those require copyable objects
 		validDroppedItems.reserve( size_t( itemsJs.size() ) );
 		for (qsize_t i = 0; i < itemsJs.size(); i++)

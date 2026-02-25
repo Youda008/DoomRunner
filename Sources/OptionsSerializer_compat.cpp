@@ -38,7 +38,7 @@ static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, 
 {
 	preset.name = presetJs.getString( "name", InvalidItemName );
 
-	preset.isSeparator = presetJs.getBool( "separator", false, DontShowError );
+	preset.isSeparator = presetJs.getBool( "separator", false, AllowMissing );
 	if (preset.isSeparator)
 	{
 		return;
@@ -106,10 +106,10 @@ static void deserialize_pre17( const JsonObjectCtx & settingsJs, LauncherSetting
 
 	settings.pathStyle.toggleAbsolute( settingsJs.getBool( "use_absolute_paths", settings.pathStyle.isAbsolute() ) );
 
-	settings.showEngineOutput = settingsJs.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
-	settings.closeOnLaunch = settingsJs.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
-	settings.checkForUpdates = settingsJs.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
-	settings.askForSandboxPermissions = settingsJs.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
+	settings.showEngineOutput = settingsJs.getBool( "show_engine_output", settings.showEngineOutput, AllowMissing );
+	settings.closeOnLaunch = settingsJs.getBool( "close_on_launch", settings.closeOnLaunch, AllowMissing );
+	settings.checkForUpdates = settingsJs.getBool( "check_for_updates", settings.checkForUpdates, AllowMissing );
+	settings.askForSandboxPermissions = settingsJs.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, AllowMissing );
 
 	OptionsStorage storage = settingsJs.getEnum< OptionsStorage >( "options_storage", settings.launchOptsStorage );
 	settings.launchOptsStorage = storage;

@@ -1594,7 +1594,11 @@ void MainWindow::loadAppearance( const JsonDocumentCtx & optionsDoc, bool loadGe
 		appearance,
 	};
 
-	deserializeAppearanceFromJsonDoc( optionsDoc, opts, loadGeometry );
+	bool success = deserializeAppearanceFromJsonDoc( optionsDoc, opts, loadGeometry );
+	if (!success)
+	{
+		return;
+	}
 
 	restoreAppearance( opts.appearance, loadGeometry );
 }
@@ -1632,7 +1636,11 @@ void MainWindow::loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc )
 		settings,
 	};
 
-	deserializeOptionsFromJsonDoc( optionsDoc, opts );
+	bool success = deserializeOptionsFromJsonDoc( optionsDoc, opts );
+	if (!success)
+	{
+		return;
+	}
 
 	restoreLoadedOptions( std::move(opts) );
 }
@@ -1681,12 +1689,19 @@ bool MainWindow::loadCache( const QString & filePath )
 		return false;
 	}
 
-	const JsonObjectCtx & jsRoot = jsonDoc->rootObject();
-	if (JsonObjectCtx jsExeCache = jsRoot.getObject( "exe_info", DontShowError ))
+	jsonDoc->enableErrorPopUps();
+
+	JsonObjectCtx jsRoot = jsonDoc->getRootObject();
+	if (!jsRoot.isValid())
+	{
+		return false;
+	}
+
+	if (JsonObjectCtx jsExeCache = jsRoot.getObject( "exe_info", AllowMissing ))
 		g_cachedExeInfo.deserialize( jsExeCache );
-	//if (JsonObjectCtx jsWadCache = jsRoot.getObject( "wad_info", DontShowError ))
+	//if (JsonObjectCtx jsWadCache = jsRoot.getObject( "wad_info", AllowMissing ))
 	//	doom::g_cachedWadInfo.deserialize( jsWadCache );  // not needed, WAD parsing is probably faster than JSON parsing
-	if (JsonObjectCtx jsPk3Cache = jsRoot.getObject( "pk3_info", DontShowError ))
+	if (JsonObjectCtx jsPk3Cache = jsRoot.getObject( "pk3_info", AllowMissing ))
 		g_cachedPk3Info.deserialize( jsPk3Cache );
 
 	return true;
@@ -1719,7 +1734,7 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		// The previous versions auto-detected some engine info incorrectly and now it's persistently stored
 		// inside the user's options. Ask him, if he wants to to re-detect all the previously auto-detected info.
 		bool refreshAllAutoEngineInfo = false;
-		if (opts.version < Version{1,9,0})
+		if (opts.version < Version{1,9})
 		{
 			refreshAllAutoEngineInfo = askForEngineInfoRefresh() == QMessageBox::Yes;
 		}
@@ -4978,7 +4993,7 @@ void MainWindow::updateSaveFilesFromDir()
 	wdg::updateComboBoxFromDir( saveModel, ui->saveFileCmbBox, saveDir, /*recursively*/false, /*emptyItem*/false, pathConvertor,
 		/*isDesiredFile*/[&]( const QFileInfo & file ) { return file.suffix().toLower() == selectedEngine->saveFileSuffix(); }
 	);
-	
+
 	// TODO: select the latest one if nothing selected
 
 	disableSelectionCallbacks = false;

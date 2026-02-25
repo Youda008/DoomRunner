@@ -103,7 +103,7 @@ QJsonObject serialize( const Engine & engine )
 
 void deserialize( const JsonObjectCtx & engineJs, Engine & engine )
 {
-	engine.isSeparator = engineJs.getBool( "separator", false, DontShowError );
+	engine.isSeparator = engineJs.getBool( "separator", false, AllowMissing );
 	if (engine.isSeparator)
 	{
 		engine.name = engineJs.getString( "name", InvalidItemName );
@@ -141,7 +141,7 @@ QJsonObject serialize( const IWAD & iwad )
 
 void deserialize( const JsonObjectCtx & engineJs, IWAD & iwad )
 {
-	iwad.isSeparator = engineJs.getBool( "separator", false, DontShowError );
+	iwad.isSeparator = engineJs.getBool( "separator", false, AllowMissing );
 	if (iwad.isSeparator)
 	{
 		iwad.name = engineJs.getString( "name", InvalidItemName );
@@ -179,11 +179,11 @@ QJsonObject serialize( const Mod & mod )
 
 void deserialize( const JsonObjectCtx & modJs, Mod & mod )
 {
-	if ((mod.isSeparator = modJs.getBool( "separator", false, DontShowError )))
+	if ((mod.isSeparator = modJs.getBool( "separator", false, AllowMissing )))
 	{
 		mod.name = modJs.getString( "name", InvalidItemName );
 	}
-	else if ((mod.isCmdArg = modJs.getBool( "cmd_argument", false, DontShowError )))
+	else if ((mod.isCmdArg = modJs.getBool( "cmd_argument", false, AllowMissing )))
 	{
 		mod.name = modJs.getString( "value", InvalidItemName );
 		mod.checked = modJs.getBool( "checked", mod.checked );
@@ -207,7 +207,7 @@ static QJsonObject serialize( const EngineSettings & engineSettings )
 
 static void deserialize( const JsonObjectCtx & enginesJs, EngineSettings & engineSettings )
 {
-	engineSettings.defaultEngine = enginesJs.getString( "default_engine", {}, DontShowError );
+	engineSettings.defaultEngine = enginesJs.getString( "default_engine", {}, AllowMissing );
 }
 
 static QJsonObject serialize( const IwadSettings & iwadSettings )
@@ -227,7 +227,7 @@ static void deserialize( const JsonObjectCtx & iwadSettingsJs, IwadSettings & iw
 	iwadSettings.updateFromDir = iwadSettingsJs.getBool( "auto_update", iwadSettings.updateFromDir );
 	iwadSettings.dir = iwadSettingsJs.getString( "directory" );
 	iwadSettings.searchSubdirs = iwadSettingsJs.getBool( "search_subdirs", iwadSettings.searchSubdirs );
-	iwadSettings.defaultIWAD = iwadSettingsJs.getString( "default_iwad", {}, DontShowError );
+	iwadSettings.defaultIWAD = iwadSettingsJs.getString( "default_iwad", {}, AllowMissing );
 }
 
 static QJsonObject serialize( const MapSettings & mapSettings )
@@ -540,7 +540,7 @@ static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const 
 {
 	preset.name = presetJs.getString( "name", InvalidItemName );
 
-	preset.isSeparator = presetJs.getBool( "separator", false, DontShowError );
+	preset.isSeparator = presetJs.getBool( "separator", false, AllowMissing );
 	if (preset.isSeparator)
 	{
 		return;
@@ -657,13 +657,13 @@ static void deserialize( const JsonObjectCtx & settingsJs, LauncherSettings & se
 {
 	settings.pathStyle.toggleAbsolute( settingsJs.getBool( "use_absolute_paths", settings.pathStyle.isAbsolute() ) );
 
-	settings.showEngineOutput = settingsJs.getBool( "show_engine_output", settings.showEngineOutput, DontShowError );
-	settings.closeOnLaunch = settingsJs.getBool( "close_on_launch", settings.closeOnLaunch, DontShowError );
-	settings.closeOutputOnSuccess = settingsJs.getBool( "close_output_on_success", settings.closeOutputOnSuccess, DontShowError );
-	settings.checkForUpdates = settingsJs.getBool( "check_for_updates", settings.checkForUpdates, DontShowError );
-	settings.askForSandboxPermissions = settingsJs.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, DontShowError );
-	settings.hideMapHelpLabel = settingsJs.getBool( "hide_map_label", settings.hideMapHelpLabel, DontShowError );
-	settings.wrapLinesInTxtViewer = settingsJs.getBool( "wrap_lines_in_txt_viewer", settings.wrapLinesInTxtViewer, DontShowError );
+	settings.showEngineOutput = settingsJs.getBool( "show_engine_output", settings.showEngineOutput, AllowMissing );
+	settings.closeOnLaunch = settingsJs.getBool( "close_on_launch", settings.closeOnLaunch, AllowMissing );
+	settings.closeOutputOnSuccess = settingsJs.getBool( "close_output_on_success", settings.closeOutputOnSuccess, AllowMissing );
+	settings.checkForUpdates = settingsJs.getBool( "check_for_updates", settings.checkForUpdates, AllowMissing );
+	settings.askForSandboxPermissions = settingsJs.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, AllowMissing );
+	settings.hideMapHelpLabel = settingsJs.getBool( "hide_map_label", settings.hideMapHelpLabel, AllowMissing );
+	settings.wrapLinesInTxtViewer = settingsJs.getBool( "wrap_lines_in_txt_viewer", settings.wrapLinesInTxtViewer, AllowMissing );
 
 	if (JsonObjectCtx optsStorageJs = settingsJs.getObject( "options_storage" ))
 	{
@@ -708,7 +708,7 @@ static void deserialize( const JsonObjectCtx & appearanceJs, AppearanceSettings 
 		}
 	}
 
-	appearance.appStyle = appearanceJs.getString( "app_style", {}, DontShowError );  // null value means system-default
+	appearance.appStyle = appearanceJs.getString( "app_style", {}, AllowMissing );  // null value means system-default
 
 	ColorScheme colorScheme = schemeFromString( appearanceJs.getString( "color_scheme" ) );
 	if (colorScheme != ColorScheme::_EnumEnd)
@@ -944,21 +944,39 @@ QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts )
 	return QJsonDocument( rootJs );
 }
 
-void deserializeAppearanceFromJsonDoc( const JsonDocumentCtx & jsonDoc, AppearanceToLoad & opts, bool loadGeometry )
+bool deserializeAppearanceFromJsonDoc( const JsonDocumentCtx & jsonDoc, AppearanceToLoad & opts, bool loadGeometry )
 {
-	const JsonObjectCtx & rootJs = jsonDoc.rootObject();
+	// report potential parsing errors via message boxes, in case the user messed up with the options file
+	jsonDoc.enableErrorPopUps();
+
+	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
+	// we want to print a useful error message with information exactly which JSON element is broken.
+	JsonObjectCtx rootJs = jsonDoc.getRootObject();
+	if (!rootJs.isValid())
+	{
+		return false;
+	}
 
 	// deserialize directly from root, so that we don't have to break compatibility with older options
 	deserialize( rootJs, opts.appearance, loadGeometry );
+
+	return true;
 }
 
-void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLoad & opts )
+bool deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLoad & opts )
 {
+	// report potential parsing errors via message boxes, in case the user messed up with the options file
+	jsonDoc.enableErrorPopUps();
+
 	// We use this contextual mechanism instead of standard JSON getters, because when something fails to load
 	// we want to print a useful error message with information exactly which JSON element is broken.
-	const JsonObjectCtx & rootJs = jsonDoc.rootObject();
+	JsonObjectCtx rootJs = jsonDoc.getRootObject();
+	if (!rootJs.isValid())
+	{
+		return false;
+	}
 
-	QString optsVersionStr = rootJs.getString( "version", {}, DontShowError );
+	QString optsVersionStr = rootJs.getString( "version", {}, AllowMissing );
 	opts.version = Version( optsVersionStr );
 
 	if (!optsVersionStr.isEmpty() && opts.version > appVersion)  // empty version means pre-1.4 version
@@ -970,9 +988,9 @@ void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLo
 	}
 
 	// backward compatibility with older options format
-	if (optsVersionStr.isEmpty() || opts.version < Version(1,7))
+	if (optsVersionStr.isEmpty() || opts.version < Version{1,7})
 	{
-		jsonDoc.disableWarnings();  // supress "missing element" warnings when loading older version
+		jsonDoc.disableErrorPopUps();  // supress "missing element" warnings when loading older version
 
 		// try to load as the 1.6.3 format, older versions will have to accept resetting some values to defaults
 		deserialize_pre17( rootJs, opts );
@@ -980,8 +998,10 @@ void deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLo
 	else
 	{
 		if (opts.version < appVersion)
-			jsonDoc.disableWarnings();  // supress "missing element" warnings when loading older version
+			jsonDoc.disableErrorPopUps();  // supress "missing element" warnings when loading older version
 
 		deserialize( rootJs, opts );
 	}
+
+	return true;
 }

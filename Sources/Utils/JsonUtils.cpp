@@ -56,185 +56,184 @@ QString JsonValueCtx::getJsonPath() const
 //======================================================================================================================
 // JsonObjectCtx
 
-QJsonValue JsonObjectCtx::getMember( const QString & key, bool showError ) const
+QJsonValue JsonObjectCtx::getMember( const QString & key, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
+		missingKey( key, errorIfMissing );
 		return QJsonValue::Null;
 	}
 	return _wrappedObject[ key ];
 }
 
-impl::JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool showError ) const
+impl::JsonObjectCtxProxy JsonObjectCtx::getObject( const QString & key, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
-		return JsonObjectCtxProxy();
+		missingKey( key, errorIfMissing );
+		return impl::JsonObjectCtxProxy();
 	}
 	QJsonValue val = _wrappedObject[ key ];
-
 	if (!val.isObject())
 	{
-		invalidTypeAtKey( key, "object" );
-		return JsonObjectCtxProxy();
+		invalidTypeAtKey( key, "object", DoReportError );
+		return impl::JsonObjectCtxProxy();
 	}
-	return JsonObjectCtxProxy( val.toObject(), *_context, *this, key );
+	return impl::JsonObjectCtxProxy( val.toObject(), *_context, *this, key );
 }
 
-impl::JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key, bool showError ) const
+impl::JsonArrayCtxProxy JsonObjectCtx::getArray( const QString & key, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
+		missingKey( key, errorIfMissing );
 		return impl::JsonArrayCtxProxy();
 	}
 	QJsonValue val = _wrappedObject[ key ];
 	if (!val.isArray())
 	{
-		invalidTypeAtKey( key, "array" );
+		invalidTypeAtKey( key, "array", DoReportError );
 		return impl::JsonArrayCtxProxy();
 	}
 	return impl::JsonArrayCtxProxy( val.toArray(), *_context, *this, key );
 }
 
-bool JsonObjectCtx::getBool( const QString & key, bool defaultVal, bool showError ) const
+bool JsonObjectCtx::getBool( const QString & key, bool defaultVal, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
+		missingKey( key, errorIfMissing );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedObject[ key ];
 	if (!val.isBool())
 	{
-		invalidTypeAtKey( key, "bool" );
+		invalidTypeAtKey( key, "bool", DoReportError );
 		return defaultVal;
 	}
 	return val.toBool();
 }
 
-int JsonObjectCtx::getInt( const QString & key, int defaultVal, bool showError ) const
+int JsonObjectCtx::getInt( const QString & key, int defaultVal, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
+		missingKey( key, errorIfMissing );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedObject[ key ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtKey( key, "int" );
+		invalidTypeAtKey( key, "int", DoReportError );
 		return defaultVal;
 	}
 	double d = val.toDouble();
 	if (d < INT_MIN || d > INT_MAX)
 	{
-		invalidTypeAtKey( key, "int" );
+		invalidTypeAtKey( key, "int", DoReportError );
 		return defaultVal;
 	}
 	return int(d);
 }
 
-uint JsonObjectCtx::getUInt( const QString & key, uint defaultVal, bool showError ) const
+uint JsonObjectCtx::getUInt( const QString & key, uint defaultVal, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
+		missingKey( key, errorIfMissing );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedObject[ key ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtKey( key, "uint" );
+		invalidTypeAtKey( key, "uint", DoReportError );
 		return defaultVal;
 	}
 	double d = val.toDouble();
 	if (d < 0 || d > UINT_MAX)
 	{
-		invalidTypeAtKey( key, "uint" );
+		invalidTypeAtKey( key, "uint", DoReportError );
 		return defaultVal;
 	}
 	return uint(d);
 }
 
-uint16_t JsonObjectCtx::getUInt16( const QString & key, uint16_t defaultVal, bool showError ) const
+uint16_t JsonObjectCtx::getUInt16( const QString & key, uint16_t defaultVal, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
+		missingKey( key, errorIfMissing );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedObject[ key ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtKey( key, "uint16" );
+		invalidTypeAtKey( key, "uint16", DoReportError );
 		return defaultVal;
 	}
 	double d = val.toDouble();
 	if (d < 0 || d > UINT16_MAX)
 	{
-		invalidTypeAtKey( key, "uint16" );
+		invalidTypeAtKey( key, "uint16", DoReportError );
 		return defaultVal;
 	}
 	return uint16_t(d);
 }
 
-int64_t JsonObjectCtx::getInt64( const QString & key, int64_t defaultVal, bool showError ) const
+int64_t JsonObjectCtx::getInt64( const QString & key, int64_t defaultVal, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
+		missingKey( key, errorIfMissing );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedObject[ key ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtKey( key, "int64" );
+		invalidTypeAtKey( key, "int64", DoReportError );
 		return defaultVal;
 	}
 	double d = val.toDouble();
 	if (d < (INT64_MIN>>10) || d > (INT64_MAX>>10))
 	{
-		invalidTypeAtKey( key, "int64" );
+		invalidTypeAtKey( key, "int64", DoReportError );
 		return defaultVal;
 	}
 	return int64_t(d);
 }
 
-double JsonObjectCtx::getDouble( const QString & key, double defaultVal, bool showError ) const
+double JsonObjectCtx::getDouble( const QString & key, double defaultVal, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
+		missingKey( key, errorIfMissing );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedObject[ key ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtKey( key, "double" );
+		invalidTypeAtKey( key, "double", DoReportError );
 		return defaultVal;
 	}
 	return val.toDouble();
 }
 
-QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool showError ) const
+QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool errorIfMissing ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
-		missingKey( key, showError );
+		missingKey( key, errorIfMissing );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedObject[ key ];
 	if (val.isNull())
 	{
-		invalidTypeAtKey( key, "string", showError );
+		invalidTypeAtKey( key, "string", errorIfMissing );
 		return defaultVal;
 	}
 	else if (!val.isString())
 	{
-		invalidTypeAtKey( key, "string" );
+		invalidTypeAtKey( key, "string", DoReportError );
 		return defaultVal;
 	}
 	return val.toString();
@@ -244,185 +243,185 @@ QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool 
 //======================================================================================================================
 // JsonArrayCtx
 
-QJsonValue JsonArrayCtx::getMember( qsize_t index, bool showError ) const
+QJsonValue JsonArrayCtx::getMember( qsize_t index ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
+		indexOutOfBounds( index, DoReportError );
 		return QJsonValue::Null;
 	}
 	return _wrappedArray[ index ];
 }
 
-impl::JsonObjectCtxProxy JsonArrayCtx::getObject( qsize_t index, bool showError ) const
+impl::JsonObjectCtxProxy JsonArrayCtx::getObject( qsize_t index ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
+		indexOutOfBounds( index, DoReportError );
 		return impl::JsonObjectCtxProxy();
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (!val.isObject())
 	{
-		invalidTypeAtIdx( index, "object" );
+		invalidTypeAtIdx( index, "object", DoReportError );
 		return impl::JsonObjectCtxProxy();
 	}
 	return impl::JsonObjectCtxProxy( val.toObject(), *_context, *this, index );
 }
 
-impl::JsonArrayCtxProxy JsonArrayCtx::getArray( qsize_t index, bool showError ) const
+impl::JsonArrayCtxProxy JsonArrayCtx::getArray( qsize_t index ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
-		return JsonArrayCtxProxy();
+		indexOutOfBounds( index, DoReportError );
+		return impl::JsonArrayCtxProxy();
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (!val.isArray())
 	{
-		invalidTypeAtIdx( index, "array" );
-		return JsonArrayCtxProxy();
+		invalidTypeAtIdx( index, "array", DoReportError );
+		return impl::JsonArrayCtxProxy();
 	}
-	return JsonArrayCtxProxy( val.toArray(), *_context, *this, index );
+	return impl::JsonArrayCtxProxy( val.toArray(), *_context, *this, index );
 }
 
-bool JsonArrayCtx::getBool( qsize_t index, bool defaultVal, bool showError ) const
+bool JsonArrayCtx::getBool( qsize_t index, bool defaultVal ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
+		indexOutOfBounds( index, DoReportError );
 		return false;
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (!val.isBool())
 	{
-		invalidTypeAtIdx( index, "bool" );
+		invalidTypeAtIdx( index, "bool", DoReportError );
 		return defaultVal;
 	}
 	return val.toBool();
 
 }
 
-int JsonArrayCtx::getInt( qsize_t index, int defaultVal, bool showError ) const
+int JsonArrayCtx::getInt( qsize_t index, int defaultVal ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
+		indexOutOfBounds( index, DoReportError );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtIdx( index, "int" );
+		invalidTypeAtIdx( index, "int", DoReportError );
 		return defaultVal;
 	}
 	double d = val.toDouble();
 	if (d < INT_MIN || d > INT_MAX)
 	{
-		invalidTypeAtIdx( index, "int" );
+		invalidTypeAtIdx( index, "int", DoReportError );
 		return defaultVal;
 	}
 	return int(d);
 }
 
-uint JsonArrayCtx::getUInt( qsize_t index, uint defaultVal, bool showError ) const
+uint JsonArrayCtx::getUInt( qsize_t index, uint defaultVal ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
+		indexOutOfBounds( index, DoReportError );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtIdx( index, "uint" );
+		invalidTypeAtIdx( index, "uint", DoReportError );
 		return defaultVal;
 	}
 	double d = val.toDouble();
 	if (d < 0 || d > UINT_MAX)
 	{
-		invalidTypeAtIdx( index, "int" );
+		invalidTypeAtIdx( index, "int", DoReportError );
 		return defaultVal;
 	}
 	return uint(d);
 }
 
-uint16_t JsonArrayCtx::getUInt16( qsize_t index, uint16_t defaultVal, bool showError ) const
+uint16_t JsonArrayCtx::getUInt16( qsize_t index, uint16_t defaultVal ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
+		indexOutOfBounds( index, DoReportError );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtIdx( index, "uint" );
+		invalidTypeAtIdx( index, "uint", DoReportError );
 		return defaultVal;
 	}
 	double d = val.toDouble();
 	if (d < 0 || d > UINT16_MAX)
 	{
-		invalidTypeAtIdx( index, "int" );
+		invalidTypeAtIdx( index, "int", DoReportError );
 		return defaultVal;
 	}
 	return uint16_t(d);
 }
 
-int64_t JsonArrayCtx::getInt64( qsize_t index, int64_t defaultVal, bool showError ) const
+int64_t JsonArrayCtx::getInt64( qsize_t index, int64_t defaultVal ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
+		indexOutOfBounds( index, DoReportError );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtIdx( index, "int64" );
+		invalidTypeAtIdx( index, "int64", DoReportError );
 		return defaultVal;
 	}
 	double d = val.toDouble();
 	if (d < (INT64_MIN>>10) || d > (INT64_MAX>>10))
 	{
-		invalidTypeAtIdx( index, "int64" );
+		invalidTypeAtIdx( index, "int64", DoReportError );
 		return defaultVal;
 	}
 	return int64_t(d);
 }
 
-double JsonArrayCtx::getDouble( qsize_t index, double defaultVal, bool showError ) const
+double JsonArrayCtx::getDouble( qsize_t index, double defaultVal ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
+		indexOutOfBounds( index, DoReportError );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (!val.isDouble())
 	{
-		invalidTypeAtIdx( index, "double" );
+		invalidTypeAtIdx( index, "double", DoReportError );
 		return defaultVal;
 	}
 	return val.toDouble();
 }
 
-QString JsonArrayCtx::getString( qsize_t index, QString defaultVal, bool showError ) const
+QString JsonArrayCtx::getString( qsize_t index, QString defaultVal ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
-		indexOutOfBounds( index, showError );
+		indexOutOfBounds( index, DoReportError );
 		return defaultVal;
 	}
 	QJsonValue val = _wrappedArray[ index ];
 	if (val.isNull())
 	{
-		invalidTypeAtIdx( index, "string", showError );
+		invalidTypeAtIdx( index, "string", DoReportError );
 		return defaultVal;
 	}
 	else if (!val.isString())
 	{
-		invalidTypeAtIdx( index, "string" );
+		invalidTypeAtIdx( index, "string", DoReportError );
 		return defaultVal;
 	}
 	return val.toString();
@@ -430,30 +429,75 @@ QString JsonArrayCtx::getString( qsize_t index, QString defaultVal, bool showErr
 
 
 //======================================================================================================================
+// JsonDocumentCtx
+
+QJsonValue::Type JsonDocumentCtx::type() const
+{
+	if (_wrappedDoc.isNull())
+		return QJsonValue::Null;
+	else if (_wrappedDoc.isObject())
+		return QJsonValue::Object;
+	else if (_wrappedDoc.isArray())
+		return QJsonValue::Array;
+	else
+		return QJsonValue::Undefined;
+}
+
+JsonObjectCtx JsonDocumentCtx::getRootObject() const
+{
+	if (!_wrappedDoc.isObject())
+	{
+		invalidTypeOfRoot( "object", DoReportError );
+		return JsonObjectCtx();
+	}
+	return JsonObjectCtx( _wrappedDoc.object(), _context );
+}
+
+JsonArrayCtx JsonDocumentCtx::getRootArray() const
+{
+	if (!_wrappedDoc.isArray())
+	{
+		invalidTypeOfRoot( "array", DoReportError );
+		return JsonArrayCtx();
+	}
+	return JsonArrayCtx( _wrappedDoc.array(), _context );
+}
+
+
+//======================================================================================================================
 // error handling
 
+static void basicMessageBox( QMessageBox::Icon icon, const QString & title, const QString & message )
+{
+	QMessageBox msgBox( icon, title, message, QMessageBox::Ok );
+
+	msgBox.exec();
+}
+
+/// Returns whether the user wants this message box to keep appearing for these types of errors.
 static bool checkableMessageBox( QMessageBox::Icon icon, const QString & title, const QString & message )
 {
 	QMessageBox msgBox( icon, title, message, QMessageBox::Ok );
+
 	QCheckBox * chkBox = new QCheckBox( "ignore the rest of these warnings" );
-	msgBox.setCheckBox( chkBox );  // msgBox takes ownership of chkBox
+	msgBox.setCheckBox( chkBox );  // msgBox takes the ownership of chkBox
 
 	msgBox.exec();
 
-	return chkBox->isChecked();
+	return !chkBox->isChecked();
 }
 
 static const char * JsonTypeStrings [] =
 {
-	"Null",
-	"Bool",
-	"Double",
-	"String",
-	"Array",
-	"Object",
-	"Undefined"
+	"null",
+	"bool",
+	"double",
+	"string",
+	"array",
+	"object",
+	"undefined"
 };
-const char * jsonTypeToStr( QJsonValue::Type type )
+static const char * jsonTypeToStr( QJsonValue::Type type )
 {
 	if (size_t(type) < std::size(JsonTypeStrings))
 		return JsonTypeStrings[ size_t(type) ];
@@ -461,67 +505,84 @@ const char * jsonTypeToStr( QJsonValue::Type type )
 		return "<invalid>";
 }
 
-void JsonObjectCtx::missingKey( const QString & key, bool showError ) const
+void JsonObjectCtx::missingKey( const QString & key, bool reportError ) const
 {
-	QString message = "Element "%elemPath( key )%" is missing in "%_context->sourceDesc%", using default value.";
-
 	_context->errorOccured = true;
 
-	if (showError)
+	if (reportError)
 	{
-		if (!_context->dontShowAgain)
-			_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
+		QString message = "Element "%elemPath( key )%" is missing in "%_context->sourceName%", using default value.";
+
+		if (_context->showErrorMsgBox)
+			_context->showErrorMsgBox = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
 		logRuntimeError( u"JsonObjectCtx" ).noquote() << message;
 	}
 }
 
-void JsonArrayCtx::indexOutOfBounds( qsize_t index, bool showError ) const
+void JsonArrayCtx::indexOutOfBounds( qsize_t index, bool reportError ) const
 {
-	QString message =
-		"JSON array "%getJsonPath()%" does not have index "%QString::number( index )%".\n"
-		"This is a bug. Please make a copy of "%_context->sourceDesc%" before clicking Ok, "
-		"and then create an issue on Github page with that file attached.";
-
 	_context->errorOccured = true;
 
-	if (showError)
+	if (reportError)
 	{
-		if (!_context->dontShowAgain)
-			_context->dontShowAgain = checkableMessageBox( QMessageBox::Critical, "Error loading JSON file", message );
-		logRuntimeError( u"JsonArrayCtx" ).noquote() << message;
+		QString message =
+			"JSON array "%getJsonPath()%" does not have index "%QString::number( index )%".\n"
+			"This is a bug. Please make a copy of "%_context->filePath%" before clicking Ok, "
+			"and then create an issue on Github page with that file attached.";
+
+		if (_context->showErrorMsgBox)
+			_context->showErrorMsgBox = checkableMessageBox( QMessageBox::Critical, "Error loading JSON file", message );
+		logLogicError( u"JsonArrayCtx" ).noquote() << message;
 	}
 }
 
-void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expectedType, bool showError ) const
+void JsonDocumentCtx::invalidTypeOfRoot( const QString & expectedType, bool reportError ) const
 {
-	QString actualType = jsonTypeToStr( _wrappedObject[ key ].type() );
-	QString message =
-		"Element "%elemPath( key )%" in "%_context->sourceDesc%" has invalid type. "
-		"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
+	_context.errorOccured = true;
 
+	if (reportError)
+	{
+		QString actualType = jsonTypeToStr( this->type() );
+		QString message =
+			"Root element in "%_context.sourceName%" has invalid type. "
+			"Expected "%expectedType%", but found "%actualType%".";
+
+		if (_context.showErrorMsgBox)
+			basicMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
+		logRuntimeError( u"JsonDocumentCtx" ).noquote() << message;
+	}
+}
+
+void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expectedType, bool reportError ) const
+{
 	_context->errorOccured = true;
 
-	if (showError)
+	if (reportError)
 	{
-		if (!_context->dontShowAgain)
-			_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
+		QString actualType = jsonTypeToStr( _wrappedObject[ key ].type() );
+		QString message =
+			"Element "%elemPath( key )%" in "%_context->sourceName%" has invalid type. "
+			"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
+
+		if (_context->showErrorMsgBox)
+			_context->showErrorMsgBox = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
 		logRuntimeError( u"JsonObjectCtx" ).noquote() << message;
 	}
 }
 
-void JsonArrayCtx::invalidTypeAtIdx( qsize_t index, const QString & expectedType, bool showError ) const
+void JsonArrayCtx::invalidTypeAtIdx( qsize_t index, const QString & expectedType, bool reportError ) const
 {
-	QString actualType = jsonTypeToStr( _wrappedArray[ index ].type() );
-	QString message =
-		"Element "%elemPath( index )%" in "%_context->sourceDesc%" has invalid type. "
-		"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
-
 	_context->errorOccured = true;
 
-	if (showError)
+	if (reportError)
 	{
-		if (!_context->dontShowAgain)
-			_context->dontShowAgain = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
+		QString actualType = jsonTypeToStr( _wrappedArray[ index ].type() );
+		QString message =
+			"Element "%elemPath( index )%" in "%_context->sourceName%" has invalid type. "
+			"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
+
+		if (_context->showErrorMsgBox)
+			_context->showErrorMsgBox = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
 		logRuntimeError( u"JsonArrayCtx" ).noquote() << message;
 	}
 }
@@ -534,11 +595,6 @@ QString JsonObjectCtx::elemPath( const QString & elemName ) const
 QString JsonArrayCtx::elemPath( qsize_t index ) const
 {
 	return getJsonPath() + "/[" + QString::number( index ) + ']';
-}
-
-QString JsonDocumentCtx::fileName() const
-{
-	return fs::getFileNameFromPath( _context.filePath );
 }
 
 
@@ -563,6 +619,8 @@ bool writeJsonToFile( const QJsonDocument & jsonDoc, const QString & filePath, c
 
 std::unique_ptr< JsonDocumentCtx > readJsonFromFile( const QString & filePath, const QString & fileDesc, bool ignoreEmpty )
 {
+	QString fileName = fs::getFileNameFromPath( filePath );
+
 	QByteArray bytes;
 	QString readError = fs::readWholeFile( filePath, bytes );
 	if (!readError.isEmpty())
@@ -583,11 +641,11 @@ std::unique_ptr< JsonDocumentCtx > readJsonFromFile( const QString & filePath, c
 	if (jsonDoc.isNull())
 	{
 		reportRuntimeError( nullptr, "Error loading "+fileDesc,
-			"Failed to parse \""%fs::getFileNameFromPath(filePath)%"\": "%parseError.errorString()%"\n"
+			"Failed to parse \""%fileName%"\": "%parseError.errorString()%"\n"
 			"You can either open it in notepad and try to repair it, or delete it and start from scratch."
 		);
 		return std::make_unique< JsonDocumentCtx >();  // invalid JsonDocument
 	}
 
-	return std::make_unique< JsonDocumentCtx >( filePath, jsonDoc );
+	return std::make_unique< JsonDocumentCtx >( jsonDoc, std::move(fileName), filePath );
 }

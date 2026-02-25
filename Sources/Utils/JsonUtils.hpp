@@ -45,16 +45,24 @@
 //    that is then automatically converted (by a constructor) to the final JsonObjectCtx/JsonArrayCtx.
 
 
-constexpr bool ShowError = true;
-constexpr bool DontShowError = false;
+// values for bool errorIfMissing
+constexpr bool MustBePresent = true;
+constexpr bool AllowMissing = false;
+
+// values for bool reportError
+constexpr bool DoReportError = true;
+constexpr bool DontReportError = false;
 
 /// data related to an ongoing parsing process
 struct ParsingContext
 {
-	QString sourceDesc;  ///< short description of the source of the JSON string that is being parsed, can be file name or something else
+	QString sourceName;  ///< short description of the source of the JSON string that is being parsed, can be file name or something else
 	QString filePath;    ///< path of the file that is being parsed, can be empty if the source is not a file
 	bool errorOccured = false;   ///< true if at least one problem has been encountered during parsing
-	bool dontShowAgain = false;  ///< whether to show "invalid element" errors to the user
+	bool showErrorMsgBox = false;  ///< whether to show message box to the user when a missing or invalid item is encountered
+
+	ParsingContext( QString sourceName = {}, QString filePath = {} )
+	    : sourceName( std::move(sourceName) ), filePath( std::move(filePath) ) {}
 };
 
 
@@ -223,50 +231,50 @@ class JsonObjectCtx : public impl::JsonObjectCtxProxy {
 
 	/// Returns a sub-value at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid value. */
-	QJsonValue getMember( const QString & key, bool showError = true ) const;
+	QJsonValue getMember( const QString & key, bool errorIfMissing = true ) const;
 
 	/// Returns a sub-object at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
-	impl::JsonObjectCtxProxy getObject( const QString & key, bool showError = true ) const;
+	impl::JsonObjectCtxProxy getObject( const QString & key, bool errorIfMissing = true ) const;
 
 	/// Returns a sub-array at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns invalid object. */
-	impl::JsonArrayCtxProxy getArray( const QString & key, bool showError = true ) const;
+	impl::JsonArrayCtxProxy getArray( const QString & key, bool errorIfMissing = true ) const;
 
 	/// Returns a bool at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	bool getBool( const QString & key, bool defaultVal, bool showError = true ) const;
+	bool getBool( const QString & key, bool defaultVal, bool errorIfMissing = true ) const;
 
 	/// Returns an int at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	int getInt( const QString & key, int defaultVal, bool showError = true ) const;
+	int getInt( const QString & key, int defaultVal, bool errorIfMissing = true ) const;
 
 	/// Returns an uint at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	uint getUInt( const QString & key, uint defaultVal, bool showError = true ) const;
+	uint getUInt( const QString & key, uint defaultVal, bool errorIfMissing = true ) const;
 
 	/// Returns an uint16_t at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	uint16_t getUInt16( const QString & key, uint16_t defaultVal, bool showError = true ) const;
+	uint16_t getUInt16( const QString & key, uint16_t defaultVal, bool errorIfMissing = true ) const;
 
 	/// Returns an int64_t at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	int64_t getInt64( const QString & key, int64_t defaultVal, bool showError = true ) const;
+	int64_t getInt64( const QString & key, int64_t defaultVal, bool errorIfMissing = true ) const;
 
 	/// Returns a double at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	double getDouble( const QString & key, double defaultVal, bool showError = true ) const;
+	double getDouble( const QString & key, double defaultVal, bool errorIfMissing = true ) const;
 
 	/// Returns a string at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	QString getString( const QString & key, QString defaultVal = QString(), bool showError = true ) const;
+	QString getString( const QString & key, QString defaultVal = QString(), bool errorIfMissing = true ) const;
 
 	/// Returns an enum at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
 	template< typename Enum >
-	Enum getEnum( const QString & key, Enum defaultVal, bool showError = true ) const
+	Enum getEnum( const QString & key, Enum defaultVal, bool errorIfMissing = true ) const
 	{
-		int intVal = getInt( key, int(defaultVal), showError );
+		int intVal = getInt( key, int(defaultVal), errorIfMissing );
 		if (intVal <= enumSize< Enum >()) {
 			return Enum( intVal );
 		} else {
@@ -277,12 +285,12 @@ class JsonObjectCtx : public impl::JsonObjectCtxProxy {
 
  protected:
 
-	void missingKey( const QString & key, bool showError ) const;
+	void missingKey( const QString & key, bool reportError ) const;
 	QString elemPath( const QString & elemName ) const;
 
  public:  // for parsing custom data from string outside of this class (for example: RGB color)
 
-	void invalidTypeAtKey( const QString & key, const QString & expectedType, bool showError = true ) const;
+	void invalidTypeAtKey( const QString & key, const QString & expectedType, bool reportError = true ) const;
 
 };
 
@@ -307,50 +315,50 @@ class JsonArrayCtx : public impl::JsonArrayCtxProxy {
 
 	/// Returns a sub-value at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid value. */
-	QJsonValue getMember( qsize_t index, bool showError = true ) const;
+	QJsonValue getMember( qsize_t index ) const;
 
 	/// Returns a sub-object at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid array. */
-	impl::JsonObjectCtxProxy getObject( qsize_t index, bool showError = true ) const;
+	impl::JsonObjectCtxProxy getObject( qsize_t index ) const;
 
 	/// Returns a sub-array at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns invalid array. */
-	impl::JsonArrayCtxProxy getArray( qsize_t index, bool showError = true ) const;
+	impl::JsonArrayCtxProxy getArray( qsize_t index ) const;
 
 	/// Returns a bool at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	bool getBool( qsize_t index, bool defaultVal, bool showError = true ) const;
+	bool getBool( qsize_t index, bool defaultVal ) const;
 
 	/// Returns an int at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	int getInt( qsize_t index, int defaultVal, bool showError = true ) const;
+	int getInt( qsize_t index, int defaultVal ) const;
 
 	/// Returns an uint at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	uint getUInt( qsize_t index, uint defaultVal, bool showError = true ) const;
+	uint getUInt( qsize_t index, uint defaultVal ) const;
 
 	/// Returns an uint16_t at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	uint16_t getUInt16( qsize_t index, uint16_t defaultVal, bool showError = true ) const;
+	uint16_t getUInt16( qsize_t index, uint16_t defaultVal ) const;
 
 	/// Returns an int64_t at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	int64_t getInt64( qsize_t index, int64_t defaultVal, bool showError = true ) const;
+	int64_t getInt64( qsize_t index, int64_t defaultVal ) const;
 
 	/// Returns a double at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	double getDouble( qsize_t index, double defaultVal, bool showError = true ) const;
+	double getDouble( qsize_t index, double defaultVal ) const;
 
 	/// Returns a string at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	QString getString( qsize_t index, QString defaultVal = QString(), bool showError = true ) const;
+	QString getString( qsize_t index, QString defaultVal = QString() ) const;
 
 	/// Returns a sub-object at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
 	template< typename Enum >
-	Enum getEnum( qsize_t index, Enum defaultVal, bool showError = true ) const
+	Enum getEnum( qsize_t index, Enum defaultVal ) const
 	{
-		int intVal = getInt( index, int(defaultVal), showError );
+		int intVal = getInt( index, int(defaultVal) );
 		if (intVal <= enumSize< Enum >()) {
 			return Enum( intVal );
 		} else {
@@ -361,18 +369,18 @@ class JsonArrayCtx : public impl::JsonArrayCtxProxy {
 
  protected:
 
-	void indexOutOfBounds( qsize_t index, bool showError ) const;
+	void indexOutOfBounds( qsize_t index, bool reportError ) const;
 	QString elemPath( qsize_t index ) const;
 
  public:  // for parsing custom data from string outside of this class (for example: RGB color)
 
-	void invalidTypeAtIdx( qsize_t index, const QString & expectedType, bool showError = true ) const;
+	void invalidTypeAtIdx( qsize_t index, const QString & expectedType, bool reportError = true ) const;
 
 };
 
 class JsonDocumentCtx {
 
-	JsonObjectCtx _rootObject;
+	QJsonDocument _wrappedDoc;
 
 	mutable ParsingContext _context;  ///< document-wide data related to an ongoing parsing process, each element has a pointer to this
 
@@ -380,10 +388,10 @@ class JsonDocumentCtx {
 
 	/// Constructs invalid JSON document.
 	/** This should only be used to indicate a failure. Anything else than isValid() or operator bool() is undefined. */
-	JsonDocumentCtx() : _rootObject() {}
+	JsonDocumentCtx() : _wrappedDoc(), _context() {}
 
-	JsonDocumentCtx( QString filePath, const QJsonDocument & wrappedDoc )
-		: _rootObject( wrappedDoc.object(), _context )  { _context.filePath = std::move(filePath); }
+	JsonDocumentCtx( QJsonDocument wrappedDoc, QString sourceName, QString filePath )
+		: _wrappedDoc( std::move(wrappedDoc) ), _context( std::move(sourceName), std::move(filePath) ) {}
 
 	// _rootObject has ptr to _context, if this gets moved/copied, it will have pointer to a different (possibly temporary) object
 	JsonDocumentCtx( const JsonDocumentCtx & ) = delete;
@@ -392,16 +400,25 @@ class JsonDocumentCtx {
 	JsonDocumentCtx & operator=( JsonDocumentCtx && ) = delete;
 
 	/// If this returns false, this object must not be used.
-	bool isValid() const                       { return _rootObject.isValid(); }
+	bool isValid() const                       { return !_wrappedDoc.isNull(); }
 	operator bool() const                      { return isValid(); }
 
-	const QString & sourceDesc() const         { return _context.sourceDesc; }
+	QJsonValue::Type type() const;
+	bool isObject() const                      { return _wrappedDoc.isObject(); }
+	bool isArray() const                       { return _wrappedDoc.isArray(); }
+
+	JsonObjectCtx getRootObject() const;
+	JsonArrayCtx getRootArray() const;
+
+	const QString & sourceName() const         { return _context.sourceName; }
 	const QString & filePath() const           { return _context.filePath; }
-	      QString   fileName() const;
 
-	const JsonObjectCtx & rootObject() const   { return _rootObject; }
+	void enableErrorPopUps() const             { _context.showErrorMsgBox = true; }
+	void disableErrorPopUps() const            { _context.showErrorMsgBox = false; }
 
-	void disableWarnings() const               { _context.dontShowAgain = true; }
+ private:
+
+	void invalidTypeOfRoot( const QString & expectedType, bool reportError = true ) const;
 
 };
 

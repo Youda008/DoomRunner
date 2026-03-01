@@ -342,6 +342,14 @@ struct ModSettings
 	bool showIcons = true;   ///< whether the mod list should show file-system icons provided by the OS
 };
 
+struct SearchState
+{
+	//QString phrase;
+	bool panelExpanded = false;
+	bool caseSensitive = false;
+	bool useRegex = false;
+};
+
 enum OptionsStorage
 {
 	DontStore,       ///< Everytime the launcher is closed and re-opened, the options are reset to defaults.
@@ -371,6 +379,7 @@ struct LauncherSettings : public StorageSettings  // inherited instead of includ
 	bool askForSandboxPermissions = true;
 	bool hideMapHelpLabel = false;
 	bool wrapLinesInTxtViewer = false;
+	SearchState presetSearch;
 
 	void assign( const StorageSettings & other ) { static_cast< StorageSettings & >( *this ) = other; }
 };

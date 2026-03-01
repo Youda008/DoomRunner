@@ -32,6 +32,16 @@ class SearchPanel : public QObject {
 	SearchPanel( QToolButton * showBtn, QLineEdit * searchPhraseLine, QCheckBox * caseChkBox, QCheckBox * regexChkBox );
 	~SearchPanel() override = default;
 
+	bool isExpanded() const;
+
+	QString searchPhrase() const;
+	void setSearchPhrase( const QString & phrase );
+
+	bool caseSensitive() const;
+	void toggleCaseSensitive( bool enable );
+	bool useRegex() const;
+	void toggleUseRegex( bool enable );
+
  public slots:
 
 	void expand();
@@ -39,12 +49,17 @@ class SearchPanel : public QObject {
 	void toggleExpanded();
 	void setExpanded( bool expanded );
 
-	void changeSearchPhrase( const QString & phrase );
-	void toggleCaseSensitive( bool enable );
-	void toggleUseRegex( bool enable );
+	void openSearch();
+
+ private slots:
+
+	void onSearchPhraseChanged( const QString & phrase );
+	void onCaseSensitiveToggled( bool enabled );
+	void onUseRegexToggled( bool enabled );
 
  signals:
 
+	void expandedToggled( bool expanded );
 	void searchParamsChanged( const QString & phrase, bool caseSensitive, bool useRegex );
 
  public:

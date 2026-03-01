@@ -21,9 +21,14 @@ SearchPanel::SearchPanel(
 	showBtn( showBtn ), searchLine( searchLine ), caseChkBox( caseChkBox ), regexChkBox( regexChkBox )
 {
 	connect( showBtn, &QToolButton::clicked, this, &ThisClass::toggleExpanded );
-	connect( searchLine, &QLineEdit::textChanged, this, &ThisClass::changeSearchPhrase );
-	connect( caseChkBox, &QCheckBox::toggled, this, &ThisClass::toggleCaseSensitive );
-	connect( regexChkBox, &QCheckBox::toggled, this, &ThisClass::toggleUseRegex );
+	connect( searchLine, &QLineEdit::textChanged, this, &ThisClass::onSearchPhraseChanged );
+	connect( caseChkBox, &QCheckBox::toggled, this, &ThisClass::onCaseSensitiveToggled );
+	connect( regexChkBox, &QCheckBox::toggled, this, &ThisClass::onUseRegexToggled );
+}
+
+bool SearchPanel::isExpanded() const
+{
+	return searchLine->isVisible();
 }
 
 void SearchPanel::setExpanded( bool expanded )
@@ -38,12 +43,13 @@ void SearchPanel::setExpanded( bool expanded )
 	regexChkBox->setVisible( expanded );
 
 	showBtn->setArrowType( expanded ? Qt::ArrowType::DownArrow : Qt::ArrowType::UpArrow );
+
+	emit expandedToggled( expanded );
 }
 
 void SearchPanel::expand()
 {
 	setExpanded( true );
-	searchLine->setFocus();
 }
 
 void SearchPanel::collapse()
@@ -53,20 +59,56 @@ void SearchPanel::collapse()
 
 void SearchPanel::toggleExpanded()
 {
-	setExpanded( !searchLine->isVisible() );
+	setExpanded( !isExpanded() );
 }
 
-void SearchPanel::changeSearchPhrase( const QString & phrase )
+void SearchPanel::openSearch()
 {
-	emit searchParamsChanged( phrase, caseChkBox->isChecked(), regexChkBox->isChecked() );
+	setExpanded( true );
+	searchLine->setFocus();
+}
+
+QString SearchPanel::searchPhrase() const
+{
+	return searchLine->text();
+}
+
+void SearchPanel::setSearchPhrase( const QString & phrase )
+{
+	searchLine->setText( phrase );
+}
+
+bool SearchPanel::caseSensitive() const
+{
+	return caseChkBox->isChecked();
 }
 
 void SearchPanel::toggleCaseSensitive( bool enable )
 {
-	emit searchParamsChanged( searchLine->text(), enable, regexChkBox->isChecked() );
+	caseChkBox->setChecked( enable );
+}
+
+bool SearchPanel::useRegex() const
+{
+	return regexChkBox->isChecked();
 }
 
 void SearchPanel::toggleUseRegex( bool enable )
 {
-	emit searchParamsChanged( searchLine->text(), caseChkBox->isChecked(), enable );
+	regexChkBox->setChecked( enable );
+}
+
+void SearchPanel::onSearchPhraseChanged( const QString & phrase )
+{
+	emit searchParamsChanged( phrase, caseSensitive(), useRegex() );
+}
+
+void SearchPanel::onCaseSensitiveToggled( bool enabled )
+{
+	emit searchParamsChanged( searchPhrase(), enabled, useRegex() );
+}
+
+void SearchPanel::onUseRegexToggled( bool enabled )
+{
+	emit searchParamsChanged( searchPhrase(), caseSensitive(), enabled );
 }

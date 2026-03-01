@@ -98,6 +98,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void onPresetDataChanged( int row, int count, const QVector<int> & roles );
 	void onPresetsReordered();
 
+	void searchPanelToggled( bool expanded );
 	void searchPresets( const QString & phrase, bool caseSensitive, bool useRegex );
 
 	void onMapIconsToggled();
@@ -243,6 +244,8 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 	void restoreGlobalOptions( const GlobalOptions & opts );
 
 	void restoreEnvVars( const EnvVars & envVars, QTableWidget * table );
+
+	void restoreSearchPanel( SearchPanel * panel, const SearchState & state );
 
 	void restoreAppearance( const AppearanceSettings & appearance, bool restoreGeometry );
 	void restoreWindowGeometry( const WindowGeometry & geometry );

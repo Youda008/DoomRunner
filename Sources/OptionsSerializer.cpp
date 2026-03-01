@@ -617,6 +617,26 @@ static void deserialize( const JsonObjectCtx & presetJs, Preset & preset, const 
 		deserialize( envVarsJs, preset.envVars );
 }
 
+static QJsonObject serialize( const SearchState & search )
+{
+	QJsonObject searchJs;
+
+	searchJs["panel_expanded"] = search.panelExpanded;
+	//searchJs["search_phrase"] = search.phrase;
+	searchJs["case_sensitive"] = search.caseSensitive;
+	searchJs["use_regex"] = search.useRegex;
+
+	return searchJs;
+}
+
+static void deserialize( const JsonObjectCtx & searchJs, SearchState & search )
+{
+	search.panelExpanded = searchJs.getBool( "panel_expanded", search.panelExpanded );
+	//search.phrase = searchJs.getString( "search_phrase", search.phrase );
+	search.caseSensitive = searchJs.getBool( "case_sensitive", search.caseSensitive );
+	search.useRegex = searchJs.getBool( "use_regex", search.useRegex );
+}
+
 static QJsonObject serialize( const StorageSettings & settings )
 {
 	QJsonObject settingsJs;
@@ -650,6 +670,8 @@ static void serialize( QJsonObject & settingsJs, const LauncherSettings & settin
 	settingsJs["hide_map_label"] = settings.hideMapHelpLabel;
 	settingsJs["wrap_lines_in_txt_viewer"] = settings.wrapLinesInTxtViewer;
 
+	settingsJs["preset_search"] = serialize( settings.presetSearch );
+
 	settingsJs["options_storage"] = serialize( static_cast< const StorageSettings & >( settings ) );
 }
 
@@ -664,6 +686,11 @@ static void deserialize( const JsonObjectCtx & settingsJs, LauncherSettings & se
 	settings.askForSandboxPermissions = settingsJs.getBool( "ask_for_sandbox_permissions", settings.askForSandboxPermissions, AllowMissing );
 	settings.hideMapHelpLabel = settingsJs.getBool( "hide_map_label", settings.hideMapHelpLabel, AllowMissing );
 	settings.wrapLinesInTxtViewer = settingsJs.getBool( "wrap_lines_in_txt_viewer", settings.wrapLinesInTxtViewer, AllowMissing );
+
+	if (JsonObjectCtx presetSearchJs = settingsJs.getObject( "preset_search" ))
+	{
+		deserialize( presetSearchJs, settings.presetSearch );
+	}
 
 	if (JsonObjectCtx optsStorageJs = settingsJs.getObject( "options_storage" ))
 	{

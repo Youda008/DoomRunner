@@ -1085,7 +1085,8 @@ void MainWindow::setupPresetList()
 
 	// setup search
 	presetSearchPanel = new SearchPanel( ui->searchShowBtn, ui->searchLine, ui->caseSensitiveChkBox, ui->regexChkBox );
-	connect( ui->presetListView->findItemAction, &QAction::triggered, presetSearchPanel, &SearchPanel::expand );
+	connect( ui->presetListView->findItemAction, &QAction::triggered, presetSearchPanel, &SearchPanel::openSearch );
+	connect( presetSearchPanel, &SearchPanel::expandedToggled, this, &ThisClass::searchPanelToggled );
 	connect( presetSearchPanel, &SearchPanel::searchParamsChanged, this, &ThisClass::searchPresets );
 }
 
@@ -1868,6 +1869,8 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 	if (settings.hideMapHelpLabel)
 		ui->mapDirHelpLabel->setHidden( true );
 
+	restoreSearchPanel( presetSearchPanel, settings.presetSearch );
+
 	restoringOptionsInProgress = false;
 
 	updateLaunchCommand();
@@ -2323,6 +2326,14 @@ void MainWindow::restoreEnvVars( const EnvVars & envVars, QTableWidget * table )
 	}
 
 	disableEnvVarsCallbacks = false;
+}
+
+void MainWindow::restoreSearchPanel( SearchPanel * panel, const SearchState & state )
+{
+	panel->setExpanded( state.panelExpanded );
+	//panel->setSearchPhrase( state.phrase );
+	panel->toggleCaseSensitive( state.caseSensitive );
+	panel->toggleUseRegex( state.useRegex );
 }
 
 void MainWindow::restoreAppearance( const AppearanceSettings & appearance, bool restoreGeometry )
@@ -3356,8 +3367,17 @@ void MainWindow::onPresetsReordered()
 	scheduleSavingOptions();
 }
 
+void MainWindow::searchPanelToggled( bool expanded )
+{
+	settings.presetSearch.panelExpanded = expanded;
+}
+
 void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool useRegex )
 {
+	//settings.presetSearch.phrase = phrase;
+	settings.presetSearch.caseSensitive = caseSensitive;
+	settings.presetSearch.useRegex = useRegex;
+
 	if (phrase.length() > 0)
 	{
 		// remember which preset was selected before the search results were shown

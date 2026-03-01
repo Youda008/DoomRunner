@@ -3282,6 +3282,9 @@ void MainWindow::presetClone()
 {
 	int selectedIdx = wdg::cloneSelectedItem( ui->presetListView, presetModel );
 
+	// automatic alt dirs are derived from preset name, and we generated a new one, so this needs to be refreshed
+	restoreAlternativePaths( presetModel[ selectedIdx ] );
+
 	if (selectedIdx >= 0)
 	{
 		// open edit mode so that user can name the preset

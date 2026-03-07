@@ -245,10 +245,11 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	void restoreEnvVars( const EnvVars & envVars, QTableWidget * table );
 
-	void restoreSearchPanel( SearchPanel * panel, const SearchState & state );
-
 	void restoreAppearance( const AppearanceSettings & appearance, bool restoreGeometry );
 	void restoreWindowGeometry( const WindowGeometry & geometry );
+
+	void restoreUiState( const UIState & state );
+	void restoreSearchPanel( SearchPanel * panel, const SearchState & state );
 
 	void togglePathStyle( PathStyle style );
 
@@ -511,6 +512,7 @@ class MainWindow : public QMainWindow, private DialogWithPaths {
 
 	LauncherSettings settings;
 	AppearanceSettings appearance;
+	UIState uiState;
 
 };
 

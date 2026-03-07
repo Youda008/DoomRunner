@@ -49,6 +49,10 @@
 constexpr bool MustBePresent = true;
 constexpr bool AllowMissing = false;
 
+// values for bool errorIfEmpty
+constexpr bool MustNotBeEmpty = true;
+constexpr bool AllowEmpty = false;
+
 // values for bool reportError
 constexpr bool DoReportError = true;
 constexpr bool DontReportError = false;
@@ -267,7 +271,7 @@ class JsonObjectCtx : public impl::JsonObjectCtxProxy {
 
 	/// Returns a string at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	QString getString( const QString & key, QString defaultVal = QString(), bool errorIfMissing = true ) const;
+	QString getString( const QString & key, QString defaultVal = QString(), bool errorIfMissing = true, bool errorIfEmpty = false ) const;
 
 	/// Returns an enum at a specified key.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
@@ -291,6 +295,7 @@ class JsonObjectCtx : public impl::JsonObjectCtxProxy {
  public:  // for parsing custom data from string outside of this class (for example: RGB color)
 
 	void invalidTypeAtKey( const QString & key, const QString & expectedType, bool reportError = true ) const;
+	void emptyStringAtKey( const QString & key, bool reportError = true ) const;
 
 };
 
@@ -351,7 +356,7 @@ class JsonArrayCtx : public impl::JsonArrayCtxProxy {
 
 	/// Returns a string at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
-	QString getString( qsize_t index, QString defaultVal = QString() ) const;
+	QString getString( qsize_t index, QString defaultVal = QString(), bool errorIfEmpty = true ) const;
 
 	/// Returns a sub-object at a specified index.
 	/** If it doesn't exist it shows an error dialog and returns default value. */
@@ -375,6 +380,7 @@ class JsonArrayCtx : public impl::JsonArrayCtxProxy {
  public:  // for parsing custom data from string outside of this class (for example: RGB color)
 
 	void invalidTypeAtIdx( qsize_t index, const QString & expectedType, bool reportError = true ) const;
+	void emptyStringAtIdx( qsize_t index, bool reportError = true ) const;
 
 };
 
@@ -455,7 +461,7 @@ QJsonArray serializeList( const List & list )
 	QJsonArray jsArray;
 	for (const auto & elem : list)
 	{
-		jsArray.append( serialize( elem ) );
+		jsArray.append( elem.serialize() );
 	}
 	return jsArray;
 }
@@ -469,7 +475,7 @@ void deserializeList( const JsonArrayCtx & jsList, List & list )
 		if (jsElem)
 		{
 			list.emplace();
-			deserialize( jsElem, list.last() );
+			list.last().deserialize( jsElem );
 		}
 	}
 }

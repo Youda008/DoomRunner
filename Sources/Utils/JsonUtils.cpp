@@ -218,7 +218,7 @@ double JsonObjectCtx::getDouble( const QString & key, double defaultVal, bool er
 	return val.toDouble();
 }
 
-QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool errorIfMissing ) const
+QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool errorIfMissing, bool errorIfEmpty ) const
 {
 	if (!_wrappedObject.contains( key ))
 	{
@@ -236,7 +236,13 @@ QString JsonObjectCtx::getString( const QString & key, QString defaultVal, bool 
 		invalidTypeAtKey( key, "string", DoReportError );
 		return defaultVal;
 	}
-	return val.toString();
+	QString str = val.toString();
+	if (str.isEmpty())
+	{
+		emptyStringAtKey( key, errorIfEmpty );
+		return defaultVal;
+	}
+	return str;
 }
 
 
@@ -406,7 +412,7 @@ double JsonArrayCtx::getDouble( qsize_t index, double defaultVal ) const
 	return val.toDouble();
 }
 
-QString JsonArrayCtx::getString( qsize_t index, QString defaultVal ) const
+QString JsonArrayCtx::getString( qsize_t index, QString defaultVal, bool errorIfEmpty ) const
 {
 	if (index < 0 || index >= _wrappedArray.size())
 	{
@@ -424,7 +430,13 @@ QString JsonArrayCtx::getString( qsize_t index, QString defaultVal ) const
 		invalidTypeAtIdx( index, "string", DoReportError );
 		return defaultVal;
 	}
-	return val.toString();
+	QString str = val.toString();
+	if (str.isEmpty())
+	{
+		emptyStringAtIdx( index, errorIfEmpty );
+		return defaultVal;
+	}
+	return str;
 }
 
 
@@ -511,7 +523,9 @@ void JsonObjectCtx::missingKey( const QString & key, bool reportError ) const
 
 	if (reportError)
 	{
-		QString message = "Element "%elemPath( key )%" is missing in "%_context->sourceName%", using default value.";
+		QString message =
+			"Element "%elemPath( key )%" is missing in "%_context->sourceName%". "
+			"Using default value.";
 
 		if (_context->showErrorMsgBox)
 			_context->showErrorMsgBox = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
@@ -562,7 +576,8 @@ void JsonObjectCtx::invalidTypeAtKey( const QString & key, const QString & expec
 		QString actualType = jsonTypeToStr( _wrappedObject[ key ].type() );
 		QString message =
 			"Element "%elemPath( key )%" in "%_context->sourceName%" has invalid type. "
-			"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
+			"Expected "%expectedType%", but found "%actualType%". "
+			"Using default value.";
 
 		if (_context->showErrorMsgBox)
 			_context->showErrorMsgBox = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
@@ -579,7 +594,40 @@ void JsonArrayCtx::invalidTypeAtIdx( qsize_t index, const QString & expectedType
 		QString actualType = jsonTypeToStr( _wrappedArray[ index ].type() );
 		QString message =
 			"Element "%elemPath( index )%" in "%_context->sourceName%" has invalid type. "
-			"Expected "%expectedType%", but found "%actualType%". Skipping this entry.";
+			"Expected "%expectedType%", but found "%actualType%". "
+			"Skipping this entry.";
+
+		if (_context->showErrorMsgBox)
+			_context->showErrorMsgBox = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
+		logRuntimeError( u"JsonArrayCtx" ).noquote() << message;
+	}
+}
+
+void JsonObjectCtx::emptyStringAtKey( const QString & key, bool reportError ) const
+{
+	_context->errorOccured = true;
+
+	if (reportError)
+	{
+		QString message =
+			"String element "%elemPath( key )%" in "%_context->sourceName%" is empty where data is required. "
+			"Using default value.";
+
+		if (_context->showErrorMsgBox)
+			_context->showErrorMsgBox = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );
+		logRuntimeError( u"JsonObjectCtx" ).noquote() << message;
+	}
+}
+
+void JsonArrayCtx::emptyStringAtIdx( qsize_t index, bool reportError ) const
+{
+	_context->errorOccured = true;
+
+	if (reportError)
+	{
+		QString message =
+			"String element "%elemPath( index )%" in "%_context->sourceName%" is empty where data is required. "
+			"Skipping this entry.";
 
 		if (_context->showErrorMsgBox)
 			_context->showErrorMsgBox = checkableMessageBox( QMessageBox::Warning, "Error loading JSON file", message );

@@ -20,21 +20,6 @@
 
 
 //----------------------------------------------------------------------------------------------------------------------
-// serialization of some individual elements - can be re-used for copy&pasting items
-
-// values used to recognize items that haven't been parsed successfully and should be left out
-extern const QString InvalidItemName;
-extern const QString InvalidItemPath;
-
-QJsonObject serialize( const Engine & engine );
-void deserialize( const JsonObjectCtx & engineJs, Engine & engine );
-QJsonObject serialize( const IWAD & iwad );
-void deserialize( const JsonObjectCtx & engineJs, IWAD & iwad );
-QJsonObject serialize( const Mod & mod );
-void deserialize( const JsonObjectCtx & modJs, Mod & mod );
-
-
-//----------------------------------------------------------------------------------------------------------------------
 // serialization of the launcher's state
 
 struct OptionsToSave
@@ -64,6 +49,7 @@ struct OptionsToSave
 	const LauncherSettings & settings;
 
 	const AppearanceSettings & appearance;
+	const UIState & uiState;
 };
 
 QJsonDocument serializeOptionsToJsonDoc( const OptionsToSave & opts );
@@ -107,6 +93,7 @@ struct OptionsToLoad
 struct AppearanceToLoad
 {
 	AppearanceSettings & appearance;
+	UIState & uiState;
 };
 
 bool deserializeOptionsFromJsonDoc( const JsonDocumentCtx & jsonDoc, OptionsToLoad & opts );

@@ -1555,6 +1555,7 @@ bool MainWindow::saveOptions( const QString & filePath )
 		settings,
 
 		appearance,
+	    uiState,
 	};
 
 	QJsonDocument jsonDoc = serializeOptionsToJsonDoc( opts );
@@ -1595,6 +1596,7 @@ void MainWindow::loadAppearance( const JsonDocumentCtx & optionsDoc, bool loadGe
 	AppearanceToLoad opts
 	{
 		appearance,
+		uiState,
 	};
 
 	bool success = deserializeAppearanceFromJsonDoc( optionsDoc, opts, loadGeometry );
@@ -1604,6 +1606,7 @@ void MainWindow::loadAppearance( const JsonDocumentCtx & optionsDoc, bool loadGe
 	}
 
 	restoreAppearance( opts.appearance, loadGeometry );
+	restoreUiState( opts.uiState );
 }
 
 void MainWindow::loadTheRestOfOptions( const JsonDocumentCtx & optionsDoc )
@@ -1867,11 +1870,6 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		restoreAudioOptions( audioOpts );
 
 	restoreGlobalOptions( globalOpts );
-
-	if (settings.hideMapHelpLabel)
-		ui->mapDirHelpLabel->setHidden( true );
-
-	restoreSearchPanel( presetSearchPanel, settings.presetSearch );
 
 	restoringOptionsInProgress = false;
 
@@ -2330,14 +2328,6 @@ void MainWindow::restoreEnvVars( const EnvVars & envVars, QTableWidget * table )
 	disableEnvVarsCallbacks = false;
 }
 
-void MainWindow::restoreSearchPanel( SearchPanel * panel, const SearchState & state )
-{
-	panel->setExpanded( state.panelExpanded );
-	//panel->setSearchPhrase( state.phrase );
-	panel->toggleCaseSensitive( state.caseSensitive );
-	panel->toggleUseRegex( state.useRegex );
-}
-
 void MainWindow::restoreAppearance( const AppearanceSettings & appearance, bool restoreGeometry )
 {
 	// set style first, on Windows it may be overriden by color scheme
@@ -2375,6 +2365,22 @@ void MainWindow::restoreWindowGeometry( const WindowGeometry & geometry )
 	}
 
 	this->setGeometry( newGeometry );
+}
+
+void MainWindow::restoreUiState( const UIState & state )
+{
+	restoreSearchPanel( presetSearchPanel, state.presetSearch );
+
+	if (state.hideMapHelpLabel)
+		ui->mapDirHelpLabel->setHidden( true );
+}
+
+void MainWindow::restoreSearchPanel( SearchPanel * panel, const SearchState & state )
+{
+	panel->setExpanded( state.panelExpanded );
+	//panel->setSearchPhrase( state.phrase );
+	panel->toggleCaseSensitive( state.caseSensitive );
+	panel->toggleUseRegex( state.useRegex );
 }
 
 
@@ -3371,14 +3377,14 @@ void MainWindow::onPresetsReordered()
 
 void MainWindow::searchPanelToggled( bool expanded )
 {
-	settings.presetSearch.panelExpanded = expanded;
+	uiState.presetSearch.panelExpanded = expanded;
 }
 
 void MainWindow::searchPresets( const QString & phrase, bool caseSensitive, bool useRegex )
 {
 	//settings.presetSearch.phrase = phrase;
-	settings.presetSearch.caseSensitive = caseSensitive;
-	settings.presetSearch.useRegex = useRegex;
+	uiState.presetSearch.caseSensitive = caseSensitive;
+	uiState.presetSearch.useRegex = useRegex;
 
 	if (phrase.length() > 0)
 	{
@@ -3460,7 +3466,7 @@ void MainWindow::onSortActionTriggered( ExtendedTreeView::SortKey key, Qt::SortO
 
 void MainWindow::onMapHelpLabelHideTriggered()
 {
-	settings.hideMapHelpLabel = true;
+	uiState.hideMapHelpLabel = true;
 
 	ui->mapDirHelpLabel->setHidden( true );
 

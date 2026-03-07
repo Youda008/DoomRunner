@@ -7,20 +7,12 @@
 
 #include "OptionsSerializer.hpp"  // OptionsToLoad
 
-#include "CommonTypes.hpp"  // PtrList
 #include "Utils/JsonUtils.hpp"
 #include "Utils/PathCheckUtils.hpp"  // checkPath, highlightInvalidListItem
 
 
 //======================================================================================================================
-//  user data
-
-static void deserialize_pre17( const JsonObjectCtx & iwadSettingsJs, IwadSettings & iwadSettings )
-{
-	iwadSettings.updateFromDir = iwadSettingsJs.getBool( "auto_update", iwadSettings.updateFromDir );
-	iwadSettings.dir = iwadSettingsJs.getString( "directory" );
-	iwadSettings.searchSubdirs = iwadSettingsJs.getBool( "subdirs", iwadSettings.searchSubdirs );
-}
+// options
 
 static void deserialize_pre17( const JsonObjectCtx & optsJs, GameplayOptions & opts )
 {
@@ -36,7 +28,7 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, GameplayOptions & o
 
 static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, const StorageSettings & settings )
 {
-	preset.name = presetJs.getString( "name", InvalidItemName );
+	preset.name = presetJs.getString( "name", InvalidItemName, MustBePresent, MustNotBeEmpty );
 
 	preset.isSeparator = presetJs.getBool( "separator", false, AllowMissing );
 	if (preset.isSeparator)
@@ -65,9 +57,7 @@ static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, 
 				continue;
 
 			Mod mod( /*checked*/false );
-			deserialize( modJs, mod );
-
-			bool isValid = mod.name != InvalidItemName && mod.path != InvalidItemPath;
+			bool isValid = mod.deserialize( modJs );
 			if (!isValid)
 				highlightListItemAsInvalid( mod );
 
@@ -83,21 +73,32 @@ static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, 
 	{
 		if (JsonObjectCtx optsJs = presetJs.getObject( "launch_options" ))
 		{
-			deserialize( optsJs, preset.launchOpts );
+			preset.launchOpts.deserialize( optsJs );
 
-			deserialize( optsJs, preset.multOpts );
+			preset.multOpts.deserialize( optsJs );
 
 			deserialize_pre17( optsJs, preset.gameOpts );
 
-			deserialize( optsJs, preset.compatOpts );
+			preset.compatOpts.deserialize( optsJs );
 
-			deserialize( optsJs, preset.altPaths );
+			preset.altPaths.deserialize( optsJs );
 		}
 	}
 
 	// preset-specific args
 
 	preset.cmdArgs = presetJs.getString( "additional_args" );
+}
+
+
+//======================================================================================================================
+// settings
+
+static void deserialize_pre17( const JsonObjectCtx & iwadSettingsJs, IwadSettings & iwadSettings )
+{
+	iwadSettings.updateFromDir = iwadSettingsJs.getBool( "auto_update", iwadSettings.updateFromDir );
+	iwadSettings.dir = iwadSettingsJs.getString( "directory" );
+	iwadSettings.searchSubdirs = iwadSettingsJs.getBool( "subdirs", iwadSettings.searchSubdirs );
 }
 
 static void deserialize_pre17( const JsonObjectCtx & settingsJs, LauncherSettings & settings )
@@ -121,7 +122,7 @@ static void deserialize_pre17( const JsonObjectCtx & settingsJs, LauncherSetting
 
 
 //======================================================================================================================
-//  options file stucture
+// top-level JSON stucture
 
 static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opts )
 {
@@ -144,10 +145,9 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 					continue;
 
 				Engine engine;
-				deserialize( engineJs, engine );
-
-				bool isValid = engine.name != InvalidItemName && engine.executablePath != InvalidItemPath
-					&& (engine.executablePath.isEmpty() || PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." ));
+				bool isValid = engine.deserialize( engineJs );
+				if (!engine.isSeparator)
+					isValid = isValid && PathChecker::checkFilePath( engine.executablePath, true, "an Engine from the saved options", "Please update it in Menu -> Initial Setup." );
 				if (!isValid)
 					highlightListItemAsInvalid( engine );
 
@@ -176,10 +176,9 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 						continue;
 
 					IWAD iwad;
-					deserialize( iwadJs, iwad );
-
-					bool isValid = iwad.name != InvalidItemName && iwad.path != InvalidItemPath
-						&& (iwad.path.isEmpty() || PathChecker::checkFilePath( iwad.path, true, "an IWAD from the saved options", "Please update it in Menu -> Initial Setup." ));
+					bool isValid = iwad.deserialize( iwadJs );
+					if (!iwad.isSeparator)
+						isValid = isValid && PathChecker::checkFilePath( iwad.path, true, "an IWAD from the saved options", "Please update it in Menu -> Initial Setup." );
 					if (!isValid)
 						highlightListItemAsInvalid( iwad );
 
@@ -191,40 +190,40 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 
 	if (JsonObjectCtx mapsJs = optsJs.getObject( "maps" ))
 	{
-		deserialize( mapsJs, opts.mapSettings );
+		opts.mapSettings.deserialize( mapsJs );
 
 		PathChecker::checkOnlyNonEmptyDirPath( opts.mapSettings.dir, true, "map directory from the saved options", "Please update it in Menu -> Setup." );
 	}
 
 	if (JsonObjectCtx modsJs = optsJs.getObject( "mods" ))
 	{
-		deserialize( modsJs, opts.modSettings );
+		opts.modSettings.deserialize( modsJs );
 	}
 
 	// options
 
 	if (opts.settings.launchOptsStorage == StoreGlobally)
 	{
-		if (JsonObjectCtx optsJs = optsJs.getObject( "launch_options" ))
+		if (JsonObjectCtx launchOptsJs = optsJs.getObject( "launch_options" ))
 		{
-			deserialize( optsJs, opts.launchOpts );
+			opts.launchOpts.deserialize( launchOptsJs );
 
-			deserialize( optsJs, opts.multOpts );
+			opts.multOpts.deserialize( launchOptsJs );
 
-			deserialize_pre17( optsJs, opts.gameOpts );
+			deserialize_pre17( launchOptsJs, opts.gameOpts );
 
-			deserialize( optsJs, opts.compatOpts );
+			opts.compatOpts.deserialize( launchOptsJs );
 		}
 	}
 
-	if (JsonObjectCtx optsJs = optsJs.getObject( "output_options" ))
+	if (JsonObjectCtx outOptsJs = optsJs.getObject( "output_options" ))
 	{
-		deserialize( optsJs, opts.videoOpts );
+		opts.videoOpts.deserialize( outOptsJs );
 
-		deserialize( optsJs, opts.audioOpts );
+		opts.audioOpts.deserialize( outOptsJs );
 	}
 
-	deserialize( optsJs, opts.globalOpts );
+	opts.globalOpts.deserialize( optsJs );
 
 	// presets
 

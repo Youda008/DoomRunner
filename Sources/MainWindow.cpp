@@ -868,13 +868,15 @@ MainWindow::MainWindow()
 {
 	ui = new Ui::MainWindow;
 	ui->setupUi( this );
+	presetSearchPanel = new SearchPanel( ui->searchShowBtn, ui->searchLine, ui->caseSensitiveChkBox, ui->regexChkBox );
+
+	// title and icon initialization
 
 	this->setWindowTitle( windowTitle() + ' ' + appVersion );
 
-	// make sure the correct widgets are enabled/disabled according to the default storage settings, until the settings are loaded
-	togglePresetSubWidgets( nullptr );
-
-	// OS-specific initialization
+ #if IS_FLATPAK_BUILD
+	QGuiApplication::setDesktopFileName("io.github.Youda008.DoomRunner");
+ #endif
 
  #if !IS_WINDOWS
 	// On Windows the application icon is already set using the Windows resource system, so loading this resource
@@ -882,9 +884,13 @@ MainWindow::MainWindow()
 	this->setWindowIcon( QIcon(":/DoomRunner.ico") );
  #endif
 
- #if IS_FLATPAK_BUILD
-	QGuiApplication::setDesktopFileName("io.github.Youda008.DoomRunner");
- #endif
+	// setup default UI state
+
+	// make sure the correct widgets are enabled/disabled according to the default storage settings, until the settings are loaded
+	togglePresetSubWidgets( nullptr );
+
+	// make the panel hidden by default, otherwise it would be visible until the options are loaded
+	presetSearchPanel->collapse();
 
 	// setup main menu actions
 
@@ -1030,9 +1036,6 @@ void MainWindow::adjustUi()
 	ui->engineDirBtn->setMinimumSize({ engineCmbBoxHeight, engineCmbBoxHeight });
 	auto configCmbBoxHeight = ui->configCmbBox->height();
 	ui->configCloneBtn->setMinimumSize({ configCmbBoxHeight, configCmbBoxHeight });
-
-	// hide it by default, it's shown on startup
-	presetSearchPanel->collapse();
 }
 
 void MainWindow::setupPresetList()
@@ -1084,7 +1087,6 @@ void MainWindow::setupPresetList()
 	connect( ui->presetBtnDown, &QToolButton::clicked, this, &ThisClass::presetMoveDown );
 
 	// setup search
-	presetSearchPanel = new SearchPanel( ui->searchShowBtn, ui->searchLine, ui->caseSensitiveChkBox, ui->regexChkBox );
 	connect( ui->presetListView->findItemAction, &QAction::triggered, presetSearchPanel, &SearchPanel::openSearch );
 	connect( presetSearchPanel, &SearchPanel::expandedToggled, this, &ThisClass::searchPanelToggled );
 	connect( presetSearchPanel, &SearchPanel::searchParamsChanged, this, &ThisClass::searchPresets );

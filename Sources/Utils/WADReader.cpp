@@ -135,7 +135,7 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 	QFile file( _filePath );
 	if (!file.open( QIODevice::ReadOnly ))
 	{
-		logRuntimeError().noquote() << "Cannot open \""<<_filePath<<"\": "<<file.errorString();
+		logRuntimeError().noquote() << "cannot open \""<<_filePath<<"\": "<<file.errorString();
 		wadInfo.status = ReadStatus::CantOpen;
 		return wadInfo;
 	}
@@ -143,7 +143,7 @@ UncertainWadInfo LoggingWadReader::readWadInfo()
 	const qint64 fileSize = file.size();
 	if (fileSize < 0)
 	{
-		logLogicError() << "file size is negative ("<<fileSize<<"), wtf??";
+		logLogicError() << _filePath << ": file size is negative ("<<fileSize<<"), wtf??";
 		wadInfo.status = ReadStatus::FailedToRead;
 		return wadInfo;
 	}

@@ -84,7 +84,7 @@ void ExtendedListView::setModel( QAbstractItemModel * model )
 	else
 	{
 		// ExtendedListView should be used together with GenericListModel, otherwise it won't work properly.
-		logLogicError() << "assigned model is not GenericListModel, some functions are disabled";
+		logLogicError() << "Assigned model is not GenericListModel, some functions are disabled";
 	}
 }
 
@@ -130,7 +130,7 @@ void ExtendedListView::toggleItemEditing( bool enabled )
 {
 	if (enabled && isReadOnly())
 	{
-		logLogicError() << "attempted to enable editing items in a read-only list view";
+		logLogicError() << "Attempted to enable editing items in a read-only list view";
 		return;
 	}
 
@@ -191,7 +191,7 @@ void ExtendedListView::setAllowedDnDSources( DnDSources dndSources )
 {
 	if (dndSources != DnDSource::None && isReadOnly())
 	{
-		logLogicError() << "attempted to enable drag&drop in a read-only list view.";
+		logLogicError() << "Attempted to enable drag&drop in a read-only list view.";
 		return;
 	}
 
@@ -430,7 +430,7 @@ void ExtendedListView::onDragAndDropFinished( DnDSources source, DnDProgressGuar
 	if (!targetModel)
 	{
 		// ExtendedListView should be used only together with GenericListModel, otherwise drag&drop won't work properly
-		logLogicError() << "assigned model is not a DropTarget, drag&drop won't work properly";
+		logLogicError() << "Assigned model is not a DropTarget, drag&drop won't work properly";
 		return;
 	}
 

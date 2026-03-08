@@ -34,7 +34,7 @@ bool ExtendedViewCommon< SubClass >::_assertCanAddEditAction( const char * actio
 	bool isReadOnly = thisAsSubClass()->isReadOnly();
 	if (isReadOnly)
 	{
-		logLogicError() << "attempted to add \""<<actionDesc<<"\" context menu actions to a read-only list view";
+		logLogicError() << "Attempted to add \""<<actionDesc<<"\" context menu actions to a read-only list view";
 	}
 	return !isReadOnly;
 }
@@ -209,7 +209,7 @@ void ExtendedViewCommon< SubClass >::_toggleListModifications( bool enabled )
 {
 	if (enabled && thisAsSubClass()->isReadOnly())
 	{
-		logLogicError() << "attempted to enable list modifications in a read-only list view.";
+		logLogicError() << "Attempted to enable list modifications in a read-only list view.";
 		return;
 	}
 

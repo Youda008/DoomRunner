@@ -524,7 +524,7 @@ bool WindowsThemeWatcherImpl::openThemeSettingsMonitoring()
 	if (!optThemeSettingsKey)
 	{
 		// This key exists since certain build of Windows 10, older versions don't have it.
-		logInfo().noquote() << "cannot open registry key: \"HKEY_CURRENT_USER/"<<lightThemeSubkeyPath<<"\"";
+		logInfo().noquote() << "Cannot open registry key: \"HKEY_CURRENT_USER/"<<lightThemeSubkeyPath<<"\"";
 		return false;
 	}
 
@@ -538,7 +538,7 @@ bool WindowsThemeWatcherImpl::openThemeSettingsMonitoring()
 	auto optUseLightTheme = win::readRegistryDWORD( *optThemeSettingsKey, nullptr, lightThemeValueName );
 	if (!optUseLightTheme)
 	{
-		logRuntimeError() << "cannot read registry value \""<<lightThemeValueName<<"\" (error "<<optUseLightTheme.error()<<")";
+		logRuntimeError() << "Cannot read registry value \""<<lightThemeValueName<<"\" (error "<<optUseLightTheme.error()<<")";
 		return false;
 	}
 
@@ -567,12 +567,12 @@ SystemThemeWatcher::SystemThemeWatcherImpl::QuitReason WindowsThemeWatcherImpl::
 	{
 		if (optUseLightTheme.error() == ERROR_INVALID_HANDLE)
 		{
-			logDebug() << "the theme registry key has been closed, aborting monitoring";
+			logDebug() << "The theme registry key has been closed, aborting monitoring";
 			quitReason = QuitReason::MonitoringClosed;
 		}
 		else if (optUseLightTheme.error() != ERROR_SUCCESS)
 		{
-			logRuntimeError() << "cannot read registry value \""<<lightThemeValueName<<"\" (error "<<optUseLightTheme.error()<<")";
+			logRuntimeError() << "Cannot read registry value \""<<lightThemeValueName<<"\" (error "<<optUseLightTheme.error()<<")";
 			quitReason = QuitReason::ReadingError;
 		}
 		return quitReason;
@@ -595,12 +595,12 @@ SystemThemeWatcher::SystemThemeWatcherImpl::QuitReason WindowsThemeWatcherImpl::
 		{
 			if (optUseLightTheme.error() == ERROR_INVALID_HANDLE)
 			{
-				logDebug() << "the theme registry key has been closed, aborting system theme monitoring";
+				logDebug() << "The theme registry key has been closed, aborting system theme monitoring";
 				quitReason = QuitReason::MonitoringClosed;
 			}
 			else
 			{
-				logRuntimeError() << "cannot read registry value \""<<lightThemeValueName<<"\" (error "<<optUseLightTheme.error()<<")";
+				logRuntimeError() << "Cannot read registry value \""<<lightThemeValueName<<"\" (error "<<optUseLightTheme.error()<<")";
 				quitReason = QuitReason::ReadingError;
 			}
 			break;
@@ -774,7 +774,7 @@ bool SystemThemeWatcher::start()
 {
 	if (_started || QThread::isRunning())
 	{
-		logLogicError() << "attempting to start a monitoring thread that is already running";
+		logLogicError() << "Attempting to start a monitoring thread that is already running";
 		return false;
 	}
 
@@ -784,7 +784,7 @@ bool SystemThemeWatcher::start()
 		return false;
 	}
 
-	logDebug() << "starting monitoring thread";
+	logDebug() << "Starting monitoring thread";
 
 	QThread::start();
 	_started = true;
@@ -798,18 +798,18 @@ bool SystemThemeWatcher::stop( ulong timeout_ms )
 	{
 		if (_started)  // thread might have exited before this call due to some error
 		{
-			logDebug() << "monitoring thread already stopped";
+			logDebug() << "Monitoring thread already stopped";
 			_started = false;
 			return true;
 		}
 		else
 		{
-			logLogicError() << "attempting to stop a monitoring thread that is not running";
+			logLogicError() << "Attempting to stop a monitoring thread that is not running";
 			return false;
 		}
 	}
 
-	logDebug() << "stopping monitoring thread";
+	logDebug() << "Stopping monitoring thread";
 
 	// Locking is needed to prevent both threads closing the monitoring at the same time.
 	std::unique_lock< std::mutex > monitoringLock( _monitoringMtx );
@@ -823,12 +823,12 @@ bool SystemThemeWatcher::stop( ulong timeout_ms )
 
 	if (threadFinished)
 	{
-		logDebug() << "monitoring thread has stopped";
+		logDebug() << "Monitoring thread has stopped";
 		_started = false;
 	}
 	else
 	{
-		logRuntimeError() << "monitoring thread has not stopped in time";
+		logRuntimeError() << "Monitoring thread has not stopped in time";
 	}
 
 	return threadFinished;
@@ -840,7 +840,7 @@ void SystemThemeWatcher::run()
 
 	auto quitReason = _impl->monitorThemeSettingsChanges( [ this ]( SystemTheme newTheme )
 	{
-		logDebug() << "system theme change detected";
+		logDebug() << "System theme change detected";
 		emit systemThemeChanged( newTheme );
 	});
 
@@ -879,14 +879,14 @@ SystemThemeWatcher::~SystemThemeWatcher()
 	{
 		// stop() was not called and the thread is still running while the application is closing.
 		// First try to stop the thread gracefully as we normally would.
-		logLogicError() << "monitoring thread is still running in destructor, trying to stop it now";
+		logLogicError() << "Monitoring thread is still running in destructor, trying to stop it now";
 		bool threadFinished = stop(500);
 
 		if (!threadFinished)
 		{
 			// The thread has not finished in time and leaving it running will cause QThread's destructor
 			// to terminate the whole application. Try to terminate the thread forcefully.
-			logRuntimeError() << "monitoring thread has not finished in time, trying to terminate it";
+			logRuntimeError() << "Monitoring thread has not finished in time, trying to terminate it";
 			QThread::terminate();
 			// From QThread documentation: "The thread may or may not be terminated immediately,
 			// depending on the operating system's scheduling policies"
@@ -896,7 +896,7 @@ SystemThemeWatcher::~SystemThemeWatcher()
 
 			if (!threadFinished)
 			{
-				logRuntimeError() << "failed to terminate the monitoring thread";
+				logRuntimeError() << "Failed to terminate the monitoring thread";
 			}
 		}
 	}

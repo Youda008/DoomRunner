@@ -444,7 +444,7 @@ class FilteredList {
 	{
 		if (!canBeModified())
 		{
-			::logLogicError( u"FilteredList" ) << "the list cannot be modified when it is filtered";
+			::logLogicError( u"FilteredList" ) << "The list cannot be modified when it is filtered";
 			throw std::logic_error("the list cannot be modified when it is filtered");
 		}
 	}
@@ -923,7 +923,7 @@ class GenericListModel : public AListModel, public ListImpl {
 			}
 			else
 			{
-				logLogicError( u"setData" ) << "attempted to set unsupported role "<<role<<" to item at row "<<index.row();
+				logLogicError( u"setData" ) << "Attempted to set unsupported role "<<role<<" to item at row "<<index.row();
 				return false;
 			}
 		}
@@ -1147,7 +1147,7 @@ class GenericListModel : public AListModel, public ListImpl {
 		JsonDocumentCtx jsonDocCtx( std::move(jsonDoc), "the pasted clipboard content", {} );
 		if (!jsonDocCtx.isArray())
 		{
-			reportLogicError( u"dropMimeData", "Cannot import data", "dropped serialized items are not a valid JSON" );
+			reportLogicError( u"dropMimeData", "Cannot import data", "Dropped serialized items are not a valid JSON" );
 			return false;
 		}
 
@@ -1161,13 +1161,13 @@ class GenericListModel : public AListModel, public ListImpl {
 			JsonObjectCtx itemJs = itemsJs.getObject( i );
 			if (!itemJs)  // wrong type on position i - skip this entry
 			{
-				reportLogicError( u"dropMimeData", "Cannot import data", "dropped item "%QString::number(i)%" is not a JSON object" );
+				reportLogicError( u"dropMimeData", "Cannot import data", "Dropped item "%QString::number(i)%" is not a JSON object" );
 				continue;
 			}
 			auto item = std::make_unique< Item >();
 			if (!item->deserialize( itemJs ))
 			{
-				reportLogicError( u"dropMimeData", "Cannot import data", "dropped item "%QString::number(i)%" doesn't have the expected structure" );
+				reportLogicError( u"dropMimeData", "Cannot import data", "Dropped item "%QString::number(i)%" doesn't have the expected structure" );
 				continue;
 			}
 			validDroppedItems.push_back( std::move( item ) );

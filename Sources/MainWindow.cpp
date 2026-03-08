@@ -2277,7 +2277,7 @@ void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts 
 	if (compatModeIdx >= ui->compatModeCmbBox->count())
 	{
 		// engine might have been removed, or its family was changed by the user
-		logLogicError() << "stored compat mode ("<<compatModeIdx<<") is out of bounds of the current combo-box content";
+		logLogicError() << "Stored compat mode ("<<compatModeIdx<<") is out of bounds of the current combo-box content";
 		return;
 	}
 	ui->compatModeCmbBox->setCurrentIndex( compatModeIdx );
@@ -2358,7 +2358,7 @@ void MainWindow::restoreWindowGeometry( const WindowGeometry & geometry )
 		}
 		else
 		{
-			logInfo() << "invalid coordinates detected ("<<geometry.x<<","<<geometry.y<<") leaving window at the default position";
+			logInfo() << "Invalid coordinates detected ("<<geometry.x<<","<<geometry.y<<"), leaving window at the default position";
 		}
 	}
 

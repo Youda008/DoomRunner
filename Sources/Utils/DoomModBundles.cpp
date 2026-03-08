@@ -40,7 +40,7 @@ static UncertainDMBContent readContent( const QString & filePath )
 	if (!file.open( QIODevice::Text | QIODevice::ReadOnly ))
 	{
 		// Here we don't want to pop up a message box, because that would show up too often and would be annoying.
-		logRuntimeError() << "could not open file "%filePath%" for reading ("%file.errorString()%")";
+		logRuntimeError() << "Could not open file "%filePath%" for reading ("%file.errorString()%")";
 		content.status = ReadStatus::CantOpen;
 		return content;
 	}
@@ -54,7 +54,7 @@ static UncertainDMBContent readContent( const QString & filePath )
 		// abort on error
 		if (file.error() != QFile::NoError)
 		{
-			logRuntimeError() << "error occured while reading a file "%filePath%" ("%file.errorString()%")";
+			logRuntimeError() << "Error occured while reading a file "%filePath%" ("%file.errorString()%")";
 			content.status = ReadStatus::FailedToRead;
 			return content;
 		}

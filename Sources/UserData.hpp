@@ -28,8 +28,19 @@
 
 class JsonObjectCtx;
 
+
+//======================================================================================================================
+// support utils
+
+// register this Qt enum for our own enum trait system
 template<> inline const char * enumName< Qt::SortOrder >() { return "Qt::SortOrder"; }
 template<> inline int enumSize< Qt::SortOrder >() { return 2; }
+
+/// \copydoc UniqueIdGenerator::generateID
+QString generateUniqueID();
+
+/// \copydoc UniqueIdGenerator::addExistingID
+void addExistingID( QStringView objectName, const QString & id );
 
 
 //======================================================================================================================
@@ -56,6 +67,7 @@ template<> inline int enumSize< Qt::SortOrder >() { return 2; }
 /// a ported Doom engine (source port) located somewhere on the disc
 struct Engine : public AModelItem
 {
+	QString id;              ///< randomly generated unique ID
 	QString name;            ///< user defined engine name
 	QString executablePath;  ///< path to the engine's executable
 	QString configDir;       ///< directory with engine's config files, style of this path is kept as the user entered it
@@ -67,8 +79,8 @@ struct Engine : public AModelItem
 	explicit Engine( const QFileInfo & file ) : executablePath( file.filePath() ) {}
 
 	// requirements of GenericListModel
-	const QString & getFilePath() const   { return executablePath; }
-	const QString & getID() const         { return executablePath; }
+	const QString & getFilePath() const     { return executablePath; }
+	const QString & getID() const           { return id; }
 
 	QJsonObject serialize() const;
 	bool deserialize( const JsonObjectCtx & engineJs );
@@ -444,9 +456,9 @@ struct Preset : public AModelItem
 {
 	QString name;
 
-	QString selectedEnginePath;   // we store the engine by path, so that it does't break when user renames them or reorders them
+	QString selectedEngine;   // we store the engine by ID, so that it does't break when user edits them or reorders them
 	QString selectedConfig;   // we store the config by name instead of index, so that it does't break when user reorders them
-	QString selectedIWAD;   // we store the IWAD by path instead of index, so that it doesn't break when user reorders them
+	QString selectedIWAD;     // we store the IWAD by path instead of index, so that it doesn't break when user reorders them
 	QStringList selectedMapPacks;
 	PtrList< Mod > mods;   // this list needs to be kept in sync with mod list widget
 	bool loadMapsAfterMods = false;

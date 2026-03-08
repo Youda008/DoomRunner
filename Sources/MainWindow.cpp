@@ -1764,7 +1764,9 @@ void MainWindow::restoreLoadedOptions( OptionsToLoad && opts )
 		else if (!engineSettings.defaultEngine.isEmpty())
 		{
 			reportUserError( "Default engine no longer exists",
-				"Engine that was marked as default ("%engineSettings.defaultEngine%") no longer exists. Please select another one." );
+				"Engine that was marked as default ("%engineSettings.defaultEngine%") was removed from engine list. "
+				"Please select another one."
+			);
 		}
 	}
 
@@ -1950,18 +1952,19 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 
 	ui->engineCmbBox->setCurrentIndex( -1 );
 
-	if (!preset.selectedEnginePath.isEmpty())  // the engine combo box might have been empty when creating this preset
+	if (!preset.selectedEngine.isEmpty())  // the engine combo box might have been empty when creating this preset
 	{
 		int engineIdx = findSuch( engineModel, [&]( const Engine & engine )
-		                                       { return engine.executablePath == preset.selectedEnginePath; } );
+		                                       { return engine.getID() == preset.selectedEngine; } );
 		if (engineIdx >= 0)
 		{
 			ui->engineCmbBox->setCurrentIndex( engineIdx );
 
-			if (!fs::isValidFile( preset.selectedEnginePath ))
+			QString selectedEnginePath = engineModel[ engineIdx ].executablePath;
+			if (!fs::isValidFile( selectedEnginePath ))
 			{
 				reportUserError( "Engine no longer exists",
-					"Engine selected for this preset ("%preset.selectedEnginePath%") no longer exists. "
+					"Engine selected for this preset ("%selectedEnginePath%") no longer exists. "
 					"Please update its path in Menu -> Initial Setup, or select another one."
 				);
 				highlightListItemAsInvalid( engineModel[ engineIdx ] );
@@ -1970,10 +1973,10 @@ void MainWindow::restoreSelectedEngine( Preset & preset )
 		else
 		{
 			reportUserError( "Engine no longer exists",
-				"Engine selected for this preset ("%preset.selectedEnginePath%") was removed from engine list. "
+				"Engine selected for this preset ("%preset.selectedEngine%") was removed from engine list. "
 				"Please select another one."
 			);
-			preset.selectedEnginePath.clear();
+			preset.selectedEngine.clear();
 			preset.compatOpts.compatMode = -1;  // compat mode is engine-specific so the previous mode is no longer valid
 		}
 	}
@@ -2902,9 +2905,9 @@ void MainWindow::onEngineSelected( int index )
 	if (disableSelectionCallbacks)
 		return;
 
-	const QString & enginePath = selectedEngine ? selectedEngine->executablePath : emptyString;
+	const QString & engineID = selectedEngine ? selectedEngine->getID() : emptyString;
 
-	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedEnginePath, enginePath );
+	bool storageModified = STORE_TO_CURRENT_PRESET_IF_SAFE( .selectedEngine, engineID );
 
 	// engine has changed -> from now on rebase engine config/data paths to the new dirs, if empty it will rebase to the current dir
 	QString engineDefaultDataDir = selectedEngine ? selectedEngine->dataDir : emptyString;
@@ -4886,7 +4889,6 @@ void MainWindow::togglePathStyle( PathStyle style )
 
 	for (Preset & preset : presetModel)
 	{
-		preset.selectedEnginePath = pathConvertor.convertPath( preset.selectedEnginePath );
 		preset.selectedIWAD = pathConvertor.convertPath( preset.selectedIWAD );
 		for (QString & selectedMapPack : preset.selectedMapPacks)
 		{

@@ -55,7 +55,7 @@ class EngineDialog : public QDialog, public DialogWithPaths {
 
  private slots:
 
-	void selectExecutable();
+	bool selectExecutable();
 	void selectConfigDir();
 	void selectDataDir();
 

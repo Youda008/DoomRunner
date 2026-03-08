@@ -9,6 +9,7 @@
 
 #include "Utils/JsonUtils.hpp"  // serialization/deserialization
 #include "Utils/FileSystemUtils.hpp"  // getParentDir
+#include "Utils/UniqueIdGenerator.hpp"
 
 #include <QIcon>
 #include <QFileIconProvider>
@@ -19,8 +20,23 @@
 
 
 //======================================================================================================================
-// icons
+// unique ID generation
 
+static UniqueIdGenerator g_uniqueIDs;
+
+QString generateUniqueID()
+{
+	return g_uniqueIDs.generateID();
+}
+
+void addExistingID( QStringView objectName, const QString & id )
+{
+	return g_uniqueIDs.addExistingID( objectName, id );
+}
+
+
+//======================================================================================================================
+// icons
 
 static const QIcon emptyIcon;
 
@@ -123,6 +139,7 @@ QJsonObject Engine::serialize() const
 	}
 	else
 	{
+		engineJs["id"] = engine.id;
 		engineJs["name"] = engine.name;
 		engineJs["path"] = engine.executablePath;
 		engineJs["config_dir"] = engine.configDir;
@@ -156,9 +173,16 @@ bool Engine::deserialize( const JsonObjectCtx & engineJs )
 		}
 		engine.family = familyFromStr( engineJs.getString( "family", {}, MustBePresent, MustNotBeEmpty ) );
 
+		// unique engine identification added in 1.9.2
+		engine.id = engineJs.getString( "id", {}, AllowMissing, MustNotBeEmpty );
+		if (engine.id.isEmpty())    // either an older version or someone messed up with the options.json
+			engine.id = generateUniqueID();  // it must always be valid for the launcher to work properly
+		else
+			addExistingID( u"Engine", engine.id );
+
 		isValid = engine.name != InvalidItemName
 		       && engine.executablePath != InvalidItemPath
-		       && engine.family != EngineFamily::_EnumEnd;
+		       && engine.family != EngineFamily::_EnumEnd;  // TODO: check what this does later
 	}
 
 	return isValid;

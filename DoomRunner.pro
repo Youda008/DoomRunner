@@ -79,6 +79,7 @@ HEADERS += \
 	Sources/Utils/StringUtils.hpp \
 	Sources/Utils/TimeStats.hpp \
 	Sources/Utils/TypeTraits.hpp \
+	Sources/Utils/UniqueIdGenerator.hpp \
 	Sources/Utils/Version.hpp \
 	Sources/Utils/WADReader.hpp \
 	Sources/Utils/WidgetUtils.hpp \
@@ -141,6 +142,7 @@ SOURCES += \
 	Sources/Utils/StandardOutput.cpp \
 	Sources/Utils/StringUtils.cpp \
 	Sources/Utils/TypeTraitsTest.cpp \
+	Sources/Utils/UniqueIdGenerator.cpp \
 	Sources/Utils/Version.cpp \
 	Sources/Utils/WADReader.cpp \
 	Sources/Utils/WidgetUtils.cpp \

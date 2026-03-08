@@ -9,11 +9,13 @@
 
 #include "UserData.hpp"
 #include "AppVersion.hpp"
+#include "Utils/ContainerUtils.hpp"
 #include "Utils/JsonUtils.hpp"
 #include "Utils/PathCheckUtils.hpp"  // checkPath, highlightInvalidListItem
 #include "Utils/ErrorHandling.hpp"
 
 #include <QFileInfo>
+#include <QStringBuilder>
 
 
 const QString InvalidItemName = "<invalid name>";
@@ -36,7 +38,7 @@ QJsonObject serialize( const Preset & preset, const StorageSettings & settings )
 
 	// files
 
-	presetJs["selected_engine"] = preset.selectedEnginePath;
+	presetJs["selected_engine"] = preset.selectedEngine;
 	presetJs["selected_config"] = preset.selectedConfig;
 	presetJs["selected_IWAD"] = preset.selectedIWAD;
 
@@ -88,7 +90,7 @@ void deserialize( Preset & preset, const JsonObjectCtx & presetJs, const Storage
 
 	// files
 
-	preset.selectedEnginePath = presetJs.getString( "selected_engine" );
+	preset.selectedEngine = presetJs.getString( "selected_engine" );
 	preset.selectedConfig = presetJs.getString( "selected_config" );
 	preset.selectedIWAD = presetJs.getString( "selected_IWAD" );
 
@@ -273,6 +275,24 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 				opts.engines.append( EngineInfo( std::move(engine) ) );  // populates only Engine fields, leaves other EngineInfo fields empty
 			}
 		}
+
+		// Until 1.9.2 the engineSettings.defaultEngine contained engine.executablePath, but we need it to be engine.id.
+		if (!opts.engineSettings.defaultEngine.isEmpty() && opts.version < Version{1,9,2})
+		{
+			int engineIdx = findSuch( opts.engines, [ &opts ]( const EngineInfo & engine )
+													{ return engine.executablePath == opts.engineSettings.defaultEngine; } );
+			if (engineIdx >= 0)
+			{
+				opts.engineSettings.defaultEngine = opts.engines[ engineIdx ].getID();
+			}
+			else
+			{
+				reportUserError( nullptr, "Default engine no longer exists",
+					"Engine that was marked as default ("%opts.engineSettings.defaultEngine%") "
+					"was removed from engine list. Please select another one."
+				);
+			}
+		}
 	}
 
 	if (JsonObjectCtx iwadsJs = rootJs.getObject( "IWADs" ))
@@ -362,6 +382,24 @@ static void deserialize( const JsonObjectCtx & rootJs, OptionsToLoad & opts )
 
 			Preset preset;
 			deserialize( preset, presetJs, opts.settings );
+
+			// Until 1.9.2 the preset.selectedEngine contained engine.executablePath, but we need it to be engine.id.
+			if (!preset.isSeparator && !preset.selectedEngine.isEmpty() && opts.version < Version{1,9,2})
+			{
+				int engineIdx = findSuch( opts.engines, [ &preset ]( const EngineInfo & engine )
+				                                        { return engine.executablePath == preset.selectedEngine; } );
+				if (engineIdx >= 0)
+				{
+					preset.selectedEngine = opts.engines[ engineIdx ].getID();
+				}
+				else
+				{
+					reportUserError( nullptr, "Engine no longer exists",
+						"Engine \""%preset.selectedEngine%"\" selected for preset \""%preset.name%"\" "
+						"was removed from engine list. Please select another one."
+					);
+				}
+			}
 
 			opts.presets.append( std::move( preset ) );
 		}

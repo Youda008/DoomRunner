@@ -7,8 +7,12 @@
 
 #include "OptionsSerializer.hpp"  // OptionsToLoad
 
+#include "Utils/ContainerUtils.hpp"
 #include "Utils/JsonUtils.hpp"
 #include "Utils/PathCheckUtils.hpp"  // checkPath, highlightInvalidListItem
+#include "Utils/ErrorHandling.hpp"
+
+#include <QStringBuilder>
 
 
 //======================================================================================================================
@@ -26,7 +30,7 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, GameplayOptions & o
 	opts.allowCheats = optsJs.getBool( "allow_cheats", opts.allowCheats );
 }
 
-static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, const StorageSettings & settings )
+static void deserialize_pre17( Preset & preset, const JsonObjectCtx & presetJs, const StorageSettings & settings )
 {
 	preset.name = presetJs.getString( "name", InvalidItemName, MustBePresent, MustNotBeEmpty );
 
@@ -38,7 +42,7 @@ static void deserialize_pre17( const JsonObjectCtx & presetJs, Preset & preset, 
 
 	// files
 
-	preset.selectedEnginePath = presetJs.getString( "selected_engine" );
+	preset.selectedEngine = presetJs.getString( "selected_engine" );
 	preset.selectedConfig = presetJs.getString( "selected_config" );
 	preset.selectedIWAD = presetJs.getString( "selected_IWAD" );
 
@@ -236,7 +240,25 @@ static void deserialize_pre17( const JsonObjectCtx & optsJs, OptionsToLoad & opt
 				continue;
 
 			Preset preset;
-			deserialize_pre17( presetJs, preset, opts.settings );
+			deserialize_pre17( preset, presetJs, opts.settings );
+
+			// Until 1.9.2 the preset.selectedEngine contained engine.executablePath, but we need it to be engine.id.
+			if (!preset.isSeparator && !preset.selectedEngine.isEmpty())
+			{
+				int engineIdx = findSuch( opts.engines, [ &preset ]( const EngineInfo & engine )
+				                                        { return engine.executablePath == preset.selectedEngine; } );
+				if (engineIdx >= 0)
+				{
+					preset.selectedEngine = opts.engines[ engineIdx ].getID();
+				}
+				else
+				{
+					reportUserError( nullptr, "Engine no longer exists",
+						"Engine \""%preset.selectedEngine%"\" selected for preset \""%preset.name%"\" "
+						"was removed from engine list. Please select another one."
+					);
+				}
+			}
 
 			opts.presets.append( std::move( preset ) );
 		}

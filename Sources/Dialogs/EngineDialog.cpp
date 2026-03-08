@@ -127,11 +127,20 @@ void EngineDialog::onWindowShown()
 	// otherwise calling done() will bug the window in a half-shown state instead of closing it properly.
 	// Even showEvent() is too early for this.
 
-	if (engine.executablePath.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())
-		selectExecutable();
-
-	if (engine.executablePath.isEmpty() && engine.name.isEmpty() && engine.configDir.isEmpty())  // user closed the selectExecutable dialog
-		this->reject();
+	if (engine.id.isEmpty())  // adding a new engine
+	{
+		bool confirmed = selectExecutable();
+		if (confirmed)
+		{
+			// We need a unique engine ID, independent from name and path, that can be referenced from a preset,
+			// so that the user can edit the engine name and path without breaking the selected engines.
+			engine.id = generateUniqueID();
+		}
+		else  // user closed the selectExecutable dialog
+		{
+			this->reject();
+		}
+	}
 }
 
 void EngineDialog::autofillEngineInfo( EngineInfo & engine, const QString & executablePath )
@@ -187,7 +196,7 @@ void EngineDialog::highlightDataDirPath( QLineEdit * lineEdit, const QString & a
 		highlightPathLineAsInvalid( lineEdit );
 }
 
-void EngineDialog::selectExecutable()
+bool EngineDialog::selectExecutable()
 {
 	bool confirmed = DialogWithPaths::selectFile( this, "engine's executable", ui->executableLine,
  #if IS_WINDOWS
@@ -201,6 +210,8 @@ void EngineDialog::selectExecutable()
 		// auto-fill the other fields based on the current value of ui->executableLine
 		autofillEngineFields();
 	}
+
+	return confirmed;
 }
 
 void EngineDialog::selectConfigDir()

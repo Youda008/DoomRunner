@@ -2274,10 +2274,10 @@ void MainWindow::restoreGameplayOptions( const GameplayOptions & opts )
 void MainWindow::restoreCompatibilityOptions( const CompatibilityOptions & opts )
 {
 	int compatModeIdx = opts.compatMode + 1;  // first item is reserved for indicating no selection
-	if (compatModeIdx >= ui->compatModeCmbBox->count())
+	if (compatModeIdx < 0 || compatModeIdx >= ui->compatModeCmbBox->count())
 	{
 		// engine might have been removed, or its family was changed by the user
-		logLogicError() << "Stored compat mode ("<<compatModeIdx<<") is out of bounds of the current combo-box content";
+		logLogicError() << "Stored compat mode ("<<opts.compatMode<<") is out of bounds of the current combo-box content";
 		return;
 	}
 	ui->compatModeCmbBox->setCurrentIndex( compatModeIdx );
@@ -2861,7 +2861,7 @@ void MainWindow::clearPresetSubWidgets()
 
 	if (settings.compatOptsStorage == StoreToPreset)
 	{
-		ui->compatModeCmbBox->setCurrentIndex( -1 );
+		ui->compatModeCmbBox->setCurrentIndex( 0 );  // there is always an empty item on index 0
 	}
 
 	if (settings.launchOptsStorage == StoreToPreset)

@@ -3,16 +3,19 @@
 # Produces all currently supported release packages for Linux,
 # and installs the application into this system.
 
-pushd "$(dirname "$0")" 1>/dev/null
-trap "popd 1>/dev/null" EXIT
+SCRIPT_DIR="$(dirname "$0")"
 
-./1-build.sh appimage release
+BUILD_TYPE=release
+
+PACKAGE_TYPE=appimage
+$SCRIPT_DIR/1-build.sh $PACKAGE_TYPE $BUILD_TYPE
 if [ $? -eq 0 ]; then
-	./2-package.sh appimage release
+	$SCRIPT_DIR/2-package.sh $PACKAGE_TYPE $BUILD_TYPE
 fi
 
-./1-build.sh deb release
+PACKAGE_TYPE=deb
+$SCRIPT_DIR/1-build.sh $PACKAGE_TYPE $BUILD_TYPE
 if [ $? -eq 0 ]; then
-	./2-package.sh deb release
-	sudo ./2-deploy.sh deb release
+	$SCRIPT_DIR/2-package.sh $PACKAGE_TYPE $BUILD_TYPE
+	sudo $SCRIPT_DIR/3-install.sh $PACKAGE_TYPE $BUILD_TYPE
 fi

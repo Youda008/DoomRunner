@@ -12,12 +12,26 @@
 #                  profile = enables some optimizations, generates debug symbols into a separate file
 #                  debug = disables optimizations, generates debug symbols into the executable
 
+set -o errexit -o nounset -o pipefail
+
 pushd "$(dirname "$0")/.." 1>/dev/null
 trap "popd 1>/dev/null; echo" EXIT
 PROJECT_DIR="$(pwd)"
+SCRIPT_DIR="$PROJECT_DIR/Scripts"
+
+# validate the arguments
 PACKAGE_TYPE=$1
+if [ $PACKAGE_TYPE != deb ] && [ $PACKAGE_TYPE != appimage ] && [ $PACKAGE_TYPE != flatpak ]; then
+	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: deb, appimage, flatpak"
+	exit 1
+fi
 BUILD_TYPE=$2
-BUILD_DIR=Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE
+if [ $BUILD_TYPE != release ] && [ $BUILD_TYPE != profile ] && [ $BUILD_TYPE != debug ]; then
+	echo "Invalid build_type \"$BUILD_TYPE\", possible values: release, profile, debug"
+	exit 1
+fi
+
+BUILD_DIR="Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
 
 echo "Building the application"
 echo "Source dir: $PROJECT_DIR"
@@ -46,23 +60,13 @@ cd "$BUILD_DIR"
 echo
 COMMAND="$QMAKE \"$PROJECT_DIR/DoomRunner.pro\" $QMAKE_CONFIG"
 echo "$COMMAND"
-eval "$COMMAND"
-if [ $? -ne 0 ]; then
-	echo
-	echo "QMake exited with error: $?"
-	echo "Build failed."
-	exit 5
-fi
+eval "$COMMAND" || exit $((100+$?))
 
 # run the Makefile
 echo
-make -j 10
-if [ $? -ne 0 ]; then
-	echo
-	echo "Make exited with error: $?"
-	echo "Build failed."
-	exit 6
-fi
+COMMAND="make -j 10"
+echo "$COMMAND"
+eval "$COMMAND" || exit $((200+$?))
 
 echo
 echo "Build finished successfully."

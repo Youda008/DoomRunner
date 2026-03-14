@@ -1,11 +1,15 @@
 #!/bin/bash
 
-# Install the application from the selected build output into this system according to Ubuntu conventions.
+# Installs the application from the selected build output into this system according to Ubuntu conventions.
+
+set -o errexit -o nounset -o pipefail
 
 pushd "$(dirname "$0")/.." 1>/dev/null
-trap "popd 1>/dev/null" EXIT
+trap "popd 1>/dev/null; echo" EXIT
+
 PACKAGE_TYPE=$1
 BUILD_TYPE=$2
+
 BUILD_DIR=Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE
 
 echo "Installing the application from $BUILD_DIR into this system"
@@ -27,4 +31,6 @@ copy "Install/XDG/DoomRunner.32x32.png" "/usr/share/icons/hicolor/32x32/apps/Doo
 copy "Install/XDG/DoomRunner.48x48.png" "/usr/share/icons/hicolor/48x48/apps/DoomRunner.png"
 copy "Install/XDG/DoomRunner.64x64.png" "/usr/share/icons/hicolor/64x64/apps/DoomRunner.png"
 copy "Install/XDG/DoomRunner.128x128.png" "/usr/share/icons/hicolor/128x128/apps/DoomRunner.png"
+
 echo
+echo "Done"

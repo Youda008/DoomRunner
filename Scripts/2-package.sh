@@ -9,34 +9,41 @@
 #                    flatpak = sandboxed application bundle containing all dependencies but running with restricted permissions
 #   build_type - release|profile|debug
 
+set -o errexit -o nounset -o pipefail
+
 pushd "$(dirname "$0")/.." 1>/dev/null
 trap "popd 1>/dev/null; echo" EXIT
 PROJECT_DIR="$(pwd)"
-PACKAGE_TYPE=$1
-BUILD_TYPE=$2
-BUILD_DIR=Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE
+SCRIPT_DIR="$PROJECT_DIR/Scripts"
 
-# verify the built executable
-EXECUTABLE_PATH="$BUILD_DIR/DoomRunner"
-if [ ! -f "$EXECUTABLE_PATH" ]; then
-	echo "Build output not found: $EXECUTABLE_PATH"
-	echo "Packaging aborted."
-	exit 3
+# validate the arguments
+PACKAGE_TYPE=$1
+if [ $PACKAGE_TYPE != deb ] && [ $PACKAGE_TYPE != appimage ] && [ $PACKAGE_TYPE != flatpak ]; then
+	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: deb, appimage, flatpak"
+	exit 1
 fi
+BUILD_TYPE=$2
+if [ $BUILD_TYPE != release ] && [ $BUILD_TYPE != profile ] && [ $BUILD_TYPE != debug ]; then
+	echo "Invalid build_type \"$BUILD_TYPE\", possible values: release, profile, debug"
+	exit 1
+fi
+
+BUILD_DIR="Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
+EXECUTABLE_PATH="$BUILD_DIR/DoomRunner"
 
 # read version number
 APP_VERSION=$(eval "echo $(cat version.txt)")
 if [ $? -ne 0 ] || [ -z $APP_VERSION ]; then
 	echo "Cannot read application version from version.txt"
 	echo "Packaging aborted."
-	exit 4
+	exit 3
 fi
 
-# determine package file name
+# compose the package file name
 BASE_NAME="DoomRunner-$APP_VERSION-Linux-64bit"
 
-RELEASE_DIR_NAME="Releases"
-[ ! -d "$RELEASE_DIR_NAME" ] && mkdir -p $RELEASE_DIR_NAME
+RELEASE_DIR="Releases"
+[ ! -d "$RELEASE_DIR" ] && mkdir -p $RELEASE_DIR
 
 if [ $PACKAGE_TYPE == deb ]; then
 	# verify the archive tool
@@ -47,20 +54,14 @@ if [ $PACKAGE_TYPE == deb ]; then
 		exit 2
 	fi
 
-	ARCHIVE_PATH="$RELEASE_DIR_NAME/$BASE_NAME-dynamic.zip"
+	ARCHIVE_PATH="$RELEASE_DIR/$BASE_NAME-dynamic.zip"
 	echo "Debian/Ubuntu package not implemented yet"
 	echo "Packaging only the executable $EXECUTABLE_PATH into $ARCHIVE_PATH"
 	echo
 	[ -f "$ARCHIVE_PATH" ] && rm "$ARCHIVE_PATH"
 	COMMAND="$ZIP_TOOL a -tzip -mx=7 \"$ARCHIVE_PATH\" \"$EXECUTABLE_PATH\""
 	echo "$COMMAND"
-	eval "$COMMAND"
-	if [ $? -ne 0 ]; then
-		echo
-		echo "$ZIP_TOOL exited with error: $?"
-		echo "Packaging aborted."
-		exit 5
-	fi
+	eval "$COMMAND" || exit $((100+$?))
 	echo
 	echo "Packaging finished successfully."
 	echo "Output: $PROJECT_DIR/$ARCHIVE_PATH"
@@ -74,7 +75,7 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 		exit 2
 	fi
 
-	APPIMAGE_PATH="$RELEASE_DIR_NAME/$BASE_NAME.AppImage"
+	APPIMAGE_PATH="$RELEASE_DIR/$BASE_NAME.AppImage"
 	echo "Generating AppImage from $BUILD_DIR into $APPIMAGE_PATH"
 	echo
 	# AppImage cannot be build on a shared NTFS drive because we would run into troubles with permissions.
@@ -92,13 +93,8 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 		--appdir \"$APPIMAGE_BUILD_DIR/AppDir\"
 		--output appimage"
 	echo "$COMMAND"
-	eval $(echo "$COMMAND" | sed -z 's/\n/ /g')  # remove newlines
-	if [ $? -ne 0 ]; then
-		echo
-		echo "$PKG_TOOL exited with error: $?"
-		echo "Packaging aborted."
-		exit 5
-	fi
+	COMMAND=$(echo "$COMMAND" | sed -z 's/\n/ /g')  # remove newlines from the command
+	eval "$COMMAND" || exit $((100+$?))
 	mv Doom_Runner-x86_64.AppImage "$PROJECT_DIR/$APPIMAGE_PATH"
 	echo
 	echo "Packaging finished successfully."
@@ -106,8 +102,5 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 	exit 0
 elif [ $PACKAGE_TYPE == flatpak ]; then
 	echo "Flatpak package not implemented yet"
-	exit 1
-else
-	echo "Unknown package type: $PACKAGE_TYPE"
 	exit 1
 fi

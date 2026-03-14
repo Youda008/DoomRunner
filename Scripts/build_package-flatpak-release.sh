@@ -1,13 +1,10 @@
 #!/bin/bash
 
-pushd "$(dirname "$0")" 1>/dev/null
-trap "popd 1>/dev/null" EXIT
+SCRIPT_DIR="$(dirname "$0")"
 
 PACKAGE_TYPE=flatpak
 BUILD_TYPE=release
 
-./1-build.sh $PACKAGE_TYPE $BUILD_TYPE
-[ $? -ne 0 ] && exit 1
+$SCRIPT_DIR/1-build.sh $PACKAGE_TYPE $BUILD_TYPE || exit
 
-./2-package.sh $PACKAGE_TYPE $BUILD_TYPE
-[ $? -ne 0 ] && exit 2
+$SCRIPT_DIR/2-package.sh $PACKAGE_TYPE $BUILD_TYPE || exit

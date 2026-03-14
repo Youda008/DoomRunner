@@ -28,7 +28,8 @@ if [ $BUILD_TYPE != release ] && [ $BUILD_TYPE != profile ] && [ $BUILD_TYPE != 
 	exit 1
 fi
 
-BUILD_DIR="Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
+# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
+BUILD_DIR="$HOME/Builds/DoomRunner/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
 EXECUTABLE_PATH="$BUILD_DIR/DoomRunner"
 
 # read version number
@@ -54,17 +55,17 @@ if [ $PACKAGE_TYPE == deb ]; then
 		exit 2
 	fi
 
-	ARCHIVE_PATH="$RELEASE_DIR/$BASE_NAME-dynamic.zip"
+	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME-dynamic.zip"
 	echo "Debian/Ubuntu package not implemented yet"
-	echo "Packaging only the executable $EXECUTABLE_PATH into $ARCHIVE_PATH"
+	echo "Packaging only the executable $EXECUTABLE_PATH into $PACKAGE_PATH"
 	echo
-	[ -f "$ARCHIVE_PATH" ] && rm "$ARCHIVE_PATH"
-	COMMAND="$ZIP_TOOL a -tzip -mx=7 \"$ARCHIVE_PATH\" \"$EXECUTABLE_PATH\""
+	[ -f "$PACKAGE_PATH" ] && rm "$PACKAGE_PATH"
+	COMMAND="$ZIP_TOOL a -tzip -mx=7 \"$PACKAGE_PATH\" \"$EXECUTABLE_PATH\""
 	echo "$COMMAND"
 	eval "$COMMAND" || exit $((100+$?))
 	echo
 	echo "Packaging finished successfully."
-	echo "Output: $PROJECT_DIR/$ARCHIVE_PATH"
+	echo "Output: $PACKAGE_PATH"
 	exit 0
 elif [ $PACKAGE_TYPE == appimage ]; then
 	# verify the packaging tool
@@ -75,30 +76,29 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 		exit 2
 	fi
 
-	APPIMAGE_PATH="$RELEASE_DIR/$BASE_NAME.AppImage"
-	echo "Generating AppImage from $BUILD_DIR into $APPIMAGE_PATH"
+	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME.AppImage"
+	echo "Generating AppImage from $BUILD_DIR into $PACKAGE_PATH"
 	echo
-	# AppImage cannot be build on a shared NTFS drive because we would run into troubles with permissions.
-	APPIMAGE_BUILD_DIR="$HOME/Builds/DoomRunner"
 	# re-create the build dir and start from scratch
-	[ -d "$APPIMAGE_BUILD_DIR/AppDir" ] && rm -r "$APPIMAGE_BUILD_DIR/AppDir"
-	mkdir -p "$APPIMAGE_BUILD_DIR/AppDir"
+	[ -d "$BUILD_DIR/AppDir" ] && rm -r "$BUILD_DIR/AppDir"
+	mkdir -p "$BUILD_DIR/AppDir"
 	# We need to make it the working directory, because the output is produced there and we can't control it.
-	cd "$APPIMAGE_BUILD_DIR"
+	pushd "$BUILD_DIR" 1>/dev/null
 	COMMAND="$PKG_TOOL
-		--executable \"$PROJECT_DIR/$EXECUTABLE_PATH\"
+		--executable \"$EXECUTABLE_PATH\"
 		--desktop-file \"$PROJECT_DIR/Install/XDG/DoomRunner.desktop\"
 		--icon-file \"$PROJECT_DIR/Install/XDG/DoomRunner.128x128.png\"
 		--icon-filename DoomRunner
-		--appdir \"$APPIMAGE_BUILD_DIR/AppDir\"
+		--appdir \"$BUILD_DIR/AppDir\"
 		--output appimage"
 	echo "$COMMAND"
 	COMMAND=$(echo "$COMMAND" | sed -z 's/\n/ /g')  # remove newlines from the command
 	eval "$COMMAND" || exit $((100+$?))
-	mv Doom_Runner-x86_64.AppImage "$PROJECT_DIR/$APPIMAGE_PATH"
+	popd 1>/dev/null
+	mv "$BUILD_DIR/Doom_Runner-x86_64.AppImage" "$PACKAGE_PATH"
 	echo
 	echo "Packaging finished successfully."
-	echo "Output: $PROJECT_DIR/$APPIMAGE_PATH"
+	echo "Output: $PACKAGE_PATH"
 	exit 0
 elif [ $PACKAGE_TYPE == flatpak ]; then
 	echo "Flatpak package not implemented yet"

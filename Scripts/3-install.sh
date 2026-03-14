@@ -10,18 +10,19 @@ trap "popd 1>/dev/null; echo" EXIT
 PACKAGE_TYPE=$1
 BUILD_TYPE=$2
 
-BUILD_DIR=Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE
+# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
+BUILD_DIR="$HOME/Builds/DoomRunner/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
 
 echo "Installing the application from $BUILD_DIR into this system"
 echo
 
 echo "Installing binaries"
 pushd "$BUILD_DIR" 1>/dev/null
-make install
+sudo make install
 popd 1>/dev/null
 echo
 
-copy() { echo "cp $1 $2"; cp $1 $2; }
+copy() { echo "cp $1 $2"; sudo cp $1 $2; }
 
 echo "Installing desktop files"
 copy "Install/XDG/DoomRunner.desktop" "/usr/share/applications/DoomRunner.desktop"

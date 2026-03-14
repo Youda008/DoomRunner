@@ -95,7 +95,7 @@ if %ERRORLEVEL% neq 0 (
 
 echo.
 echo Build finished successfully.
-echo Output: %PROJECT_DIR%\%BUILD_DIR%
+echo Output: %BUILD_DIR%
 set ERROR_CODE=0
 
 :exit

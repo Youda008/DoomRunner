@@ -17,5 +17,5 @@ PACKAGE_TYPE=deb
 $SCRIPT_DIR/1-build.sh $PACKAGE_TYPE $BUILD_TYPE
 if [ $? -eq 0 ]; then
 	$SCRIPT_DIR/2-package.sh $PACKAGE_TYPE $BUILD_TYPE
-	sudo $SCRIPT_DIR/3-install.sh $PACKAGE_TYPE $BUILD_TYPE
+	$SCRIPT_DIR/3-install.sh $PACKAGE_TYPE $BUILD_TYPE
 fi

@@ -73,7 +73,7 @@ if %ERRORLEVEL% neq 0 (
 
 echo.
 echo Packaging finished successfully.
-echo Output: %PROJECT_DIR%\%ARCHIVE_PATH%
+echo Output: %ARCHIVE_PATH%
 set ERROR_CODE=0
 
 :exit

@@ -31,11 +31,12 @@ if [ $BUILD_TYPE != release ] && [ $BUILD_TYPE != profile ] && [ $BUILD_TYPE != 
 	exit 1
 fi
 
-BUILD_DIR="Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
+# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
+BUILD_DIR="$HOME/Builds/DoomRunner/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
 
 echo "Building the application"
 echo "Source dir: $PROJECT_DIR"
-echo "Output dir: $PROJECT_DIR/$BUILD_DIR"
+echo "Output dir: $BUILD_DIR"
 echo "Build type: $PACKAGE_TYPE $BUILD_TYPE"
 
 # select and verify the Qt build tools
@@ -53,7 +54,7 @@ if [ $BUILD_TYPE == profile ]; then  QMAKE_CONFIG="CONFIG+=profile CONFIG+=separ
 if [ $BUILD_TYPE == release ]; then  QMAKE_CONFIG="CONFIG+=release CONFIG+=separate_debug_info"; fi
 if [ $PACKAGE_TYPE == flatpak ]; then  QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=flatpak"; fi
 
-[ ! -d "$BUILD_DIR" ] && mkdir "$BUILD_DIR"
+[ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # generate the Makefile
@@ -70,5 +71,5 @@ eval "$COMMAND" || exit $((200+$?))
 
 echo
 echo "Build finished successfully."
-echo "Output: $PROJECT_DIR/$BUILD_DIR"
+echo "Output: $BUILD_DIR"
 exit 0

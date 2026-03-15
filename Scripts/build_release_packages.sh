@@ -5,7 +5,7 @@
 SCRIPT_DIR="$(dirname "$0")"
 
 # detect the operating system
-if [ -d "/Applications" ] && [ -d "/Library" ]; then
+if [[ -d "/Applications" && -d "/Library" ]]; then
 	OS_TYPE=MacOS
 else
 	OS_TYPE=Linux

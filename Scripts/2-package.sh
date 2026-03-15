@@ -20,7 +20,7 @@ SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
 
 # detect the operating system
-if [ -d "/Applications" ] && [ -d "/Library" ]; then
+if [[ -d "/Applications" && -d "/Library" ]]; then
 	OS_TYPE=MacOS
 else
 	OS_TYPE=Linux
@@ -35,10 +35,10 @@ fi
 
 # validate the arguments
 PACKAGE_TYPE=$2
-if [ $OS_TYPE == Linux ] && [ $PACKAGE_TYPE != deb ] && [ $PACKAGE_TYPE != appimage ] && [ $PACKAGE_TYPE != flatpak ]; then
+if [[ $OS_TYPE == Linux && $PACKAGE_TYPE != deb && $PACKAGE_TYPE != appimage && $PACKAGE_TYPE != flatpak ]]; then
 	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: deb, appimage, flatpak"
 	exit 1
-elif [ $OS_TYPE == MacOS ] && [ $PACKAGE_TYPE != dmg ]; then
+elif [[ $OS_TYPE == MacOS && $PACKAGE_TYPE != dmg ]]; then
 	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: dmg"
 	exit 1
 fi
@@ -60,7 +60,7 @@ RELEASE_DIR="$SOURCE_DIR/Releases"
 
 # read version number
 APP_VERSION=$(eval "echo $(cat version.txt)")
-if [ $? -ne 0 ] || [ -z $APP_VERSION ]; then
+if [[ $? -ne 0 || -z $APP_VERSION ]]; then
 	echo "Cannot read application version from version.txt"
 	echo "Packaging aborted."
 	exit 3

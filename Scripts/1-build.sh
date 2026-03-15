@@ -25,7 +25,7 @@ SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
 
 # detect the operating system
-if [ -d "/Applications" ] && [ -d "/Library" ]; then
+if [[ -d "/Applications" && -d "/Library" ]]; then
 	OS_TYPE=MacOS
 else
 	OS_TYPE=Linux
@@ -33,15 +33,15 @@ fi
 
 # validate the arguments
 PACKAGE_TYPE=$1
-if [ $OS_TYPE == Linux ] && [ $PACKAGE_TYPE != deb ] && [ $PACKAGE_TYPE != appimage ] && [ $PACKAGE_TYPE != flatpak ]; then
+if [[ $OS_TYPE == Linux && $PACKAGE_TYPE != deb && $PACKAGE_TYPE != appimage && $PACKAGE_TYPE != flatpak ]]; then
 	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: deb, appimage, flatpak"
 	exit 1
-elif [ $OS_TYPE == MacOS ] && [ $PACKAGE_TYPE != app ]; then
+elif [[ $OS_TYPE == MacOS && $PACKAGE_TYPE != app ]]; then
 	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: app"
 	exit 1
 fi
 BUILD_TYPE=$2
-if [ $BUILD_TYPE != release ] && [ $BUILD_TYPE != profile ] && [ $BUILD_TYPE != debug ]; then
+if [[ $BUILD_TYPE != release && $BUILD_TYPE != profile && $BUILD_TYPE != debug ]]; then
 	echo "Invalid build_type \"$BUILD_TYPE\", possible values: release, profile, debug"
 	exit 1
 fi
@@ -82,7 +82,7 @@ cd "$BUILD_DIR"
 
 # 2-package.sh modifies the app and `make` doesn't recognize it and regenerate it,
 # so we need to delete it manually to get into the expected state.
-[ $OS_TYPE == MacOS ] && [ -d "$BUILD_DIR/$PROJECT_NAME.app" ] && rm -r "$BUILD_DIR/$PROJECT_NAME.app"
+[[ $OS_TYPE == MacOS && -d "$BUILD_DIR/$PROJECT_NAME.app" ]] && rm -r "$BUILD_DIR/$PROJECT_NAME.app"
 
 # generate the Makefile
 echo

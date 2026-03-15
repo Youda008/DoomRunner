@@ -2,12 +2,9 @@
 
 # Creates a distributable package from the selected build output.
 #
-# Usage: 2-package.sh <package_type> <build_type>
-#   package_type - what kind of package is this build meant for, some of them require specific build config
-#                    deb = Debian/Ubuntu package that relies on the package maneger to install its dependencies
-#                    appimage = self-mounting application bundle that contains all dependencies compressed in the executable
-#                    flatpak = sandboxed application bundle containing all dependencies but running with restricted permissions
-#   build_type - release|profile|debug
+# Usage: 2-package.sh <build_dir> <package_type>
+#   build_dir - path to the directory where the application has been built
+#   See 1-build.sh for the description of the other parameters
 
 set -o errexit -o nounset -o pipefail
 
@@ -19,20 +16,21 @@ SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
 
 # validate the arguments
-PACKAGE_TYPE=$1
+PACKAGE_TYPE=$2
 if [ $PACKAGE_TYPE != deb ] && [ $PACKAGE_TYPE != appimage ] && [ $PACKAGE_TYPE != flatpak ]; then
 	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: deb, appimage, flatpak"
 	exit 1
 fi
-BUILD_TYPE=$2
-if [ $BUILD_TYPE != release ] && [ $BUILD_TYPE != profile ] && [ $BUILD_TYPE != debug ]; then
-	echo "Invalid build_type \"$BUILD_TYPE\", possible values: release, profile, debug"
-	exit 1
+
+BUILD_DIR="$1"
+EXECUTABLE_PATH="$BUILD_DIR/$PROJECT_NAME"
+if [ ! -f "$EXECUTABLE_PATH" ]; then
+	echo "There is no build output in \"%BUILD_DIR%\"" | eval $SHORTEN_PATHS
+	echo "Packaging aborted."
+	exit 3
 fi
 
-# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
-BUILD_DIR="$HOME/Builds/$PROJECT_NAME/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
-EXECUTABLE_PATH="$BUILD_DIR/$PROJECT_NAME"
+RELEASE_DIR="$SOURCE_DIR/Releases"
 
 # read version number
 APP_VERSION=$(eval "echo $(cat version.txt)")
@@ -45,7 +43,6 @@ fi
 # compose the package file name
 BASE_NAME="$PROJECT_NAME-$APP_VERSION-Linux-64bit"
 
-RELEASE_DIR="$SOURCE_DIR/Releases"
 [ ! -d "$RELEASE_DIR" ] && mkdir -p $RELEASE_DIR
 
 if [ $PACKAGE_TYPE == deb ]; then
@@ -98,6 +95,7 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 		--appdir \"$BUILD_DIR/AppDir\"
 		--output appimage"
 	echo "$COMMAND" | eval $SHORTEN_PATHS
+	echo
 	COMMAND=$(echo "$COMMAND" | sed -z 's/\n/ /g')  # remove newlines from the command
 	eval "$COMMAND" || exit $((100+$?))
 	popd 1>/dev/null

@@ -11,11 +11,7 @@ SCRIPT_DIR="$SOURCE_DIR/Scripts"
 SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
 
-PACKAGE_TYPE=$1
-BUILD_TYPE=$2
-
-# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
-BUILD_DIR="$HOME/Builds/$PROJECT_NAME/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
+BUILD_DIR="$1"
 
 echo "Installing the application from \"$BUILD_DIR\" into this system" | eval $SHORTEN_PATHS
 echo

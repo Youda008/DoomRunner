@@ -19,6 +19,7 @@ trap "popd 1>/dev/null; echo" EXIT
 SOURCE_DIR="$(pwd)"
 SCRIPT_DIR="$SOURCE_DIR/Scripts"
 SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
+PROJECT_NAME="$(basename "$SOURCE_DIR")"
 
 # validate the arguments
 PACKAGE_TYPE=$1
@@ -33,7 +34,7 @@ if [ $BUILD_TYPE != release ] && [ $BUILD_TYPE != profile ] && [ $BUILD_TYPE != 
 fi
 
 # We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
-BUILD_DIR="$HOME/Builds/DoomRunner/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
+BUILD_DIR="$HOME/Builds/$PROJECT_NAME/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
 
 # select and verify the Qt build tools
 QMAKE=qmake6
@@ -60,7 +61,7 @@ cd "$BUILD_DIR"
 
 # generate the Makefile
 echo
-COMMAND="$QMAKE \"$SOURCE_DIR/DoomRunner.pro\" $QMAKE_CONFIG"
+COMMAND="$QMAKE \"$SOURCE_DIR/$PROJECT_NAME.pro\" $QMAKE_CONFIG"
 echo "$COMMAND" |  eval $SHORTEN_PATHS
 eval "$COMMAND" || exit $((100+$?))
 

@@ -18,6 +18,7 @@ pushd "%~dp0.."
 set "SOURCE_DIR=%cd%"
 set "SCRIPT_DIR=%SOURCE_DIR%\Scripts"
 set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR}""
+for %%I in ("%SOURCE_DIR%") do set "PROJECT_NAME=%%~nxI"
 
 :: validate the arguments
 set TARGET_ENV=%~1
@@ -76,7 +77,7 @@ cd "%BUILD_DIR%"
 
 :: generate the Makefile
 echo.
-set "COMMAND="%QMAKE%" "%SOURCE_DIR%\DoomRunner.pro" %QMAKE_CONFIG%"
+set "COMMAND="%QMAKE%" "%SOURCE_DIR%\%PROJECT_NAME%.pro" %QMAKE_CONFIG%"
 echo %COMMAND% | %SHORTEN_PATHS%
 call %COMMAND%
 if %ERRORLEVEL% neq 0 (

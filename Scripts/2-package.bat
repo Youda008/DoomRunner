@@ -9,6 +9,7 @@ pushd "%~dp0.."
 set "SOURCE_DIR=%cd%"
 set "SCRIPT_DIR=%SOURCE_DIR%\Scripts"
 set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR}""
+for %%I in ("%SOURCE_DIR%") do set "PROJECT_NAME=%%~nxI"
 
 :: validate the arguments
 set TARGET_ENV=%~1
@@ -31,7 +32,7 @@ if %BUILD_TYPE% NEQ release ( if %BUILD_TYPE% NEQ profile ( if %BUILD_TYPE% NEQ 
 )))
 
 set "BUILD_DIR=%SOURCE_DIR%\Build-Windows-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
-set "EXECUTABLE_PATH=%BUILD_DIR%\%BUILD_TYPE%\DoomRunner.exe"
+set "EXECUTABLE_PATH=%BUILD_DIR%\%BUILD_TYPE%\%PROJECT_NAME%.exe"
 
 :: verify the archive tool
 set "ZIP_TOOL=C:\Program Files\7-Zip\7z.exe"
@@ -54,7 +55,7 @@ if %ERRORLEVEL% neq 0 (
 :: compose the package file name
 if %TARGET_ENV%==legacy set "TARGET_ENV_DESC=legacy(32bit)"
 if %TARGET_ENV%==recent set "TARGET_ENV_DESC=recent(64bit)"
-set "BASE_NAME=DoomRunner-%APP_VERSION%-Windows-%TARGET_ENV_DESC%-%LINKAGE%"
+set "BASE_NAME=%PROJECT_NAME%-%APP_VERSION%-Windows-%TARGET_ENV_DESC%-%LINKAGE%"
 
 set "RELEASE_DIR=%SOURCE_DIR%\Releases"
 set "PACKAGE_PATH=%RELEASE_DIR%\%BASE_NAME%.zip"

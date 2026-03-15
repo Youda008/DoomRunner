@@ -16,6 +16,7 @@ trap "popd 1>/dev/null; echo" EXIT
 SOURCE_DIR="$(pwd)"
 SCRIPT_DIR="$SOURCE_DIR/Scripts"
 SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
+PROJECT_NAME="$(basename "$SOURCE_DIR")"
 
 # validate the arguments
 PACKAGE_TYPE=$1
@@ -30,8 +31,8 @@ if [ $BUILD_TYPE != release ] && [ $BUILD_TYPE != profile ] && [ $BUILD_TYPE != 
 fi
 
 # We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
-BUILD_DIR="$HOME/Builds/DoomRunner/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
-EXECUTABLE_PATH="$BUILD_DIR/DoomRunner"
+BUILD_DIR="$HOME/Builds/$PROJECT_NAME/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
+EXECUTABLE_PATH="$BUILD_DIR/$PROJECT_NAME"
 
 # read version number
 APP_VERSION=$(eval "echo $(cat version.txt)")
@@ -42,7 +43,7 @@ if [ $? -ne 0 ] || [ -z $APP_VERSION ]; then
 fi
 
 # compose the package file name
-BASE_NAME="DoomRunner-$APP_VERSION-Linux-64bit"
+BASE_NAME="$PROJECT_NAME-$APP_VERSION-Linux-64bit"
 
 RELEASE_DIR="$SOURCE_DIR/Releases"
 [ ! -d "$RELEASE_DIR" ] && mkdir -p $RELEASE_DIR
@@ -91,15 +92,16 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 	pushd "$BUILD_DIR" 1>/dev/null
 	COMMAND="$PKG_TOOL
 		--executable \"$EXECUTABLE_PATH\"
-		--desktop-file \"$SOURCE_DIR/Install/XDG/DoomRunner.desktop\"
-		--icon-file \"$SOURCE_DIR/Install/XDG/DoomRunner.128x128.png\"
-		--icon-filename DoomRunner
+		--desktop-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.desktop\"
+		--icon-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.128x128.png\"
+		--icon-filename $PROJECT_NAME
 		--appdir \"$BUILD_DIR/AppDir\"
 		--output appimage"
 	echo "$COMMAND" | eval $SHORTEN_PATHS
 	COMMAND=$(echo "$COMMAND" | sed -z 's/\n/ /g')  # remove newlines from the command
 	eval "$COMMAND" || exit $((100+$?))
 	popd 1>/dev/null
+	# Some tools will just always do their own thing, no matter what -_-
 	mv "$BUILD_DIR/Doom_Runner-x86_64.AppImage" "$PACKAGE_PATH"
 	echo
 	echo "Packaging finished successfully."

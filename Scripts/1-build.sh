@@ -5,8 +5,9 @@
 # Usage: 1-build.sh <package_type> <build_type>
 #   package_type - what kind of package is this build meant for, some of them require specific build config
 #                    deb = Debian/Ubuntu package that relies on the package maneger to install its dependencies
-#                    appimage = self-mounting application bundle that contains all dependencies compressed in the executable
-#                    flatpak = sandboxed application bundle containing all dependencies but running with restricted permissions
+#                    appimage = self-mounting Linux application bundle that contains all dependencies compressed in the executable
+#                    flatpak = sandboxed Linux application bundle containing all dependencies but running with restricted permissions
+#                    app = standard MacOS application bundle that contains all dependencies bundled in its directory
 #   build_type - QMake build type
 #                  release = enables most optimizations, generates debug symbols into a separate file
 #                  profile = enables some optimizations, generates debug symbols into a separate file
@@ -23,10 +24,20 @@ SCRIPT_DIR="$SOURCE_DIR/Scripts"
 SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
 
+# detect the operating system
+if [ -d "/Applications" ] && [ -d "/Library" ]; then
+	OS_TYPE=MacOS
+else
+	OS_TYPE=Linux
+fi
+
 # validate the arguments
 PACKAGE_TYPE=$1
-if [ $PACKAGE_TYPE != deb ] && [ $PACKAGE_TYPE != appimage ] && [ $PACKAGE_TYPE != flatpak ]; then
+if [ $OS_TYPE == Linux ] && [ $PACKAGE_TYPE != deb ] && [ $PACKAGE_TYPE != appimage ] && [ $PACKAGE_TYPE != flatpak ]; then
 	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: deb, appimage, flatpak"
+	exit 1
+elif [ $OS_TYPE == MacOS ] && [ $PACKAGE_TYPE != app ]; then
+	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: app"
 	exit 1
 fi
 BUILD_TYPE=$2
@@ -35,8 +46,14 @@ if [ $BUILD_TYPE != release ] && [ $BUILD_TYPE != profile ] && [ $BUILD_TYPE != 
 	exit 1
 fi
 
-# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
-BUILD_DIR="$HOME/Builds/$PROJECT_NAME/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
+# determine the build directory
+BUILD_DIR_NAME="Build-$OS_TYPE-$PACKAGE_TYPE-$BUILD_TYPE"
+if [[ "$SOURCE_DIR" == "/media/"* ]]; then
+	# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
+	BUILD_DIR="$HOME/Builds/$PROJECT_NAME/$BUILD_DIR_NAME"
+else
+	BUILD_DIR="$SOURCE_DIR/$BUILD_DIR_NAME"
+fi
 # Writing to file is the only way we can return this path to the caller.
 echo $BUILD_DIR > /tmp/BUILD_DIR
 
@@ -62,6 +79,10 @@ echo " Build type: $PACKAGE_TYPE $BUILD_TYPE"
 
 [ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
+
+# 2-package.sh modifies the app and `make` doesn't recognize it and regenerate it,
+# so we need to delete it manually to get into the expected state.
+[ $OS_TYPE == MacOS ] && [ -d "$BUILD_DIR/$PROJECT_NAME.app" ] && rm -r "$BUILD_DIR/$PROJECT_NAME.app"
 
 # generate the Makefile
 echo

@@ -208,6 +208,20 @@ win32 {
 
 #-- libraries ------------------------------------
 
+macx {
+	# To link libraries on Mac we must manually add their installation paths.
+	# And because the installation path depends on the CPU architecture,
+	# and there is no easy way to detect it, we just add both.
+	HOMEBREW_PREFIX_ARM = /opt/homebrew/opt
+	HOMEBREW_PREFIX_X86 = /usr/local/opt
+
+	INCLUDEPATH += \
+		$$HOMEBREW_PREFIX_ARM/minizip/include $$HOMEBREW_PREFIX_X86/minizip/include
+
+	LIBS += \
+		-L$$HOMEBREW_PREFIX_ARM/minizip/lib -L$$HOMEBREW_PREFIX_X86/minizip/lib
+}
+
 LIBS += -lminizip
 equals(QT_MAJOR_VERSION, 5): LIBS += -lbz2
 win32: LIBS += -lole32 -luuid -ldwmapi -lversion

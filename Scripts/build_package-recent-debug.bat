@@ -8,7 +8,7 @@ set BUILD_TYPE=debug
 
 call %SCRIPT_DIR%\1-build.bat %TARGET_ENV% %LINKAGE% %BUILD_TYPE% || goto exit
 
-call %SCRIPT_DIR%\2-package.bat %TARGET_ENV% %LINKAGE% %BUILD_TYPE% || goto exit
+call %SCRIPT_DIR%\2-package.bat %BUILD_DIR% %TARGET_ENV% %LINKAGE% %BUILD_TYPE% || goto exit
 
 :exit
 pause

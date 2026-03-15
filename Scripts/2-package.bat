@@ -1,7 +1,10 @@
 :: Creates a distributable package from the selected build output.
 ::
-:: Usage: 2-package.bat <target_env> <linkage> <build_type>
-::   See 1-build.bat for the parameter description
+:: Usage: 2-package.bat <build_dir> <target_env> <linkage> <build_type>
+::   build_dir - path to the directory where the application has been built
+::   See 1-build.bat for the description of the other parameters
+::
+:: NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as PACKAGE_PATH.
 
 @echo off
 
@@ -12,36 +15,26 @@ set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR
 for %%I in ("%SOURCE_DIR%") do set "PROJECT_NAME=%%~nxI"
 
 :: validate the arguments
-set TARGET_ENV=%~1
+set TARGET_ENV=%~2
+set LINKAGE=%~3
+set BUILD_TYPE=%~4
 if %TARGET_ENV% NEQ recent ( if %TARGET_ENV% NEQ legacy (
 	echo Invalid target_env "%TARGET_ENV%", possible values: recent, legacy
 	set ERROR_CODE=1
 	goto exit
 ))
-set LINKAGE=%~2
-if %LINKAGE% NEQ static ( if %LINKAGE% NEQ dynamic (
-	echo Invalid linkage "%LINKAGE%", possible values: static, dynamic
-	set ERROR_CODE=1
-	goto exit
-))
-set BUILD_TYPE=%~3
-if %BUILD_TYPE% NEQ release ( if %BUILD_TYPE% NEQ profile ( if %BUILD_TYPE% NEQ debug (
-	echo Invalid build_type "%BUILD_TYPE%", possible values: release, profile, debug
-	set ERROR_CODE=1
-	goto exit
-)))
 
-set "BUILD_DIR=%SOURCE_DIR%\Build-Windows-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
+:: verify the build output
+set "BUILD_DIR=%~1"
 set "EXECUTABLE_PATH=%BUILD_DIR%\%BUILD_TYPE%\%PROJECT_NAME%.exe"
-
-:: verify the archive tool
-set "ZIP_TOOL=C:\Program Files\7-Zip\7z.exe"
-if not exist "%ZIP_TOOL%" (
-	echo Archive tool not found: %ZIP_TOOL%
+if not exist "%EXECUTABLE_PATH%" (
+	echo There is no build output in "%BUILD_DIR%" | %SHORTEN_PATHS%
 	echo Packaging aborted.
-	set ERROR_CODE=2
+	set ERROR_CODE=3
 	goto exit
 )
+
+set "RELEASE_DIR=%SOURCE_DIR%\Releases"
 
 :: read version number
 for /f "delims=" %%A in (version.txt) do set APP_VERSION=%%~A
@@ -57,7 +50,15 @@ if %TARGET_ENV%==legacy set "TARGET_ENV_DESC=legacy(32bit)"
 if %TARGET_ENV%==recent set "TARGET_ENV_DESC=recent(64bit)"
 set "BASE_NAME=%PROJECT_NAME%-%APP_VERSION%-Windows-%TARGET_ENV_DESC%-%LINKAGE%"
 
-set "RELEASE_DIR=%SOURCE_DIR%\Releases"
+:: verify the archive tool
+set "ZIP_TOOL=C:\Program Files\7-Zip\7z.exe"
+if not exist "%ZIP_TOOL%" (
+	echo Archive tool not found: %ZIP_TOOL%
+	echo Packaging aborted.
+	set ERROR_CODE=2
+	goto exit
+)
+
 set "PACKAGE_PATH=%RELEASE_DIR%\%BASE_NAME%.zip"
 
 echo Packaging the build output into an archive

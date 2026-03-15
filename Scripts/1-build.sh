@@ -11,6 +11,8 @@
 #                  release = enables most optimizations, generates debug symbols into a separate file
 #                  profile = enables some optimizations, generates debug symbols into a separate file
 #                  debug = disables optimizations, generates debug symbols into the executable
+#
+# NOTE: This script outputs the build directory path in a file /tmp/BUILD_DIR. The caller should delete the file after no longer needed.
 
 set -o errexit -o nounset -o pipefail
 
@@ -35,6 +37,8 @@ fi
 
 # We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
 BUILD_DIR="$HOME/Builds/$PROJECT_NAME/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
+# Writing to file is the only way we can return this path to the caller.
+echo $BUILD_DIR > /tmp/BUILD_DIR
 
 # select and verify the Qt build tools
 QMAKE=qmake6
@@ -52,8 +56,8 @@ if [ $BUILD_TYPE == release ]; then  QMAKE_CONFIG="CONFIG+=release CONFIG+=separ
 if [ $PACKAGE_TYPE == flatpak ]; then  QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=flatpak"; fi
 
 echo "Building the application"
-echo " Project dir: $SOURCE_DIR"
-echo " Output  dir: $BUILD_DIR"
+echo " Source dir: $SOURCE_DIR"
+echo " Output dir: $BUILD_DIR"
 echo " Build type: $PACKAGE_TYPE $BUILD_TYPE"
 
 [ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"

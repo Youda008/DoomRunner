@@ -11,6 +11,8 @@
 ::                  release = enables most optimizations, generates debug symbols into a separate file
 ::                  profile = enables some optimizations, generates debug symbols into a separate file
 ::                  debug = disables optimizations, generates debug symbols into the executable
+::
+:: NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as BUILD_DIR.
 
 @echo off
 

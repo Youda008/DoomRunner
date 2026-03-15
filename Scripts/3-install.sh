@@ -6,6 +6,9 @@ set -o errexit -o nounset -o pipefail
 
 pushd "$(dirname "$0")/.." 1>/dev/null
 trap "popd 1>/dev/null; echo" EXIT
+SOURCE_DIR="$(pwd)"
+SCRIPT_DIR="$SOURCE_DIR/Scripts"
+SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
 
 PACKAGE_TYPE=$1
 BUILD_TYPE=$2
@@ -13,7 +16,7 @@ BUILD_TYPE=$2
 # We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
 BUILD_DIR="$HOME/Builds/DoomRunner/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
 
-echo "Installing the application from $BUILD_DIR into this system"
+echo "Installing the application from \"$BUILD_DIR\" into this system" | eval $SHORTEN_PATHS
 echo
 
 echo "Installing binaries"
@@ -22,7 +25,7 @@ sudo make install
 popd 1>/dev/null
 echo
 
-copy() { echo "cp $1 $2"; sudo cp $1 $2; }
+copy() { echo "cp \"{SOURCE_DIR}/$1\" \"$2\""; sudo cp "$SOURCE_DIR/$1" "$2"; }
 
 echo "Installing desktop files"
 copy "Install/XDG/DoomRunner.desktop" "/usr/share/applications/DoomRunner.desktop"

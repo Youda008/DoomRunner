@@ -16,8 +16,9 @@ set -o errexit -o nounset -o pipefail
 
 pushd "$(dirname "$0")/.." 1>/dev/null
 trap "popd 1>/dev/null; echo" EXIT
-PROJECT_DIR="$(pwd)"
-SCRIPT_DIR="$PROJECT_DIR/Scripts"
+SOURCE_DIR="$(pwd)"
+SCRIPT_DIR="$SOURCE_DIR/Scripts"
+SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
 
 # validate the arguments
 PACKAGE_TYPE=$1
@@ -34,11 +35,6 @@ fi
 # We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
 BUILD_DIR="$HOME/Builds/DoomRunner/Build-Linux-$PACKAGE_TYPE-$BUILD_TYPE"
 
-echo "Building the application"
-echo "Source dir: $PROJECT_DIR"
-echo "Output dir: $BUILD_DIR"
-echo "Build type: $PACKAGE_TYPE $BUILD_TYPE"
-
 # select and verify the Qt build tools
 QMAKE=qmake6
 if [ -z $(which $QMAKE) ]; then
@@ -54,13 +50,18 @@ if [ $BUILD_TYPE == profile ]; then  QMAKE_CONFIG="CONFIG+=profile CONFIG+=separ
 if [ $BUILD_TYPE == release ]; then  QMAKE_CONFIG="CONFIG+=release CONFIG+=separate_debug_info"; fi
 if [ $PACKAGE_TYPE == flatpak ]; then  QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=flatpak"; fi
 
+echo "Building the application"
+echo " Project dir: $SOURCE_DIR"
+echo " Output  dir: $BUILD_DIR"
+echo " Build type: $PACKAGE_TYPE $BUILD_TYPE"
+
 [ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 # generate the Makefile
 echo
-COMMAND="$QMAKE \"$PROJECT_DIR/DoomRunner.pro\" $QMAKE_CONFIG"
-echo "$COMMAND"
+COMMAND="$QMAKE \"$SOURCE_DIR/DoomRunner.pro\" $QMAKE_CONFIG"
+echo "$COMMAND" |  eval $SHORTEN_PATHS
 eval "$COMMAND" || exit $((100+$?))
 
 # run the Makefile
@@ -71,5 +72,5 @@ eval "$COMMAND" || exit $((200+$?))
 
 echo
 echo "Build finished successfully."
-echo "Output: $BUILD_DIR"
+echo "Output: $BUILD_DIR" | eval $SHORTEN_PATHS
 exit 0

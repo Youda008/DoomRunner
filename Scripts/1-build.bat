@@ -15,8 +15,9 @@
 @echo off
 
 pushd "%~dp0.."
-set "PROJECT_DIR=%cd%"
-set "SCRIPT_DIR=%PROJECT_DIR%\Scripts"
+set "SOURCE_DIR=%cd%"
+set "SCRIPT_DIR=%SOURCE_DIR%\Scripts"
+set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR}""
 
 :: validate the arguments
 set TARGET_ENV=%~1
@@ -38,12 +39,7 @@ if %BUILD_TYPE% NEQ release ( if %BUILD_TYPE% NEQ profile ( if %BUILD_TYPE% NEQ 
 	goto exit
 )))
 
-set "BUILD_DIR=Build-Windows-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
-
-echo Building the application
-echo Source dir: %PROJECT_DIR%
-echo Output dir: %PROJECT_DIR%\%BUILD_DIR%
-echo Build type: %TARGET_ENV% %LINKAGE% %BUILD_TYPE%
+set "BUILD_DIR=%SOURCE_DIR%\Build-Windows-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
 
 :: setup the msys2 build environment
 set "MSYS_ROOT=C:\msys64"
@@ -70,13 +66,18 @@ if %BUILD_TYPE%==profile  set "QMAKE_CONFIG=CONFIG+=profile CONFIG+=separate_deb
 if %BUILD_TYPE%==release  set "QMAKE_CONFIG=CONFIG+=release CONFIG+=separate_debug_info"
 if %TARGET_ENV%==recent if %LINKAGE%==static set "QMAKE_CONFIG=%QMAKE_CONFIG% QMAKE_LFLAGS+=-Wl,--start-group"
 
+echo Building the application
+echo  Source dir: %SOURCE_DIR%
+echo  Output dir: %BUILD_DIR%
+echo  Build type: %TARGET_ENV% %LINKAGE% %BUILD_TYPE%
+
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 cd "%BUILD_DIR%"
 
 :: generate the Makefile
 echo.
-set "COMMAND="%QMAKE%" "%PROJECT_DIR%\DoomRunner.pro" %QMAKE_CONFIG%"
-echo %COMMAND%
+set "COMMAND="%QMAKE%" "%SOURCE_DIR%\DoomRunner.pro" %QMAKE_CONFIG%"
+echo %COMMAND% | %SHORTEN_PATHS%
 call %COMMAND%
 if %ERRORLEVEL% neq 0 (
 	set ERROR_CODE=100+%ERRORLEVEL%
@@ -95,7 +96,7 @@ if %ERRORLEVEL% neq 0 (
 
 echo.
 echo Build finished successfully.
-echo Output: %BUILD_DIR%
+echo Output: %BUILD_DIR% | %SHORTEN_PATHS%
 set ERROR_CODE=0
 
 :exit

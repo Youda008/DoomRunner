@@ -6,8 +6,9 @@
 @echo off
 
 pushd "%~dp0.."
-set "PROJECT_DIR=%cd%"
-set "SCRIPT_DIR=%PROJECT_DIR%\Scripts"
+set "SOURCE_DIR=%cd%"
+set "SCRIPT_DIR=%SOURCE_DIR%\Scripts"
+set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR}""
 
 :: validate the arguments
 set TARGET_ENV=%~1
@@ -29,7 +30,7 @@ if %BUILD_TYPE% NEQ release ( if %BUILD_TYPE% NEQ profile ( if %BUILD_TYPE% NEQ 
 	goto exit
 )))
 
-set "BUILD_DIR=Build-Windows-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
+set "BUILD_DIR=%SOURCE_DIR%\Build-Windows-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
 set "EXECUTABLE_PATH=%BUILD_DIR%\%BUILD_TYPE%\DoomRunner.exe"
 
 :: verify the archive tool
@@ -55,16 +56,20 @@ if %TARGET_ENV%==legacy set "TARGET_ENV_DESC=legacy(32bit)"
 if %TARGET_ENV%==recent set "TARGET_ENV_DESC=recent(64bit)"
 set "BASE_NAME=DoomRunner-%APP_VERSION%-Windows-%TARGET_ENV_DESC%-%LINKAGE%"
 
-set "RELEASE_DIR=Releases"
+set "RELEASE_DIR=%SOURCE_DIR%\Releases"
+set "PACKAGE_PATH=%RELEASE_DIR%\%BASE_NAME%.zip"
+
+echo Packaging the build output into an archive
+echo  Build dir: %BUILD_DIR% | %SHORTEN_PATHS%
+echo  Archive: %PACKAGE_PATH% | %SHORTEN_PATHS%
+
 if not exist "%RELEASE_DIR%" mkdir "%RELEASE_DIR%"
 
 :: create a zip archive
-set "ARCHIVE_PATH=%RELEASE_DIR%\%BASE_NAME%.zip"
-echo Packaging the executable %EXECUTABLE_PATH% into %ARCHIVE_PATH%
+if exist "%PACKAGE_PATH%" rm "%PACKAGE_PATH%"
 echo.
-if exist "%ARCHIVE_PATH%" rm "%ARCHIVE_PATH%"
-set "COMMAND="%ZIP_TOOL%" a -tzip -mx=7 "%ARCHIVE_PATH%" "%EXECUTABLE_PATH%""
-echo %COMMAND%
+set "COMMAND="%ZIP_TOOL%" a -tzip -mx=7 "%PACKAGE_PATH%" "%EXECUTABLE_PATH%""
+echo %COMMAND% | %SHORTEN_PATHS%
 call %COMMAND%
 if %ERRORLEVEL% neq 0 (
 	set ERROR_CODE=100+%ERRORLEVEL%
@@ -73,7 +78,7 @@ if %ERRORLEVEL% neq 0 (
 
 echo.
 echo Packaging finished successfully.
-echo Output: %ARCHIVE_PATH%
+echo Output: %PACKAGE_PATH% | %SHORTEN_PATHS%
 set ERROR_CODE=0
 
 :exit

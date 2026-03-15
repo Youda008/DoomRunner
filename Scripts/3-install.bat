@@ -4,17 +4,22 @@
 @echo off
 
 pushd "%~dp0.."
+set "SOURCE_DIR=%cd%"
+set "SCRIPT_DIR=%SOURCE_DIR%\Scripts"
+set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR}""
 
 set TARGET_ENV=%~1
 set LINKAGE=%~2
 set BUILD_TYPE=%~3
 
-set BUILD_DIR=Build-Windows-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%
+set "BUILD_DIR=%SOURCE_DIR%\Build-Windows-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
 
-set "SOURCE=%BUILD_DIR%\%BUILD_TYPE%\DoomRunner.exe"
 set "DESTINATION=C:\Users\Youda\Games\Doom\DoomRunner"
-echo Installing %SOURCE% to %DESTINATION%
-copy "%SOURCE%" "%DESTINATION%"
+echo Installing the application from "%BUILD_DIR%" to "%DESTINATION%" | %SHORTEN_PATHS%
+
+set "FILE=%BUILD_DIR%\%BUILD_TYPE%\DoomRunner.exe"
+echo copy "%FILE%" "%DESTINATION%" | %SHORTEN_PATHS%
+copy "%FILE%" "%DESTINATION%"
 
 echo.
 echo Done

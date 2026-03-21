@@ -175,20 +175,33 @@ make
 ## Building the application on MacOS
 
 
-This guide assumes you have Homebrew installed.  
-Open the terminal and write the following commands.
-
-##### 1. Install Qt
+On MacOS we rely on a third-party but widely used package manager called [Homebrew](https://en.wikipedia.org/wiki/Homebrew_(package_manager)). If you don't have it yet, visit the official website [www.brew.sh](https://brew.sh/) and install it according to the instructions. Then add its directories to the environment variable PATH – can be done with the following command:
 ```
-brew install qt
+eval "$(/opt/homebrew/bin/brew shellenv)"
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
 ```
 
-##### 2. Build the project
+##### 1. Install the build toolchain
+You can install the C++ compiler either as a part of the official development toolchain from Apple called Xcode
+```
+xcode-select --install
+```
+or using a minimal compiler package from Homebrew
+```
+brew install gcc
+```
+
+##### 2. Install Qt and other libraries
+```
+brew install qt minizip
+```
+
+##### 3. Build the project
 ```
 cd <DoomRunner repository>
 mkdir build
 cd build
-qmake ../DoomRunner.pro CONFIG+=release
+qmake6 ../DoomRunner.pro CONFIG+=release
 make
 ```
 

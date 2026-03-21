@@ -12,12 +12,12 @@
 
 set -o errexit -o nounset -o pipefail
 
-pushd "$(dirname "$0")/.." 1>/dev/null
-trap "popd 1>/dev/null; echo" EXIT
-SOURCE_DIR="$(pwd)"
-SCRIPT_DIR="$SOURCE_DIR/Scripts"
+SCRIPT_DIR=$(realpath "$(dirname "$0")")
+SOURCE_DIR=$(realpath "$SCRIPT_DIR/..")
 SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
+pushd "$SOURCE_DIR" 1>/dev/null
+trap "popd 1>/dev/null; echo" EXIT
 
 # detect the operating system
 if [[ -d "/Applications" && -d "/Library" ]]; then
@@ -69,13 +69,13 @@ fi
 # compose the package file name
 BASE_NAME="$PROJECT_NAME-$APP_VERSION-$OS_TYPE-$HW_ARCH"
 
-[ ! -d "$RELEASE_DIR" ] && mkdir -p $RELEASE_DIR
+[ ! -d "$RELEASE_DIR" ] && mkdir -p "$RELEASE_DIR"
 
 if [ $PACKAGE_TYPE == deb ]; then
 
 	# verify the archive tool
 	ZIP_TOOL=7z
-	if [ -z $(which $ZIP_TOOL) ]; then
+	if [ -z "$(which $ZIP_TOOL)" ]; then
 		echo "Archive tool not available: $ZIP_TOOL"
 		echo "Please install it first"
 		echo "Packaging aborted."
@@ -104,7 +104,7 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 
 	# verify the packaging tool
 	PKG_TOOL="$HOME/Apps/linuxdeploy-$HW_ARCH.AppImage"
-	if [ ! -f $PKG_TOOL ]; then
+	if [ ! -f "$PKG_TOOL" ]; then
 		echo "Packaging tool not present: $PKG_TOOL"
 		echo "Please download it first"
 		echo "Packaging aborted."
@@ -153,7 +153,7 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 
 	# verify the packaging tools
 	PKG_TOOL=macdeployqt
-	if [ -z $(which $PKG_TOOL) ]; then
+	if [ -z "$(which $PKG_TOOL)" ]; then
 		echo "Packaging tool not available: $PKG_TOOL"
 		echo "Please install Qt build tools"
 		echo "Packaging aborted."
@@ -202,21 +202,21 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 
 	echo
 	echo "Deleting unused plugins"
-	for PLUGIN_PATH in $(find "$PLUGIN_DIR" -name "*.dylib"); do
-		PLUGIN_NAME="${PLUGIN_PATH#$PLUGIN_DIR/}"
-		if [[ ! " ${REQUIRED_PLUGINS[@]} " =~ " ${PLUGIN_NAME%.*} " ]]; then
+	while IFS= read -r PLUGIN_PATH; do
+		PLUGIN_NAME="${PLUGIN_PATH#"$PLUGIN_DIR/"}"
+		if [[ ! " ${REQUIRED_PLUGINS[*]} " == *" ${PLUGIN_NAME%.*} "* ]]; then
 			echo "Deleting plugin: $PLUGIN_NAME"
 			rm "$PLUGIN_PATH"
 		else
 			echo "Keeping plugin: $PLUGIN_NAME"
 			# we also need the dependencies of the plugin
 			DEPENDENCIES=$("$SCRIPT_DIR/get_mac_deps.py" --executable-path="$EXECUTABLE_PATH" "$PLUGIN_PATH")
-			while read -r DEP_PATH; do
+			while IFS= read -r DEP_PATH; do
 				#echo "  it depends on: $DEP_PATH"
 				REQUIRED_LIBRARIES+=("$DEP_PATH")
 			done < <(echo "$DEPENDENCIES")
 		fi
-	done
+	done < <(find "$PLUGIN_DIR" -name "*.dylib")
 	find "$PLUGIN_DIR" -type d -empty -delete
 
 	# Check for unused frameworks and dylibs
@@ -235,29 +235,29 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 
 	echo
 	echo "Deleting unused frameworks"
-	for FW_PATH in $(find "$FRAMEWORK_DIR" -name "*.framework"); do
-		FW_NAME="${FW_PATH#$FRAMEWORK_DIR/}"
+	while IFS= read -r FW_PATH; do
+		FW_NAME="${FW_PATH#"$FRAMEWORK_DIR/"}"
 
-		if [[ ! " ${REQUIRED_FRAMEWORKS[@]} " =~ " ${FW_PATH} " ]]; then
+		if [[ ! " ${REQUIRED_FRAMEWORKS[*]} " == *" ${FW_PATH} "* ]]; then
 			echo "Deleting framework: $FW_NAME"
 			rm -r "$FW_PATH"
 		else
 			echo "Keeping framework: $FW_NAME"
 		fi
-	done
+	done < <(find "$FRAMEWORK_DIR" -name "*.framework")
 
 	echo
 	echo "Deleting unused libraries"
-	for LIB_PATH in $(find "$LIBRARY_DIR" -name "*.dylib"); do
-		LIB_NAME="${LIB_PATH#$LIBRARY_DIR/}"
+	while IFS= read -r LIB_PATH; do
+		LIB_NAME="${LIB_PATH#"$LIBRARY_DIR/"}"
 
-		if [[ ! " ${REQUIRED_LIBRARIES[@]} " =~ " ${LIB_PATH} " ]]; then
+		if [[ ! " ${REQUIRED_LIBRARIES[*]} " == *" ${LIB_PATH} "* ]]; then
 			echo "Deleting library: $LIB_NAME"
 			rm "$LIB_PATH"
 		else
 			echo "Keeping library: $LIB_NAME"
 		fi
-	done
+	done < <(find "$LIBRARY_DIR" -name "*.dylib")
 
 	# Update the signature
 

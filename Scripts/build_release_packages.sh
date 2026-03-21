@@ -2,7 +2,7 @@
 
 # Produces all currently supported release packages for Linux
 
-SCRIPT_DIR="$(dirname "$0")"
+SCRIPT_DIR=$(realpath "$(dirname "$0")")
 
 # detect the operating system
 if [[ -d "/Applications" && -d "/Library" ]]; then
@@ -18,25 +18,25 @@ BUILD_TYPE=release
 if [ $OS_TYPE == Linux ]; then
 
 	PACKAGE_TYPE=deb
-	$SCRIPT_DIR/1-build.sh $PACKAGE_TYPE $BUILD_TYPE
+	"$SCRIPT_DIR/1-build.sh" $PACKAGE_TYPE $BUILD_TYPE
 	if [ $? -eq 0 ]; then
 		BUILD_DIR=$(cat /tmp/BUILD_DIR)
-		$SCRIPT_DIR/2-package.sh $BUILD_DIR $PACKAGE_TYPE
+		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $PACKAGE_TYPE
 	fi
 
 	PACKAGE_TYPE=appimage
-	$SCRIPT_DIR/1-build.sh $PACKAGE_TYPE $BUILD_TYPE
+	"$SCRIPT_DIR/1-build.sh" $PACKAGE_TYPE $BUILD_TYPE
 	if [ $? -eq 0 ]; then
 		BUILD_DIR=$(cat /tmp/BUILD_DIR)
-		$SCRIPT_DIR/2-package.sh $BUILD_DIR $PACKAGE_TYPE
+		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $PACKAGE_TYPE
 	fi
 
 elif [ $OS_TYPE == MacOS ]; then
 
-	$SCRIPT_DIR/1-build.sh app $BUILD_TYPE
+	"$SCRIPT_DIR/1-build.sh" app $BUILD_TYPE
 	if [ $? -eq 0 ]; then
 		BUILD_DIR=$(cat /tmp/BUILD_DIR)
-		$SCRIPT_DIR/2-package.sh $BUILD_DIR dmg
+		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" dmg
 	fi
 
 fi

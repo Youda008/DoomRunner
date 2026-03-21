@@ -17,12 +17,12 @@
 
 set -o errexit -o nounset -o pipefail
 
-pushd "$(dirname "$0")/.." 1>/dev/null
-trap "popd 1>/dev/null; echo" EXIT
-SOURCE_DIR="$(pwd)"
-SCRIPT_DIR="$SOURCE_DIR/Scripts"
+SCRIPT_DIR=$(realpath "$(dirname "$0")")
+SOURCE_DIR=$(realpath "$SCRIPT_DIR/..")
 SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
+pushd "$SOURCE_DIR" 1>/dev/null
+trap "popd 1>/dev/null; echo" EXIT
 
 # detect the operating system
 if [[ -d "/Applications" && -d "/Library" ]]; then
@@ -55,11 +55,11 @@ else
 	BUILD_DIR="$SOURCE_DIR/$BUILD_DIR_NAME"
 fi
 # Writing to file is the only way we can return this path to the caller.
-echo $BUILD_DIR > /tmp/BUILD_DIR
+echo "$BUILD_DIR" > /tmp/BUILD_DIR
 
 # select and verify the Qt build tools
 QMAKE=qmake6
-if [ -z $(which $QMAKE) ]; then
+if [ -z "$(which $QMAKE)" ]; then
 	echo
 	echo "Qt build tools not found: $QMAKE"
 	echo "Build aborted."

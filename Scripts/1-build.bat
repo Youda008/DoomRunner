@@ -16,9 +16,10 @@
 
 @echo off
 
-pushd "%~dp0.."
+pushd "%~dp0"
+set "SCRIPT_DIR=%cd%"
+cd ..
 set "SOURCE_DIR=%cd%"
-set "SCRIPT_DIR=%SOURCE_DIR%\Scripts"
 set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR}""
 for %%I in ("%SOURCE_DIR%") do set "PROJECT_NAME=%%~nxI"
 

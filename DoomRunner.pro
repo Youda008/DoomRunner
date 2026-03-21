@@ -208,18 +208,28 @@ win32 {
 
 #-- libraries ------------------------------------
 
+# To link libraries on Mac we must manually add their installation paths.
 macx {
-	# To link libraries on Mac we must manually add their installation paths.
-	# And because the installation path depends on the CPU architecture,
-	# and there is no easy way to detect it, we just add both.
-	HOMEBREW_PREFIX_ARM = /opt/homebrew/opt
-	HOMEBREW_PREFIX_X86 = /usr/local/opt
+    # Libraries are most commonly installed via Homebrew.
+	# But the typical Homebrew paths depends on the CPU architecture, so we must detect it first.
+	CPU_ARCH = $$system(uname -m)
+	equals(CPU_ARCH, arm64) {
+	    HOMEBREW_PREFIX = /opt/homebrew/opt
+	} else: equals(CPU_ARCH, x86_64) {
+	    HOMEBREW_PREFIX = /usr/local/opt
+	}
+
+	# add "LIBRARY_DIR=/custom/path" to the qmake command to override the auto-detected value
+    isEmpty(LIBRARY_DIR) {
+        !isEmpty(HOMEBREW_PREFIX): LIBRARY_DIR = $$HOMEBREW_PREFIX
+        else: error("Unable to detect library installation path. Please specify LIBRARY_DIR=")
+    }
 
 	INCLUDEPATH += \
-		$$HOMEBREW_PREFIX_ARM/minizip/include $$HOMEBREW_PREFIX_X86/minizip/include
+		$$LIBRARY_DIR/minizip/include
 
 	LIBS += \
-		-L$$HOMEBREW_PREFIX_ARM/minizip/lib -L$$HOMEBREW_PREFIX_X86/minizip/lib
+		-L$$LIBRARY_DIR/minizip/lib
 }
 
 LIBS += -lminizip

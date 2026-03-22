@@ -2,15 +2,13 @@
 
 # Builds all parts of the project using requested build parameters.
 #
-# Usage: 1-build.sh <cpu_arch> <package_type> <build_type>
+# Usage: 1-build.sh <cpu_arch> <build_preset> <build_type>
 #   cpu_arch - the target CPU architecture of the binaries (cross-compilation is currently only supported for MacOS)
 #                default = the architecture of the computer running this script
 #				 other common options: i386, x86_64, arm64
-#   package_type - what kind of package is this build meant for, some of them require specific build config
-#                    deb = Debian/Ubuntu package that relies on the package maneger to install its dependencies
-#                    appimage = self-mounting Linux application bundle that contains all dependencies compressed in the executable
-#                    flatpak = sandboxed Linux application bundle containing all dependencies but running with restricted permissions
-#                    app = standard MacOS application bundle that contains all dependencies bundled in its directory
+#   build_preset - build type that defines additional build configuration
+#                    default = without any additional configuration values
+#                    flatpak = special build configuration for producing a Flatpak package
 #   build_type - QMake build type
 #                  release = enables most optimizations, generates debug symbols into a separate file
 #                  profile = enables some optimizations, generates debug symbols into a separate file
@@ -31,8 +29,11 @@ trap "popd 1>/dev/null; echo" EXIT
 # detect the operating system
 if [[ -d "/Applications" && -d "/Library" ]]; then
 	OS_TYPE=MacOS
-else
+elif [[ -d "/usr/bin" ]]; then
 	OS_TYPE=Linux
+else
+	echo "Unrecognized operating system."
+	exit 2
 fi
 
 # detect the CPU architecture of this computer
@@ -45,16 +46,16 @@ if [[ $CPU_ARCH == default ]]; then
 elif [[ $OS_TYPE == Linux && $CPU_ARCH != $THIS_CPU_ARCH ]]; then
 	echo "Cross-compilation is currently only supported for MacOS, the only available cpu_arch is $THIS_CPU_ARCH."
 	exit 1
-elif [[ $OS_TYPE == MacOS && $CPU_ARCH != x86_64 && $CPU_ARCH != arm64 ]]; then
-	echo "Invalid cpu_arch \"$CPU_ARCH\" for MacOS, possible values: x86_64, arm64."
+elif [[ $OS_TYPE == MacOS && $CPU_ARCH != arm64 && $CPU_ARCH != x86_64 ]]; then
+	echo "Invalid cpu_arch \"$CPU_ARCH\" for MacOS, possible values: arm64, x86_64."
 	exit 1
 fi
-PACKAGE_TYPE=$2
-if [[ $OS_TYPE == Linux && $PACKAGE_TYPE != deb && $PACKAGE_TYPE != appimage && $PACKAGE_TYPE != flatpak ]]; then
-	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: deb, appimage, flatpak"
+BUILD_PRESET=$2
+if [[ $OS_TYPE == Linux && $BUILD_PRESET != default && $BUILD_PRESET != flatpak ]]; then
+	echo "Invalid build_preset \"$BUILD_PRESET\", possible values: default, flatpak"
 	exit 1
-elif [[ $OS_TYPE == MacOS && $PACKAGE_TYPE != app ]]; then
-	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: app"
+elif [[ $OS_TYPE == MacOS && $BUILD_PRESET != default ]]; then
+	echo "Invalid build_preset \"$BUILD_PRESET\", possible values: default"
 	exit 1
 fi
 BUILD_TYPE=$3
@@ -63,8 +64,8 @@ if [[ $BUILD_TYPE != release && $BUILD_TYPE != profile && $BUILD_TYPE != debug ]
 	exit 1
 fi
 
-# determine the build directory
-BUILD_DIR_NAME="Build-$OS_TYPE-$CPU_ARCH-$PACKAGE_TYPE-$BUILD_TYPE"
+# compose the build directory
+BUILD_DIR_NAME="Build-$OS_TYPE-$CPU_ARCH-$BUILD_PRESET-$BUILD_TYPE"
 if [[ "$SOURCE_DIR" == "/media/"* ]]; then
 	# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
 	BUILD_DIR="$HOME/Builds/$PROJECT_NAME/$BUILD_DIR_NAME"
@@ -103,12 +104,12 @@ fi
 if [ $BUILD_TYPE == debug ]; then    QMAKE_CONFIG="CONFIG+=debug"; fi
 if [ $BUILD_TYPE == profile ]; then  QMAKE_CONFIG="CONFIG+=profile CONFIG+=separate_debug_info"; fi
 if [ $BUILD_TYPE == release ]; then  QMAKE_CONFIG="CONFIG+=release CONFIG+=separate_debug_info"; fi
-if [ $PACKAGE_TYPE == flatpak ]; then  QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=flatpak"; fi
+if [ $BUILD_PRESET == flatpak ]; then  QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=flatpak"; fi
 
 echo "Building the application"
 echo " Source dir: $SOURCE_DIR"
 echo " Output dir: $BUILD_DIR"
-echo " Build type: $CPU_ARCH $PACKAGE_TYPE $BUILD_TYPE"
+echo " Build type: $CPU_ARCH $BUILD_PRESET $BUILD_TYPE"
 
 [ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"

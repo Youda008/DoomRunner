@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Recursively inspects the dependencies of the selected executable and prints the unique library paths, each on its own line.
 
 import sys

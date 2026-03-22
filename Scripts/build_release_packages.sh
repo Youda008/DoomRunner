@@ -1,44 +1,44 @@
 #!/bin/bash
 
-# Produces all currently supported release packages for Linux
+# Produces all currently supported release packages for Linux and MacOS.
 
 SCRIPT_DIR=$(realpath "$(dirname "$0")")
-PROJECT_NAME="$(basename "$SCRIPT_DIR/..")"
-
-# detect the operating system
-if [[ -d "/Applications" && -d "/Library" ]]; then
-	OS_TYPE=MacOS
-else
-	OS_TYPE=Linux
-fi
+PROJECT_NAME="$(basename "$(dirname "$SCRIPT_DIR")")"
 
 TEMP_DIR="/tmp/$PROJECT_NAME"
 trap '[ -d "$TEMP_DIR" ] && rm -r "$TEMP_DIR"' EXIT
 
-BUILD_TYPE=release
+# detect the operating system
+if [[ -d "/Applications" && -d "/Library" ]]; then
+	OS_TYPE=MacOS
+elif [[ -d "/usr/bin" ]]; then
+	OS_TYPE=Linux
+else
+	echo "Unrecognized operating system."
+	exit 1
+fi
 
 if [ $OS_TYPE == Linux ]; then
 
-	PACKAGE_TYPE=deb
-	"$SCRIPT_DIR/1-build.sh" $PACKAGE_TYPE $BUILD_TYPE
+	"$SCRIPT_DIR/1-build.sh" default default release
 	if [ $? -eq 0 ]; then
-		source "$TEMP_DIR/build_vars.sh"  # load return values from 1-build.sh
-		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $PACKAGE_TYPE
-	fi
-
-	PACKAGE_TYPE=appimage
-	"$SCRIPT_DIR/1-build.sh" $PACKAGE_TYPE $BUILD_TYPE
-	if [ $? -eq 0 ]; then
-		source "$TEMP_DIR/build_vars.sh"  # load return values from 1-build.sh
-		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $PACKAGE_TYPE
+		source "$TEMP_DIR/build_vars.sh"  # load return values from the 1-build.sh
+		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH deb
+		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH appimage
 	fi
 
 elif [ $OS_TYPE == MacOS ]; then
 
-	"$SCRIPT_DIR/1-build.sh" app $BUILD_TYPE
+	"$SCRIPT_DIR/1-build.sh" arm64 default release
 	if [ $? -eq 0 ]; then
-		source "$TEMP_DIR/build_vars.sh"  # load return values from 1-build.sh
-		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" dmg
+		source "$TEMP_DIR/build_vars.sh"  # load return values from the 1-build.sh
+		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH dmg
+	fi
+
+	"$SCRIPT_DIR/1-build.sh" x86_64 default release
+	if [ $? -eq 0 ]; then
+		source "$TEMP_DIR/build_vars.sh"  # load return values from the 1-build.sh
+		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH dmg
 	fi
 
 fi

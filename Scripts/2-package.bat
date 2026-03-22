@@ -2,7 +2,7 @@
 ::
 :: Usage: 2-package.bat <build_dir> <target_env> <linkage> <build_type>
 ::   build_dir - path to the directory where the application has been built
-::   See 1-build.bat for the description of the other parameters
+::   The other parameters are there just to compose the package file name. See 1-build.bat for their description.
 ::
 :: NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as PACKAGE_PATH.
 
@@ -47,9 +47,10 @@ if %ERRORLEVEL% neq 0 (
 )
 
 :: compose the package file name
-if %TARGET_ENV%==legacy set "TARGET_ENV_DESC=legacy(32bit)"
-if %TARGET_ENV%==recent set "TARGET_ENV_DESC=recent(64bit)"
-set "BASE_NAME=%PROJECT_NAME%-%APP_VERSION%-Windows-%TARGET_ENV_DESC%-%LINKAGE%"
+set OS_TYPE=Windows
+if %TARGET_ENV%==legacy set "TARGET_ENV_DESC=legacy(i386)"
+if %TARGET_ENV%==recent set "TARGET_ENV_DESC=recent(x86_64)"
+set "BASE_NAME=%PROJECT_NAME%-%APP_VERSION%-%OS_TYPE%-%TARGET_ENV_DESC%-%LINKAGE%"
 
 :: verify the archive tool
 set "ZIP_TOOL=C:\Program Files\7-Zip\7z.exe"

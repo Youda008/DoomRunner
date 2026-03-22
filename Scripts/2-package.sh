@@ -2,8 +2,10 @@
 
 # Creates a distributable package from the selected build output.
 #
-# Usage: 2-package.sh <build_dir> <package_type>
+# Usage: 2-package.sh <build_dir> <os_type> <cpu_arch> <package_type>
 #   build_dir - path to the directory where the application has been built
+#   os_type - the target operating system of the package (only needed to compose the package file name)
+#   cpu_arch - the target CPU architecture of the package (only needed to compose the package file name)
 #   package_type - what kind of package should be produced from the build output
 #                    deb = Debian/Ubuntu package that relies on the package maneger to install its dependencies
 #                    appimage = self-mounting Linux application bundle that contains all dependencies compressed in the executable
@@ -19,22 +21,18 @@ PROJECT_NAME="$(basename "$SOURCE_DIR")"
 pushd "$SOURCE_DIR" 1>/dev/null
 trap "popd 1>/dev/null; echo" EXIT
 
-# detect the operating system
-if [[ -d "/Applications" && -d "/Library" ]]; then
-	OS_TYPE=MacOS
-else
-	OS_TYPE=Linux
-fi
-
-# detect the hardware architecture (TODO)
-if [ $OS_TYPE == MacOS ]; then
-	HW_ARCH=arm64
-else
-	HW_ARCH=x86_64
-fi
-
 # validate the arguments
-PACKAGE_TYPE=$2
+OS_TYPE=$2
+if [[ $OS_TYPE != Linux && $OS_TYPE != MacOS ]]; then
+	echo "Unsupported os_type \"$OS_TYPE\", possible values: Linux, MacOS"
+	exit 1
+fi
+CPU_ARCH=$3
+if [[ $OS_TYPE == MacOS && $CPU_ARCH != arm64 && $CPU_ARCH != x86_64 ]]; then
+	echo "Invalid cpu_arch \"$CPU_ARCH\" for MacOS, possible values: arm64, x86_64."
+	exit 1
+fi
+PACKAGE_TYPE=$4
 if [[ $OS_TYPE == Linux && $PACKAGE_TYPE != deb && $PACKAGE_TYPE != appimage && $PACKAGE_TYPE != flatpak ]]; then
 	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: deb, appimage, flatpak"
 	exit 1
@@ -43,8 +41,9 @@ elif [[ $OS_TYPE == MacOS && $PACKAGE_TYPE != dmg ]]; then
 	exit 1
 fi
 
+# verify the build output
 BUILD_DIR="$1"
-if [ $OS_TYPE == MacOS ]; then
+if [[ $OS_TYPE == MacOS ]]; then
 	APP_PATH="$BUILD_DIR/$PROJECT_NAME.app"
 	EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/$PROJECT_NAME"
 else
@@ -67,15 +66,15 @@ if [[ $? -ne 0 || -z $APP_VERSION ]]; then
 fi
 
 # compose the package file name
-BASE_NAME="$PROJECT_NAME-$APP_VERSION-$OS_TYPE-$HW_ARCH"
+BASE_NAME="$PROJECT_NAME-$APP_VERSION-$OS_TYPE-$CPU_ARCH"
 
 [ ! -d "$RELEASE_DIR" ] && mkdir -p "$RELEASE_DIR"
 
 if [ $PACKAGE_TYPE == deb ]; then
 
 	# verify the archive tool
-	ZIP_TOOL=7z
-	if [ -z "$(which $ZIP_TOOL)" ]; then
+	ZIP_TOOL=$(which 7z)
+	if [ -z "$ZIP_TOOL" ]; then
 		echo "Archive tool not available: $ZIP_TOOL"
 		echo "Please install it first"
 		echo "Packaging aborted."
@@ -103,9 +102,9 @@ if [ $PACKAGE_TYPE == deb ]; then
 elif [ $PACKAGE_TYPE == appimage ]; then
 
 	# verify the packaging tool
-	PKG_TOOL="$HOME/Apps/linuxdeploy-$HW_ARCH.AppImage"
-	if [ ! -f "$PKG_TOOL" ]; then
-		echo "Packaging tool not present: $PKG_TOOL"
+	DEPLOY_TOOL="$HOME/Apps/linuxdeploy-$CPU_ARCH.AppImage"
+	if [ ! -f "$DEPLOY_TOOL" ]; then
+		echo "Packaging tool not present: $DEPLOY_TOOL"
 		echo "Please download it first"
 		echo "Packaging aborted."
 		exit 2
@@ -123,7 +122,7 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 	# We need to make it the working directory, because the output is produced there and we can't control it.
 	pushd "$BUILD_DIR" 1>/dev/null
 	echo
-	COMMAND="$PKG_TOOL
+	COMMAND="$DEPLOY_TOOL
 		--executable \"$EXECUTABLE_PATH\"
 		--desktop-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.desktop\"
 		--icon-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.128x128.png\"
@@ -137,7 +136,7 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 	popd 1>/dev/null
 
 	# Some tools will just always do their own thing, no matter what -_-
-	mv "$BUILD_DIR/Doom_Runner-$HW_ARCH.AppImage" "$PACKAGE_PATH"
+	mv "$BUILD_DIR/Doom_Runner-$CPU_ARCH.AppImage" "$PACKAGE_PATH"
 
 	echo
 	echo "Packaging finished successfully."
@@ -152,9 +151,15 @@ elif [ $PACKAGE_TYPE == flatpak ]; then
 elif [ $PACKAGE_TYPE == dmg ]; then
 
 	# verify the packaging tools
-	PKG_TOOL=macdeployqt
-	if [ -z "$(which $PKG_TOOL)" ]; then
-		echo "Packaging tool not available: $PKG_TOOL"
+	if [[ $CPU_ARCH == arm64 ]]; then
+		eval "$(/opt/homebrew/bin/brew shellenv)"
+		DEPLOY_TOOL="/opt/homebrew/bin/macdeployqt"
+	elif [[ $CPU_ARCH == x86_64 ]]; then
+		eval "$(/usr/local/bin/brew shellenv)"
+		DEPLOY_TOOL="/usr/local/bin/macdeployqt"
+	fi
+	if [ ! -f "$DEPLOY_TOOL" ]; then
+		echo "Packaging tool not available: $DEPLOY_TOOL"
 		echo "Please install Qt build tools"
 		echo "Packaging aborted."
 		exit 2
@@ -166,7 +171,7 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 	echo " Image file: $PACKAGE_PATH" | eval $SHORTEN_PATHS
 
 	echo
-	COMMAND="macdeployqt \"$APP_PATH\""
+	COMMAND="$DEPLOY_TOOL \"$APP_PATH\""
 	echo "$COMMAND" |  eval $SHORTEN_PATHS
 	eval "$COMMAND" || exit $((100+$?))
 	echo
@@ -210,7 +215,7 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 		else
 			echo "Keeping plugin: $PLUGIN_NAME"
 			# we also need the dependencies of the plugin
-			DEPENDENCIES=$("$SCRIPT_DIR/get_mac_deps.py" --executable-path="$EXECUTABLE_PATH" "$PLUGIN_PATH")
+			DEPENDENCIES=$(python3 "$SCRIPT_DIR/get_mac_deps.py" --executable-path="$EXECUTABLE_PATH" "$PLUGIN_PATH")
 			while IFS= read -r DEP_PATH; do
 				#echo "  it depends on: $DEP_PATH"
 				REQUIRED_LIBRARIES+=("$DEP_PATH")
@@ -223,7 +228,7 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 	# This can be detected automatically using the otool -L command.
 
 	# recursively inspect dependencies and get a list of unique ones
-	DEPENDENCIES=$("$SCRIPT_DIR/get_mac_deps.py" "$EXECUTABLE_PATH")
+	DEPENDENCIES=$(python3 "$SCRIPT_DIR/get_mac_deps.py" "$EXECUTABLE_PATH")
 	while read -r DEP_PATH; do
 		if [[ $DEP_PATH == *".framework/"* ]]; then
 			DEP_PATH=$(dirname "$(dirname "$(dirname "$DEP_PATH")")")

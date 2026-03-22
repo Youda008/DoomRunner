@@ -43,7 +43,10 @@ if %BUILD_TYPE% NEQ release ( if %BUILD_TYPE% NEQ profile ( if %BUILD_TYPE% NEQ 
 	goto exit
 )))
 
-set "BUILD_DIR=%SOURCE_DIR%\Build-Windows-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
+:: compose the build directory
+set OS_TYPE=Windows
+set "BUILD_DIR_NAME=Build-%OS_TYPE%-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
+set "BUILD_DIR=%SOURCE_DIR%\%BUILD_DIR_NAME%"
 
 :: setup the msys2 build environment
 set "MSYS_ROOT=C:\msys64"

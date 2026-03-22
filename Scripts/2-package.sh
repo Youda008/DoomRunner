@@ -21,6 +21,17 @@ PROJECT_NAME="$(basename "$SOURCE_DIR")"
 pushd "$SOURCE_DIR" 1>/dev/null
 trap "popd 1>/dev/null; echo" EXIT
 
+DESKTOP_APP_NAME="Doom Runner"
+APP_NAME_UNDERSCORED="${DESKTOP_APP_NAME// /_}"
+
+function echo_and_eval() {
+	COMMAND="$1"
+	echo "$COMMAND" | eval $SHORTEN_PATHS
+	COMMAND=$(echo "$COMMAND" | tr -d '\n')  # remove newlines from the command
+	eval "$COMMAND"
+	return $?
+}
+
 # validate the arguments
 OS_TYPE=$2
 if [[ $OS_TYPE != Linux && $OS_TYPE != MacOS ]]; then
@@ -90,9 +101,7 @@ if [ $PACKAGE_TYPE == deb ]; then
 	[ -f "$PACKAGE_PATH" ] && rm "$PACKAGE_PATH"
 
 	echo
-	COMMAND="$ZIP_TOOL a -tzip -mx=7 \"$PACKAGE_PATH\" \"$EXECUTABLE_PATH\""
-	echo "$COMMAND" |  eval $SHORTEN_PATHS
-	eval "$COMMAND" || exit $((100+$?))
+	echo_and_eval "$ZIP_TOOL a -tzip -mx=7 \"$PACKAGE_PATH\" \"$EXECUTABLE_PATH\"" || exit $((100+$?))
 
 	echo
 	echo "Packaging finished successfully."
@@ -115,12 +124,15 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 	echo " Build dir: $BUILD_DIR" | eval $SHORTEN_PATHS
 	echo " Image file: $PACKAGE_PATH" | eval $SHORTEN_PATHS
 
-	# re-create the build dir and start from scratch
-	[ -d "$BUILD_DIR/AppDir" ] && rm -r "$BUILD_DIR/AppDir"
-	mkdir -p "$BUILD_DIR/AppDir"
-
-	# We need to make it the working directory, because the output is produced there and we can't control it.
+	# Create the package inside the build dir, otherwise we risk running into issues with Unix permissions.
+	# We also need to make it the working dir, because the output is produced there and we can't control it.
 	pushd "$BUILD_DIR" 1>/dev/null
+
+	# cleanup the previous artifacts and start from scratch
+	[ -f "$PACKAGE_PATH" ] && rm "$PACKAGE_PATH"
+	[ -d "AppDir" ] && rm -r "AppDir"
+	mkdir -p "AppDir"
+
 	echo
 	COMMAND="$DEPLOY_TOOL
 		--executable \"$EXECUTABLE_PATH\"
@@ -128,15 +140,15 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 		--icon-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.128x128.png\"
 		--icon-filename $PROJECT_NAME
 		--appdir \"$BUILD_DIR/AppDir\"
-		--output appimage"
-	echo "$COMMAND" | eval $SHORTEN_PATHS
-	echo
-	COMMAND=$(echo "$COMMAND" | sed -z 's/\n/ /g')  # remove newlines from the command
-	eval "$COMMAND" || exit $((100+$?))
-	popd 1>/dev/null
+		--output appimage
+		"
+	echo_and_eval "$COMMAND" || exit $((100+$?))
 
-	# Some tools will just always do their own thing, no matter what -_-
-	mv "$BUILD_DIR/Doom_Runner-$CPU_ARCH.AppImage" "$PACKAGE_PATH"
+	# some tools will just always do their own thing, no matter what -_-
+	TEMP_PACKAGE_NAME="$APP_NAME_UNDERSCORED-$CPU_ARCH.AppImage"
+	mv "$TEMP_PACKAGE_NAME" "$PACKAGE_PATH"
+
+	popd 1>/dev/null
 
 	echo
 	echo "Packaging finished successfully."
@@ -166,14 +178,13 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 	fi
 
 	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME.dmg"
+	VOLUME_NAME="$DESKTOP_APP_NAME $APP_VERSION"
 	echo "Generating MacOS application bundle from the build output"
 	echo " Build dir: $BUILD_DIR" | eval $SHORTEN_PATHS
 	echo " Image file: $PACKAGE_PATH" | eval $SHORTEN_PATHS
 
 	echo
-	COMMAND="$DEPLOY_TOOL \"$APP_PATH\""
-	echo "$COMMAND" |  eval $SHORTEN_PATHS
-	eval "$COMMAND" || exit $((100+$?))
+	echo_and_eval "$DEPLOY_TOOL \"$APP_PATH\"" || exit $((100+$?))
 	echo
 	echo "The 'Cannot resolve rpath' errors can be ignored"
 
@@ -274,16 +285,82 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 
 	echo
 	echo "Creating DMG image"
-	[ -f "$PACKAGE_PATH" ] && rm "$PACKAGE_PATH"
-	# TODO: volname with version
-	COMMAND="hdiutil create -volname \"Doom Runner\"
-		-srcfolder \"$APP_PATH\"
-		-format UDZO
-		-imagekey zlib-level=9
-		\"$PACKAGE_PATH\""
-	echo "$COMMAND" | eval $SHORTEN_PATHS
-	COMMAND=$(echo "$COMMAND" | tr -d '\n')  # remove newlines from the command
-	eval "$COMMAND" || exit $((100+$?))
+
+	# create a writable DMG image first, so that we can do some adjustments
+	TEMP_DMG_PATH="$BUILD_DIR/$PROJECT_NAME-temp.dmg"
+	MOUNTED_DMG_VOLUME="/Volumes/$VOLUME_NAME"
+	echo
+	COMMAND="hdiutil create
+      -volname \"$VOLUME_NAME\"
+      -fs HFS+
+      -size 200m
+      -ov \"$TEMP_DMG_PATH\"
+      "
+	echo_and_eval "$COMMAND" || exit $((200+$?))
+
+	echo
+	echo_and_eval "hdiutil attach \"$TEMP_DMG_PATH\"" || exit $((300+$?))
+
+	sleep 1
+
+	echo
+	echo "Copying data into the image..."
+	cp -f -R "$APP_PATH" "$MOUNTED_DMG_VOLUME/"
+	ln -f -s /Applications "$MOUNTED_DMG_VOLUME/Applications"
+	mkdir "$MOUNTED_DMG_VOLUME/.background"
+	cp "$SOURCE_DIR/Install/DMG/background-960x720.png" "$MOUNTED_DMG_VOLUME/.background/background.png"
+	chflags hidden "$MOUNTED_DMG_VOLUME/.background"
+
+	sleep 1
+
+	# Setup the background and layout of the mounted DMG image.
+	#cp "$SOURCE_DIR/Install/DMG/DS_Store" "$MOUNTED_DMG_VOLUME/.DS_Store"
+	osascript <<EOF
+		tell application "Finder"
+			tell disk "$VOLUME_NAME"
+				open
+
+				set current view of container window to icon view
+				set toolbar visible of container window to false
+				set statusbar visible of container window to false
+
+				set the bounds of container window to {100, 100, 820, 640}
+
+				set viewOptions to the icon view options of container window
+				set arrangement of viewOptions to not arranged
+				set icon size of viewOptions to 128
+
+				set background picture of viewOptions to file ".background:background.png"
+
+				set position of item "$PROJECT_NAME.app" to {160, 225}
+				set position of item "Applications" to {550, 225}
+
+				close
+				open
+				update without registering applications
+			end tell
+		end tell
+EOF
+
+	echo
+	echo "Now you can make manual changes in the mounted image."
+	echo "When you're finished, press Enter to continue"
+	read
+
+	echo_and_eval "hdiutil detach \"$MOUNTED_DMG_VOLUME\"" || exit $((400+$?))
+
+	sleep 2
+
+	echo
+	COMMAND="hdiutil convert
+      \"$TEMP_DMG_PATH\"
+      -format UDZO
+      -imagekey zlib-level=9
+      -ov -o \"$PACKAGE_PATH\"
+      "
+	echo_and_eval "$COMMAND" || exit $((500+$?))
+
+	rm "$TEMP_DMG_PATH"
 
 	echo
 	echo "Packaging finished successfully."

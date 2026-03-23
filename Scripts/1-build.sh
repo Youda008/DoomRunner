@@ -2,10 +2,13 @@
 
 # Builds all parts of the project using requested build parameters.
 #
-# Usage: 1-build.sh <cpu_arch> <build_preset> <build_type>
+# Usage: 1-build.sh <cpu_arch> <linkage> <build_preset> <build_type>
 #   cpu_arch - the target CPU architecture of the binaries (cross-compilation is currently only supported for MacOS)
 #                default = the architecture of the computer running this script
 #				 other common options: i386, x86_64, arm64
+#   linkage - how the library dependencies are linked
+#               static = produces large standalone executable with all libraries integrated into it (currently unsupported)
+#               dynamic = produces small executable, but the libraries have to be installed into the system or bundled with the application
 #   build_preset - build type that defines additional build configuration
 #                    default = without any additional configuration values
 #                    flatpak = special build configuration for producing a Flatpak package
@@ -50,7 +53,15 @@ elif [[ $OS_TYPE == MacOS && $CPU_ARCH != arm64 && $CPU_ARCH != x86_64 ]]; then
 	echo "Invalid cpu_arch \"$CPU_ARCH\" for MacOS, possible values: arm64, x86_64."
 	exit 1
 fi
-BUILD_PRESET=$2
+LINKAGE=$2
+if [[ $LINKAGE != static && $LINKAGE != dynamic ]]; then
+	echo "Invalid linkage \"$LINKAGE\", possible values: static, dynamic"
+	exit 1
+elif [[ $LINKAGE == static ]]; then
+	echo "Static linking is currently not supported."
+	exit 1
+fi
+BUILD_PRESET=$3
 if [[ $OS_TYPE == Linux && $BUILD_PRESET != default && $BUILD_PRESET != flatpak ]]; then
 	echo "Invalid build_preset \"$BUILD_PRESET\", possible values: default, flatpak"
 	exit 1
@@ -58,14 +69,14 @@ elif [[ $OS_TYPE == MacOS && $BUILD_PRESET != default ]]; then
 	echo "Invalid build_preset \"$BUILD_PRESET\", possible values: default"
 	exit 1
 fi
-BUILD_TYPE=$3
+BUILD_TYPE=$4
 if [[ $BUILD_TYPE != release && $BUILD_TYPE != profile && $BUILD_TYPE != debug ]]; then
 	echo "Invalid build_type \"$BUILD_TYPE\", possible values: release, profile, debug"
 	exit 1
 fi
 
 # compose the build directory
-BUILD_DIR_NAME="Build-$OS_TYPE-$CPU_ARCH-$BUILD_PRESET-$BUILD_TYPE"
+BUILD_DIR_NAME="Build-$OS_TYPE-$CPU_ARCH-$LINKAGE-$BUILD_PRESET-$BUILD_TYPE"
 if [[ "$SOURCE_DIR" == "/media/"* ]]; then
 	# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
 	BUILD_DIR="$HOME/Builds/$PROJECT_NAME/$BUILD_DIR_NAME"
@@ -109,7 +120,7 @@ if [ $BUILD_PRESET == flatpak ]; then  QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=flatp
 echo "Building the application"
 echo " Source dir: $SOURCE_DIR"
 echo " Output dir: $BUILD_DIR"
-echo " Build type: $CPU_ARCH $BUILD_PRESET $BUILD_TYPE"
+echo " Build type: $CPU_ARCH $LINKAGE $BUILD_PRESET $BUILD_TYPE"
 
 [ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"

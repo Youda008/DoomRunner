@@ -1,8 +1,12 @@
 :: Creates a distributable package from the selected build output.
 ::
-:: Usage: 2-package.bat <build_dir> <target_env> <linkage> <build_type>
+:: Usage: 2-package.bat <build_dir> <target_env> <package_type> <build_type>
 ::   build_dir - path to the directory where the application has been built
-::   The other parameters are there just to compose the package file name. See 1-build.bat for their description.
+::   target_env - only needed to compose the package file name, see 1-build.bat for description
+::   package_type - what kind of package should be produced from the build output
+::                    static_exe = zipped statically linked executable that integrates all dependencies into itself
+::                    bundled_dlls = zipped dynamically linked executable carries the required DLLs with it (currently unsupported)
+::   build_type - only needed to find the executable, see 1-build.bat for description
 ::
 :: NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as PACKAGE_PATH.
 
@@ -17,13 +21,18 @@ for %%I in ("%SOURCE_DIR%") do set "PROJECT_NAME=%%~nxI"
 
 :: validate the arguments
 set TARGET_ENV=%~2
-set LINKAGE=%~3
-set BUILD_TYPE=%~4
 if %TARGET_ENV% NEQ recent ( if %TARGET_ENV% NEQ legacy (
 	echo Invalid target_env "%TARGET_ENV%", possible values: recent, legacy
 	set ERROR_CODE=1
 	goto exit
 ))
+set PACKAGE_TYPE=%~3
+if %PACKAGE_TYPE% NEQ static_exe ( if %PACKAGE_TYPE% NEQ bundled_dlls (
+    echo Invalid package_type "%PACKAGE_TYPE%", possible values: static_exe, bundled_dlls
+    set ERROR_CODE=1
+    goto exit
+))
+set BUILD_TYPE=%~4
 
 :: verify the build output
 set "BUILD_DIR=%~1"
@@ -50,7 +59,9 @@ if %ERRORLEVEL% neq 0 (
 set OS_TYPE=Windows
 if %TARGET_ENV%==legacy set "TARGET_ENV_DESC=legacy(i386)"
 if %TARGET_ENV%==recent set "TARGET_ENV_DESC=recent(x86_64)"
-set "BASE_NAME=%PROJECT_NAME%-%APP_VERSION%-%OS_TYPE%-%TARGET_ENV_DESC%-%LINKAGE%"
+set "BASE_NAME=%PROJECT_NAME%-%APP_VERSION%-%OS_TYPE%-%TARGET_ENV_DESC%-%PACKAGE_TYPE%"
+
+if not exist "%RELEASE_DIR%" mkdir "%RELEASE_DIR%"
 
 :: verify the archive tool
 set "ZIP_TOOL=C:\Program Files\7-Zip\7z.exe"
@@ -63,11 +74,17 @@ if not exist "%ZIP_TOOL%" (
 
 set "PACKAGE_PATH=%RELEASE_DIR%\%BASE_NAME%.zip"
 
+
+if %PACKAGE_TYPE%==static_exe    goto static_exe
+if %PACKAGE_TYPE%==bundled_dlls  goto bundled_dlls
+goto exit
+
+
+:static_exe
+
 echo Packaging the build output into an archive
 echo  Build dir: %BUILD_DIR% | %SHORTEN_PATHS%
 echo  Archive: %PACKAGE_PATH% | %SHORTEN_PATHS%
-
-if not exist "%RELEASE_DIR%" mkdir "%RELEASE_DIR%"
 
 :: create a zip archive
 if exist "%PACKAGE_PATH%" rm "%PACKAGE_PATH%"
@@ -84,6 +101,15 @@ echo.
 echo Packaging finished successfully.
 echo Output: %PACKAGE_PATH% | %SHORTEN_PATHS%
 set ERROR_CODE=0
+goto exit
+
+
+:bundled_dlls
+
+echo Package with bundled DLLs is not implemented yet.
+set ERROR_CODE=1
+goto exit
+
 
 :exit
 echo.

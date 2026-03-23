@@ -5,8 +5,8 @@
 ::                  recent = UCRT64,  Qt6
 ::                  legacy = MINGW32, Qt5
 ::   linkage    - how the library dependencies are linked
-::                  static = produces large standalone executable
-::                  dynamic = produces small executable, but the DLLs have to be installed into the system or bundled with the application
+::                  static = produces large standalone executable with all libraries integrated into it
+::                  dynamic = produces small executable, but the libraries have to be installed into the system or bundled with the application
 ::   build_type - QMake build type
 ::                  release = enables most optimizations, generates debug symbols into a separate file
 ::                  profile = enables some optimizations, generates debug symbols into a separate file
@@ -42,6 +42,10 @@ if %BUILD_TYPE% NEQ release ( if %BUILD_TYPE% NEQ profile ( if %BUILD_TYPE% NEQ 
 	set ERROR_CODE=1
 	goto exit
 )))
+
+:: may be useful for composing file or directory names
+if %TARGET_ENV%==legacy set "CPU_ARCH=i386"
+if %TARGET_ENV%==recent set "CPU_ARCH=x86_64"
 
 :: compose the build directory
 set OS_TYPE=Windows

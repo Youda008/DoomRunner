@@ -7,7 +7,9 @@
 #   os_type - the target operating system of the package (only needed to compose the package file name)
 #   cpu_arch - the target CPU architecture of the package (only needed to compose the package file name)
 #   package_type - what kind of package should be produced from the build output
-#                    deb = Debian/Ubuntu package that relies on the package maneger to install its dependencies
+#                    dynamic_exe = only zips the dynamically linked executable, dependencies must be installed manually by the user
+#                    static_exe = zipped statically linked executable that integrates all dependencies into itself (currently unsupported)
+#                    deb = Debian/Ubuntu package that relies on the package manager to install its dependencies
 #                    appimage = self-mounting Linux application bundle that contains all dependencies compressed in the executable
 #                    flatpak = sandboxed Linux application bundle containing all dependencies but running with restricted permissions
 #                    dmg = mountable MacOS image containing all dependencies bundled in a standard application bundle (.app file)
@@ -44,8 +46,8 @@ if [[ $OS_TYPE == MacOS && $CPU_ARCH != arm64 && $CPU_ARCH != x86_64 ]]; then
 	exit 1
 fi
 PACKAGE_TYPE=$4
-if [[ $OS_TYPE == Linux && $PACKAGE_TYPE != deb && $PACKAGE_TYPE != appimage && $PACKAGE_TYPE != flatpak ]]; then
-	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: deb, appimage, flatpak"
+if [[ $OS_TYPE == Linux && $PACKAGE_TYPE != dynamic_exe && $PACKAGE_TYPE != static_exe && $PACKAGE_TYPE != deb && $PACKAGE_TYPE != appimage && $PACKAGE_TYPE != flatpak ]]; then
+	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: dynamic_exe, static_exe, deb, appimage, flatpak"
 	exit 1
 elif [[ $OS_TYPE == MacOS && $PACKAGE_TYPE != dmg ]]; then
 	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: dmg"
@@ -81,7 +83,7 @@ BASE_NAME="$PROJECT_NAME-$APP_VERSION-$OS_TYPE-$CPU_ARCH"
 
 [ ! -d "$RELEASE_DIR" ] && mkdir -p "$RELEASE_DIR"
 
-if [ $PACKAGE_TYPE == deb ]; then
+if [ $PACKAGE_TYPE == dynamic_exe ] || [ $PACKAGE_TYPE == static_exe ]; then
 
 	# verify the archive tool
 	ZIP_TOOL=$(which 7z)
@@ -92,9 +94,8 @@ if [ $PACKAGE_TYPE == deb ]; then
 		exit 2
 	fi
 
-	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME-dynamic.zip"
-	echo "Debian/Ubuntu package not implemented yet"
-	echo "Packaging only the executable"
+	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME-$PACKAGE_TYPE.zip"
+	echo "Packaging the executable"
 	echo " Executable: $EXECUTABLE_PATH" | eval $SHORTEN_PATHS
 	echo " Archive: $PACKAGE_PATH" | eval $SHORTEN_PATHS
 
@@ -107,6 +108,11 @@ if [ $PACKAGE_TYPE == deb ]; then
 	echo "Packaging finished successfully."
 	echo "Output: $PACKAGE_PATH" | eval $SHORTEN_PATHS
 	exit 0
+
+elif [ $PACKAGE_TYPE == deb ]; then
+
+	echo "Debian/Ubuntu package is not implemented yet"
+	exit 1
 
 elif [ $PACKAGE_TYPE == appimage ]; then
 
@@ -157,7 +163,7 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 
 elif [ $PACKAGE_TYPE == flatpak ]; then
 
-	echo "Flatpak package not implemented yet"
+	echo "Flatpak package is not implemented yet"
 	exit 1
 
 elif [ $PACKAGE_TYPE == dmg ]; then

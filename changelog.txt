@@ -1,18 +1,32 @@
+1.9.2
+- added auto-detection and basic support for UZDoom, nugget-doom and cherry-doom
+- added an option to sort map files by name, type, size and date
+- added an option to wrap long lines in the WAD Description Viewer
+- added an ability to read the map names from pk3 files
+- added an ability to open WAD description file within a selected zip file
+- added support for Wolf3D data file types
+- using command line parameter -merge instead of -file for loading files in ChocolateDoom and its forks
+- the state of the preset search bar is now restored on next start
+- engines are now internally indexed by a unique ID, so that their name and path can be changed without breaking existing presets
+- fixed incorrectly highlighted engine directories when trying to edit a newly added engine
+- fixed invalid alternative paths in the "Data directories" tab when using the preset name and the preset is cloned
+- fixed the layout of the "Data directories" tab on Linux
+
 1.9.1
+- introduced "Doom Mod Bundles" - sub-lists of mods that can be shared between presets
+- added a possibility to hide the map list help label via a right-click
+- added "Open file" action to the right-click menu
+- added "Move to top/bottom" actions to the right-click menu
+- added the possibility to copy&paste mods from one preset to another
+- Demo directory is now a separate directory from Save directory with its own override
+- allowed entering absolute paths into the "Custom data sub-directories" fields
+- only use -pistolstart and +sv_cheats in the command if the engine supports it (to prevent errors when starting)
 - fixed crash when reordering mods on some operating systems
 - fixed all dmflags2 being mistakenly put into dmflags3
 - fixed broken layout with Qt versions older than 6.8
 - fixed compatibility with the KEX-based Doom re-release (the file paths will be absolute)
 - fixed the special character escaping in the "Additional arguments" lines
 - fixed tooltips for the Custom data sub-directories and some gameplay flags
-- only use -pistolstart and +sv_cheats in the command if the engine supports it (to prevent errors when starting)
-- allowed entering absolute paths into the "Custom data sub-directories" fields
-- Demo directory is now a separate directory from Save directory with its own override
-- added possibility to hide the map list help label via a right click
-- added "Open file" action to the right-click menu
-- added "Move to top/bottom" actions to the right-click menu
-- added the possibility to copy&paste mods from one preset to another
-- introduced "Doom Mod Bundles" - sub-lists of mods that can be shared between presets
 - minor bug-fixes and optimizations
 
 1.9.0

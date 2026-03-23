@@ -4,6 +4,7 @@
 # and installs the application into this system.
 
 SCRIPT_DIR=$(realpath "$(dirname "$0")")
+PROJECT_NAME="$(basename "$(dirname "$SCRIPT_DIR")")"
 
 TEMP_DIR="/tmp/$PROJECT_NAME"
 trap '[ -d "$TEMP_DIR" ] && rm -r "$TEMP_DIR"' EXIT

@@ -125,6 +125,8 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 		exit 2
 	fi
 
+	export QMAKE=$(which qmake6)  # required by the qt plugin of linuxdeploy
+
 	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME.AppImage"
 	echo "Generating AppImage from the build output"
 	echo " Build dir: $BUILD_DIR" | eval $SHORTEN_PATHS
@@ -146,13 +148,14 @@ elif [ $PACKAGE_TYPE == appimage ]; then
       --icon-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.128x128.png\"
       --icon-filename $PROJECT_NAME
       --appdir \"$BUILD_DIR/AppDir\"
+      --plugin qt
       --output appimage
       "
 	echo_and_eval "$COMMAND" || exit $((100+$?))
 
 	# some tools will just always do their own thing, no matter what -_-
 	TEMP_PACKAGE_NAME="$APP_NAME_UNDERSCORED-$CPU_ARCH.AppImage"
-	mv "$TEMP_PACKAGE_NAME" "$PACKAGE_PATH"
+	cp "$TEMP_PACKAGE_NAME" "$PACKAGE_PATH"
 
 	popd 1>/dev/null
 

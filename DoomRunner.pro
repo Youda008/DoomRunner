@@ -186,6 +186,8 @@ macx: ICON = Resources/DoomRunner.icns
 
 #-- build type variables -------------------------
 
+DEFINES += PROJECT_NAME=\\\"$$TARGET\\\"
+
 CONFIG(debug, debug|release) {
 	DEFINES += DEBUG
 	DEFINES += IS_DEBUG_BUILD=true

@@ -249,6 +249,12 @@ QString getThisLauncherDataDir()
 
 	QString appDataDir = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
 
+	// When packaged into an AppImage, the AppDataLocation will compose the path from the AppImage file name,
+	// which will result in something like "/home/youda/.local/share/DoomRunner-1.9.2-Linux-x86_64/",
+	// which will of course cause the launcher to lose its data when its replaced with a newer version.
+	// Therefore we must fix this path and replace the directory name with a constant project name.
+	appDataDir = QFileInfo( appDataDir ).dir().filePath( PROJECT_NAME );
+
 	if constexpr (IS_WINDOWS)
 	{
 		QString thisExeDir = QApplication::applicationDirPath();

@@ -10,7 +10,7 @@
 #               static = produces large standalone executable with all libraries integrated into it (currently unsupported)
 #               dynamic = produces small executable, but the libraries have to be installed into the system or bundled with the application
 #   build_preset - build type that defines additional build configuration
-#                    default = without any additional configuration values
+#                    plain = without any additional build config values
 #                    flatpak = special build configuration for producing a Flatpak package
 #   build_type - QMake build type
 #                  release = enables most optimizations, generates debug symbols into a separate file
@@ -62,11 +62,11 @@ elif [[ $LINKAGE == static ]]; then
 	exit 1
 fi
 BUILD_PRESET=$3
-if [[ $OS_TYPE == Linux && $BUILD_PRESET != default && $BUILD_PRESET != flatpak ]]; then
-	echo "Invalid build_preset \"$BUILD_PRESET\", possible values: default, flatpak"
+if [[ $OS_TYPE == Linux && $BUILD_PRESET != plain && $BUILD_PRESET != flatpak ]]; then
+	echo "Invalid build_preset \"$BUILD_PRESET\", possible values: plain, flatpak"
 	exit 1
-elif [[ $OS_TYPE == MacOS && $BUILD_PRESET != default ]]; then
-	echo "Invalid build_preset \"$BUILD_PRESET\", possible values: default"
+elif [[ $OS_TYPE == MacOS && $BUILD_PRESET != plain ]]; then
+	echo "Invalid build_preset \"$BUILD_PRESET\", possible values: plain"
 	exit 1
 fi
 BUILD_TYPE=$4
@@ -76,12 +76,12 @@ if [[ $BUILD_TYPE != release && $BUILD_TYPE != profile && $BUILD_TYPE != debug ]
 fi
 
 # compose the build directory
-BUILD_DIR_NAME="Build-$OS_TYPE-$CPU_ARCH-$LINKAGE-$BUILD_PRESET-$BUILD_TYPE"
+BUILD_DIR_NAME="$OS_TYPE-$CPU_ARCH-$LINKAGE-$BUILD_PRESET-$BUILD_TYPE"
 if [[ "$SOURCE_DIR" == "/media/"* ]]; then
 	# We cannot build on a shared NTFS drive because then we run into troubles with Linux permissions.
 	BUILD_DIR="$HOME/Builds/$PROJECT_NAME/$BUILD_DIR_NAME"
 else
-	BUILD_DIR="$SOURCE_DIR/$BUILD_DIR_NAME"
+	BUILD_DIR="$SOURCE_DIR/Builds/$BUILD_DIR_NAME"
 fi
 
 # Writing to a file is the only way we can return data to the caller.

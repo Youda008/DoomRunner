@@ -141,13 +141,13 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 
 	echo
 	COMMAND="$DEPLOY_TOOL
-		--executable \"$EXECUTABLE_PATH\"
-		--desktop-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.desktop\"
-		--icon-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.128x128.png\"
-		--icon-filename $PROJECT_NAME
-		--appdir \"$BUILD_DIR/AppDir\"
-		--output appimage
-		"
+      --executable \"$EXECUTABLE_PATH\"
+      --desktop-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.desktop\"
+      --icon-file \"$SOURCE_DIR/Install/XDG/$PROJECT_NAME.128x128.png\"
+      --icon-filename $PROJECT_NAME
+      --appdir \"$BUILD_DIR/AppDir\"
+      --output appimage
+      "
 	echo_and_eval "$COMMAND" || exit $((100+$?))
 
 	# some tools will just always do their own thing, no matter what -_-

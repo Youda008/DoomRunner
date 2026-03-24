@@ -9,7 +9,7 @@ PROJECT_NAME="$(basename "$(dirname "$SCRIPT_DIR")")"
 TEMP_DIR="/tmp/$PROJECT_NAME"
 trap '[ -d "$TEMP_DIR" ] && rm -r "$TEMP_DIR"' EXIT
 
-"$SCRIPT_DIR/1-build.sh" default dynamic default release
+"$SCRIPT_DIR/1-build.sh" default dynamic plain release
 if [ $? -ne 0 ]; then
 	exit 1
 fi

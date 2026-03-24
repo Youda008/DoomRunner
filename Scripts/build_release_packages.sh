@@ -20,7 +20,7 @@ fi
 
 if [ $OS_TYPE == Linux ]; then
 
-	"$SCRIPT_DIR/1-build.sh" default dynamic default release
+	"$SCRIPT_DIR/1-build.sh" default dynamic plain release
 	if [ $? -eq 0 ]; then
 		source "$TEMP_DIR/build_vars.sh"  # load return values from the 1-build.sh
 		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH dynamic_exe
@@ -29,13 +29,13 @@ if [ $OS_TYPE == Linux ]; then
 
 elif [ $OS_TYPE == MacOS ]; then
 
-	"$SCRIPT_DIR/1-build.sh" arm64 dynamic default release
+	"$SCRIPT_DIR/1-build.sh" arm64 dynamic plain release
 	if [ $? -eq 0 ]; then
 		source "$TEMP_DIR/build_vars.sh"  # load return values from the 1-build.sh
 		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH dmg
 	fi
 
-	"$SCRIPT_DIR/1-build.sh" x86_64 dynamic default release
+	"$SCRIPT_DIR/1-build.sh" x86_64 dynamic plain release
 	if [ $? -eq 0 ]; then
 		source "$TEMP_DIR/build_vars.sh"  # load return values from the 1-build.sh
 		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH dmg

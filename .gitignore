@@ -5,6 +5,4 @@
 /Research
 *.autosave
 *.pro.user*
-/*.bat
-/*.sh
 /todo.txt

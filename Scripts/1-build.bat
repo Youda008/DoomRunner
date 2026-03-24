@@ -49,8 +49,8 @@ if %TARGET_ENV%==recent set "CPU_ARCH=x86_64"
 
 :: compose the build directory
 set OS_TYPE=Windows
-set "BUILD_DIR_NAME=Build-%OS_TYPE%-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
-set "BUILD_DIR=%SOURCE_DIR%\%BUILD_DIR_NAME%"
+set "BUILD_DIR_NAME=%OS_TYPE%-%TARGET_ENV%-%LINKAGE%-%BUILD_TYPE%"
+set "BUILD_DIR=%SOURCE_DIR%\Builds\%BUILD_DIR_NAME%"
 
 :: setup the msys2 build environment
 set "MSYS_ROOT=C:\msys64"

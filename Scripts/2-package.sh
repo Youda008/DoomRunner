@@ -317,13 +317,13 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 	cp -f -R "$APP_PATH" "$MOUNTED_DMG_VOLUME/"
 	ln -f -s /Applications "$MOUNTED_DMG_VOLUME/Applications"
 	mkdir "$MOUNTED_DMG_VOLUME/.background"
-	cp "$SOURCE_DIR/Install/DMG/background-960x720.png" "$MOUNTED_DMG_VOLUME/.background/background.png"
+	cp "$SOURCE_DIR/Packaging/dmg/background-960x720.png" "$MOUNTED_DMG_VOLUME/.background/background.png"
 	chflags hidden "$MOUNTED_DMG_VOLUME/.background"
 
 	sleep 1
 
 	# Setup the background and layout of the mounted DMG image.
-	#cp "$SOURCE_DIR/Install/DMG/DS_Store" "$MOUNTED_DMG_VOLUME/.DS_Store"
+	#cp "$SOURCE_DIR/Packaging/dmg/DS_Store" "$MOUNTED_DMG_VOLUME/.DS_Store"
 	osascript "$SCRIPT_DIR/set_finder_layout.applescript" "$VOLUME_NAME" "$PROJECT_NAME"
 
 	echo

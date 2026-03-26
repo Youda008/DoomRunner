@@ -1,0 +1,12 @@
+Package: doomrunner
+Version: ${VERSION}
+Section: games
+Priority: optional
+Architecture: ${ARCH}
+Depends: libqt6core6t64 | libqt6core6, libqt6gui6, libqt6widgets6, libqt6network6, libminizip1
+Maintainer: Jan Broz <youda008@gmail.com>
+Description: A graphical preset-based launcher for Doom source ports
+ Doom Runner is a launcher for common Doom source ports (like GZDoom,
+ Zandronum, Crispy Doom, PrBoom, ...) with a graphical user interface.
+ It is designed around the idea of presets for various multi-file
+ modifications to allow one-click switching between them.

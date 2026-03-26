@@ -25,6 +25,7 @@ if [ $OS_TYPE == Linux ]; then
 		source "$TEMP_DIR/build_vars.sh"  # load return values from the 1-build.sh
 		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH dynamic_exe
 		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH appimage
+		"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH deb
 	fi
 
 elif [ $OS_TYPE == MacOS ]; then

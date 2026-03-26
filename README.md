@@ -84,9 +84,9 @@ On Linux you have few options.
 
 #### Use the AppImage (recommended)
 
-The release page contains a file with an .AppImage suffix. This application bundle is designed so that you can just drop it anywhere on your drive and run it right away (the same way as a statically linked executable). Its data files will be stored in the standard location for data of your distribution (commonly `~/.local/share/DoomRunner`). 
+The release page contains a file with an `.AppImage` suffix. This application bundle is designed so that you can just drop it anywhere on your drive and run it right away (the same way as a statically linked executable). Its data files will be stored in the standard location for data of your distribution (commonly `~/.local/share/DoomRunner`). 
 
-#### Install via Flatpak
+#### Install it via Flatpak
 
 Doom Runner can be installed via [Flatpak](https://flatpak.org/) from this link:
 
@@ -94,10 +94,17 @@ Doom Runner can be installed via [Flatpak](https://flatpak.org/) from this link:
 
 See [Flathub README](https://github.com/flathub/io.github.Youda008.DoomRunner#readme) for more information.
 
-#### Install from AUR
+#### Install it from AUR
 
 Arch Linux users can leverage [AUR](https://wiki.archlinux.org/title/Arch_User_Repository) to install Doom Runner via package manager from this [package](https://aur.archlinux.org/packages/doomrunner).
 The AUR wiki page contains instructions on how to do it.
+
+#### Install it from the provided .deb package
+
+Debian and Ubuntu users can install Doom Runner from the .deb package on the release page. Download it and install it using the following command:
+```
+sudo dpkg -i DoomRunner-<...>.deb
+```
 
 #### Install on NixOS
 

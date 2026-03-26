@@ -156,6 +156,11 @@ Additionally to the executable, you can also install the desktop file and icons 
 Instructions for building and developing this application are now in [HowToBuild.md](HowToBuild.md).
 
 
+## The use of Qt
+
+This application was written with the help of the Qt framework. Its license requires me to publicly acknowledge using it and provide access to its source code, which can be found here: https://github.com/qt/qtbase. The exact version of Qt with which this application was built is not fixed and can vary based on your OS distribution or package repository. It should work with anything from 5.15 to the latest 6.x version.
+
+
 ## Reporting issues and requesting features
 
 If you encounter a bug or just want the launcher to work differently, you can either create an issue here on GitHub (the preferred way) or reach me on email youda008@gmail.com or on Discord as Youda008.

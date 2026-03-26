@@ -67,7 +67,7 @@ For Windows, I only provide a statically linked executable because installing th
 
 ### Windows
 
-The `DoomRunner.exe` bundles everything inside itself. Just extract it into some directory and it is good to go. Putting it to `Program Files` is also supported, the data files will then be in `%AppData%\DoomRunner`.
+The `DoomRunner.exe` bundles everything inside itself. Just extract it into some directory and it is good to go. Putting it to `Program Files` is also supported, the data files will then be stored in `%AppData%\DoomRunner`.
 
 #### Scoop
 
@@ -82,27 +82,9 @@ scoop install doomrunner
 
 On Linux you have few options.
 
-#### Install manually
+#### Use the AppImage (recommended)
 
-Extract the executable in where you usually put them, commonly `/usr/bin` or `/opt/DoomRunner`.
-
-Then you need to install the following shared libraries to make the app run.
-
-* `libqt6core`
-* `libqt6gui`
-* `libqt6widgets`
-* `libqt6network`
-
-Please note that in different distributions the libraries might have slightly different names, for example, in Ubuntu 24 LTS they are called `libqt6core6t64`, `libqt6gui6`, `libqt6widgets6`, ...
-
-Use your distribution package manager to find and install those
-
-* Ubuntu: `sudo apt install libname`
-* Arch: `pacman -S libname`
-* ...
-* or use some graphical package manager like, for example, Synaptic Package Manager
-
-The executable was built in Kubuntu 24.04 LTS, so there is a chance that it will not find the libraries in other distributions. In that case you will need to build it yourself.
+The release page contains a file with an .AppImage suffix. This application bundle is designed so that you can just drop it anywhere on your drive and run it right away (the same way as a statically linked executable). Its data files will be stored in the standard location for data of your distribution (commonly `~/.local/share/DoomRunner`). 
 
 #### Install via Flatpak
 
@@ -142,6 +124,30 @@ or
 ```
 
 2. Rebuild the system with `nixos-rebuild`
+
+#### Install manually
+
+Extract the executable in where you usually put them, commonly `/usr/bin` or `/opt/DoomRunner`.
+
+Then you need to install the following shared libraries to make the app run.
+
+* `libqt6core`
+* `libqt6gui`
+* `libqt6widgets`
+* `libqt6network`
+
+Please note that in different distributions the libraries might have slightly different names, for example, in Ubuntu 24 LTS they are called `libqt6core6t64`, `libqt6gui6`, `libqt6widgets6`, ...
+
+Use your distribution package manager to find and install those
+
+* Ubuntu: `sudo apt install libname`
+* Arch: `pacman -S libname`
+* ...
+* or use some graphical package manager like, for example, Synaptic Package Manager
+
+The executable was built in Kubuntu 24.04 LTS, so there is a chance that it will not find the libraries in other distributions. In that case you will need to build it yourself.
+
+Additionally to the executable, you can also install the desktop file and icons located in the `Install` directory. You can take a look at the [install script](Scripts/3-install.sh) to see how it's done on Ubuntu.
 
 
 

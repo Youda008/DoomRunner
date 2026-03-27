@@ -2,7 +2,7 @@
 
 # Creates a distributable package from the selected build output.
 #
-# Usage: 2-package.sh <build_dir> <os_type> <cpu_arch> <package_type>
+# Usage: 2-package.sh <build_dir> <os_type> <cpu_arch> <package_type> <build_type>
 #   build_dir - path to the directory where the application has been built
 #   os_type - the target operating system of the package (only needed to compose the package file name)
 #   cpu_arch - the target CPU architecture of the package (only needed to compose the package file name)
@@ -13,6 +13,7 @@
 #                    appimage = self-mounting Linux application bundle that contains all dependencies compressed in the executable
 #                    flatpak = sandboxed Linux application bundle containing all dependencies but running with restricted permissions
 #                    dmg = mountable MacOS image containing all dependencies bundled in a standard application bundle (.app file)
+#   build_type - only required for package_type=flatpak
 #
 # NOTE: This script outputs some of its variables (like PACKAGE_PATH) into /tmp/$PROJECT_NAME/package_vars.sh,
 #       which can be loaded using the 'source' command. This, however, has to be cleaned up by the caller.
@@ -65,7 +66,7 @@ if [[ $OS_TYPE == MacOS ]]; then
 else
 	EXECUTABLE_PATH="$BUILD_DIR/$PROJECT_NAME"
 fi
-if [ ! -f "$EXECUTABLE_PATH" ]; then
+if [[ ! -f "$EXECUTABLE_PATH" && ! $PACKAGE_TYPE == flatpak ]]; then
 	echo "There is no build output in \"$BUILD_DIR\"" | eval $SHORTEN_PATHS
 	echo "Packaging aborted."
 	exit 3
@@ -224,8 +225,59 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 
 elif [ $PACKAGE_TYPE == flatpak ]; then
 
-	echo "Flatpak package is not implemented yet"
-	exit 1
+	# verify the packaging tool
+	FLATPAK_BUILDER=$(which flatpak-builder)
+	if [ -z "$FLATPAK_BUILDER" ]; then
+		echo "Packaging tool not available: flatpak-builder"
+		echo "Please install 'flatpak-builder' package first"
+		echo "Packaging aborted."
+		exit 2
+	fi
+
+	BUILD_TYPE=$5
+
+	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME.flatpak"
+	TEMP_PACKAGE_PATH="$BUILD_DIR/$BASE_NAME.flatpak"  # otherwise we risk issues with Unix permissions
+	echo "Generating Flatpak package from the source code"
+	echo " Package file: $PACKAGE_PATH" | eval $SHORTEN_PATHS
+
+	# cleanup the previous staging files and start from scratch
+	[ -f "$PACKAGE_PATH" ] && rm "$PACKAGE_PATH"
+	#[ -d "$BUILD_DIR" ] && rm -r "$BUILD_DIR"
+	mkdir -p "$BUILD_DIR"
+
+	FLATPAK_STATE_DIR="$BUILD_DIR/flatpak-state"
+	FLATPAK_BUILD_DIR="$BUILD_DIR/flatpak-build"
+	FLATPAK_REPO_DIR="$BUILD_DIR/flatpak-repo"
+
+	sed -e "s|\${SOURCE_DIR}|$SOURCE_DIR|" \
+	    -e "s|\${BUILD_TYPE}|$BUILD_TYPE|" \
+	    < "$SOURCE_DIR/Packaging/flatpak/manifest.yml.in" > "$BUILD_DIR/manifest.yml"
+
+	echo
+	COMMAND="$FLATPAK_BUILDER
+      --force-clean
+      --install-deps-from=flathub
+      --state-dir=\"$FLATPAK_STATE_DIR\"
+      --repo=\"$FLATPAK_REPO_DIR\"
+      \"$FLATPAK_BUILD_DIR\"
+      \"$BUILD_DIR/manifest.yml\"
+      "
+	echo_and_eval "$COMMAND" || exit $((100+$?))
+
+	echo
+	echo_and_eval "flatpak build-bundle \"$FLATPAK_REPO_DIR\" \"$TEMP_PACKAGE_PATH\" io.github.Youda008.DoomRunner" || exit $((200+$?))
+
+	cp "$TEMP_PACKAGE_PATH" "$PACKAGE_PATH"
+
+	# This directory contains a copy of the whole project directory and a new copy is made for every next build!
+	# If we don't delete it, we can quickly run out of disk space.
+	rm -r "$FLATPAK_STATE_DIR/build"
+
+	echo
+	echo "Packaging finished successfully."
+	echo "Output: $PACKAGE_PATH" | eval $SHORTEN_PATHS
+	exit 0
 
 elif [ $PACKAGE_TYPE == dmg ]; then
 

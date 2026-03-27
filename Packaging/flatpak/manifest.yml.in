@@ -1,0 +1,48 @@
+app-id: io.github.Youda008.DoomRunner
+runtime: org.kde.Platform
+runtime-version: '6.9'
+sdk: org.kde.Sdk
+command: DoomRunner
+finish-args:
+  - --device=all
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --share=ipc
+  - --share=network
+  # Allow to browse local files and store absolute paths
+  - --filesystem=home:rw
+  # Allow to execute host engines
+  - --talk-name=org.freedesktop.Flatpak
+  # Simpler way of preventing KDE related errors
+  - --env=KDE_FULL_SESSION=false
+modules:
+  - name: minizip
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DBUILD_SHARED_LIBS=ON
+    sources:
+      - type: archive
+        url: https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
+        sha256: 17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c
+    subdir: contrib/minizip
+
+  - name: doomrunner
+    buildsystem: qmake
+    config-opts:
+      - CONFIG+=${BUILD_TYPE} flatpak
+      - INSTALL_DIR+=/app/bin
+      - QMAKE_LIBDIR+=/app/lib64
+    sources:
+      - type: dir
+        path: ${SOURCE_DIR}
+    post-install:
+      # Patch desktop file using Flatpak references
+      - desktop-file-edit --set-icon=${FLATPAK_ID} Install/XDG/DoomRunner.desktop
+      # Install desktop file and icons
+      - install -Dm 644 Install/XDG/io.github.Youda008.DoomRunner.appdata.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
+      - install -Dm 644 Install/XDG/DoomRunner.desktop /app/share/applications/${FLATPAK_ID}.desktop
+      - |
+        for size in 16 24 32 48 64 128; do
+          install -Dm644 Install/XDG/DoomRunner.${size}x${size}.png /app/share/icons/hicolor/${size}x${size}/apps/${FLATPAK_ID}.png
+        done

@@ -26,12 +26,9 @@ copy() { echo "cp \"{SOURCE_DIR}/$1\" \"$2\""; sudo cp "$SOURCE_DIR/$1" "$2"; }
 
 echo "Installing desktop files"
 copy "Install/XDG/$PROJECT_NAME.desktop" "/usr/share/applications/$PROJECT_NAME.desktop"
-copy "Install/XDG/$PROJECT_NAME.16x16.png" "/usr/share/icons/hicolor/16x16/apps/$PROJECT_NAME.png"
-copy "Install/XDG/$PROJECT_NAME.24x24.png" "/usr/share/icons/hicolor/24x24/apps/$PROJECT_NAME.png"
-copy "Install/XDG/$PROJECT_NAME.32x32.png" "/usr/share/icons/hicolor/32x32/apps/$PROJECT_NAME.png"
-copy "Install/XDG/$PROJECT_NAME.48x48.png" "/usr/share/icons/hicolor/48x48/apps/$PROJECT_NAME.png"
-copy "Install/XDG/$PROJECT_NAME.64x64.png" "/usr/share/icons/hicolor/64x64/apps/$PROJECT_NAME.png"
-copy "Install/XDG/$PROJECT_NAME.128x128.png" "/usr/share/icons/hicolor/128x128/apps/$PROJECT_NAME.png"
+for SIZE in 16 24 32 48 64 128; do
+	copy "Install/XDG/$PROJECT_NAME.${SIZE}x${SIZE}.png" "/usr/share/icons/hicolor/${SIZE}x${SIZE}/apps/$PROJECT_NAME.png"
+done
 
 echo
 echo "Done"

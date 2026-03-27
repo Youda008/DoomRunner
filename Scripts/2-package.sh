@@ -88,7 +88,7 @@ if [ $PACKAGE_TYPE == dynamic_exe ] || [ $PACKAGE_TYPE == static_exe ]; then
 	# verify the archive tool
 	ZIP_TOOL=$(which 7z)
 	if [ -z "$ZIP_TOOL" ]; then
-		echo "Archive tool not available: $ZIP_TOOL"
+		echo "Archive tool not available: 7z"
 		echo "Please install it first"
 		echo "Packaging aborted."
 		exit 2

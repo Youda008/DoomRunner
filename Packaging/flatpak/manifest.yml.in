@@ -17,16 +17,16 @@ finish-args:
   # Simpler way of preventing KDE related errors
   - --env=KDE_FULL_SESSION=false
 modules:
-  - name: minizip
+  - name: minizip-ng
     buildsystem: cmake-ninja
     config-opts:
       - -DBUILD_SHARED_LIBS=ON
+      - -DMZ_ZLIB=ON
     sources:
-      - type: archive
-        url: https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
-        sha256: 17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c
-    subdir: contrib/minizip
-
+      - type: git
+        url: https://github.com/zlib-ng/minizip-ng
+        tag: 4.1.0
+        commit: cf4b58e17ebdcff8c6fbce1a9c3af5bf0485423c
   - name: doomrunner
     buildsystem: qmake
     config-opts:

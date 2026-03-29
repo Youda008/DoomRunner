@@ -1,11 +1,14 @@
 #!/bin/bash
 
-# Installs the application from the selected build output into this system.
-#
-# Usage: 3-install.sh <install_method> <path>
-#   install_method - how and from which source the package is installed
-#                      from_build - the package will be installed from the build output, <path> is the path of the build directory
-#                      from_deb - the package will be installed from a Debian package, <path> is the path of the package file
+function exit_with_help() {
+	echo 'Installs the application from the selected build output into this system.'
+	echo ''
+	echo 'Usage: 3-install.sh <install_method> <path>'
+	echo '  install_method - how and from which source the package is installed'
+	echo '                     from_build - the package will be installed from the build output, <path> is the path of the build directory'
+	echo '                     from_deb - the package will be installed from a Debian package, <path> is the path of the package file'
+	exit $1
+}
 
 set -o errexit -o nounset -o pipefail
 
@@ -15,6 +18,16 @@ SOURCE_DIR="$(pwd)"
 SCRIPT_DIR="$SOURCE_DIR/Scripts"
 SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '\$SOURCE_DIR' | python3 '$SCRIPT_DIR/replace.py' '$HOME' '\$HOME'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
+
+function echo_and_eval() {
+	COMMAND="$1"
+	echo "$COMMAND" | eval $SHORTEN_PATHS
+	COMMAND=$(echo "$COMMAND" | tr -d '\n')  # remove newlines from the command
+	eval "$COMMAND"
+	return $?
+}
+
+function copy() { echo "cp \"\$SOURCE_DIR/$1\" \"$2\""; sudo cp "$SOURCE_DIR/$1" "$2"; }
 
 # detect the operating system
 if [[ -d "/Applications" && -d "/Library" ]]; then
@@ -26,15 +39,11 @@ else
 	exit 1
 fi
 
-function echo_and_eval() {
-	COMMAND="$1"
-	echo "$COMMAND" | eval $SHORTEN_PATHS
-	COMMAND=$(echo "$COMMAND" | tr -d '\n')  # remove newlines from the command
-	eval "$COMMAND"
-	return $?
-}
-
-function copy() { echo "cp \"\$SOURCE_DIR/$1\" \"$2\""; sudo cp "$SOURCE_DIR/$1" "$2"; }
+if [[ $# -lt 2 ]]; then
+	exit_with_help 1
+elif [[ $1 == "-h" || $1 == "--help" ]]; then
+	exit_with_help 0
+fi
 
 INSTALL_METHOD="$1"
 

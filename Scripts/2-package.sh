@@ -1,22 +1,25 @@
 #!/bin/bash
 
-# Creates a distributable package from the selected build output.
-#
-# Usage: 2-package.sh <build_dir> <os_type> <cpu_arch> <package_type> <build_type>
-#   build_dir - path to the directory where the application has been built
-#   os_type - the target operating system of the package (only needed to compose the package file name)
-#   cpu_arch - the target CPU architecture of the package (only needed to compose the package file name)
-#   package_type - what kind of package should be produced from the build output
-#                    dynamic_exe = only zips the dynamically linked executable, dependencies must be installed manually by the user
-#                    static_exe = zipped statically linked executable that integrates all dependencies into itself (currently unsupported)
-#                    deb = Debian/Ubuntu package that relies on the package manager to install its dependencies
-#                    appimage = self-mounting Linux application bundle that contains all dependencies compressed in the executable
-#                    flatpak = sandboxed Linux application bundle containing all dependencies but running with restricted permissions
-#                    dmg = mountable MacOS image containing all dependencies bundled in a standard application bundle (.app file)
-#   build_type - only required for producing package_type=flatpak, see 1-build.sh for description
-#
-# NOTE: This script outputs some of its variables (like PACKAGE_PATH) into /tmp/$PROJECT_NAME/package_vars.sh,
-#       which can be loaded using the 'source' command. This, however, has to be cleaned up by the caller.
+function exit_with_help() {
+	echo 'Creates a distributable package from the selected build output.'
+	echo ''
+	echo 'Usage: 2-package.sh <build_dir> <os_type> <cpu_arch> <package_type> <build_type>'
+	echo '  build_dir - path to the directory where the application has been built'
+	echo '  os_type - the target operating system of the package (only needed to compose the package file name)'
+	echo '  cpu_arch - the target CPU architecture of the package (only needed to compose the package file name)'
+	echo '  package_type - what kind of package should be produced from the build output'
+	echo '                   dynamic_exe = only zips the dynamically linked executable, dependencies must be installed manually by the user'
+	echo '                   static_exe = zipped statically linked executable that integrates all dependencies into itself (currently unsupported)'
+	echo '                   deb = Debian/Ubuntu package that relies on the package manager to install its dependencies'
+	echo '                   appimage = self-mounting Linux application bundle that contains all dependencies compressed in the executable'
+	echo '                   flatpak = sandboxed Linux application bundle containing all dependencies but running with restricted permissions'
+	echo '                   dmg = mountable MacOS image containing all dependencies bundled in a standard application bundle (.app file)'
+	echo '  build_type - only required for producing package_type=flatpak, see 1-build.sh for description'
+	echo ''
+	echo 'NOTE: This script outputs some of its variables (like PACKAGE_PATH) into /tmp/$PROJECT_NAME/package_vars.sh,'
+	echo '      which can be loaded using the `source` command. This, however, has to be cleaned up by the caller.'
+	exit $1
+}
 
 set -o errexit -o nounset -o pipefail
 
@@ -39,6 +42,11 @@ function echo_and_eval() {
 }
 
 # validate the arguments
+if [[ $# -lt 4 ]]; then
+	exit_with_help 1
+elif [[ $1 == "-h" || $1 == "--help" ]]; then
+	exit_with_help 0
+fi
 BUILD_DIR="$1"
 OS_TYPE=$2
 if [[ $OS_TYPE != Linux && $OS_TYPE != MacOS ]]; then

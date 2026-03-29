@@ -1,24 +1,27 @@
 #!/bin/bash
 
-# Builds all parts of the project using requested build parameters.
-#
-# Usage: 1-build.sh <cpu_arch> <linkage> <build_preset> <build_type>
-#   cpu_arch - the target CPU architecture of the binaries (cross-compilation is currently only supported for MacOS)
-#                default = the architecture of the computer running this script
-#				 other common options: i386, x86_64, arm64
-#   linkage - how the library dependencies are linked
-#               static = produces large standalone executable with all libraries integrated into it (currently unsupported)
-#               dynamic = produces small executable, but the libraries have to be installed into the system or bundled with the application
-#   build_preset - build type that defines additional build configuration
-#                    plain = without any additional build config values
-#                    flatpak = special build configuration for producing a Flatpak package
-#   build_type - QMake build type
-#                  release = enables most optimizations, generates debug symbols into a separate file
-#                  profile = enables some optimizations, generates debug symbols into a separate file
-#                  debug = disables optimizations, generates debug symbols into the executable
-#
-# NOTE: This script outputs some of its variables (like BUILD_DIR) into /tmp/$PROJECT_NAME/build_vars.sh,
-#       which can be loaded using the 'source' command. This, however, has to be cleaned up by the caller.
+function exit_with_help() {
+	echo 'Builds all parts of the project using requested build parameters.'
+	echo ''
+	echo 'Usage: 1-build.sh <cpu_arch> <linkage> <build_preset> <build_type>'
+	echo '  cpu_arch - the target CPU architecture of the binaries (cross-compilation is currently only supported for MacOS)'
+	echo '               default = the architecture of the computer running this script'
+	echo '               other common options: i386, x86_64, arm64'
+	echo '  linkage - how the library dependencies are linked'
+	echo '              static = produces large standalone executable with all libraries integrated into it (currently unsupported)'
+	echo '              dynamic = produces small executable, but the libraries have to be installed into the system or bundled with the application'
+	echo '  build_preset - build type that defines additional build configuration'
+	echo '                   plain = without any additional build config values'
+	echo '                   flatpak = special build configuration for producing a Flatpak package'
+	echo '  build_type - QMake build type'
+	echo '                 release = enables most optimizations, generates debug symbols into a separate file'
+	echo '                 profile = enables some optimizations, generates debug symbols into a separate file'
+	echo '                 debug = disables optimizations, generates debug symbols into the executable'
+	echo ''
+	echo 'NOTE: This script outputs some of its variables (like BUILD_DIR) into /tmp/$PROJECT_NAME/build_vars.sh,'
+	echo '      which can be loaded using the `source` command. This, however, has to be cleaned up by the caller.'
+	exit $1
+}
 
 set -o errexit -o nounset -o pipefail
 
@@ -43,6 +46,11 @@ fi
 THIS_CPU_ARCH=$(uname -m)
 
 # validate the arguments
+if [[ $# -lt 4 ]]; then
+	exit_with_help 1
+elif [[ $1 == "-h" || $1 == "--help" ]]; then
+	exit_with_help 0
+fi
 CPU_ARCH=$1
 if [[ $CPU_ARCH == default ]]; then
 	CPU_ARCH=$THIS_CPU_ARCH

@@ -1,21 +1,25 @@
-:: Builds all parts of the project using requested build parameters.
-::
-:: Usage: 1-build.bat <target_env> <linkage> <build_type>
-::   target_env - combines hardware architecture, msys2 build environment and Qt version
-::                  recent = UCRT64,  Qt6
-::                  legacy = MINGW32, Qt5
-::   linkage    - how the library dependencies are linked
-::                  static = produces large standalone executable with all libraries integrated into it
-::                  dynamic = produces small executable, but the libraries have to be installed into the system or bundled with the application
-::   build_type - QMake build type
-::                  release = enables most optimizations, generates debug symbols into a separate file
-::                  profile = enables some optimizations, generates debug symbols into a separate file
-::                  debug = disables optimizations, generates debug symbols into the executable
-::
-:: NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as BUILD_DIR.
-
 @echo off
+goto :start
 
+:exit_with_help
+echo Builds all parts of the project using requested build parameters.
+echo.
+echo Usage: 1-build.bat ^<target_env^> ^<linkage^> ^<build_type^>
+echo   target_env - combines hardware architecture, msys2 build environment and Qt version
+echo                  recent = UCRT64,  Qt6
+echo                  legacy = MINGW32, Qt5
+echo   linkage    - how the library dependencies are linked
+echo                  static = produces large standalone executable with all libraries integrated into it
+echo                  dynamic = produces small executable, but the libraries have to be installed into the system or bundled with the application
+echo   build_type - QMake build type
+echo                  release = enables most optimizations, generates debug symbols into a separate file
+echo                  profile = enables some optimizations, generates debug symbols into a separate file
+echo                  debug = disables optimizations, generates debug symbols into the executable
+echo.
+echo NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as BUILD_DIR.
+goto :exit
+
+:start
 pushd "%~dp0"
 set "SCRIPT_DIR=%cd%"
 cd ..
@@ -24,6 +28,18 @@ set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR
 for %%I in ("%SOURCE_DIR%") do set "PROJECT_NAME=%%~nxI"
 
 :: validate the arguments
+set count=0
+for %%x in (%*) do set /a count+=1
+if %count% LSS 3 (
+	set ERROR_CODE=1
+	goto :exit_with_help
+) else if "%~1"=="/?" (
+	set ERROR_CODE=0
+	goto :exit_with_help
+) else if "%~1"=="/help" (
+	set ERROR_CODE=0
+	goto :exit_with_help
+)
 set TARGET_ENV=%~1
 if %TARGET_ENV% NEQ recent ( if %TARGET_ENV% NEQ legacy (
 	echo Invalid target_env "%TARGET_ENV%", possible values: recent, legacy

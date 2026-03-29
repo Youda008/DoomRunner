@@ -1,16 +1,20 @@
-:: Creates a distributable package from the selected build output.
-::
-:: Usage: 2-package.bat <build_dir> <target_env> <package_type>
-::   build_dir - path to the directory where the application has been built
-::   target_env - only needed to compose the package file name, see 1-build.bat for description
-::   package_type - what kind of package should be produced from the build output
-::                    static_exe = zipped statically linked executable that integrates all dependencies into itself
-::                    bundled_dlls = zipped dynamically linked executable carries the required DLLs with it (currently unsupported)
-::
-:: NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as PACKAGE_PATH.
-
 @echo off
+goto :start
 
+:exit_with_help
+echo Creates a distributable package from the selected build output.
+echo.
+echo Usage: 2-package.bat ^<build_dir^> ^<target_env^> ^<package_type^>
+echo   build_dir - path to the directory where the application has been built
+echo   target_env - only needed to compose the package file name, see 1-build.bat for description
+echo   package_type - what kind of package should be produced from the build output
+echo                    static_exe = zipped statically linked executable that integrates all dependencies into itself
+echo                    bundled_dlls = zipped dynamically linked executable carries the required DLLs with it (currently unsupported)
+echo.
+echo NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as PACKAGE_PATH.
+goto :exit
+
+:start
 pushd "%~dp0"
 set "SCRIPT_DIR=%cd%"
 cd ..
@@ -19,6 +23,18 @@ set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR
 for %%I in ("%SOURCE_DIR%") do set "PROJECT_NAME=%%~nxI"
 
 :: validate the arguments
+set count=0
+for %%x in (%*) do set /a count+=1
+if %count% LSS 3 (
+	set ERROR_CODE=1
+	goto :exit_with_help
+) else if "%~1"=="/?" (
+	set ERROR_CODE=0
+	goto :exit_with_help
+) else if "%~1"=="/help" (
+	set ERROR_CODE=0
+	goto :exit_with_help
+)
 set "BUILD_DIR=%~1"
 set TARGET_ENV=%~2
 if %TARGET_ENV% NEQ recent ( if %TARGET_ENV% NEQ legacy (

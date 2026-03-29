@@ -120,9 +120,10 @@ if [[ -z "$QMAKE" || ! -f "$QMAKE" ]]; then
 fi
 
 # prepare QMake build config
-if [ $BUILD_TYPE == debug ]; then    QMAKE_CONFIG="CONFIG+=debug"; fi
-if [ $BUILD_TYPE == profile ]; then  QMAKE_CONFIG="CONFIG+=profile CONFIG+=separate_debug_info"; fi
-if [ $BUILD_TYPE == release ]; then  QMAKE_CONFIG="CONFIG+=release CONFIG+=separate_debug_info"; fi
+QMAKE_CONFIG="CONFIG-=qml_debug"
+if [ $BUILD_TYPE == debug ]; then    QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=debug"; fi
+if [ $BUILD_TYPE == profile ]; then  QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=profile CONFIG+=force_debug_info CONFIG+=separate_debug_info"; fi
+if [ $BUILD_TYPE == release ]; then  QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=release CONFIG+=force_debug_info CONFIG+=separate_debug_info"; fi
 if [ $BUILD_PRESET == flatpak ]; then  QMAKE_CONFIG="$QMAKE_CONFIG CONFIG+=flatpak"; fi
 
 echo "Building the application"

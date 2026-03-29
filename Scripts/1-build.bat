@@ -88,9 +88,10 @@ if not exist "%QMAKE%" (
 )
 
 :: prepare QMake build config
-if %BUILD_TYPE%==debug    set "QMAKE_CONFIG=CONFIG+=debug"
-if %BUILD_TYPE%==profile  set "QMAKE_CONFIG=CONFIG+=profile CONFIG+=separate_debug_info"
-if %BUILD_TYPE%==release  set "QMAKE_CONFIG=CONFIG+=release CONFIG+=separate_debug_info"
+set "QMAKE_CONFIG=CONFIG-=qml_debug"
+if %BUILD_TYPE%==debug    set "QMAKE_CONFIG=%QMAKE_CONFIG% CONFIG+=debug"
+if %BUILD_TYPE%==profile  set "QMAKE_CONFIG=%QMAKE_CONFIG% CONFIG+=profile CONFIG+=force_debug_info CONFIG+=separate_debug_info"
+if %BUILD_TYPE%==release  set "QMAKE_CONFIG=%QMAKE_CONFIG% CONFIG+=release CONFIG+=force_debug_info CONFIG+=separate_debug_info"
 if %TARGET_ENV%==recent if %LINKAGE%==static set "QMAKE_CONFIG=%QMAKE_CONFIG% QMAKE_LFLAGS+=-Wl,--start-group"
 
 echo Building the application

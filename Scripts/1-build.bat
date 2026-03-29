@@ -44,19 +44,19 @@ set TARGET_ENV=%~1
 if %TARGET_ENV% NEQ recent ( if %TARGET_ENV% NEQ legacy (
 	echo Invalid target_env "%TARGET_ENV%", possible values: recent, legacy
 	set ERROR_CODE=1
-	goto exit
+	goto :exit
 ))
 set LINKAGE=%~2
 if %LINKAGE% NEQ static ( if %LINKAGE% NEQ dynamic (
 	echo Invalid linkage "%LINKAGE%", possible values: static, dynamic
 	set ERROR_CODE=1
-	goto exit
+	goto :exit
 ))
 set BUILD_TYPE=%~3
 if %BUILD_TYPE% NEQ release ( if %BUILD_TYPE% NEQ profile ( if %BUILD_TYPE% NEQ debug (
 	echo Invalid build_type "%BUILD_TYPE%", possible values: release, profile, debug
 	set ERROR_CODE=1
-	goto exit
+	goto :exit
 )))
 
 :: may be useful for composing file or directory names
@@ -84,7 +84,7 @@ if not exist "%QMAKE%" (
 	echo Qt build tools not found: %QMAKE%
 	echo Build aborted.
 	set ERROR_CODE=2
-	goto exit
+	goto :exit
 )
 
 :: prepare QMake build config
@@ -108,7 +108,7 @@ echo %COMMAND% | %SHORTEN_PATHS%
 call %COMMAND%
 if %ERRORLEVEL% neq 0 (
 	set ERROR_CODE=100+%ERRORLEVEL%
-	goto exit
+	goto :exit
 )
 
 :: run the Makefile
@@ -118,7 +118,7 @@ echo %COMMAND%
 call %COMMAND%
 if %ERRORLEVEL% neq 0 (
 	set ERROR_CODE=200+%ERRORLEVEL%
-	goto exit
+	goto :exit
 )
 
 echo.

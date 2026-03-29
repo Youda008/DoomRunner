@@ -36,7 +36,7 @@ if exist "%BUILD_DIR%\debug\%PROJECT_NAME%.exe"   set BUILD_TYPE=debug
 if "%BUILD_TYPE%"=="" (
 	echo Failed to auto-detect build_type in "%BUILD_DIR%", please update this code
 	set ERROR_CODE=3
-	goto exit
+	goto :exit
 )
 
 set "INSTALL_DIR=C:\Users\Youda\Games\Doom\%PROJECT_NAME%"

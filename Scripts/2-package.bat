@@ -40,13 +40,13 @@ set TARGET_ENV=%~2
 if %TARGET_ENV% NEQ recent ( if %TARGET_ENV% NEQ legacy (
 	echo Invalid target_env "%TARGET_ENV%", possible values: recent, legacy
 	set ERROR_CODE=1
-	goto exit
+	goto :exit
 ))
 set PACKAGE_TYPE=%~3
 if %PACKAGE_TYPE% NEQ static_exe ( if %PACKAGE_TYPE% NEQ bundled_dlls (
     echo Invalid package_type "%PACKAGE_TYPE%", possible values: static_exe, bundled_dlls
     set ERROR_CODE=1
-    goto exit
+    goto :exit
 ))
 
 :: detect the build type automatically
@@ -56,7 +56,7 @@ if exist "%BUILD_DIR%\debug\%PROJECT_NAME%.exe"   set BUILD_TYPE=debug
 if "%BUILD_TYPE%"=="" (
 	echo Failed to auto-detect build_type in "%BUILD_DIR%", please update this code
 	set ERROR_CODE=3
-	goto exit
+	goto :exit
 )
 
 :: verify the build output
@@ -65,7 +65,7 @@ if not exist "%EXECUTABLE_PATH%" (
 	echo There is no build output in "%BUILD_DIR%" | %SHORTEN_PATHS%
 	echo Packaging aborted.
 	set ERROR_CODE=3
-	goto exit
+	goto :exit
 )
 
 set "RELEASE_DIR=%SOURCE_DIR%\Releases"
@@ -76,7 +76,7 @@ if %ERRORLEVEL% neq 0 (
 	echo Cannot read application version from version.txt
 	echo Packaging aborted.
 	set ERROR_CODE=3
-	goto exit
+	goto :exit
 )
 
 :: compose the package file name
@@ -94,15 +94,15 @@ if not exist "%ZIP_TOOL%" (
 	echo Archive tool not found: %ZIP_TOOL%
 	echo Packaging aborted.
 	set ERROR_CODE=2
-	goto exit
+	goto :exit
 )
 
 set "PACKAGE_PATH=%RELEASE_DIR%\%BASE_NAME%.zip"
 
 
-if %PACKAGE_TYPE%==static_exe    goto static_exe
-if %PACKAGE_TYPE%==bundled_dlls  goto bundled_dlls
-goto exit
+if %PACKAGE_TYPE%==static_exe    goto :static_exe
+if %PACKAGE_TYPE%==bundled_dlls  goto :bundled_dlls
+goto :exit
 
 
 :static_exe
@@ -119,21 +119,21 @@ echo %COMMAND% | %SHORTEN_PATHS%
 call %COMMAND%
 if %ERRORLEVEL% neq 0 (
 	set ERROR_CODE=100+%ERRORLEVEL%
-	goto exit
+	goto :exit
 )
 
 echo.
 echo Packaging finished successfully.
 echo Output: %PACKAGE_PATH% | %SHORTEN_PATHS%
 set ERROR_CODE=0
-goto exit
+goto :exit
 
 
 :bundled_dlls
 
 echo Package with bundled DLLs is not implemented yet.
 set ERROR_CODE=1
-goto exit
+goto :exit
 
 
 :exit

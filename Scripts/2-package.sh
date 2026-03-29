@@ -22,7 +22,7 @@ set -o errexit -o nounset -o pipefail
 
 SCRIPT_DIR=$(realpath "$(dirname "$0")")
 SOURCE_DIR=$(realpath "$SCRIPT_DIR/..")
-SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
+SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '\$SOURCE_DIR' | python3 '$SCRIPT_DIR/replace.py' '$HOME' '\$HOME'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
 pushd "$SOURCE_DIR" 1>/dev/null
 trap "popd 1>/dev/null; echo" EXIT

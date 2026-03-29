@@ -13,7 +13,7 @@ pushd "$(dirname "$0")/.." 1>/dev/null
 trap "popd 1>/dev/null; echo" EXIT
 SOURCE_DIR="$(pwd)"
 SCRIPT_DIR="$SOURCE_DIR/Scripts"
-SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '{SOURCE_DIR}'"
+SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '\$SOURCE_DIR' | python3 '$SCRIPT_DIR/replace.py' '$HOME' '\$HOME'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
 
 function echo_and_eval() {
@@ -24,7 +24,7 @@ function echo_and_eval() {
 	return $?
 }
 
-function copy() { echo "cp \"{SOURCE_DIR}/$1\" \"$2\""; sudo cp "$SOURCE_DIR/$1" "$2"; }
+function copy() { echo "cp \"\$SOURCE_DIR/$1\" \"$2\""; sudo cp "$SOURCE_DIR/$1" "$2"; }
 
 INSTALL_METHOD="$1"
 

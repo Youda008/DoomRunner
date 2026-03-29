@@ -16,6 +16,16 @@ SCRIPT_DIR="$SOURCE_DIR/Scripts"
 SHORTEN_PATHS="python3 '$SCRIPT_DIR/replace.py' '$SOURCE_DIR' '\$SOURCE_DIR' | python3 '$SCRIPT_DIR/replace.py' '$HOME' '\$HOME'"
 PROJECT_NAME="$(basename "$SOURCE_DIR")"
 
+# detect the operating system
+if [[ -d "/Applications" && -d "/Library" ]]; then
+	OS_TYPE=MacOS
+elif [[ -d "/usr/bin" ]]; then
+	OS_TYPE=Linux
+else
+	echo "Unrecognized operating system."
+	exit 1
+fi
+
 function echo_and_eval() {
 	COMMAND="$1"
 	echo "$COMMAND" | eval $SHORTEN_PATHS
@@ -35,18 +45,26 @@ if [ $INSTALL_METHOD == from_build ]; then
 	echo "Installing the application from the build output in \"$BUILD_DIR\" into this system" | eval $SHORTEN_PATHS
 	echo
 
-	echo "Installing binaries"
-	pushd "$BUILD_DIR" 1>/dev/null
-	sudo make install
-	popd 1>/dev/null
-	echo
+	if [ $OS_TYPE == Linux ]; then
 
+		echo "Installing binaries"
+		pushd "$BUILD_DIR" 1>/dev/null
+		sudo make install
+		popd 1>/dev/null
+		echo
 
-	echo "Installing desktop files"
-	copy "Install/XDG/$PROJECT_NAME.desktop" "/usr/share/applications/$PROJECT_NAME.desktop"
-	for SIZE in 16 24 32 48 64 128; do
-		copy "Install/XDG/$PROJECT_NAME.${SIZE}x${SIZE}.png" "/usr/share/icons/hicolor/${SIZE}x${SIZE}/apps/$PROJECT_NAME.png"
-	done
+		echo "Installing desktop files"
+		copy "Install/XDG/$PROJECT_NAME.desktop" "/usr/share/applications/$PROJECT_NAME.desktop"
+		for SIZE in 16 24 32 48 64 128; do
+			copy "Install/XDG/$PROJECT_NAME.${SIZE}x${SIZE}.png" "/usr/share/icons/hicolor/${SIZE}x${SIZE}/apps/$PROJECT_NAME.png"
+		done
+
+	elif [ $OS_TYPE == MacOS ]; then
+
+		echo "Installing $PROJECT_NAME.app"
+		copy "$BUILD_DIR/$PROJECT_NAME.app" "/Applications"
+
+	fi
 
 elif [ $INSTALL_METHOD == from_deb ]; then
 

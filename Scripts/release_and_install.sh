@@ -17,4 +17,5 @@ source "$TEMP_DIR/build_vars.sh"  # load return values from the 1-build.sh
 
 "$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH dynamic_exe
 "$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH appimage
-"$SCRIPT_DIR/3-install.sh" "$BUILD_DIR"
+"$SCRIPT_DIR/2-package.sh" "$BUILD_DIR" $OS_TYPE $CPU_ARCH deb
+"$SCRIPT_DIR/3-install.sh" from_build "$BUILD_DIR"

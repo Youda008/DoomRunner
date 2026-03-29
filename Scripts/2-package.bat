@@ -1,12 +1,11 @@
 :: Creates a distributable package from the selected build output.
 ::
-:: Usage: 2-package.bat <build_dir> <target_env> <package_type> <build_type>
+:: Usage: 2-package.bat <build_dir> <target_env> <package_type>
 ::   build_dir - path to the directory where the application has been built
 ::   target_env - only needed to compose the package file name, see 1-build.bat for description
 ::   package_type - what kind of package should be produced from the build output
 ::                    static_exe = zipped statically linked executable that integrates all dependencies into itself
 ::                    bundled_dlls = zipped dynamically linked executable carries the required DLLs with it (currently unsupported)
-::   build_type - only needed to find the executable, see 1-build.bat for description
 ::
 :: NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as PACKAGE_PATH.
 
@@ -20,6 +19,7 @@ set "SHORTEN_PATHS=python3 "%SCRIPT_DIR%\replace.py" "%SOURCE_DIR%" "{SOURCE_DIR
 for %%I in ("%SOURCE_DIR%") do set "PROJECT_NAME=%%~nxI"
 
 :: validate the arguments
+set "BUILD_DIR=%~1"
 set TARGET_ENV=%~2
 if %TARGET_ENV% NEQ recent ( if %TARGET_ENV% NEQ legacy (
 	echo Invalid target_env "%TARGET_ENV%", possible values: recent, legacy
@@ -32,10 +32,18 @@ if %PACKAGE_TYPE% NEQ static_exe ( if %PACKAGE_TYPE% NEQ bundled_dlls (
     set ERROR_CODE=1
     goto exit
 ))
-set BUILD_TYPE=%~4
+
+:: detect the build type automatically
+if exist "%BUILD_DIR%\release\%PROJECT_NAME%.exe" set BUILD_TYPE=release
+if exist "%BUILD_DIR%\profile\%PROJECT_NAME%.exe" set BUILD_TYPE=profile
+if exist "%BUILD_DIR%\debug\%PROJECT_NAME%.exe"   set BUILD_TYPE=debug
+if "%BUILD_TYPE%"=="" (
+	echo Failed to auto-detect build_type in "%BUILD_DIR%", please update this code
+	set ERROR_CODE=3
+	goto exit
+)
 
 :: verify the build output
-set "BUILD_DIR=%~1"
 set "EXECUTABLE_PATH=%BUILD_DIR%\%BUILD_TYPE%\%PROJECT_NAME%.exe"
 if not exist "%EXECUTABLE_PATH%" (
 	echo There is no build output in "%BUILD_DIR%" | %SHORTEN_PATHS%
@@ -60,6 +68,7 @@ set OS_TYPE=Windows
 if %TARGET_ENV%==legacy set "TARGET_ENV_DESC=legacy(i386)"
 if %TARGET_ENV%==recent set "TARGET_ENV_DESC=recent(x86_64)"
 set "BASE_NAME=%PROJECT_NAME%-%APP_VERSION%-%OS_TYPE%-%TARGET_ENV_DESC%-%PACKAGE_TYPE%"
+if %BUILD_TYPE% NEQ release set "BASE_NAME=%BASE_NAME%-%BUILD_TYPE%"
 
 if not exist "%RELEASE_DIR%" mkdir "%RELEASE_DIR%"
 

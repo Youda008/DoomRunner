@@ -2,7 +2,7 @@
 
 # Creates a distributable package from the selected build output.
 #
-# Usage: 2-package.sh <build_dir> <os_type> <cpu_arch> <package_type>
+# Usage: 2-package.sh <build_dir> <os_type> <cpu_arch> <package_type> <build_type>
 #   build_dir - path to the directory where the application has been built
 #   os_type - the target operating system of the package (only needed to compose the package file name)
 #   cpu_arch - the target CPU architecture of the package (only needed to compose the package file name)
@@ -13,6 +13,10 @@
 #                    appimage = self-mounting Linux application bundle that contains all dependencies compressed in the executable
 #                    flatpak = sandboxed Linux application bundle containing all dependencies but running with restricted permissions
 #                    dmg = mountable MacOS image containing all dependencies bundled in a standard application bundle (.app file)
+#   build_type - only required for producing package_type=flatpak, see 1-build.sh for description
+#
+# NOTE: This script outputs some of its variables (like PACKAGE_PATH) into /tmp/$PROJECT_NAME/package_vars.sh,
+#       which can be loaded using the 'source' command. This, however, has to be cleaned up by the caller.
 
 set -o errexit -o nounset -o pipefail
 
@@ -35,6 +39,7 @@ function echo_and_eval() {
 }
 
 # validate the arguments
+BUILD_DIR="$1"
 OS_TYPE=$2
 if [[ $OS_TYPE != Linux && $OS_TYPE != MacOS ]]; then
 	echo "Unsupported os_type \"$OS_TYPE\", possible values: Linux, MacOS"
@@ -54,18 +59,36 @@ elif [[ $OS_TYPE == MacOS && $PACKAGE_TYPE != dmg ]]; then
 	exit 1
 fi
 
-# verify the build output
-BUILD_DIR="$1"
-if [[ $OS_TYPE == MacOS ]]; then
-	APP_PATH="$BUILD_DIR/$PROJECT_NAME.app"
-	EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/$PROJECT_NAME"
+# verify the build output and detect build type
+if [[ $PACKAGE_TYPE == flatpak ]]; then
+	BUILD_TYPE=$5
+	if [[ $BUILD_TYPE != release && $BUILD_TYPE != profile && $BUILD_TYPE != debug ]]; then
+		echo "Invalid build_type \"$BUILD_TYPE\", possible values: release, profile, debug"
+		exit 1
+	fi
 else
-	EXECUTABLE_PATH="$BUILD_DIR/$PROJECT_NAME"
-fi
-if [ ! -f "$EXECUTABLE_PATH" ]; then
-	echo "There is no build output in \"$BUILD_DIR\"" | eval $SHORTEN_PATHS
-	echo "Packaging aborted."
-	exit 3
+	if [[ $OS_TYPE == MacOS ]]; then
+		APP_PATH="$BUILD_DIR/$PROJECT_NAME.app"
+		EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/$PROJECT_NAME"
+	else
+		EXECUTABLE_PATH="$BUILD_DIR/$PROJECT_NAME"
+	fi
+	MAKEFILE_PATH="$BUILD_DIR/Makefile"
+	if [[ ! -f "$EXECUTABLE_PATH" || ! -f "$MAKEFILE_PATH" ]]; then
+		echo "There is no build output in \"$BUILD_DIR\"" | eval $SHORTEN_PATHS
+		echo "Packaging aborted."
+		exit 3
+	fi
+	if   [[ ! -z $(cat "$MAKEFILE_PATH" | grep "CONFIG+=release") ]]; then
+		BUILD_TYPE=release
+	elif [[ ! -z $(cat "$MAKEFILE_PATH" | grep "CONFIG+=profile") ]]; then
+		BUILD_TYPE=profile
+	elif [[ ! -z $(cat "$MAKEFILE_PATH" | grep "CONFIG+=debug") ]]; then
+		BUILD_TYPE=debug
+	else
+		echo "Failed to auto-detect build_type in \"$BUILD_DIR\", please update this code"
+		exit 3
+	fi
 fi
 
 RELEASE_DIR="$SOURCE_DIR/Releases"
@@ -80,6 +103,7 @@ fi
 
 # compose the package file name
 BASE_NAME="$PROJECT_NAME-$APP_VERSION-$OS_TYPE-$CPU_ARCH"
+[ $BUILD_TYPE != release ] && BASE_NAME="$BASE_NAME-$BUILD_TYPE"
 
 [ ! -d "$RELEASE_DIR" ] && mkdir -p "$RELEASE_DIR"
 
@@ -107,12 +131,68 @@ if [ $PACKAGE_TYPE == dynamic_exe ] || [ $PACKAGE_TYPE == static_exe ]; then
 	echo
 	echo "Packaging finished successfully."
 	echo "Output: $PACKAGE_PATH" | eval $SHORTEN_PATHS
-	exit 0
 
 elif [ $PACKAGE_TYPE == deb ]; then
 
-	echo "Debian/Ubuntu package is not implemented yet"
-	exit 1
+	# verify the packaging tool
+	DPKG_TOOL=$(which dpkg-deb)
+	if [ -z "$DPKG_TOOL" ]; then
+		echo "Packaging tool not available: dpkg-deb"
+		echo "Please install 'dpkg' package first"
+		echo "Packaging aborted."
+		exit 2
+	fi
+
+	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME.deb"
+	TEMP_PACKAGE_PATH="$BUILD_DIR/$BASE_NAME.deb"  # otherwise we risk issues with Unix permissions
+	echo "Generating Debian package from the build output"
+	echo " Build dir: $BUILD_DIR" | eval $SHORTEN_PATHS
+	echo " Package file: $PACKAGE_PATH" | eval $SHORTEN_PATHS
+
+	# cleanup the previous staging files and start from scratch
+	STAGING_DIR="$BUILD_DIR/deb-staging"
+	[ -d "$STAGING_DIR" ] && rm -r "$STAGING_DIR"
+	mkdir -p "$STAGING_DIR/DEBIAN"
+	mkdir -p "$STAGING_DIR/usr/bin"
+	mkdir -p "$STAGING_DIR/usr/share/applications"
+	mkdir -p "$STAGING_DIR/usr/share/metainfo"
+	mkdir -p "$STAGING_DIR/usr/share/doc/$PROJECT_NAME"
+
+	# copy executable
+	cp "$EXECUTABLE_PATH" "$STAGING_DIR/usr/bin/"
+
+	# copy desktop file and appdata
+	cp "$SOURCE_DIR/Install/XDG/$PROJECT_NAME.desktop" "$STAGING_DIR/usr/share/applications/"
+	cp "$SOURCE_DIR/Install/XDG/io.github.Youda008.DoomRunner.appdata.xml" "$STAGING_DIR/usr/share/metainfo/"
+
+	# copy icons
+	for SIZE in 16 24 32 48 64 128; do
+		ICON_DIR="$STAGING_DIR/usr/share/icons/hicolor/${SIZE}x${SIZE}/apps"
+		mkdir -p "$ICON_DIR"
+		cp "$SOURCE_DIR/Install/XDG/$PROJECT_NAME.${SIZE}x${SIZE}.png" "$ICON_DIR/$PROJECT_NAME.png"
+	done
+
+	# copy copyright
+	cp "$SOURCE_DIR/Packaging/deb/copyright" "$STAGING_DIR/usr/share/doc/$PROJECT_NAME/"
+
+	# translate the CPU architecture to the debian style
+	DEB_ARCH=$CPU_ARCH
+	[ $DEB_ARCH == x86_64 ] && DEB_ARCH=amd64
+
+	# generate control file
+	sed -e "s|\${VERSION}|$APP_VERSION|" \
+	    -e "s|\${ARCH}|$DEB_ARCH|" \
+	    < "$SOURCE_DIR/Packaging/deb/control.in" > "$STAGING_DIR/DEBIAN/control"
+
+	# build the package
+	echo
+	echo_and_eval "$DPKG_TOOL --build \"$STAGING_DIR\" \"$TEMP_PACKAGE_PATH\"" || exit $((100+$?))
+
+	cp "$TEMP_PACKAGE_PATH" "$PACKAGE_PATH"
+
+	echo
+	echo "Packaging finished successfully."
+	echo "Output: $PACKAGE_PATH" | eval $SHORTEN_PATHS
 
 elif [ $PACKAGE_TYPE == appimage ]; then
 
@@ -136,7 +216,7 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 	# We also need to make it the working dir, because the output is produced there and we can't control it.
 	pushd "$BUILD_DIR" 1>/dev/null
 
-	# cleanup the previous artifacts and start from scratch
+	# cleanup the previous staging files and start from scratch
 	[ -f "$PACKAGE_PATH" ] && rm "$PACKAGE_PATH"
 	[ -d "AppDir" ] && rm -r "AppDir"
 	mkdir -p "AppDir"
@@ -162,12 +242,60 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 	echo
 	echo "Packaging finished successfully."
 	echo "Output: $PACKAGE_PATH" | eval $SHORTEN_PATHS
-	exit 0
 
 elif [ $PACKAGE_TYPE == flatpak ]; then
 
-	echo "Flatpak package is not implemented yet"
-	exit 1
+	# verify the packaging tool
+	FLATPAK_BUILDER=$(which flatpak-builder)
+	if [ -z "$FLATPAK_BUILDER" ]; then
+		echo "Packaging tool not available: flatpak-builder"
+		echo "Please install 'flatpak-builder' package first"
+		echo "Packaging aborted."
+		exit 2
+	fi
+
+	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME.flatpak"
+	TEMP_PACKAGE_PATH="$BUILD_DIR/$BASE_NAME.flatpak"  # otherwise we risk issues with Unix permissions
+	echo "Generating Flatpak package from the source code"
+	echo " Package file: $PACKAGE_PATH" | eval $SHORTEN_PATHS
+
+	# cleanup the previous staging files and start from scratch
+	[ -f "$PACKAGE_PATH" ] && rm "$PACKAGE_PATH"
+	#[ -d "$BUILD_DIR" ] && rm -r "$BUILD_DIR"
+	mkdir -p "$BUILD_DIR"
+
+	FLATPAK_STATE_DIR="$BUILD_DIR/flatpak-state"
+	FLATPAK_BUILD_DIR="$BUILD_DIR/flatpak-build"
+	FLATPAK_REPO_DIR="$BUILD_DIR/flatpak-repo"
+
+	sed -e "s|\${SOURCE_DIR}|$SOURCE_DIR|" \
+	    -e "s|\${BUILD_TYPE}|$BUILD_TYPE|" \
+	    < "$SOURCE_DIR/Packaging/flatpak/manifest.yml.in" > "$BUILD_DIR/manifest.yml"
+
+	echo
+	COMMAND="$FLATPAK_BUILDER
+      --force-clean
+      --install-deps-from=flathub
+      --state-dir=\"$FLATPAK_STATE_DIR\"
+      --repo=\"$FLATPAK_REPO_DIR\"
+      \"$FLATPAK_BUILD_DIR\"
+      \"$BUILD_DIR/manifest.yml\"
+      "
+	echo_and_eval "$COMMAND" || exit $((100+$?))
+
+	echo
+	echo_and_eval "flatpak build-bundle \"$FLATPAK_REPO_DIR\" \"$TEMP_PACKAGE_PATH\" io.github.Youda008.DoomRunner" || exit $((200+$?))
+
+	cp "$TEMP_PACKAGE_PATH" "$PACKAGE_PATH"
+
+	# This directory contains a copy of the whole project directory and a new copy is made for every next build!
+	# If we don't delete it, we can quickly run out of disk space.
+	rm -r "$FLATPAK_STATE_DIR/build"
+
+	echo
+	echo "Packaging finished successfully."
+	echo "Output: $PACKAGE_PATH" | eval $SHORTEN_PATHS
+	exit 0
 
 elif [ $PACKAGE_TYPE == dmg ]; then
 
@@ -317,13 +445,13 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 	cp -f -R "$APP_PATH" "$MOUNTED_DMG_VOLUME/"
 	ln -f -s /Applications "$MOUNTED_DMG_VOLUME/Applications"
 	mkdir "$MOUNTED_DMG_VOLUME/.background"
-	cp "$SOURCE_DIR/Install/DMG/background-960x720.png" "$MOUNTED_DMG_VOLUME/.background/background.png"
+	cp "$SOURCE_DIR/Packaging/dmg/background-960x720.png" "$MOUNTED_DMG_VOLUME/.background/background.png"
 	chflags hidden "$MOUNTED_DMG_VOLUME/.background"
 
 	sleep 1
 
 	# Setup the background and layout of the mounted DMG image.
-	#cp "$SOURCE_DIR/Install/DMG/DS_Store" "$MOUNTED_DMG_VOLUME/.DS_Store"
+	#cp "$SOURCE_DIR/Packaging/dmg/DS_Store" "$MOUNTED_DMG_VOLUME/.DS_Store"
 	osascript "$SCRIPT_DIR/set_finder_layout.applescript" "$VOLUME_NAME" "$PROJECT_NAME"
 
 	echo
@@ -349,6 +477,13 @@ elif [ $PACKAGE_TYPE == dmg ]; then
 	echo
 	echo "Packaging finished successfully."
 	echo "Output: $PACKAGE_PATH" | eval $SHORTEN_PATHS
-	exit 0
 
 fi
+
+# Writing to a file is the only way we can return data to the caller.
+TEMP_DIR="/tmp/$PROJECT_NAME"
+[ ! -d "$TEMP_DIR" ] && mkdir -p "$TEMP_DIR"
+:> "$TEMP_DIR/package_vars.sh"  # clear the file
+echo "PACKAGE_PATH='$PACKAGE_PATH'"  >> "$TEMP_DIR/package_vars.sh"
+echo "RELEASE_DIR='$RELEASE_DIR'"  >> "$TEMP_DIR/package_vars.sh"
+exit 0

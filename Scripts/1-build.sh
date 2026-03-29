@@ -102,7 +102,7 @@ if [[ $OS_TYPE == MacOS ]]; then
 		QMAKE="/usr/local/bin/qmake6"
 	fi
 else
-	QMAKE=$(which qmake6)
+	QMAKE=$(which qmake6) || true
 fi
 if [[ -z "$QMAKE" || ! -f "$QMAKE" ]]; then
 	echo

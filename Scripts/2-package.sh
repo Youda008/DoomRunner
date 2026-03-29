@@ -110,7 +110,7 @@ BASE_NAME="$PROJECT_NAME-$APP_VERSION-$OS_TYPE-$CPU_ARCH"
 if [ $PACKAGE_TYPE == dynamic_exe ] || [ $PACKAGE_TYPE == static_exe ]; then
 
 	# verify the archive tool
-	ZIP_TOOL=$(which 7z)
+	ZIP_TOOL=$(which 7z) || true
 	if [ -z "$ZIP_TOOL" ]; then
 		echo "Archive tool not available: 7z"
 		echo "Please install it first"
@@ -135,7 +135,7 @@ if [ $PACKAGE_TYPE == dynamic_exe ] || [ $PACKAGE_TYPE == static_exe ]; then
 elif [ $PACKAGE_TYPE == deb ]; then
 
 	# verify the packaging tool
-	DPKG_TOOL=$(which dpkg-deb)
+	DPKG_TOOL=$(which dpkg-deb) || true
 	if [ -z "$DPKG_TOOL" ]; then
 		echo "Packaging tool not available: dpkg-deb"
 		echo "Please install 'dpkg' package first"
@@ -246,7 +246,7 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 elif [ $PACKAGE_TYPE == flatpak ]; then
 
 	# verify the packaging tool
-	FLATPAK_BUILDER=$(which flatpak-builder)
+	FLATPAK_BUILDER=$(which flatpak-builder) || true
 	if [ -z "$FLATPAK_BUILDER" ]; then
 		echo "Packaging tool not available: flatpak-builder"
 		echo "Please install 'flatpak-builder' package first"

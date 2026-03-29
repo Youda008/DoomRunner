@@ -6,7 +6,7 @@
 ::   package_type - what kind of package should be produced from the build output
 ::                    static_exe = zipped statically linked executable that integrates all dependencies into itself
 ::                    bundled_dlls = zipped dynamically linked executable carries the required DLLs with it (currently unsupported)
-::   build_type - only needed to find the executable, see 1-build.bat for description
+::   build_type - required for the package file name and to find the executable, see 1-build.bat for description
 ::
 :: NOTE: Running the script via the 'call' command allows the caller to re-use the variables such as PACKAGE_PATH.
 
@@ -60,6 +60,7 @@ set OS_TYPE=Windows
 if %TARGET_ENV%==legacy set "TARGET_ENV_DESC=legacy(i386)"
 if %TARGET_ENV%==recent set "TARGET_ENV_DESC=recent(x86_64)"
 set "BASE_NAME=%PROJECT_NAME%-%APP_VERSION%-%OS_TYPE%-%TARGET_ENV_DESC%-%PACKAGE_TYPE%"
+if %BUILD_TYPE% NEQ release set "BASE_NAME=%BASE_NAME%-%BUILD_TYPE%"
 
 if not exist "%RELEASE_DIR%" mkdir "%RELEASE_DIR%"
 

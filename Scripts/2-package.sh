@@ -13,7 +13,7 @@
 #                    appimage = self-mounting Linux application bundle that contains all dependencies compressed in the executable
 #                    flatpak = sandboxed Linux application bundle containing all dependencies but running with restricted permissions
 #                    dmg = mountable MacOS image containing all dependencies bundled in a standard application bundle (.app file)
-#   build_type - only required for package_type=flatpak
+#   build_type - required for the package file name and for producing package_type=flatpak, see 1-build.sh for description
 #
 # NOTE: This script outputs some of its variables (like PACKAGE_PATH) into /tmp/$PROJECT_NAME/package_vars.sh,
 #       which can be loaded using the 'source' command. This, however, has to be cleaned up by the caller.
@@ -57,6 +57,11 @@ elif [[ $OS_TYPE == MacOS && $PACKAGE_TYPE != dmg ]]; then
 	echo "Invalid package_type \"$PACKAGE_TYPE\", possible values: dmg"
 	exit 1
 fi
+BUILD_TYPE=$5
+if [[ $BUILD_TYPE != release && $BUILD_TYPE != profile && $BUILD_TYPE != debug ]]; then
+	echo "Invalid build_type \"$BUILD_TYPE\", possible values: release, profile, debug"
+	exit 1
+fi
 
 # verify the build output
 BUILD_DIR="$1"
@@ -84,6 +89,7 @@ fi
 
 # compose the package file name
 BASE_NAME="$PROJECT_NAME-$APP_VERSION-$OS_TYPE-$CPU_ARCH"
+[ $BUILD_TYPE != release ] && BASE_NAME="$BASE_NAME-$BUILD_TYPE"
 
 [ ! -d "$RELEASE_DIR" ] && mkdir -p "$RELEASE_DIR"
 
@@ -233,8 +239,6 @@ elif [ $PACKAGE_TYPE == flatpak ]; then
 		echo "Packaging aborted."
 		exit 2
 	fi
-
-	BUILD_TYPE=$5
 
 	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME.flatpak"
 	TEMP_PACKAGE_PATH="$BUILD_DIR/$BASE_NAME.flatpak"  # otherwise we risk issues with Unix permissions

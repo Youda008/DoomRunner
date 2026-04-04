@@ -278,7 +278,7 @@ elif [ $PACKAGE_TYPE == flatpak ]; then
 
 	sed -e "s|\${SOURCE_DIR}|$SOURCE_DIR|" \
 	    -e "s|\${BUILD_TYPE}|$BUILD_TYPE|" \
-	    < "$SOURCE_DIR/Packaging/flatpak/manifest.yml.in" > "$BUILD_DIR/manifest.yml"
+	    < "$SOURCE_DIR/Packaging/flatpak/manifest.in.yml" > "$BUILD_DIR/manifest.yml"
 
 	echo
 	COMMAND="$FLATPAK_BUILDER

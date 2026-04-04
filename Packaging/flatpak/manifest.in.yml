@@ -22,6 +22,7 @@ modules:
     config-opts:
       - -DBUILD_SHARED_LIBS=ON
       - -DMZ_ZLIB=ON
+      - -DCMAKE_INSTALL_LIBDIR=lib
     sources:
       - type: git
         url: https://github.com/zlib-ng/minizip-ng
@@ -32,7 +33,7 @@ modules:
     config-opts:
       - CONFIG+=${BUILD_TYPE} flatpak
       - INSTALL_DIR+=/app/bin
-      - QMAKE_LIBDIR+=/app/lib64
+      - QMAKE_LIBDIR+=/app/lib
     sources:
       - type: dir
         path: ${SOURCE_DIR}

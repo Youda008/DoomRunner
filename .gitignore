@@ -1,6 +1,7 @@
 /Build*
 /build*
 /Releases
+/Scripts/build_package-*
 /TestDoomDir
 /Research
 *.autosave

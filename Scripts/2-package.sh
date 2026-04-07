@@ -225,7 +225,6 @@ elif [ $PACKAGE_TYPE == appimage ]; then
 	pushd "$BUILD_DIR" 1>/dev/null
 
 	# cleanup the previous staging files and start from scratch
-	[ -f "$PACKAGE_PATH" ] && rm "$PACKAGE_PATH"
 	[ -d "AppDir" ] && rm -r "AppDir"
 	mkdir -p "AppDir"
 
@@ -262,47 +261,63 @@ elif [ $PACKAGE_TYPE == flatpak ]; then
 		exit 2
 	fi
 
-	PACKAGE_PATH="$RELEASE_DIR/$BASE_NAME.flatpak"
-	TEMP_PACKAGE_PATH="$BUILD_DIR/$BASE_NAME.flatpak"  # otherwise we risk issues with Unix permissions
+	# Flatpak repository common for all projects, prefer environment variable if it exists
+	[ -z "${FLATPAK_REPO-}" ] && FLATPAK_REPO="$HOME/Builds/flatpak-repo"
+
+	# Flatpak intermediate dirs
+	FLATPAK_STATE_DIR="$BUILD_DIR/flatpak-build-state"  # downloaded sources, build dir, build cache, ...
+	FLATPAK_DEST_DIR="$BUILD_DIR/flatpak-build-output"  # build output, things to be installed - binaries, metainfo, icons, ...
+
+	# temporary package destination dir - otherwise we risk issues with Unix permissions
+	TEMP_PACKAGE_DEST_DIR="$BUILD_DIR"
+
+	PACKAGE_NAME_APP="$BASE_NAME-app.flatpak"
+	PACKAGE_NAME_DBG="$BASE_NAME-symbols.flatpak"
+
 	echo "Generating Flatpak package from the source code"
-	echo " Package file: $PACKAGE_PATH" | eval $SHORTEN_PATHS
+	echo " source dir:       $SOURCE_DIR" | eval $SHORTEN_PATHS
+	echo " build state dir:  $FLATPAK_STATE_DIR" | eval $SHORTEN_PATHS
+	echo " build dest dir:   $FLATPAK_DEST_DIR" | eval $SHORTEN_PATHS
+	echo " repository:       $FLATPAK_REPO" | eval $SHORTEN_PATHS
 
-	# cleanup the previous staging files and start from scratch
-	[ -f "$PACKAGE_PATH" ] && rm "$PACKAGE_PATH"
-	#[ -d "$BUILD_DIR" ] && rm -r "$BUILD_DIR"
-	mkdir -p "$BUILD_DIR"
+	[ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"
 
-	FLATPAK_STATE_DIR="$BUILD_DIR/flatpak-state"
-	FLATPAK_BUILD_DIR="$BUILD_DIR/flatpak-build"
-	FLATPAK_REPO_DIR="$BUILD_DIR/flatpak-repo"
-
+	# substitute variables inside the manifest
 	sed -e "s|\${SOURCE_DIR}|$SOURCE_DIR|" \
 	    -e "s|\${BUILD_TYPE}|$BUILD_TYPE|" \
 	    < "$SOURCE_DIR/Packaging/flatpak/manifest.in.yml" > "$BUILD_DIR/manifest.yml"
 
+	# download sources, build everything, and export the build output to the Flatpak repository
 	echo
 	COMMAND="$FLATPAK_BUILDER
       --force-clean
+      --delete-build-dirs
       --install-deps-from=flathub
       --state-dir=\"$FLATPAK_STATE_DIR\"
-      --repo=\"$FLATPAK_REPO_DIR\"
-      \"$FLATPAK_BUILD_DIR\"
+      --repo=\"$FLATPAK_REPO\"
+      \"$FLATPAK_DEST_DIR\"
       \"$BUILD_DIR/manifest.yml\"
       "
 	echo_and_eval "$COMMAND" || exit $((100+$?))
 
+	# Someone please tell me how to manually do the same thing as `flatpak-builder ... --repo="$FLATPAK_REPO" ...`
+	#echo
+	#echo_and_eval "flatpak build-export \"$FLATPAK_REPO\" \"$FLATPAK_DEST_DIR\"" || exit $((200+$?))
+	#echo
+	#echo_and_eval "flatpak build-export \"$FLATPAK_REPO\" \"$FLATPAK_DEST_DIR\" --runtime --files=files" || exit $((200+$?))
+
+	# create packages from the new refs in the Flatpak repository
 	echo
-	echo_and_eval "flatpak build-bundle \"$FLATPAK_REPO_DIR\" \"$TEMP_PACKAGE_PATH\" io.github.Youda008.DoomRunner" || exit $((200+$?))
+	echo_and_eval "flatpak build-bundle \"$FLATPAK_REPO\" \"$TEMP_PACKAGE_DEST_DIR/$PACKAGE_NAME_APP\" io.github.Youda008.DoomRunner" || exit $((300+$?))
+	echo
+	echo_and_eval "flatpak build-bundle \"$FLATPAK_REPO\" \"$TEMP_PACKAGE_DEST_DIR/$PACKAGE_NAME_DBG\" io.github.Youda008.DoomRunner.Debug --runtime" || exit $((300+$?))
 
-	cp "$TEMP_PACKAGE_PATH" "$PACKAGE_PATH"
-
-	# This directory contains a copy of the whole project directory and a new copy is made for every next build!
-	# If we don't delete it, we can quickly run out of disk space.
-	rm -r "$FLATPAK_STATE_DIR/build"
+	cp "$TEMP_PACKAGE_DEST_DIR"/*.flatpak "$RELEASE_DIR/"
 
 	echo
 	echo "Packaging finished successfully."
-	echo "Output: $PACKAGE_PATH" | eval $SHORTEN_PATHS
+	echo "Output: $RELEASE_DIR/$PACKAGE_NAME_APP" | eval $SHORTEN_PATHS
+	echo "        $RELEASE_DIR/$PACKAGE_NAME_DBG" | eval $SHORTEN_PATHS
 	exit 0
 
 elif [ $PACKAGE_TYPE == dmg ]; then

@@ -16,6 +16,8 @@ finish-args:
   - --talk-name=org.freedesktop.Flatpak
   # Simpler way of preventing KDE related errors
   - --env=KDE_FULL_SESSION=false
+build-options:
+  strip: false
 modules:
   - name: minizip-ng
     buildsystem: cmake-ninja

@@ -106,6 +106,31 @@ Debian and Ubuntu users can install Doom Runner from the .deb package on the rel
 sudo dpkg -i DoomRunner-<...>.deb
 ```
 
+#### Install on openSUSE
+
+##### Tumbleweed
+
+```
+sudo zypper install DoomRunner
+```
+
+##### Leap 16.0
+
+If you do not have `opi` installed, first intall it:
+
+```
+sudo zypper install opi
+```
+
+Then install DoomRunner with `opi`
+
+```
+opi DoomRunner
+```
+
+Select `DoomRunner` in the list, then the `games:tools` devel project, then proceed to installation.
+
+
 #### Install on NixOS
 
 Thanks to [Keenan Weaver](https://github.com/keenanweaver), NixOS users can install Doom Runner [package](https://search.nixos.org/packages?channel=unstable&show=doomrunner&from=0&size=50&sort=relevance&type=packages&query=doomrunner) using the following instructions.

@@ -1124,7 +1124,7 @@ void MainWindow::setupMapPackList()
 	ui->mapDirView->setSelectionMode( QAbstractItemView::ExtendedSelection );
 
 	// set item filters
-	mapModel.setFilter( QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot | QDir::NoSymLinks );
+	mapModel.setFilter( QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot );
 	mapModel.setNameFilters( makeFileSystemModelFilter( doom::getModSuffixes() ) );
 	mapModel.setNameFilterDisables( false );
 
